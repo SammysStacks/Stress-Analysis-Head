@@ -1,0 +1,73 @@
+**__pycache__/
+__oldFiles/
+*.DS_Store
+*.cache
+**.out
+.idea/
+venv/
+*.pyc
+*~
+*$
+
+helperFiles/**/.*
+_projectFiles/**/.*
+_experimentalData/**/.*
+.__projectFiles
+._helperFiles
+
+_projectFiles/_supplementaryWork/Machine Learning Predictions/finalFigures/*
+helperFiles/machineLearning/modelControl/_finalModels/storedModels/
+helperFiles/machineLearning/modelControl/_finalModels/emotionModel/
+helperFiles/machineLearning/modelControl/Models/pyTorch/modelArchitectures/emotionModel/dataAnalysis/trainingFigures/
+
+
+# Feedback control files and folders
+helperFiles/machineLearning/feedbackControl/musicTherapy/Organized Sounds/GTZAN/*
+helperFiles/machineLearning/feedbackControl/musicTherapy/Organized Sounds/MTG-Jamendo/a*
+helperFiles/machineLearning/feedbackControl/virtualRealityControl/Virtual Images/horror.osgb
+
+# Supplementary information
+_projectFiles/_supplementaryWork/Signal Data and Features/Figures/Feature Time Windows/
+_projectFiles/Adobe Illustrator Figures/
+_projectFiles/_backgroundInfo/
+_projectFiles/_figurePlans/
+
+# Compiled Dataset
+_experimentalData/allSensors/_oldFiles/
+_experimentalData/_compiledData/_*
+
+# Unused Metadatasets
+_experimentalData/_metaDatasets/_notUsing/
+
+# WESAD Dataset
+_experimentalData/_metaDatasets/WESAD/S*
+_experimentalData/_metaDatasets/WESAD/dataAnalysis/
+!_experimentalData/_metaDatasets/WESAD/savedFeatures/
+
+# Dapper Dataset
+_experimentalData/_metaDatasets/DAPPER/*
+!_experimentalData/_metaDatasets/DAPPER/savedFeatures/
+
+# Emognition Dataset
+_experimentalData/_metaDatasets/EMOGNITION/*
+!_experimentalData/_metaDatasets/EMOGNITION/savedFeatures/
+_experimentalData/_metaDatasets/EMOGNITION/savedFeatures/Old/
+_experimentalData/_metaDatasets/EMOGNITION/savedFeatures/_oldFiles/
+
+# AMIGOS Dataset
+_experimentalData/_metaDatasets/AMIGOS/dataAnalysis/
+_experimentalData/_metaDatasets/AMIGOS/allOriginalData/
+_experimentalData/_metaDatasets/AMIGOS/allProcessedData/
+_experimentalData/_metaDatasets/AMIGOS/savedFeatures/_*
+!_experimentalData/_metaDatasets/AMIGOS/savedFeatures/
+
+# CASE Dataset
+_experimentalData/_metaDatasets/CASE/data/raw/
+_experimentalData/_metaDatasets/CASE/data/initial/
+_experimentalData/_metaDatasets/CASE/data/non-interpolated/
+_experimentalData/_metaDatasets/CASE/data/interpolated/annotations/
+_experimentalData/_metaDatasets/CASE/data/interpolated/dataAnalysis/
+_experimentalData/_metaDatasets/CASE/data/interpolated/physiological/*.csv
+_experimentalData/_metaDatasets/CASE/data/interpolated/physiological/savedFeatures/_*
+!_experimentalData/_metaDatasets/CASE/data/interpolated/physiological/savedFeatures/
+!_experimentalData/_metaDatasets/CASE/metadata/

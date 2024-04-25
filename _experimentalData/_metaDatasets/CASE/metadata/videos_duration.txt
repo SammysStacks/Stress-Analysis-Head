@@ -1,0 +1,12 @@
+"video_name"	"video_duration"
+"amusing-1"	185583.333
+"amusing-2"	173083.333
+"bluVid"	120000	
+"boring-1"	118666.667
+"boring-2"	160125
+"endVid"	120000
+"relaxed-1"	145125
+"relaxed-2"	146750
+"scary-1"	197000
+"scary-2"	143750
+"startVid"	101500

@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- PlotAPI - Chord
+This package enables the generation of Chord diagrams. They can be saved 
+directly to HTML files or displayed in a Jupyter Notebook output cell.
+
+Copyright 2021, PlotAPI
+http:
+https:
+
+Copyright 2021, Dr. Shahin Rostami
+http:
+-->
+<!--LICENSE
+Chord (https:
+Copyright (C) 2021  Dr. Shahin Rostami
+-->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+<title>PlotAPI - Chord Diagram</title>
+
+<link href="https://fonts.googleapis.com/css?family=Lato:400,700,900&display=swap" rel="stylesheet" type="text/css"/>
+
+<link rel="stylesheet" href="https://plotapi.com/static/css/tippy.translucent.css" />
+
+<style>
+#plotapi-chart-868f6eae .tippy-content, #featured-plotapi-chart-868f6eae .tippy-content {
+    font-family: "Lato", sans-serif !important;
+}
+
+#plotapi-chart-868f6eae, #featured-plotapi-chart-868f6eae {
+    font-size: 16px;
+    font-family: "Lato", sans-serif !important;
+    text-align: center;
+    fill: #454545;
+}
+
+#plotapi-chart-868f6eae svg, #featured-plotapi-chart-868f6eae svg {
+    max-width: 700px;
+}
+
+.details_thumbs-plotapi-chart-868f6eae {
+    margin: 1.0px;
+    max-width: 85px;
+    padding: 0;
+    display: inline-block; 
+}
+
+.details_thumbs-plotapi-chart-868f6eae img {
+    max-width: 85px;
+}
+
+.details_thumbs-plotapi-chart-868f6eae figcaption {
+    text-align: center;
+    font-size: 14px;
+}
+
+#plotapi-chart-868f6eae .hidden_chord, #featured-plotapi-chart-868f6eae .hidden_chord {
+    display:none;
+}
+
+#plotapi-chart-868f6eae .arc_numbers, #featured-plotapi-chart-868f6eae .arc_numbers {
+    paint-order: stroke;
+    stroke: #454545;
+    stroke-width: 2px; 
+    font-weight: bold;
+    fill: #fff;
+    font-size: 10px;
+}
+
+
+@media (min-width: 600px) {
+    #plotapi-chart-868f6eae svg, #featured-plotapi-chart-868f6eae svg {
+        font-size: 20px;
+    }
+
+    #plotapi-chart-868f6eae .arc_numbers, #featured-plotapi-chart-868f6eae .arc_numbers {
+        font-size: 14px;
+    }
+}
+
+
+
+</style>
+</head>
+<body>
+    <div id="plotapi-chart-868f6eae" class="chord plotapi-container"></div>
+
+    <script>
+    (function() {
+        var jupyter_classic = !(typeof(IPython)==="undefined");
+        var dependencies_paths = {
+                        'd3': 'https://plotapi.com/static/js/d3.v7.min',
+                        'chord': 'https://plotapi.com/static/js/d3-chord',
+                        '@popperjs/core': 'https://plotapi.com/static/js/popper.min',
+                        'tippy': 'https://plotapi.com/static/js/tippy.min',
+                    }
+
+        if(jupyter_classic){
+            require.config(
+                {
+                    paths: dependencies_paths
+                }
+            );
+
+            require([
+                'd3',
+                'tippy',
+                'chord',
+                ], function(d3, tippy, chord, pako) {
+                window.d3 = d3;
+                window.tippy = tippy;
+                window.pako = pako;
+                plotapi_plot();
+            });
+        }
+        else{
+            var dependencies = Object.values(dependencies_paths);
+            
+            function dependency_loader(dependencies_loaded){
+                var script = document.createElement("script");
+                script.type = "text/javascript";
+                script.src = dependencies[dependencies_loaded] + ".js";
+
+                script.onload = function () {
+                    if(dependencies_loaded < dependencies.length-1){
+                    dependency_loader(dependencies_loaded+1)
+                    }
+                    else{
+                        plotapi_plot();
+                    }
+                };
+                document.body.appendChild(script);
+            }
+
+            dependency_loader(0);
+        }
+
+        function plotapi_plot(){
+            margin = {
+                left: 100.0,
+                top: 100.0,
+                right: 100.0,
+                bottom: 100.0
+            };
+
+            width = Math.min(window.innerWidth, 700) - margin.left - margin.right;
+            height = Math.min(window.innerWidth, 700) - margin.top - margin.bottom;
+            Names = ['Calm', 'Secure', 'Ease', 'Worrying', 'Comfortable', 'Self-confident', 'Relaxed', 'Content', 'Steady', 'Pleasant', 'Tense', 'Strained', 'Upset', 'Satisfied', 'Frightened', 'Nervous', 'Jittery', 'Indecisive', 'Worried', 'Confused'];
+            Pull = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+            matrix = [[0.0, 0.7407683700436659, 0.7330278725457308, 0.5429169814180517, 0.682984756933809, 0.32268119304621673, 0.7252512762407923, 0.49428461731390533, 0.5783737851174373, 0.6373096789253783, 0.6044144863883405, 0.46899523227291195, 0.35908622309496774, 0.14242975342403158, 0.3782144520167212, 0.47379736302834313, 0.3717855286459006, 0.1976692110311562, 0.21745708210144216, 0.21154358613089244], [0.740768370043666, 0.0, 0.6857582124102665, 0.5338188381677368, 0.6593431698767532, 0.4433394237183335, 0.670163634135716, 0.5567629501997644, 0.5632572853308406, 0.6316151060186235, 0.517163693020628, 0.37272349203421173, 0.2938880642495315, 0.09082079084190596, 0.4058159499392637, 0.3277689263553559, 0.3065873806938914, 0.19514467557664214, 0.170417733527291, 0.14218803151966614], [0.7330278725457308, 0.6857582124102665, 0.0, 0.6455408670591645, 0.7346733437790683, 0.410575834237588, 0.7730073221349825, 0.6187795140243487, 0.4906696302265666, 0.6188462730064187, 0.6537373237466277, 0.5325168074324265, 0.40065666763299956, 0.28837769974525895, 0.35308014199293614, 0.4916221606542199, 0.3563655915053618, 0.30814365077082045, 0.28443021620998793, 0.26599427116195207], [0.5429169814180516, 0.5338188381677367, 0.6455408670591645, 0.0, 0.7243000270213743, 0.5478903133370691, 0.6560658560982484, 0.6921274377652841, 0.5242307926003004, 0.7221907488945718, 0.5785938424102713, 0.5180101219097173, 0.43873527824716285, 0.36444673263821464, 0.26384545277565047, 0.4683190452984344, 0.34569452058097266, 0.34293613332923856, 0.38877141733203513, 0.27851723583662047], [0.682984756933809, 0.6593431698767531, 0.7346733437790683, 0.7243000270213743, 0.0, 0.453543104830207, 0.7916995784139053, 0.6543160222086689, 0.5562752777513257, 0.6785010454651413, 0.6159134177570178, 0.581402755017716, 0.3999453002906755, 0.2970032499007118, 0.36951063304615844, 0.4657631827086581, 0.40178775020734264, 0.2715216011944087, 0.352321839676108, 0.20576464227123023], [0.32268119304621673, 0.44333942371833346, 0.410575834237588, 0.5478903133370691, 0.453543104830207, 0.0, 0.4350000708148076, 0.5929203726471051, 0.45500194256165055, 0.5630444195950726, 0.24570104933605866, 0.20740846125950757, 0.18490303957875415, 0.11402534604269124, 0.14543580856949492, 0.17074088322783085, 0.14538643771600712, 0.22195466762604052, 0.1840145633261937, 0.20728730125563502], [0.7252512762407923, 0.670163634135716, 0.7730073221349824, 0.6560658560982484, 0.7916995784139053, 0.4350000708148077, 0.0, 0.6864540715581484, 0.5931426988336072, 0.6960329124301777, 0.6439410522265275, 0.5577451239091882, 0.420985273991121, 0.3181802281916338, 0.41419941911410924, 0.5533720753130679, 0.3382621572266436, 0.28787169666781315, 0.3826704504260366, 0.2754200770690472], [0.4942846173139053, 0.5567629501997644, 0.6187795140243488, 0.6921274377652841, 0.654316022208669, 0.5929203726471052, 0.6864540715581484, 0.0, 0.5498827616417367, 0.6654457129174456, 0.47981102157229294, 0.3893032902077708, 0.3573292455487847, 0.20797233483905297, 0.3176837144778917, 0.3496715473262673, 0.2194570887553308, 0.2251893463290344, 0.2797221085071103, 0.30234124185084466], [0.5783737851174373, 0.5632572853308406, 0.4906696302265667, 0.5242307926003004, 0.5562752777513257, 0.4550019425616506, 0.5931426988336072, 0.5498827616417367, 0.0, 0.640756897407587, 0.42005196823321983, 0.3082440150488868, 0.3163481012335317, 0.04094486335936704, 0.3279132124875264, 0.3102575569934323, 0.2947712146519381, 0.2278330928580086, 0.22432358837936528, 0.2817943322583483], [0.6373096789253783, 0.6316151060186234, 0.6188462730064187, 0.7221907488945718, 0.6785010454651415, 0.5630444195950727, 0.6960329124301777, 0.6654457129174456, 0.6407568974075871, 0.0, 0.5607525305633171, 0.4290994620548359, 0.36898711585769284, 0.22317554093648187, 0.3544122018253104, 0.44201080760926076, 0.3254082541479582, 0.23377039690195914, 0.3490219488994904, 0.2699545033572014], [0.6044144863883405, 0.517163693020628, 0.6537373237466277, 0.5785938424102713, 0.6159134177570177, 0.24570104933605869, 0.6439410522265275, 0.47981102157229294, 0.42005196823321983, 0.5607525305633171, 0.0, 0.6721335243556992, 0.43219350250627475, 0.3884256622513274, 0.3756529074999404, 0.6065320367238454, 0.47904057838323394, 0.33603188546652285, 0.44400512929352415, 0.3207086169288994], [0.468995232272912, 0.3727234920342117, 0.5325168074324265, 0.5180101219097172, 0.581402755017716, 0.20740846125950757, 0.5577451239091883, 0.3893032902077709, 0.30824401504888677, 0.4290994620548359, 0.6721335243556993, 0.0, 0.42170233571783705, 0.450811850848755, 0.397829396025345, 0.4624052535284828, 0.5290647385647943, 0.234417224494711, 0.4180668079932728, 0.21129213590298912], [0.35908622309496774, 0.2938880642495315, 0.40065666763299956, 0.43873527824716285, 0.39994530029067554, 0.1849030395787541, 0.42098527399112096, 0.3573292455487847, 0.31634810123353174, 0.36898711585769284, 0.43219350250627475, 0.42170233571783705, 0.0, 0.39081147216824175, 0.5301435602608245, 0.4934914391251661, 0.4831013187005409, 0.40349242162602594, 0.4725878088604031, 0.3164823411157419], [0.14242975342403158, 0.09082079084190596, 0.2883776997452589, 0.36444673263821464, 0.2970032499007118, 0.11402534604269123, 0.3181802281916337, 0.20797233483905297, 0.04094486335936704, 0.22317554093648187, 0.38842566225132735, 0.450811850848755, 0.39081147216824175, 0.0, 0.4123487457596184, 0.5323781614926812, 0.3961416079447796, 0.41377742346521845, 0.7128154207674983, 0.35947913006575105], [0.3782144520167212, 0.4058159499392637, 0.35308014199293614, 0.2638454527756505, 0.3695106330461585, 0.14543580856949492, 0.41419941911410924, 0.31768371447789173, 0.3279132124875265, 0.35441220182531047, 0.3756529074999404, 0.39782939602534506, 0.5301435602608245, 0.4123487457596184, 0.0, 0.4412439859617011, 0.3803038429309481, 0.33691421706867225, 0.375713998325293, 0.4030772502282385], [0.47379736302834313, 0.3277689263553559, 0.4916221606542199, 0.4683190452984344, 0.4657631827086581, 0.17074088322783082, 0.5533720753130679, 0.3496715473262673, 0.3102575569934324, 0.4420108076092608, 0.6065320367238455, 0.46240525352848283, 0.493491439125166, 0.5323781614926814, 0.44124398596170117, 0.0, 0.47644655454732493, 0.3246023912418348, 0.581467316061345, 0.3044170862980859], [0.3717855286459006, 0.30658738069389146, 0.3563655915053618, 0.34569452058097266, 0.40178775020734264, 0.14538643771600712, 0.3382621572266436, 0.21945708875533082, 0.2947712146519381, 0.32540825414795815, 0.4790405783832339, 0.5290647385647942, 0.4831013187005409, 0.39614160794477965, 0.3803038429309481, 0.47644655454732493, 0.0, 0.25271717259146026, 0.40544624432977, 0.0945967675286274], [0.1976692110311562, 0.1951446755766421, 0.30814365077082045, 0.34293613332923856, 0.2715216011944087, 0.2219546676260405, 0.28787169666781315, 0.2251893463290344, 0.22783309285800862, 0.23377039690195914, 0.33603188546652285, 0.23441722449471103, 0.403492421626026, 0.41377742346521845, 0.33691421706867225, 0.3246023912418348, 0.25271717259146026, 0.0, 0.47610839421674805, 0.4377786804550752], [0.21745708210144218, 0.170417733527291, 0.2844302162099879, 0.38877141733203513, 0.35232183967610803, 0.1840145633261937, 0.3826704504260366, 0.2797221085071103, 0.22432358837936528, 0.3490219488994904, 0.4440051292935242, 0.4180668079932727, 0.4725878088604031, 0.7128154207674982, 0.375713998325293, 0.5814673160613452, 0.40544624432977, 0.476108394216748, 0.0, 0.42950884409282786], [0.21154358613089244, 0.14218803151966614, 0.26599427116195207, 0.27851723583662047, 0.20576464227123023, 0.207287301255635, 0.27542007706904725, 0.30234124185084466, 0.2817943322583483, 0.26995450335720145, 0.3207086169288994, 0.2112921359029891, 0.3164823411157419, 0.3594791300657511, 0.4030772502282384, 0.3044170862980859, 0.09459676752862739, 0.4377786804550752, 0.4295088440928279, 0.0]];
+            details = [];
+            details_thumbs = [];
+            conjunction = "and";
+            innerRadius = Math.min(width, height) * 0.45;
+            outerRadius = innerRadius * 1.1;
+
+            offset = 0;
+            
+            
+                var colors = d3.scaleSequential(d3.interpolateRainbow)
+                    .domain([0,matrix.length]);
+
+            
+            var chord_data = chord(false,false)
+                .padAngle(0.01)
+                .sortChords(d3.descending) 
+                (matrix);
+
+            var arc = d3.arc()
+
+
+            var path = d3.ribbon()
+                         .startAngle(startAngle)
+                         .endAngle(endAngle);
+
+            
+            var svg = d3.select("#plotapi-chart-868f6eae")
+                .append("svg")
+                .attr(
+                    "viewBox",
+                    "0 0 " +
+                    (width + margin.left + margin.right) +
+                    " " +
+                    (height + margin.top + margin.bottom)
+                )
+                .attr("class","plotapi-plot")
+                .attr("preserveAspectRatio", "xMinYMin meet")
+                .append("g")
+                .attr(
+                    "transform",
+                    "translate(" +
+                    (width / 2 + margin.left) +
+                    "," +
+                    (height / 2 + margin.top) +
+                    ") rotate(0)"
+                );
+
+
+
+
+            
+            
+            function getGradID(d) {
+                return ("linkGrad-plotapi-chart-868f6eae-" + d.source.index + "-" + d.target.index);
+            }
+
+            
+            var grads = svg.append("defs")
+                .selectAll("linearGradient")
+                .data(chord_data)
+                .enter()
+                .append("linearGradient")
+                .attr("id", getGradID)
+                .attr("gradientUnits", "userSpaceOnUse")
+                .attr("x1", function (d, i) {
+                    if(d.source.index == d.target.index){
+                        return 0;
+                    }
+                    return (innerRadius * Math.cos((d.source.endAngle - d.source.startAngle) / 2 + d.source.startAngle - Math.PI / 2));
+                })
+                .attr("y1", function (d, i) {
+                    return (innerRadius * Math.sin((d.source.endAngle - d.source.startAngle) / 2 + d.source.startAngle - Math.PI / 2));
+                })
+                .attr("x2", function (d, i) {
+                    return (innerRadius * Math.cos((d.target.endAngle - d.target.startAngle) / 2 + d.target.startAngle - Math.PI / 2));
+                })
+                .attr("y2", function (d, i) {
+                    return (innerRadius * Math.sin((d.target.endAngle - d.target.startAngle) / 2 + d.target.startAngle - Math.PI / 2));
+                });
+
+            
+            grads.append("stop")
+                .attr("offset", "0%")
+                .attr("stop-color", function (d) {
+                    return colors(d.source.index);
+                });
+
+            
+            grads.append("stop")
+                .attr("offset", "100%")
+                .attr("stop-color", function (d) {
+                    return colors(d.target.index);
+                });
+
+            
+            var outerArcs = svg.selectAll("g.group")
+                .data(chord_data.groups)
+                .enter()
+                .append("g")
+                .attr("class", "group")
+                .on("mouseover", fade(0.1, 1, Names))
+                .on("mouseout", fade(0.8, 0.8, Names));
+
+            outerArcs.append("path")
+                .style("fill", function (d) {
+                    return colors(d.index);
+                })
+                .attr("d", function(d){ 
+                    return arc
+                        .innerRadius(innerRadius * 1.01 + Pull[d.index])
+                        .outerRadius(outerRadius + Pull[d.index])
+                        .startAngle(startAngle) 
+                        .endAngle(endAngle)(d)
+                })
+                .each(function (d, i) {
+                });
+
+
+                
+                
+
+
+                
+                    
+                    outerArcs.append("text")
+                        .each(function (d) {
+                            d.angle = (d.startAngle + d.endAngle) / 2 + offset;
+                        })
+                        .attr("dy", ".35em")
+                        .attr("class", function (d) {
+                            return "titles";
+                        })
+                        .attr("text-anchor", function (d) {
+                            return d.angle > Math.PI ? "end" : null;
+                        })
+                        .attr("transform", function (d) {
+                            return ("rotate(" + ((d.angle * 180) / Math.PI - 90) + ")" + "translate(" + (outerRadius + 10 + Pull[d.index]) + ")" + (d.angle > Math.PI ? "rotate(180)" : ""));
+                        })
+                        .text(function (d, i) {
+                            return Names[i];
+                        })
+                        .call(wrap, 100.0);
+
+
+                
+                var chords = svg.selectAll("path.chord")
+                    .data(chord_data)
+                    .enter()
+                    .append("path")
+
+                .attr("class", function (d) {
+                    return "chord";
+                })                                 
+                .style("fill", function (d) {
+                    return "url(#" + getGradID(d) + ")";
+                })         
+                .style("opacity", 0.8)
+                .attr("d", function(d){ 
+                    d.source.radius = Math.max(innerRadius + Pull[d.source.index], 0);
+                    d.target.radius = Math.max(innerRadius + Pull[d.target.index], 0);
+                    
+                    return path(d);
+                })
+                .on("mouseover", mouseoverChord(Names, conjunction, details, details_thumbs))
+                .on("mouseout", mouseoutChord(0.8, 0.8));
+            
+            function startAngle(d) {
+                return d.startAngle + offset;
+            }
+            function endAngle(d) {
+                return d.endAngle + offset;
+            }
+
+            function wrap(text, width) {
+                text.each(function() {
+                    var text = d3.select(this);
+                    var words = text.text().split(/\s+/).reverse();
+                    var word;
+                    var line = [];
+                    var y = text.attr("y");
+                    var dy = parseFloat(text.attr("dy"));
+                    var tspan = text.text(null).append("tspan").attr("x", 0).attr("y", y).attr("dy", dy + "em");
+                    var lines = 0;
+
+                    while (word = words.pop()) {
+                        line.push(word)
+                        tspan.text(line.join(" "))
+                        
+                        if (tspan.node().getComputedTextLength() > width && line.length > 1) {
+                            line.pop()      
+                            if(line.length != 0){
+                                tspan.text(line.join(" "))
+                            }
+                            line = [word]
+                            tspan = text.append("tspan").attr("x", 0).attr("y", y).attr("dy", "1em").text(word)
+                            lines = lines+1;
+                        }
+                    }
+                    text.select("tspan:nth-child(1)").attr("dy", ""+(0.35-(lines * 0.5))+"em");
+                })
+            }
+
+            
+            function fade(opacityIn, opacityOut, names) {
+                return function (i, d) {
+            
+                    d3.select(this.ownerSVGElement)
+                        .selectAll("path.chord")
+                        .filter(function (k) {
+                            return k.source.index !== d.index && k.target.index !== d.index;
+                        })
+                        .transition()
+                        .style("opacity", opacityIn);
+
+                    d3.select(this.ownerSVGElement)
+                        .selectAll("path.chord")
+                        .filter(function (k) {
+                            return k.source.index == d.index || k.target.index == d.index;
+                        })
+                        .transition()
+                        .style("opacity", opacityOut);                            
+                };
+            }
+
+            
+            function mouseoverChord(names, conjunction, details, details_thumbs) {
+                return function (i, d) {
+
+                    d3.select(this.ownerSVGElement)
+                        .selectAll("path.chord")
+                        .transition()
+                        .style("opacity", 0.1);
+
+                    
+                    d3.select(this).transition().style("opacity", 1);
+
+                    num_instances = Number(d.source.value);
+
+                    tippy_content = "<span style='font-weight:900'>" + names[d.source.index] + "</span> ";
+                    
+                    if(names[d.source.index] != names[d.target.index]){
+                        tippy_content = tippy_content + conjunction + " <span style='font-weight:900'>" + names[d.target.index] + "</span>";
+                        tippy_content = tippy_content + "<br>occur together in" + " <span style='font-weight:900'>"
+                    }
+                    else{
+                        tippy_content = tippy_content + "<br>"
+                    }
+                        tippy_content = tippy_content + num_instances + "</span> " + "percent correlated";
+
+
+
+                    if (Array.isArray(details) && details.length && Array.isArray(details_thumbs) && details_thumbs.length) {   
+                        if (Array.isArray(details[d.source.index][d.target.index]) && details[d.source.index][d.target.index].length &&
+                                Array.isArray(details_thumbs[d.source.index][d.target.index]) && details_thumbs[d.source.index][d.target.index].length) {                                  
+                            var figures = '';
+
+                            for(var k = 0; k < details[d.source.index][d.target.index].length; k++) {
+                                figures += "<figure class='details_thumbs-plotapi-chart-868f6eae'><img src=" + details_thumbs[d.source.index][d.target.index][k] + "><figcaption>" + details[d.source.index][d.target.index][k] + "</figcaption></figure>"
+                            }
+                    
+                            tippy_content = tippy_content + "<br><br><center><span><em>" + figures + "</em></span></center>";
+                        }
+                    }
+                    else if (Array.isArray(details) && details.length) {
+                        if (Array.isArray(details[d.source.index][d.target.index]) && details[d.source.index][d.target.index].length) {
+                            details_content = details[d.source.index][d.target.index].join(", ");
+                            tippy_content = tippy_content + "<br><br><span><em>" + details_content + "</em></span>";
+                        }
+                    }
+                    else if (Array.isArray(details_thumbs) && details_thumbs.length) {   
+                        if (Array.isArray(details_thumbs[d.source.index][d.target.index]) && details_thumbs[d.source.index][d.target.index].length) {                                 
+                            var figures = '';
+
+                            for(var k = 0; k < details_thumbs[d.source.index][d.target.index].length; k++) {
+                                figures += "<figure class='details_thumbs-plotapi-chart-868f6eae'><img src=" + details_thumbs[d.source.index][d.target.index][k] + "></figure>"
+                            }
+                    
+                            tippy_content = tippy_content + "<br><br><center><span><em>" + figures + "</em></span></center>";
+                        }
+                    }
+                    
+                    if(this._tippy == null)
+                    {
+                        tippy(this, {
+                            allowHTML: true,
+                            followCursor: true,
+                            content: tippy_content,
+                            size: "large",
+                            arrow: true,
+                            maxWidth: 1000.0,
+                            theme:'translucent',
+                        });
+                    }
+                };                    
+            }
+
+            
+            function mouseoutChord(opacityIn, opacityOut) {
+                return function (d, i) {
+                    d3.select(this.ownerSVGElement)
+                        .selectAll("path.chord")
+                        .transition()
+                        .style("opacity", opacityOut);
+                };
+            }
+
+
+            async function animate() {
+            
+                for (let index = 0; index < d3.selectAll("#plotapi-chart-868f6eae .group").nodes().length; index++) {
+                    await new Promise(r => setTimeout(r, 217.3913043478261));
+                    d3.select(d3.selectAll("#plotapi-chart-868f6eae .group").nodes()[index]).dispatch('mouseover');
+                }
+
+                await new Promise(r => setTimeout(r, 217.3913043478261));
+                d3.select(d3.selectAll("#plotapi-chart-868f6eae .group").nodes()[0]).dispatch('mouseout');                
+            }
+            animate();
+            
+        
+
+            
+
+            
+            d3.select("#plotapi-chart-868f6eae svg")
+                .append("svg:a")
+                .attr("xlink:href", "https://plotapi.com")
+                .attr("target", "_blank")
+                .append("image")
+                .attr("xlink:href", "https://plotapi.com/gallery/icon/plotapi.svg")
+                .attr('width', 20)
+                .attr('height', 20)
+                .attr('x', width+margin.left + margin.right-20)
+                .attr('y', 0)
+                .style("opacity", 0)
+                .attr("id","plotapi-chart-868f6eae_icon")
+
+            d3.select("#plotapi-chart-868f6eae_icon")
+                .append("title")
+                .text("Produced with PlotAPI");
+
+            d3.select("#plotapi-chart-868f6eae_icon").on("mouseover", function(d, i) {
+                d3.select("#plotapi-chart-868f6eae_icon").style("opacity", 1)
+            });
+
+            d3.select("#plotapi-chart-868f6eae_icon").on("mouseout", function(d, i) {
+                d3.select("#plotapi-chart-868f6eae_icon").style("opacity", 0.6)
+            });
+
+            d3.select("#plotapi-chart-868f6eae svg").on("mouseenter", function() {
+                d3.select("#plotapi-chart-868f6eae_icon").style("opacity", 0.6)
+            });
+
+            d3.select("#plotapi-chart-868f6eae svg").on("mouseleave", function() {
+                                    
+                d3.select("#plotapi-chart-868f6eae_icon").style("opacity", 0);
+            });
+            
+
+            
+            
+        }    
+
+    }());
+    </script>            
+</body>
+</html>
