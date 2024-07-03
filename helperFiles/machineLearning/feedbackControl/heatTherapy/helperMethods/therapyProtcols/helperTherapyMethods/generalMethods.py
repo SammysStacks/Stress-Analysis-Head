@@ -1,6 +1,7 @@
 # General
 from scipy.ndimage import gaussian_filter
 import torch
+import numpy as np
 
 # Import helper files.
 from helperFiles.machineLearning.feedbackControl.heatTherapy.helperMethods.dataInterface.dataInterface import dataInterface
@@ -11,6 +12,30 @@ class generalMethods:
     def __init__(self):
         # Initialize helper classes.
         self.dataInterface = dataInterface
+
+
+    @staticmethod
+    def resampleBins(allParameterBins, allPredictionBins, eventlySpacedBins=True):
+        maxLengthParamBins = max([len(paramBins) for paramBins in allParameterBins])
+        # get the max index of the bins with maxlengthParamBins
+        maxParamIndex = max([i for i, paramBins in enumerate(allParameterBins) if len(paramBins) == maxLengthParamBins])
+        maxLengthPredBins = max([len(predBins) for predBins in allPredictionBins])
+        # get the max index of the bins with maxlengthPredBins
+        maxPredIndex = max([i for i, predBins in enumerate(allPredictionBins) if len(predBins) == maxLengthPredBins])
+        # assert that all the bins are normalized between 0 and 1
+        # assert min(predBins[0] for predBins in allPredictionBins) == 0.0 and max(predBins[-1] for predBins in allPredictionBins) == 1.0, "Prediction bins must be normalized between 0 and 1"
+        if len(allParameterBins) == 1:
+            if eventlySpacedBins:
+                # Resample the bins to be evenly spaced.
+                allParameterBins = [np.linspace(0, 1, maxLengthParamBins) for _ in allParameterBins]
+                allPredictionBins = [np.linspace(0, 1, maxLengthPredBins) for _ in allPredictionBins]
+            else:
+                # just duplicate the bins with largest binlength within allParameterBins and allPredictionBins
+                allParameterBins = [allParameterBins[maxParamIndex] for _ in allParameterBins]
+                allPredictionBins = [allPredictionBins[maxPredIndex] for _ in allPredictionBins]
+        return allParameterBins, allPredictionBins
+
+
 
     @staticmethod
     def smoothenArray(deltaFunctionMatrix, sigma):
@@ -41,80 +66,53 @@ class generalMethods:
     def separateUneven2DArray(inputArray, index):
         return inputArray[index]
 
-    def getProbabilityMatrix(self, initialData, allParameterBins, allPredictionBins, gausSTD, noise=0.0, applyGaussianFilter=True):
-        probabilityMatrix = []
+    def getProbabilityMatrix(self, initialSingleEmotionData, allParameterBins, singlePredictionBins, gausParamSTD,  gausLossSTD, noise=0.0, applyGaussianFilter=True):
+        """Note: single emotion data can be (T, PA), (T, NA), (T, SA), and (T, compiledLoss) corresponding to different types of map we have for heat therapy"""
+        # allParameterBins is a 2D array of size (numParameters, numBins)
+        probabilityMatrix = torch.zeros((len(allParameterBins[0]), len(singlePredictionBins))) # dim: torch.Size([numParameterBins[0], singlePredictionBins])
 
-        # For each input parameter.
-        for parameterInd in range(len(allParameterBins)):
-            parameterBins = allParameterBins[parameterInd]
-            probabilityMatrix.append([])
+        print('initialSingleEmotionData: ', initialSingleEmotionData.shape)
 
-            # For each prediction.
-            for predictionInd in range(len(allPredictionBins)):
-                predictionBins = allPredictionBins[predictionInd]
-
-                # Initialize a probability matrix: p(predictionBin | *paramBin).
-                probabilityMatrix.append(torch.zeros(len(parameterBins), len(predictionBins)))
-
-        probabilityMatrix = [torch.zeros((len(allParameterBins), len(allPredictionBins[predictionInd]))) for predictionInd in range(len(allPredictionBins))]
-        prob_matrix_PA = probabilityMatrix[0]
-        prob_matrix_NA = probabilityMatrix[1]
-        prob_matrix_SA = probabilityMatrix[2]
-
+        # TODO: Add checks if the input data only has 1 param, loss sequence:
         # Calculate the probability matrix.
-        for initialDataPoints in initialData:
+
+        for initialDataPoints in initialSingleEmotionData:
             currentUserTemp = initialDataPoints[0] # within loop: torch.Size([1, 1])
-            currentUserLoss = initialDataPoints[1:4] # within loop: torch.Size([3, 1. 1])
+            currentUserLoss = initialDataPoints[1] # within loop: torch.Size([1, 1])
+            print('currentUserLoss: ', currentUserLoss)
 
             if applyGaussianFilter:
                 # Generate a delta function probability.
                 tempBinIndex = self.dataInterface.getBinIndex(allParameterBins, currentUserTemp)
                 #print('allPredictionBins: ', allPredictionBins)
-                # separate out uneven 2D arrays
-                PA_list_separated = generalMethods.separateUneven2DArray(allPredictionBins, 0)
-                NA_list_separated = generalMethods.separateUneven2DArray(allPredictionBins, 1)
-                SA_list_separated = generalMethods.separateUneven2DArray(allPredictionBins, 2)
-
-                lossBinIndex_PA = self.dataInterface.getBinIndex(PA_list_separated, currentUserLoss)
-                lossBinIndex_NA = self.dataInterface.getBinIndex(NA_list_separated, currentUserLoss)
-                lossBinIndex_SA = self.dataInterface.getBinIndex(SA_list_separated, currentUserLoss)
-                prob_matrix_PA[tempBinIndex][lossBinIndex_PA] += 1  # map out bins and fill out with discrete values
-                prob_matrix_NA[tempBinIndex][lossBinIndex_NA] += 1  # map out bins and fill out with discrete values
-                prob_matrix_SA[tempBinIndex][lossBinIndex_SA] += 1  # map out bins and fill out with discrete values
+                print('signlePredictionBins: ', singlePredictionBins)
+                print('currentUserLoss: ', currentUserLoss)
+                lossBinIndex = self.dataInterface.getBinIndex(singlePredictionBins, currentUserLoss)
+                probabilityMatrix[tempBinIndex][lossBinIndex] += 1  # map out bins and fill out with discrete values
             else:
-                # separate out uneven 2D arrays
-                PA_list_separated = generalMethods.separateUneven2DArray(allPredictionBins, 0)
-                NA_list_separated = generalMethods.separateUneven2DArray(allPredictionBins, 1)
-                SA_list_separated = generalMethods.separateUneven2DArray(allPredictionBins, 2)
                 # Generate 2D gaussian matrix.
-                gaussianMatrix_PA = self.createGaussianMap(allParameterBins, PA_list_separated, gausMean=(currentUserLoss, currentUserTemp), gausSTD=gausSTD)
-                gaussianMatrix_NA = self.createGaussianMap(allParameterBins, NA_list_separated, gausMean=(currentUserLoss, currentUserTemp), gausSTD=gausSTD)
-                gaussianMatrix_SA = self.createGaussianMap(allParameterBins, SA_list_separated, gausMean=(currentUserLoss, currentUserTemp), gausSTD=gausSTD)
-                prob_matrix_PA += gaussianMatrix_PA  # Add the gaussian map to the matrix
-                prob_matrix_NA += gaussianMatrix_NA  # Add the gaussian map to the matrix
-                prob_matrix_SA += gaussianMatrix_SA  # Add the gaussian map to the matrix
+                gaussianMatrix = self.createGaussianMap(allParameterBins, singlePredictionBins, gausMean=(currentUserLoss, currentUserTemp), gausSTD=gausSTD)
+                probabilityMatrix += gaussianMatrix  # Add the gaussian map to the matrix
 
+        # gauss data structure change for input
+        if gausLossSTD.dim() == 0:
+            gausLossSTD = gausLossSTD.unsqueeze(0)
+
+        # Concatenate tensors
+        combinedSTD = torch.cat((gausParamSTD, gausLossSTD))
+        print('combinedSTD: ', combinedSTD)
+        print('combinedSTD size: ', combinedSTD.size())
         if applyGaussianFilter:
             # Smoothen the probability matrix.
-            prob_matrix_PA = self.smoothenArray(prob_matrix_PA, sigma=gausSTD[::-1])
-            prob_matrix_NA = self.smoothenArray(prob_matrix_NA, sigma=gausSTD[::-1])
-            prob_matrix_SA = self.smoothenArray(prob_matrix_SA, sigma=gausSTD[::-1])
+            probabilityMatrix = self.smoothenArray(probabilityMatrix, sigma=combinedSTD.numpy())
+
+        probabilityMatrix = torch.tensor(probabilityMatrix)
 
         # Normalize the probability matrix.
-        prob_matrix_PA += noise * torch.randn(*prob_matrix_PA.size())  # Add random noise
-        prob_matrix_NA += noise * torch.randn(*prob_matrix_NA.size())  # Add random noise
-        prob_matrix_SA += noise * torch.randn(*prob_matrix_SA.size())  # Add random noise
-        prob_matrix_PA = torch.clamp(prob_matrix_PA, min=0, max=None)  # Ensure no negative probabilities
-        prob_matrix_NA = torch.clamp(prob_matrix_NA, min=0, max=None)  # Ensure no negative probabilities
-        prob_matrix_SA = torch.clamp(prob_matrix_SA, min=0, max=None)  # Ensure no negative probabilities
-
-        prob_matrix_PA = prob_matrix_PA / prob_matrix_PA.sum()
-        prob_matrix_NA = prob_matrix_NA / prob_matrix_NA.sum()
-        prob_matrix_SA = prob_matrix_SA / prob_matrix_SA.sum()
-
-        # TODO: combine three probability matrices
-
-
+        probabilityMatrix += noise * torch.randn(*probabilityMatrix.size())  # Add random noise
+        probabilityMatrix = torch.clamp(probabilityMatrix, min=0, max=None)  # Ensure no negative probabilities
+        probabilityMatrix = probabilityMatrix / probabilityMatrix.sum()
+        print('@#$@#$ probability matrix: ', probabilityMatrix)
         return probabilityMatrix
 
 

@@ -22,13 +22,7 @@ class dataInterface:
 
         # Calculate the compiled loss.
         compiledLoss = predictionWeights_tensor * (initialMentalStates - self.optimalNormalizedState).pow(2) # weighted MSE; torch.Size([30, 3, 1, 1])
-
         compiledLoss = compiledLoss.sum(dim=1) # dim = numPoints, 1, 1; torch.Size([30, 1, 1])
-
-        # Normalize the loss values.
-        compiledLoss = compiledLoss / compiledLoss.sum() # dim = numPoints, 1, 1; torch.Size([30, 1, 1])
-        # compiledLoss dimension: numPoints
-
         return compiledLoss
 
     @staticmethod

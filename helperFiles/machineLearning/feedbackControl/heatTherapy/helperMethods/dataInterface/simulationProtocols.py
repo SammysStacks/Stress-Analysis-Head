@@ -64,6 +64,7 @@ class simulationProtocols:
     def randomlySamplePoints(self, numPoints=1, lastTimePoint=None):
         # generate a random temperature within the bounds.
         sampledPredictions = self.uniformParamSampler.sample(torch.Size([numPoints, self.numPredictions])).unsqueeze(-1) # torch.size ([numPoints, numPredictions, 1, 1]) ([1,3,1,1])
+        print('!!!!sampledPredictions:', sampledPredictions)
         sampledParameters = self.uniformParamSampler.sample(torch.Size([numPoints, self.numParameters])).unsqueeze(-1) # torch.size ([numPoints, numParameters, 1, 1]) ([1,1,1,1]) for heat therapy we just have temperature so second dim is 1
         simulatedTimes = self.getSimulatedTimes(numPoints, lastTimePoint) # torch.size([0]) at the beginning. nothing is in here. tensor([], dtype=torch.int64)
         # sampledPredictions dimension: numPoints, numPredictions
@@ -74,7 +75,10 @@ class simulationProtocols:
 
     # ------------------------ Simulation Interface ------------------------ #
 
-    def initializeSimulatedMaps(self, lossWeights, gausSTDs, applyGaussianFilter):
+    def initializeSimulatedMaps(self, lossWeights, gausParamSTDs, gausLossSTDs, applyGaussianFilter):
+        # convert gausSTD to a 2D tensor by combining paramSTDs and lossSTDs
+        print('gausParamSTDs:', gausParamSTDs)
+        print('gausLossSTDs:', gausLossSTDs)
         # Get the simulated data points.
         simulatedTimes, sampledParameters, sampledPredictions = self.generateSimulatedMap()
         simulatedTimes = torch.cat((torch.tensor([0]), simulatedTimes))
@@ -90,21 +94,25 @@ class simulationProtocols:
 
         # Compiling the simulated Data for generating probability matrix
         initialSimulatedData = torch.cat((sampledParameters, sampledPredictions, simulatedCompiledLoss), dim=1) # numPoints, (Parameter, emotionPrediction, compiledLoss), 1, 1; torch.Size([30, 5, 1, 1])
-        # initialSimulatedData_PA = initialSimulatedData[:, [0, 1], :, :]  # Shape: [30, 2, 1, 1]
-        #
-        # # Extract for NA: Parameter and second emotion prediction
-        # initialSimulatedData_NA = initialSimulatedData[:, [0, 2], :, :]  # Shape: [30, 2, 1, 1]
-        #
-        # # Extract for SA: Parameter and third emotion prediction
-        # initialSimulatedData_SA = initialSimulatedData[:, [0, 3], :, :]  # Shape: [30, 2, 1, 1]
-        print('initialSimulatedData: ', initialSimulatedData)
-        #print('initialSimulatedData_PA: ', initialSimulatedData_PA)
-        self.simulatedMapPA = self.generalMethods.getProbabilityMatrix(initialSimulatedData, self.allParameterBins, self.allPredictionBins, gausSTDs[0], noise=0.1, applyGaussianFilter=applyGaussianFilter)
-        self.simulatedMapNA = self.generalMethods.getProbabilityMatrix(initialSimulatedData, self.allParameterBins, self.allPredictionBins, gausSTDs[1], noise=0.1, applyGaussianFilter=applyGaussianFilter)
-        self.simulatedMapSA = self.generalMethods.getProbabilityMatrix(initialSimulatedData, self.allParameterBins, self.allPredictionBins, gausSTDs[2], noise=0.1, applyGaussianFilter=applyGaussianFilter)
+        initialSimulatedData_PA = initialSimulatedData[:, [0, 1], :, :]  # Shape: [30, 2, 1, 1]
+
+        # Extract for NA: Parameter and second emotion prediction
+        initialSimulatedData_NA = initialSimulatedData[:, [0, 2], :, :]  # Shape: [30, 2, 1, 1]
+
+        # Extract for SA: Parameter and third emotion prediction
+        initialSimulatedData_SA = initialSimulatedData[:, [0, 3], :, :]  # Shape: [30, 2, 1, 1]
+
+        # resample the data bins
+        resampledParameterBins, resampledPredictionBins = self.generalMethods.resampleBins(self.allParameterBins, self.allPredictionBins, eventlySpacedBins=False)
+        print('!@#!@#!@#!@# resampled_prediction_bins:', resampledPredictionBins)
+        # it doesn't really matter to index resampledPrediciton bins or not, it's the same anyways
+        self.simulatedMapPA = self.generalMethods.getProbabilityMatrix(initialSimulatedData_PA, resampledParameterBins, resampledPredictionBins[0], gausParamSTDs, gausLossSTDs[0], noise=0.1, applyGaussianFilter=applyGaussianFilter)
+        self.simulatedMapNA = self.generalMethods.getProbabilityMatrix(initialSimulatedData_NA, resampledParameterBins, resampledPredictionBins[1], gausParamSTDs, gausLossSTDs[1], noise=0.1, applyGaussianFilter=applyGaussianFilter)
+        self.simulatedMapSA = self.generalMethods.getProbabilityMatrix(initialSimulatedData_SA, resampledParameterBins, resampledPredictionBins[2], gausParamSTDs, gausLossSTDs[2], noise=0.1, applyGaussianFilter=applyGaussianFilter)
 
         # say that state anxiety has a slightly higher weight and normalize
-        self.simulatedMapCompiledLoss = (lossWeights[0]*self.simulatedMapPA + lossWeights[1]*self.simulatedMapNA + lossWeights[2]*self.simulatedMapSA) / torch.sum(lossWeights)
+        self.simulatedMapCompiledLoss = (lossWeights[0]*self.simulatedMapPA + lossWeights[1]*self.simulatedMapNA + lossWeights[2]*self.simulatedMapSA)
+        self.simulatedMapCompiledLoss = self.simulatedMapCompiledLoss / torch.sum(self.simulatedMapCompiledLoss) # Normalization
 
     def getSimulatedCompiledLoss(self, currentParam, currentUserState, newUserTemp=None):
         # Unpack the current user state.

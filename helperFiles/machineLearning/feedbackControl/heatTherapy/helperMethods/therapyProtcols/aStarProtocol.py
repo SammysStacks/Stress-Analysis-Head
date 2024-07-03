@@ -1,6 +1,6 @@
 # General
 import numpy as np
-
+import torch
 from .generalTherapyProtocol import generalTherapyProtocol
 
 
@@ -8,7 +8,9 @@ class aStarTherapyProtocol(generalTherapyProtocol):
     def __init__(self, initialParameterBounds, unNormalizedParameterBinWidths, simulationParameters, therapyMethod, learningRate=5):
         super().__init__(initialParameterBounds, unNormalizedParameterBinWidths, simulationParameters, therapyMethod)
         # Define update parameters.
-        self.gausSTD = np.array([0.05, 2.5])  # The standard deviation for the Gaussian distribution.
+        # TODO: rexamine the gausSTD
+        self.gausParam_STD = torch.tensor([0.3333]) #self.gausParameterSTDs  # The standard deviation for the Gaussian distribution.
+        self.gausLoss_STD = torch.tensor([0.05]) #self.gausLossSTDs
         self.learningRate = learningRate  # The learning rate for the therapy.
         self.discretePersonalizedMap = []  # The discrete personalized map.
 
@@ -18,24 +20,27 @@ class aStarTherapyProtocol(generalTherapyProtocol):
         self.uncertaintyBias = 1  # The bias for uncertainty.
 
         # Specific A Star Protocol parameters.
-        self.tempBinsVisited = np.full(self.allNumParameterBins, False)
+        self.paramBinsVisited = np.full(self.allNumParameterBins, False)
         self.decayConstant = 1 / (2 * 3600)  # The decay constant for the personalized map.
 
         # Initialize the heuristic and personalized maps.
         self.heuristicMap = self.initializeHeuristicMaps()  # Estimate on what temperatures you like. Based on population average.
         self.initializeFirstPersonalizedMap()  # list of probability maps.
 
+        # resampled bins for the parameter and prediction bins
+        self.allParameterBins_resampled, self.allPredictionBins_resampled = self.generalMethods.resampleBins(self.allParameterBins, self.allPredictionBins, eventlySpacedBins=False)
+
     def updateTherapyState(self):
-        # Unpack the current user state.
-        currentUserState = self.userStatePath[-1]  # Order: (T, Loss) (get the latest user state) each (T, Loss) stored in the userStatePath list
-        currentUserTemp, currentUserLoss = currentUserState
-
+        # Get the current user state.
+        currentParam = self.paramStatePath[-1].squeeze(0)
+        currentCompiledLoss = self.userMentalStateCompiledLoss[-1]
         # Update the temperatures visited.
-        tempBinIndex = self.getBinIndex(self.temp_bins, currentUserTemp)
-        self.tempBinsVisited[tempBinIndex] = True  # documents the temperature visited by indexing the temperature bin and set the value to true
-
+        paramBinIndex = self.dataInterface.getBinIndex(self.allParameterBins_resampled, currentParam)
+        print('allParameterBins_resampled: ', self.allParameterBins_resampled)
+        print('paramBinIndex: ', paramBinIndex)
+        self.paramBinsVisited[paramBinIndex] = True  # documents the temperature visited by indexing the temperature bin and set the value to true
         # Update the personalized user map.
-        self.trackCurrentState(currentUserState)  # Keep track of each discrete temperature-loss pair.
+        self.trackCurrentState(currentParam, currentCompiledLoss)  # Keep track of each discrete temperature-loss pair.
         personalizedMap = self.getUpdatedPersonalizedMap()  # Convert the discrete map to a probability distribution.
 
         # Get the current time point.
@@ -101,9 +106,15 @@ class aStarTherapyProtocol(generalTherapyProtocol):
 
     # ------------------------ Personalization Interface ------------------------ #
 
-    def trackCurrentState(self, currentUserState):
+    def trackCurrentState(self, currentParam, currentCompiledLoss):
+        print('currentParam: ', currentParam)
+        print('currentCompiledLoss: ', currentCompiledLoss)
+        initialSingleEmotionData = torch.cat((currentParam, currentCompiledLoss), dim=1).unsqueeze(3)
+        print('initialSingleEmotionData: ', initialSingleEmotionData)
+        print('initialSingleEmotionData size: ', initialSingleEmotionData.size())
         # Smoothen out the discrete map into a probability distribution.
-        probabilityMatrix = self.getProbabilityMatrix([currentUserState])
+        print('self.allpredictionBins_resampled: ', self.allPredictionBins_resampled)
+        probabilityMatrix = self.generalMethods.getProbabilityMatrix(initialSingleEmotionData, self.allParameterBins_resampled, self.allPredictionBins_resampled[0], self.gausParam_STD, self.gausLoss_STD, noise=0.0, applyGaussianFilter=True)
         self.discretePersonalizedMap.append(probabilityMatrix)  # the discretePersonalizedMap list will store the probability matrix
 
     @staticmethod
@@ -113,12 +124,14 @@ class aStarTherapyProtocol(generalTherapyProtocol):
 
     def getUpdatedPersonalizedMap(self):
         # Assert the integrity of the state tracking.
-        print(f"Length of temperatureTimepoints: {len(self.temperatureTimepoints)}")
-        print(f"Content of temperatureTimepoints: {self.temperatureTimepoints}")
+        print(f"Length of parameterPath: {len(self.paramStatePath)}")
+        print(f'Length of TimePoints: {len(self.timePoints)}')
+        print(f'Content of ParameterPath: {self.paramStatePath}')
+        print(f'Content of TimePoints: {self.timePoints}')
         print(f"Length of discretePersonalizedMap: {len(self.discretePersonalizedMap)}")
         print(f"Content of discretePersonalizedMap: {self.discretePersonalizedMap}")
-        assert len(self.temperatureTimepoints) == len(self.discretePersonalizedMap), \
-            f"The time delays and discrete maps are not the same length. {len(self.temperatureTimepoints)} {len(self.discretePersonalizedMap)}"
+        assert len(self.paramStatePath) == len(self.timePoints) == len(self.discretePersonalizedMap), \
+            f"The time delays and discrete maps are not the same length. {len(self.paramStatePath)} {len(self.timePoints)} {len(self.discretePersonalizedMap)}"
         # Unpack the temperature-timepoints relation.
         tempTimepoints = np.asarray(self.temperatureTimepoints)
         associatedTempInds = tempTimepoints[:, 1]
@@ -151,7 +164,7 @@ class aStarTherapyProtocol(generalTherapyProtocol):
 
     def initializeFirstPersonalizedMap(self):
         # Initialize a uniform personalized map. No bias.
-        uniformMap = np.ones((self.allNumParameterBins, self.numPredictionBins))
+        uniformMap = np.ones((max([len(paramBins) for paramBins in self.allParameterBins]), max([len(predBins) for predBins in self.allPredictionBins])))
         uniformMap = uniformMap / uniformMap.sum()
 
         # Store the initial personalized map estimate.
@@ -162,15 +175,14 @@ class aStarTherapyProtocol(generalTherapyProtocol):
 
     def initializeHeuristicMaps(self):
         if self.simulateTherapy:
-            # Get the simulated data points.
-            initialHeuristicStates = self.simulationProtocols.generateSimulatedMap(self.simulationProtocols.numSimulationHeuristicSamples, simulatedMapType=self.simulationProtocols.heuristicMapType)
-            # initialHeuristicStates dimension: numSimulationHeuristicSamples, (T, PA, NA, SA); 2D array
+            print("simulating compiled loss map for heuristic map", self.simulationProtocols.simulatedMapCompiledLoss)
+            return self.simulationProtocols.simulatedMapCompiledLoss
         else:
             # Get the real data points.
             initialHeuristicStates = self.empatchProtocols.getTherapyData()
 
-        # Get the heuristic matrix from the simulated points.
-        initialHeuristicData = self.compileLossStates(initialHeuristicStates)  # InitialData dim: numPoints, (T, L)
-        heuristicMap = self.getProbabilityMatrix(initialHeuristicData)  # Adding Gaussian distributions and normalizing the probability
+            # Get the heuristic matrix from the simulated points.
+            initialHeuristicData = self.compileLossStates(initialHeuristicStates)  # InitialData dim: numPoints, (T, L)
+            heuristicMap = self.getProbabilityMatrix(initialHeuristicData)  # Adding Gaussian distributions and normalizing the probability
 
-        return heuristicMap
+            return heuristicMap

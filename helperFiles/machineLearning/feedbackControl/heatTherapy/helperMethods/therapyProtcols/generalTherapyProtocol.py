@@ -72,6 +72,7 @@ class generalTherapyProtocol(abc.ABC):
         self.paramStatePath = None
         self.timePoints = None
         self.userMentalStateCompiledLoss = None
+        self.userName = None
         self.resetTherapy()
 
     def resetTherapy(self):
@@ -81,15 +82,14 @@ class generalTherapyProtocol(abc.ABC):
         self.paramStatePath = []  # The path of the therapy parameters: numParameters
         self.timePoints = [] # The time points for the therapy.
         self.userMentalStateCompiledLoss = []  # The compiled loss for the user's mental state.
-
+        self.userName = []  # The user's name.
         # Reset the therapy maps.
         self.initializeMaps()
-        print('passed here')
 
     # ------------------------ Track User States ------------------------ #
     def initializeMaps(self):
         if self.simulateTherapy:
-            self.simulationProtocols.initializeSimulatedMaps(self.predictionWeights, self.gausLossSTDs, self.applyGaussianFilter)
+            self.simulationProtocols.initializeSimulatedMaps(self.predictionWeights, self.gausParameterSTDs, self.gausLossSTDs, self.applyGaussianFilter)
         else:
             # real data points
             temperature, pa, na, sa = self.empatchProtocols.getTherapyData()
@@ -107,20 +107,24 @@ class generalTherapyProtocol(abc.ABC):
         # Get the user information.
         timePoints, parameters, emptionStates = self.getCurrentState()  # TODO: (double check) dim: numPoints, timePoint: t; emotionStates: (PA, NA, SA); prediction: predict the next state
         # Track the user state and time delay.
-        self.timePoints.append(timePoints) # TODO: check dimension
+        startTimePoint = torch.cat((torch.tensor([0]), timePoints))
+        self.timePoints.append(startTimePoint) # TODO: check dimension
         self.paramStatePath.append(parameters) # TODO: check dimension
         self.userMentalStatePath.append(emptionStates) # TODO: check dimension
-
+        print('emotionstates[-1]: ', emptionStates[-1])
         # Calculate the initial user loss.
         compiledLoss = self.dataInterface.calculateCompiledLoss(emptionStates[-1])  # compile the loss state for the current emotion state
+        print('###compiled loss: ', compiledLoss)
         self.userMentalStateCompiledLoss.append(compiledLoss) # TODO: check dimension
-
+        print('passed here 22222')
+        print(self.userMentalStateCompiledLoss)
+        self.userName.append(userName)
 
     def getCurrentState(self):
         if self.simulateTherapy:
             # Simulate a new time point by adding a constant delay factor.
             currentTime, currentParam, currentPredictions = self.simulationProtocols.getInitialState() #TODO: check starting point, what are them
-            print('passed here')
+            print('passed here currentstate')
             return currentTime, currentParam, currentPredictions
         else:
             # TODO: Implement a method to get the current user state.
