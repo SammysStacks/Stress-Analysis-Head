@@ -105,7 +105,7 @@ class generalTherapyProtocol(abc.ABC):
 
     def initializeUserState(self, userName):
         # Get the user information.
-        timePoints, parameters, emptionStates = self.getCurrentState()  # TODO: (double check) dim: numPoints, timePoint: t; emotionStates: (PA, NA, SA); prediction: predict the next state
+        timePoints, parameters, emptionStates = self.getInitialSate()  # TODO: (double check) dim: numPoints, timePoint: t; emotionStates: (PA, NA, SA); prediction: predict the next state
         # Track the user state and time delay.
         startTimePoint = torch.cat((torch.tensor([0]), timePoints))
         self.timePoints.append(startTimePoint) # TODO: check dimension
@@ -120,7 +120,7 @@ class generalTherapyProtocol(abc.ABC):
         print(self.userMentalStateCompiledLoss)
         self.userName.append(userName)
 
-    def getCurrentState(self):
+    def getInitialSate(self):
         if self.simulateTherapy:
             # Simulate a new time point by adding a constant delay factor.
             currentTime, currentParam, currentPredictions = self.simulationProtocols.getInitialState() #TODO: check starting point, what are them
@@ -133,10 +133,11 @@ class generalTherapyProtocol(abc.ABC):
 
         # Returning timePoint, (T, PA, NA, SA)
 
-    def getNextState(self, newParamValues):
+    def getNextState(self, newParamValues, therapyMethod):
         if self.simulateTherapy:
             # Simulate a new time.
             lastTimePoint = self.timePoints[-1][0] if len(self.timePoints) != 0 else 0
+            print('lastTimePoint')
             newTimePoint = self.simulationProtocols.getSimulatedTimes(self.simulationProtocols.initialPoints, lastTimePoint)
 
             # get the current user state
@@ -144,7 +145,7 @@ class generalTherapyProtocol(abc.ABC):
             currentEmotionStates = self.userMentalStatePath[-1]
 
             # Sample the new loss form a pre-simulated map.
-            newUserLoss, PA, NA, SA = self.simulationProtocols.getSimulatedCompiledLoss(currentParam, currentEmotionStates, newParamValues)
+            newUserLoss, PA, NA, SA = self.simulationProtocols.getSimulatedCompiledLoss(currentParam, currentEmotionStates, newParamValues, therapyMethod)
 
             # User state update
             self.timePoints.append(newTimePoint)  # TODO: check dimension

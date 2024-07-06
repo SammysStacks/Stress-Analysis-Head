@@ -46,6 +46,9 @@ class generalMethods:
         library = torch if torchFlag else None
 
         xValues = library.arange(len(inputData), dtype=library.float32)
+        print('xValues: ', xValues)
+        print('gausMean: ', gausMean)
+        print('gausSTD: ', gausSTD)
         gaussianArray = library.exp(-0.5 * ((xValues - gausMean) / gausSTD) ** 2)
         gaussianArray = gaussianArray / gaussianArray.sum()  # Normalize the Gaussian array
         

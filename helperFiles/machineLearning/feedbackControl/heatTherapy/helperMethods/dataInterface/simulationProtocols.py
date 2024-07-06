@@ -114,32 +114,58 @@ class simulationProtocols:
         self.simulatedMapCompiledLoss = (lossWeights[0]*self.simulatedMapPA + lossWeights[1]*self.simulatedMapNA + lossWeights[2]*self.simulatedMapSA)
         self.simulatedMapCompiledLoss = self.simulatedMapCompiledLoss / torch.sum(self.simulatedMapCompiledLoss) # Normalization
 
-    def getSimulatedCompiledLoss(self, currentParam, currentUserState, newUserTemp=None):
+    def getSimulatedCompiledLoss(self, currentParam, currentUserState, newUserTemp=None, therapyMethod = None):
         # Unpack the current user state.
         currentUserTemp = currentParam
         currentUserLoss = self.dataInterface.calculateCompiledLoss(currentUserState)
 
         newUserTemp = currentUserTemp if newUserTemp is None else newUserTemp
 
-        # Calculate the bin indices for the current and new user states.
-        currentLossIndex = self.dataInterface.getBinIndex(self.allPredictionBins, currentUserLoss)
-        newTempBinIndex = self.dataInterface.getBinIndex(self.allParameterBins, newUserTemp)
+        # if it is aStarProtocol, resample
+        if therapyMethod == 'aStarTherapyProtocol':
+            resampledParameterBins, resampledPredictionBins = self.generalMethods.resampleBins(self.allParameterBins, self.allPredictionBins, eventlySpacedBins=False)
+            # Calculate the bin indices for the current and new user states.
+            print('resampledPredictionBins:', resampledPredictionBins)
+            print('currentUserLoss:', currentUserLoss)
 
+            # doesn't matter to index resampledPrediciton bins or not, it's the same anyways if we are resampling
+            currentLossIndex = self.dataInterface.getBinIndex(resampledPredictionBins[0], currentUserLoss)
+            newTempBinIndex = self.dataInterface.getBinIndex(resampledParameterBins[0], newUserTemp)
+        else:
+            # Calculate the bin indices for the current and new user states.
+            currentLossIndex = self.dataInterface.getBinIndex(self.allPredictionBins, currentUserLoss)
+            newTempBinIndex = self.dataInterface.getBinIndex(self.allParameterBins, newUserTemp)
         # Simulate a new user loss.
-        sampledLoss_compiled, PA_compiled, NA_compiled, SA_compiled = self.sampleNewLoss(currentLossIndex, newTempBinIndex)
+        print('currentUserLoss:', currentUserLoss)
+        print('newTempBinIndex:', newTempBinIndex)
+        sampledLoss_compiled, PA_compiled, NA_compiled, SA_compiled = self.sampleNewLoss(currentLossIndex, newTempBinIndex, therapyMethod)
+        print('sampledLoss_compiled:', sampledLoss_compiled)
+        print('PA_compiled:', PA_compiled)
+        print('NA_compiled:', NA_compiled)
+        print('SA_compiled:', SA_compiled)
+        print('PA.size:', PA_compiled.size())
+        print(torch.asarray([[PA_compiled, NA_compiled, SA_compiled]]))
+        exit()
         newUserLoss = self.dataInterface.calculateCompiledLoss(torch.asarray([[PA_compiled, NA_compiled, SA_compiled]]))[0]
+        print('passed getSimulatedCompiledLoss process')
         return newUserLoss, PA_compiled, NA_compiled, SA_compiled #TODO: check is sampledLoss_compiled == newUserLoss
 
-    def sampleNewLoss(self, currentLossIndex, newParamIndex, gausSTD=0.1):
+    def sampleNewLoss(self, currentLossIndex, newParamIndex, therapyMethod=None, gausSTD=0.1):
         simulatedMapPA = torch.tensor(self.simulatedMapPA, dtype=torch.float32)
         simulatedMapNA = torch.tensor(self.simulatedMapNA, dtype=torch.float32)
         simulatedMapSA = torch.tensor(self.simulatedMapSA, dtype=torch.float32)
         simulatedMapCompiledLoss = torch.tensor(self.simulatedMapCompiledLoss, dtype=torch.float32)
-        allPredictionBins = torch.tensor(self.allPredictionBins, dtype=torch.float32)
+        if therapyMethod == 'aStarTherapyProtocol':
+            # resampling
+            resampledParameterBins, resampledPredictionBins = self.generalMethods.resampleBins(self.allParameterBins, self.allPredictionBins, eventlySpacedBins=False)
+            allPredictionBins = torch.tensor(resampledPredictionBins, dtype=torch.float32)
 
         # Calculate new loss probabilities and Gaussian boost
         newLossProbabilities = simulatedMapCompiledLoss[newParamIndex] / torch.sum(simulatedMapCompiledLoss[newParamIndex])
-        gaussian_boost = self.generalMethods.createGaussianArray(inputData=newLossProbabilities, gausMean=currentLossIndex, gausSTD=gausSTD, torchFlag=True)
+        print('currentLossIndex:', currentLossIndex)
+        print('newLossProbabilities:', newLossProbabilities)
+        print('gausSTD:', gausSTD)
+        gaussian_boost = self.generalMethods.createGaussianArray(inputData=newLossProbabilities.numpy(), gausMean=currentLossIndex, gausSTD=gausSTD, torchFlag=True)
 
         # Combine the two distributions and normalize
         newLossProbabilities = newLossProbabilities + gaussian_boost
