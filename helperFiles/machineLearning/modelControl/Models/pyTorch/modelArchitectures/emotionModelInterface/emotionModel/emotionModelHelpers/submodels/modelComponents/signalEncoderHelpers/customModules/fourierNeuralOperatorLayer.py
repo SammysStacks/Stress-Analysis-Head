@@ -21,6 +21,8 @@ class fourierNeuralOperatorLayer(fourierNeuralOperatorWeights):
         self.nFreqModes = self.maxSequenceLength // 2 + 1  # Number of Fourier modes (frequencies) to use.
         if maxFreqNodes is not None: self.nFreqModes = min(self.nFreqModes, maxFreqNodes)
 
+
+
         # Initialize Fourier neural operator parameters.
         self.fourierWeights = self.fourierWeightParameters(inChannel=numInputChannels, outChannel=numOutputChannels, nFreqModes=self.nFreqModes + 1)
         self.skipConnectionModel = self.skipConnectionEncoding(inChannel=numInputChannels, outChannel=numOutputChannels)
