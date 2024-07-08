@@ -2,11 +2,11 @@ import torch
 from torch import nn
 
 # Import machine learning files
-from helperFiles.machineLearning.modelControl.Models.pyTorch.modelArchitectures.emotionModel.emotionModelHelpers.generalMethods.complexHelperMethods import complexHelperMethods
-from ..signalEncoderModules import signalEncoderModules
+from helperFiles.machineLearning.modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.generalMethods.complexHelperMethods import complexHelperMethods
+from helperFiles.machineLearning.modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.signalEncoderHelpers.customModules.fourierNeuralOperatorWeights import fourierNeuralOperatorWeights
 
 
-class fourierNeuralOperatorLayer(signalEncoderModules):
+class fourierNeuralOperatorLayer(fourierNeuralOperatorWeights):
 
     def __init__(self, numInputChannels, numOutputChannels, maxSequenceLength, maxFreqNodes=None, applyFourierConvolution=True):
         super(fourierNeuralOperatorLayer, self).__init__()
@@ -31,7 +31,7 @@ class fourierNeuralOperatorLayer(signalEncoderModules):
             self.convolveFourierSpace = self.fourierConvolution(inChannel=numOutputChannels)
 
         # Initialize activation method.
-        self.activationFunction = nn.SELU()  # Activation function for the Fourier neural operator.
+        self.activationFunction = self.getActivationMethod(activationType='boundedExp_0_2')
 
         # Import helper classes.
         self.complexHelperMethods = complexHelperMethods

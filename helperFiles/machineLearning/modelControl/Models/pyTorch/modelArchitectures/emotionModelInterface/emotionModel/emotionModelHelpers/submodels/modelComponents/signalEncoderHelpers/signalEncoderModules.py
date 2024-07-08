@@ -23,7 +23,8 @@ class signalEncoderModules(convolutionalHelpers):
 
     def neuralWeightIndependentModel(self, numInputFeatures=1, numOutputFeatures=1):
         return nn.Sequential(
-            self.linearModel(numInputFeatures=numInputFeatures, numOutputFeatures=numOutputFeatures, activationMethod='none', layerType='fc_WNO'),
+            self.linearModel(numInputFeatures=numInputFeatures, numOutputFeatures=numInputFeatures, activationMethod='boundedExp_0_2', layerType='fc_WNO'),
+            self.linearModel(numInputFeatures=numInputFeatures, numOutputFeatures=numOutputFeatures, activationMethod='boundedExp_0_2', layerType='fc_WNO'),
         )
 
     def neuralWeightParameters(self, inChannel=1, outChannel=2, finalFrequencyDim=46):
