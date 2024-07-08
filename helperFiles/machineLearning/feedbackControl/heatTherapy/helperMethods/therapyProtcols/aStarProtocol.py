@@ -32,13 +32,13 @@ class aStarTherapyProtocol(generalTherapyProtocol):
 
     def updateTherapyState(self):
         # Get the current user state.
-        currentParam = self.paramStatePath[-1].squeeze(0)
+        currentParam = self.paramStatePath[-1] # dim should be torch.Size([1, 1, 1, 1])
         currentCompiledLoss = self.userMentalStateCompiledLoss[-1]
+
         # Update the temperatures visited.
         paramBinIndex = self.dataInterface.getBinIndex(self.allParameterBins_resampled, currentParam)
-        print('allParameterBins_resampled: ', self.allParameterBins_resampled)
-        print('paramBinIndex: ', paramBinIndex)
         self.paramBinsVisited[paramBinIndex] = True  # documents the temperature visited by indexing the temperature bin and set the value to true
+
         # Update the personalized user map.
         self.trackCurrentState(currentParam, currentCompiledLoss)  # Keep track of each discrete temperature-loss pair.
         personalizedMap = self.getUpdatedPersonalizedMap()  # Convert the discrete map to a probability distribution.
@@ -52,23 +52,32 @@ class aStarTherapyProtocol(generalTherapyProtocol):
 
         # Find the best temperature in the gradient direction.
         newUserParam, benefitFunction = self.findOptimalDirection(probabilityMap, currentParam, currentCompiledLoss)
-        print('newUserParam: ', newUserParam)
-        print('beneiftFunction: ', benefitFunction)
-        newUserParam = newUserParam + self.uncertaintyBias * np.random.normal(loc=0, scale=0.5)  # Add noise to the gradient.
-        # deltaTemp = self.findNewTemperature(currentUserState, gradientDirection)
-        # deltaTemp = deltaTemp + self.uncertaintyBias * np.random.normal(loc=0, scale=0.5)  # Add noise to the gradient.
 
-        print('parameter bounds',  self.initialParameterBounds)
+        newUserParam = newUserParam + self.uncertaintyBias * np.random.normal(loc=0, scale=0.5)  # Add noise to the gradient.
         # Calculate the new temperature.
-        newUserParam = self.boundNewTemperature(newUserParam, bufferZone=1)
-        print('passed counter!@#!@#!@#!232')
+        #newUserParam = self.boundNewTemperature(newUserParam, bufferZone=1) # newUserParam = torch.Size([1, 1, 1, 1])
+        print('benefitFunction:', benefitFunction.size())
+        print('heuristicMap:', self.heuristicMap.size())
+        print('personalizedMap:', personalizedMap.size())
+        print('simulationProtocols.simulatedMapCompiledLoss:', self.simulationProtocols.simulatedMapCompiledLoss.size())
+        newUserParam = torch.tensor(newUserParam).view(1, 1, 1, 1)
+        # bound the parameter
+        newUserParam = torch.clamp(newUserParam, min=0, max=1)
         return newUserParam, (benefitFunction, self.heuristicMap, personalizedMap, self.simulationProtocols.simulatedMapCompiledLoss)
 
     def boundNewTemperature(self, newUserParam, bufferZone=0.01):
         # Bound the new temperature.
         # TODO: current implementation only for heat therapy (1D), so we extract the parameter bounds at the 1st dimension. For music therapy, we need both dimensions
         newUserTemp = max((self.initialParameterBounds[0][0]).numpy() + bufferZone, min((self.initialParameterBounds[0][1]).numpy() - bufferZone, newUserParam))
+        newUserTemp = torch.tensor(newUserTemp).view(1, 1, 1, 1)
         return newUserTemp
+
+    def normalizeParameter(self, newUserParam):
+        """Used to get the normalized temperature given the actual temperature in C not needed i feel"""
+        # Normalize the parameter.
+        newUserParam = (newUserParam - self.initialParameterBounds[0][0]) / (self.initialParameterBounds[0][1] - self.initialParameterBounds[0][0])
+        return newUserParam
+
 
     def findNewTemperature(self, currentUserState, gradientDirection):
         # Unpack the current user state.
@@ -83,26 +92,21 @@ class aStarTherapyProtocol(generalTherapyProtocol):
     # ------------------------ Update Parameters ------------------------ #
 
     def findOptimalDirection(self, probabilityMap, currentParam, currentCompiledLoss):
+
         # Calculate benefits/loss of exploring/moving.
         potentialLossBenefit = np.array(self.allPredictionBins_resampled[0]) # doesn't matter which prediction bin, they are essentially the same.
         probabilityMap = probabilityMap / probabilityMap.sum(axis=1)[:, np.newaxis]  # Normalize the probability map.
 
         # Calculate the expected rewards.
-        print('potnetialLossBenefit: ', potentialLossBenefit)
-        potentialRewards = potentialLossBenefit[np.newaxis, :]
+        potentialRewards = potentialLossBenefit[np.newaxis, :] # add 1 dimension from potentialLossBenefit
         expectedRewards = probabilityMap * potentialRewards
 
         # Find the best temperature bin index in the rewards.
         expectedRewardAtTemp = expectedRewards.sum(axis=1)  # Normalize across temperature bins.
         bestTempBinIndex = torch.argmin(expectedRewardAtTemp).item()
-        print('bestTempBinIndex: ', bestTempBinIndex)
-        print('self.allParameterBins_resampled: ', self.allParameterBins_resampled)
-        print('self.allParameterBins_resampled[0]: ', self.allParameterBins_resampled[0])
-        print('self.allParametersBins_resampled[0][bestTempBinIndex]: ', self.allParameterBins_resampled[0][bestTempBinIndex])
-        print('expectedRewards', expectedRewards)
+
         # Convert parameterBinWidths to numpy array or list
-        parameterBinWidths = self.parameterBinWidths.numpy() if isinstance(self.parameterBinWidths, torch.Tensor) else self.parameterBinWidths
-        print('self.parameterBinWidths: ', self.parameterBinWidths)
+        parameterBinWidths = self.parameterBinWidths.numpy() if isinstance(self.parameterBinWidths, torch.Tensor) else self.parameterBinWidths # used to place the temperature at the center of the bin
         #TODO: Note current instrumentation is for heat therapy, which allParameterBins_resampled is a 2D array but only 1st index is used
         return self.allParameterBins_resampled[0][bestTempBinIndex] + parameterBinWidths / 2, expectedRewards
 
@@ -124,13 +128,10 @@ class aStarTherapyProtocol(generalTherapyProtocol):
     # ------------------------ Personalization Interface ------------------------ #
 
     def trackCurrentState(self, currentParam, currentCompiledLoss):
-        print('currentParam: ', currentParam)
-        print('currentCompiledLoss: ', currentCompiledLoss)
-        initialSingleEmotionData = torch.cat((currentParam, currentCompiledLoss), dim=1).unsqueeze(3)
-        print('initialSingleEmotionData: ', initialSingleEmotionData)
-        print('initialSingleEmotionData size: ', initialSingleEmotionData.size())
+        print('currentParam:', currentParam.size()) # torch.Size([1, 1, 1, 1])
+        print('currentCompiledLoss:', currentCompiledLoss.size()) # torch.Size([1, 1, 1, 1])
+        initialSingleEmotionData = torch.cat((currentParam, currentCompiledLoss), dim=1) # dim: torch.Size([1, 2, 1, 1])
         # Smoothen out the discrete map into a probability distribution.
-        print('self.allpredictionBins_resampled: ', self.allPredictionBins_resampled)
         probabilityMatrix = self.generalMethods.getProbabilityMatrix(initialSingleEmotionData, self.allParameterBins_resampled, self.allPredictionBins_resampled[0], self.gausParam_STD, self.gausLoss_STD, noise=0.0, applyGaussianFilter=True)
         self.discretePersonalizedMap.append(probabilityMatrix)  # the discretePersonalizedMap list will store the probability matrix
 
@@ -141,47 +142,57 @@ class aStarTherapyProtocol(generalTherapyProtocol):
 
     def getUpdatedPersonalizedMap(self):
         # Assert the integrity of the state tracking.
-        print(f"Length of parameterPath: {len(self.paramStatePath)}")
-        print(f'Length of TimePoints: {len(self.timePoints)}')
-        print('self.ParamStatePath: ', self.paramStatePath)
-        print(f'Content of ParameterPath: {self.paramStatePath}')
-        print(f'Content of TimePoints: {self.timePoints}')
-        print(f"Length of discretePersonalizedMap: {len(self.discretePersonalizedMap)}")
-        print(f"Content of discretePersonalizedMap: {self.discretePersonalizedMap}")
-        print(f"Type of three parameters for comparison: {type(self.paramStatePath)}, {type(self.timePoints)}, {type(self.discretePersonalizedMap)}")
+        # print(f"Length of parameterPath: {len(self.paramStatePath)}")
+        # print(f'Length of TimePoints: {len(self.timePoints)}')
+        # print('self.ParamStatePath: ', self.paramStatePath)
+        # print(f'Content of ParameterPath: {self.paramStatePath}')
+        # print(f'Content of TimePoints: {self.timePoints}')
+        # print(f"Length of discretePersonalizedMap: {len(self.discretePersonalizedMap)}")
+        # print(f"Content of discretePersonalizedMap: {self.discretePersonalizedMap}")
+        # print(f"Type of three parameters for comparison: {type(self.paramStatePath)}, {type(self.timePoints)}, {type(self.discretePersonalizedMap)}")
         assert len(self.paramStatePath) == len(self.timePoints) == len(self.discretePersonalizedMap), \
             f"The time delays and discrete maps are not the same length. {len(self.paramStatePath)} {len(self.timePoints)} {len(self.discretePersonalizedMap)}"
 
         # Unpack the temperature-timepoints relation.
-        associatedParamInds = np.asarray(self.paramStatePath)
+        associatedParamInd = []
+        associatedParams = np.asarray(self.paramStatePath).flatten()
         associatedTimePoints = np.asarray(self.timePoints)
+        for i in range(len(associatedTimePoints)):
+            associatedParamInd.append(self.dataInterface.getBinIndex(self.allParameterBins_resampled, associatedParams[i]))
 
         # Get the weighting for each discrete temperature-loss pair.
         currentTimeDelays = np.abs(associatedTimePoints - associatedTimePoints[-1])
+        print('associatedParams:', associatedParams)
+        print('associatedTimePoints:', associatedTimePoints)
+        print('associateTimdPoints[-1]:', associatedTimePoints[-1])
+        print('currentTimeDelays:', currentTimeDelays)
         personalizedMapWeights = self.personalizedMapWeightingFunc(currentTimeDelays, self.decayConstant)
-
-        # For each temperature bin.
+        print('personalizedMapWeights:', personalizedMapWeights)
+        print('associatedParamInd:', associatedParamInd)
+        # For each parameter bin.
         for paramIndex in range(self.allNumParameterBins[0]):
             # If the temperature bin has been visited.
-            if paramIndex in associatedParamInds:
-                paramIndexMask = associatedParamInds == paramIndex
-
+            if paramIndex in associatedParamInd:
+                paramIndexMask = associatedParams == paramIndex
+                print('paramIndexMask:', paramIndexMask)
                 # Normalize the weights per this bin.
                 personalizedMapWeights[paramIndexMask] = personalizedMapWeights[paramIndexMask] / personalizedMapWeights[paramIndexMask].sum()
 
         # Perform a weighted average of all the personalized maps.
-        personalizedMap = np.sum(self.discretePersonalizedMap * personalizedMapWeights[:, np.newaxis, np.newaxis], axis=0)
+        print("self.discretePersonalizedMap:", self.discretePersonalizedMap)
 
+        personalizedMap = np.sum(self.discretePersonalizedMap * personalizedMapWeights[:, np.newaxis], axis=0)
         if self.applyGaussianFilter:
             combinedSTD = torch.cat((self.gausParam_STD, self.gausLoss_STD))
             # Smoothen the personalized map.
-            print('personalizedMap: ', personalizedMap)
-            print('personalizedMap size: ', personalizedMap.squeeze(0).shape)
-            print('combinedSTD: ', combinedSTD)
-            personalizedMap = self.generalMethods.smoothenArray(personalizedMap.squeeze(0), sigma=combinedSTD.numpy())
+            personalizedMap = torch.tensor(personalizedMap)
+
+            personalizedMap = self.generalMethods.smoothenArray(personalizedMap.squeeze(), sigma=combinedSTD.numpy())
 
         # Normalize the personalized map.
         personalizedMap = personalizedMap / personalizedMap.sum()  # Normalize along the temperature axis.
+        # convert to torch tensor
+        personalizedMap = torch.tensor(personalizedMap)
         return personalizedMap
 
     def initializeFirstPersonalizedMap(self):
@@ -197,7 +208,7 @@ class aStarTherapyProtocol(generalTherapyProtocol):
 
     def initializeHeuristicMaps(self):
         if self.simulateTherapy:
-            print("simulating compiled loss map for heuristic map", self.simulationProtocols.simulatedMapCompiledLoss)
+            #print("simulating compiled loss map for heuristic map", self.simulationProtocols.simulatedMapCompiledLoss)
             return self.simulationProtocols.simulatedMapCompiledLoss
         else:
             # Get the real data points.

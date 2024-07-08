@@ -23,15 +23,20 @@ class heatTherapyControl(heatTherapyHelpers):
             if self.therapyMethod == "aStarTherapyProtocol":
                 # Get the next states for the therapy.
                 therapyState, allMaps = self.therapyProtocol.updateTherapyState() # therapy state newuserParam
-                # TODO: get next states ...
+
+                # normalize the therapy state
+                # therapyState = self.therapyProtocol.normalizeParameter(therapyState) # normalizeTherapyState = torch.Size([1, 1, 1, 1])
+
                 self.therapyProtocol.getNextState(therapyState, self.therapyMethod)
-                exit()
-            if self.plotResults:
-                if self.therapyMethod == "aStarTherapyProtocol":
-                    self.therapyProtocol.plotTherapyResults(allMaps)
+
+                # Preparation for plotting
+                combinedStates = [[param_state, user_compiled_mental] for param_state, user_compiled_mental in zip(self.therapyProtocol.paramStatePath, self.therapyProtocol.userMentalStateCompiledLoss)]
+
+                if self.plotResults:
+                    self.therapyProtocol.plottingProtocolsMain.plotTherapyResults(combinedStates, allMaps)
                     print(f"Alpha after iteration: {self.therapyProtocol.percentHeuristic}\n")
-                elif self.therapyMethod == "basicTherapyProtocol":
-                    self.therapyProtocol.plotTherapyResults_basic(allMaps)  # For basic protocol, allMaps is the simulated map (only 1)
+                # elif self.therapyMethod == "basicTherapyProtocol":
+                #     self.therapyProtocol.plotTherapyResults_basic(allMaps)  # For basic protocol, allMaps is the simulated map (only 1)
             # Check if the therapy has converged.
             self.therapyProtocol.checkConvergence(maxIterations)
 
@@ -41,8 +46,8 @@ if __name__ == "__main__":
     userTherapyMethod = "aStarTherapyProtocol"  # The therapy algorithm to run. Options: "aStarTherapyProtocol", "basicTherapyProtocol", "nnTherapyProtocol", "hmmTherapyProtocol"
     testingUserName = "Squirtle"  # The username for the therapy.
     temperatureBounds = (35, 50)  # The temperature bounds for the therapy.
-    temperatureBinWidth = 5  # The temperature bounds for the therapy.
-    plotTherapyResults = False  # Whether to plot the results.
+    temperatureBinWidth = 0.5  # The temperature bounds for the therapy.
+    plotTherapyResults = True  # Whether to plot the results.
 
     # Simulation parameters.
     currentSimulationParameters = {

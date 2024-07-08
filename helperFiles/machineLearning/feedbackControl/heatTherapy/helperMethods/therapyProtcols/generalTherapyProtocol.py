@@ -43,9 +43,10 @@ class generalTherapyProtocol(abc.ABC):
         self.numParameters = len(self.initialParameterBounds)  # The number of parameters. # 1 for now
 
         # Calculated parameters.
-        self.parameterBinWidths = dataInterface.normalizeParameters(currentParamBounds=self.initialParameterBounds - self.initialParameterBounds[:, 0:1], normalizedParamBounds=self.modelParameterBounds, currentParamValues=self.unNormalizedParameterBinWidths)
+        self.parameterBinWidths = dataInterface.normalizeParameters(currentParamBounds=self.initialParameterBounds - self.initialParameterBounds[:, 0:1], normalizedParamBounds=self.modelParameterBounds, currentParamValues=self.unNormalizedParameterBinWidths) #torch.tensor([0.1])
         self.predictionBinWidths = dataInterface.normalizeParameters(currentParamBounds=self.predictionBounds - self.predictionBounds[:, 0:1], normalizedParamBounds=self.modelParameterBounds, currentParamValues=self.predictionBinWidths)
-        self.optimalNormalizedState = dataInterface.normalizeParameters(currentParamBounds=self.predictionBounds, normalizedParamBounds=self.modelParameterBounds, currentParamValues=self.optimalPredictions)
+
+        self.optimalNormalizedState = dataInterface.normalizeParameters(currentParamBounds=self.predictionBounds, normalizedParamBounds=self.modelParameterBounds, currentParamValues=self.optimalPredictions)  # The optimal normalized state for the therapy. tensor([1, 0, 0])
         self.gausParameterSTDs = self.parameterBinWidths.clone()  # The standard deviation for the Gaussian distribution for parameters.
         self.numPredictions = len(self.optimalNormalizedState)  # The number of losses to predict.
         self.gausLossSTDs = self.predictionBinWidths.clone()  # The standard deviation for the Gaussian distribution for losses.
@@ -53,8 +54,8 @@ class generalTherapyProtocol(abc.ABC):
         # Initialize the loss and parameter bins.
         self.allParameterBins = dataInterface.initializeAllBins(self.modelParameterBounds, self.parameterBinWidths)    # Note this is an UNEVEN 2D list. [[parameter]] bin list
         self.allPredictionBins = dataInterface.initializeAllBins(self.modelParameterBounds, self.predictionBinWidths)  # Note this is an UNEVEN 2D list. [[PA], [NA], [SA]] bin list
-        print('allParameterBins: ', self.allParameterBins)
-        print('allPredictionBins: ', self.allPredictionBins)
+
+        # print('allPredictionBins: ', self.allPredictionBins)
 
         # Initialize the number of bins for the parameter and loss.
         self.allNumParameterBins = [len(self.allParameterBins[parameterInd]) for parameterInd in range(self.numParameters)]  # Parameter number of Bins in the list
@@ -105,26 +106,31 @@ class generalTherapyProtocol(abc.ABC):
 
     def initializeUserState(self, userName):
         # Get the user information.
-        timePoints, parameters, emptionStates = self.getInitialSate()  # TODO: (double check) dim: numPoints, timePoint: t; emotionStates: (PA, NA, SA); prediction: predict the next state
+        # timePints: a tensor
+        # parameter: tensor of size 1, 1, 1, 1
+        # emotionStates: tensor of size 1, 3, 1, 1
+        timePoints, parameters, emotionStates = self.getInitialSate()  # dim: numPoints, timePoint: t; emotionStates: (PA, NA, SA); prediction: predict the next state
         # Track the user state and time delay.
-        startTimePoint = torch.cat((torch.tensor([0]), timePoints))
-        self.timePoints.append(startTimePoint) # TODO: check dimension
-        self.paramStatePath.append(parameters) # TODO: check dimension
-        self.userMentalStatePath.append(emptionStates) # TODO: check dimension
-        print('emotionstates[-1]: ', emptionStates[-1])
+        startTimePoint = timePoints
+        self.timePoints.append(startTimePoint) # timePoints: list of tensor: [tensor(0)]
+        self.paramStatePath.append(parameters) # self.paramStatePath: list of tensor: [torch.Size([1, 1, 1, 1])
+        self.userMentalStatePath.append(emotionStates) # emotionstates: list of tensor: torch.Size([1, 3, 1, 1])
         # Calculate the initial user loss.
-        compiledLoss = self.dataInterface.calculateCompiledLoss(emptionStates[-1])  # compile the loss state for the current emotion state
-        print('###compiled loss: ', compiledLoss)
-        self.userMentalStateCompiledLoss.append(compiledLoss) # TODO: check dimension
-        print('passed here 22222')
-        print(self.userMentalStateCompiledLoss)
-        self.userName.append(userName)
+        compiledLoss = self.dataInterface.calculateCompiledLoss(emotionStates[-1])  # compile the loss state for the current emotion state; torch.Size([1, 1, 1, 1])
+        self.userMentalStateCompiledLoss.append(compiledLoss) #  list of tensor torch.Size([1, 1, 1, 1])
+        self.userName.append(userName) # list: username
+
+        print('timePoints: ', self.timePoints)
+        print('paramStatePath: ', self.paramStatePath)
+        print('userMentalStatePath: ', self.userMentalStatePath)
+        print('userMentalStateCompiledLoss: ', self.userMentalStateCompiledLoss)
+
+
 
     def getInitialSate(self):
         if self.simulateTherapy:
             # Simulate a new time point by adding a constant delay factor.
-            currentTime, currentParam, currentPredictions = self.simulationProtocols.getInitialState() #TODO: check starting point, what are them
-            print('passed here currentstate')
+            currentTime, currentParam, currentPredictions = self.simulationProtocols.getInitialState() # currentTime: tensor(0); currentParam: torch.Size([1, 1, 1, 1]); currentPredictions: torch.Size([1, 3, 1, 1]) predefined.
             return currentTime, currentParam, currentPredictions
         else:
             # TODO: Implement a method to get the current user state.
@@ -136,21 +142,24 @@ class generalTherapyProtocol(abc.ABC):
     def getNextState(self, newParamValues, therapyMethod):
         if self.simulateTherapy:
             # Simulate a new time.
-            lastTimePoint = self.timePoints[-1][0] if len(self.timePoints) != 0 else 0
-            print('lastTimePoint')
+            lastTimePoint = self.timePoints[-1] if len(self.timePoints) != 0 else 0
+            # convert tensor to int
+            lastTimePoint = int(lastTimePoint)
+            print('lastTimePoint: ', lastTimePoint)
             newTimePoint = self.simulationProtocols.getSimulatedTimes(self.simulationProtocols.initialPoints, lastTimePoint)
-
             # get the current user state
             currentParam = self.paramStatePath[-1]
             currentEmotionStates = self.userMentalStatePath[-1]
-
             # Sample the new loss form a pre-simulated map.
             newUserLoss, PA, NA, SA = self.simulationProtocols.getSimulatedCompiledLoss(currentParam, currentEmotionStates, newParamValues, therapyMethod)
-
+            # combined mentalstate
+            combinedMentalState = torch.cat((PA, NA, SA), dim=1)
             # User state update
+            print('newParamValues: ', newParamValues)
+            print('timePoints: ', newTimePoint)
             self.timePoints.append(newTimePoint)  # TODO: check dimension
             self.paramStatePath.append(newParamValues)  # TODO: check dimension
-            self.userMentalStatePath.append((PA, NA, SA))  # TODO: check dimension
+            self.userMentalStatePath.append(combinedMentalState)  # TODO: check dimension
             self.userMentalStateCompiledLoss.append(newUserLoss)  # TODO: check dimension
         else:
             pass

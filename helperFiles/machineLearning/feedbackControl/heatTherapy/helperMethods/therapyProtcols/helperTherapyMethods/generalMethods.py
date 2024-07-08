@@ -46,9 +46,6 @@ class generalMethods:
         library = torch if torchFlag else None
 
         xValues = library.arange(len(inputData), dtype=library.float32)
-        print('xValues: ', xValues)
-        print('gausMean: ', gausMean)
-        print('gausSTD: ', gausSTD)
         gaussianArray = library.exp(-0.5 * ((xValues - gausMean) / gausSTD) ** 2)
         gaussianArray = gaussianArray / gaussianArray.sum()  # Normalize the Gaussian array
         
@@ -56,8 +53,11 @@ class generalMethods:
 
     @staticmethod
     def createGaussianMap(allParameterBins, predictionBins, gausMean, gausSTD):
+        # convert input to tensors
+        allParameterBins = torch.tensor(allParameterBins).squeeze()
+        predictionBins = torch.tensor(predictionBins).squeeze()
         # Generate a grid for Gaussian distribution calculations
-        x, y = torch.meshgrid(predictionBins, allParameterBins)
+        x, y = torch.meshgrid(allParameterBins, predictionBins) #TODO: check x y axis, my understanding we need parameter on the x and then prediction on the y
 
         # Calculate Gaussian distribution values across the grid
         gaussMatrix = torch.exp(-0.5 * ((x - gausMean[0]) ** 2 / gausSTD[0] ** 2 + (y - gausMean[1]) ** 2 / gausSTD[1] ** 2))
@@ -74,27 +74,22 @@ class generalMethods:
         # allParameterBins is a 2D array of size (numParameters, numBins)
         probabilityMatrix = torch.zeros((len(allParameterBins[0]), len(singlePredictionBins))) # dim: torch.Size([numParameterBins[0], singlePredictionBins])
 
-        print('initialSingleEmotionData: ', initialSingleEmotionData.shape)
-
         # TODO: Add checks if the input data only has 1 param, loss sequence:
         # Calculate the probability matrix.
 
         for initialDataPoints in initialSingleEmotionData:
             currentUserTemp = initialDataPoints[0] # within loop: torch.Size([1, 1])
             currentUserLoss = initialDataPoints[1] # within loop: torch.Size([1, 1])
-            print('currentUserLoss: ', currentUserLoss)
 
-            if applyGaussianFilter:
+            if not applyGaussianFilter:
                 # Generate a delta function probability.
                 tempBinIndex = self.dataInterface.getBinIndex(allParameterBins, currentUserTemp)
-                #print('allPredictionBins: ', allPredictionBins)
-                print('signlePredictionBins: ', singlePredictionBins)
-                print('currentUserLoss: ', currentUserLoss)
                 lossBinIndex = self.dataInterface.getBinIndex(singlePredictionBins, currentUserLoss)
-                probabilityMatrix[tempBinIndex][lossBinIndex] += 1  # map out bins and fill out with discrete values
+                probabilityMatrix[tempBinIndex][lossBinIndex] += 1  # map out bins and fill out with discrete values # parameterbins x lossbins
+
             else:
                 # Generate 2D gaussian matrix.
-                gaussianMatrix = self.createGaussianMap(allParameterBins, singlePredictionBins, gausMean=(currentUserLoss, currentUserTemp), gausSTD=gausSTD)
+                gaussianMatrix = self.createGaussianMap(allParameterBins, singlePredictionBins, gausMean=(currentUserLoss, currentUserTemp), gausSTD=(gausParamSTD, gausLossSTD))
                 probabilityMatrix += gaussianMatrix  # Add the gaussian map to the matrix
 
         # gauss data structure change for input
@@ -103,19 +98,15 @@ class generalMethods:
 
         # Concatenate tensors
         combinedSTD = torch.cat((gausParamSTD, gausLossSTD))
-        print('combinedSTD: ', combinedSTD)
-        print('combinedSTD size: ', combinedSTD.size())
         if applyGaussianFilter:
             # Smoothen the probability matrix.
             probabilityMatrix = self.smoothenArray(probabilityMatrix, sigma=combinedSTD.numpy())
-
-        probabilityMatrix = torch.tensor(probabilityMatrix)
-
+            probabilityMatrix = torch.tensor(probabilityMatrix)
         # Normalize the probability matrix.
+
         probabilityMatrix += noise * torch.randn(*probabilityMatrix.size())  # Add random noise
-        probabilityMatrix = torch.clamp(probabilityMatrix, min=0, max=None)  # Ensure no negative probabilities
+        probabilityMatrix = torch.clamp(probabilityMatrix, min=0.0, max=None)  # Ensure no negative probabilities
         probabilityMatrix = probabilityMatrix / probabilityMatrix.sum()
-        print('@#$@#$ probability matrix: ', probabilityMatrix)
         return probabilityMatrix
 
 

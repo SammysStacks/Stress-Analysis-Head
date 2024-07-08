@@ -34,11 +34,10 @@ class plottingProtocolsMain:
         # Unpack the user states.
         benefitFunction, heuristic_map, personalized_map, simulated_map = final_map_pack
         num_steps = len(userStatePath)
-
         # Titles and maps to be plotted.
         titles = ['Projected Benefit Map', 'Heuristic Map', 'Personalized Map', 'Simulated Map']
         maps = [benefitFunction, heuristic_map, personalized_map, simulated_map]
-        plottingImage = None
+
 
         # Setup subplots
         fig, axs = plt.subplots(2, 2, figsize=(12, 12))
@@ -48,18 +47,19 @@ class plottingProtocolsMain:
 
         # Plotting each map with the corresponding user state path
         for i, (map_to_plot, title) in enumerate(zip(maps, titles)):
-            ax = axs[i % 2, i // 2]
-            plottingImage = ax.imshow(map_to_plot.T, cmap='coolwarm', extent=[self.modelParameterBounds[0], self.modelParameterBounds[1], self.predictionBounds[0], self.predictionBounds[1]], aspect='auto', origin='lower')
+            ax = axs[i % 2, i // 2]  # Correct indexing for subplot
+            plottingImage = ax.imshow(map_to_plot.T, cmap='coolwarm', extent=[self.modelParameterBounds[0].item(), self.modelParameterBounds[1].item(), 0, 1], aspect='auto', origin='lower')
 
             # Plot past user states with fading red line
             for j in range(num_steps - 1):
-                ax.plot([userStatePath[j][0], userStatePath[j + 1][0]],
-                        [userStatePath[j][1], userStatePath[j + 1][1]],
+                ax.plot([userStatePath[j][0].item(), userStatePath[j + 1][0].item()],
+                        [userStatePath[j][1].item(), userStatePath[j + 1][1].item()],
                         color=(0, 0, 0, alphas[j]), linewidth=2)
+            print('userStatePath', userStatePath)
 
-            ax.scatter(userStatePath[-1][0], userStatePath[-1][1], color='tab:red', label='Current State', edgecolor='black', s=75, zorder=10)
+            ax.scatter(userStatePath[-1][0].item(), userStatePath[-1][1].item(), color='tab:red', label='Current State', edgecolor='black', s=75, zorder=10)
             ax.set_title(f'{title} (After Iteration {num_steps})')
-            ax.set_xlabel('parameter')
+            ax.set_xlabel('Parameter')
             ax.set_ylabel('Loss')
             ax.legend()
 
@@ -68,8 +68,7 @@ class plottingProtocolsMain:
         fig.colorbar(plottingImage, ax=axs.ravel().tolist(), label='Probability')
         plt.show()
 
-        print(f"New current state after iteration {num_steps + 1}: parameter = {userStatePath[-1][0]}, Loss = {userStatePath[-1][1]}")
-
+        print(f"New current state after iteration {num_steps + 1}: parameter = {userStatePath[-1][0].item()}, Loss = {userStatePath[-1][1].item()}")
     # ------------------------ Basic Protocol plotting ------------------------ #
 
     def plotTherapyResults_basic(self, userStatePath, simulated_map):
