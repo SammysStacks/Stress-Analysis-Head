@@ -63,7 +63,7 @@ class aStarTherapyProtocol(generalTherapyProtocol):
         newUserParam = torch.tensor(newUserParam).view(1, 1, 1, 1)
         # bound the parameter
         newUserParam = torch.clamp(newUserParam, min=0, max=1)
-        return newUserParam, (benefitFunction, self.heuristicMap, personalizedMap, self.simulationProtocols.simulatedMapCompiledLoss)
+        return newUserParam, (benefitFunction, self.heuristicMap, personalizedMap, probabilityMap)
 
     def boundNewTemperature(self, newUserParam, bufferZone=0.01):
         # Bound the new temperature.
