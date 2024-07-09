@@ -62,13 +62,6 @@ class aStarTherapyProtocol(generalTherapyProtocol):
         newUserParam = torch.clamp(newUserParam, min=0, max=1)
         return newUserParam, (benefitFunction, self.heuristicMap, personalizedMap, probabilityMap)
 
-    def boundNewTemperature(self, newUserParam, bufferZone=0.01):
-        # Bound the new temperature.
-        # TODO: current implementation only for heat therapy (1D), so we extract the parameter bounds at the 1st dimension. For music therapy, we need both dimensions
-        newUserTemp = max((self.initialParameterBounds[0][0]).numpy() + bufferZone, min((self.initialParameterBounds[0][1]).numpy() - bufferZone, newUserParam))
-        newUserTemp = torch.tensor(newUserTemp).view(1, 1, 1, 1)
-        return newUserTemp
-
     def normalizeParameter(self, newUserParam):
         """Used to get the normalized temperature given the actual temperature in C not needed i feel"""
         # Normalize the parameter.
@@ -97,10 +90,12 @@ class aStarTherapyProtocol(generalTherapyProtocol):
         # Calculate the expected rewards.
         potentialRewards = potentialLossBenefit[np.newaxis, :] # add 1 dimension from potentialLossBenefit
         expectedRewards = probabilityMap * potentialRewards
-
+        print('expectedRewards:', expectedRewards)
         # Find the best temperature bin index in the rewards.
-        expectedRewardAtTemp = expectedRewards.sum(axis=1)  # Normalize across temperature bins.
-        bestTempBinIndex = torch.argmin(expectedRewardAtTemp).item()
+        expectedRewardAtTemp = expectedRewards.sum(axis=1)
+        print('expectedRewardAtTemp:', expectedRewardAtTemp)
+
+        bestTempBinIndex = torch.argmin(expectedRewardAtTemp).item() # minimizing losses, so lower values are better
 
         # Convert parameterBinWidths to numpy array or list
         parameterBinWidths = self.parameterBinWidths.numpy() if isinstance(self.parameterBinWidths, torch.Tensor) else self.parameterBinWidths # used to place the temperature at the center of the bin
@@ -130,7 +125,7 @@ class aStarTherapyProtocol(generalTherapyProtocol):
 
         initialSingleEmotionData = torch.cat((currentParam, currentCompiledLoss), dim=1) # dim: torch.Size([1, 2, 1, 1])
         # Smoothen out the discrete map into a probability distribution.
-        probabilityMatrix = self.generalMethods.getProbabilityMatrix(initialSingleEmotionData, self.allParameterBins_resampled, self.allPredictionBins_resampled[0], self.gausParam_STD, self.gausLoss_STD, noise=0.0, applyGaussianFilter=True)
+        probabilityMatrix = self.generalMethods.getProbabilityMatrix(initialSingleEmotionData, self.allParameterBins_resampled, self.allPredictionBins_resampled[0], self.gausParam_STD, self.gausLoss_STD, noise=0.1, applyGaussianFilter=True)
         self.discretePersonalizedMap.append(probabilityMatrix)  # the discretePersonalizedMap list will store the probability matrix
 
 
@@ -167,9 +162,10 @@ class aStarTherapyProtocol(generalTherapyProtocol):
         for paramIndex in range(self.allNumParameterBins[0]):
             # If the temperature bin has been visited.
             if paramIndex in associatedParamInd:
-                paramIndexMask = np.isin(associatedParamInd, paramIndex)
+                paramIndexMask = np.isin(associatedParamInd, paramIndex) # only output a list of boolean values dim = numParambins
                 # Normalize the weights per this bin.
                 print('paramIndexMask:', paramIndexMask)
+                # TODO: double check
                 personalizedMapWeights[paramIndexMask] = personalizedMapWeights[paramIndexMask] / personalizedMapWeights[paramIndexMask].sum()
                 print('personalizedMapWeights:', personalizedMapWeights)
                 print('personalizedMapWeights[paramIndexMask]:', personalizedMapWeights[paramIndexMask])

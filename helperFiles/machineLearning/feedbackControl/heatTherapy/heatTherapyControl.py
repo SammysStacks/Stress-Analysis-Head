@@ -30,7 +30,7 @@ class heatTherapyControl(heatTherapyHelpers):
                 self.therapyProtocol.getNextState(therapyState, self.therapyMethod)
 
                 # Preparation for plotting
-                combinedStates = [[param_state, user_compiled_mental] for param_state, user_compiled_mental in zip(self.therapyProtocol.paramStatePath, self.therapyProtocol.userMentalStateCompiledLoss)]
+                combinedStates = [[param_state, user_compiled_mental] for param_state, user_compiled_mental in zip(self.therapyProtocol.unNormalizedParameter, self.therapyProtocol.userMentalStateCompiledLoss)]
 
                 if self.plotResults:
                     self.therapyProtocol.plottingProtocolsMain.plotTherapyResults(combinedStates, allMaps)
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     userTherapyMethod = "aStarTherapyProtocol"  # The therapy algorithm to run. Options: "aStarTherapyProtocol", "basicTherapyProtocol", "nnTherapyProtocol", "hmmTherapyProtocol"
     testingUserName = "Squirtle"  # The username for the therapy.
     temperatureBounds = (35, 50)  # The temperature bounds for the therapy.
-    temperatureBinWidth = 0.5  # The temperature bounds for the therapy.
+    temperatureBinWidth = 1  # The temperature bounds for the therapy.
     plotTherapyResults = True  # Whether to plot the results.
 
     # Simulation parameters.

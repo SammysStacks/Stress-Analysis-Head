@@ -6,8 +6,9 @@ import torch
 
 
 class plottingProtocolsMain:
-    def __init__(self, modelParameterBounds, allNumParameterBins, parameterBinWidths, predictionBounds, allNumPredictionBins, predictionBinWidths):
+    def __init__(self, initialParameterBounds, modelParameterBounds, allNumParameterBins, parameterBinWidths, predictionBounds, allNumPredictionBins, predictionBinWidths):
         # General parameters.
+        self.initialParameterBounds = initialParameterBounds.squeeze()  # The bounds for the parameter.
         self.modelParameterBounds = modelParameterBounds  # The bounds for the parameter.
         self.parameterBinWidths = parameterBinWidths  # The width of the parameter bins.
         self.predictionBinWidths = predictionBinWidths  # The width of the loss bins.
@@ -48,7 +49,8 @@ class plottingProtocolsMain:
         # Plotting each map with the corresponding user state path
         for i, (map_to_plot, title) in enumerate(zip(maps, titles)):
             ax = axs[i % 2, i // 2]  # Correct indexing for subplot
-            plottingImage = ax.imshow(map_to_plot.T, cmap='coolwarm', extent=[self.modelParameterBounds[0].item(), self.modelParameterBounds[1].item(), 0, 1], aspect='auto', origin='lower')
+
+            plottingImage = ax.imshow(map_to_plot.T, cmap='coolwarm', extent=[self.initialParameterBounds[0].item(), self.initialParameterBounds[1].item(), 0, 1], aspect='auto', origin='lower')
 
             # Plot past user states with fading red line
             for j in range(num_steps - 1):

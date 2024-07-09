@@ -33,6 +33,7 @@ class generalMethods:
                 # just duplicate the bins with largest binlength within allParameterBins and allPredictionBins
                 allParameterBins = [allParameterBins[maxParamIndex] for _ in allParameterBins]
                 allPredictionBins = [allPredictionBins[maxPredIndex] for _ in allPredictionBins]
+
         return allParameterBins, allPredictionBins
 
 
@@ -57,7 +58,7 @@ class generalMethods:
         allParameterBins = torch.tensor(allParameterBins).squeeze()
         predictionBins = torch.tensor(predictionBins).squeeze()
         # Generate a grid for Gaussian distribution calculations
-        x, y = torch.meshgrid(allParameterBins, predictionBins) #TODO: check x y axis, my understanding we need parameter on the x and then prediction on the y
+        x, y = torch.meshgrid(allParameterBins, predictionBins, indexing='ij')
 
         # Calculate Gaussian distribution values across the grid
         gaussMatrix = torch.exp(-0.5 * ((x - gausMean[0]) ** 2 / gausSTD[0] ** 2 + (y - gausMean[1]) ** 2 / gausSTD[1] ** 2))
@@ -73,14 +74,13 @@ class generalMethods:
         """Note: single emotion data can be (T, PA), (T, NA), (T, SA), and (T, compiledLoss) corresponding to different types of map we have for heat therapy"""
         # allParameterBins is a 2D array of size (numParameters, numBins)
         probabilityMatrix = torch.zeros((len(allParameterBins[0]), len(singlePredictionBins))) # dim: torch.Size([numParameterBins[0], singlePredictionBins])
-        # TODO: Add checks if the input data only has 1 param, loss sequence:
         # Calculate the probability matrix.
 
         for initialDataPoints in initialSingleEmotionData:
             currentUserTemp = initialDataPoints[0] # within loop: torch.Size([1, 1])
             currentUserLoss = initialDataPoints[1] # within loop: torch.Size([1, 1])
 
-            if not applyGaussianFilter:
+            if applyGaussianFilter:
                 # Generate a delta function probability.
                 tempBinIndex = self.dataInterface.getBinIndex(allParameterBins, currentUserTemp)
                 lossBinIndex = self.dataInterface.getBinIndex(singlePredictionBins, currentUserLoss)
@@ -88,7 +88,7 @@ class generalMethods:
 
             else:
                 # Generate 2D gaussian matrix.
-                gaussianMatrix = self.createGaussianMap(allParameterBins, singlePredictionBins, gausMean=(currentUserLoss, currentUserTemp), gausSTD=(gausParamSTD, gausLossSTD))
+                gaussianMatrix = self.createGaussianMap(allParameterBins, singlePredictionBins, gausMean=(currentUserTemp, currentUserLoss), gausSTD=(gausParamSTD, gausLossSTD))
                 probabilityMatrix += gaussianMatrix  # Add the gaussian map to the matrix
 
         # gauss data structure change for input

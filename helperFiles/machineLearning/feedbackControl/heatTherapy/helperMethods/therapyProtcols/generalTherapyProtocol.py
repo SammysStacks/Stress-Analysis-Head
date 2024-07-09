@@ -25,6 +25,7 @@ class generalTherapyProtocol(abc.ABC):
         self.compileModelInfoClass = compileModelInfo()  # The class for compiling model information.
         # Get information from the hard-coded survey information.
         self.predictionBinWidths = self.compileModelInfoClass.standardErrorMeasurements  # using the SEM as bin width for the losses (PA, NA, SA)
+
         self.optimalPredictions = self.compileModelInfoClass.optimalPredictions  # The bounds for the mental health predictions.
         self.predictionWeights = self.compileModelInfoClass.predictionWeights  # The weights for the loss function. [PA, NA, SA]
         self.predictionBounds = self.compileModelInfoClass.predictionBounds  # The bounds for the mental health predictions.
@@ -63,7 +64,7 @@ class generalTherapyProtocol(abc.ABC):
 
         # Define a helper class for experimental parameters.
         self.simulationProtocols = simulationProtocols(self.allParameterBins, self.allPredictionBins, self.predictionBinWidths, self.modelParameterBounds, self.numPredictions, self.numParameters, self.predictionWeights, self.optimalNormalizedState, self.initialParameterBounds, self.unNormalizedAllParameterBins, simulationParameters)
-        self.plottingProtocolsMain = plottingProtocolsMain(self.modelParameterBounds, self.allNumParameterBins, self.parameterBinWidths, self.predictionBounds, self.allNumPredictionBins, self.predictionBinWidths)
+        self.plottingProtocolsMain = plottingProtocolsMain(self.initialParameterBounds, self.modelParameterBounds, self.allNumParameterBins, self.parameterBinWidths, self.predictionBounds, self.allNumPredictionBins, self.predictionBinWidths)
         #self.empatchProtocols = empatchProtocols(self.predictionOrder, self.predictionBounds, self.modelParameterBounds, therapyMethod=therapyMethod)
         self.dataInterface = dataInterface(self.predictionWeights, self.optimalNormalizedState)
         self.generalMethods = generalMethods()
@@ -74,6 +75,7 @@ class generalTherapyProtocol(abc.ABC):
         self.timePoints = None
         self.userMentalStateCompiledLoss = None
         self.userName = None
+        self.unNormalizedParameter = None
         self.resetTherapy()
 
     def resetTherapy(self):
@@ -84,6 +86,7 @@ class generalTherapyProtocol(abc.ABC):
         self.timePoints = [] # The time points for the therapy.
         self.userMentalStateCompiledLoss = []  # The compiled loss for the user's mental state.
         self.userName = []  # The user's name.
+        self.unNormalizedParameter = []
         # Reset the therapy maps.
         self.initializeMaps()
 
@@ -119,6 +122,10 @@ class generalTherapyProtocol(abc.ABC):
         compiledLoss = self.dataInterface.calculateCompiledLoss(emotionStates[-1])  # compile the loss state for the current emotion state; torch.Size([1, 1, 1, 1])
         self.userMentalStateCompiledLoss.append(compiledLoss) #  list of tensor torch.Size([1, 1, 1, 1])
         self.userName.append(userName) # list: username
+        initialUserParamBinIndex = self.dataInterface.getBinIndex(self.allParameterBins, parameters)
+        initialUserParam = self.unNormalizedAllParameterBins[0][initialUserParamBinIndex]  # bound the initial temperature (1D)
+        initialUserParam = self.boundNewTemperature(initialUserParam, bufferZone=0.01)  # bound the initial temperature (1D)
+        self.unNormalizedParameter.append(initialUserParam) # list of tensor torch.Size([1, 1, 1, 1])
 
 
 
@@ -151,14 +158,27 @@ class generalTherapyProtocol(abc.ABC):
             print('newUserLoss, PA, NA, SA', newUserLoss, PA, NA, SA)
             combinedMentalState = torch.cat((PA, NA, SA), dim=1)
             print(f'newuSerparam,newuserLoss {newParamValues, newUserLoss}')
+            # unbound temperature:
+            param_state_index = self.dataInterface.getBinIndex(self.allParameterBins[0], newParamValues)
+            param_state_unbound = self.unNormalizedAllParameterBins[0][param_state_index]
+            param_state_unbound = self.boundNewTemperature(param_state_unbound, bufferZone=0.01)  # newUserParam = torch.Size([1, 1, 1, 1])
+            print('param_state_unbound', param_state_unbound)
             # User state update
 
             self.timePoints.append(newTimePoint)  # TODO: check dimension
             self.paramStatePath.append(newParamValues)  # TODO: check dimension
             self.userMentalStatePath.append(combinedMentalState)  # TODO: check dimension
             self.userMentalStateCompiledLoss.append(newUserLoss)  # TODO: check dimension
+            self.unNormalizedParameter.append(param_state_unbound)  # TODO: check dimension
         else:
             pass
+
+    def boundNewTemperature(self, newUserParam, bufferZone=0.01):
+        # Bound the new temperature.
+        # TODO: current implementation only for heat therapy (1D), so we extract the parameter bounds at the 1st dimension. For music therapy, we need both dimensions
+        newUserTemp = max((self.initialParameterBounds[0][0]).numpy() + bufferZone, min((self.initialParameterBounds[0][1]).numpy() - bufferZone, newUserParam))
+        newUserTemp = torch.tensor(newUserTemp).view(1, 1, 1, 1)
+        return newUserTemp
 
     def checkConvergence(self, maxIterations):
         # Check if the therapy has converged.

@@ -147,21 +147,27 @@ class simulationProtocols:
             currentLossIndex = self.dataInterface.getBinIndex(resampledPredictionBins[0], currentUserLoss)
             currentTempBinIndex = self.dataInterface.getBinIndex(resampledParameterBins[0], currentUserTemp)
             newTempBinIndex = self.dataInterface.getBinIndex(resampledParameterBins[0], newUserTemp)
+            newUserLoss, PA, NA, SA = self.sampleNewLoss(currentUserLoss, currentLossIndex, currentTempBinIndex, newTempBinIndex, currentUserState, therapyMethod, bufferZone=0.01)
+            newUserLoss = torch.tensor(newUserLoss).view(1, 1, 1, 1)
+            PA = torch.tensor(PA).view(1, 1, 1, 1)
+            NA = torch.tensor(NA).view(1, 1, 1, 1)
+            SA = torch.tensor(SA).view(1, 1, 1, 1)
+            return newUserLoss, PA, NA, SA
 
         else:
+            # for other conditions or protocols
             # Calculate the bin indices for the current and new user states.
             currentLossIndex = self.dataInterface.getBinIndex(self.allPredictionBins, currentUserLoss)
             newTempBinIndex = self.dataInterface.getBinIndex(self.allParameterBins, newUserTemp)
+            #newUserLoss, PA, NA, SA = self.sampleNewLoss(currentUserLoss, currentLossIndex, currentTempBinIndex, newTempBinIndex, currentUserState, therapyMethod, bufferZone=0.01)
         # Simulate a new user loss.
+            newUserLoss = None
+            PA = None
+            NA = None
+            SA = None
+            return newUserLoss, PA, NA, SA
 
-        newUserLoss, PA, NA, SA = self.sampleNewLoss(currentUserLoss, currentLossIndex, currentTempBinIndex, newTempBinIndex, currentUserState, therapyMethod, bufferZone=0.01)
-        newUserLoss = torch.tensor(newUserLoss).view(1, 1, 1, 1)
-        PA = torch.tensor(PA).view(1, 1, 1, 1)
-        NA = torch.tensor(NA).view(1, 1, 1, 1)
-        SA = torch.tensor(SA).view(1, 1, 1, 1)
-        return newUserLoss, PA, NA, SA
-
-    def sampleNewLoss(self, currentUserLoss, currentLossIndex, currentParamBinIndex, newParamIndex, currentUserState, therapyMethod=None, bufferZone=0.01, gausSTD=0.1):
+    def sampleNewLoss(self, currentUserLoss, currentLossIndex, currentParamBinIndex, newParamIndex, currentUserState, therapyMethod=None, bufferZone=0.01, gausSTD=0.05):
 
         simulatedMapPA = torch.tensor(self.simulatedMapPA, dtype=torch.float32)
         simulatedMapNA = torch.tensor(self.simulatedMapNA, dtype=torch.float32)
