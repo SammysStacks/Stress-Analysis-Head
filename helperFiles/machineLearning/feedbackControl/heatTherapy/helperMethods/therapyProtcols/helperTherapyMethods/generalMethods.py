@@ -73,7 +73,6 @@ class generalMethods:
         """Note: single emotion data can be (T, PA), (T, NA), (T, SA), and (T, compiledLoss) corresponding to different types of map we have for heat therapy"""
         # allParameterBins is a 2D array of size (numParameters, numBins)
         probabilityMatrix = torch.zeros((len(allParameterBins[0]), len(singlePredictionBins))) # dim: torch.Size([numParameterBins[0], singlePredictionBins])
-
         # TODO: Add checks if the input data only has 1 param, loss sequence:
         # Calculate the probability matrix.
 
@@ -98,6 +97,7 @@ class generalMethods:
 
         # Concatenate tensors
         combinedSTD = torch.cat((gausParamSTD, gausLossSTD))
+
         if applyGaussianFilter:
             # Smoothen the probability matrix.
             probabilityMatrix = self.smoothenArray(probabilityMatrix, sigma=combinedSTD.numpy())

@@ -54,7 +54,7 @@ class generalTherapyProtocol(abc.ABC):
         # Initialize the loss and parameter bins.
         self.allParameterBins = dataInterface.initializeAllBins(self.modelParameterBounds, self.parameterBinWidths)    # Note this is an UNEVEN 2D list. [[parameter]] bin list
         self.allPredictionBins = dataInterface.initializeAllBins(self.modelParameterBounds, self.predictionBinWidths)  # Note this is an UNEVEN 2D list. [[PA], [NA], [SA]] bin list
-
+        self.unNormalizedAllParameterBins = dataInterface.initializeAllBins(self.initialParameterBounds, self.unNormalizedParameterBinWidths.unsqueeze(0))  # Note this is an UNEVEN 2D list. [[parameter]] bin list
         # print('allPredictionBins: ', self.allPredictionBins)
 
         # Initialize the number of bins for the parameter and loss.
@@ -62,7 +62,7 @@ class generalTherapyProtocol(abc.ABC):
         self.allNumPredictionBins = [len(self.allPredictionBins[lossInd]) for lossInd in range(self.numPredictions)]  #PA, NA, SA number of bins in the list
 
         # Define a helper class for experimental parameters.
-        self.simulationProtocols = simulationProtocols(self.allParameterBins, self.allPredictionBins, self.predictionBinWidths, self.modelParameterBounds, self.numPredictions, self.numParameters, self.predictionWeights, self.optimalNormalizedState, simulationParameters)
+        self.simulationProtocols = simulationProtocols(self.allParameterBins, self.allPredictionBins, self.predictionBinWidths, self.modelParameterBounds, self.numPredictions, self.numParameters, self.predictionWeights, self.optimalNormalizedState, self.initialParameterBounds, self.unNormalizedAllParameterBins, simulationParameters)
         self.plottingProtocolsMain = plottingProtocolsMain(self.modelParameterBounds, self.allNumParameterBins, self.parameterBinWidths, self.predictionBounds, self.allNumPredictionBins, self.predictionBinWidths)
         #self.empatchProtocols = empatchProtocols(self.predictionOrder, self.predictionBounds, self.modelParameterBounds, therapyMethod=therapyMethod)
         self.dataInterface = dataInterface(self.predictionWeights, self.optimalNormalizedState)
@@ -109,7 +109,7 @@ class generalTherapyProtocol(abc.ABC):
         # timePints: a tensor
         # parameter: tensor of size 1, 1, 1, 1
         # emotionStates: tensor of size 1, 3, 1, 1
-        timePoints, parameters, emotionStates = self.getInitialSate()  # dim: numPoints, timePoint: t; emotionStates: (PA, NA, SA); prediction: predict the next state
+        timePoints, parameters, emotionStates = self.getInitialSate()  # dim: numPoints, timePoint: t; emotionStates: (PA, NA, SA); prediction: predict the next state; Note these are actual state values
         # Track the user state and time delay.
         startTimePoint = timePoints
         self.timePoints.append(startTimePoint) # timePoints: list of tensor: [tensor(0)]
@@ -120,10 +120,6 @@ class generalTherapyProtocol(abc.ABC):
         self.userMentalStateCompiledLoss.append(compiledLoss) #  list of tensor torch.Size([1, 1, 1, 1])
         self.userName.append(userName) # list: username
 
-        print('timePoints: ', self.timePoints)
-        print('paramStatePath: ', self.paramStatePath)
-        print('userMentalStatePath: ', self.userMentalStatePath)
-        print('userMentalStateCompiledLoss: ', self.userMentalStateCompiledLoss)
 
 
 
@@ -145,7 +141,6 @@ class generalTherapyProtocol(abc.ABC):
             lastTimePoint = self.timePoints[-1] if len(self.timePoints) != 0 else 0
             # convert tensor to int
             lastTimePoint = int(lastTimePoint)
-            print('lastTimePoint: ', lastTimePoint)
             newTimePoint = self.simulationProtocols.getSimulatedTimes(self.simulationProtocols.initialPoints, lastTimePoint)
             # get the current user state
             currentParam = self.paramStatePath[-1]
@@ -153,10 +148,11 @@ class generalTherapyProtocol(abc.ABC):
             # Sample the new loss form a pre-simulated map.
             newUserLoss, PA, NA, SA = self.simulationProtocols.getSimulatedCompiledLoss(currentParam, currentEmotionStates, newParamValues, therapyMethod)
             # combined mentalstate
+            print('newUserLoss, PA, NA, SA', newUserLoss, PA, NA, SA)
             combinedMentalState = torch.cat((PA, NA, SA), dim=1)
+            print(f'newuSerparam,newuserLoss {newParamValues, newUserLoss}')
             # User state update
-            print('newParamValues: ', newParamValues)
-            print('timePoints: ', newTimePoint)
+
             self.timePoints.append(newTimePoint)  # TODO: check dimension
             self.paramStatePath.append(newParamValues)  # TODO: check dimension
             self.userMentalStatePath.append(combinedMentalState)  # TODO: check dimension

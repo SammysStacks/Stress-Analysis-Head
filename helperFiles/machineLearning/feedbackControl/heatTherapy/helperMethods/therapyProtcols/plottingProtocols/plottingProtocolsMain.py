@@ -43,7 +43,7 @@ class plottingProtocolsMain:
         fig, axs = plt.subplots(2, 2, figsize=(12, 12))
 
         # Color and alpha gradient for the path
-        alphas = np.linspace(0.1, 1, num_steps - 1)  # Adjust alpha for segments
+        alphas = np.linspace(0.1, 1, num_steps - 1) ** 10  # Adjust alpha for segments
 
         # Plotting each map with the corresponding user state path
         for i, (map_to_plot, title) in enumerate(zip(maps, titles)):
@@ -55,7 +55,6 @@ class plottingProtocolsMain:
                 ax.plot([userStatePath[j][0].item(), userStatePath[j + 1][0].item()],
                         [userStatePath[j][1].item(), userStatePath[j + 1][1].item()],
                         color=(0, 0, 0, alphas[j]), linewidth=2)
-            print('userStatePath', userStatePath)
 
             ax.scatter(userStatePath[-1][0].item(), userStatePath[-1][1].item(), color='tab:red', label='Current State', edgecolor='black', s=75, zorder=10)
             ax.set_title(f'{title} (After Iteration {num_steps})')

@@ -1,5 +1,7 @@
 # General
 import torch
+import torch.nn.functional as F
+import numpy as np
 
 # Import helper files.
 from helperFiles.machineLearning.feedbackControl.heatTherapy.helperMethods.dataInterface.dataInterface import dataInterface
@@ -7,10 +9,11 @@ from helperFiles.machineLearning.feedbackControl.heatTherapy.helperMethods.thera
 
 
 class simulationProtocols:
-    def __init__(self, allParameterBins, allPredictionBins, predictionBinWidths, modelParameterBounds, numPredictions, numParameters, predictionWeights, optimalNormalizedState, simulationParameters):
+    def __init__(self, allParameterBins, allPredictionBins, predictionBinWidths, modelParameterBounds, numPredictions, numParameters, predictionWeights, optimalNormalizedState, initialParameterBounds, unNormalizedParameterBins, simulationParameters):
         # General parameters.
         self.optimalNormalizedState = optimalNormalizedState
         self.modelParameterBounds = modelParameterBounds
+        self.initialParameterBounds = initialParameterBounds
         self.simulationParameters = simulationParameters
         self.predictionBinWidths = predictionBinWidths
         self.allPredictionBins = allPredictionBins
@@ -18,14 +21,18 @@ class simulationProtocols:
         self.allParameterBins = allParameterBins
         self.numPredictions = numPredictions
         self.numParameters = numParameters
+        self.unNormalizedParamBins = unNormalizedParameterBins
         # Hardcoded parameters.
         self.initialTimePoint = 0
         self.initialPoints = 1
         self.timeDelay = 10
         self.startingPoints = [47,  0.5966159,   0.69935307,  0.91997683] # Can use a random start point, for now just this
 
+
         # Given simulation parameters.
+        self.UnNormalizedUniformParamSampler = torch.distributions.uniform.Uniform(torch.FloatTensor([initialParameterBounds.squeeze()[0]]), torch.FloatTensor([initialParameterBounds.squeeze()[1]]))
         self.uniformParamSampler = torch.distributions.uniform.Uniform(torch.FloatTensor([modelParameterBounds[0]]), torch.FloatTensor([modelParameterBounds[1]]))
+        self.uniformPredictionSampler = torch.distributions.uniform.Uniform(torch.FloatTensor([modelParameterBounds[0]]), torch.FloatTensor([modelParameterBounds[1]]))
         self.numSimulationHeuristicSamples = simulationParameters['numSimulationHeuristicSamples']
         self.numSimulationTrueSamples = simulationParameters['numSimulationTrueSamples']
         self.heuristicMapType = simulationParameters['heuristicMapType']
@@ -33,7 +40,7 @@ class simulationProtocols:
 
         # Simulated parameters.
         self.startingTimes, self.startingParams, self.startingPredictions = self.randomlySamplePoints(numPoints=self.initialPoints, lastTimePoint=self.initialTimePoint - self.timeDelay)
-
+        print(f'startingTimes, straringParams, startingPredictions: {self.startingTimes, self.startingParams, self.startingPredictions}')
         # Uninitialized parameters.
         self.simulatedMapPA = None
         self.simulatedMapNA = None
@@ -72,7 +79,7 @@ class simulationProtocols:
 
     def randomlySamplePoints(self, numPoints=1, lastTimePoint=None):
         # generate a random temperature within the bounds.
-        sampledPredictions = self.uniformParamSampler.sample(torch.Size([numPoints, self.numPredictions])).unsqueeze(-1) # torch.size ([numPoints, numPredictions, 1, 1]) ([1,3,1,1])
+        sampledPredictions = self.uniformPredictionSampler.sample(torch.Size([numPoints, self.numPredictions])).unsqueeze(-1) # torch.size ([numPoints, numPredictions, 1, 1]) ([1,3,1,1])
         sampledParameters = self.uniformParamSampler.sample(torch.Size([numPoints, self.numParameters])).unsqueeze(-1) # torch.size ([numPoints, numParameters, 1, 1]) ([1,1,1,1]) for heat therapy we just have temperature so second dim is 1
         simulatedTimes = self.getSimulatedTimes(numPoints, lastTimePoint) # torch.size([0]) at the beginning. nothing is in here. tensor([], dtype=torch.int64)
         # sampledPredictions dimension: numPoints, numPredictions
@@ -112,19 +119,21 @@ class simulationProtocols:
 
         # it doesn't really matter to index resampledPrediciton bins or not, it's the same anyways
         # Map sizes: torch.Size([4, 19]) corresponding to numParamBins at 1st dimension and numPredictionBins
+        """VERY IMPORTANT: simulated maps are all probability matrices, meaning the probability of possessing certain parameter prediction pairs on the map"""
         self.simulatedMapPA = self.generalMethods.getProbabilityMatrix(initialSimulatedData_PA, resampledParameterBins, resampledPredictionBins[0], gausParamSTDs, gausLossSTDs[0], noise=0.1, applyGaussianFilter=applyGaussianFilter)
         self.simulatedMapNA = self.generalMethods.getProbabilityMatrix(initialSimulatedData_NA, resampledParameterBins, resampledPredictionBins[1], gausParamSTDs, gausLossSTDs[1], noise=0.1, applyGaussianFilter=applyGaussianFilter)
         self.simulatedMapSA = self.generalMethods.getProbabilityMatrix(initialSimulatedData_SA, resampledParameterBins, resampledPredictionBins[2], gausParamSTDs, gausLossSTDs[2], noise=0.1, applyGaussianFilter=applyGaussianFilter)
 
-
         # say that state anxiety has a slightly higher weight and normalize
         self.simulatedMapCompiledLoss = (lossWeights[0]*self.simulatedMapPA + lossWeights[1]*self.simulatedMapNA + lossWeights[2]*self.simulatedMapSA)
         self.simulatedMapCompiledLoss = self.simulatedMapCompiledLoss / torch.sum(self.simulatedMapCompiledLoss) # Normalization
+        # self.simulatedMapCompiledLoss = self.apply_gaussian_smoothing(self.simulatedMapCompiledLoss, kernel_size=3, sigma=0.5)
+        # smoothen the map
 
     def getSimulatedCompiledLoss(self, currentParam, currentUserState, newUserTemp=None, therapyMethod = None):
         # Unpack the current user state.
         currentUserTemp = currentParam
-        print('entering calculateCiled Loss in getnextstates')
+        print('entering calculate Loss in getNextStates')
         currentUserLoss = self.dataInterface.calculateCompiledLoss(currentUserState) # torch.Size([1, 1, 1, 1])
 
         newUserTemp = currentUserTemp if newUserTemp is None else newUserTemp
@@ -134,39 +143,26 @@ class simulationProtocols:
             resampledParameterBins, resampledPredictionBins = self.generalMethods.resampleBins(self.allParameterBins, self.allPredictionBins, eventlySpacedBins=False)
             # Calculate the bin indices for the current and new user states.
 
-            # doesn't matter to index resampledPrediciton bins or not, it's the same anyways if we are resampling
+            # doesn't matter to index resampledPrediciton bins or not, it's the same anyway if we are resampling
             currentLossIndex = self.dataInterface.getBinIndex(resampledPredictionBins[0], currentUserLoss)
+            currentTempBinIndex = self.dataInterface.getBinIndex(resampledParameterBins[0], currentUserTemp)
             newTempBinIndex = self.dataInterface.getBinIndex(resampledParameterBins[0], newUserTemp)
+
         else:
             # Calculate the bin indices for the current and new user states.
             currentLossIndex = self.dataInterface.getBinIndex(self.allPredictionBins, currentUserLoss)
             newTempBinIndex = self.dataInterface.getBinIndex(self.allParameterBins, newUserTemp)
         # Simulate a new user loss.
-        sampledLoss_compiled, PA_compiled, NA_compiled, SA_compiled = self.sampleNewLoss(currentLossIndex, newTempBinIndex, therapyMethod)
 
-        # get the loss value with max probability
-        sampledLoss_compiled_max = max(sampledLoss_compiled)
-        PA_max = max(PA_compiled)
-        NA_max = max(NA_compiled)
-        SA_max = max(SA_compiled)
+        newUserLoss, PA, NA, SA = self.sampleNewLoss(currentUserLoss, currentLossIndex, currentTempBinIndex, newTempBinIndex, currentUserState, therapyMethod, bufferZone=0.01)
+        newUserLoss = torch.tensor(newUserLoss).view(1, 1, 1, 1)
+        PA = torch.tensor(PA).view(1, 1, 1, 1)
+        NA = torch.tensor(NA).view(1, 1, 1, 1)
+        SA = torch.tensor(SA).view(1, 1, 1, 1)
+        return newUserLoss, PA, NA, SA
 
-        # stacking them to pass on calculating compiled Loss
-        combinedEmotionStates = torch.stack([PA_compiled, NA_compiled, SA_compiled], dim=1)
-        if combinedEmotionStates.shape != torch.Size([19, 3, 1, 1]):
-            combinedEmotionStates = combinedEmotionStates.view(19, 3, 1, 1)
+    def sampleNewLoss(self, currentUserLoss, currentLossIndex, currentParamBinIndex, newParamIndex, currentUserState, therapyMethod=None, bufferZone=0.01, gausSTD=0.1):
 
-        newUserLoss = self.dataInterface.calculateCompiledLoss(combinedEmotionStates)
-        # normalize newUserLoss
-        newUserLoss = newUserLoss / torch.sum(newUserLoss)
-        newUserLoss_max = max(newUserLoss).unsqueeze(0)
-        # ensure dimensions are correct
-        PA_max = PA_max.view(1, 1, 1, 1)
-        NA_max = NA_max.view(1, 1, 1, 1)
-        SA_max = SA_max.view(1, 1, 1, 1)
-        # Note: sampledLoss_compiled is not the same as newUserLoss, sampledLoss_compiled sampled from compiled loss map directly, newUserloss calculated from PA, NA, SA
-        return newUserLoss_max, PA_max, NA_max, SA_max
-
-    def sampleNewLoss(self, currentLossIndex, newParamIndex, therapyMethod=None, gausSTD=0.1):
         simulatedMapPA = torch.tensor(self.simulatedMapPA, dtype=torch.float32)
         simulatedMapNA = torch.tensor(self.simulatedMapNA, dtype=torch.float32)
         simulatedMapSA = torch.tensor(self.simulatedMapSA, dtype=torch.float32)
@@ -174,29 +170,43 @@ class simulationProtocols:
         if therapyMethod == 'aStarTherapyProtocol':
             # resampling
             resampledParameterBins, resampledPredictionBins = self.generalMethods.resampleBins(self.allParameterBins, self.allPredictionBins, eventlySpacedBins=False)
-            allPredictionBins = torch.tensor(resampledPredictionBins, dtype=torch.float32)
+            if newParamIndex != currentParamBinIndex or torch.rand(1).item() < 0.1:
 
-        # Calculate new loss probabilities and Gaussian boost
-        newLossProbabilities = simulatedMapCompiledLoss[newParamIndex] / torch.sum(simulatedMapCompiledLoss[newParamIndex])
+                # Calculate new loss probabilities and Gaussian boost
+                newLossProbabilities = simulatedMapCompiledLoss[newParamIndex] / torch.sum(simulatedMapCompiledLoss[newParamIndex])
 
-        gaussian_boost = self.generalMethods.createGaussianArray(inputData=newLossProbabilities.numpy(), gausMean=currentLossIndex, gausSTD=gausSTD, torchFlag=True)
-        # Combine the two distributions and normalize
-        newLossProbabilities = newLossProbabilities + gaussian_boost
-        newLossProbabilities = newLossProbabilities / torch.sum(newLossProbabilities)
+                gaussian_boost = self.generalMethods.createGaussianArray(inputData=newLossProbabilities.numpy(), gausMean=currentLossIndex, gausSTD=gausSTD, torchFlag=True)
+                # Combine the two distributions and normalize
+                newLossProbabilities = newLossProbabilities + gaussian_boost
+                newLossProbabilities = newLossProbabilities / torch.sum(newLossProbabilities)
 
-        # Sample distribution of loss at a certain temperature for PA, NA, SA
-        simulatedSpecificMaps = {'PA': simulatedMapPA, 'NA': simulatedMapNA, 'SA': simulatedMapSA}
-        specificLossProbabilities = {}
+                # Sample a new loss from the distribution
+                newLossBinIndex = torch.multinomial(newLossProbabilities, 1).item()
+                newUserLoss = resampledPredictionBins[0][newLossBinIndex] # doesn't matter which prediction bins, after resampling they are the same. TODO: do we need to add half of the bin width? to make it in the middle?
+                # Sample distribution of loss at a certain temperature for PA, NA, SA
+                simulatedSpecificMaps = {'PA': simulatedMapPA, 'NA': simulatedMapNA, 'SA': simulatedMapSA}
+                specificLossProbabilities = {}
+                specificUserLosses = {}
 
-        for key in simulatedSpecificMaps.keys():
-            specificLossProbabilities[key] = simulatedSpecificMaps[key][newParamIndex] / torch.sum(simulatedSpecificMaps[key][newParamIndex])
-            gaussian_boost = self.generalMethods.createGaussianArray(inputData=specificLossProbabilities[key], gausMean=currentLossIndex, gausSTD=gausSTD, torchFlag=True)
-            specificLossProbabilities[key] = specificLossProbabilities[key] + gaussian_boost
-            specificLossProbabilities[key] = specificLossProbabilities[key] / torch.sum(specificLossProbabilities[key])
+                for key in simulatedSpecificMaps.keys():
+                    specificLossProbabilities[key] = simulatedSpecificMaps[key][newParamIndex] / torch.sum(simulatedSpecificMaps[key][newParamIndex])
+                    gaussian_boost = self.generalMethods.createGaussianArray(inputData=specificLossProbabilities[key].numpy(), gausMean=currentLossIndex, gausSTD=gausSTD, torchFlag=True)
+                    specificLossProbabilities[key] = specificLossProbabilities[key] + gaussian_boost
+                    specificLossProbabilities[key] = specificLossProbabilities[key] / torch.sum(specificLossProbabilities[key])
 
-        # specificLossProbabilities contains the normalized loss probabilities for PA, NA, and SA
+                    # Optionally, you can also sample a new loss for each specific map if needed
+                    newSpecificLossBinIndex = torch.multinomial(specificLossProbabilities[key], 1).item()
+                    specificUserLosses[key] = resampledPredictionBins[0][newSpecificLossBinIndex]
+                    print(f"{key} specific user loss: {specificUserLosses[key]}")
 
-        return newLossProbabilities, specificLossProbabilities['PA'], specificLossProbabilities['NA'], specificLossProbabilities['SA']
+                # specificLossProbabilities contains the normalized loss probabilities for PA, NA, and SA
+                return newUserLoss, specificUserLosses['PA'], specificUserLosses['NA'], specificUserLosses['SA']
+            else:
+                newUserLoss = currentUserLoss + torch.normal(mean=0.0, std=0.01, size=currentUserLoss.size())
+                newUserLossPA = currentUserState[0][0][0][0] + torch.normal(mean=0.0, std=0.01, size=currentUserState[0][0][0][0].size())
+                newUserLossNA = currentUserState[0][1][0][0] + torch.normal(mean=0.0, std=0.01, size=currentUserState[0][1][0][0].size())
+                newUserLossSA = currentUserState[0][2][0][0] + torch.normal(mean=0.0, std=0.01, size=currentUserState[0][2][0][0].size())
+                return newUserLoss, newUserLossPA, newUserLossNA, newUserLossSA
 
     # ------------------------ Sampling Methods ------------------------ #
 
@@ -249,3 +259,42 @@ class simulationProtocols:
         simulatedTimes = simulatedTimes.pow(2)
 
         return simulatedTimes, sampledParameters, sampledPredictions
+
+
+    def apply_gaussian_smoothing(self, input_map, kernel_size=5, sigma=0.1):
+        """
+        Apply Gaussian smoothing to the input map.
+
+        Parameters:
+        input_map (torch.Tensor): The input probability map.
+        kernel_size (int): The size of the Gaussian kernel. Default is 5.
+        sigma (float): The standard deviation of the Gaussian kernel. Default is 1.0.
+
+        Returns:
+        torch.Tensor: The smoothed probability map with the same size as the input.
+        """
+
+        # Create a 1D Gaussian kernel
+        def gaussian_kernel_1d(kernel_size, sigma):
+            half_size = (kernel_size - 1) // 2
+            x = torch.arange(-half_size, half_size + 1, dtype=torch.float32)
+            kernel = torch.exp(-0.5 * (x / sigma) ** 2)
+            kernel = kernel / kernel.sum()
+            return kernel
+
+        # Create a 2D Gaussian kernel from the 1D kernel
+        def gaussian_kernel_2d(kernel_size, sigma):
+            kernel_1d = gaussian_kernel_1d(kernel_size, sigma)
+            kernel_2d = kernel_1d[:, None] * kernel_1d[None, :]
+            return kernel_2d
+
+        kernel_2d = gaussian_kernel_2d(kernel_size, sigma)
+        kernel_2d = kernel_2d.expand(1, 1, -1, -1)
+
+        # Apply the Gaussian filter
+        input_map = input_map.unsqueeze(0).unsqueeze(0)
+        padding = kernel_size // 2
+        smoothed_map = F.conv2d(input_map, kernel_2d, padding=padding)
+        smoothed_map = smoothed_map.squeeze(0).squeeze(0)
+
+        return smoothed_map

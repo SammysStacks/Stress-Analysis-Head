@@ -9,7 +9,7 @@ class aStarTherapyProtocol(generalTherapyProtocol):
         super().__init__(initialParameterBounds, unNormalizedParameterBinWidths, simulationParameters, therapyMethod)
         # Define update parameters.
         # TODO: rexamine the gausSTD
-        self.gausParam_STD = torch.tensor([0.3333]) #self.gausParameterSTDs  # The standard deviation for the Gaussian distribution.
+        self.gausParam_STD = torch.tensor([1]) #self.gausParameterSTDs  # The standard deviation for the Gaussian distribution.
         self.gausLoss_STD = torch.tensor([0.05]) #self.gausLossSTDs
         self.learningRate = learningRate  # The learning rate for the therapy.
         self.discretePersonalizedMap = []  # The discrete personalized map.
@@ -30,10 +30,11 @@ class aStarTherapyProtocol(generalTherapyProtocol):
         # resampled bins for the parameter and prediction bins
         self.allParameterBins_resampled, self.allPredictionBins_resampled = self.generalMethods.resampleBins(self.allParameterBins, self.allPredictionBins, eventlySpacedBins=False)
 
+
     def updateTherapyState(self):
         # Get the current user state.
-        currentParam = self.paramStatePath[-1] # dim should be torch.Size([1, 1, 1, 1])
-        currentCompiledLoss = self.userMentalStateCompiledLoss[-1]
+        currentParam = self.paramStatePath[-1] # dim should be torch.Size([1, 1, 1, 1]); actual parameter value
+        currentCompiledLoss = self.userMentalStateCompiledLoss[-1] # actual compiled loss value
 
         # Update the temperatures visited.
         paramBinIndex = self.dataInterface.getBinIndex(self.allParameterBins_resampled, currentParam)
@@ -55,12 +56,8 @@ class aStarTherapyProtocol(generalTherapyProtocol):
 
         newUserParam = newUserParam + self.uncertaintyBias * np.random.normal(loc=0, scale=0.5)  # Add noise to the gradient.
         # Calculate the new temperature.
-        #newUserParam = self.boundNewTemperature(newUserParam, bufferZone=1) # newUserParam = torch.Size([1, 1, 1, 1])
-        print('benefitFunction:', benefitFunction.size())
-        print('heuristicMap:', self.heuristicMap.size())
-        print('personalizedMap:', personalizedMap.size())
-        print('simulationProtocols.simulatedMapCompiledLoss:', self.simulationProtocols.simulatedMapCompiledLoss.size())
-        newUserParam = torch.tensor(newUserParam).view(1, 1, 1, 1)
+        # newUserParam = self.boundNewTemperature(newUserParam, bufferZone=1) # newUserParam = torch.Size([1, 1, 1, 1])
+        newUserParam = torch.tensor(newUserParam).view(1, 1, 1, 1) # actual userParam, not probability
         # bound the parameter
         newUserParam = torch.clamp(newUserParam, min=0, max=1)
         return newUserParam, (benefitFunction, self.heuristicMap, personalizedMap, probabilityMap)
@@ -107,6 +104,7 @@ class aStarTherapyProtocol(generalTherapyProtocol):
 
         # Convert parameterBinWidths to numpy array or list
         parameterBinWidths = self.parameterBinWidths.numpy() if isinstance(self.parameterBinWidths, torch.Tensor) else self.parameterBinWidths # used to place the temperature at the center of the bin
+
         #TODO: Note current instrumentation is for heat therapy, which allParameterBins_resampled is a 2D array but only 1st index is used
         return self.allParameterBins_resampled[0][bestTempBinIndex] + parameterBinWidths / 2, expectedRewards
 
@@ -120,6 +118,7 @@ class aStarTherapyProtocol(generalTherapyProtocol):
         # Update the confidence flags.
         self.percentHeuristic = min(self.percentHeuristic, 1 - percentConfidence) - 0.001
         self.percentHeuristic = min(1.0, max(0.0, self.percentHeuristic))
+        print('self.percentHeuristic:', self.percentHeuristic)
 
         # Update the bias terms.
         self.explorationBias = self.percentHeuristic  # TODO
@@ -128,12 +127,12 @@ class aStarTherapyProtocol(generalTherapyProtocol):
     # ------------------------ Personalization Interface ------------------------ #
 
     def trackCurrentState(self, currentParam, currentCompiledLoss):
-        print('currentParam:', currentParam.size()) # torch.Size([1, 1, 1, 1])
-        print('currentCompiledLoss:', currentCompiledLoss.size()) # torch.Size([1, 1, 1, 1])
+
         initialSingleEmotionData = torch.cat((currentParam, currentCompiledLoss), dim=1) # dim: torch.Size([1, 2, 1, 1])
         # Smoothen out the discrete map into a probability distribution.
         probabilityMatrix = self.generalMethods.getProbabilityMatrix(initialSingleEmotionData, self.allParameterBins_resampled, self.allPredictionBins_resampled[0], self.gausParam_STD, self.gausLoss_STD, noise=0.0, applyGaussianFilter=True)
         self.discretePersonalizedMap.append(probabilityMatrix)  # the discretePersonalizedMap list will store the probability matrix
+
 
     @staticmethod
     def personalizedMapWeightingFunc(timeDelays, decay_constant):
@@ -162,25 +161,20 @@ class aStarTherapyProtocol(generalTherapyProtocol):
 
         # Get the weighting for each discrete temperature-loss pair.
         currentTimeDelays = np.abs(associatedTimePoints - associatedTimePoints[-1])
-        print('associatedParams:', associatedParams)
-        print('associatedTimePoints:', associatedTimePoints)
-        print('associateTimdPoints[-1]:', associatedTimePoints[-1])
-        print('currentTimeDelays:', currentTimeDelays)
         personalizedMapWeights = self.personalizedMapWeightingFunc(currentTimeDelays, self.decayConstant)
-        print('personalizedMapWeights:', personalizedMapWeights)
-        print('associatedParamInd:', associatedParamInd)
+
         # For each parameter bin.
         for paramIndex in range(self.allNumParameterBins[0]):
             # If the temperature bin has been visited.
             if paramIndex in associatedParamInd:
-                paramIndexMask = associatedParams == paramIndex
-                print('paramIndexMask:', paramIndexMask)
+                paramIndexMask = np.isin(associatedParamInd, paramIndex)
                 # Normalize the weights per this bin.
+                print('paramIndexMask:', paramIndexMask)
                 personalizedMapWeights[paramIndexMask] = personalizedMapWeights[paramIndexMask] / personalizedMapWeights[paramIndexMask].sum()
+                print('personalizedMapWeights:', personalizedMapWeights)
+                print('personalizedMapWeights[paramIndexMask]:', personalizedMapWeights[paramIndexMask])
 
         # Perform a weighted average of all the personalized maps.
-        print("self.discretePersonalizedMap:", self.discretePersonalizedMap)
-
         personalizedMap = np.sum(self.discretePersonalizedMap * personalizedMapWeights[:, np.newaxis], axis=0)
         if self.applyGaussianFilter:
             combinedSTD = torch.cat((self.gausParam_STD, self.gausLoss_STD))
