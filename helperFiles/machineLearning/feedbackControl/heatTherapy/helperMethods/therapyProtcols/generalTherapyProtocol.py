@@ -54,7 +54,7 @@ class generalTherapyProtocol(abc.ABC):
 
         # Initialize the loss and parameter bins.
         self.allParameterBins = dataInterface.initializeAllBins(self.modelParameterBounds, self.parameterBinWidths)    # Note this is an UNEVEN 2D list. [[parameter]] bin list
-        self.allPredictionBins = dataInterface.initializeAllBins(self.modelParameterBounds, self.predictionBinWidths)  # Note this is an UNEVEN 2D list. [[PA], [NA], [SA]] bin list
+        self.allPredictionBins = dataInterface.initializeAllBins(self.modelParameterBounds, self.predictionBinWidths)  # Note this is an UNEVEN 2D list. [[PA], [NA], [SA]] bin list TODO: the binwidth could be the same, but we can unNormalize differently?
         self.unNormalizedAllParameterBins = dataInterface.initializeAllBins(self.initialParameterBounds, self.unNormalizedParameterBinWidths.unsqueeze(0))  # Note this is an UNEVEN 2D list. [[parameter]] bin list
         # print('allPredictionBins: ', self.allPredictionBins)
 
@@ -94,6 +94,7 @@ class generalTherapyProtocol(abc.ABC):
     def initializeMaps(self):
         if self.simulateTherapy:
             self.simulationProtocols.initializeSimulatedMaps(self.predictionWeights, self.gausParameterSTDs, self.gausLossSTDs, self.applyGaussianFilter)
+            print("finished initializing Maps")
         else:
             # real data points
             temperature, pa, na, sa = self.empatchProtocols.getTherapyData()
@@ -126,6 +127,7 @@ class generalTherapyProtocol(abc.ABC):
         initialUserParam = self.unNormalizedAllParameterBins[0][initialUserParamBinIndex]  # bound the initial temperature (1D)
         initialUserParam = self.boundNewTemperature(initialUserParam, bufferZone=0.01)  # bound the initial temperature (1D)
         self.unNormalizedParameter.append(initialUserParam) # list of tensor torch.Size([1, 1, 1, 1])
+
 
 
 

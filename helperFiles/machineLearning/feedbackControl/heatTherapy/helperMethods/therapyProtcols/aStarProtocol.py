@@ -9,8 +9,8 @@ class aStarTherapyProtocol(generalTherapyProtocol):
         super().__init__(initialParameterBounds, unNormalizedParameterBinWidths, simulationParameters, therapyMethod)
         # Define update parameters.
         # TODO: rexamine the gausSTD
-        self.gausParam_STD = torch.tensor([1]) #self.gausParameterSTDs  # The standard deviation for the Gaussian distribution.
-        self.gausLoss_STD = torch.tensor([0.05]) #self.gausLossSTDs
+        self.gausParam_STD = self.gausParameterSTDs #self.gausParameterSTDs  # The standard deviation for the Gaussian distribution.
+        self.gausLoss_STD = torch.tensor([0.0580]) #self.gausLossSTDs
         self.learningRate = learningRate  # The learning rate for the therapy.
         self.discretePersonalizedMap = []  # The discrete personalized map.
 
@@ -90,10 +90,8 @@ class aStarTherapyProtocol(generalTherapyProtocol):
         # Calculate the expected rewards.
         potentialRewards = potentialLossBenefit[np.newaxis, :] # add 1 dimension from potentialLossBenefit
         expectedRewards = probabilityMap * potentialRewards
-        print('expectedRewards:', expectedRewards)
         # Find the best temperature bin index in the rewards.
         expectedRewardAtTemp = expectedRewards.sum(axis=1)
-        print('expectedRewardAtTemp:', expectedRewardAtTemp)
 
         bestTempBinIndex = torch.argmin(expectedRewardAtTemp).item() # minimizing losses, so lower values are better
 
@@ -164,11 +162,7 @@ class aStarTherapyProtocol(generalTherapyProtocol):
             if paramIndex in associatedParamInd:
                 paramIndexMask = np.isin(associatedParamInd, paramIndex) # only output a list of boolean values dim = numParambins
                 # Normalize the weights per this bin.
-                print('paramIndexMask:', paramIndexMask)
-                # TODO: double check
                 personalizedMapWeights[paramIndexMask] = personalizedMapWeights[paramIndexMask] / personalizedMapWeights[paramIndexMask].sum()
-                print('personalizedMapWeights:', personalizedMapWeights)
-                print('personalizedMapWeights[paramIndexMask]:', personalizedMapWeights[paramIndexMask])
 
         # Perform a weighted average of all the personalized maps.
         personalizedMap = np.sum(self.discretePersonalizedMap * personalizedMapWeights[:, np.newaxis], axis=0)

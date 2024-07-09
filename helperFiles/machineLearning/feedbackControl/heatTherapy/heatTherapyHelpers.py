@@ -31,7 +31,7 @@ class heatTherapyHelpers:
         if self.therapyMethod == "aStarTherapyProtocol":
             self.therapyProtocol = aStarTherapyProtocol(self.initialParameterBounds, self.unNormalizedParameterBinWidths, self.simulationParameters, therapyMethod, learningRate=2)
         elif self.therapyMethod == "basicTherapyProtocol":
-            self.therapyProtocol = basicTherapyProtocol(self.initialParameterBounds, self.simulationParameters)
+            self.therapyProtocol = basicTherapyProtocol(self.initialParameterBounds, self.unNormalizedParameterBinWidths, self.simulationParameters, therapyMethod)
         elif self.therapyMethod == "nnTherapyProtocol":
             self.therapyProtocol = nnTherapyProtocol(self.initialParameterBounds, self.simulationParameters, modelName="2024-04-12 heatTherapyModel", onlineTraining=False)
         elif self.therapyMethod == "hmmTherapyProtocol":

@@ -1,58 +1,74 @@
 # General
 import numpy as np
 import random
-
+import torch
 # Import files.
 from .generalTherapyProtocol import generalTherapyProtocol
 
 
 class basicTherapyProtocol(generalTherapyProtocol):
-    def __init__(self, temperatureBounds, simulationParameters):
-        super().__init__(temperatureBounds, simulationParameters)
+    def __init__(self, initialParameterBounds, unNormalizedParameterBinWidths, simulationParameters, therapyMethod):
+        super().__init__(initialParameterBounds, unNormalizedParameterBinWidths, simulationParameters, therapyMethod)
         # Specific basic protocol parameters
         self.discretePersonalizedMap = [] # store the probability matrix
-        self.gausSTD = np.array([0.05, 2.5])  # The standard deviation for the Gaussian distribution
+        self.gausParam_STD = self.gausParameterSTDs  # self.gausParameterSTDs  # The standard deviation for the Gaussian distribution.
+        self.gausLoss_STD = torch.tensor([0.0580]) # resampled bin width TODO: need to change it to be more general
         self.uncertaintyBias = 1  # The bias for uncertainty.
         self.finishedTherapy = False    # Whether the therapy has finished.
-        self.numTempsConsider = 2  # Number of temperatures to consider for the next step
+        self.numParamsConsider = 2  # Number of temperatures to consider for the next step
         self.percentHeuristic = 1  # The percentage of the heuristic map to use.
-        self.heuristicMap = self.initializeMaps()
+        self.heuristicMap = self.initializeStartingMaps()
 
+        # resampled bins for the parameter and prediction bins
+        self.allParameterBins_resampled, self.allPredictionBins_resampled = self.generalMethods.resampleBins(self.allParameterBins, self.allPredictionBins, eventlySpacedBins=False)
 
     # ------------------------ Update Parameters ------------------------ #
     def updateTherapyState(self):
         # get the current user state
-        currentUserState = self.userStatePath[-1]
-        currentUserTemp, currentUserLoss = currentUserState
+        currentParam = self.paramStatePath[-1]  # dim should be torch.Size([1, 1, 1, 1]); actual parameter value
+        currentCompiledLoss = self.userMentalStateCompiledLoss[-1]  # actual compiled loss value
 
         # Update temperature towards smaller loss
-        newUserTemp = self.updateTemperature(currentUserTemp, currentUserLoss)
-        newUserTemp = self.boundNewTemperature(newUserTemp)
+        newUserParam = self.updateTemperature(currentParam, currentCompiledLoss)
 
-        return newUserTemp, self.simulationProtocols.simulatedMap
+        return newUserParam, self.simulationProtocols.simulatedMapCompiledLoss
 
-    def updateTemperature(self, currentUserTemp, currentUserLoss):
+    def updateTemperature(self, currentUserParam, currentUserLoss):
         # Define the new temperature update step.
-        temperatureStep = self.tempBinWidth   # arbitrary direction step for temperature update
-
-        # If we have not visited the current temperature bin.
-        if len(self.userStatePath) <= 1:
+        paramStep = self.parameterBinWidths   # arbitrary direction step for temperature update
+        # first movement in the parameter space
+        if len(self.paramStatePath) <= 1:
             # Randomly move in a direction.
-            return currentUserTemp + random.uniform(-temperatureStep, temperatureStep)
+            paramStepTensor = torch.tensor(random.uniform(-paramStep, paramStep)).view(1, 1, 1, 1)
+            return currentUserParam + paramStepTensor
 
+        # get Bin index for next condition comparison
+        currentParamBinIndex = self.dataInterface.getBinIndex(self.allParameterBins[0], currentUserParam)
+        unboundedCurrentParam = self.unNormalizedAllParameterBins[0][currentParamBinIndex]
         # Look at the previous temperature states.
-        previousUserTemp, previousUserLoss = self.userStatePath[-2]
+        previousUserParam = self.paramStatePath[-2]
+        previousCompiledLoss = self.userMentalStateCompiledLoss[-2]
+        prevParamBinIndex = self.dataInterface.getBinIndex(self.allParameterBins[0], previousUserParam)
+        unboundedPrevParam = self.unNormalizedAllParameterBins[0][prevParamBinIndex]
+
+        if torch.rand(1) < 0.1:
+            # move for larger steps
+            return currentUserParam + torch.tensor(random.uniform(-10 * paramStep, 10 * paramStep)).view(1, 1, 1, 1)
 
         # If we didn't move temperature last time. This can happen at boundaries.
-        if currentUserTemp == previousUserTemp:
+        if unboundedCurrentParam == unboundedPrevParam:
             # Randomly move in a direction.
-            return currentUserTemp + random.uniform(-temperatureStep, temperatureStep)
+            return currentUserParam + torch.tensor(random.uniform(-paramStep, paramStep)).view(1, 1, 1, 1)
         else:
-            interpSlope = (currentUserLoss - previousUserLoss) / (currentUserTemp - previousUserTemp)
+            interpSlope = (currentUserLoss - previousCompiledLoss) / (currentUserParam - previousUserParam)
+            # Determine the direction of paramStep based on the sign of interpSlope
+            if interpSlope > 0:
+                # If slope is positive, decrease the parameter if the current parameter is greater than the previous, otherwise increase
+                return currentUserParam - paramStep if currentUserParam > previousUserParam else currentUserParam + paramStep
+            else:
+                # If slope is negative, increase the parameter if the current parameter is less than the previous, otherwise decrease
+                return currentUserParam + paramStep if currentUserParam < previousUserParam else currentUserParam - paramStep
 
-        if interpSlope < 0:
-            return currentUserTemp - temperatureStep
-        return currentUserTemp + temperatureStep
 
     def trackCurrentState(self, currentUserState):
         # Smoothen out the discrete map into a probability distribution.
@@ -72,17 +88,9 @@ class basicTherapyProtocol(generalTherapyProtocol):
         self.personalizedMap = uniformMap
 
     # ------------------------ initialize simulated Map ------------------------ #
-    def initializeMaps(self):
+    def initializeStartingMaps(self):
         if self.simulateTherapy:
-            # Get the simulated data points.
-            initialHeuristicStates = self.simulationProtocols.generateSimulatedMap(self.simulationProtocols.numSimulationHeuristicSamples, simulatedMapType=self.simulationProtocols.heuristicMapType)
-            initialSimulatedStates = self.simulationProtocols.generateSimulatedMap(self.simulationProtocols.numSimulationTrueSamples, simulatedMapType=self.simulationProtocols.simulatedMapType)
-            # initialHeuristicStates dimension: numSimulationHeuristicSamples, (T, PA, NA, SA); 2D array
-            # initialSimulatedStates dimension: numSimulationTrueSamples, (T, PA, NA, SA); 2D array
-
-            # Get the simulated matrix from the simulated points.
-            initialSimulatedData = self.compileLossStates(initialSimulatedStates)  # initialSimulatedData dimension: numSimulationTrueSamples, (T, L).
-            self.simulationProtocols.simulatedMap = self.getProbabilityMatrix(initialSimulatedData)  # Spreading delta function probability.
+            return self.simulationProtocols.simulatedMapCompiledLoss
         else:
             # Get the real data points.
             initialHeuristicStates = self.empatchProtocols.getTherapyData()

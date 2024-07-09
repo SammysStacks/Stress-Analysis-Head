@@ -133,13 +133,13 @@ class simulationProtocols:
     def getSimulatedCompiledLoss(self, currentParam, currentUserState, newUserTemp=None, therapyMethod = None):
         # Unpack the current user state.
         currentUserTemp = currentParam
-        print('entering calculate Loss in getNextStates')
+        print('entering loss calculation in the getNextStates')
         currentUserLoss = self.dataInterface.calculateCompiledLoss(currentUserState) # torch.Size([1, 1, 1, 1])
 
         newUserTemp = currentUserTemp if newUserTemp is None else newUserTemp
 
         # if it is aStarProtocol, resample
-        if therapyMethod == 'aStarTherapyProtocol':
+        if therapyMethod == 'aStarTherapyProtocol' or 'basicTherapyProtocol':
             resampledParameterBins, resampledPredictionBins = self.generalMethods.resampleBins(self.allParameterBins, self.allPredictionBins, eventlySpacedBins=False)
             # Calculate the bin indices for the current and new user states.
 
@@ -153,7 +153,6 @@ class simulationProtocols:
             NA = torch.tensor(NA).view(1, 1, 1, 1)
             SA = torch.tensor(SA).view(1, 1, 1, 1)
             return newUserLoss, PA, NA, SA
-
         else:
             # for other conditions or protocols
             # Calculate the bin indices for the current and new user states.
@@ -168,12 +167,11 @@ class simulationProtocols:
             return newUserLoss, PA, NA, SA
 
     def sampleNewLoss(self, currentUserLoss, currentLossIndex, currentParamBinIndex, newParamIndex, currentUserState, therapyMethod=None, bufferZone=0.01, gausSTD=0.05):
-
         simulatedMapPA = torch.tensor(self.simulatedMapPA, dtype=torch.float32)
         simulatedMapNA = torch.tensor(self.simulatedMapNA, dtype=torch.float32)
         simulatedMapSA = torch.tensor(self.simulatedMapSA, dtype=torch.float32)
         simulatedMapCompiledLoss = torch.tensor(self.simulatedMapCompiledLoss, dtype=torch.float32)
-        if therapyMethod == 'aStarTherapyProtocol':
+        if therapyMethod == 'aStarTherapyProtocol' or 'basicTherapyProtocol':
             # resampling
             resampledParameterBins, resampledPredictionBins = self.generalMethods.resampleBins(self.allParameterBins, self.allPredictionBins, eventlySpacedBins=False)
             if newParamIndex != currentParamBinIndex or torch.rand(1).item() < 0.1:

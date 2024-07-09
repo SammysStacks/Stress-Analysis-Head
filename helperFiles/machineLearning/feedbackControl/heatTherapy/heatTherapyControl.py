@@ -18,6 +18,7 @@ class heatTherapyControl(heatTherapyHelpers):
     def runTherapyProtocol(self, maxIterations=None):
         # Initialize holder parameters such as the user maps.
         self.therapyProtocol.initializeUserState(userName=self.userName)
+        print('passed initialize UserState')
         # Until the therapy converges.
         while not self.therapyProtocol.finishedTherapy:
             if self.therapyMethod == "aStarTherapyProtocol":
@@ -37,6 +38,13 @@ class heatTherapyControl(heatTherapyHelpers):
                     print(f"Alpha after iteration: {self.therapyProtocol.percentHeuristic}\n")
                 # elif self.therapyMethod == "basicTherapyProtocol":
                 #     self.therapyProtocol.plotTherapyResults_basic(allMaps)  # For basic protocol, allMaps is the simulated map (only 1)
+            elif self.therapyMethod == 'basicTherapyProtocol':
+                therapyState, basicMap = self.therapyProtocol.updateTherapyState()
+                self.therapyProtocol.getNextState(therapyState, self.therapyMethod)
+                # Preparation for plotting
+                combinedStates = [[param_state, user_compiled_mental] for param_state, user_compiled_mental in zip(self.therapyProtocol.unNormalizedParameter, self.therapyProtocol.userMentalStateCompiledLoss)]
+                if self.plotResults:
+                    self.therapyProtocol.plottingProtocolsMain.plotTherapyResults_basic(combinedStates, basicMap)
             # Check if the therapy has converged.
             self.therapyProtocol.checkConvergence(maxIterations)
 
@@ -46,7 +54,7 @@ if __name__ == "__main__":
     userTherapyMethod = "aStarTherapyProtocol"  # The therapy algorithm to run. Options: "aStarTherapyProtocol", "basicTherapyProtocol", "nnTherapyProtocol", "hmmTherapyProtocol"
     testingUserName = "Squirtle"  # The username for the therapy.
     temperatureBounds = (35, 50)  # The temperature bounds for the therapy.
-    temperatureBinWidth = 1  # The temperature bounds for the therapy.
+    temperatureBinWidth = 1.5  # The temperature bounds for the therapy.
     plotTherapyResults = True  # Whether to plot the results.
 
     # Simulation parameters.

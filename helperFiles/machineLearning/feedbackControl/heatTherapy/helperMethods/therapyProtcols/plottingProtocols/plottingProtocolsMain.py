@@ -50,7 +50,7 @@ class plottingProtocolsMain:
         for i, (map_to_plot, title) in enumerate(zip(maps, titles)):
             ax = axs[i % 2, i // 2]  # Correct indexing for subplot
 
-            plottingImage = ax.imshow(map_to_plot.T, cmap='coolwarm', extent=[self.initialParameterBounds[0].item(), self.initialParameterBounds[1].item(), 0, 1], aspect='auto', origin='lower')
+            plottingImage = ax.imshow(map_to_plot.T, cmap='cividis', extent=[self.initialParameterBounds[0].item(), self.initialParameterBounds[1].item(), 0, 1], aspect='auto', origin='lower')
 
             # Plot past user states with fading red line
             for j in range(num_steps - 1):
@@ -80,19 +80,19 @@ class plottingProtocolsMain:
         fig, ax = plt.subplots(figsize=(6, 6))
 
         # Color and alpha gradient for the path
-        alphas = np.linspace(0.1, 1, num_steps - 1)  # Adjust alpha for segments
+        alphas = np.linspace(0.1, 1, num_steps - 1) ** 10  # Adjust alpha for segments
 
         # Plotting the simulated map with the corresponding user state path
-        im = ax.imshow(simulated_map.T, cmap='coolwarm', extent=[self.modelParameterBounds[0], self.modelParameterBounds[1], self.predictionBounds[0], self.predictionBounds[1]], aspect='auto', origin='lower')
+        im = ax.imshow(simulated_map.T, cmap='cividis', extent=[self.initialParameterBounds[0].item(), self.initialParameterBounds[1].item(), 0, 1], aspect='auto', origin='lower')
 
         # Plot past user states with fading color
         for j in range(num_steps - 1):
-            ax.plot([userStatePath[j][0], userStatePath[j + 1][0]],
-                    [userStatePath[j][1], userStatePath[j + 1][1]],
-                    color=(1, 0, 0, alphas[j]), linewidth=2)  # using red color for the path
+            ax.plot([userStatePath[j][0].item(), userStatePath[j + 1][0].item()],
+                    [userStatePath[j][1].item(), userStatePath[j + 1][1].item()],
+                    color=(0, 0, 0, alphas[j]), linewidth=2)  # using red color for the path
 
         # Highlight the current state
-        ax.scatter(userStatePath[-1][0], userStatePath[-1][1], color='tab:red', label='Current State', edgecolor='black', s=75, zorder=10)
+        ax.scatter(userStatePath[-1][0].item(), userStatePath[-1][1].item(), color='tab:red', label='Current State', edgecolor='black', s=75, zorder=10)
 
         # Set titles and labels
         ax.set_title(f'Simulated Map (After Iteration {num_steps})')
