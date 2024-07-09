@@ -65,7 +65,7 @@ class generalTherapyProtocol(abc.ABC):
         # Define a helper class for experimental parameters.
         self.simulationProtocols = simulationProtocols(self.allParameterBins, self.allPredictionBins, self.predictionBinWidths, self.modelParameterBounds, self.numPredictions, self.numParameters, self.predictionWeights, self.optimalNormalizedState, self.initialParameterBounds, self.unNormalizedAllParameterBins, simulationParameters)
         self.plottingProtocolsMain = plottingProtocolsMain(self.initialParameterBounds, self.modelParameterBounds, self.allNumParameterBins, self.parameterBinWidths, self.predictionBounds, self.allNumPredictionBins, self.predictionBinWidths)
-        #self.empatchProtocols = empatchProtocols(self.predictionOrder, self.predictionBounds, self.modelParameterBounds, therapyMethod=therapyMethod)
+        #self.empatchProtocols = empatchProtocols(self.predictionOrder, self.predictionBounds, self.modelParameterBounds, therapyExpMethod='HeatingPad')
         self.dataInterface = dataInterface(self.predictionWeights, self.optimalNormalizedState)
         self.generalMethods = generalMethods()
 

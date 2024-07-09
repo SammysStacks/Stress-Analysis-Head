@@ -51,9 +51,10 @@ class basicTherapyProtocol(generalTherapyProtocol):
         prevParamBinIndex = self.dataInterface.getBinIndex(self.allParameterBins[0], previousUserParam)
         unboundedPrevParam = self.unNormalizedAllParameterBins[0][prevParamBinIndex]
 
-        if torch.rand(1) < 0.1:
-            # move for larger steps
-            return currentUserParam + torch.tensor(random.uniform(-10 * paramStep, 10 * paramStep)).view(1, 1, 1, 1)
+        #TODO: need to double check
+        # if torch.rand(1) < 0.1:
+        #     # move for larger steps
+        #     return currentUserParam + torch.tensor(random.uniform(-10 * paramStep, 10 * paramStep)).view(1, 1, 1, 1)
 
         # If we didn't move temperature last time. This can happen at boundaries.
         if unboundedCurrentParam == unboundedPrevParam:
@@ -62,13 +63,15 @@ class basicTherapyProtocol(generalTherapyProtocol):
         else:
             interpSlope = (currentUserLoss - previousCompiledLoss) / (currentUserParam - previousUserParam)
             # Determine the direction of paramStep based on the sign of interpSlope
-            if interpSlope > 0:
-                # If slope is positive, decrease the parameter if the current parameter is greater than the previous, otherwise increase
-                return currentUserParam - paramStep if currentUserParam > previousUserParam else currentUserParam + paramStep
-            else:
-                # If slope is negative, increase the parameter if the current parameter is less than the previous, otherwise decrease
-                return currentUserParam + paramStep if currentUserParam < previousUserParam else currentUserParam - paramStep
-
+            # if interpSlope > 0:
+            #     # If slope is positive, decrease the parameter if the current parameter is greater than the previous, otherwise increase
+            #     return currentUserParam - paramStep if currentUserParam > previousUserParam else currentUserParam + paramStep
+            # else:
+            #     # If slope is negative, increase the parameter if the current parameter is less than the previous, otherwise decrease
+            #     return currentUserParam + paramStep if currentUserParam < previousUserParam else currentUserParam - paramStep
+            if interpSlope < 0:
+                return currentUserParam - paramStep
+            return currentUserParam + paramStep
 
     def trackCurrentState(self, currentUserState):
         # Smoothen out the discrete map into a probability distribution.

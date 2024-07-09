@@ -12,13 +12,13 @@ from helperFiles.dataAcquisitionAndAnalysis.excelProcessing.extractDataProtocols
 
 class empatchProtocols(extractData):
 
-    def __init__(self, predictionOrder, predictionBounds, modelParameterBounds, therapyMethod="HeatingPad"):
+    def __init__(self, predictionOrder, predictionBounds, modelParameterBounds, therapyExpMethod="HeatingPad"):
         super().__init__()
         # General parameters.
         self.modelParameterBounds = modelParameterBounds  # The bounds for the model parameters.
         self.predictionBounds = predictionBounds  # The bounds for the predictions.
         self.predictionOrder = predictionOrder  # The order of the predictions.
-        self.therapyMethod = therapyMethod  # The therapy method to analyze.
+        self.therapyExpMethod = therapyExpMethod  # The therapy method to analyze.
 
         # Collected data parameters.
         self.featureNames, self.biomarkerFeatureNames, self.biomarkerFeatureOrder = self.getFeatureInformation()
@@ -30,7 +30,7 @@ class empatchProtocols(extractData):
         self.trainingFolder = "/../../../../../../" + self.compileModelInfo.getTrainingDataFolder(useTherapyData=True)
 
         # Assert the validity of the input parameters.
-        self.compileModelInfo.assertValidTherapyMethod(therapyMethod=self.therapyMethod)
+        self.compileModelInfo.assertValidTherapyMethod(therapyMethod=self.therapyExpMethod)
 
     def getFeatureInformation(self):
         # Specify biomarker information.
