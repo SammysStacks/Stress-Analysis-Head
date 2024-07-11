@@ -37,9 +37,9 @@ if __name__ == "__main__":
     useTherapyData = True  # Use the Therapy Data folder for any files.
 
     # Specify the user parameters.
-    userName = "Mya".replace(" ", "")
+    userName = "Josh".replace(" ", "")
     trialName = "HeatTherapy Trial"
-    date = "2024-07-09"
+    date = "2024-07-10"
 
     # Specify experimental parameters.
     boardSerialNum = '12ba4cb61c85ec11bc01fc2b19c2d21c'  # Board's Serial Number (port.serial_number). Only used if streaming data, else it gets reset to None.

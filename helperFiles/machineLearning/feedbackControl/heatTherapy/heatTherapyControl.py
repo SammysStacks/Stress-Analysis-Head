@@ -19,6 +19,11 @@ class heatTherapyControl(heatTherapyHelpers):
         # Initialize holder parameters such as the user maps.
         self.therapyProtocol.initializeUserState(userName=self.userName)
         print('passed initialize UserState')
+        if self.therapyMethod == 'hmmTherapyProtocol':
+            self.therapyProtocol.trainHMM()
+            sequence = self.therapyProtocol.updateTherapyState()
+            print('sequence:', sequence)
+            exit()
         # Until the therapy converges.
         while not self.therapyProtocol.finishedTherapy:
             if self.therapyMethod == "aStarTherapyProtocol":
@@ -45,17 +50,18 @@ class heatTherapyControl(heatTherapyHelpers):
                 combinedStates = [[param_state, user_compiled_mental] for param_state, user_compiled_mental in zip(self.therapyProtocol.unNormalizedParameter, self.therapyProtocol.userMentalStateCompiledLoss)]
                 if self.plotResults:
                     self.therapyProtocol.plottingProtocolsMain.plotTherapyResults_basic(combinedStates, basicMap)
+
             # Check if the therapy has converged.
             self.therapyProtocol.checkConvergence(maxIterations)
 
 
 if __name__ == "__main__":
     # User parameters.
-    userTherapyMethod = "basicTherapyProtocol"  # The therapy algorithm to run. Options: "aStarTherapyProtocol", "basicTherapyProtocol", "nnTherapyProtocol", "hmmTherapyProtocol"
+    userTherapyMethod = "hmmTherapyProtocol"  # The therapy algorithm to run. Options: "aStarTherapyProtocol", "basicTherapyProtocol", "nnTherapyProtocol", "hmmTherapyProtocol"
     testingUserName = "Squirtle"  # The username for the therapy.
     temperatureBounds = (35, 50)  # The temperature bounds for the therapy.
     temperatureBinWidth = 1.5  # The temperature bounds for the therapy.
-    plotTherapyResults = True  # Whether to plot the results.
+    plotTherapyResults = False  # Whether to plot the results.
 
     # Simulation parameters.
     currentSimulationParameters = {

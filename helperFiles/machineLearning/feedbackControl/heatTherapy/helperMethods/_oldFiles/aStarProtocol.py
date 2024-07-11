@@ -24,6 +24,7 @@ class aStarProtocol(generalProtocol):
             self.simulationProtocols.simulatedMap = self.initializeHeuristicMap(self.simulationProtocols.numSimulationTrueSamples)  # Estimate on what temperatures you like. Based on population average.
 
     def updateTherapyState(self):
+
         # Unpack the current user state.
         currentUserState = self.userStatePath[-1]
         currentUserTemp, currentUserLoss = currentUserState

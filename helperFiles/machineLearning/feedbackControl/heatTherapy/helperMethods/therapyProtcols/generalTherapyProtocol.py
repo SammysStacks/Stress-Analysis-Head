@@ -94,7 +94,6 @@ class generalTherapyProtocol(abc.ABC):
     def initializeMaps(self):
         if self.simulateTherapy:
             self.simulationProtocols.initializeSimulatedMaps(self.predictionWeights, self.gausParameterSTDs, self.gausLossSTDs, self.applyGaussianFilter)
-            print("finished initializing Maps")
         else:
             # real data points
             temperature, pa, na, sa = self.empatchProtocols.getTherapyData()
@@ -189,6 +188,7 @@ class generalTherapyProtocol(abc.ABC):
                 self.finishedTherapy = True
         else:
             # TODO: Implement a convergence check. Maybe based on stagnant loss.
+            # TODO: give a loss threshold, and find the most probable temperature
             pass
 
     # ------------------------ Child Class Contract ------------------------ #

@@ -46,6 +46,7 @@ class simulationProtocols:
         self.simulatedMapNA = None
         self.simulatedMapSA = None
         self.simulatedMapCompiledLoss = None
+        self.simulatedMapCompiledLossUnNormalized = None
 
         # Initialize helper classes.
         self.dataInterface = dataInterface(predictionWeights, optimalNormalizedState)
@@ -126,6 +127,7 @@ class simulationProtocols:
 
         # say that state anxiety has a slightly higher weight and normalize
         self.simulatedMapCompiledLoss = (lossWeights[0]*self.simulatedMapPA + lossWeights[1]*self.simulatedMapNA + lossWeights[2]*self.simulatedMapSA)
+        self.simulatedMapCompiledLossUnNormalized = self.simulatedMapCompiledLoss
         self.simulatedMapCompiledLoss = self.simulatedMapCompiledLoss / torch.sum(self.simulatedMapCompiledLoss) # Normalization
         # self.simulatedMapCompiledLoss = self.apply_gaussian_smoothing(self.simulatedMapCompiledLoss, kernel_size=3, sigma=0.5)
         # smoothen the map
