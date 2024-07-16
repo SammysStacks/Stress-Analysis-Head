@@ -21,9 +21,10 @@ class heatTherapyControl(heatTherapyHelpers):
         print('passed initialize UserState')
         if self.therapyMethod == 'hmmTherapyProtocol':
             self.therapyProtocol.trainHMM()
-            sequence = self.therapyProtocol.updateTherapyState()
-            print('sequence:', sequence)
-            exit()
+            currentParam, predictedSequence, outputMap = self.therapyProtocol.updateTherapyState()
+            if self.plotResults:
+                self.therapyProtocol.plottingProtocolsMain.plotTherapyResults_hmm(self.therapyProtocol.hmmModel, currentParam, predictedSequence, outputMap)
+                exit
         # Until the therapy converges.
         while not self.therapyProtocol.finishedTherapy:
             if self.therapyMethod == "aStarTherapyProtocol":
@@ -61,7 +62,7 @@ if __name__ == "__main__":
     testingUserName = "Squirtle"  # The username for the therapy.
     temperatureBounds = (35, 50)  # The temperature bounds for the therapy.
     temperatureBinWidth = 1.5  # The temperature bounds for the therapy.
-    plotTherapyResults = False  # Whether to plot the results.
+    plotTherapyResults = True  # Whether to plot the results.
 
     # Simulation parameters.
     currentSimulationParameters = {

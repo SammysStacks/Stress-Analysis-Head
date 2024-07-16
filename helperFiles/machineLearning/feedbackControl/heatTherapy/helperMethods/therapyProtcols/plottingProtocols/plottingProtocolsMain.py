@@ -3,7 +3,7 @@ from matplotlib import pyplot as plt
 import seaborn as sns
 import numpy as np
 import torch
-
+import time
 
 class plottingProtocolsMain:
     def __init__(self, initialParameterBounds, modelParameterBounds, allNumParameterBins, parameterBinWidths, predictionBounds, allNumPredictionBins, predictionBinWidths):
@@ -106,6 +106,41 @@ class plottingProtocolsMain:
 
         # Print current state information
         print(f"New current state after iteration {num_steps + 1}: parameter = {userStatePath[-1][0]}, Loss = {userStatePath[-1][1]}")
+
+    def plotTherapyResults_hmm(self, hmmModel, currentParam, predictedSequence, simulated_map):
+        print('Graphing starts')
+        start_time = time.time()
+
+        fig, axs = plt.subplots(1, 2, figsize=(12, 6))  # Adjusted figure size for better layout
+
+        # Plot the transition matrix on the left subplot
+        ax1 = axs[0]
+        cax1 = ax1.matshow(hmmModel.transmat_, cmap='viridis')
+        cbar1 = fig.colorbar(cax1, ax=ax1, orientation='horizontal')
+        cbar1.ax.set_xlabel('Transition Probability')
+        ax1.set_title('Transition Matrix')
+        ax1.set_xlabel('State')
+        ax1.set_ylabel('State')
+        ax1.set_aspect('auto')  # Set aspect ratio to auto
+
+        # Plot the simulated map on the right subplot
+        ax2 = axs[1]
+        im = ax2.imshow(simulated_map.T, cmap='cividis', extent=[self.initialParameterBounds[0].item(), self.initialParameterBounds[1].item(), 0, 1], aspect='equal', origin='lower')
+        cbar2 = fig.colorbar(im, ax=ax2, orientation='horizontal')
+        cbar2.ax.set_xlabel('Simulated Probability')
+        ax2.set_title('Simulated Map')
+        ax2.set_xlabel('Temperature Bins')
+        ax2.set_ylabel('Loss Bins')
+        ax2.set_aspect('auto')  # Set aspect ratio to auto
+
+        # Adjust layout to fit both plots nicely on the screen
+        plt.tight_layout()
+
+        # Show the plots
+        plt.show()
+
+        end_time = time.time()
+        print(f"Graphing completed in {end_time - start_time:.2f} seconds")
 
     # ------------------------ NN Plotting ------------------------ #
 
