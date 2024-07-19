@@ -62,7 +62,7 @@ class convolutionalHelpers(abnormalConvolutions):
         elif activationType.startswith('boundedExp'):
             nonLinearityRegion = int(activationType.split('_')[2]) if '_' in activationType else 2
             topExponent = int(activationType.split('_')[1]) if '_' in activationType else 0
-            activationFunction = boundedExp(topExponent=topExponent, nonLinearityRegion=nonLinearityRegion)
+            activationFunction = boundedExp(decayConstant=topExponent, nonLinearityRegion=nonLinearityRegion)
         elif activationType == 'boundedS':
             activationFunction = boundedS()
         elif activationType == 'linearOscillation':

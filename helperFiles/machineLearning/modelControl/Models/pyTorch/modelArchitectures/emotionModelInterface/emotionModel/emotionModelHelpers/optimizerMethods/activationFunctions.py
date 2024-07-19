@@ -18,21 +18,23 @@ class switchActivation(nn.Module):
 
 
 class boundedExp(nn.Module):
-    def __init__(self, topExponent=0, nonLinearityRegion=2, infiniteBound=math.exp(-0.5)):
+    def __init__(self, decayConstant=0, nonLinearityRegion=2, infiniteBound=math.exp(-0.5)):
         super(boundedExp, self).__init__()
         # General parameters.
         self.nonLinearityRegion = nonLinearityRegion  # The non-linear region is mainly between [-nonLinearityRegion, nonLinearityRegion].
         self.infiniteBound = infiniteBound  # This controls how the activation converges at +/- infinity. The convergence is equal to inputValue*infiniteBound.
-        self.topExponent = topExponent  # This controls the non-linearity of the data close to 0. Larger values make the activation more linear. Recommended to be 0 to 1. After 1, the activation becomes linear near 0.
+        self.decayConstant = decayConstant  # This controls the non-linearity of the data close to 0. Larger values make the activation more linear. Recommended to be 0 or 1. After 1, the activation becomes linear near 0.
 
         # Assert the validity of the inputs.
-        assert 0 <= self.topExponent, "The exponent in the numerator and denominator must be greater than 0 to be continuous."
-        assert self.infiniteBound <= 1, "The infinite bound must be less than or equal to 1 to ensure convergence."
+        assert isinstance(self.decayConstant, int), f"The decayConstant must be an integer to ensure a continuous activation, but got {type(self.decayConstant).__name__}"
+        assert 0 < abs(self.infiniteBound) <= 1, "The magnitude of the inf bound has a domain of (0, 1] to ensure a stable convergence."
+        assert 0 < self.nonLinearityRegion, "The non-linearity region must be positive, as negatives are redundant and 0 is linear."
+        assert 0 <= self.decayConstant, "The decayConstant must be greater than 0 for the activation function to be continuous."
 
     def forward(self, x):
         # Calculate the exponential activation function.
-        exponentialNumerator = torch.pow(x/self.nonLinearityRegion, 2*self.topExponent)
-        exponentialDenominator = 1 + torch.pow(x/self.nonLinearityRegion, 2*self.topExponent + 2)
+        exponentialNumerator = torch.pow(x/self.nonLinearityRegion, 2*self.decayConstant)
+        exponentialDenominator = 1 + torch.pow(x/self.nonLinearityRegion, 2*self.decayConstant + 2)
         exponentialTerm = torch.exp(exponentialNumerator / exponentialDenominator)
 
         # Calculate the linear term.

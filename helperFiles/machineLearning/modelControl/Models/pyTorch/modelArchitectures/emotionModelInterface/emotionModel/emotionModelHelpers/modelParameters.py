@@ -8,9 +8,12 @@ class modelParameters:
 
     def __init__(self, userInputParams, accelerator=None):
         # General parameters
-        self.gpuFlag = accelerator.device.type == 'cuda'
-        self.userInputParams = userInputParams
-        self.accelerator = accelerator
+        self.userInputParams = userInputParams  # The user input parameters.
+        self.accelerator = accelerator  # The single-instance accelerator for the model.
+
+        # Run-specific parameters.
+        self.hpcTrialRun = userInputParams['deviceListed'].startswith("HPC")  # The HPC trial run flag.
+        self.gpuFlag = accelerator.device.type == 'cuda'  # The GPU flag.
 
         # General parameters
         self.timeWindows = self.getTimeWindows()  # The time windows to consider.
@@ -34,7 +37,7 @@ class modelParameters:
 
         return self.generalMethods.biased_high_sample(*addingNoiseRange, randomValue=random.uniform(a=0, b=1)), addingNoiseRange
 
-    def getTrainingBatchSize(self, submodel, metaDatasetName, numExperiments):
+    def getTrainingBatchSize(self, submodel, numExperiments):
         # Wesad: Found 32 (out of 32) well-labeled emotions across 61 experiments with 70 signals.
         # Emognition: Found 12 (out of 12) well-labeled emotions across 407 experiments with 55 signals.
         # Amigos: Found 12 (out of 12) well-labeled emotions across 318 experiments with 120 signals.
@@ -77,9 +80,9 @@ class modelParameters:
         if submodel == "signalEncoder":
             if self.userInputParams['numSigEncodingLayers'] <= 2 and self.userInputParams['numSigLiftedChannels'] <= 16: minimumBatchSize = 64
         elif submodel == "autoencoder":
-            minimumBatchSize = 32 if self.userInputParams['deviceListed'].startswith("HPC") else 32
+            minimumBatchSize = 32 if self.hpcTrialRun else 32
         elif submodel == "emotionPrediction":
-            minimumBatchSize = 32 if self.userInputParams['deviceListed'].startswith("HPC") else 32
+            minimumBatchSize = 32 if self.hpcTrialRun else 32
         else:
             raise Exception()
 
@@ -111,29 +114,22 @@ class modelParameters:
         else:
             raise Exception()
 
-    @staticmethod
-    def setParamsHPC(args, accelerator, userInputParams, storeLoss, fastPass, useFinalParams):
+    def alterProtocolParams(self, storeLoss, fastPass, useFinalParams):
         # Self-check the hpc parameters.
-        if userInputParams['deviceListed'].startswith("HPC") and useFinalParams:
-            accelerator.gradient_accumulation_steps = 16
+        if self.hpcTrialRun and useFinalParams:
+            self.accelerator.gradient_accumulation_steps = 16
             storeLoss = True  # Turn on loss storage for HPC.
             fastPass = False  # Turn off fast pass for HPC.
 
-            if args.submodel == "signalEncoder":
-                if args.numSigLiftedChannels <= 32 and args.numSigEncodingLayers <= 4:
-                    accelerator.gradient_accumulation_steps = 16
-                if args.numSigLiftedChannels <= 32 and args.numSigEncodingLayers <= 1:
-                    accelerator.gradient_accumulation_steps = 8
-                if args.numSigLiftedChannels <= 16 and args.numSigEncodingLayers <= 2:
-                    accelerator.gradient_accumulation_steps = 8
+        # Set CPU settings.
+        if not self.gpuFlag:
+            self.accelerator.gradient_accumulation_steps = 16
 
-            # CPU settings
-            if userInputParams['deviceListed'].endswith("CPU"):
-                accelerator.gradient_accumulation_steps = 16
+        # Relay the inputs to the user.
+        numGradientSteps = self.accelerator.gradient_accumulation_steps
+        print(f"Final parameters: storeLoss={storeLoss}, fastPass={fastPass}, device={self.accelerator.device}, numGradientSteps={numGradientSteps}", flush=True)
 
-            print("HPC Parameters:", storeLoss, fastPass, accelerator.gradient_accumulation_steps, accelerator.device, flush=True)
-
-        return accelerator, storeLoss, fastPass
+        return storeLoss, fastPass
 
     # -------------------------- Compilation Parameters ------------------------- #
 

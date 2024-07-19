@@ -38,7 +38,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2024-06-11 wavelet analysis"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2024-07-07 wavelet analysis"  # The current date we are training the model. Unique identifier of this training set.
     modelName = "emotionModel"  # The emotion model's unique identifier. Options: emotionModel
     testSplitRatio = 0.2  # The percentage of testing points.
 
@@ -68,25 +68,24 @@ if __name__ == "__main__":
     parser.add_argument('--numInterpreterHeads', type=int, default=4, help='The number of ways to interpret a set of physiological signals.')
     parser.add_argument('--numBasicEmotions', type=int, default=8, help='The number of basic emotions (basis states of emotions).')
     parser.add_argument('--sequenceLength', type=int, default=240, help='The maximum number of time series points to consider')
+
     # Parse the arguments
-    args = parser.parse_args()
+    userInputParams, submodel = modelParameters.compileParameters(args=parser.parse_args())
 
     # --------------------------- Setup Training --------------------------- #
-
-    # Organize all the model parameters.
-    sharedModelWeights = modelParameters.getSharedModels()  # The shared model weights.
-    userInputParams, submodel = modelParameters.compileParameters(args)  # The user input parameters and the submodel.
-    accelerator, storeLoss, fastPass = modelParameters.setParamsHPC(args, accelerator, userInputParams, storeLoss, fastPass, useFinalParams)  # Set the HPC parameters.
-    fastPass = True
 
     # Initialize the model information classes.
     modelCompiler = compileModelData(submodel, userInputParams, useTherapyData=False, accelerator=accelerator)
     modelParameters = modelParameters(userInputParams, accelerator)
     modelInfoClass = compileModelInfo()
 
+    # Organize all the model parameters.
+    storeLoss, fastPass = modelParameters.alterProtocolParams(storeLoss, fastPass, useFinalParams)  # Set the HPC parameters.
+    sharedModelWeights = modelParameters.getSharedModels()  # The shared model weights.
+
     # Specify training parameters
-    datasetNames, metaDatasetNames, allDatasetNames = modelParameters.compileModelNames()  # Compile the model names.
     numEpoch_toPlot, numEpoch_toSaveFull = modelParameters.getEpochInfo(submodel, useFinalParams)  # The number of epochs to plot and save the model.
+    datasetNames, metaDatasetNames, allDatasetNames = modelParameters.compileModelNames()  # Compile the model names.
     numConstrainedEpochs, numEpochs = modelParameters.getNumEpochs(submodel)  # The number of epochs to train the model.
     trainingDate = modelCompiler.embedInformation(submodel, trainingDate)  # Embed training information into the name.
     submodelsSaving = modelParameters.getSubmodelsSaving(submodel)  # The submodels to save.

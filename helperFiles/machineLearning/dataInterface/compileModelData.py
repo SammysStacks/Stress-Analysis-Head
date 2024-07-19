@@ -34,9 +34,13 @@ class compileModelData(compileModelDataHelpers):
         self.fullAnalysisSuffix = '_fullAnalysisParams'
 
         # Initialize the metadata interfaces.
-        metaDatasetNames = ["wesad", "emognition", "amigos", "dapper", "case"]
-        metaProtocolInterfaces = [wesadInterface(), emognitionInterface(), amigosInterface(), dapperInterface(), caseInterface()]
-        self.metaProtocolMap = {metaDatasetNames[i]: metaProtocolInterfaces[i] for i in range(len(metaProtocolInterfaces))}
+        self.metaProtocolMap = {
+            "emognition": emognitionInterface(),
+            "amigos": amigosInterface(),
+            "dapper": dapperInterface(),
+            "wesad": wesadInterface(),
+            "case": caseInterface()
+        }
 
     # ------------------------ Compile Analysis Data ------------------------ #
 
@@ -277,7 +281,7 @@ class compileModelData(compileModelDataHelpers):
             # ---------------------- Create the Model ---------------------- #
 
             # Get the model parameters
-            batch_size = self.modelParameters.getTrainingBatchSize(submodel, metaDatasetName, numExperiments=len(augmentedFeatureData))
+            batch_size = self.modelParameters.getTrainingBatchSize(submodel, numExperiments=len(augmentedFeatureData))
 
             # Organize the training data into the expected pytorch format.
             pytorchDataClass = pytorchDataInterface(batch_size=batch_size, num_workers=0, shuffle=True, accelerator=self.accelerator)
