@@ -65,7 +65,7 @@ class generalTherapyProtocol(abc.ABC):
         # Define a helper class for experimental parameters.
         self.simulationProtocols = simulationProtocols(self.allParameterBins, self.allPredictionBins, self.predictionBinWidths, self.modelParameterBounds, self.numPredictions, self.numParameters, self.predictionWeights, self.optimalNormalizedState, self.initialParameterBounds, self.unNormalizedAllParameterBins, simulationParameters)
         self.plottingProtocolsMain = plottingProtocolsMain(self.initialParameterBounds, self.modelParameterBounds, self.allNumParameterBins, self.parameterBinWidths, self.predictionBounds, self.allNumPredictionBins, self.predictionBinWidths)
-        #self.empatchProtocols = empatchProtocols(self.predictionOrder, self.predictionBounds, self.modelParameterBounds, therapyExpMethod='HeatingPad')
+        self.empatchProtocols = empatchProtocols(self.predictionOrder, self.predictionBounds, self.modelParameterBounds, therapyExpMethod='HeatingPad')
         self.dataInterface = dataInterface(self.predictionWeights, self.optimalNormalizedState)
         self.generalMethods = generalMethods()
 
@@ -97,6 +97,7 @@ class generalTherapyProtocol(abc.ABC):
         else:
             # real data points
             temperature, pa, na, sa = self.empatchProtocols.getTherapyData()
+            exit()
             # sort the temperature, pa, na, sa into correct format passed to generate initialSimulatedData
             initialSimulatedStates = torch.stack([temperature, pa, na, sa], dim=1)
             initialSimulatedData = self.dataInterface.calculateCompiledLoss(initialSimulatedStates)  # initialSimulatedData dimension: numSimulationTrueSamples, (T, L).
@@ -135,10 +136,14 @@ class generalTherapyProtocol(abc.ABC):
         if self.simulateTherapy:
             # Simulate a new time point by adding a constant delay factor.
             currentTime, currentParam, currentPredictions = self.simulationProtocols.getInitialState() # currentTime: tensor(0); currentParam: torch.Size([1, 1, 1, 1]); currentPredictions: torch.Size([1, 3, 1, 1]) predefined.
+            print('currentTime, currentParam, currentPredictions', currentTime, currentParam, currentPredictions)
+            exit()
             return currentTime, currentParam, currentPredictions
         else:
             # TODO: Implement a method to get the current user state.
             # Simulate a new time.
+            currentTime, currentParam, currentPredictions = self.empatchProtocols.getTherapyData()
+            exit()
             pass
 
         # Returning timePoint, (T, PA, NA, SA)

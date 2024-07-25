@@ -20,14 +20,18 @@ class empatchProtocols(extractData):
         self.predictionOrder = predictionOrder  # The order of the predictions.
         self.therapyExpMethod = therapyExpMethod  # The therapy method to analyze.
 
-        # Collected data parameters.
-        self.featureNames, self.biomarkerFeatureNames, self.biomarkerFeatureOrder = self.getFeatureInformation()
 
         # Initialize helper classes.
         self.compileModelInfo = compileModelInfo()
 
+        # Collected data parameters.
+        self.featureNames, self.biomarkerFeatureNames, self.biomarkerFeatureOrder = self.getFeatureInformation()
+
         # Get the data folder.
-        self.trainingFolder = "/../../../../../../" + self.compileModelInfo.getTrainingDataFolder(useTherapyData=True)
+        # self.trainingFolder = "/../../../../../../" + self.compileModelInfo.getTrainingDataFolder(useTherapyData=True)
+        base_dir = os.path.dirname(__file__)
+        relative_path = os.path.join(base_dir, "../../../../../../", self.compileModelInfo.getTrainingDataFolder(useTherapyData=True))
+        self.trainingFolder = os.path.abspath(relative_path)
 
         # Assert the validity of the input parameters.
         self.compileModelInfo.assertValidTherapyMethod(therapyMethod=self.therapyExpMethod)
@@ -43,15 +47,15 @@ class empatchProtocols(extractData):
         # Initialize holders.
         paramStates = []  # The state values for each experiment. Dimensions: numExperiments, (P1, P2, ...); 2D array
         lossStates = []  # The state values for each experiment. Dimensions: numExperiments, (PA, NA, SA); 2D array
-
+        stateHolder = []
         # For each file in the training folder.
         for excelFile in natsorted(os.listdir(self.trainingFolder)):
             # Remove any files that are not part of the therapy data.
             if not excelFile.endswith(".xlsx") or excelFile.startswith(("~", ".")): continue  # Only analyze Excel files with the training signals.
-            if self.therapyMethod not in excelFile: continue  # Only analyze the therapy data.
+            if self.therapyExpMethod not in excelFile: continue  # Only analyze the therapy data.
 
             # Get the full file information.
-            savedFeaturesFile = self.trainingFolder + self.saveFeatureFolder + excelFile.split(".")[0] + self.saveFeatureFile_Appended
+            savedFeaturesFile = self.trainingFolder + '/' + self.saveFeatureFolder + excelFile.split(".")[0] + self.saveFeatureFile_Appended
             # Extract the features from the Excel file.
             rawFeatureTimesHolder, rawFeatureHolder, _, experimentTimes, experimentNames, currentSurveyAnswerTimes, \
                 currentSurveyAnswersList, surveyQuestions, currentSubjectInformationAnswers, subjectInformationQuestions \
@@ -59,21 +63,69 @@ class empatchProtocols(extractData):
             # currentSurveyAnswersList: The user answers to the survey questions during the experiment. Dimensions: numExperiments, numSurveyQuestions
             # surveyQuestions: The questions asked in the survey. Dimensions: numSurveyQuestions = numEmotionsRecorded
             # currentSurveyAnswerTimes: The times the survey questions were answered. Dimensions: numExperiments
-
             # Extract the mental health information.
             predictionOrder, finalLabels = self.compileModelInfo.extractFinalLabels(currentSurveyAnswersList, finalLabels=[])
             assert predictionOrder == self.predictionOrder, f"The given prediction order {predictionOrder} does not match the model's expected prediction order {self.predictionOrder}."
             # finalLabels: The final mental health labels for the experiment. Dimensions: numLabels, numExperiments
 
-            currentPredictionStates = dataInterface.normalizeParameters(currentParamBounds=self.predictionBounds, normalizedParamBounds=self.modelParameterBounds, currentParamValues=torch.tensor(finalLabels)).tolist()
+            finalLabelsTensor = torch.tensor(finalLabels)
 
+            # Initialize a list to hold the normalized values
+            normalizedValuesList = []
+            # Loop through each column in finalLabelsTensor and normalize individually
+            for i in range(finalLabelsTensor.shape[1]):
+                currentParamValues = finalLabelsTensor[:, i]
+                normalizedValues = dataInterface.normalizeParameters(
+                    currentParamBounds=self.predictionBounds,
+                    normalizedParamBounds=self.modelParameterBounds,
+                    currentParamValues=currentParamValues
+                )
+                normalizedValuesList.append(normalizedValues)
+
+            # Combine the normalized values back into a tensor and convert to list
+            currentPredictionStates = torch.stack(normalizedValuesList, dim=1).tolist()
+
+            def temperatureInterface():
+                mean_temperature_list = torch.as_tensor(rawFeatureHolder[3])[:, 0]
+
+                # Get the temperatures in the time window.
+                allTemperatureTimes = torch.as_tensor(rawFeatureTimesHolder[3])
+                allTemperatures = torch.as_tensor(mean_temperature_list)
+                experimentTempHolder = []
+                # For each experiment.
+                for experimentalInd in range(len(experimentNames)):
+                    # Get the start and end times for the experiment.
+                    surveyAnswerTime = currentSurveyAnswerTimes[experimentalInd]
+                    startExperimentTime = experimentTimes[experimentalInd][0]
+                    experimentName = experimentNames[experimentalInd]
+
+                    # Extract the temperature used in the experiment.
+                    if self.therapyExpMethod in experimentName:
+                        print('experimentName', experimentName)
+                        experimentalTemp = int(experimentName.split("-")[-1])
+                        experimentTempHolder.append(experimentalTemp)
+                    else:
+                        # Get the temperature at the start and end of the experiment.
+                        startTemperatureInd = torch.argmin(torch.abs(allTemperatureTimes - startExperimentTime))
+                        surveyAnswerTimeInd = torch.argmin(torch.abs(allTemperatureTimes - surveyAnswerTime))
+
+                        # Find the average temperature between the start and end times.
+                        experimentalTemp = torch.mean(allTemperatures[startTemperatureInd:surveyAnswerTimeInd])
+                        experimentTempHolder.append(experimentalTemp.item())
+                return experimentTempHolder
+
+            experimentTempHolder = temperatureInterface()
             # For each experiment.
             for experimentalInd in range(len(experimentNames)):
                 # Get the mental state values and normalize them.
-                emotion_states = [finalLabels[0][experimentalInd], finalLabels[1][experimentalInd], finalLabels[2][experimentalInd]]
-
+                emotion_states = [currentPredictionStates[0][experimentalInd], currentPredictionStates[1][experimentalInd], currentPredictionStates[2][experimentalInd]]
+                experimentalTemp = experimentTempHolder[experimentalInd]
                 stateHolder.append([experimentalTemp] + emotion_states)
+                print('stateHolder', stateHolder)
+
         stateHolder = torch.as_tensor(stateHolder)
+        print('stateHolder', stateHolder)
+        exit()
         temperature = stateHolder[:, 0].view(1, -1)
         pa = stateHolder[:, 1].view(1, -1)
         na = stateHolder[:, 2].view(1, -1)
@@ -81,27 +133,3 @@ class empatchProtocols(extractData):
 
         return temperature, pa, na, sa
 
-    def temperatureInterface(self):
-        mean_temperature_list = torch.as_tensor(rawFeatureHolder[3])[:, 0]
-
-        # Get the temperatures in the time window.
-        allTemperatureTimes = torch.as_tensor(rawFeatureTimesHolder[3])
-        allTemperatures = torch.as_tensor(mean_temperature_list)
-
-        # For each experiment.
-        for experimentalInd in range(len(experimentNames)):
-            # Get the start and end times for the experiment.
-            surveyAnswerTime = currentSurveyAnswerTimes[experimentalInd]
-            startExperimentTime = experimentTimes[experimentalInd][0]
-            experimentName = experimentNames[experimentalInd]
-
-            # Extract the temperature used in the experiment.
-            if self.therapyMethod in experimentName:
-                experimentalTemp = int(experimentName.split("-")[-1])
-            else:
-                # Get the temperature at the start and end of the experiment.
-                startTemperatureInd = torch.argmin(torch.abs(allTemperatureTimes - startExperimentTime))
-                surveyAnswerTimeInd = torch.argmin(torch.abs(allTemperatureTimes - surveyAnswerTime))
-
-                # Find the average temperature between the start and end times.
-                experimentalTemp = torch.mean(allTemperatures[startTemperatureInd:surveyAnswerTimeInd])

@@ -41,12 +41,20 @@ class simulationProtocols:
         # Simulated parameters.
         self.startingTimes, self.startingParams, self.startingPredictions = self.randomlySamplePoints(numPoints=self.initialPoints, lastTimePoint=self.initialTimePoint - self.timeDelay)
         print(f'startingTimes, straringParams, startingPredictions: {self.startingTimes, self.startingParams, self.startingPredictions}')
+
         # Uninitialized parameters.
         self.simulatedMapPA = None
         self.simulatedMapNA = None
         self.simulatedMapSA = None
         self.simulatedMapCompiledLoss = None
         self.simulatedMapCompiledLossUnNormalized = None
+
+        # Real Data point simulation
+        self.realSimMapPA = None
+        self.realSimMapNA = None
+        self.realSimMapSA = None
+        self.realSimMapCompiledLoss = None
+        self.realSimMapCompiledLossUnNormalized = None
 
         # Initialize helper classes.
         self.dataInterface = dataInterface(predictionWeights, optimalNormalizedState)

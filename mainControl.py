@@ -28,8 +28,8 @@ if __name__ == "__main__":
 
     # Protocol switches: only the first true variably executes.
     readDataFromExcel = False  # For SINGLE FILE analysis. Analyze Data from Excel File called 'currentFilename' on Sheet Number 'testSheetNum'
-    streamData = True  # Stream in Data from the Board and Analyze.
-    trainModel = False  # Train Model with ALL Data in 'collectedDataFolder'.
+    streamData = False  # Stream in Data from the Board and Analyze.
+    trainModel = True  # Train Model with ALL Data in 'collectedDataFolder'.
 
     # User options during the run: any number can be true.
     useModelPredictions = False or trainModel  # Apply the learning algorithm to decode the signals.
@@ -37,9 +37,9 @@ if __name__ == "__main__":
     useTherapyData = True  # Use the Therapy Data folder for any files.
 
     # Specify the user parameters.
-    userName = "Wenjian".replace(" ", "")
-    trialName = "EEG Trial3"
-    date = "2024-07-19"
+    userName = "Josh".replace(" ", "")
+    trialName = "HeatingPad"
+    date = "2024-07-24"
 
     # Specify experimental parameters.
     boardSerialNum = '12ba4cb61c85ec11bc01fc2b19c2d21c'  # Board's Serial Number (port.serial_number). Only used if streaming data, else it gets reset to None.
@@ -140,7 +140,6 @@ if __name__ == "__main__":
                 for finalLabelInd in range(len(featureLabelTypes)):
                     finalLabel = featureLabelTypes[finalLabelInd]
                     experimentNames = [experimentalOrder[i] for i in subjectExperimentInds]
-
                     plt.figure(figsize=(12, 6))  # Increase the figure size for better readability
                     bar_positions = np.arange(len(experimentNames))
                     bars = plt.bar(bar_positions, [allFinalLabels[finalLabelInd][i] for i in subjectExperimentInds], color=colors)
