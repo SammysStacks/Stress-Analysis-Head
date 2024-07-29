@@ -21,10 +21,16 @@ class heatTherapyControl(heatTherapyHelpers):
         print('passed initialize UserState')
         if self.therapyMethod == 'hmmTherapyProtocol':
             self.therapyProtocol.trainHMM()
-            currentParam, predictedSequence, outputMap = self.therapyProtocol.updateTherapyState()
-            if self.plotResults:
-                self.therapyProtocol.plottingProtocolsMain.plotTherapyResults_hmm(self.therapyProtocol.hmmModel, currentParam, predictedSequence, outputMap)
-                exit
+            while not self.therapyProtocol.finishedTherapy:
+                currentParam, outputMap = self.therapyProtocol.updateTherapyState()
+                print('currentParam:', currentParam)
+                self.therapyProtocol.getNextState(currentParam, self.therapyMethod)
+                print('self.therpyprotocol.paramStatePath:', self.therapyProtocol.paramStatePath)
+                combinedStates = [[param_state, user_compiled_mental] for param_state, user_compiled_mental in zip(self.therapyProtocol.unNormalizedParameter, self.therapyProtocol.userMentalStateCompiledLoss)]
+                print('combinedStates:', combinedStates)
+                if self.plotResults:
+                    self.therapyProtocol.plottingProtocolsMain.plotTherapyResults_hmm(self.therapyProtocol.hmmModel, combinedStates, outputMap)
+                self.therapyProtocol.checkConvergence_hmm(maxIterations)
         # Until the therapy converges.
         while not self.therapyProtocol.finishedTherapy:
             if self.therapyMethod == "aStarTherapyProtocol":
@@ -38,7 +44,6 @@ class heatTherapyControl(heatTherapyHelpers):
 
                 # Preparation for plotting
                 combinedStates = [[param_state, user_compiled_mental] for param_state, user_compiled_mental in zip(self.therapyProtocol.unNormalizedParameter, self.therapyProtocol.userMentalStateCompiledLoss)]
-
                 if self.plotResults:
                     self.therapyProtocol.plottingProtocolsMain.plotTherapyResults(combinedStates, allMaps)
                     print(f"Alpha after iteration: {self.therapyProtocol.percentHeuristic}\n")
@@ -58,7 +63,7 @@ class heatTherapyControl(heatTherapyHelpers):
 
 if __name__ == "__main__":
     # User parameters.
-    userTherapyMethod = "aStarTherapyProtocol"  # The therapy algorithm to run. Options: "aStarTherapyProtocol", "basicTherapyProtocol", "nnTherapyProtocol", "hmmTherapyProtocol"
+    userTherapyMethod = "hmmTherapyProtocol"  # The therapy algorithm to run. Options: "aStarTherapyProtocol", "basicTherapyProtocol", "nnTherapyProtocol", "hmmTherapyProtocol"
     testingUserName = "Squirtle"  # The username for the therapy.
     temperatureBounds = (35, 50)  # The temperature bounds for the therapy.
     temperatureBinWidth = 1.5  # The temperature bounds for the therapy.
@@ -70,11 +75,11 @@ if __name__ == "__main__":
         'simulatedMapType': 'uniformSampling',  # The method for generating the simulated map. Options: 'uniformSampling', 'linearSampling', 'parabolicSampling'
         'numSimulationHeuristicSamples': 50,  # The number of simulation samples to generate.
         'numSimulationTrueSamples': 30,  # The number of simulation samples to generate.
-        'simulateTherapy': False,  # Whether to simulate the therapy.
+        'simulateTherapy': True,  # Whether to simulate the therapy.
     }
 
     # Initialize the therapy protocol
     therapyProtocol = heatTherapyControl(testingUserName, temperatureBounds, temperatureBinWidth, currentSimulationParameters, therapyMethod=userTherapyMethod, plotResults=plotTherapyResults)
 
     # Run the therapy protocol.
-    therapyProtocol.runTherapyProtocol(maxIterations=2000)
+    therapyProtocol.runTherapyProtocol(maxIterations=None)

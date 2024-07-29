@@ -140,7 +140,7 @@ class simulationProtocols:
         # self.simulatedMapCompiledLoss = self.apply_gaussian_smoothing(self.simulatedMapCompiledLoss, kernel_size=3, sigma=0.5)
         # smoothen the map
 
-    def getSimulatedCompiledLoss(self, currentParam, currentUserState, newUserTemp=None, therapyMethod = None):
+    def getSimulatedCompiledLoss(self, currentParam, currentUserState, newUserTemp=None, therapyMethod=None):
         # Unpack the current user state.
         currentUserTemp = currentParam
         print('entering loss calculation in the getNextStates')
@@ -149,7 +149,7 @@ class simulationProtocols:
         newUserTemp = currentUserTemp if newUserTemp is None else newUserTemp
 
         # if it is aStarProtocol, resample
-        if therapyMethod == 'aStarTherapyProtocol' or 'basicTherapyProtocol':
+        if therapyMethod == 'aStarTherapyProtocol' or 'basicTherapyProtocol' or 'hmmTherapyProtocol':
             resampledParameterBins, resampledPredictionBins = self.generalMethods.resampleBins(self.allParameterBins, self.allPredictionBins, eventlySpacedBins=False)
             # Calculate the bin indices for the current and new user states.
 
@@ -181,7 +181,7 @@ class simulationProtocols:
         simulatedMapNA = torch.tensor(self.simulatedMapNA, dtype=torch.float32)
         simulatedMapSA = torch.tensor(self.simulatedMapSA, dtype=torch.float32)
         simulatedMapCompiledLoss = torch.tensor(self.simulatedMapCompiledLoss, dtype=torch.float32)
-        if therapyMethod == 'aStarTherapyProtocol' or 'basicTherapyProtocol':
+        if therapyMethod == 'aStarTherapyProtocol' or 'basicTherapyProtocol' or 'hmmTherapyProtocol':
             # resampling
             resampledParameterBins, resampledPredictionBins = self.generalMethods.resampleBins(self.allParameterBins, self.allPredictionBins, eventlySpacedBins=False)
             if newParamIndex != currentParamBinIndex or torch.rand(1).item() < 0.1:
@@ -208,7 +208,7 @@ class simulationProtocols:
                     specificLossProbabilities[key] = specificLossProbabilities[key] + gaussian_boost
                     specificLossProbabilities[key] = specificLossProbabilities[key] / torch.sum(specificLossProbabilities[key])
 
-                    # Optionally, you can also sample a new loss for each specific map if needed
+                    # can also sample a new loss for each specific map if needed
                     newSpecificLossBinIndex = torch.multinomial(specificLossProbabilities[key], 1).item()
                     specificUserLosses[key] = resampledPredictionBins[0][newSpecificLossBinIndex]
                     print(f"{key} specific user loss: {specificUserLosses[key]}")

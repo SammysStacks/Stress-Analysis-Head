@@ -107,7 +107,7 @@ class plottingProtocolsMain:
         # Print current state information
         print(f"New current state after iteration {num_steps + 1}: parameter = {userStatePath[-1][0]}, Loss = {userStatePath[-1][1]}")
 
-    def plotTherapyResults_hmm(self, hmmModel, currentParam, predictedSequence, simulated_map):
+    def plotTherapyResults_hmm(self, hmmModel, combinedStates, simulated_map):
         print('Graphing starts')
         start_time = time.time()
 
@@ -132,6 +132,18 @@ class plottingProtocolsMain:
         ax2.set_xlabel('Temperature Bins')
         ax2.set_ylabel('Loss Bins')
         ax2.set_aspect('auto')  # Set aspect ratio to auto
+
+        # Plot combined states with transitions
+        num_steps = len(combinedStates)
+        alphas = np.linspace(0.1, 1, num_steps - 1) ** 10  # Adjust alpha for segments
+
+        for j in range(num_steps - 1):
+            ax2.plot([combinedStates[j][0].item(), combinedStates[j + 1][0].item()],
+                     [combinedStates[j][1].item(), combinedStates[j + 1][1].item()],
+                     color=(0, 0, 0, alphas[j]), linewidth=2)
+
+        # Highlight the current state
+        ax2.scatter(combinedStates[-1][0].item(), combinedStates[-1][1].item(), color='tab:red', label='Current State', edgecolor='black', s=75, zorder=10)
 
         # Adjust layout to fit both plots nicely on the screen
         plt.tight_layout()

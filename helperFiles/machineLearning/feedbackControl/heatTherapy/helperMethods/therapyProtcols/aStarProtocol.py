@@ -56,7 +56,7 @@ class aStarTherapyProtocol(generalTherapyProtocol):
 
         newUserParam = newUserParam + self.uncertaintyBias * np.random.normal(loc=0, scale=0.5)  # Add noise to the gradient.
         # Calculate the new temperature.
-        # newUserParam = self.boundNewTemperature(newUserParam, bufferZone=1) # newUserParam = torch.Size([1, 1, 1, 1])
+        #newUserParam = self.boundNewTemperature(newUserParam, bufferZone=1) # newUserParam = torch.Size([1, 1, 1, 1])
         newUserParam = torch.tensor(newUserParam).view(1, 1, 1, 1) # actual userParam, not probability
         # bound the parameter
         newUserParam = torch.clamp(newUserParam, min=0, max=1)

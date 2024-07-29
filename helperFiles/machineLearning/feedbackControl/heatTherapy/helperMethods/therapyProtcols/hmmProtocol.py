@@ -1,6 +1,6 @@
 from hmmlearn import hmm
 import numpy as np
-
+import torch
 # Import files.
 from .generalTherapyProtocol import generalTherapyProtocol
 
@@ -77,35 +77,51 @@ class hmmTherapyProtocol(generalTherapyProtocol):
             model.fit(train_data)
             self.hmmModel = model
 
-
     def predict_optimal_sequence(self, currentParamIndex, sequence_length):
         predicted_sequence = [currentParamIndex]
-        loss_bin_sequence = [np.argmax(self.simulationProtocols.simulatedMapCompiledLoss[currentParamIndex])]
         for _ in range(sequence_length - 1):
-            nextStateIndex = np.argmax(self.hmmModel.transmat_[currentParamIndex])
+            # Sample the next state based on the transition probabilities
+            nextStateIndex = np.random.choice(self.numStates, p=self.hmmModel.transmat_[currentParamIndex])
             predicted_sequence.append(nextStateIndex)
             currentParamIndex = nextStateIndex
-            loss_bin_sequence.append(np.argmax(self.simulationProtocols.simulatedMapCompiledLoss[currentParamIndex]))
-            if np.argmax(self.simulationProtocols.simulatedMapCompiledLoss[currentParamIndex]) < 0.2:
-                print('argmax ')
-                break
+        return predicted_sequence
 
-        loss_bin_list = [tensor.item() for tensor in loss_bin_sequence]
-        return predicted_sequence, loss_bin_list
-
+    # def predict_optimal_sequence(self, currentParamIndex, sequence_length):
+    #     predicted_sequence = [currentParamIndex]
+    #     loss_bin_sequence = [np.argmax(self.simulationProtocols.simulatedMapCompiledLoss[currentParamIndex])]
+    #     for _ in range(sequence_length - 1):
+    #         # Sample the next state based on the transition probabilities
+    #         nextStateIndex = np.random.choice(self.numStates, p=self.hmmModel.transmat_[currentParamIndex])
+    #         predicted_sequence.append(nextStateIndex)
+    #         currentParamIndex = nextStateIndex
+    #         loss_bin_sequence.append(np.argmax(self.simulationProtocols.simulatedMapCompiledLoss[currentParamIndex]))
+    #         if np.argmax(self.simulationProtocols.simulatedMapCompiledLoss[currentParamIndex]) < 0.2:
+    #             print('argmax ')
+    #             print('self.simulationProtocols.simulatedMapCompiledLoss[currentParamIndex]', self.simulationProtocols.simulatedMapCompiledLoss[currentParamIndex])
+    #             break
+    #
+    #     loss_bin_list = [tensor.item() for tensor in loss_bin_sequence]
+    #     return predicted_sequence, loss_bin_list
 
     def updateTherapyState(self):
+        # from IPython import embed
+        # embed()
         currentParam = self.paramStatePath[-1].item()
         currentLoss = self.userMentalStateCompiledLoss[-1].item()
         paramBin = self.dataInterface.getBinIndex(self.allParameterBins_resampled[0], currentParam)
         lossBin = self.dataInterface.getBinIndex(self.allPredictionBins_resampled[0], currentLoss)
-        sequence_length = 20
-        predicted_sequence, loss_bin_list = self.predict_optimal_sequence(currentParamIndex=paramBin, sequence_length=sequence_length)
+        sequence_length = 2
+        predicted_sequence = self.predict_optimal_sequence(currentParamIndex=paramBin, sequence_length=sequence_length)
         print('initialparameter:', currentParam)
         print('initial Parameter Bin:', paramBin)
         print('predicted sequence:', predicted_sequence)
-        print('loss bin sequence:', loss_bin_list)
+        # this is a bin index
+        updatedParamIndex = predicted_sequence[-1] # + np.random.normal(loc=0, scale=0.5) # add noise to the parameter (subject would not feel the temperature difference within bin)
+        print('updatedParamIndex:', updatedParamIndex)
+        # unbound parameter
+        updatedParam = torch.tensor(self.allParameterBins_resampled[0][updatedParamIndex])
+        print('updatedParam:', updatedParam)
 
-        return currentParam, predicted_sequence, self.simulationProtocols.simulatedMapCompiledLoss
+        return updatedParam, self.simulationProtocols.simulatedMapCompiledLoss
 
 

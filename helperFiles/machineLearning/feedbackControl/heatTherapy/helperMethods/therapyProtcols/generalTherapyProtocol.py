@@ -116,6 +116,7 @@ class generalTherapyProtocol(abc.ABC):
         timePoints, parameters, emotionStates = self.getInitialSate()  # dim: numPoints, timePoint: t; emotionStates: (PA, NA, SA); prediction: predict the next state; Note these are actual state values
         # Track the user state and time delay.
         startTimePoint = timePoints
+
         self.timePoints.append(startTimePoint) # timePoints: list of tensor: [tensor(0)]
         self.paramStatePath.append(parameters) # self.paramStatePath: list of tensor: [torch.Size([1, 1, 1, 1])
         self.userMentalStatePath.append(emotionStates) # emotionstates: list of tensor: torch.Size([1, 3, 1, 1])
@@ -137,7 +138,6 @@ class generalTherapyProtocol(abc.ABC):
             # Simulate a new time point by adding a constant delay factor.
             currentTime, currentParam, currentPredictions = self.simulationProtocols.getInitialState() # currentTime: tensor(0); currentParam: torch.Size([1, 1, 1, 1]); currentPredictions: torch.Size([1, 3, 1, 1]) predefined.
             print('currentTime, currentParam, currentPredictions', currentTime, currentParam, currentPredictions)
-            exit()
             return currentTime, currentParam, currentPredictions
         else:
             # TODO: Implement a method to get the current user state.
@@ -171,11 +171,11 @@ class generalTherapyProtocol(abc.ABC):
             print('param_state_unbound', param_state_unbound)
             # User state update
 
-            self.timePoints.append(newTimePoint)  # TODO: check dimension
-            self.paramStatePath.append(newParamValues)  # TODO: check dimension
-            self.userMentalStatePath.append(combinedMentalState)  # TODO: check dimension
-            self.userMentalStateCompiledLoss.append(newUserLoss)  # TODO: check dimension
-            self.unNormalizedParameter.append(param_state_unbound)  # TODO: check dimension
+            self.timePoints.append(newTimePoint)
+            self.paramStatePath.append(newParamValues)
+            self.userMentalStatePath.append(combinedMentalState)
+            self.userMentalStateCompiledLoss.append(newUserLoss)
+            self.unNormalizedParameter.append(param_state_unbound)
         else:
             pass
 
@@ -195,6 +195,33 @@ class generalTherapyProtocol(abc.ABC):
             # TODO: Implement a convergence check. Maybe based on stagnant loss.
             # TODO: give a loss threshold, and find the most probable temperature
             pass
+
+    def checkConvergence_hmm(self, maxIterations):
+        # Check if the therapy has converged.
+        if maxIterations is not None:
+            if len(self.userMentalStatePath) >= maxIterations:
+                self.finishedTherapy = True
+        else:
+            currentParam = self.paramStatePath[-1].item()
+            currentCompiledLoss = self.userMentalStateCompiledLoss[-1].item()
+
+            # Get the corresponding bin index for currentCompiledLoss and currentParam
+            currentParamIndex = self.dataInterface.getBinIndex(self.allParameterBins[0], currentParam)
+            currentLossIndex = self.dataInterface.getBinIndex(self.allPredictionBins[0], currentCompiledLoss)
+
+            currentProbability = self.simulationProtocols.simulatedMapCompiledLoss[currentParamIndex][currentLossIndex]
+
+            # Check if currentProbability is greater than 80% of other probabilities under currentParam
+            param_probs = self.simulationProtocols.simulatedMapCompiledLoss[currentParamIndex]
+            param_quantile = torch.quantile(param_probs, 0.8)
+
+            # Check if currentProbability is greater than 80% of probabilities for all parameters under the same loss bin
+            loss_probs = self.simulationProtocols.simulatedMapCompiledLoss[:, currentLossIndex]
+            loss_quantile = torch.quantile(loss_probs, 0.8)
+
+            if currentCompiledLoss < 0.2:
+                if currentProbability > param_quantile and currentProbability > loss_quantile:
+                    self.finishedTherapy = True
 
     # ------------------------ Child Class Contract ------------------------ #
 

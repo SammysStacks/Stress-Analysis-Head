@@ -125,11 +125,14 @@ class empatchProtocols(extractData):
 
         stateHolder = torch.as_tensor(stateHolder)
         print('stateHolder', stateHolder)
-        exit()
-        temperature = stateHolder[:, 0].view(1, -1)
+        parameter = stateHolder[:, 0].view(1, -1)
         pa = stateHolder[:, 1].view(1, -1)
         na = stateHolder[:, 2].view(1, -1)
         sa = stateHolder[:, 3].view(1, -1)
-
-        return temperature, pa, na, sa
+        print('parameter', parameter)
+        print('pa', pa)
+        print('na', na)
+        print('sa', sa)
+        exit()
+        return parameter, pa, na, sa
 
