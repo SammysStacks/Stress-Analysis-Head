@@ -69,6 +69,7 @@ class generalTherapyProtocol(abc.ABC):
         self.dataInterface = dataInterface(self.predictionWeights, self.optimalNormalizedState)
         self.generalMethods = generalMethods()
 
+
         # Reset the therapy parameters.
         self.userMentalStatePath = None
         self.paramStatePath = None
@@ -77,6 +78,8 @@ class generalTherapyProtocol(abc.ABC):
         self.userName = None
         self.unNormalizedParameter = None
         self.resetTherapy()
+
+
 
     def resetTherapy(self):
         # Reset the therapy parameters.
@@ -97,16 +100,39 @@ class generalTherapyProtocol(abc.ABC):
         else:
             # real data points
             temperature, pa, na, sa = self.empatchProtocols.getTherapyData()
-            exit()
             # sort the temperature, pa, na, sa into correct format passed to generate initialSimulatedData
             initialSimulatedStates = torch.stack([temperature, pa, na, sa], dim=1)
-            initialSimulatedData = self.dataInterface.calculateCompiledLoss(initialSimulatedStates)  # initialSimulatedData dimension: numSimulationTrueSamples, (T, L).
-            self.simulationProtocols.NA_map_simulated = self.generalMethods.getProbabilityMatrix(initialSimulatedData, self.allParameterBins, self.allPredictionBins, self.gausLossSTDs, noise=0.05, applyGaussianFilter=self.applyGaussianFilter)
-            self.simulationProtocols.SA_map_simulated = self.generalMethods.getProbabilityMatrix(initialSimulatedData, self.allParameterBins, self.allPredictionBins, self.gausLossSTDs, noise=0.1, applyGaussianFilter=self.applyGaussianFilter)
-            self.simulationProtocols.PA_map_simulated = self.generalMethods.getProbabilityMatrix(initialSimulatedData, self.allParameterBins, self.allPredictionBins, self.gausLossSTDs, noise=0.0, applyGaussianFilter=self.applyGaussianFilter)
+            extracted_param = initialSimulatedStates[0, 0, :]
+            # normalize the temperature
+            extracted_param = dataInterface.normalizeParameters(currentParamBounds=self.initialParameterBounds, normalizedParamBounds=self.modelParameterBounds, currentParamValues=extracted_param)
+            extracted_pa = initialSimulatedStates[0, 1, :]
+            extracted_na = initialSimulatedStates[0, 2, :]
+            extracted_sa = initialSimulatedStates[0, 3, :]
+
+            # Stack the PA, NA, and SA into the desired shape
+            realDataInitialEmotionStates = torch.stack([extracted_pa, extracted_na, extracted_sa], dim=1).unsqueeze(2).unsqueeze(3)  # [48, 3, 1, 1]
+
+            initialRealData_compiledLoss = self.dataInterface.calculateCompiledLoss(realDataInitialEmotionStates)  # initialSimulatedData dimension: numSimulationTrueSamples, (T, L).
+            realDataInitialCompiledStates = torch.stack([extracted_param, extracted_pa, extracted_na, extracted_sa, initialRealData_compiledLoss.flatten()], dim=1).unsqueeze(2).unsqueeze(3)  # [48, 5, 1, 1]
+
+            # data preprocessing for generating intial Maps
+            initialRealData_PA = realDataInitialCompiledStates[:, [0, 1], :, :]  # Shape: [30, 2, 1, 1]
+
+            # Extract for NA: Parameter and second emotion prediction
+            initialRealData_NA = realDataInitialCompiledStates[:, [0, 2], :, :]  # Shape: [30, 2, 1, 1]
+
+            # Extract for SA: Parameter and third emotion prediction
+            initialRealData_SA = realDataInitialCompiledStates[:, [0, 3], :, :]  # Shape: [30, 2, 1, 1]
+
+            # resample the data bins
+            resampledParameterBins, resampledPredictionBins = self.generalMethods.resampleBins(self.allParameterBins, self.allPredictionBins, eventlySpacedBins=False)
+
+            self.simulationProtocols.realSimMapPA = self.generalMethods.getProbabilityMatrix(initialRealData_PA, resampledParameterBins, resampledPredictionBins[0], self.gausParameterSTDs, self.gausLossSTDs[0], noise=0.1, applyGaussianFilter=self.applyGaussianFilter)
+            self.simulationProtocols.realSimMapNA = self.generalMethods.getProbabilityMatrix(initialRealData_NA, resampledParameterBins, resampledPredictionBins[1], self.gausParameterSTDs, self.gausLossSTDs[1], noise=0.1, applyGaussianFilter=self.applyGaussianFilter)
+            self.simulationProtocols.realSimMapSA = self.generalMethods.getProbabilityMatrix(initialRealData_SA, resampledParameterBins, resampledPredictionBins[2], self.gausParameterSTDs, self.gausLossSTDs[2], noise=0.1, applyGaussianFilter=self.applyGaussianFilter)
 
             # say that state anxiety has a slightly higher weight
-            self.simulationProtocols.simulatedMap = 0.3 * self.simulationProtocols.PA_map_simulated + 0.3 * self.simulationProtocols.NA_map_simulated + 0.4 * self.simulationProtocols.SA_map_simulated
+            self.simulationProtocols.realSimMapCompiledLoss = 0.3 * self.simulationProtocols.realSimMapPA + 0.3 * self.simulationProtocols.realSimMapNA + 0.4 * self.simulationProtocols.realSimMapSA
 
     def initializeUserState(self, userName):
         # Get the user information.
@@ -140,11 +166,11 @@ class generalTherapyProtocol(abc.ABC):
             print('currentTime, currentParam, currentPredictions', currentTime, currentParam, currentPredictions)
             return currentTime, currentParam, currentPredictions
         else:
-            # TODO: Implement a method to get the current user state.
-            # Simulate a new time.
-            currentTime, currentParam, currentPredictions = self.empatchProtocols.getTherapyData()
-            exit()
-            pass
+            # TODO: !!! Implement a method to get the current user state.
+            # TODO: right now just simulate a random start state, eventually this has to be real time start state
+            currentTime, currentParam, currentPredictions = self.simulationProtocols.getInitialState()  # currentTime: tensor(0); currentParam: torch.Size([1, 1, 1, 1]); currentPredictions: torch.Size([1, 3, 1, 1]) predefined.
+            print('currentTime, currentParam, currentPredictions', currentTime, currentParam, currentPredictions)
+            return currentTime, currentParam, currentPredictions
 
         # Returning timePoint, (T, PA, NA, SA)
 
@@ -177,7 +203,33 @@ class generalTherapyProtocol(abc.ABC):
             self.userMentalStateCompiledLoss.append(newUserLoss)
             self.unNormalizedParameter.append(param_state_unbound)
         else:
-            pass
+            # TODO !!! eventually, this will be the real-time user state update during experiment
+            # Simulate a new time.
+            lastTimePoint = self.timePoints[-1] if len(self.timePoints) != 0 else 0
+            # convert tensor to int
+            lastTimePoint = int(lastTimePoint)
+            newTimePoint = self.simulationProtocols.getSimulatedTimes(self.simulationProtocols.initialPoints, lastTimePoint)
+            # get the current user state
+            currentParam = self.paramStatePath[-1]
+            currentEmotionStates = self.userMentalStatePath[-1]
+            # Sample the new loss form a pre-simulated map.
+            newUserLoss, PA, NA, SA = self.simulationProtocols.getSimulatedCompiledLoss_empatch(currentParam, currentEmotionStates, newParamValues, therapyMethod)
+            # combined mentalstate
+            print('newUserLoss, PA, NA, SA', newUserLoss, PA, NA, SA)
+            combinedMentalState = torch.cat((PA, NA, SA), dim=1)
+            print(f'newuSerparam,newuserLoss {newParamValues, newUserLoss}')
+            # unbound temperature:
+            param_state_index = self.dataInterface.getBinIndex(self.allParameterBins[0], newParamValues)
+            param_state_unbound = self.unNormalizedAllParameterBins[0][param_state_index]
+            param_state_unbound = self.boundNewTemperature(param_state_unbound, bufferZone=0.01)  # newUserParam = torch.Size([1, 1, 1, 1])
+            print('param_state_unbound', param_state_unbound)
+            # User state update
+
+            self.timePoints.append(newTimePoint)
+            self.paramStatePath.append(newParamValues)
+            self.userMentalStatePath.append(combinedMentalState)
+            self.userMentalStateCompiledLoss.append(newUserLoss)
+            self.unNormalizedParameter.append(param_state_unbound)
 
     def boundNewTemperature(self, newUserParam, bufferZone=0.01):
         # Bound the new temperature.
@@ -192,9 +244,29 @@ class generalTherapyProtocol(abc.ABC):
             if len(self.userMentalStatePath) >= maxIterations:
                 self.finishedTherapy = True
         else:
-            # TODO: Implement a convergence check. Maybe based on stagnant loss.
-            # TODO: give a loss threshold, and find the most probable temperature
-            pass
+            currentParam = self.paramStatePath[-1].item()
+            currentCompiledLoss = self.userMentalStateCompiledLoss[-1].item()
+
+            # Get the corresponding bin index for currentCompiledLoss and currentParam
+            currentParamIndex = self.dataInterface.getBinIndex(self.allParameterBins[0], currentParam)
+            currentLossIndex = self.dataInterface.getBinIndex(self.allPredictionBins[0], currentCompiledLoss)
+            if self.simulateTherapy:
+                probabilityMap = self.simulationProtocols.simulatedMapCompiledLoss
+            else:
+                probabilityMap = self.simulationProtocols.realSimMapCompiledLoss
+            currentProbability = probabilityMap[currentParamIndex][currentLossIndex]
+
+            # Check if currentProbability is greater than 80% of other probabilities under currentParam
+            param_probs = probabilityMap[currentParamIndex]
+            param_quantile = torch.quantile(param_probs, 0.8)
+
+            # Check if currentProbability is greater than 80% of probabilities for all parameters under the same loss bin
+            loss_probs = probabilityMap[:, currentLossIndex]
+            loss_quantile = torch.quantile(loss_probs, 0.8)
+
+            if currentCompiledLoss < 0.2:
+                if currentProbability > param_quantile and currentProbability > loss_quantile:
+                    self.finishedTherapy = True
 
     def checkConvergence_hmm(self, maxIterations):
         # Check if the therapy has converged.
@@ -208,20 +280,24 @@ class generalTherapyProtocol(abc.ABC):
             # Get the corresponding bin index for currentCompiledLoss and currentParam
             currentParamIndex = self.dataInterface.getBinIndex(self.allParameterBins[0], currentParam)
             currentLossIndex = self.dataInterface.getBinIndex(self.allPredictionBins[0], currentCompiledLoss)
-
-            currentProbability = self.simulationProtocols.simulatedMapCompiledLoss[currentParamIndex][currentLossIndex]
+            if self.simulateTherapy:
+                probabilityMap = self.simulationProtocols.simulatedMapCompiledLoss
+            else:
+                probabilityMap = self.simulationProtocols.realSimMapCompiledLoss
+            currentProbability = probabilityMap[currentParamIndex][currentLossIndex]
 
             # Check if currentProbability is greater than 80% of other probabilities under currentParam
-            param_probs = self.simulationProtocols.simulatedMapCompiledLoss[currentParamIndex]
+            param_probs = probabilityMap[currentParamIndex]
             param_quantile = torch.quantile(param_probs, 0.8)
 
             # Check if currentProbability is greater than 80% of probabilities for all parameters under the same loss bin
-            loss_probs = self.simulationProtocols.simulatedMapCompiledLoss[:, currentLossIndex]
+            loss_probs = probabilityMap[:, currentLossIndex]
             loss_quantile = torch.quantile(loss_probs, 0.8)
 
             if currentCompiledLoss < 0.2:
                 if currentProbability > param_quantile and currentProbability > loss_quantile:
                     self.finishedTherapy = True
+
 
     # ------------------------ Child Class Contract ------------------------ #
 

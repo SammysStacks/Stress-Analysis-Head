@@ -13,7 +13,7 @@ class hmmTherapyProtocol(generalTherapyProtocol):
         self.numStates = len(self.allParameterBins_resampled[0])  # 11 in this case; len(self.allParameterBins_resampled[0]) * len(self.allPredictionBins_resampled[0])
 
         # Parameters for observation sequence
-        self.sequenceLength = self.numStates * 50
+        self.sequenceLength = self.numStates * 500
         self.numSequence = 19
         self.predictionSequenceLength = 2
 
@@ -34,7 +34,9 @@ class hmmTherapyProtocol(generalTherapyProtocol):
             return normalized_initial_matrix.numpy()
         else:
             # TODO: get the emission matrix from actual data
-            pass
+            normalized_initial_matrix = self.simulationProtocols.realSimMapCompiledLoss / self.simulationProtocols.realSimMapCompiledLoss.sum(axis=1, keepdims=True)
+            print("Initial emission matrix shape:", normalized_initial_matrix.shape)
+            return normalized_initial_matrix.numpy()
 
     def initialTransitionMatrix(self):
         # Initialize the transition matrix.
@@ -55,8 +57,18 @@ class hmmTherapyProtocol(generalTherapyProtocol):
             observation_sequences = np.array(observation_sequences).reshape(-1, 1)
             return observation_sequences
         else:
-            pass
+            # TODO: think about how we are gonna use the actual data to train the HMM
+            # right now this is just the same as generating random sequence from real data
+            observation_sequences = []
+            current_state = np.random.choice(self.numStates, p=self.startProb)
 
+            for _ in range(self.sequenceLength):
+                observed_bin = np.random.choice(len(self.allPredictionBins_resampled[0]), p=self.emissionMatrix[current_state])
+                observation_sequences.append(observed_bin)
+                current_state = np.random.choice(self.numStates, p=self.transitionMatrix[current_state])
+
+            observation_sequences = np.array(observation_sequences).reshape(-1, 1)
+            return observation_sequences
     def trainHMM(self):
         if self.HMMmodels == 'categorical':
             model = hmm.CategoricalHMM(n_components=self.numStates, n_iter=1000, init_params="")
@@ -121,7 +133,10 @@ class hmmTherapyProtocol(generalTherapyProtocol):
         # unbound parameter
         updatedParam = torch.tensor(self.allParameterBins_resampled[0][updatedParamIndex])
         print('updatedParam:', updatedParam)
+        if self.simulateTherapy:
+            return updatedParam, self.simulationProtocols.simulatedMapCompiledLoss
+        else:
+            return updatedParam, self.simulationProtocols.realSimMapCompiledLoss
 
-        return updatedParam, self.simulationProtocols.simulatedMapCompiledLoss
 
 

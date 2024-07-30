@@ -312,3 +312,87 @@ class simulationProtocols:
         smoothed_map = smoothed_map.squeeze(0).squeeze(0)
 
         return smoothed_map
+
+
+    # TO be deleted after real-time streaming is implemented
+    def getSimulatedCompiledLoss_empatch(self, currentParam, currentUserState, newUserTemp=None, therapyMethod=None):
+        # Unpack the current user state.
+        currentUserTemp = currentParam
+        print('entering loss calculation in the getNextStates')
+        currentUserLoss = self.dataInterface.calculateCompiledLoss(currentUserState) # torch.Size([1, 1, 1, 1])
+
+        newUserTemp = currentUserTemp if newUserTemp is None else newUserTemp
+
+        # if it is aStarProtocol, resample
+        if therapyMethod == 'aStarTherapyProtocol' or 'basicTherapyProtocol' or 'hmmTherapyProtocol':
+            resampledParameterBins, resampledPredictionBins = self.generalMethods.resampleBins(self.allParameterBins, self.allPredictionBins, eventlySpacedBins=False)
+            # Calculate the bin indices for the current and new user states.
+
+            # doesn't matter to index resampledPrediciton bins or not, it's the same anyway if we are resampling
+            currentLossIndex = self.dataInterface.getBinIndex(resampledPredictionBins[0], currentUserLoss)
+            currentTempBinIndex = self.dataInterface.getBinIndex(resampledParameterBins[0], currentUserTemp)
+            newTempBinIndex = self.dataInterface.getBinIndex(resampledParameterBins[0], newUserTemp)
+            newUserLoss, PA, NA, SA = self.sampleNewLoss_empatch(currentUserLoss, currentLossIndex, currentTempBinIndex, newTempBinIndex, currentUserState, therapyMethod, bufferZone=0.01)
+            newUserLoss = torch.tensor(newUserLoss).view(1, 1, 1, 1)
+            PA = torch.tensor(PA).view(1, 1, 1, 1)
+            NA = torch.tensor(NA).view(1, 1, 1, 1)
+            SA = torch.tensor(SA).view(1, 1, 1, 1)
+            return newUserLoss, PA, NA, SA
+        else:
+            # for other conditions or protocols
+            # Calculate the bin indices for the current and new user states.
+            currentLossIndex = self.dataInterface.getBinIndex(self.allPredictionBins, currentUserLoss)
+            newTempBinIndex = self.dataInterface.getBinIndex(self.allParameterBins, newUserTemp)
+            #newUserLoss, PA, NA, SA = self.sampleNewLoss(currentUserLoss, currentLossIndex, currentTempBinIndex, newTempBinIndex, currentUserState, therapyMethod, bufferZone=0.01)
+        # Simulate a new user loss.
+            newUserLoss = None
+            PA = None
+            NA = None
+            SA = None
+            return newUserLoss, PA, NA, SA
+
+    def sampleNewLoss_empatch(self, currentUserLoss, currentLossIndex, currentParamBinIndex, newParamIndex, currentUserState, therapyMethod=None, bufferZone=0.01, gausSTD=0.05):
+        simulatedMapPA = torch.tensor(self.realSimMapPA, dtype=torch.float32)
+        simulatedMapNA = torch.tensor(self.realSimMapNA, dtype=torch.float32)
+        simulatedMapSA = torch.tensor(self.realSimMapSA, dtype=torch.float32)
+        simulatedMapCompiledLoss = torch.tensor(self.realSimMapCompiledLoss, dtype=torch.float32)
+        if therapyMethod == 'aStarTherapyProtocol' or 'basicTherapyProtocol' or 'hmmTherapyProtocol':
+            # resampling
+            resampledParameterBins, resampledPredictionBins = self.generalMethods.resampleBins(self.allParameterBins, self.allPredictionBins, eventlySpacedBins=False)
+            if newParamIndex != currentParamBinIndex or torch.rand(1).item() < 0.1:
+
+                # Calculate new loss probabilities and Gaussian boost
+                newLossProbabilities = simulatedMapCompiledLoss[newParamIndex] / torch.sum(simulatedMapCompiledLoss[newParamIndex])
+
+                gaussian_boost = self.generalMethods.createGaussianArray(inputData=newLossProbabilities.numpy(), gausMean=currentLossIndex, gausSTD=gausSTD, torchFlag=True)
+                # Combine the two distributions and normalize
+                newLossProbabilities = newLossProbabilities + gaussian_boost
+                newLossProbabilities = newLossProbabilities / torch.sum(newLossProbabilities)
+
+                # Sample a new loss from the distribution
+                newLossBinIndex = torch.multinomial(newLossProbabilities, 1).item()
+                newUserLoss = resampledPredictionBins[0][newLossBinIndex] # doesn't matter which prediction bins, after resampling they are the same. TODO: do we need to add half of the bin width? to make it in the middle?
+                # Sample distribution of loss at a certain temperature for PA, NA, SA
+                simulatedSpecificMaps = {'PA': simulatedMapPA, 'NA': simulatedMapNA, 'SA': simulatedMapSA}
+                specificLossProbabilities = {}
+                specificUserLosses = {}
+
+                for key in simulatedSpecificMaps.keys():
+                    specificLossProbabilities[key] = simulatedSpecificMaps[key][newParamIndex] / torch.sum(simulatedSpecificMaps[key][newParamIndex])
+                    gaussian_boost = self.generalMethods.createGaussianArray(inputData=specificLossProbabilities[key].numpy(), gausMean=currentLossIndex, gausSTD=gausSTD, torchFlag=True)
+                    specificLossProbabilities[key] = specificLossProbabilities[key] + gaussian_boost
+                    specificLossProbabilities[key] = specificLossProbabilities[key] / torch.sum(specificLossProbabilities[key])
+
+                    # can also sample a new loss for each specific map if needed
+                    newSpecificLossBinIndex = torch.multinomial(specificLossProbabilities[key], 1).item()
+                    specificUserLosses[key] = resampledPredictionBins[0][newSpecificLossBinIndex]
+                    print(f"{key} specific user loss: {specificUserLosses[key]}")
+
+                # specificLossProbabilities contains the normalized loss probabilities for PA, NA, and SA
+                return newUserLoss, specificUserLosses['PA'], specificUserLosses['NA'], specificUserLosses['SA']
+            else:
+                newUserLoss = currentUserLoss + torch.normal(mean=0.0, std=0.01, size=currentUserLoss.size())
+                newUserLossPA = currentUserState[0][0][0][0] + torch.normal(mean=0.0, std=0.01, size=currentUserState[0][0][0][0].size())
+                newUserLossNA = currentUserState[0][1][0][0] + torch.normal(mean=0.0, std=0.01, size=currentUserState[0][1][0][0].size())
+                newUserLossSA = currentUserState[0][2][0][0] + torch.normal(mean=0.0, std=0.01, size=currentUserState[0][2][0][0].size())
+                return newUserLoss, newUserLossPA, newUserLossNA, newUserLossSA

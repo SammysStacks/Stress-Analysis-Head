@@ -133,6 +133,5 @@ class empatchProtocols(extractData):
         print('pa', pa)
         print('na', na)
         print('sa', sa)
-        exit()
         return parameter, pa, na, sa
 

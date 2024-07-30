@@ -195,11 +195,5 @@ class aStarTherapyProtocol(generalTherapyProtocol):
             #print("simulating compiled loss map for heuristic map", self.simulationProtocols.simulatedMapCompiledLoss)
             return self.simulationProtocols.simulatedMapCompiledLoss
         else:
-            # Get the real data points.
-            initialHeuristicStates = self.empatchProtocols.getTherapyData()
-
-            # Get the heuristic matrix from the simulated points.
-            initialHeuristicData = self.compileLossStates(initialHeuristicStates)  # InitialData dim: numPoints, (T, L)
-            heuristicMap = self.getProbabilityMatrix(initialHeuristicData)  # Adding Gaussian distributions and normalizing the probability
-
-            return heuristicMap
+            # Initialize a heuristic map.
+            return self.simulationProtocols.realSimMapCompiledLoss

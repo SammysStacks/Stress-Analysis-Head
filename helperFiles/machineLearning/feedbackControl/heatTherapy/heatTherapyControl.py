@@ -19,6 +19,7 @@ class heatTherapyControl(heatTherapyHelpers):
         # Initialize holder parameters such as the user maps.
         self.therapyProtocol.initializeUserState(userName=self.userName)
         print('passed initialize UserState')
+        iterationCounter = 0
         if self.therapyMethod == 'hmmTherapyProtocol':
             self.therapyProtocol.trainHMM()
             while not self.therapyProtocol.finishedTherapy:
@@ -31,6 +32,8 @@ class heatTherapyControl(heatTherapyHelpers):
                 if self.plotResults:
                     self.therapyProtocol.plottingProtocolsMain.plotTherapyResults_hmm(self.therapyProtocol.hmmModel, combinedStates, outputMap)
                 self.therapyProtocol.checkConvergence_hmm(maxIterations)
+                iterationCounter += 1
+                print('iterationCounter:', iterationCounter)
         # Until the therapy converges.
         while not self.therapyProtocol.finishedTherapy:
             if self.therapyMethod == "aStarTherapyProtocol":
@@ -59,13 +62,15 @@ class heatTherapyControl(heatTherapyHelpers):
 
             # Check if the therapy has converged.
             self.therapyProtocol.checkConvergence(maxIterations)
+            iterationCounter += 1
+            print('iterationCounter:', iterationCounter)
 
 
 if __name__ == "__main__":
     # User parameters.
     userTherapyMethod = "hmmTherapyProtocol"  # The therapy algorithm to run. Options: "aStarTherapyProtocol", "basicTherapyProtocol", "nnTherapyProtocol", "hmmTherapyProtocol"
     testingUserName = "Squirtle"  # The username for the therapy.
-    temperatureBounds = (35, 50)  # The temperature bounds for the therapy.
+    temperatureBounds = (30, 50)  # The temperature bounds for the therapy.
     temperatureBinWidth = 1.5  # The temperature bounds for the therapy.
     plotTherapyResults = True  # Whether to plot the results.
 
@@ -75,7 +80,7 @@ if __name__ == "__main__":
         'simulatedMapType': 'uniformSampling',  # The method for generating the simulated map. Options: 'uniformSampling', 'linearSampling', 'parabolicSampling'
         'numSimulationHeuristicSamples': 50,  # The number of simulation samples to generate.
         'numSimulationTrueSamples': 30,  # The number of simulation samples to generate.
-        'simulateTherapy': True,  # Whether to simulate the therapy.
+        'simulateTherapy': False,  # Whether to simulate the therapy.
     }
 
     # Initialize the therapy protocol

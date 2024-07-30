@@ -30,8 +30,10 @@ class basicTherapyProtocol(generalTherapyProtocol):
 
         # Update temperature towards smaller loss
         newUserParam = self.updateTemperature(currentParam, currentCompiledLoss)
-
-        return newUserParam, self.simulationProtocols.simulatedMapCompiledLoss
+        if self.simulateTherapy:
+            return newUserParam, self.simulationProtocols.simulatedMapCompiledLoss
+        else:
+            return newUserParam, self.simulationProtocols.realSimMapCompiledLoss
 
     def updateTemperature(self, currentUserParam, currentUserLoss):
         # Define the new temperature update step.
@@ -95,16 +97,5 @@ class basicTherapyProtocol(generalTherapyProtocol):
         if self.simulateTherapy:
             return self.simulationProtocols.simulatedMapCompiledLoss
         else:
-            # Get the real data points.
-            initialHeuristicStates = self.empatchProtocols.getTherapyData()
-            # dimension of initialHeuristicStates: (T, PA, NA, SA); 2D array (we have 6 points for now)
-            print('intialHeuristic', initialHeuristicStates)
-            initialSimulatedStates = self.simulationProtocols.generateSimulatedMap(self.simulationProtocols.numSimulationTrueSamples, simulatedMapType=self.simulationProtocols.simulatedMapType)
-            initialSimulatedData = self.compileLossStates(initialSimulatedStates)  # initialSimulatedData dimension: numSimulationTrueSamples, (T, L).
-            self.simulationProtocols.simulatedMap = self.getProbabilityMatrix(initialSimulatedData)  # Spreading delta function probability.
-
-        # Get the heuristic matrix from the simulated points.
-        initialHeuristicData = self.compileLossStates(initialHeuristicStates)  # InitialData dim: numPoints, (T, L)
-        heuristicMap = self.getProbabilityMatrix(initialHeuristicData)  # Adding Gaussian distributions and normalizing the probability
-
-        return heuristicMap
+            # TODO: eventually, this should return the fully compiled map with real data (once we finished data collection)
+            return self.simulationProtocols.realSimMapCompiledLoss
