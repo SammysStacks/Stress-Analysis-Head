@@ -42,7 +42,7 @@ class trainingProtocols(extractData):
 
     def streamTrainingData(self, featureAverageWindows, plotTrainingData=False, reanalyzeData=False, metaTraining=False, reverseOrder=False):
         # Hold time series analysis of features.
-        allRawFeatureIntervals, allRawFeatureIntervalTimes, allAlignedFeatureIntervals, allAlignedFeatureIntervalTimes = [], [], [], []
+        allRawFeatureIntervalTimes, allRawFeatureIntervals, allCompiledFeatureIntervals, allAlignedFeatureIntervals, allAlignedFeatureIntervalTimes = [], [], [], [], []
         # Hold features extraction information.
         allRawFeatureHolders, allRawFeatureTimesHolders, allAlignedFeatureHolder, allAlignedFeatureTimes = [], [], [], []
         # Hold survey information.
@@ -179,17 +179,20 @@ class trainingProtocols(extractData):
 
             # ----------- Segment the Experimental Feature Signals ----------- #
 
+            # Calculate a buffer for the experiment.
+            modelFeatureTimeBuffer = max(300, self.modelParameters.getTimeWindows()[-1] + self.modelParameters.getShiftInfo(submodel='maxShift') - 5)
+
             badExperimentalInds = []
             # For each experiment performed in the trial.
             for experimentInd in range(len(experimentTimes)):
                 startExperimentTime, endExperimentTime = experimentTimes[experimentInd]
                 startSurveyTime = currentSurveyAnswerTimes[experimentInd]
 
-                # Calculate the raw feature intervals
+                # Calculate the feature intervals
                 newRawFeatureIntervalTimes, newRawFeatureIntervals = self.organizeRawFeatureIntervals(startExperimentTime, startSurveyTime, rawFeatureTimesHolder, rawFeatureHolder)
+                _, newCompiledFeatureIntervals = self.organizeRawFeatureIntervals(startExperimentTime, startSurveyTime, rawFeatureTimesHolder, compiledFeatureHolders)
 
                 # Calculate the aligned feature intervals
-                modelFeatureTimeBuffer = max(300, self.modelParameters.getTimeWindows()[-1] + self.modelParameters.getShiftInfo(submodel='maxShift') - 5)
                 alignedFeatureIntervals, alignedFeatureIntervalTimes = self.readData.compileModelFeatures(alignedFeatureTimes, alignedFeatures, startSurveyTime - modelFeatureTimeBuffer, startSurveyTime)
 
                 # Check the features.
@@ -199,6 +202,7 @@ class trainingProtocols(extractData):
 
                 # Save the interval information
                 allAlignedFeatureIntervalTimes.append(alignedFeatureIntervalTimes)
+                allCompiledFeatureIntervals.append(newCompiledFeatureIntervals)
                 allRawFeatureIntervalTimes.append(newRawFeatureIntervalTimes)
                 allAlignedFeatureIntervals.append(alignedFeatureIntervals)
                 experimentalOrder.append(experimentNames[experimentInd])
@@ -280,11 +284,12 @@ class trainingProtocols(extractData):
         allFinalLabels, surveyQuestions, surveyAnswersList = np.asarray(allFinalLabels), np.asarray(surveyQuestions), np.asarray(surveyAnswersList)
         print(f'surveyQuestions: {surveyQuestions}')
 
+        # Assert consistency across training data.
+        assert len(allRawFeatureIntervals) == len(allRawFeatureIntervalTimes) == len(allCompiledFeatureIntervals) == len(allAlignedFeatureIntervals) == len(allAlignedFeatureIntervalTimes)
         assert len(allRawFeatureTimesHolders) == len(allRawFeatureHolders) == len(allAlignedFeatureTimes) == len(allAlignedFeatureHolder)
-        assert len(allRawFeatureIntervals) == len(allRawFeatureIntervalTimes) == len(allAlignedFeatureIntervals) == len(allAlignedFeatureIntervalTimes)
 
         # Return Training Data and Labels
-        return allRawFeatureTimesHolders, allRawFeatureHolders, allRawFeatureIntervals, allRawFeatureIntervalTimes, \
+        return allRawFeatureTimesHolders, allRawFeatureHolders, allRawFeatureIntervalTimes, allRawFeatureIntervals, allCompiledFeatureIntervals, \
             allAlignedFeatureTimes, allAlignedFeatureHolder, allAlignedFeatureIntervals, allAlignedFeatureIntervalTimes, \
             subjectOrder, experimentalOrder, allFinalLabels, featureLabelTypes, surveyQuestions, surveyAnswersList, surveyAnswerTimes
 

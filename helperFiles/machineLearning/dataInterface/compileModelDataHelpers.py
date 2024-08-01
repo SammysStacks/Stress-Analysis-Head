@@ -402,26 +402,3 @@ class compileModelDataHelpers:
         return snr_values
 
     # ---------------------------------------------------------------------- #
-    # -------------------------- Data Organization ------------------------- #
-
-    @staticmethod
-    def _selectSignals(allSignalData, signalInds):
-        """
-        Purpose: keep of the signalInds in allSignalData.
-        --------------------------------------------
-        allSignalData : A list of size (batchSize, numSignals, sequenceLength)
-        featureInds : A list of size numSignalsKeep
-        """
-        # Base case, no indices selected.
-        if signalInds is None:
-            return allSignalData
-
-        selectedData = []
-        # For each set of signals.
-        for dataInd in range(len(allSignalData)):
-            # Select and store only the signalInds.
-            signalData = np.asarray(allSignalData[dataInd])
-            selectedData.append(signalData[signalInds, :])
-        return selectedData
-
-    # ---------------------------------------------------------------------- #

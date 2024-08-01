@@ -51,9 +51,9 @@ class compileModelData(compileModelDataHelpers):
         if loadCompiledData and os.path.isfile(f'{self.compiledInfoLocation}{compiledModelName}{self.compiledExtension}'): return self.loadCompiledInfo(compiledModelName)
 
         # Specify biomarker information.
-        streamingOrder = ["eog", "eeg", "eda", "temp"]  # A List Representing the Order of the Sensors being Streamed in.
-        extractFeaturesFrom = ["eog", "eeg", "eda", "temp"]  # A list with all the biomarkers from streamingOrder for feature extraction
-        featureAverageWindows = [60, 30, 30, 30]  # EOG: 120-180; EEG: 60-90; EDA: ?; Temp: 30 - 60
+        streamingOrder = self.compileModelInfo.streamingOrder  # A List Representing the Order of the Sensors being Streamed in.
+        extractFeaturesFrom = self.compileModelInfo.streamingOrder  # A list with all the biomarkers from streamingOrder for feature extraction
+        featureAverageWindows = self.compileModelInfo.featureAverageWindows  # EOG: 120-180; EEG: 60-90; EDA: ?; Temp: 30 - 60
         plotTrainingData = False
 
         # Survey information.
@@ -65,7 +65,7 @@ class compileModelData(compileModelDataHelpers):
 
         globalMetaAnalysisClass = globalMetaAnalysis(self.trainingFolder, surveyQuestions=[])
         # Extract the features from the training files and organize them.
-        allRawFeatureTimesHolders, allRawFeatureHolders, allRawFeatureIntervals, allRawFeatureIntervalTimes, \
+        allRawFeatureTimesHolders, allRawFeatureHolders, allRawFeatureIntervalTimes, allRawFeatureIntervals, allCompiledFeatureIntervals, \
             allAlignedFeatureTimes, allAlignedFeatureHolder, allAlignedFeatureIntervals, allAlignedFeatureIntervalTimes, \
             subjectOrder, experimentalOrder, allFinalLabels, featureLabelTypes, surveyQuestions, surveyAnswersList, surveyAnswerTimes \
             = globalMetaAnalysisClass.trainingProtocolInterface(streamingOrder, biomarkerFeatureOrder, featureAverageWindows, biomarkerFeatureNames, plotTrainingData, metaTraining=False)
@@ -76,9 +76,9 @@ class compileModelData(compileModelDataHelpers):
         activityNames, activityLabels = self.compileModelInfo.extractActivityInformation(experimentalOrder, distinguishBaselines=False)
 
         # Compile the project data together
-        data_to_store = {f"{compiledModelName}": [allAlignedFeatureIntervals, surveyAnswersList, surveyQuestions, activityLabels, activityNames, numQuestionOptions, subjectOrder, featureNames]}
+        data_to_store = {f"{compiledModelName}": [allRawFeatureIntervalTimes, allCompiledFeatureIntervals, surveyAnswersList, surveyQuestions, activityLabels, activityNames, numQuestionOptions, subjectOrder, featureNames]}
         data_to_store_Full = {
-            f"{compiledModelName}": [allRawFeatureTimesHolders, allRawFeatureHolders, allRawFeatureIntervals, allRawFeatureIntervalTimes,
+            f"{compiledModelName}": [allRawFeatureTimesHolders, allRawFeatureHolders, allRawFeatureIntervalTimes, allRawFeatureIntervals, allCompiledFeatureIntervals,
                                      allAlignedFeatureTimes, allAlignedFeatureHolder, allAlignedFeatureIntervals, allAlignedFeatureIntervalTimes,
                                      subjectOrder, experimentalOrder, activityNames, activityLabels, allFinalLabels, featureLabelTypes,
                                      featureNames, surveyQuestions, surveyAnswersList, surveyAnswerTimes, numQuestionOptions]}
@@ -86,12 +86,12 @@ class compileModelData(compileModelDataHelpers):
         self.saveCompiledInfo(data_to_store_Full, compiledModelName + self.fullAnalysisSuffix)
         self.saveCompiledInfo(data_to_store, compiledModelName)
 
-        return allAlignedFeatureIntervals, surveyAnswersList, surveyQuestions, activityLabels, activityNames, numQuestionOptions, subjectOrder, featureNames
+        return allRawFeatureIntervalTimes, allCompiledFeatureIntervals, surveyAnswersList, surveyQuestions, activityLabels, activityNames, numQuestionOptions, subjectOrder, featureNames
 
     def compileMetaAnalyses(self, metaDatasetNames, loadCompiledData=False, compiledModelName="compiledMetaTrainingInfo"):
         # Prepare to compile all the metadata analyses.
         metaSurveyQuestions, metaSurveyAnswersList, metaNumQuestionOptions, metaSubjectOrder = [], [], [], []
-        metaAlignedFeatureIntervals, metaFeatureNames, metaActivityNames, metaActivityLabels = [], [], [], []
+        metaRawFeatureTimeIntervals, metaCompiledFeatureIntervals, metaFeatureNames, metaActivityNames, metaActivityLabels = [], [], [], [], []
 
         plotTrainingData = False
         # For each meta-analysis protocol
@@ -107,10 +107,10 @@ class compileModelData(compileModelDataHelpers):
             print(f"Reading in metadata for {datasetName}")
             # Base case: we are loading in data that was already compiled.
             if loadCompiledData and os.path.isfile(f'{self.compiledInfoLocation}{compiledModelFinalName}{self.compiledExtension}'):
-                allAlignedFeatureIntervals, subjectOrder, featureNames, surveyQuestions, surveyAnswersList, activityNames, activityLabels = self.loadCompiledInfo(compiledModelFinalName)
+                allRawFeatureIntervalTimes, allCompiledFeatureIntervals, subjectOrder, featureNames, surveyQuestions, surveyAnswersList, activityNames, activityLabels = self.loadCompiledInfo(compiledModelFinalName)
             else:
                 # Collected the training data.
-                allRawFeatureTimesHolders, allRawFeatureHolders, allRawFeatureIntervals, allRawFeatureIntervalTimes, \
+                allRawFeatureTimesHolders, allRawFeatureHolders, allRawFeatureIntervalTimes, allRawFeatureIntervals, allCompiledFeatureIntervals, \
                     allAlignedFeatureTimes, allAlignedFeatureHolder, allAlignedFeatureIntervals, allAlignedFeatureIntervalTimes, \
                     subjectOrder, experimentalOrder, allFinalLabels, featureLabelTypes, surveyQuestions, surveyAnswersList, surveyAnswerTimes \
                     = metaAnalysisProtocol.trainingProtocolInterface(streamingOrder, biomarkerFeatureOrder, featureAverageWindows, biomarkerFeatureNames, plotTrainingData, metaTraining=True)
@@ -119,8 +119,8 @@ class compileModelData(compileModelDataHelpers):
                 activityNames, activityLabels = metaAnalysisProtocol.extractExperimentLabels(experimentalOrder)
 
                 # Update the compiled data so the next person can use it.
-                data_to_store = {f"{compiledModelFinalName}": [allAlignedFeatureIntervals, subjectOrder, featureNames, surveyQuestions, surveyAnswersList, activityNames, activityLabels]}
-                data_to_store_Full = {f"{compiledModelFinalName}": [allRawFeatureTimesHolders, allRawFeatureHolders, allRawFeatureIntervals, allRawFeatureIntervalTimes,
+                data_to_store = {f"{compiledModelFinalName}": [allRawFeatureIntervalTimes, allCompiledFeatureIntervals, subjectOrder, featureNames, surveyQuestions, surveyAnswersList, activityNames, activityLabels]}
+                data_to_store_Full = {f"{compiledModelFinalName}": [allRawFeatureTimesHolders, allRawFeatureHolders, allRawFeatureIntervalTimes, allRawFeatureIntervals, allCompiledFeatureIntervals,
                                                                     allAlignedFeatureTimes, allAlignedFeatureHolder, allAlignedFeatureIntervals, allAlignedFeatureIntervalTimes, subjectOrder,
                                                                     experimentalOrder, allFinalLabels, featureLabelTypes, surveyQuestions, surveyAnswersList, surveyAnswerTimes,
                                                                     activityNames, activityLabels]}
@@ -135,33 +135,34 @@ class compileModelData(compileModelDataHelpers):
             metaSurveyQuestions.append(surveyQuestions)
             metaSurveyAnswersList.append(surveyAnswersList)
             metaNumQuestionOptions.append(numQuestionOptions)
-            metaAlignedFeatureIntervals.append(allAlignedFeatureIntervals)
+            metaCompiledFeatureIntervals.append(allCompiledFeatureIntervals)
+            metaRawFeatureTimeIntervals.append(allRawFeatureIntervalTimes)
 
-        return metaAlignedFeatureIntervals, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions, metaSubjectOrder, metaFeatureNames, metaDatasetNames
+        return metaRawFeatureTimeIntervals, metaCompiledFeatureIntervals, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions, metaSubjectOrder, metaFeatureNames, metaDatasetNames
 
     # -------------------- Machine Learning Preparation -------------------- #
 
     def compileModelsFull(self, metaDatasetNames, modelName, submodel, testSplitRatio, datasetNames, useFinalParams=False):
         # Compile the metadata together.
-        metaAlignedFeatureIntervals, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions, \
+        metaRawFeatureTimeIntervals, metaCompiledFeatureIntervals, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions, \
             metaSubjectOrder, metaFeatureNames, metaDatasetNames = self.compileMetaAnalyses(metaDatasetNames, loadCompiledData=True)
 
         # Compile the project data together
-        allAlignedFeatureIntervals, surveyAnswersList, surveyQuestions, activityLabels, activityNames, numQuestionOptions, subjectOrder, featureNames = self.compileProjectAnalysis(loadCompiledData=True)
+        allRawFeatureIntervalTimes, allCompiledFeatureIntervals, surveyAnswersList, surveyQuestions, activityLabels, activityNames, numQuestionOptions, subjectOrder, featureNames = self.compileProjectAnalysis(loadCompiledData=True)
 
         # Compile the meta-learning modules.
-        allMetaModels, allMetaDataLoaders, allMetaLossDataHolders = self.compileModels(metaAlignedFeatureIntervals, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions,
+        allMetaModels, allMetaDataLoaders, allMetaLossDataHolders = self.compileModels(metaRawFeatureTimeIntervals, metaCompiledFeatureIntervals, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions,
                                                                                        metaSubjectOrder, metaFeatureNames, metaDatasetNames, modelName, submodel, testSplitRatio, metaTraining=True, specificInfo=None,
                                                                                        useFinalParams=useFinalParams, random_state=42)
         # Compile the final modules.
-        allModels, allDataLoaders, allLossDataHolders = self.compileModels([allAlignedFeatureIntervals], [surveyAnswersList], [surveyQuestions], [activityLabels], [activityNames], [numQuestionOptions], [subjectOrder],
+        allModels, allDataLoaders, allLossDataHolders = self.compileModels([allRawFeatureIntervalTimes], [allCompiledFeatureIntervals], [surveyAnswersList], [surveyQuestions], [activityLabels], [activityNames], [numQuestionOptions], [subjectOrder],
                                                                            [featureNames], datasetNames, modelName, submodel, testSplitRatio, metaTraining=False, specificInfo=None, useFinalParams=useFinalParams, random_state=42)
         # Create the meta-loss models and data loaders.
         allMetaLossDataHolders.extend(allLossDataHolders)
 
         return allModels, allDataLoaders, allLossDataHolders, allMetaModels, allMetaDataLoaders, allMetaLossDataHolders, metaDatasetNames
 
-    def compileModels(self, metaAlignedFeatureIntervals, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions,
+    def compileModels(self, metaRawFeatureTimeIntervals, metaCompiledFeatureIntervals, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions,
                       metaSubjectOrder, metaFeatureNames, metaDatasetNames, modelName, submodel, testSplitRatio, metaTraining, specificInfo=None, useFinalParams=False, random_state=42):
         # Initialize relevant holders.
         allModelPipelines = []
@@ -173,8 +174,9 @@ class compileModelData(compileModelDataHelpers):
         print(f"\nSplitting the data into {'meta-' if metaTraining else ''}models:", flush=True)
 
         # For each meta-information collected.
-        for metadataInd in range(len(metaAlignedFeatureIntervals)):
-            allAlignedFeatureIntervals = metaAlignedFeatureIntervals[metadataInd].copy()
+        for metadataInd in range(len(metaRawFeatureTimeIntervals)):
+            allRawFeatureTimeIntervals = metaRawFeatureTimeIntervals[metadataInd].copy()
+            allCompiledFeatureIntervals = metaCompiledFeatureIntervals[metadataInd].copy()
             numQuestionOptions = metaNumQuestionOptions[metadataInd].copy()
             subjectOrder = np.asarray(metaSubjectOrder[metadataInd]).copy()
             surveyAnswersList = metaSurveyAnswersList[metadataInd].copy() - 1
@@ -196,7 +198,6 @@ class compileModelData(compileModelDataHelpers):
             activityLabelInd = -1
 
             # Remove any experiments and signals that are bad.
-            selectedSignalData = self._selectSignals(allAlignedFeatureIntervals, None)  # Cull bad signals (if any) from the data.
             allSignalData, allFeatureLabels, allSubjectInds = self._removeBadExperiments(selectedSignalData, surveyAnswersList, subjectOrder)
             allSignalData, featureNames = self._removeBadSignals(allSignalData, featureNames)
             if len(allSignalData) == 0: continue

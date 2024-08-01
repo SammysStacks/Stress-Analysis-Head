@@ -38,7 +38,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2024-07-07 wavelet analysis"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2024-08-01 wavelet analysis"  # The current date we are training the model. Unique identifier of this training set.
     modelName = "emotionModel"  # The emotion model's unique identifier. Options: emotionModel
     testSplitRatio = 0.2  # The percentage of testing points.
 
