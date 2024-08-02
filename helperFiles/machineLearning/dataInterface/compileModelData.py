@@ -128,15 +128,15 @@ class compileModelData(compileModelDataHelpers):
                 self.saveCompiledInfo(data_to_store, compiledModelFinalName)
 
             # Organize all the metadata analyses.
-            metaSubjectOrder.append(subjectOrder)
-            metaFeatureNames.append(featureNames)
-            metaActivityNames.append(activityNames)
-            metaActivityLabels.append(activityLabels)
-            metaSurveyQuestions.append(surveyQuestions)
-            metaSurveyAnswersList.append(surveyAnswersList)
-            metaNumQuestionOptions.append(numQuestionOptions)
             metaCompiledFeatureIntervals.append(allCompiledFeatureIntervals)
             metaRawFeatureTimeIntervals.append(allRawFeatureIntervalTimes)
+            metaNumQuestionOptions.append(numQuestionOptions)
+            metaSurveyAnswersList.append(surveyAnswersList)
+            metaSurveyQuestions.append(surveyQuestions)
+            metaActivityLabels.append(activityLabels)
+            metaActivityNames.append(activityNames)
+            metaFeatureNames.append(featureNames)
+            metaSubjectOrder.append(subjectOrder)
 
         return metaRawFeatureTimeIntervals, metaCompiledFeatureIntervals, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions, metaSubjectOrder, metaFeatureNames, metaDatasetNames
 
@@ -189,6 +189,9 @@ class compileModelData(compileModelDataHelpers):
             # Assert the assumptions made about the incoming data
             assert surveyAnswersList.min().item() >= -2, "All ratings must be greater than 0 (exception for -2, which is reserved for missing)."
             assert -1 not in surveyAnswersList, print("surveyAnswersList should contain ratings from 0 to n", flush=True)
+            # Specify the incoming dimensions.
+            # allCompiledFeatureIntervals dimension: batchSize, numSignals, sequenceLength*  -> *sequenceLength is not constant
+            # allRawFeatureTimeIntervals dimension: batchSize, numSignals, sequenceLength*  -> *sequenceLength is not constant
 
             # ---------------------- Data Preparation ---------------------- #
 

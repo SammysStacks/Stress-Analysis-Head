@@ -190,16 +190,19 @@ class featureOrganization(humanMachineInterface):
     # ---------------------- Compile Incoming Features --------------------- #
 
     def compileModelFeatures(self, featureTimes, features, startTime, endTime):
+        # features dim: numTimePoints, numBiomarkerFeatures
+        # featureTimes dim: numTimePoints
+
         # Locate the experiment indices within the data
-        endStimuliInd = np.searchsorted(featureTimes, endTime, side='left')
         startStimuliInd = np.searchsorted(featureTimes, startTime, side='right')
+        endStimuliInd = np.searchsorted(featureTimes, endTime, side='left')
 
         # Check if the time range is valid.
         if endStimuliInd - startStimuliInd <= self.minNumExperimentalPoints:
             return None, None
 
         # Save raw interval information
-        featureIntervalTimes = [featureTimes[startStimuliInd:endStimuliInd] for _ in range(len(features[0]))]
+        featureIntervalTimes = featureTimes[startStimuliInd:endStimuliInd]
         featureIntervals = features[startStimuliInd:endStimuliInd]
 
         return featureIntervals, featureIntervalTimes
@@ -271,6 +274,6 @@ class featureOrganization(humanMachineInterface):
             # Perform the feature averaging
             compiledFeatures = self.averageFeatures_static(rawFeatureTimes, rawFeatures, averageWindow, startTimeInd=0)
             compiledFeatureHolders.append(compiledFeatures)
-        # compiledFeatures dim: numTimePoints, numBiomarkerFeatures
+        # compiledFeatures dim: numBiomarkers, numTimePoints, numBiomarkerFeatures
 
         return compiledFeatureHolders

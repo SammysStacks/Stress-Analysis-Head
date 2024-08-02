@@ -44,7 +44,7 @@ class trainingProtocols(extractData):
         # Hold time series analysis of features.
         allRawFeatureIntervalTimes, allRawFeatureIntervals, allCompiledFeatureIntervals, allAlignedFeatureIntervals, allAlignedFeatureIntervalTimes = [], [], [], [], []
         # Hold features extraction information.
-        allRawFeatureHolders, allRawFeatureTimesHolders, allAlignedFeatureHolder, allAlignedFeatureTimes = [], [], [], []
+        allRawFeatureHolders, allRawFeatureTimesHolders, allCompiledFeatureHolders, allAlignedFeatureHolder, allAlignedFeatureTimes = [], [], [], [], []
         # Hold survey information.
         subjectInformationQuestions, surveyAnswersList, surveyAnswerTimes, surveyQuestions = [], [], [], []
         # Hold experimental information.
@@ -141,13 +141,13 @@ class trainingProtocols(extractData):
             # ----------------- Extract Compiled Features ----------------- #
 
             # Average the features across a sliding window at each timePoint
-            compiledFeatureHolders = self.readData.compileStaticFeatures(rawFeatureTimesHolder, rawFeatureHolder, featureAverageWindows)
-            # compiledFeatureHolders dim: numBiomarkers, numTimePoints, numBiomarkerFeatures
+            compiledFeatureHolder = self.readData.compileStaticFeatures(rawFeatureTimesHolder, rawFeatureHolder, featureAverageWindows)
+            # compiledFeatureHolder dim: numBiomarkers, numTimePoints, numBiomarkerFeatures
 
             # Assert the compiled features are the same length as the raw features
-            assert len(compiledFeatureHolders[0][0]) == len(rawFeatureHolder[0][0]), "Compiled features are not the same length as the raw features"
-            assert len(compiledFeatureHolders[0]) == len(rawFeatureHolder[0]), "Compiled features are not the same length as the raw features"
-            assert len(compiledFeatureHolders) == len(rawFeatureHolder), "Compiled features are not the same length as the raw features"
+            assert len(compiledFeatureHolder[0][0]) == len(rawFeatureHolder[0][0]), "Compiled features are not the same length as the raw features"
+            assert len(compiledFeatureHolder[0]) == len(rawFeatureHolder[0]), "Compiled features are not the same length as the raw features"
+            assert len(compiledFeatureHolder) == len(rawFeatureHolder), "Compiled features are not the same length as the raw features"
 
             # For each unique analysis with features.
             for analysis in self.readData.featureAnalysisList:
@@ -155,7 +155,7 @@ class trainingProtocols(extractData):
                     biomarkerInd = analysis.featureChannelIndices[featureChannelInd]
 
                     # Add back the relevant feature information.
-                    analysis.compiledFeatures[featureChannelInd] = compiledFeatureHolders[biomarkerInd]
+                    analysis.compiledFeatures[featureChannelInd] = compiledFeatureHolder[biomarkerInd]
                     analysis.rawFeatureTimes[featureChannelInd] = rawFeatureTimesHolder[biomarkerInd]
                     analysis.rawFeatures[featureChannelInd] = rawFeatureHolder[biomarkerInd]
 
@@ -189,11 +189,16 @@ class trainingProtocols(extractData):
                 startSurveyTime = currentSurveyAnswerTimes[experimentInd]
 
                 # Calculate the feature intervals
-                newRawFeatureIntervalTimes, newRawFeatureIntervals = self.organizeRawFeatureIntervals(startExperimentTime, startSurveyTime, rawFeatureTimesHolder, rawFeatureHolder)
-                _, newCompiledFeatureIntervals = self.organizeRawFeatureIntervals(startExperimentTime, startSurveyTime, rawFeatureTimesHolder, compiledFeatureHolders)
+                newRawFeatureIntervalTimes, newRawFeatureIntervals = self.organizeRawFeatureIntervals(startSurveyTime - modelFeatureTimeBuffer, startSurveyTime, rawFeatureTimesHolder, rawFeatureHolder)
+                _, newCompiledFeatureIntervals = self.organizeRawFeatureIntervals(startSurveyTime - modelFeatureTimeBuffer, startSurveyTime, rawFeatureTimesHolder, compiledFeatureHolder)
+                # newCompiledFeatureIntervals dim: numBiomarkers, numTimePoints, numBiomarkerFeatures
+                # newRawFeatureIntervals dim: numBiomarkers, numTimePoints, numBiomarkerFeatures
+                # newRawFeatureIntervalTimes dim: numBiomarkers, numTimePoints
 
                 # Calculate the aligned feature intervals
                 alignedFeatureIntervals, alignedFeatureIntervalTimes = self.readData.compileModelFeatures(alignedFeatureTimes, alignedFeatures, startSurveyTime - modelFeatureTimeBuffer, startSurveyTime)
+                # alignedFeatureIntervals dim: numTimePoints, numFeatures
+                # alignedFeatureIntervalTimes dim: numTimePoints
 
                 # Check the features.
                 if newRawFeatureIntervalTimes is None or alignedFeatureIntervals is None:
@@ -258,12 +263,11 @@ class trainingProtocols(extractData):
             # ------------------ Organize Information ------------------ #
 
             # Set up the compilation variables
+            allCompiledFeatureHolders.append(compiledFeatureHolder)
             allRawFeatureTimesHolders.append(rawFeatureTimesHolder)
-            allRawFeatureHolders.append(rawFeatureHolder)
-
-            # Store the aligned feature information
             allAlignedFeatureTimes.append(alignedFeatureTimes)
             allAlignedFeatureHolder.append(alignedFeatures)
+            allRawFeatureHolders.append(rawFeatureHolder)
 
             # Save the survey labels.
             surveyAnswersList.extend(currentSurveyAnswersList)
@@ -314,8 +318,8 @@ class trainingProtocols(extractData):
                 break
 
             # Save raw and aligned interval information
-            newRawFeatureIntervalTimes.extend(featureIntervalTimes)
-            newRawFeatureIntervals.extend(featureIntervals)
+            newRawFeatureIntervalTimes.append(featureIntervalTimes)
+            newRawFeatureIntervals.append(featureIntervals)
 
         return newRawFeatureIntervalTimes, newRawFeatureIntervals
 
