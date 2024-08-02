@@ -201,7 +201,7 @@ class compileModelData(compileModelDataHelpers):
             activityLabelInd = -1
 
             # Remove any experiments and signals that are bad.
-            allSignalData, allFeatureLabels, allSubjectInds = self._removeBadExperiments(selectedSignalData, surveyAnswersList, subjectOrder)
+            allSignalData, allFeatureLabels, allSubjectInds = self._removeBadExperiments(allRawFeatureTimeIntervals, allCompiledFeatureIntervals, surveyAnswersList, subjectOrder)
             allSignalData, featureNames = self._removeBadSignals(allSignalData, featureNames)
             if len(allSignalData) == 0: continue
             # allSignalData dimension: batchSize, numSignals, sequenceLength

@@ -319,11 +319,12 @@ class compileModelDataHelpers:
     # ---------------------------------------------------------------------- #
     # ---------------------------- Data Cleaning --------------------------- #
 
-    def _removeBadExperiments(self, allSignalData, allLabels, subjectInds):
+    def _removeBadExperiments(self, allRawFeatureTimeIntervals, allCompiledFeatureIntervals, allLabels, subjectInds):
         """
         Purpose: Remove bad experiments from the data list.
         --------------------------------------------
-        allSignalData : A list of size (batchSize, sequenceLength, numSignals)
+        allCompiledFeatureIntervals : A list of size (batchSize, numSignals, sequenceLength*)
+        allRawFeatureTimeIntervals : A list of size (batchSize, numSignals, sequenceLength*)
         allLabels : A 2D numpy array of size (batchSize, numLabels)
         subjectInds : A 1D numpy array of size (batchSize,)
         """
@@ -331,16 +332,16 @@ class compileModelDataHelpers:
         goodBatchInds = []
         finalData = []
 
-        # For each set of signals.
-        for dataInd in range(len(allSignalData)):
-            signalData = np.asarray(allSignalData[dataInd]).T
+        # For each experimental batch
+        for batchInd in range(len(allCompiledFeatureIntervals)):
+            signalData = np.asarray(allSignalData[batchInd]).T
             numSignals, sequenceLength = signalData.shape
 
             # Assert that the signal is long enough.
             if sequenceLength < self.minSeqLength: continue
 
             # Compile the good batches.
-            goodBatchInds.append(dataInd)
+            goodBatchInds.append(batchInd)
             finalData.append(signalData)
 
         return finalData, allLabels[goodBatchInds], subjectInds[goodBatchInds]
