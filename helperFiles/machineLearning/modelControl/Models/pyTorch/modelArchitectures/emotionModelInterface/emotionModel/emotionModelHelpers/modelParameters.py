@@ -16,6 +16,8 @@ class modelParameters:
         self.gpuFlag = accelerator.device.type == 'cuda' if accelerator else False  # The GPU flag.
 
         # General parameters
+        self.demographicIdentifiers = []  # The demographic identifiers to consider.
+        self.subjectI = []  # The emotion identifiers to consider.`
         self.timeWindows = self.getTimeWindows()  # The time windows to consider.
         self.maxNumSignals = 138  # The maximum number of signals to consider.
         self.minTimeBuffer = 600  # The minimum time buffer to consider.
