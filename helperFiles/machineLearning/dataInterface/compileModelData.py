@@ -265,15 +265,8 @@ class compileModelData(compileModelDataHelpers):
                 = self.organizeActivityLabels(activityNames, allFeatureLabels[:, activityLabelInd][goodActivityMask])  # Expects inputs/outputs from 0 to n-1
             allFeatureLabels[~goodActivityMask] = self.missingLabelValue  # Remove any unused activity indices (as the good indices were rehashed)
 
-            # Data augmentation to increase the variations of datapoints.
-            if metaDatasetName.lower() not in self.dontShiftDatasets:
-                allSignalData, allFeatureLabels, currentTrainingMask, currentTestingMask, allSignalStopInds, allSubjectInds \
-                    = self.addShiftedSignals(allSignalData, allFeatureLabels, currentTrainingMask, currentTestingMask, allSignalStopInds, allSubjectInds)
-            else:
-                allSignalData = self.dataInterface.getRecentSignalPoints(allSignalData, self.maxSeqLength + self.numSecondsShift)
-
             # Add the demographic information.
-            allSignalData, numSubjectIdentifiers, demographicLength = self.addDemographicInfo(allSignalData, allSignalStopInds, allSubjectInds, metadataInd)
+            allSignalData, subjectIdentifiers, demographicIdentifiers = self.addDemographicInfo(allSignalData, allSignalStopInds, allSubjectInds, metadataInd)
 
             # ---------------------- Create the Model ---------------------- #
 
@@ -286,7 +279,7 @@ class compileModelData(compileModelDataHelpers):
 
             # Initialize and train the model class.
             modelPipeline = emotionPipeline(accelerator=self.accelerator, modelID=metadataInd, datasetName=metaDatasetName, modelName=modelName, allEmotionClasses=numQuestionOptions.copy(),
-                                            maxNumSignals=numSignals, numSubjectIdentifiers=numSubjectIdentifiers, demographicLength=demographicLength, numSubjects=numSubjects,
+                                            maxNumSignals=numSignals, subjectIdentifiers=subjectIdentifiers, demographicIdentifiers=demographicIdentifiers, numSubjects=numSubjects,
                                             userInputParams=self.userInputParams, emotionNames=surveyQuestions, activityNames=activityNames, featureNames=featureNames, submodel=submodel, useFinalParams=useFinalParams, debuggingResults=True)
 
             # Hugging face integration.

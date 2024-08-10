@@ -188,35 +188,34 @@ class compileModelDataHelpers:
 
             return allFeatureLabels, allSingleClassIndices
 
-    def addDemographicInfo(self, allFeatureData, allSubjectInds, datasetInd):
-        """
-        Purpose: The same signal without the last few seconds still has the same label
-        --------------------------------------------
-        allFeatureData : A 3D list of all signals in each experiment (batchSize, numSignals, finalDistributionLength)
-        allSubjectInds : A 1D numpy array of size batchSize
-        """
-        # Get the dimensions of the input arrays
-        numExperiments, numSignals, totalLength = allFeatureData.shape
-        demographicLength = 0
-        numSubjectIdentifiers = 2
+    @staticmethod
+    def addDemographicInfo(allSignalData, allSignalStopInds, allSubjectInds, datasetInd):
+        # allSignalData : A numpy array of size (batchSize, numSignals, maxSequenceLength, 2)
+        # allSignalStopInds : A numpy array of size (batchSize, numSignals)
+        # allSubjectInds : A numpy array of size batchSize
+        numExperiments, numSignals, totalLength = allSignalData.shape
+        subjectIdentifiers = ["signalIndex", "subjectIndex", "datasetIndex"]
+        demographicIdentifiers = []
 
         # Create lists to store the new augmented data.
-        updatedFeatureData = torch.zeros((numExperiments, numSignals, self.maxSeqLength + demographicLength + 2))
+        numSubjectIdentifiers, demographicLength = len(subjectIdentifiers), len(demographicIdentifiers)
+        compiledSignalData = torch.zeros((numExperiments, numSignals, totalLength + numSubjectIdentifiers + demographicLength, 2))
 
         # For each recorded experiment.
         for experimentInd in range(numExperiments):
             # Compile an array of subject indices.
-            subjectInds = torch.full((numSignals, 1), allSubjectInds[experimentInd])
-            datasetInds = torch.full((numSignals, 1), datasetInd)
+            subjectInds = torch.full(size=(numSignals, 1), fill_value=allSubjectInds[experimentInd])
+            datasetInds = torch.full(size=(numSignals, 1), fill_value=datasetInd)
+            signalStopInds = allSignalStopInds[experimentInd][:, None]
 
             # Collect the demographic information.
-            demographicContext = torch.hstack((subjectInds, datasetInds))
+            demographicContext = torch.hstack((signalStopInds, subjectInds, datasetInds))
             assert demographicLength + numSubjectIdentifiers == demographicContext.shape[1], "Asserting I am self-consistent. Hardcoded assertion"
 
             # Add the demographic data to the feature array.
-            updatedFeatureData[experimentInd] = torch.hstack((allFeatureData[experimentInd], demographicContext))
+            compiledSignalData[experimentInd] = torch.hstack((allSignalData[experimentInd], demographicContext))
 
-        return updatedFeatureData, numSubjectIdentifiers, demographicLength
+        return compiledSignalData, subjectIdentifiers, demographicIdentifiers
 
     # ---------------------------------------------------------------------- #
     # -------------------------- Data Augmentation ------------------------- #
