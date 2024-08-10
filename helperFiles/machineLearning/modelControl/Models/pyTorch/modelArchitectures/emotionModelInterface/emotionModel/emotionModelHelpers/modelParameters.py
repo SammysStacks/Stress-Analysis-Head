@@ -12,8 +12,8 @@ class modelParameters:
         self.accelerator = accelerator  # The single-instance accelerator for the model.
 
         # Run-specific parameters.
-        self.hpcTrialRun = userInputParams['deviceListed'].startswith("HPC")  # The HPC trial run flag.
-        self.gpuFlag = accelerator.device.type == 'cuda'  # The GPU flag.
+        self.hpcTrialRun = userInputParams['deviceListed'].startswith("HPC") if userInputParams else False  # The HPC trial run flag.
+        self.gpuFlag = accelerator.device.type == 'cuda' if accelerator else False  # The GPU flag.
 
         # General parameters
         self.timeWindows = self.getTimeWindows()  # The time windows to consider.

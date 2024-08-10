@@ -279,7 +279,8 @@ class compileModelDataHelpers:
     # ---------------------------------------------------------------------- #
     # ---------------------------- Data Cleaning --------------------------- #
 
-    def _padSignalData(self, allRawFeatureTimeIntervals, allCompiledFeatureIntervals):
+    @staticmethod
+    def _padSignalData(allRawFeatureTimeIntervals, allCompiledFeatureIntervals):
         # allRawFeatureTimeIntervals : A list of size (batchSize, numSignals, finalDistributionLength*)
         # allCompiledFeatureIntervals : A list of size (batchSize, numSignals, finalDistributionLength*)
         # allSignalData : A list of size (batchSize, numSignals, maxSequenceLength, 2)
@@ -287,7 +288,6 @@ class compileModelDataHelpers:
         # Determine the final dimensions of the padded array.
         batchSize, numSignals = len(allRawFeatureTimeIntervals), len(allRawFeatureTimeIntervals[0])
         maxSequenceLength = max(max(len(seq) for seq in signal) for signal in allRawFeatureTimeIntervals)
-        assert maxSequenceLength <= self.modelParameters.getMaxBufferLength(), f"{self.modelParameters.getMaxBufferLength()} < {maxSequenceLength}"
 
         # Initialize the padded array and end signal indices list
         allSignalData = np.zeros((batchSize, numSignals, maxSequenceLength, 2))
