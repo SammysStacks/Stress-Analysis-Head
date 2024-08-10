@@ -67,7 +67,7 @@ if __name__ == "__main__":
     # Add arguments for the emotion prediction
     parser.add_argument('--numInterpreterHeads', type=int, default=4, help='The number of ways to interpret a set of physiological signals.')
     parser.add_argument('--numBasicEmotions', type=int, default=8, help='The number of basic emotions (basis states of emotions).')
-    parser.add_argument('--sequenceLength', type=int, default=240, help='The maximum number of time series points to consider')
+    parser.add_argument('--finalDistributionLength', type=int, default=240, help='The maximum number of time series points to consider')
 
     # Parse the arguments
     userInputParams, submodel = modelParameters.compileParameters(args=parser.parse_args())

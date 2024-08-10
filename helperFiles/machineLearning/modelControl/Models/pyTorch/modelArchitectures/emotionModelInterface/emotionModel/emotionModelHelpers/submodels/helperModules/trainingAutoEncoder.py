@@ -18,7 +18,7 @@ class trainingAutoEncoder:
         self.numEncodings = 1  # The number of compressions/expansions possible for this dataset.
 
     def augmentFinalTarget(self, signalLength):
-        """ The shape of inputData: (batchSize, signalLength, sequenceLength) """
+        """ The shape of inputData: (batchSize, signalLength, finalDistributionLength) """
         # Set up the training parameters
         forwardDirection = 0 <= self.numEncodings
         compressingSignalFlag = forwardDirection + (self.compressedLength < signalLength) != 1

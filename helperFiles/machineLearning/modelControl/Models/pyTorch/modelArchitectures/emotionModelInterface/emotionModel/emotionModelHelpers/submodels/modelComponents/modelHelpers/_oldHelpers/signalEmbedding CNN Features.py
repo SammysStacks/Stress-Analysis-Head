@@ -82,14 +82,14 @@ class embeddingLayer(_convolutionalHelpers.convolutionalHelpers):
         # ------------------------------------------------------------------ # 
 
     def forward(self, inputData):
-        """ The shape of inputData: (batchSize, numSignals, sequenceLength) """
+        """ The shape of inputData: (batchSize, numSignals, finalDistributionLength) """
         # Specify the current input shape of the data.
         batchSize, numSignals, sequenceLength = inputData.size()
         assert self.sequenceLength == sequenceLength
         
         # Reshape the data to the expected input into the CNN architecture.
         signalData = inputData.view(batchSize * numSignals, 1, sequenceLength) # Seperate out indivisual signals.
-        # signalData dimension: batchSize*numSignals, 1, sequenceLength
+        # signalData dimension: batchSize*numSignals, 1, finalDistributionLength
         
         import matplotlib.pyplot as plt
         plt.plot(signalData[0][0].detach().cpu())
@@ -104,7 +104,7 @@ class embeddingLayer(_convolutionalHelpers.convolutionalHelpers):
         embeddedSignals_0 = embeddedSignals_0 + signalData
         # Apply a pooling layer to reduce the signal's dimension.
         embeddedSignals_1 = self.splitPooling(embeddedSignals_0, self.poolingLayers)
-        # embeddedSignals_1 dimension: batchSize*numSignals, 6, sequenceLength/2
+        # embeddedSignals_1 dimension: batchSize*numSignals, 6, finalDistributionLength/2
         
         # Apply the second CNN block to reduce spatial dimension.
         embeddedSignals_2 = self.embedSignalsCNN_2(embeddedSignals_1)
@@ -113,7 +113,7 @@ class embeddingLayer(_convolutionalHelpers.convolutionalHelpers):
         embeddedSignals_2 = embeddedSignals_2 + embeddedSignals_1
         # Apply a pooling layer to reduce the signal's dimension.
         embeddedSignals_2 = self.splitPooling(embeddedSignals_2, self.poolingLayers)
-        # embeddedSignals_2 dimension: batchSize*numSignals, 6, sequenceLength/4
+        # embeddedSignals_2 dimension: batchSize*numSignals, 6, finalDistributionLength/4
         
         # Apply the third CNN block to reduce spatial dimension.
         embeddedSignals_3 = self.embedSignalsCNN_3(embeddedSignals_2)
@@ -122,7 +122,7 @@ class embeddingLayer(_convolutionalHelpers.convolutionalHelpers):
         embeddedSignals_3 = embeddedSignals_3 + embeddedSignals_3
         # Apply a pooling layer to reduce the signal's dimension.
         embeddedSignals_3 = self.splitPooling(embeddedSignals_3, self.poolingLayers)
-        # embeddedSignals_3 dimension: batchSize*numSignals, 6, sequenceLength/8
+        # embeddedSignals_3 dimension: batchSize*numSignals, 6, finalDistributionLength/8
         
                 
         # Apply the fourth CNN block to reduce spatial dimension.
@@ -132,7 +132,7 @@ class embeddingLayer(_convolutionalHelpers.convolutionalHelpers):
         embeddedSignals_4 = embeddedSignals_4 + embeddedSignals_3
         # Apply a pooling layer to reduce the signal's dimension.
         embeddedSignals_4 = self.splitPooling(embeddedSignals_4, self.poolingLayers)
-        # embeddedSignals_4 dimension: batchSize*numSignals, 6, sequenceLength/16
+        # embeddedSignals_4 dimension: batchSize*numSignals, 6, finalDistributionLength/16
         
         import matplotlib.pyplot as plt
         plt.plot(embeddedSignals_4[0].view(-1).detach().cpu())
@@ -146,7 +146,7 @@ class embeddingLayer(_convolutionalHelpers.convolutionalHelpers):
         
         # Seperate put each signal into its respective batch.
         embeddedData = embeddedSignals_4.view(batchSize*numSignals, -1)
-        # EmbeddedData dimension: batchSize*numSignals, sequenceLength/
+        # EmbeddedData dimension: batchSize*numSignals, finalDistributionLength/
         
         # Synthesize the information in the embedded space.
         embeddedSignals = self.embedSignalsANN_1(embeddedData)
@@ -165,7 +165,7 @@ class embeddingLayer(_convolutionalHelpers.convolutionalHelpers):
         return embeddedData
     
     def printParams(self, numSignals = 2):
-        #embeddingLayer(sequenceLength = 64, embeddedLength = 16).printParams(numSignals = 2)
+        #embeddingLayer(finalDistributionLength = 64, embeddedLength = 16).printParams(numSignals = 2)
         t1 = time.time()
         summary(self, (numSignals, self.sequenceLength,))
         t2 = time.time()

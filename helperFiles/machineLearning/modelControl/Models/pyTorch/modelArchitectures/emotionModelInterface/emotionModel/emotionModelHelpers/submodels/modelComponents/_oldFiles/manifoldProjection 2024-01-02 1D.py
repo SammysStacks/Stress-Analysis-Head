@@ -152,7 +152,7 @@ class signalProjection(manifoldProjectionHead):
         
         # Reshape the data to the expected input into the CNN architecture.
         signalData = inputData.view(batchSize * numEncodedSignals, 1, compressedLength) # Seperate out indivisual signals.
-        # signalData dimension: batchSize*numEncodedSignals, 1, sequenceLength
+        # signalData dimension: batchSize*numEncodedSignals, 1, finalDistributionLength
         
         # Apply CNN architecture to compress the data.
         projectedSignals = self.projectSignals(signalData)

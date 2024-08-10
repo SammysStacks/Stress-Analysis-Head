@@ -24,7 +24,7 @@ class organizeTrainingLosses(lossCalculations):
 
         # Load in all the data and labels for final predictions.
         allData, allLabels, allTrainingMasks, allTestingMasks = lossDataLoader.dataset.getAll()
-        allSignalData, allDemographicData, allSubjectIdentifiers = self.dataInterface.separateData(allData, model.sequenceLength, model.numSubjectIdentifiers, model.demographicLength)
+        allSignalData, allDemographicData, allSubjectIdentifiers = self.dataInterface.separateData(allData, model.finalDistributionLength, model.numSubjectIdentifiers, model.demographicLength)
         reconstructionIndex = self.dataInterface.getReconstructionIndex(allTrainingMasks)
         assert reconstructionIndex is not None
 

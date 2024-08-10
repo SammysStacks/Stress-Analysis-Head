@@ -133,7 +133,7 @@ class signalEncoding(signalEncoderBase):
         super(signalEncoding, self).__init__(signalDimension, numExpandedSignals, numCompressedSignals)        
                         
     def forward(self, signalData):
-        """ The shape of signalData: (batchSize, numSignals, sequenceLength) """
+        """ The shape of signalData: (batchSize, numSignals, finalDistributionLength) """
         # Specify the current input shape of the data.
         batchSize, numExpandedSignals, signalDimension = signalData.size()
         assert self.numExpandedSignals == numExpandedSignals
@@ -165,7 +165,7 @@ class signalDecoding(signalEncoderBase):
         super(signalDecoding, self).__init__(signalDimension, numExpandedSignals, numCompressedSignals)        
                         
     def forward(self, signalData):
-        """ The shape of signalData: (batchSize, numSignals, sequenceLength) """
+        """ The shape of signalData: (batchSize, numSignals, finalDistributionLength) """
         # Specify the current input shape of the data.
         batchSize, numCompressedSignals, signalDimension = signalData.size()
         assert self.numCompressedSignals == numCompressedSignals

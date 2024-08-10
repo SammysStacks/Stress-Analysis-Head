@@ -64,7 +64,7 @@ class transformerLayer(nn.Module):
         self.allAttentionWeights = []  # Dimension: numEpochs, numLayers, attentionWeightDim, where attentionWeightDim = batch_size, numHeads, seq_length, seq_length
 
     def forward(self, inputData, allTrainingData = False):
-        """ The shape of inputData = (batchSize, sequenceLength, signalEmbeddingDim)"""
+        """ The shape of inputData = (batchSize, finalDistributionLength, signalEmbeddingDim)"""
         # if allTrainingData: self.allAttentionWeights.append([]);# print("")
         
         # For each encoding layer.

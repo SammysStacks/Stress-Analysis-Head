@@ -33,12 +33,12 @@ class encodingLayer(nn.Module):
         elif 64 <= sequenceLength:
             self.encoderModel = autoencoder90s.encodingLayer(sequenceLength, compressedLength)
         else:
-            raise Exception(f"No Model Prepared for sequenceLength of {sequenceLength} and compressedLength of {compressedLength}")
+            raise Exception(f"No Model Prepared for finalDistributionLength of {sequenceLength} and compressedLength of {compressedLength}")
                 
         # ------------------------------------------------------------------ # 
 
     def forward(self, inputData):
-        """ The shape of inputData: (batchSize, numSignals, sequenceLength) """
+        """ The shape of inputData: (batchSize, numSignals, finalDistributionLength) """
         # Specify the current input shape of the data.
         batchSize, numSignals, sequenceLength = inputData.size()
         assert self.sequenceLength == sequenceLength
@@ -47,7 +47,7 @@ class encodingLayer(nn.Module):
         
         # Reshape the data to the expected input into the CNN architecture.
         signalData = inputData.view(batchSize * numSignals, 1, sequenceLength) # Seperate out indivisual signals.
-        # signalData dimension: batchSize*numSignals, 1, sequenceLength
+        # signalData dimension: batchSize*numSignals, 1, finalDistributionLength
 
         # Apply CNN architecture to compress the data.
         compressedSignals = self.encoderModel(signalData)
@@ -62,7 +62,7 @@ class encodingLayer(nn.Module):
         return compressedData
     
     def printParams(self, numSignals = 2):
-        # encodingLayer(sequenceLength = 240, compressedLength = 64).to('cpu').printParams(numSignals = 2)
+        # encodingLayer(finalDistributionLength = 240, compressedLength = 64).to('cpu').printParams(numSignals = 2)
         t1 = time.time()
         summary(self, (numSignals, self.sequenceLength,)) # summary(model, inputShape)
         t2 = time.time()
@@ -86,7 +86,7 @@ class decodingLayer(nn.Module):
         elif 64 <= sequenceLength:
             self.decoderModel = autoencoder90s.decodingLayer(sequenceLength, compressedLength)
         else:
-            raise Exception(f"No Model Prepared for sequenceLength of {sequenceLength} and compressedLength of {compressedLength}")
+            raise Exception(f"No Model Prepared for finalDistributionLength of {sequenceLength} and compressedLength of {compressedLength}")
                 
         # ------------------------------------------------------------------ # 
                 
@@ -107,14 +107,14 @@ class decodingLayer(nn.Module):
         
         # Organize the signals into the original batches.
         reconstructedData = decompressedSignals.view(batchSize, numSignals, self.sequenceLength)
-        # compressedSignals dimension: batchSize, numSignals, self.sequenceLength
+        # compressedSignals dimension: batchSize, numSignals, self.finalDistributionLength
         
         # ------------------------------------------------------------------ # 
 
         return reconstructedData
     
     def printParams(self, numSignals = 2):
-        # decodingLayer(compressedLength = 64, sequenceLength = 240).to('cpu').printParams(numSignals = 2)
+        # decodingLayer(compressedLength = 64, finalDistributionLength = 240).to('cpu').printParams(numSignals = 2)
         summary(self, (numSignals, self.compressedLength,))
     
 

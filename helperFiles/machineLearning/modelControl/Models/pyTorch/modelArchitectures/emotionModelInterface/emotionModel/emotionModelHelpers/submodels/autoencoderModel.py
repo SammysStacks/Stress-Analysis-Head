@@ -66,7 +66,7 @@ class autoencoderModel(globalModel):
         self.testingLosses_timeReconstructionOptimalAnalysis = [[] for _ in self.timeWindows]  # List of list of data reconstruction testing losses. Dim: numTimeWindows, numEpochs
 
     def forward(self, encodedData, reconstructSignals=False, calculateLoss=False, trainingFlag=False):
-        """ The shape of inputData: (batchSize, numSignals, sequenceLength) """
+        """ The shape of inputData: (batchSize, numSignals, finalDistributionLength) """
         print("\nEntering autoencoder model", flush=True)
 
         # ----------------------- Data Preprocessing ----------------------- #  
@@ -175,7 +175,7 @@ class autoencoderModel(globalModel):
                                                                                                 targetSequenceLength=targetSequenceLength,
                                                                                                 autoencoderLayerLoss=autoencoderLayerLoss,
                                                                                                 calculateLoss=calculateLoss)
-        # reconstructedEncodedData dimension: batchSize, numSignals, sequenceLength
+        # reconstructedEncodedData dimension: batchSize, numSignals, finalDistributionLength
         print("Autoencoder Upward path:", numSignalPath, flush=True)
 
         # Denoise the final signals.

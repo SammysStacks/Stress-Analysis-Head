@@ -18,18 +18,18 @@ from ..._globalPytorchModel import globalModel
 
 
 class emotionModelHead(globalModel):
-    def __init__(self, submodel, accelerator, sequenceLength, signalMinMaxScale, maxNumSignals, numSubjectIdentifiers, demographicLength, userInputParams,
+    def __init__(self, submodel, accelerator, finalDistributionLength, signalMinMaxScale, maxNumSignals, numSubjectIdentifiers, demographicLength, userInputParams,
                  timeWindows, emotionNames, activityNames, featureNames, numSubjects, datasetName, useFinalParams, debuggingResults=False):
         super(emotionModelHead, self).__init__()
         # General model parameters.
         self.sequenceBounds = (timeWindows[0], timeWindows[-1])  # The minimum and maximum sequence length for the model.
+        self.finalDistributionLength = finalDistributionLength  # The final length of the signal distribution.
         self.numSubjectIdentifiers = numSubjectIdentifiers  # The number of subject identifiers (subject index, etc.).
         self.demographicLength = demographicLength  # The amount of demographic information (age, weight, etc.). Subject index is not included.
         self.signalMinMaxScale = signalMinMaxScale  # The minimum and maximum values for the signals.
         self.debuggingResults = debuggingResults  # Whether to print debugging results. Type: bool
         self.numActivities = len(activityNames)  # The number of activities to predict.
         self.numEmotions = len(emotionNames)  # The number of emotions to predict.
-        self.sequenceLength = sequenceLength  # The length of each incoming signal: features used in the model.
         self.numSignals = len(featureNames)  # The number of signals going into the model.
         self.maxNumSignals = maxNumSignals  # The maximum number of signals to consider.
         self.activityNames = activityNames  # The names of each activity we are predicting. Dim: numActivities
@@ -162,8 +162,8 @@ class emotionModelHead(globalModel):
         encodedData, reconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLayerLoss = self.signalEncoderModel(signalData, initialSignalData, decodeSignals, calculateLoss, trainingFlag)
         # decodedPredictedIndexProbabilities dimension: batchSize, numSignals
         # predictedIndexProbabilities dimension: batchSize, numSignals
-        # encodedData dimension: batchSize, numEncodedSignals, sequenceLength
-        # reconstructedData dimension: batchSize, numSignals, sequenceLength
+        # encodedData dimension: batchSize, numEncodedSignals, finalDistributionLength
+        # reconstructedData dimension: batchSize, numSignals, finalDistributionLength
         # signalEncodingLayerLoss dimension: batchSize
         t2 = time.time(); print("\tSignal Encoder:", t2 - t1)
 
@@ -183,8 +183,8 @@ class emotionModelHead(globalModel):
         # Forward pass through the autoencoder for data compression.
         compressedData, reconstructedEncodedData, autoencoderLayerLoss = self.autoencoderModel(encodedData, reconstructSignals, calculateLoss, trainingFlag)
         # compressedData dimension: batchSize, numSignals, compressedLength
-        # reconstructedEncodedData dimension: batchSize, numSignals, sequenceLength
-        # signalData dimension: batchSize, numSignals, sequenceLength
+        # reconstructedEncodedData dimension: batchSize, numSignals, finalDistributionLength
+        # signalData dimension: batchSize, numSignals, finalDistributionLength
         # autoencoderLayerLoss dimension: batchSize
         t2 = time.time(); print("\tAutoencoder:", t2 - t1)
 
@@ -193,7 +193,7 @@ class emotionModelHead(globalModel):
             numSignalForwardPath = self.signalEncoderModel.encodeSignals.simulateSignalPath(initialSignalData.size(1), encodedData.size(1))[0]
             doubleReconstructedData = self.signalEncoderModel.reconstructEncodedData(reconstructedEncodedData, numSignalForwardPath, signalEncodingLayerLoss=None, calculateLoss=False)[2]
             denoisedDoubleReconstructedData = self.autoencoderModel.generalAutoencoder.applyDenoiserLast(doubleReconstructedData)
-            # denoisedDoubleReconstructedData dimension: batchSize, numSignals, sequenceLength
+            # denoisedDoubleReconstructedData dimension: batchSize, numSignals, finalDistributionLength
 
         return signalEncodingOutputs, compressedData, reconstructedEncodedData, denoisedDoubleReconstructedData, autoencoderLayerLoss
 
@@ -294,7 +294,7 @@ class emotionModelHead(globalModel):
             endIdx = startIdx + batchData.size(0)
 
             # Separate out the data.
-            allSignalData, allDemographicData, allSubjectIdentifiers = emotionDataInterface.separateData(batchData, self.sequenceLength, self.numSubjectIdentifiers, self.demographicLength)
+            allSignalData, allDemographicData, allSubjectIdentifiers = emotionDataInterface.separateData(batchData, self.finalDistributionLength, self.numSubjectIdentifiers, self.demographicLength)
             segmentedSignalData = emotionDataInterface.getRecentSignalPoints(allSignalData, timeWindow)  # Segment the data into its time window.
 
             # Forward pass for the current batch

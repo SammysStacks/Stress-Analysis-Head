@@ -31,7 +31,7 @@ class emotionDataInterface:
         return augmentedSignalDatas
 
     def changeSignalLength(self, minimumSignalLength, signalDatas):
-        # Assuming signalData is your tensor with dimensions [batchSize, numSignals, sequenceLength]
+        # Assuming signalData is your tensor with dimensions [batchSize, numSignals, finalDistributionLength]
         assert all(signalDatas[0].shape == signalDatas[i].shape for i in range(len(signalDatas)))
         batchSize, numSignals, sequenceLength = signalDatas[0].shape
 
@@ -44,7 +44,7 @@ class emotionDataInterface:
         return augmentedSignalDatas
 
     def changeNumSignals(self, signalDatas, minNumSignals, maxNumSignals, alteredDim=1):
-        # Assuming signalData is your tensor with dimensions [batchSize, numSignals, sequenceLength]
+        # Assuming signalData is your tensor with dimensions [batchSize, numSignals, finalDistributionLength]
         assert all(signalDatas[0].shape == signalDatas[i].shape for i in range(len(signalDatas)))
         numSignals = signalDatas[0].size(alteredDim)
         minValue = max(minNumSignals+1, int(numSignals/3))
@@ -68,7 +68,7 @@ class emotionDataInterface:
 
     @staticmethod
     def getRecentSignalPoints(signalData, finalLength):
-        return signalData[:, :, -finalLength:].contiguous()
+        return signalData[:, :, :finalLength].contiguous()
 
     @staticmethod
     def getRecentSignals(signalData, finalLength):
@@ -92,7 +92,7 @@ class emotionDataInterface:
         demographicData = inputData[:, :, sequenceLength + numSubjectIdentifiers:]  # .to(torch.float32)
         signalData = inputData[:, :, 0:sequenceLength]  # .to(torch.float32)
         # demographicData dimension: batchSize, numSignals, demographicLength
-        # signalData dimension: batchSize, numSignals, sequenceLength
+        # signalData dimension: batchSize, numSignals, finalDistributionLength
         # subjectInds dimension: batchSize, numSubjectIdentifiers
 
         return signalData, demographicData, subjectIdentifiers

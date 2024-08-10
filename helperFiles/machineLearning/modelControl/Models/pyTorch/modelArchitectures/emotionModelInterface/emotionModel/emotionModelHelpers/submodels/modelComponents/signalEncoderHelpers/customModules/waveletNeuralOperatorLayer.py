@@ -16,11 +16,11 @@ class waveletNeuralOperatorLayer(waveletNeuralOperatorWeights):
         # Apply the wavelet neural operator and the skip connection.
         neuralOperatorOutput = self.waveletNeuralOperator(inputData, lowFrequencyTerms, highFrequencyTerms)
         neuralOperatorOutput = neuralOperatorOutput + self.skipConnectionModel(inputData) + extraSkipConnection
-        # neuralOperatorOutput dimension: batchSize, numOutputSignals, sequenceLength
+        # neuralOperatorOutput dimension: batchSize, numOutputSignals, finalDistributionLength
 
         # Apply the activation function.
         neuralOperatorOutput = self.activationFunction(neuralOperatorOutput)
-        # neuralOperatorOutput dimension: batchSize, numOutputSignals, sequenceLength
+        # neuralOperatorOutput dimension: batchSize, numOutputSignals, finalDistributionLength
 
         return neuralOperatorOutput
 
@@ -49,21 +49,21 @@ class waveletNeuralOperatorLayer(waveletNeuralOperatorWeights):
 
         # Perform wavelet reconstruction.
         reconstructedData = self.idwt((lowFrequency, highFrequencies))
-        # reconstructedData dimension: batchSize, numOutputSignals, sequenceLength
+        # reconstructedData dimension: batchSize, numOutputSignals, finalDistributionLength
 
         # Add smoothing to the signals if necessary.
         if self.smoothingKernelSize:
             reconstructedData = self.applySmoothing(reconstructedData, self.smoothingKernel)
-            # reconstructedData dimension: batchSize, numOutputSignals, sequenceLength
+            # reconstructedData dimension: batchSize, numOutputSignals, finalDistributionLength
 
         # Remove the padding.
         reconstructedData = reconstructedData[:, :, -sequenceLength:]
-        # reconstructedData dimension: batchSize, numOutputSignals, sequenceLength
+        # reconstructedData dimension: batchSize, numOutputSignals, finalDistributionLength
 
         if self.addBiasTerm:
             # Add the bias terms.
             reconstructedData = reconstructedData + self.operatorBiases
-            # outputData dimension: batchSize, numOutputSignals, sequenceLength
+            # outputData dimension: batchSize, numOutputSignals, finalDistributionLength
 
         return reconstructedData
 

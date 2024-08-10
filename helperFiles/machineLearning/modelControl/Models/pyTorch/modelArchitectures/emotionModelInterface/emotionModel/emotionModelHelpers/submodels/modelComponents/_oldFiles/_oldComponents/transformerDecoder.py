@@ -89,7 +89,7 @@ class transformerDecoder(nn.Module):
 
     def forward(self, signalData, contextualData, allTrainingData = False):
         """ 
-        The shape of signalData = (batchSize, sequenceLength, signalDim)
+        The shape of signalData = (batchSize, finalDistributionLength, signalDim)
         The shape of contextualData = (batchSize, contextualLength)
         """
         # if allTrainingData: self.allAttentionWeights.append([]);# print("")

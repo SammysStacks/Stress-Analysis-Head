@@ -49,14 +49,14 @@ class autoencoderModel(_globalPytorchModel.globalModel):
         self.testingLosses_compressedSTD = []     # List of compressed standard deviation (autoencoder) testing losses. Dim: numEpochs      
 
     def forward(self, signalData, reconstructSignals = False, calculateLoss = False, trainingFlag = False):
-        """ The shape of inputData: (batchSize, numSignals, sequenceLength) """
+        """ The shape of inputData: (batchSize, numSignals, finalDistributionLength) """
         
         # ----------------------- Data Preprocessing ----------------------- #  
 
         # Prepare the data for compression/expansion
         signalData = signalData.to(torch.float32) # Floats are required for gradient tracking.
         autoencoderLayerLoss = torch.zeros((signalData.size(0)), device=signalData.device)
-        # signalData dimension: batchSize, numSignals, sequenceLength
+        # signalData dimension: batchSize, numSignals, finalDistributionLength
         # autoencoderLayerLoss dimension: batchSize
             
         # --------------------- Signal Compression --------------------- # 
@@ -89,7 +89,7 @@ class autoencoderModel(_globalPytorchModel.globalModel):
                                                                                autoencoderLayerLoss = decoderLoss,
                                                                                signalData = reconstructedData,
                                                                                calculateLoss = calculateLoss)
-            # reconstructedData dimension: batchSize, numSignals, sequenceLength
+            # reconstructedData dimension: batchSize, numSignals, finalDistributionLength
             
             if calculateLoss:
                 # Calculate the loss in reconstructing the encoded data.

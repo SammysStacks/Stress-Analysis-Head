@@ -225,7 +225,7 @@ class generalAutoencoder(generalAutoencoderBase):
         
         # Reshape the data to the expected input into the CNN architecture.
         signalData = signalData.view(batchSize * numSignals, 1, signalDimension) # Seperate out indivisual signals.
-        # signalData dimension: batchSize*numSignals, 1, sequenceLength 
+        # signalData dimension: batchSize*numSignals, 1, finalDistributionLength
         
         # ------------- Signal Compression/Expansion Algorithm ------------- #       
         

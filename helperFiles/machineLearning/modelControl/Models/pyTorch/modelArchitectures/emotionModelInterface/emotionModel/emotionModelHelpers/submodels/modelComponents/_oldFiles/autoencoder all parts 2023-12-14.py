@@ -23,9 +23,9 @@ class autoencoderParameters(nn.Module):
         self.sequenceLength = sequenceLength
         
         # Layern dimensions.
-        # self.firstCompressionDim = sequenceLength
-        # self.secondCompressionDim = int(sequenceLength/2) # 120
-        # self.thirdCompressionDim = int(sequenceLength/4) # 60
+        # self.firstCompressionDim = finalDistributionLength
+        # self.secondCompressionDim = int(finalDistributionLength/2) # 120
+        # self.thirdCompressionDim = int(finalDistributionLength/4) # 60
         
         self.firstCompressionDim = 180
         self.secondCompressionDim = 140
@@ -36,7 +36,7 @@ class autoencoderParameters(nn.Module):
         Applies different pooling layers to different channel splits of the input data.
         
         Parameters:
-        inputData (torch.Tensor): The input data tensor of shape (batchSize, numChannels, sequenceLength).
+        inputData (torch.Tensor): The input data tensor of shape (batchSize, numChannels, finalDistributionLength).
         poolingLayers (list of nn.Module): A list of pooling layer objects to be applied to the input data.
         
         Returns:
@@ -190,14 +190,14 @@ class encodingLayer(autoencoderParameters):
         # ------------------------------------------------------------------ # 
 
     def forward(self, inputData):
-        """ The shape of inputData: (batchSize, numSignals, sequenceLength) """
+        """ The shape of inputData: (batchSize, numSignals, finalDistributionLength) """
         # Specify the current input shape of the data.
         batchSize, numSignals, sequenceLength = inputData.size()
         assert self.sequenceLength == sequenceLength
         
         # Reshape the data to the expected input into the CNN architecture.
         signalData = inputData.view(batchSize * numSignals, 1, sequenceLength) # Seperate out indivisual signals.
-        # signalData dimension: batchSize*numSignals, 1, sequenceLength
+        # signalData dimension: batchSize*numSignals, 1, finalDistributionLength
                 
         # ------------------------ CNN Architecture ------------------------ # 
 
@@ -205,7 +205,7 @@ class encodingLayer(autoencoderParameters):
         compressedSignals_0 = self.channelExpansion(signalData)
         # Add a residual connection to prevent loss of information.
         compressedSignals_0 = compressedSignals_0 + signalData
-        # compressedSignals_0 dimension: batchSize*numSignals, 6, sequenceLength
+        # compressedSignals_0 dimension: batchSize*numSignals, 6, finalDistributionLength
 
         # Apply the first CNN block to reduce spatial dimension.
         compressedSignals_1 = self.compressSignalsCNN_1(compressedSignals_0)
@@ -265,7 +265,7 @@ class encodingLayer(autoencoderParameters):
         return compressedData
     
     def printParams(self, numSignals = 2):
-        #encodingLayer(sequenceLength = 240, compressedLength = 64).printParams(numSignals = 2)
+        #encodingLayer(finalDistributionLength = 240, compressedLength = 64).printParams(numSignals = 2)
         t1 = time.time()
         summary(self, (numSignals, self.sequenceLength,)) # summary(model, inputShape)
         t2 = time.time()
@@ -372,8 +372,8 @@ class decodingLayer(autoencoderParameters):
         # )
         
         # self.decompressSignalsANN_LinearConv = _convolutionalLinearLayer.convolutionalLinearLayer(
-        #         initialDimension = self.sequenceLength,
-        #         compressedDim = self.sequenceLength,
+        #         initialDimension = self.finalDistributionLength,
+        #         compressedDim = self.finalDistributionLength,
         #         compressedEmbeddedDim = 8,
         #         embeddingStride = 1,
         #         embeddedDim = 8,
@@ -456,36 +456,36 @@ class decodingLayer(autoencoderParameters):
         decompressedSignals_4 = self.expandSignalsCNN_4(decompressedSignals_4)
         # Add a residual connection to prevent loss of information.
         decompressedSignals_4 = decompressedSignals_4 + decompressedSignals_40
-        # decompressedSignals_4 dimension: batchSize*numSignals, 6, sequenceLength
+        # decompressedSignals_4 dimension: batchSize*numSignals, 6, finalDistributionLength
 
         # Apply the pre=expansion CNN block to increase the spatial dimension.
         decompressedSignals_5 = self.channelPreCompression(decompressedSignals_4)
         decompressedSignals_5 = self.channelPreCompression(decompressedSignals_5)
         # Decrease the number of channels in the encocder.
         decompressedSignals = self.channelCompression(decompressedSignals_5)
-        # decompressedSignals dimension: batchSize*numSignals, 1, sequenceLength
+        # decompressedSignals dimension: batchSize*numSignals, 1, finalDistributionLength
         
         # ------------------------ ANN Architecture ------------------------ # 
 
        # Organize the signals into the original batches.
-        # reconstructedData = decompressedSignals.view(batchSize, numSignals, self.sequenceLength)
-        # reconstructedData dimension: batchSize, numSignals, sequenceLength
+        # reconstructedData = decompressedSignals.view(batchSize, numSignals, self.finalDistributionLength)
+        # reconstructedData dimension: batchSize, numSignals, finalDistributionLength
         
         
-        # decompressedSignals = decompressedSignals.view(batchSize*numSignals, self.sequenceLength) 
+        # decompressedSignals = decompressedSignals.view(batchSize*numSignals, self.finalDistributionLength)
         # decompressedSignals = decompressedSignals + self.decompressSignalsANN_LinearConv(decompressedSignals, self.convolutionalLinearLayer)
-        # # compressedSignals dimension: batchSize*numSignals, self.sequenceLength
+        # # compressedSignals dimension: batchSize*numSignals, self.finalDistributionLength
         
         # Organize the signals into the original batches.
         reconstructedData = decompressedSignals.view(batchSize, numSignals, self.sequenceLength)
-        # compressedSignals dimension: batchSize, numSignals, self.sequenceLength
+        # compressedSignals dimension: batchSize, numSignals, self.finalDistributionLength
         
         # ------------------------------------------------------------------ # 
 
         return reconstructedData
     
     def printParams(self, numSignals = 2):
-        #decodingLayer(compressedLength = 64, sequenceLength = 240).printParams(numSignals = 2)
+        #decodingLayer(compressedLength = 64, finalDistributionLength = 240).printParams(numSignals = 2)
         summary(self, (numSignals, self.compressedLength,))
     
     

@@ -40,7 +40,7 @@ class encoderCNN(nn.Module):
         )
 
     def forward(self, inputData):
-        """ The shape of inputData: (batchSize, sequenceLength, numSignals) """
+        """ The shape of inputData: (batchSize, finalDistributionLength, numSignals) """
         # Reshape the data to contain one channel
         inputData = inputData.unsqueeze(1)
         

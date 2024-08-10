@@ -53,7 +53,7 @@ class compileModelDataHelpers:
 
         # Exclusion criterion.
         self.minNumClasses, self.maxClassPercentage = self.modelParameters.getExclusionCriteria(submodel)
-        self.minSeqLength, self.maxSeqLength = self.modelParameters.getSequenceLengthRange(submodel, userInputParams['sequenceLength'])  # Seconds.
+        self.minSeqLength, self.maxSeqLength = self.modelParameters.getSequenceLengthRange(submodel, userInputParams['finalDistributionLength'])  # Seconds.
 
         # Data augmentation.
         samplingFrequency = 1
@@ -66,7 +66,7 @@ class compileModelDataHelpers:
         # Embedded information for each model.
         self.signalEncoderModelInfo = f"signalEncoder on {userInputParams['deviceListed']} with {userInputParams['signalEncoderWaveletType'].replace('.', '')} at {userInputParams['optimizerType']} at numSigLiftedChannels {userInputParams['numSigLiftedChannels']} at numExpandedSignals {userInputParams['numExpandedSignals']} at numSigEncodingLayers {userInputParams['numSigEncodingLayers']}"
         self.autoencoderModelInfo = f"autoencoder on {userInputParams['deviceListed']} with {userInputParams['optimizerType']} at compressionFactor {str(userInputParams['compressionFactor']).replace('.', '')} expansionFactor {str(userInputParams['expansionFactor']).replace('.', '')}"
-        self.emotionPredictionModelInfo = f"emotionPrediction on {userInputParams['deviceListed']} with {userInputParams['optimizerType']} with seqLength {userInputParams['sequenceLength']}"
+        self.emotionPredictionModelInfo = f"emotionPrediction on {userInputParams['deviceListed']} with {userInputParams['optimizerType']} with seqLength {userInputParams['finalDistributionLength']}"
 
     # ---------------------- Model Specific Parameters --------------------- #
 
@@ -97,24 +97,15 @@ class compileModelDataHelpers:
 
     @staticmethod
     def organizeActivityLabels(activityNames, activityLabels):
-        """
-        Purpose: To remove any activityNames where the label is not present and 
-                 reindex the activityLabels from 0 to number of unique activities after culling.
-        Parameters:
-        - activityNames: a list of all unique activity names (strings).
-        - activityLabels: a 1D tensor of index hashes for the unique activityName.
-        """
-        # Convert activityNames to a numpy array for easier string handling
-        activityNames = np.asarray(activityNames)
-
         # Find the unique activity labels
-        uniqueActivityLabels, culledActivityLabels = torch.unique(activityLabels, return_inverse=True)
+        uniqueActivityLabels, validActivityLabels = torch.unique(activityLabels, return_inverse=True)
+        assert len(activityLabels) == len(validActivityLabels), f"{len(activityLabels)} != {len(validActivityLabels)}"
 
         # Get the corresponding unique activity names
+        activityNames = torch.as_tensor(activityNames)
         uniqueActivityNames = activityNames[uniqueActivityLabels.int()]
 
-        assert len(activityLabels) == len(culledActivityLabels)
-        return uniqueActivityNames, culledActivityLabels.double()
+        return uniqueActivityNames, validActivityLabels
 
     @staticmethod
     def segmentSignals_toModel(numSignals, numSignalsCombine, random_state, metaTraining=True):
@@ -146,57 +137,62 @@ class compileModelDataHelpers:
         return signalCombinationInds
 
     def organizeLabels(self, allFeatureLabels, metaTraining, metaDatasetName, numSignals):
+        """
+        Purpose: Organize and clean the feature labels for training and evaluation.
+        --------------------------------------------
+        allFeatureLabels : A numpy array or list of size (batchSize, numLabels)
+        metaTraining : Boolean indicating if the data is for training
+        metaDatasetName : String representing the name of the dataset
+        numSignals : Integer representing the number of signals in the dataset
+        """
         # Convert to tensor and zero out the class indices
         allFeatureLabels = torch.as_tensor(allFeatureLabels)
         batchSize, numLabels = allFeatureLabels.shape
+        allSingleClassIndices = [[]]*numLabels
 
-        allSingleClassIndices = []
-        # For each type of label (emotion).
+        # Iterate over each label type (emotion)
         for labelTypeInd in range(numLabels):
-            # Get all the label responses across all batches.
             featureLabels = allFeatureLabels[:, labelTypeInd]
-            allSingleClassIndices.append([])
 
-            # Remove unknown labels.
+            # Mask out unknown labels
             goodLabelInds = 0 <= featureLabels  # The minimum label should be 0
             featureLabels[~goodLabelInds] = self.missingLabelValue
 
             # Count the number of times the emotion label has a unique value.
             unique_classes, class_counts = torch.unique(featureLabels[goodLabelInds], return_counts=True)
             # unique_classes, class_counts dim: numUniqueClasses (number of unique emotion scores).
-            smallClassInds = class_counts < 2
+            smallClassMask = class_counts < 2
 
             # For small distributions.
-            if smallClassInds.any():
-                # Find the bad experiments (batches) with only one sample.
-                badClasses = unique_classes[torch.nonzero(smallClassInds).reshape(1, -1)[0]]
+            if smallClassMask.any():
+                # Remove labels belonging to small classes
+                smallClassLabels = unique_classes[smallClassMask]
+                smallClassLabelMask = torch.isin(featureLabels, smallClassLabels)
+                allSingleClassIndices[labelTypeInd].extend(smallClassLabelMask.nonzero(as_tuple=False).squeeze().tolist())
+                featureLabels[smallClassLabelMask] = self.missingLabelValue
 
-                # Remove the datapoint as we cannot split the class between test/train
-                smallClassLabelInds = torch.isin(featureLabels, badClasses)
-                allSingleClassIndices[-1].extend(smallClassLabelInds)
+                # Recalculate unique classes.
+                goodLabelInds = goodLabelInds & ~smallClassLabelMask
+                unique_classes, class_counts = torch.unique(featureLabels[goodLabelInds], return_counts=True)
 
-                # Reassess the class counts
-                finalMask = goodLabelInds & ~smallClassLabelInds
-                unique_classes, class_counts = torch.unique(featureLabels[finalMask], return_counts=True)
+                # Ensure greater variability in the class rating system.
+                if metaTraining and (len(unique_classes) < self.minNumClasses or len(featureLabels) * self.maxClassPercentage <= class_counts.max().item()):
+                    featureLabels[:] = self.missingLabelValue
 
-            # Ensure greater variability in the class rating system.
-            if metaTraining and (len(unique_classes) < self.minNumClasses or len(featureLabels) * self.maxClassPercentage <= class_counts.max().item()):
-                featureLabels[:] = self.missingLabelValue
+                # Save the edits made to the featureLabels
+                allFeatureLabels[:, labelTypeInd] = featureLabels
 
-            # Save the edits made to the featureLabels
-            allFeatureLabels[:, labelTypeInd] = featureLabels
+            # Report the information from this dataset.
+            numGoodEmotions = torch.sum(~torch.all(torch.isnan(allFeatureLabels), dim=0)).item()
+            print(f"\t{metaDatasetName.capitalize()}: Found {numGoodEmotions - 1} (out of {numLabels - 1}) well-labeled emotions across {batchSize} experiments with {numSignals} signals.", flush=True)
 
-        # Report the information from this dataset.
-        numGoodEmotions = torch.sum(~torch.all(torch.isnan(allFeatureLabels), dim=0)).item()
-        print(f"\t{metaDatasetName.capitalize()}: Found {numGoodEmotions - 1} (out of {numLabels - 1}) well-labeled emotions across {batchSize} experiments with {numSignals} signals.", flush=True)
-
-        return allFeatureLabels, allSingleClassIndices
+            return allFeatureLabels, allSingleClassIndices
 
     def addDemographicInfo(self, allFeatureData, allSubjectInds, datasetInd):
         """
         Purpose: The same signal without the last few seconds still has the same label
         --------------------------------------------
-        allFeatureData : A 3D list of all signals in each experiment (batchSize, numSignals, sequenceLength)
+        allFeatureData : A 3D list of all signals in each experiment (batchSize, numSignals, finalDistributionLength)
         allSubjectInds : A 1D numpy array of size batchSize
         """
         # Get the dimensions of the input arrays
@@ -225,19 +221,19 @@ class compileModelDataHelpers:
     # ---------------------------------------------------------------------- #
     # -------------------------- Data Augmentation ------------------------- #
 
-    def addShiftedSignals(self, allFeatureData, allFeatureLabels, currentTrainingMask, currentTestingMask, allSubjectInds):
+    def addShiftedSignals(self, allSignalData, allFeatureLabels, currentTrainingMask, currentTestingMask, allSubjectInds):
         """
         Purpose: The same signal without the last few seconds still has the same label
         --------------------------------------------
-        allFeatureData : A 3D list of all signals in each experiment (batchSize, numSignals, sequenceLength)
+        allSignalData : An array of all signals in each experiment of size (batchSize, numSignals, maxSequenceLength, 2)
         allFeatureLabels : A numpy array of all labels per experiment of size (batchSize, numLabels)
-        currentTestingMask : A boolean mask of testing data of size (batchSize, numLabels)
         currentTrainingMask : A boolean mask of training data of size (batchSize, numLabels)
+        currentTestingMask : A boolean mask of testing data of size (batchSize, numLabels)
         allSubjectInds : A 1D numpy array of size batchSize
         """
         # Get the dimensions of the input arrays
-        numExperiments, numSignals, totalLength = allFeatureData.shape
-        _, numLabels = allFeatureLabels.shape
+        numExperiments, numSignals, maxSequenceLength, _ = allSignalData.shape
+        numLabels = allFeatureLabels.shape[1]
 
         # Create lists to store the new augmented data, labels, and masks
         augmentedFeatureLabels = torch.zeros((numExperiments * self.numShifts, numLabels))
@@ -252,7 +248,7 @@ class compileModelDataHelpers:
             # For each shift in the signals.
             for shiftInd in range(self.numShifts):
                 # Create shifted signals
-                shiftedSignals = allFeatureData[experimentInd, :, -self.maxSeqLength - shiftInd * self.numIndices_perShift:totalLength - shiftInd * self.numIndices_perShift]
+                shiftedSignals = allSignalData[experimentInd, :, -self.maxSeqLength - shiftInd * self.numIndices_perShift:totalLength - shiftInd * self.numIndices_perShift]
 
                 # Append the shifted data and corresponding labels and masks
                 augmentedFeatureLabels[experimentInd * self.numShifts + shiftInd] = allFeatureLabels[experimentInd]
@@ -284,8 +280,8 @@ class compileModelDataHelpers:
     # ---------------------------- Data Cleaning --------------------------- #
 
     def _padSignalData(self, allRawFeatureTimeIntervals, allCompiledFeatureIntervals):
-        # allRawFeatureTimeIntervals : A list of size (batchSize, numSignals, sequenceLength*)
-        # allCompiledFeatureIntervals : A list of size (batchSize, numSignals, sequenceLength*)
+        # allRawFeatureTimeIntervals : A list of size (batchSize, numSignals, finalDistributionLength*)
+        # allCompiledFeatureIntervals : A list of size (batchSize, numSignals, finalDistributionLength*)
         # allSignalData : A list of size (batchSize, numSignals, maxSequenceLength, 2)
         # allSignalStopInds : A list of size (batchSize, numSignals)            
         # Determine the final dimensions of the padded array.

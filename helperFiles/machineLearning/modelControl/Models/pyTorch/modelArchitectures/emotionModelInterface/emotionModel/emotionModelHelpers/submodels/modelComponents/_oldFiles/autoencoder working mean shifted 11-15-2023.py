@@ -78,14 +78,14 @@ class encodingLayer(autoencoderParameters):
         )
 
     def forward(self, inputData):
-        """ The shape of inputData: (batchSize, numSignals, sequenceLength) """
+        """ The shape of inputData: (batchSize, numSignals, finalDistributionLength) """
         # Specify the current input shape of the data.
         batchSize, numSignals, sequenceLength = inputData.size()
         assert self.sequenceLength == sequenceLength
         
         # Reshape the data to the expected input into the CNN architecture.
         signalData = inputData.view(batchSize * numSignals, 1, sequenceLength) # Seperate out indivisual signals.
-        # signalData dimension: batchSize*numSignals, 1, sequenceLength
+        # signalData dimension: batchSize*numSignals, 1, finalDistributionLength
         
         # ------------------------ CNN Architecture ------------------------ # 
         
@@ -93,7 +93,7 @@ class encodingLayer(autoencoderParameters):
         compressedSignals_0 = self.channelExpansion(signalData)
         # Add a residual connection to prevent loss of information.
         compressedSignals_0 = compressedSignals_0 + signalData
-        # compressedSignals_0 dimension: batchSize*numSignals, 8, sequenceLength
+        # compressedSignals_0 dimension: batchSize*numSignals, 8, finalDistributionLength
 
         # Apply the first CNN block to reduce spatial dimension.
         compressedSignals_1 = self.compressSignalsCNN_1(compressedSignals_0)
@@ -142,7 +142,7 @@ class encodingLayer(autoencoderParameters):
         return compressedData
     
     def printParams(self, numSignals = 50):
-        #encodingLayer(sequenceLength = 300, compressedLength = 64).printParams(numSignals = 50)
+        #encodingLayer(finalDistributionLength = 300, compressedLength = 64).printParams(numSignals = 50)
         summary(self, (numSignals, self.sequenceLength,)) # summary(model, inputShape)
         
         # Count the trainable parameters.
@@ -249,22 +249,22 @@ class decodingLayer(autoencoderParameters):
         compressedSignals_3 = compressedSignals_3 + compressedSignals_2
         # Apply a pooling layer to increase the signal's dimension.
         compressedSignals_3 = self.initialPooling(compressedSignals_3)
-        # compressedSignals_3 dimension: batchSize*numSignals, 8, sequenceLength
+        # compressedSignals_3 dimension: batchSize*numSignals, 8, finalDistributionLength
 
         # Decrease the number of channels in the encocder.
         decompressedSignals = self.channelCompression(compressedSignals_3)
-        # decompressedSignals dimension: batchSize*numSignals, 1, sequenceLength
+        # decompressedSignals dimension: batchSize*numSignals, 1, finalDistributionLength
         
         # ------------------------------------------------------------------ # 
 
         # Reconstruct the original signals.
         reconstructedData = decompressedSignals.view(batchSize, numSignals, self.sequenceLength)   # Organize the signals into the original batches.
-        # reconstructedData dimension: batchSize, numSignals, sequenceLength
+        # reconstructedData dimension: batchSize, numSignals, finalDistributionLength
 
         return reconstructedData
     
     def printParams(self, numSignals = 50):
-        #decodingLayer(compressedLength = 64, sequenceLength = 300).printParams()
+        #decodingLayer(compressedLength = 64, finalDistributionLength = 300).printParams()
         summary(self, (numSignals, self.compressedLength,))
     
     

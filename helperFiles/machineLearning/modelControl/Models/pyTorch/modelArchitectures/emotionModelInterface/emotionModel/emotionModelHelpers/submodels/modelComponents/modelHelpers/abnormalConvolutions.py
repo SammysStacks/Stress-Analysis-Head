@@ -21,7 +21,7 @@ class abnormalConvolutions(nn.Module):
         Applies different pooling layers to different channel splits of the input data.
         
         Parameters:
-        inputData (torch.Tensor): The input data tensor of shape (batchSize, numChannels, sequenceLength).
+        inputData (torch.Tensor): The input data tensor of shape (batchSize, numChannels, finalDistributionLength).
         poolingLayers (list of nn.Module): A list of pooling layer objects to be applied to the input data.
         
         Returns:

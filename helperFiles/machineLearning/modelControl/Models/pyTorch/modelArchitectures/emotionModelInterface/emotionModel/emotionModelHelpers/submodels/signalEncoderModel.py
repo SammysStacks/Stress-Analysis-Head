@@ -90,20 +90,20 @@ class signalEncoderModel(globalModel):
         self.debuggingResults = debuggingResults
 
     def forward(self, signalData, initialSignalData, decodeSignals=False, calculateLoss=False, trainingFlag=False):
-        """ The shape of inputData: (batchSize, numSignals, sequenceLength) """
+        """ The shape of inputData: (batchSize, numSignals, finalDistributionLength) """
         if self.debuggingResults: print("\nEntering signal encoder model")
 
         # ----------------------- Data Preprocessing ----------------------- #  
 
         # Prepare the data for compression/expansion
         batchSize, numSignals, sequenceLength = signalData.size()
-        # signalData dimension: batchSize, numSignals, sequenceLength
+        # signalData dimension: batchSize, numSignals, finalDistributionLength
 
         # Create placeholders for the final variables.
         decodedPredictedIndexProbabilities = torch.ones((batchSize, numSignals), device=signalData.device)
         denoisedReconstructedData = torch.zeros_like(signalData, device=signalData.device)
         signalEncodingLoss = torch.zeros((batchSize,), device=signalData.device)
-        # denoisedReconstructedData dimension: batchSize, numSignals, sequenceLength
+        # denoisedReconstructedData dimension: batchSize, numSignals, finalDistributionLength
         # signalEncodingLoss dimension: batchSize
 
         # Initialize training parameters
@@ -128,12 +128,12 @@ class signalEncoderModel(globalModel):
         # Learn how to add positional encoding to each signal's position.
         positionEncodedData = self.encodeSignals.positionalEncodingInterface.addPositionalEncoding(signalData)
         predictedIndexProbabilities = self.predictPositionClasses(positionEncodedData)  # Predict the positional encoding index.
-        # positionEncodedData dimension: batchSize, numSignals, sequenceLength
+        # positionEncodedData dimension: batchSize, numSignals, finalDistributionLength
         # predictedIndexProbabilities dimension: batchSize, numSignals
 
         # Compress the signal space into numEncodedSignals.
         encodedData, numSignalForwardPath, signalEncodingLayerLoss = self.encodeSignals(signalData=positionEncodedData, targetNumSignals=numEncodedSignals, signalEncodingLayerLoss=None, calculateLoss=calculateLoss, forward=True)
-        # encodedData dimension: batchSize, numEncodedSignals, sequenceLength
+        # encodedData dimension: batchSize, numEncodedSignals, finalDistributionLength
 
         # ---------------------- Signal Reconstruction --------------------- #
 
@@ -210,7 +210,7 @@ class signalEncoderModel(globalModel):
             calculateLoss=calculateLoss,
             decodedData=encodedData,
         )
-        # reconstructedInitEncodingData dimension: batchSize, numSignals, sequenceLength
+        # reconstructedInitEncodingData dimension: batchSize, numSignals, finalDistributionLength
         if self.debuggingResults: print("Signal Encoding Upward Path:", encodedData.size(1), reversePath, decodedData.size(1))
         assert reversePath[1:] == numSignalForwardPath[1:][::-1], f"Signal encoding path mismatch: {reversePath[1:]} != {numSignalForwardPath[1:][::-1]} reversed"
 

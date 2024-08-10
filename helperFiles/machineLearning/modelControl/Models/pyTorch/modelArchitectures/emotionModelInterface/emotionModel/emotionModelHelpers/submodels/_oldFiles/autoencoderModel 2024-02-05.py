@@ -62,14 +62,14 @@ class autoencoderModel(_globalPytorchModel.globalModel):
         self.testingLosses_compressedSTD = []     # List of compressed standard deviation (autoencoder) testing losses. Dim: numEpochs      
 
     def forward(self, signalData, reconstructSignals = False, trainingFlag = False, maxBatchSignals = 5000):
-        """ The shape of inputData: (batchSize, numSignals, sequenceLength) """
+        """ The shape of inputData: (batchSize, numSignals, finalDistributionLength) """
         
         # ----------------------- Data Preprocessing ----------------------- #  
 
         # Extract the incoming data's dimension and ensure proper data format.
         batchSize, numSignals, sequenceLength = signalData.size()
         signalData = signalData.to(torch.float32) # Floats are required for gradient tracking.
-        # signalData dimension: batchSize, numSignals, sequenceLength
+        # signalData dimension: batchSize, numSignals, finalDistributionLength
         
         # Assert the integrity of the incoming data.
         assert sequenceLength == self.sequenceLength, f"The signals have length {sequenceLength}, but the model expected {self.sequenceLength} points."
@@ -106,7 +106,7 @@ class autoencoderModel(_globalPytorchModel.globalModel):
                 
                 # Reconstruct the initial signals.
                 reconstructedData[startIdx:endIdx] = self.reconstructSignals(noisyCompressedData)
-                # reconstructedData dimension: batchSize, numSignals, sequenceLength
+                # reconstructedData dimension: batchSize, numSignals, finalDistributionLength
                 
                 # Clear the cache memory
                 gc.collect(); torch.cuda.empty_cache();

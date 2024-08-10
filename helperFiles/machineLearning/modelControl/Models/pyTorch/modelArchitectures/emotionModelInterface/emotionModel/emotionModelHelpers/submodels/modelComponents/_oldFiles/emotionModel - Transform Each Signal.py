@@ -127,13 +127,13 @@ class modelHead(_globalPytorchModel.globalModel):
         # Seperate out indivisual signals.
         batchSize, signalInfoLength, numSignals = inputData.size()
         signalInfo = inputData.transpose(1, 2).reshape(batchSize * numSignals, signalInfoLength)
-        # signalInfo dimension: batchSize*numSignals, sequenceLength + contextualLength
+        # signalInfo dimension: batchSize*numSignals, finalDistributionLength + contextualLength
 
         # Seperate the sequence from contextual information.
         signalData = signalInfo[:, 0:self.maxSeqLength].to(torch.float32)
         contextualData = signalInfo[:, self.maxSeqLength:]
         # contextualData dimension = batchSize*numSignals, contextualLength
-        # signalData dimension = batchSize*numSignals, sequenceLength
+        # signalData dimension = batchSize*numSignals, finalDistributionLength
         assert self.contextualLength == contextualData.size(1)
 
         # ----------------------- Signal Compression ----------------------- #  
@@ -182,9 +182,9 @@ class modelHead(_globalPytorchModel.globalModel):
 
         if trainingData:    
             # Reconstruct the initial signals.
-            decompressedData = self.reconstructSignals(compressedData)  # decompressedData dimension: batchSize*numSignals, sequenceLength
+            decompressedData = self.reconstructSignals(compressedData)  # decompressedData dimension: batchSize*numSignals, finalDistributionLength
             reconstructedSignals = decompressedData.view(batchSize, numSignals, self.maxSeqLength).transpose(1, 2)   # Organize the signals into the original batches.
-            # reconstructedSignals dimension: batchSize, sequenceLength, numSignals
+            # reconstructedSignals dimension: batchSize, finalDistributionLength, numSignals
             
             return finalPredictions, reconstructedSignals
             

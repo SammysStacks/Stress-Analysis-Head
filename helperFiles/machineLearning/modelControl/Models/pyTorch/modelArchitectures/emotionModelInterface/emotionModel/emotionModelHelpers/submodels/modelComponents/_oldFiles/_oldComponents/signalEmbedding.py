@@ -20,7 +20,7 @@ class signalEmbedding(nn.Module):
         self.embeddingDim = embeddingDim        # The number of shifted columns to output. If even, preference is given towards future values.
         
     def forward(self, inputData):
-        """ The shape of inputData = (batchSize, sequenceLength)"""
+        """ The shape of inputData = (batchSize, finalDistributionLength)"""
         # Preprocess the data.
         inputData = inputData.unsqueeze(2)
         batchSize, sequenceLength, numSignals = inputData.size()

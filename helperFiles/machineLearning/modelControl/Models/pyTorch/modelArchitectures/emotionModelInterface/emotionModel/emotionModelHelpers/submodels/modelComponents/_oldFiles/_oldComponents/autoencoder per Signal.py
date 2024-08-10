@@ -52,7 +52,7 @@ class encodingLayer(nn.Module):
         )
 
     def forward(self, inputData):
-        """ The shape of inputData: (batchSize, sequenceLength) """
+        """ The shape of inputData: (batchSize, finalDistributionLength) """
         
         # Apply CNN architecture to reduce spatial dimension.
         inputData = inputData.unsqueeze(1) # Add one channel to the signal.

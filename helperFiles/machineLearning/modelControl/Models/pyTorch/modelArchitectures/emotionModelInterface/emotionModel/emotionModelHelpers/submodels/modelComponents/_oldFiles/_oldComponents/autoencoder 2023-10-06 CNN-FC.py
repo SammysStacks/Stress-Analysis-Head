@@ -51,7 +51,7 @@ class encodingLayer(nn.Module):
         )
 
     def forward(self, inputData):
-        """ The shape of inputData: (batchSize, numSignals, sequenceLength) """
+        """ The shape of inputData: (batchSize, numSignals, finalDistributionLength) """
         # Specify the current input shape of the data.
         batchSize, numSignals, sequenceLength = inputData.size()
         assert self.sequenceLength == sequenceLength
@@ -59,7 +59,7 @@ class encodingLayer(nn.Module):
         # Reshape the data to the expected input into the CNN architecture.
         signalData = inputData.view(batchSize * numSignals, sequenceLength) # Seperate out indivisual signals.
         signalData = signalData.unsqueeze(1) # Add one channel to the signal.
-        # signalData dimension: batchSize*numSignals, 1, sequenceLength
+        # signalData dimension: batchSize*numSignals, 1, finalDistributionLength
         
         # Apply CNN architecture to reduce spatial dimension.
         compressedSignals = self.compressSignals(signalData) # The new dimension: batchSize*numSignals, numChannels = 1, imageLength
@@ -74,7 +74,7 @@ class encodingLayer(nn.Module):
         return compressedData
     
     def printParams(self, numSignals = 50):
-        #encodingLayer(sequenceLength = 240, compressedLength = 32).printParams(numSignals = 75)
+        #encodingLayer(finalDistributionLength = 240, compressedLength = 32).printParams(numSignals = 75)
         summary(self, (numSignals, self.sequenceLength,)) # summary(model, inputShape)
         
     
@@ -122,7 +122,7 @@ class decodingLayer(nn.Module):
             # nn.GELU(),
             
             # # Neural architecture: Layer 2
-            # nn.Linear(256, sequenceLength, bias=True),
+            # nn.Linear(256, finalDistributionLength, bias=True),
         )
                 
     def forward(self, compressedData):
@@ -144,16 +144,16 @@ class decodingLayer(nn.Module):
         # Match the original sequence length.
         decompressedSignals = decompressedSignals.view(batchSize*numSignals, -1) # decompressedSignals dimension: batchSize*numSignals, numChannels*imageLength
         decompressedSignals = self.flattenToSequence(decompressedSignals)
-        # decompressedSignals dimension: batchSize*numSignals, sequenceLength
+        # decompressedSignals dimension: batchSize*numSignals, finalDistributionLength
         
         # Reconstruct the original signals.
         reconstructedData = decompressedSignals.view(batchSize, numSignals, self.sequenceLength)   # Organize the signals into the original batches.
-        # reconstructedData dimension: batchSize, numSignals, sequenceLength
+        # reconstructedData dimension: batchSize, numSignals, finalDistributionLength
 
         return reconstructedData
     
     def printParams(self, numSignals = 75, compressedLength = 32, sequenceLength = 240):
-        #decodingLayer(compressedLength = 32, sequenceLength = 240).printParams()
+        #decodingLayer(compressedLength = 32, finalDistributionLength = 240).printParams()
         summary(self, (numSignals, compressedLength,))
     
     

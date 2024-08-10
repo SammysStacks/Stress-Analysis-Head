@@ -63,7 +63,7 @@ class featureEncoder(nn.Module):
         self.allAttentionWeights = []  # Dimension: numEpochs, numLayers, attentionWeightDim, where attentionWeightDim = batch_size, numHeads, seq_length, seq_length
 
     def forward(self, signalData, allTrainingData = False):
-        """ The shape of signalData = (batchSize, sequenceLength, embeddingDim)"""
+        """ The shape of signalData = (batchSize, finalDistributionLength, embeddingDim)"""
         # if allTrainingData: self.allAttentionWeights.append([]);
         
         # For each encoding layer.

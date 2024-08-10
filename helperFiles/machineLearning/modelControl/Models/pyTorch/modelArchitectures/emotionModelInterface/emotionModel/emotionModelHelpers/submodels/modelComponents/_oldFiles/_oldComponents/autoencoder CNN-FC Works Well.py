@@ -85,7 +85,7 @@ class encodingLayer(autoencoderParameters):
         )
 
     def forward(self, inputData):
-        """ The shape of inputData: (batchSize, numSignals, sequenceLength) """
+        """ The shape of inputData: (batchSize, numSignals, finalDistributionLength) """
         # Specify the current input shape of the data.
         batchSize, numSignals, sequenceLength = inputData.size()
         assert self.sequenceLength == sequenceLength
@@ -93,7 +93,7 @@ class encodingLayer(autoencoderParameters):
         # Reshape the data to the expected input into the CNN architecture.
         signalData = inputData.view(batchSize * numSignals, sequenceLength) # Seperate out indivisual signals.
         signalData = signalData.unsqueeze(1) # Add one channel to the signal.
-        # signalData dimension: batchSize*numSignals, 1, sequenceLength
+        # signalData dimension: batchSize*numSignals, 1, finalDistributionLength
         
         # Apply CNN architecture to reduce spatial dimension.
         compressedSignals = signalData + self.compressSignalsCNN_1(signalData)
@@ -113,7 +113,7 @@ class encodingLayer(autoencoderParameters):
         return compressedData
     
     def printParams(self, numSignals = 75):
-        #encodingLayer(sequenceLength = 300, compressedLength = 64).printParams(numSignals = 75)
+        #encodingLayer(finalDistributionLength = 300, compressedLength = 64).printParams(numSignals = 75)
         summary(self, (numSignals, self.sequenceLength,)) # summary(model, inputShape)
         
     
@@ -176,7 +176,7 @@ class decodingLayer(autoencoderParameters):
         # finalDeconvShape = self.expandSignalsCNN(torch.ones((1, self.numOutputChannels, self.compressionLengthCNN))).shape
         # finalDeconvDimension = torch.tensor(finalDeconvShape[1:]).prod().item()
         # # Assert the correct shape of the expanded image.
-        # assert self.sequenceLength == finalDeconvDimension, f"sequenceLength: {sequenceLength}; finalDeconvDimension: {finalDeconvDimension}; self.numOutputChannels: {self.numOutputChannels}"
+        # assert self.finalDistributionLength == finalDeconvDimension, f"finalDistributionLength: {finalDistributionLength}; finalDeconvDimension: {finalDeconvDimension}; self.numOutputChannels: {self.numOutputChannels}"
                 
     def forward(self, compressedData):
         """ The shape of compressedData: (batchSize, numSignals, compressedLength) """
@@ -200,16 +200,16 @@ class decodingLayer(autoencoderParameters):
         decompressedSignals = self.upPooling_Stride3(decompressedSignals)
         decompressedSignals = self.expandSignalsCNN_3(decompressedSignals)
 
-        # decompressedSignals dimension: batchSize*numSignals, numChannels = 1, self.sequenceLength
+        # decompressedSignals dimension: batchSize*numSignals, numChannels = 1, self.finalDistributionLength
 
         # Reconstruct the original signals.
         reconstructedData = decompressedSignals.view(batchSize, numSignals, self.sequenceLength)   # Organize the signals into the original batches.
-        # reconstructedData dimension: batchSize, numSignals, sequenceLength
+        # reconstructedData dimension: batchSize, numSignals, finalDistributionLength
 
         return reconstructedData
     
     def printParams(self, numSignals = 75):
-        #decodingLayer(compressedLength = 64, sequenceLength = 300).printParams()
+        #decodingLayer(compressedLength = 64, finalDistributionLength = 300).printParams()
         summary(self, (numSignals, self.compressedLength,))
     
     

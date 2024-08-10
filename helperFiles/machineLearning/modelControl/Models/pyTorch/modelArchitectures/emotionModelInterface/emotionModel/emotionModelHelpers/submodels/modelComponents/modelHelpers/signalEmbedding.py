@@ -78,14 +78,14 @@ class embeddingLayer(_convolutionalHelpers.convolutionalHelpers):
         # ------------------------------------------------------------------ # 
 
     def forward(self, inputData):
-        """ The shape of inputData: (batchSize, numSignals, sequenceLength) """
+        """ The shape of inputData: (batchSize, numSignals, finalDistributionLength) """
         # Specify the current input shape of the data.
         batchSize, numSignals, sequenceLength = inputData.size()
         assert self.sequenceLength == sequenceLength
         
         # Reshape the data to the expected input into the CNN architecture.
         signalData = inputData.view(batchSize * numSignals, 1, sequenceLength) # Seperate out indivisual signals.
-        # signalData dimension: batchSize*numSignals, 1, sequenceLength
+        # signalData dimension: batchSize*numSignals, 1, finalDistributionLength
         
         # ------------------------ CNN Architecture ------------------------ # 
         
@@ -95,7 +95,7 @@ class embeddingLayer(_convolutionalHelpers.convolutionalHelpers):
         embeddedSignals_0 = embeddedSignals_0 + signalData
         # Apply a pooling layer to reduce the signal's dimension.
         embeddedSignals_1 = self.splitPooling(embeddedSignals_0, self.poolingLayers)
-        # embeddedSignals_1 dimension: batchSize*numSignals, 6, sequenceLength/2
+        # embeddedSignals_1 dimension: batchSize*numSignals, 6, finalDistributionLength/2
         
         # Apply the second CNN block to reduce spatial dimension.
         embeddedSignals_2 = self.embedSignalsCNN_2(embeddedSignals_1)
@@ -104,11 +104,11 @@ class embeddingLayer(_convolutionalHelpers.convolutionalHelpers):
         embeddedSignals_2 = embeddedSignals_2 + embeddedSignals_1
         # Apply a pooling layer to reduce the signal's dimension.
         # embeddedSignals_2 = self.splitPooling(embeddedSignals_2, self.poolingLayers)
-        # embeddedSignals_2 dimension: batchSize*numSignals, 6, sequenceLength/4
+        # embeddedSignals_2 dimension: batchSize*numSignals, 6, finalDistributionLength/4
         
         # Apply the third CNN block to reduce spatial dimension.
         embeddedSignals_3 = self.embedSignalsCNN_3(embeddedSignals_2)
-        # embeddedSignals_3 dimension: batchSize*numSignals, 1, sequenceLength/4
+        # embeddedSignals_3 dimension: batchSize*numSignals, 1, finalDistributionLength/4
 
         # ------------------------ ANN Architecture ------------------------ # 
         
@@ -125,7 +125,7 @@ class embeddingLayer(_convolutionalHelpers.convolutionalHelpers):
         return embeddedData
     
     def printParams(self, numSignals = 2):
-        #embeddingLayer(sequenceLength = 64, embeddedLength = 16).printParams(numSignals = 2)
+        #embeddingLayer(finalDistributionLength = 64, embeddedLength = 16).printParams(numSignals = 2)
         t1 = time.time()
         summary(self, (numSignals, self.sequenceLength,))
         t2 = time.time()

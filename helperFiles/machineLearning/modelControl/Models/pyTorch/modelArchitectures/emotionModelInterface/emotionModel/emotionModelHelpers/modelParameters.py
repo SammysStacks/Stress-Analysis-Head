@@ -135,6 +135,9 @@ class modelParameters:
 
     # -------------------------- Compilation Parameters ------------------------- #
 
+    def getFinalDistributionLength(self):
+        return self.timeWindows[-1]
+
     def getMaxBufferLength(self):
         maxTimeBufferConsidered = 2 * self.getTimeWindows()[-1] + self.getShiftInfo(submodel='maxShift')
         modelFeatureTimeBuffer = max(self.minTimeBuffer, maxTimeBufferConsidered)
@@ -279,7 +282,7 @@ class modelParameters:
             # Assign emotion prediction parameters
             'numInterpreterHeads': args.numInterpreterHeads,  # The number of ways to interpret a set of physiological signals.
             'numBasicEmotions': args.numBasicEmotions,  # The number of basic emotions (basis states of emotions).
-            'sequenceLength': args.sequenceLength,  # The maximum number of time series points to consider.
+            'finalDistributionLength': args.finalDistributionLength,  # The maximum number of time series points to consider.
         }
 
         # Relay the inputs to the user.

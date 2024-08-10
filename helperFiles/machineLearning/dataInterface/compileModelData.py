@@ -1,25 +1,23 @@
-from sklearn.model_selection import train_test_split
-import numpy as np
-import torch
-import copy
 import os
 
+import numpy as np
+import torch
+from sklearn.model_selection import train_test_split
+
+from helperFiles.dataAcquisitionAndAnalysis.metadataAnalysis.amigosInterface import amigosInterface
+from helperFiles.dataAcquisitionAndAnalysis.metadataAnalysis.caseInterface import caseInterface
+from helperFiles.dataAcquisitionAndAnalysis.metadataAnalysis.dapperInterface import dapperInterface
+# Import interfaces for the metadata
+from helperFiles.dataAcquisitionAndAnalysis.metadataAnalysis.emognitionInterface import emognitionInterface
+from helperFiles.dataAcquisitionAndAnalysis.metadataAnalysis.wesadInterface import wesadInterface
+from .compileModelDataHelpers import compileModelDataHelpers
+from ..featureAnalysis.compiledFeatureNames.compileFeatureNames import compileFeatureNames  # Functions to extract feature names
+from ..modelControl.Models.pyTorch.Helpers.dataLoaderPyTorch import pytorchDataInterface
 # Import files for training and testing the model
 from ..modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionPipeline import emotionPipeline
 from ..modelControl.modelSpecifications.compileModelInfo import compileModelInfo  # Functions with model information
-from .compileModelDataHelpers import compileModelDataHelpers
-
 # Import interfaces for the model's data
 from ...dataAcquisitionAndAnalysis.metadataAnalysis.globalMetaAnalysis import globalMetaAnalysis
-from ..featureAnalysis.compiledFeatureNames.compileFeatureNames import compileFeatureNames  # Functions to extract feature names
-from ..modelControl.Models.pyTorch.Helpers.dataLoaderPyTorch import pytorchDataInterface
-
-# Import interfaces for the metadata
-from helperFiles.dataAcquisitionAndAnalysis.metadataAnalysis.emognitionInterface import emognitionInterface
-from helperFiles.dataAcquisitionAndAnalysis.metadataAnalysis.amigosInterface import amigosInterface
-from helperFiles.dataAcquisitionAndAnalysis.metadataAnalysis.dapperInterface import dapperInterface
-from helperFiles.dataAcquisitionAndAnalysis.metadataAnalysis.wesadInterface import wesadInterface
-from helperFiles.dataAcquisitionAndAnalysis.metadataAnalysis.caseInterface import caseInterface
 
 
 class compileModelData(compileModelDataHelpers):
@@ -190,8 +188,8 @@ class compileModelData(compileModelDataHelpers):
             assert surveyAnswersList.min().item() >= -2, "All ratings must be greater than 0 (exception for -2, which is reserved for missing)."
             assert -1 not in surveyAnswersList, print("surveyAnswersList should contain ratings from 0 to n", flush=True)
             # Specify the incoming dimensions.
-            # allCompiledFeatureIntervals dimension: batchSize, numSignals, sequenceLength*  -> *sequenceLength is not constant
-            # allRawFeatureTimeIntervals dimension: batchSize, numSignals, sequenceLength*  -> *sequenceLength is not constant
+            # allCompiledFeatureIntervals dimension: batchSize, numSignals, finalDistributionLength*  -> *finalDistributionLength is not constant
+            # allRawFeatureTimeIntervals dimension: batchSize, numSignals, finalDistributionLength*  -> *finalDistributionLength is not constant
 
             # ---------------------- Data Preparation ---------------------- #
 
@@ -225,40 +223,39 @@ class compileModelData(compileModelDataHelpers):
 
             # ---------------------- Test/Train Split ---------------------- #
 
-            # Initiate a mask for distinguishing between training and testing data.
-            currentTrainingMask = torch.full(allFeatureLabels.size(), fill_value=False, dtype=torch.bool)
-            currentTestingMask = torch.full(allFeatureLabels.size(), fill_value=False, dtype=torch.bool)
+            # Initialize masks for distinguishing between training and testing data.
+            currentTrainingMask = torch.zeros_like(allFeatureLabels, dtype=torch.bool)
+            currentTestingMask = torch.zeros_like(allFeatureLabels, dtype=torch.bool)
 
             # For each type of label/emotion recorded.
             for labelTypeInd in range(numLabels):
-                currentFeatureLabels = copy.deepcopy(allFeatureLabels[:, labelTypeInd])
+                currentFeatureLabels = allFeatureLabels[:, labelTypeInd].clone()
+                singleClassIndices = allSmallClassIndices[labelTypeInd]
 
                 # Temporarily remove the single classes.
-                singleClassIndices = allSmallClassIndices[labelTypeInd]
                 currentFeatureLabels[singleClassIndices] = self.missingLabelValue
-                # Remove the missing data from the arrays.
-                missingClassMask = torch.isnan(currentFeatureLabels)
-                currentIndices = np.delete(allExperimentalIndices.copy(), torch.nonzero(missingClassMask))
+                validLabelMask = ~torch.isnan(currentFeatureLabels)
 
-                if len(currentIndices) != 0:
-                    # Get the number of unique classes for stratification.
-                    stratifyBy = currentFeatureLabels[~missingClassMask]
-                    minTestSplitRatio = len(np.unique(stratifyBy, return_counts=False)) / len(stratifyBy)
+                # Apply the mask to get the valid class data.
+                currentIndices = allExperimentalIndices[validLabelMask]  # Dim: numValidLabels
+                stratifyBy = currentFeatureLabels[validLabelMask]  # Dim: numValidLabels
+                unique_classes = len(torch.unique(stratifyBy))
+                if len(currentIndices) == 0: continue
 
-                    # Adjust the test split ratio if necessary.
-                    if testSplitRatio < minTestSplitRatio:
-                        print(f"\t\tWarning: The test split ratio is too small for the number of classes. Ignoring {surveyQuestions[labelTypeInd]} labels", flush=True)
-                        continue
+                # You must have at least two labels per class.
+                if testSplitRatio < unique_classes / len(stratifyBy):
+                    print(f"\t\tWarning: The test split ratio is too small for the number of classes. Ignoring {surveyQuestions[labelTypeInd]} labels", flush=True)
+                    continue
 
-                    # Randomly split the data and labels, keeping a balance between testing/training.
-                    Training_Indices, Testing_Indices = train_test_split(currentIndices, test_size=max(minTestSplitRatio, testSplitRatio),
-                                                                         shuffle=True, stratify=stratifyBy, random_state=random_state)
+                # Randomly split the data and labels, keeping a balance between testing/training.
+                Training_Indices, Testing_Indices = train_test_split(arrays=currentIndices.cpu().numpy(), test_size=testSplitRatio, shuffle=True, stratify=stratifyBy.cpu().numpy(), random_state=random_state)
 
-                    # Populate the training and testing mask                        
-                    currentTestingMask[:, labelTypeInd][Testing_Indices] = True
-                    currentTrainingMask[:, labelTypeInd][Training_Indices] = True
-                    # Add in the single class values
-                    currentTrainingMask[:, labelTypeInd][singleClassIndices] = True
+                # Populate the training and testing mask.
+                currentTestingMask[Testing_Indices, labelTypeInd] = True
+                currentTrainingMask[Training_Indices, labelTypeInd] = True
+
+                # Add back the single class values to the training mask.
+                currentTrainingMask[singleClassIndices, labelTypeInd] = True
 
             # ---------------------- Data Adjustments ---------------------- #
 
@@ -266,33 +263,30 @@ class compileModelData(compileModelDataHelpers):
             goodActivityMask = (currentTestingMask[:, activityLabelInd]) | (currentTrainingMask[:, activityLabelInd])
             activityNames, allFeatureLabels[:, activityLabelInd][goodActivityMask] \
                 = self.organizeActivityLabels(activityNames, allFeatureLabels[:, activityLabelInd][goodActivityMask])  # Expects inputs/outputs from 0 to n-1
-            allFeatureLabels[~goodActivityMask] = -1  # Remove any unused activity indices (as the good indices were rehashed)
+            allFeatureLabels[~goodActivityMask] = self.missingLabelValue  # Remove any unused activity indices (as the good indices were rehashed)
 
             # Data augmentation to increase the variations of datapoints.
             if metaDatasetName.lower() not in self.dontShiftDatasets:
-                augmentedFeatureData, augmentedFeatureLabels, augmentedTrainingMask, augmentedTestingMask, augmentedSubjectInds \
-                    = self.addShiftedSignals(allSignalData, allFeatureLabels, currentTrainingMask, currentTestingMask, allSubjectInds)
+                allSignalData, allFeatureLabels, currentTrainingMask, currentTestingMask, allSignalStopInds, allSubjectInds \
+                    = self.addShiftedSignals(allSignalData, allFeatureLabels, currentTrainingMask, currentTestingMask, allSignalStopInds, allSubjectInds)
             else:
-                allFeatureData = self.dataInterface.getRecentSignalPoints(allSignalData, self.maxSeqLength + self.numSecondsShift)
-
-                augmentedFeatureData, augmentedFeatureLabels, augmentedTrainingMask, augmentedTestingMask, augmentedSubjectInds \
-                    = self.dataInterface.getRecentSignalPoints(allFeatureData, self.maxSeqLength), allFeatureLabels, currentTrainingMask, currentTestingMask, allSubjectInds
+                allSignalData = self.dataInterface.getRecentSignalPoints(allSignalData, self.maxSeqLength + self.numSecondsShift)
 
             # Add the demographic information.
-            augmentedFeatureData, numSubjectIdentifiers, demographicLength = self.addDemographicInfo(augmentedFeatureData, augmentedSubjectInds, metadataInd)
+            allSignalData, numSubjectIdentifiers, demographicLength = self.addDemographicInfo(allSignalData, allSignalStopInds, allSubjectInds, metadataInd)
 
             # ---------------------- Create the Model ---------------------- #
 
             # Get the model parameters
-            batch_size = self.modelParameters.getTrainingBatchSize(submodel, numExperiments=len(augmentedFeatureData))
+            batch_size = self.modelParameters.getTrainingBatchSize(submodel, numExperiments=len(allSignalData))
 
             # Organize the training data into the expected pytorch format.
             pytorchDataClass = pytorchDataInterface(batch_size=batch_size, num_workers=0, shuffle=True, accelerator=self.accelerator)
-            modelDataLoader = pytorchDataClass.getDataLoader(augmentedFeatureData, augmentedFeatureLabels, augmentedTrainingMask, augmentedTestingMask)
+            modelDataLoader = pytorchDataClass.getDataLoader(allSignalData, allFeatureLabels, currentTrainingMask, currentTestingMask)
 
             # Initialize and train the model class.
             modelPipeline = emotionPipeline(accelerator=self.accelerator, modelID=metadataInd, datasetName=metaDatasetName, modelName=modelName, allEmotionClasses=numQuestionOptions.copy(),
-                                            sequenceLength=sequenceLength, maxNumSignals=numSignals, numSubjectIdentifiers=numSubjectIdentifiers, demographicLength=demographicLength, numSubjects=numSubjects,
+                                            maxNumSignals=numSignals, numSubjectIdentifiers=numSubjectIdentifiers, demographicLength=demographicLength, numSubjects=numSubjects,
                                             userInputParams=self.userInputParams, emotionNames=surveyQuestions, activityNames=activityNames, featureNames=featureNames, submodel=submodel, useFinalParams=useFinalParams, debuggingResults=True)
 
             # Hugging face integration.
@@ -325,7 +319,7 @@ class compileModelData(compileModelDataHelpers):
     def onlyPreloadModelAttributes(self, modelName, datasetNames, loadSubmodel, loadSubmodelDate, loadSubmodelEpochs, allDummyModelPipelines=()):
         # Initialize relevant holders.
         userInputParams = {'deviceListed': "cpu", 'submodel': 'emotionPrediction', 'numExpandedSignals': 2, 'numSigEncodingLayers': 4, 'numSigLiftedChannels': 4,
-                           'compressionFactor': 1.5, 'expansionFactor': 1.5, 'numInterpreterHeads': 4, 'numBasicEmotions': 8, 'sequenceLength': 240}
+                           'compressionFactor': 1.5, 'expansionFactor': 1.5, 'numInterpreterHeads': 4, 'numBasicEmotions': 8, 'finalDistributionLength': 240}
 
         # Overwrite the location of the saved models.
         self.modelMigration.replaceFinalModelFolder("_finalModels/storedModels/")
@@ -338,7 +332,7 @@ class compileModelData(compileModelDataHelpers):
 
                 # Initialize and train the model class.
                 dummyModelPipeline = emotionPipeline(accelerator=self.accelerator, modelID=metadataInd, datasetName=datasetName, modelName=modelName, allEmotionClasses=[],
-                                                     sequenceLength=240, maxNumSignals=500, numSubjectIdentifiers=1, demographicLength=0, numSubjects=1, userInputParams=userInputParams,
+                                                     maxNumSignals=500, numSubjectIdentifiers=1, demographicLength=0, numSubjects=1, userInputParams=userInputParams,
                                                      emotionNames=[], activityNames=[], featureNames=[], submodel=loadSubmodel, useFinalParams=True, debuggingResults=True)
                 # Hugging face integration.
                 dummyModelPipeline.acceleratorInterface()

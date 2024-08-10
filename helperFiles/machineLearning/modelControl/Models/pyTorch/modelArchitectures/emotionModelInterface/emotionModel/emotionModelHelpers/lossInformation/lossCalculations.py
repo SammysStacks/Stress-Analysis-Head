@@ -133,9 +133,9 @@ class lossCalculations:
         # Find the boolean flags for the data involved in the loss calculation.
         reconstructionDataMask = self.getReconstructionDataMask(allLabelsMask, reconstructionIndex)
         # Isolate the signals for this loss (For example, training vs. testing).
-        reconstructedEncodedData = self.getData(allReconstructedEncodedData, reconstructionDataMask)  # Dim: numExperiments, numSignals, sequenceLength
+        reconstructedEncodedData = self.getData(allReconstructedEncodedData, reconstructionDataMask)  # Dim: numExperiments, numSignals, finalDistributionLength
         compressedData = self.getData(allCompressedData, reconstructionDataMask)  # Dim: numExperiments, numSignals, compressedLength
-        encodedData = self.getData(allEncodedData, reconstructionDataMask)  # Dim: numExperiments, numSignals, sequenceLength
+        encodedData = self.getData(allEncodedData, reconstructionDataMask)  # Dim: numExperiments, numSignals, finalDistributionLength
         autoencoderLayerLoss = self.getData(allAutoencoderLayerLoss, reconstructionDataMask)  # Dim: numExperiments
         assert encodedData.shape[0] != 0, f"There are no signals for this loss calculation. reconstructionDataMask: {reconstructionDataMask}"
 

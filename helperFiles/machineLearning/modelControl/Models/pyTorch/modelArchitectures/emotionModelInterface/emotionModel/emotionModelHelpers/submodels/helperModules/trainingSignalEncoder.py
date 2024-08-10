@@ -19,7 +19,7 @@ class trainingSignalEncoder:
             self.switchDirections = False
 
     def augmentFinalTarget(self, numSignals):
-        """ The shape of inputData: (batchSize, numSignals, sequenceLength) """
+        """ The shape of inputData: (batchSize, numSignals, finalDistributionLength) """
         # Set up the training parameters
         compressingSignalFlag = self.numEncodedSignals < numSignals
         numEncodedSignals = numSignals  # Initialize starting point.

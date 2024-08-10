@@ -75,14 +75,14 @@ class encodingLayer(autoencoderParameters):
         self.finalPooling = nn.AdaptiveAvgPool1d(self.compressedLength)
 
     def forward(self, inputData):
-        """ The shape of inputData: (batchSize, numSignals, sequenceLength) """
+        """ The shape of inputData: (batchSize, numSignals, finalDistributionLength) """
         # Specify the current input shape of the data.
         batchSize, numSignals, sequenceLength = inputData.size()
         assert self.sequenceLength == sequenceLength
         
         # Reshape the data to the expected input into the ANN architecture.
         signalData = inputData.view(batchSize * numSignals, sequenceLength) # Seperate out indivisual signals.
-        # signalData dimension: batchSize*numSignals, sequenceLength
+        # signalData dimension: batchSize*numSignals, finalDistributionLength
                 
         # ------------------------ ANN Architecture ------------------------ # 
         
@@ -105,7 +105,7 @@ class encodingLayer(autoencoderParameters):
         return compressedData
     
     def printParams(self, numSignals = 50):
-        #encodingLayer(sequenceLength = 300, compressedLength = 64).printParams(numSignals = 50)
+        #encodingLayer(finalDistributionLength = 300, compressedLength = 64).printParams(numSignals = 50)
         summary(self, (numSignals, self.sequenceLength,)) # summary(model, inputShape)
         
         # Count the trainable parameters.
@@ -185,18 +185,18 @@ class decodingLayer(autoencoderParameters):
         # embeddedSignalData dimension: batchSize*numSignals, firstCompressionDim
         
         decompressedSignals_3 = self.deconvLinear_3(decompressedSignals_2, self.deconvLinearArchitecture_3)
-        # embeddedSignalData dimension: batchSize*numSignals, sequenceLength
+        # embeddedSignalData dimension: batchSize*numSignals, finalDistributionLength
 
         # ------------------------------------------------------------------ # 
 
         # Reconstruct the original signals.
         reconstructedData = decompressedSignals_3.view(batchSize, numSignals, self.sequenceLength)   # Organize the signals into the original batches.
-        # reconstructedData dimension: batchSize, numSignals, sequenceLength
+        # reconstructedData dimension: batchSize, numSignals, finalDistributionLength
 
         return reconstructedData
     
     def printParams(self, numSignals = 50):
-        #decodingLayer(compressedLength = 64, sequenceLength = 300).printParams()
+        #decodingLayer(compressedLength = 64, finalDistributionLength = 300).printParams()
         summary(self, (numSignals, self.compressedLength,))
     
     

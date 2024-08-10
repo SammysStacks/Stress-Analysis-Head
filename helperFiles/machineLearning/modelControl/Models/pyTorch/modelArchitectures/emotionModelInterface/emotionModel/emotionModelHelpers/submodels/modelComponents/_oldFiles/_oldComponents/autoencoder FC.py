@@ -22,14 +22,14 @@ class encodingLayer(nn.Module):
         )
 
     def forward(self, inputData):
-        """ The shape of inputData: (batchSize, numSignals, sequenceLength) """
+        """ The shape of inputData: (batchSize, numSignals, finalDistributionLength) """
         # Specify the current input shape of the data.
         batchSize, numSignals, sequenceLength = inputData.size()
         assert self.sequenceLength == sequenceLength
         
         # Reshape the data to the expected input into the CNN architecture.
         signalData = inputData.view(batchSize * numSignals, sequenceLength) # Seperate out indivisual signals.
-        # signalData dimension: batchSize*numSignals, sequenceLength
+        # signalData dimension: batchSize*numSignals, finalDistributionLength
         
         # Apply FC architecture to reduce spatial dimension.
         compressedSignals = self.compressSignalsFC(signalData) # The new dimension: batchSize*numSignals, self.compressedLength
@@ -39,7 +39,7 @@ class encodingLayer(nn.Module):
         return compressedData
     
     def printParams(self, numSignals = 50, sequenceLength = 300):
-        #encodingLayer(sequenceLength = 300, compressedLength = 32).printParams(numSignals = 75, sequenceLength = 300)
+        #encodingLayer(finalDistributionLength = 300, compressedLength = 32).printParams(numSignals = 75, finalDistributionLength = 300)
         summary(self, (numSignals, sequenceLength,)) # summary(model, inputShape)
         
     
@@ -66,14 +66,14 @@ class decodingLayer(nn.Module):
         # compressedSignals dimension: batchSize*numSignals, self.compressedLength
 
         # Apply a FC architecture to reconstruct the signals.
-        decompressedSignals = self.expandSignals(compressedSignals) # The new dimension: batchSize*numSignals, self.sequenceLength
+        decompressedSignals = self.expandSignals(compressedSignals) # The new dimension: batchSize*numSignals, self.finalDistributionLength
         reconstructedData = decompressedSignals.view(batchSize, numSignals, self.sequenceLength)   # Organize the signals into the original batches.
-        # reconstructedData dimension: batchSize, numSignals, sequenceLength
+        # reconstructedData dimension: batchSize, numSignals, finalDistributionLength
 
         return reconstructedData
     
     def printParams(self, numSignals = 75, compressedLength = 32, sequenceLength = 300):
-        #decodingLayer(compressedLength = 32, sequenceLength = 300).printParams()
+        #decodingLayer(compressedLength = 32, finalDistributionLength = 300).printParams()
         summary(self, (numSignals, compressedLength,))
     
 

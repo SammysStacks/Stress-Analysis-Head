@@ -8,10 +8,10 @@ from .emotionPipelineHelpers import emotionPipelineHelpers
 
 class emotionPipeline(emotionPipelineHelpers):
 
-    def __init__(self, accelerator, modelID, datasetName, modelName, allEmotionClasses, sequenceLength, maxNumSignals, numSubjectIdentifiers, demographicLength,
+    def __init__(self, accelerator, modelID, datasetName, modelName, allEmotionClasses, maxNumSignals, numSubjectIdentifiers, demographicLength,
                  numSubjects, userInputParams, emotionNames, activityNames, featureNames, submodel, useFinalParams, debuggingResults=False):
         # General parameters.
-        super().__init__(accelerator, modelID, datasetName, modelName, allEmotionClasses, sequenceLength, maxNumSignals, numSubjectIdentifiers, demographicLength,
+        super().__init__(accelerator, modelID, datasetName, modelName, allEmotionClasses, maxNumSignals, numSubjectIdentifiers, demographicLength,
                          numSubjects, userInputParams, emotionNames, activityNames, featureNames, submodel, useFinalParams, debuggingResults)
         # General parameters.
         self.maxBatchSignals = maxNumSignals
@@ -30,7 +30,7 @@ class emotionPipeline(emotionPipelineHelpers):
             allLabels: Integer labels representing class indices. Dim: numExperiments, numLabels (where numLabels = numEmotions + 1)
             allTestingMasks: Boolean flags representing if the label is a testing label. Dim: numExperiments, numLabels (where numLabels = numEmotions + 1)
             allTrainingMasks: Boolean flags representing if the label is a training label. Dim: numExperiments, numLabels (where numLabels = numEmotions + 1)
-                Note: signalInfoLength = sequenceLength + 1 + demographicLength (The extra +1 is for the subject index)
+                Note: signalInfoLength = finalDistributionLength + 1 + demographicLength (The extra +1 is for the subject index)
                 Note: the last dimension in allLabels is for human activity recognition.
         """
         # Hugging face integration.
@@ -83,9 +83,9 @@ class emotionPipeline(emotionPipelineHelpers):
                             continue  # We are not training on any points (or need to refresh training)
 
                     # Separate the data into signal, demographic, and subject identifier information.
-                    signalData, demographicData, subjectIdentifiers = self.dataInterface.separateData(batchData, self.sequenceLength, self.numSubjectIdentifiers, self.demographicLength)
+                    signalData, demographicData, subjectIdentifiers = self.dataInterface.separateData(batchData, self.finalDistributionLength, self.numSubjectIdentifiers, self.demographicLength)
                     # demographicData dimension: batchSize, numSignals, demographicLength
-                    # signalData dimension: batchSize, numSignals, sequenceLength
+                    # signalData dimension: batchSize, numSignals, finalDistributionLength
                     # subjectInds dimension: batchSize, numSubjectIdentifiers
 
                     # Randomly choose to add noise to the model.
@@ -102,7 +102,7 @@ class emotionPipeline(emotionPipelineHelpers):
                         # Augment the data to add some noise to the model.
                         addingNoiseSTD, addingNoiseRange = self.modelParameters.getAugmentationDeviation(submodel)
                         augmentedSignalData = self.dataInterface.addNoise(augmentedSignalData, trainingFlag=True, noiseSTD=addingNoiseSTD)
-                        # augmentedSignalData dimension: batchSize, numSignals, sequenceLength
+                        # augmentedSignalData dimension: batchSize, numSignals, finalDistributionLength
 
                     # ------------ Forward pass through the model  ------------- #
 
@@ -122,8 +122,8 @@ class emotionPipeline(emotionPipelineHelpers):
                         encodedData, reconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLayerLoss = model.signalEncoding(augmentedSignalData, initialSignalData, decodeSignals=True, calculateLoss=self.calculateFullLoss, trainingFlag=True)
                         # decodedPredictedIndexProbabilities dimension: batchSize, numSignals, maxNumEncodedSignals
                         # predictedIndexProbabilities dimension: batchSize, numSignals, maxNumEncodedSignals
-                        # encodedData dimension: batchSize, numEncodedSignals, sequenceLength
-                        # reconstructedData dimension: batchSize, numSignals, sequenceLength
+                        # encodedData dimension: batchSize, numEncodedSignals, finalDistributionLength
+                        # reconstructedData dimension: batchSize, numSignals, finalDistributionLength
                         # signalEncodingLayerLoss dimension: batchSize
 
                         # Assert that nothing is wrong with the predictions.
@@ -168,8 +168,8 @@ class emotionPipeline(emotionPipelineHelpers):
                         # Perform the forward pass through the model.
                         encodedData, reconstructedData, signalEncodingLayerLoss, compressedData, reconstructedEncodedData, denoisedDoubleReconstructedData, autoencoderLayerLoss = \
                             model.compressData(augmentedSignalData, initialSignalData, reconstructSignals=True, calculateLoss=True, compileVariables=False, compileLosses=False, fullReconstruction=True, trainingFlag=True)
-                        # denoisedDoubleReconstructedData dimension: batchSize, numSignals, sequenceLength
-                        # reconstructedEncodedData dimension: batchSize, numEncodedSignals, sequenceLength
+                        # denoisedDoubleReconstructedData dimension: batchSize, numSignals, finalDistributionLength
+                        # reconstructedEncodedData dimension: batchSize, numEncodedSignals, finalDistributionLength
                         # compressedData dimension: batchSize, numEncodedSignals, compressedLength
                         # autoencoderLayerLoss dimension: batchSize
 
