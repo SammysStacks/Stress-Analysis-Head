@@ -201,26 +201,30 @@ class compileModelData(compileModelDataHelpers):
             activityLabelInd = -1
 
             # Remove any experiments and signals that are bad.
-            allSignalData, allFeatureLabels, allSubjectInds = self._removeBadExperiments(allRawFeatureTimeIntervals, allCompiledFeatureIntervals, surveyAnswersList, subjectOrder)
-            allSignalData, featureNames = self._removeBadSignals(allSignalData, featureNames)
-            if len(allSignalData) == 0: continue
-            # allSignalData dimension: batchSize, numSignals, sequenceLength
+            allSignalData, allSignalStopInds = self._padSignalData(allRawFeatureTimeIntervals, allCompiledFeatureIntervals)
+            allSignalData, allSignalStopInds, allFeatureLabels, allSubjectInds = self._removeBadExperiments(allSignalData, allSignalStopInds, surveyAnswersList, subjectOrder)
+            allSignalData, allSignalStopInds, featureNames = self._removeBadSignals(allSignalData, allSignalStopInds, featureNames)
+            # allSignalData dimension: batchSize, numSignals, maxSequenceLength, [time, signal]
             # allFeatureLabels dimension: batchSize, numLabels
-
-            # Organize the feature labels and identify any missing labels.
-            allFeatureLabels, allSingleClassIndices = self.organizeLabels(allFeatureLabels, metaTraining, metaDatasetName, len(allSignalData[0]))
+            # allSignalStopInds dimension: batchSize, numSignals
+            # allSubjectInds dimension: batchSize
+            # featureNames dimension: numSignals
 
             # Compile dataset-specific information.
-            signalInds = np.arange(0, len(allSignalData[0]))
+            batchSize, numSignals, = allSignalStopInds.shape
             numSubjects = max(allSubjectInds) + 1
+            if numSignals == 0: continue
+            if batchSize == 0: continue
+
+            # Organize the feature labels and identify any missing labels.
+            allFeatureLabels, allSingleClassIndices = self.organizeLabels(allFeatureLabels, metaTraining, metaDatasetName, numSignals)
 
             # Organize the signal indices and demographic information.
-            allFeatureData = self.organizeSignals(allSignalData, signalInds)
-            currentFeatureNames = np.asarray(featureNames)[signalInds]
+            allFeatureData = self.organizeSignals(allSignalData)
 
             # Compile basic information about the data.
             numExperiments, numSignals, totalLength = allFeatureData.size()
-            allExperimentalIndices = np.arange(0, numExperiments)
+            allExperimentalIndices = torch.arange(0, numExperiments)
             sequenceLength = totalLength - self.numSecondsShift
             assert sequenceLength == self.maxSeqLength
 
@@ -294,7 +298,7 @@ class compileModelData(compileModelDataHelpers):
             # Initialize and train the model class.
             modelPipeline = emotionPipeline(accelerator=self.accelerator, modelID=metadataInd, datasetName=metaDatasetName, modelName=modelName, allEmotionClasses=numQuestionOptions.copy(),
                                             sequenceLength=sequenceLength, maxNumSignals=numSignals, numSubjectIdentifiers=numSubjectIdentifiers, demographicLength=demographicLength, numSubjects=numSubjects,
-                                            userInputParams=self.userInputParams, emotionNames=surveyQuestions, activityNames=activityNames, featureNames=currentFeatureNames, submodel=submodel, useFinalParams=useFinalParams, debuggingResults=True)
+                                            userInputParams=self.userInputParams, emotionNames=surveyQuestions, activityNames=activityNames, featureNames=featureNames, submodel=submodel, useFinalParams=useFinalParams, debuggingResults=True)
 
             # Hugging face integration.
             modelDataLoader = modelPipeline.acceleratorInterface(modelDataLoader)

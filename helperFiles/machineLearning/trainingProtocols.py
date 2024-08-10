@@ -1,19 +1,18 @@
 import os
 import re
-import scipy
-import bisect
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from natsort import natsorted
+import scipy
 import seaborn as sns
-import matplotlib.pyplot as plt
+from natsort import natsorted
 from openpyxl import load_workbook
 
+from .featureAnalysis.featurePlotting import featurePlotting
 # Import Files for Machine Learning
 from .modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
 from .modelControl.modelSpecifications.compileModelInfo import compileModelInfo
-from .featureAnalysis.featurePlotting import featurePlotting
-
 # Import excel data interface
 from ..dataAcquisitionAndAnalysis.excelProcessing.extractDataProtocols import extractData
 from ..dataAcquisitionAndAnalysis.excelProcessing.saveDataProtocols import saveExcelData
@@ -36,8 +35,8 @@ class trainingProtocols(extractData):
 
         # Initialize important classes
         self.analyzeFeatures = featurePlotting(self.trainingFolder + "dataAnalysis/", overwrite=False)
+        self.modelParameters = modelParameters(userInputParams="", accelerator=None)
         self.compileModelInfo = compileModelInfo()
-        self.modelParameters = modelParameters
         self.saveInputs = saveExcelData()
 
     def streamTrainingData(self, featureAverageWindows, plotTrainingData=False, reanalyzeData=False, metaTraining=False, reverseOrder=False):
@@ -130,8 +129,8 @@ class trainingProtocols(extractData):
             # -------------------- Prepare Raw Features -------------------- #
 
             # Add the parameters to readData.
-            self.readData.rawFeatureTimesHolder = rawFeatureTimesHolder
-            self.readData.rawFeatureHolder = rawFeatureHolder
+            self.readData.rawFeatureTimesHolder = rawFeatureTimesHolder  # dim: numBiomarkers, numTimePoints
+            self.readData.rawFeatureHolder = rawFeatureHolder  # dim: numBiomarkers, numTimePoints, numBiomarkerFeatures
 
             # Convert to numpy arrays. Note, the holder may be inhomogeneous.
             for biomarkerInd in range(len(rawFeatureHolder)):
@@ -180,23 +179,23 @@ class trainingProtocols(extractData):
             # ----------- Segment the Experimental Feature Signals ----------- #
 
             # Calculate a buffer for the experiment.
-            modelFeatureTimeBuffer = max(300, self.modelParameters.getTimeWindows()[-1] + self.modelParameters.getShiftInfo(submodel='maxShift') - 5)
+            modelFeatureTimeBuffer = self.modelParameters.getMaxBufferLength()
 
             badExperimentalInds = []
             # For each experiment performed in the trial.
             for experimentInd in range(len(experimentTimes)):
-                startExperimentTime, endExperimentTime = experimentTimes[experimentInd]
+                startIntervalTime = currentSurveyAnswerTimes[experimentInd] - modelFeatureTimeBuffer
                 startSurveyTime = currentSurveyAnswerTimes[experimentInd]
 
                 # Calculate the feature intervals
-                newRawFeatureIntervalTimes, newRawFeatureIntervals = self.organizeRawFeatureIntervals(startSurveyTime - modelFeatureTimeBuffer, startSurveyTime, rawFeatureTimesHolder, rawFeatureHolder)
-                _, newCompiledFeatureIntervals = self.organizeRawFeatureIntervals(startSurveyTime - modelFeatureTimeBuffer, startSurveyTime, rawFeatureTimesHolder, compiledFeatureHolder)
+                newRawFeatureIntervalTimes, newRawFeatureIntervals = self.organizeRawFeatureIntervals(startIntervalTime, startSurveyTime, rawFeatureTimesHolder, rawFeatureHolder)
+                _, newCompiledFeatureIntervals = self.organizeRawFeatureIntervals(startIntervalTime, startSurveyTime, rawFeatureTimesHolder, compiledFeatureHolder)
                 # newCompiledFeatureIntervals dim: numBiomarkers, numTimePoints, numBiomarkerFeatures
                 # newRawFeatureIntervals dim: numBiomarkers, numTimePoints, numBiomarkerFeatures
                 # newRawFeatureIntervalTimes dim: numBiomarkers, numTimePoints
 
                 # Calculate the aligned feature intervals
-                alignedFeatureIntervals, alignedFeatureIntervalTimes = self.readData.compileModelFeatures(alignedFeatureTimes, alignedFeatures, startSurveyTime - modelFeatureTimeBuffer, startSurveyTime)
+                alignedFeatureIntervals, alignedFeatureIntervalTimes = self.readData.compileModelFeatures(startIntervalTime, startSurveyTime, alignedFeatureTimes, alignedFeatures)
                 # alignedFeatureIntervals dim: numTimePoints, numFeatures
                 # alignedFeatureIntervalTimes dim: numTimePoints
 
@@ -213,10 +212,9 @@ class trainingProtocols(extractData):
                 experimentalOrder.append(experimentNames[experimentInd])
                 allRawFeatureIntervals.append(newRawFeatureIntervals)
 
-                if metaTraining:
-                    subjectOrder.append(int(re.search(r'\d+', excelFileName).group()))
-                else:
-                    subjectOrder.append(" ".join(excelFileName.split(" ")[1:]))
+                # Save the subject order
+                if metaTraining: subjectOrder.append(int(re.search(r'\d+', excelFileName).group()))
+                else: subjectOrder.append(" ".join(excelFileName.split(" ")[1:]))
 
             # Remove indices where no features were collected.
             for experimentInd in sorted(badExperimentalInds, reverse=True):
@@ -239,7 +237,6 @@ class trainingProtocols(extractData):
                                                              predictionType=self.compileModelInfo.predictionOrder[modelInd], folderName=excelFileName + "/realTimePredictions/")
 
             if plotTrainingData:
-
                 startBiomarkerFeatureIndex = 0
                 for biomarkerInd in range(len(rawFeatureHolder)):
                     rawFeatureTimes = rawFeatureTimesHolder[biomarkerInd]
@@ -310,7 +307,7 @@ class trainingProtocols(extractData):
             # rawFeatureTimes dim: numTimePoints
 
             # Calculate the raw feature intervals
-            featureIntervals, featureIntervalTimes = self.readData.compileModelFeatures(rawFeatureTimes, rawFeatures, startExperimentTime, startSurveyTime)
+            featureIntervals, featureIntervalTimes = self.readData.compileModelFeatures(startExperimentTime, startSurveyTime, rawFeatureTimes, rawFeatures)
 
             # If there are no features found
             if featureIntervals is None:

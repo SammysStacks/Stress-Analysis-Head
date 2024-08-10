@@ -18,6 +18,8 @@ class modelParameters:
         # General parameters
         self.timeWindows = self.getTimeWindows()  # The time windows to consider.
         self.maxNumSignals = 138  # The maximum number of signals to consider.
+        self.minTimeBuffer = 600  # The minimum time buffer to consider.
+        self.minFeatureFreq = 0.1  # The minimum average number of sequence points/second to consider.
 
         # Helper classes.
         self.generalMethods = generalMethods()
@@ -133,15 +135,21 @@ class modelParameters:
 
     # -------------------------- Compilation Parameters ------------------------- #
 
+    def getMaxBufferLength(self):
+        maxTimeBufferConsidered = 2 * self.getTimeWindows()[-1] + self.getShiftInfo(submodel='maxShift')
+        modelFeatureTimeBuffer = max(self.minTimeBuffer, maxTimeBufferConsidered)
+
+        return modelFeatureTimeBuffer
+
     @staticmethod
     def getSignalMinMaxScale():
         return 1  # Some wavelets constrained to +/- 1.
 
     @staticmethod
     def getTimeWindows():
-        return [90, 120, 150, 180, 210, 240]
+        return [90, 120, 150, 180, 210, 240, 300]
 
-    def getSequenceLength(self, submodel, sequenceLength):
+    def getSequenceLengthRange(self, submodel, sequenceLength):
         if submodel == "signalEncoder":
             return self.timeWindows[0], self.timeWindows[-1]
         elif submodel == "autoencoder":
@@ -155,13 +163,13 @@ class modelParameters:
     @staticmethod
     def getShiftInfo(submodel):
         if submodel == "signalEncoder":
-            return ["wesad", "emognition", "amigos", "dapper", "case"], 40, 50
+            return ["wesad", "emognition", "amigos", "dapper", "case"], 60, 30  # dontShiftDatasets, numSecondsShift, numSeconds_perShift
         elif submodel == "autoencoder":
-            return ["wesad", "emognition", "amigos", "dapper", "case"], 40, 50
+            return ["wesad", "emognition", "amigos", "dapper", "case"], 60, 30  # dontShiftDatasets, numSecondsShift, numSeconds_perShift
         elif submodel == "emotionPrediction":
-            return ['case', 'amigos'], 4, 2
+            return ['case', 'amigos'], 5, 2  # dontShiftDatasets, numSecondsShift, numSeconds_perShift
         elif submodel == "maxShift":
-            return 50
+            return 60
         else:
             raise Exception()
 

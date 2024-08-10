@@ -53,7 +53,7 @@ class compileModelDataHelpers:
 
         # Exclusion criterion.
         self.minNumClasses, self.maxClassPercentage = self.modelParameters.getExclusionCriteria(submodel)
-        self.minSeqLength, self.maxSeqLength = self.modelParameters.getSequenceLength(submodel, userInputParams['sequenceLength'])  # Seconds.
+        self.minSeqLength, self.maxSeqLength = self.modelParameters.getSequenceLengthRange(submodel, userInputParams['sequenceLength'])  # Seconds.
 
         # Data augmentation.
         samplingFrequency = 1
@@ -145,40 +145,35 @@ class compileModelDataHelpers:
         print(f"\tPotentially Initializing {len(signalCombinationInds)} models per emotion", flush=True)
         return signalCombinationInds
 
-    def organizeSignals(self, allSignalData, signalInds):
-        """
-        Purpose: Create the final signal array (of correct length).
-        --------------------------------------------
-        allSignalData : A list of size (batchSize, numSignals, sequenceLength)
-        signalInds : A list of size numSignalsCombine
-        """
+    def organizeSignals(self, allSignalData):
+        # allSignalData : A list of size (batchSize, numSignals, maxSequenceLength, 2)
+
         featureData = []
         # Compile the feature's data across all experiments.
         for batchInd in range(len(allSignalData)):
             signalData = np.asarray(allSignalData[batchInd])
-            data = signalData[signalInds, :]
 
             # Assertions about data integrity.
-            numSignals, sequenceLength = data.shape
-            assert self.minSeqLength <= sequenceLength, f"Expected {self.minSeqLength}, but received {data.shape[1]} "
+            numSignals, sequenceLength = signalData.shape
+            assert self.minSeqLength <= sequenceLength, f"Expected {self.minSeqLength}, but received {signalData.shape[1]} "
 
             # Standardize the signals
             if self.standardizeSignals:
-                data = minMaxScale_noInverse(data, scale=self.modelParameters.getSignalMinMaxScale())
+                signalData = minMaxScale_noInverse(signalData, scale=self.modelParameters.getSignalMinMaxScale())
 
             # Add buffer if needed.
             if sequenceLength < self.maxSeqLength + self.numSecondsShift:
-                prependedBuffer = np.zeros((numSignals, self.maxSeqLength + self.numSecondsShift - sequenceLength)) * data[:, 0:1]
-                data = np.hstack((prependedBuffer, data))
+                prependedBuffer = np.zeros((numSignals, self.maxSeqLength + self.numSecondsShift - sequenceLength)) * signalData[:, 0:1]
+                signalData = np.hstack((prependedBuffer, signalData))
             elif self.maxSeqLength + self.numSecondsShift < sequenceLength:
-                data = data[:, -self.maxSeqLength - self.numSecondsShift:]
+                signalData = signalData[:, -self.maxSeqLength - self.numSecondsShift:]
 
             # Standardize the signals
             if self.standardizeSignals:
-                data = minMaxScale_noInverse(data, scale=self.modelParameters.getSignalMinMaxScale())
+                signalData = minMaxScale_noInverse(signalData, scale=self.modelParameters.getSignalMinMaxScale())
 
-            # This is good data
-            featureData.append(data.tolist())
+            # This is good signalData
+            featureData.append(signalData.tolist())
         featureData = torch.tensor(featureData)
 
         # Assert the integrity.
@@ -188,11 +183,13 @@ class compileModelDataHelpers:
 
     def organizeLabels(self, allFeatureLabels, metaTraining, metaDatasetName, numSignals):
         # Convert to tensor and zero out the class indices
-        allFeatureLabels = torch.tensor(np.asarray(allFeatureLabels))
+        allFeatureLabels = torch.as_tensor(allFeatureLabels)
+        batchSize, numLabels = allFeatureLabels.shape
 
         allSingleClassIndices = []
-        # For each type of label recorded during the trial.
-        for labelTypeInd in range(allFeatureLabels.shape[1]):
+        # For each type of label (emotion).
+        for labelTypeInd in range(numLabels):
+            # Get all the label responses across all batches.
             featureLabels = allFeatureLabels[:, labelTypeInd]
             allSingleClassIndices.append([])
 
@@ -200,18 +197,22 @@ class compileModelDataHelpers:
             goodLabelInds = 0 <= featureLabels  # The minimum label should be 0
             featureLabels[~goodLabelInds] = self.missingLabelValue
 
-            # Count the classes
+            # Count the number of times the emotion label has a unique value.
             unique_classes, class_counts = torch.unique(featureLabels[goodLabelInds], return_counts=True)
-            if (class_counts < 2).any():
+            # unique_classes, class_counts dim: numUniqueClasses (number of unique emotion scores).
+            smallClassInds = class_counts < 2
+
+            # For small distributions.
+            if smallClassInds.any():
                 # Find the bad experiments (batches) with only one sample.
-                badClasses = unique_classes[torch.nonzero(class_counts < 2).reshape(1, -1)[0]]
+                badClasses = unique_classes[torch.nonzero(smallClassInds).reshape(1, -1)[0]]
 
                 # Remove the datapoint as we cannot split the class between test/train
-                badLabelInds = torch.isin(featureLabels, badClasses)
-                allSingleClassIndices[-1].extend(badLabelInds)
+                smallClassLabelInds = torch.isin(featureLabels, badClasses)
+                allSingleClassIndices[-1].extend(smallClassLabelInds)
 
                 # Reassess the class counts
-                finalMask = goodLabelInds & ~badLabelInds
+                finalMask = goodLabelInds & ~smallClassLabelInds
                 unique_classes, class_counts = torch.unique(featureLabels[finalMask], return_counts=True)
 
             # Ensure greater variability in the class rating system.
@@ -221,10 +222,9 @@ class compileModelDataHelpers:
             # Save the edits made to the featureLabels
             allFeatureLabels[:, labelTypeInd] = featureLabels
 
-        # Report back the information from this dataset
-        numExperiments, numAllLabels = allFeatureLabels.shape
+        # Report the information from this dataset.
         numGoodEmotions = torch.sum(~torch.all(torch.isnan(allFeatureLabels), dim=0)).item()
-        print(f"\t{metaDatasetName.capitalize()}: Found {numGoodEmotions - 1} (out of {numAllLabels - 1}) well-labeled emotions across {numExperiments} experiments with {numSignals} signals.", flush=True)
+        print(f"\t{metaDatasetName.capitalize()}: Found {numGoodEmotions - 1} (out of {numLabels - 1}) well-labeled emotions across {batchSize} experiments with {numSignals} signals.", flush=True)
 
         return allFeatureLabels, allSingleClassIndices
 
@@ -319,86 +319,117 @@ class compileModelDataHelpers:
     # ---------------------------------------------------------------------- #
     # ---------------------------- Data Cleaning --------------------------- #
 
-    def _removeBadExperiments(self, allRawFeatureTimeIntervals, allCompiledFeatureIntervals, allLabels, subjectInds):
+    def _padSignalData(self, allRawFeatureTimeIntervals, allCompiledFeatureIntervals):
+        # allRawFeatureTimeIntervals : A list of size (batchSize, numSignals, sequenceLength*)
+        # allCompiledFeatureIntervals : A list of size (batchSize, numSignals, sequenceLength*)
+        # allSignalData : A list of size (batchSize, numSignals, maxSequenceLength, 2)
+        # allSignalStopInds : A list of size (batchSize, numSignals)            
+        # Determine the final dimensions of the padded array.
+        batchSize, numSignals = len(allRawFeatureTimeIntervals), len(allRawFeatureTimeIntervals[0])
+        maxSequenceLength = max(max(len(seq) for seq in signal) for signal in allRawFeatureTimeIntervals)
+        assert maxSequenceLength <= self.modelParameters.getMaxBufferLength(), f"{self.modelParameters.getMaxBufferLength()} < {maxSequenceLength}"
+
+        # Initialize the padded array and end signal indices list
+        allSignalData = np.zeros((batchSize, numSignals, maxSequenceLength, 2))
+        allSignalStopInds = np.zeros(shape=(batchSize, numSignals), dtype=int)
+
+        for batchInd in range(batchSize):
+            for signalInd in range(numSignals):
+                compiledFeatureInterval = allCompiledFeatureIntervals[batchInd][signalInd]
+                rawTimeInterval = allRawFeatureTimeIntervals[batchInd][signalInd]
+
+                # Determine the length of the sequence
+                sequenceLength = len(compiledFeatureInterval)
+                allSignalStopInds[batchInd][signalInd] = sequenceLength
+
+                # Fill the padded array with the signal data
+                allSignalData[batchInd][signalInd][:sequenceLength, 0] = rawTimeInterval
+                allSignalData[batchInd][signalInd][:sequenceLength, 1] = compiledFeatureInterval
+
+        return allSignalData, allSignalStopInds
+
+    def _removeBadExperiments(self, allSignalData, allSignalStopInds, allLabels, subjectInds):
         """
         Purpose: Remove bad experiments from the data list.
         --------------------------------------------
-        allCompiledFeatureIntervals : A list of size (batchSize, numSignals, sequenceLength*)
-        allRawFeatureTimeIntervals : A list of size (batchSize, numSignals, sequenceLength*)
-        allLabels : A 2D numpy array of size (batchSize, numLabels)
-        subjectInds : A 1D numpy array of size (batchSize,)
+        allSignalData : A numpy array of size (batchSize, numSignals, maxSequenceLength, 2)
+        allSignalStopInds : A numpy array of size (batchSize, numSignals)
+        allLabels : A numpy array of size (batchSize, numLabels)
+        subjectInds : A numpy array of size (batchSize,)
         """
         # Initialize data holders.
         goodBatchInds = []
-        finalData = []
 
         # For each experimental batch
-        for batchInd in range(len(allCompiledFeatureIntervals)):
-            signalData = np.asarray(allSignalData[batchInd]).T
-            numSignals, sequenceLength = signalData.shape
+        for batchInd in range(len(allSignalStopInds)):
+            minSignalInd = np.argmin(allSignalStopInds[batchInd])
+            minBatchSequencePoints = allSignalStopInds[batchInd][minSignalInd]
+            minBatchSequenceTime = allSignalData[batchInd][minSignalInd][minBatchSequencePoints - 1][0] - allSignalData[batchInd][minSignalInd][0][0]
 
             # Assert that the signal is long enough.
-            if sequenceLength < self.minSeqLength: continue
+            if minBatchSequencePoints/minBatchSequenceTime < self.modelParameters.minFeatureFreq:
+                print(f"\tBatch {batchInd} has a signal that is too short. {minBatchSequencePoints} points in {minBatchSequenceTime} seconds.")
+                continue
 
             # Compile the good batches.
             goodBatchInds.append(batchInd)
-            finalData.append(signalData)
 
-        return finalData, allLabels[goodBatchInds], subjectInds[goodBatchInds]
+        return allSignalData[goodBatchInds], allSignalStopInds[goodBatchInds], allLabels[goodBatchInds], subjectInds[goodBatchInds]
 
-    def _removeBadSignals(self, allSignalData, featureNames):
+    def _removeBadSignals(self, allSignalData, allSignalStopInds, featureNames):
         """
         Purpose: Remove poor signals from ALL data batches.
         --------------------------------------------
-        allSignalData : A list of size (batchSize, numSignals, sequenceLength)
+        allSignalData : A numpy array of size (batchSize, numSignals, maxSequenceLength, 2)
+        allSignalStopInds : A numpy array of size (batchSize, numSignals)
         featureNames : A numpy array of size numSignals
         """
-        # Initialize data holders.
-        goodFeatureInds = set(np.arange(0, len(featureNames)))
-        assert len(allSignalData) == 0 or len(featureNames) == len(allSignalData[0]), f"Feature names do not match data dimensions. {len(featureNames)} != {len(allSignalData[0])}"
 
-        # For each set of signals.
-        for batchInd in range(len(allSignalData)):
-            signalData = np.asarray(allSignalData[batchInd])
-            # signalData dimension: numSignals, sequenceLength
+        # Ensure the feature names match the number of signals
+        assert len(allSignalData) == 0 or len(featureNames) == allSignalData.shape[1], \
+            f"Feature names do not match data dimensions. {len(featureNames)} != {allSignalData.shape[1]}"
 
-            # Calculate time-series statistics for each signal.
-            signalSNRs = self.calculate_snr(signalData)
+        # Initialize a mask for good features (start with all features assumed good)
+        goodFeatureMask = np.ones(len(featureNames), dtype=bool)
 
-            # Remove any feature that doesn't vary enough.
-            badIndices = np.where(signalSNRs == 0)[0]
-            goodFeatureInds.difference_update(badIndices)
-        # Convert the set into a sorted list of indices.
-        goodFeatureInds = np.array(list(goodFeatureInds))
-        goodFeatureInds.sort()
+        # For each batch of signals
+        for batchInd in range(allSignalData.shape[0]):
+            signalBatchData = allSignalData[batchInd]  # shape: (numSignals, maxSequenceLength, 2)
+            signalStopInds = allSignalStopInds[batchInd]
 
-        finalData = []
-        # For each experimental data point.
-        for experimentInd in range(len(allSignalData)):
-            signalData = np.asarray(allSignalData[experimentInd])
+            # Calculate SNRs for each signal in the batch
+            signalSNRs = self.calculate_snr(signalBatchData, signalStopInds)
 
-            finalData.append(signalData[goodFeatureInds, :])
+            # Update the good feature mask based on an SNR threshold
+            goodFeatureMask &= (1E-10 <= signalSNRs)
 
-        # Only featureNames the labels of the good experiments.
-        featureNames = featureNames[goodFeatureInds]
-
-        return finalData, featureNames
+        # Apply the mask to keep only the good signals and corresponding feature names
+        return allSignalData[:, goodFeatureMask], allSignalStopInds[:, goodFeatureMask], featureNames[goodFeatureMask]
 
     @staticmethod
-    def calculate_snr(signalData):
-        # Standardize the signals
-        scaledData = minMaxScale_noInverse(signalData, scale=1)
+    def calculate_snr(signalBatchData, signalStopInds):
+        # signalBatchData dimension: numSignals, maxSequenceLength, 2
+        # signalStopInds dimension: numSignals
+        snr_values = np.zeros(len(signalBatchData))
 
-        # Calculate the signal-to-noise ratio for each signal.
-        signal_power = np.mean(scaledData ** 2, axis=-1)
-        noise_power = np.var(scaledData - np.mean(scaledData, axis=-1, keepdims=True), axis=-1)
+        # For each signal in the batch.
+        for signalInd in range(len(signalBatchData)):
+            # Get the signal data for the current signal.
+            signalData = signalBatchData[signalInd, :signalStopInds[signalInd], 1]
 
-        # Handle the case when noise_power == 0 (avoid division by zero)
-        signal_power[noise_power == 0] = 1  # Prevent division by zero
-        noise_power[noise_power == 0] = 1  # Prevent division by zero
+            # Standardize the signals (min-max scaling).
+            scaledData = minMaxScale_noInverse(signalData[:, :, 1], scale=1)
 
-        # Calculate the signal-to-noise ratio for each signal.
-        snr_values = 10 * np.log10(signal_power / noise_power)
+            # Calculate the signal-to-noise ratio for each signal.
+            signal_power = np.mean(scaledData ** 2, axis=-1)
+            noise_power = np.var(scaledData, axis=-1)
+
+            # Handle the case when noise_power == 0 (avoid division by zero)
+            signal_power[noise_power == 0] = 1E-10  # Prevent division by zero
+            noise_power[noise_power == 0] = 1E-10  # Prevent division by zero
+
+            # Calculate the signal-to-noise ratio for each signal.
+            snr_values[signalInd] = 10 * np.log10(signal_power / noise_power)
 
         return snr_values
 

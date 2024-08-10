@@ -189,7 +189,7 @@ class featureOrganization(humanMachineInterface):
 
     # ---------------------- Compile Incoming Features --------------------- #
 
-    def compileModelFeatures(self, featureTimes, features, startTime, endTime):
+    def compileModelFeatures(self, startTime, endTime, featureTimes, features):
         # features dim: numTimePoints, numBiomarkerFeatures
         # featureTimes dim: numTimePoints
 
