@@ -203,7 +203,7 @@ class compileModelData(compileModelDataHelpers):
             # Remove any experiments and signals that are bad.
             allSignalData, allSignalStopInds = self._padSignalData(allRawFeatureTimeIntervals, allCompiledFeatureIntervals)
             allSignalData, allSignalStopInds, allFeatureLabels, allSubjectInds = self._removeBadExperiments(allSignalData, allSignalStopInds, surveyAnswersList, subjectOrder)
-            allSignalData, allSignalStopInds, featureNames = self._removeBadSignals(allSignalData, allSignalStopInds, featureNames)
+            allSignalData, allSignalStopInds, featureNames = self._preprocessSignals(allSignalData, allSignalStopInds, featureNames)
             # allSignalData dimension: batchSize, numSignals, maxSequenceLength, [time, signal]
             # allFeatureLabels dimension: batchSize, numLabels
             # allSignalStopInds dimension: batchSize, numSignals
@@ -211,35 +211,30 @@ class compileModelData(compileModelDataHelpers):
             # featureNames dimension: numSignals
 
             # Compile dataset-specific information.
-            batchSize, numSignals, = allSignalStopInds.shape
+            numExperiments, numSignals, maxSequenceLength, _ = allSignalData.size()
+            allExperimentalIndices = torch.arange(0, numExperiments)
             numSubjects = max(allSubjectInds) + 1
+            numLabels = allFeatureLabels.size(1)
+            if numExperiments == 0: continue
             if numSignals == 0: continue
-            if batchSize == 0: continue
 
             # Organize the feature labels and identify any missing labels.
-            allFeatureLabels, allSingleClassIndices = self.organizeLabels(allFeatureLabels, metaTraining, metaDatasetName, numSignals)
-
-            # Organize the signal indices and demographic information.
-            allFeatureData = self.organizeSignals(allSignalData)
-
-            # Compile basic information about the data.
-            numExperiments, numSignals, totalLength = allFeatureData.size()
-            allExperimentalIndices = torch.arange(0, numExperiments)
-            sequenceLength = totalLength - self.numSecondsShift
-            assert sequenceLength == self.maxSeqLength
+            allFeatureLabels, allSmallClassIndices = self.organizeLabels(allFeatureLabels, metaTraining, metaDatasetName, numSignals)
+            # allSmallClassIndices dimension: numLabels, numSingleClassIndices
+            # allFeatureLabels dimension: batchSize, numLabels
 
             # ---------------------- Test/Train Split ---------------------- #
 
             # Initiate a mask for distinguishing between training and testing data.
-            currentTestingMask = torch.full(allFeatureLabels.shape, fill_value=False, dtype=torch.bool)
-            currentTrainingMask = torch.full(allFeatureLabels.shape, fill_value=False, dtype=torch.bool)
+            currentTrainingMask = torch.full(allFeatureLabels.size(), fill_value=False, dtype=torch.bool)
+            currentTestingMask = torch.full(allFeatureLabels.size(), fill_value=False, dtype=torch.bool)
 
-            # For each type of label recorded during the trial.
-            for labelTypeInd in range(allFeatureLabels.shape[1]):
+            # For each type of label/emotion recorded.
+            for labelTypeInd in range(numLabels):
                 currentFeatureLabels = copy.deepcopy(allFeatureLabels[:, labelTypeInd])
 
                 # Temporarily remove the single classes.
-                singleClassIndices = allSingleClassIndices[labelTypeInd]
+                singleClassIndices = allSmallClassIndices[labelTypeInd]
                 currentFeatureLabels[singleClassIndices] = self.missingLabelValue
                 # Remove the missing data from the arrays.
                 missingClassMask = torch.isnan(currentFeatureLabels)
@@ -276,9 +271,9 @@ class compileModelData(compileModelDataHelpers):
             # Data augmentation to increase the variations of datapoints.
             if metaDatasetName.lower() not in self.dontShiftDatasets:
                 augmentedFeatureData, augmentedFeatureLabels, augmentedTrainingMask, augmentedTestingMask, augmentedSubjectInds \
-                    = self.addShiftedSignals(allFeatureData, allFeatureLabels, currentTrainingMask, currentTestingMask, allSubjectInds)
+                    = self.addShiftedSignals(allSignalData, allFeatureLabels, currentTrainingMask, currentTestingMask, allSubjectInds)
             else:
-                allFeatureData = self.dataInterface.getRecentSignalPoints(allFeatureData, self.maxSeqLength + self.numSecondsShift)
+                allFeatureData = self.dataInterface.getRecentSignalPoints(allSignalData, self.maxSeqLength + self.numSecondsShift)
 
                 augmentedFeatureData, augmentedFeatureLabels, augmentedTrainingMask, augmentedTestingMask, augmentedSubjectInds \
                     = self.dataInterface.getRecentSignalPoints(allFeatureData, self.maxSeqLength), allFeatureLabels, currentTrainingMask, currentTestingMask, allSubjectInds

@@ -145,42 +145,6 @@ class compileModelDataHelpers:
         print(f"\tPotentially Initializing {len(signalCombinationInds)} models per emotion", flush=True)
         return signalCombinationInds
 
-    def organizeSignals(self, allSignalData):
-        # allSignalData : A list of size (batchSize, numSignals, maxSequenceLength, 2)
-
-        featureData = []
-        # Compile the feature's data across all experiments.
-        for batchInd in range(len(allSignalData)):
-            signalData = np.asarray(allSignalData[batchInd])
-
-            # Assertions about data integrity.
-            numSignals, sequenceLength = signalData.shape
-            assert self.minSeqLength <= sequenceLength, f"Expected {self.minSeqLength}, but received {signalData.shape[1]} "
-
-            # Standardize the signals
-            if self.standardizeSignals:
-                signalData = minMaxScale_noInverse(signalData, scale=self.modelParameters.getSignalMinMaxScale())
-
-            # Add buffer if needed.
-            if sequenceLength < self.maxSeqLength + self.numSecondsShift:
-                prependedBuffer = np.zeros((numSignals, self.maxSeqLength + self.numSecondsShift - sequenceLength)) * signalData[:, 0:1]
-                signalData = np.hstack((prependedBuffer, signalData))
-            elif self.maxSeqLength + self.numSecondsShift < sequenceLength:
-                signalData = signalData[:, -self.maxSeqLength - self.numSecondsShift:]
-
-            # Standardize the signals
-            if self.standardizeSignals:
-                signalData = minMaxScale_noInverse(signalData, scale=self.modelParameters.getSignalMinMaxScale())
-
-            # This is good signalData
-            featureData.append(signalData.tolist())
-        featureData = torch.tensor(featureData)
-
-        # Assert the integrity.
-        assert len(featureData) != 0
-
-        return featureData
-
     def organizeLabels(self, allFeatureLabels, metaTraining, metaDatasetName, numSignals):
         # Convert to tensor and zero out the class indices
         allFeatureLabels = torch.as_tensor(allFeatureLabels)
@@ -374,9 +338,13 @@ class compileModelDataHelpers:
             # Compile the good batches.
             goodBatchInds.append(batchInd)
 
-        return allSignalData[goodBatchInds], allSignalStopInds[goodBatchInds], allLabels[goodBatchInds], subjectInds[goodBatchInds]
+        # Convert to tensor arrays for easier handling
+        subjectInds = torch.as_tensor(subjectInds[goodBatchInds])
+        allLabels = torch.as_tensor(allLabels[goodBatchInds])
 
-    def _removeBadSignals(self, allSignalData, allSignalStopInds, featureNames):
+        return allSignalData[goodBatchInds], allSignalStopInds[goodBatchInds], allLabels, subjectInds
+
+    def _preprocessSignals(self, allSignalData, allSignalStopInds, featureNames):
         """
         Purpose: Remove poor signals from ALL data batches.
         --------------------------------------------
@@ -394,17 +362,24 @@ class compileModelDataHelpers:
 
         # For each batch of signals
         for batchInd in range(allSignalData.shape[0]):
-            signalBatchData = allSignalData[batchInd]  # shape: (numSignals, maxSequenceLength, 2)
             signalStopInds = allSignalStopInds[batchInd]
 
+            # Standardize the signals.
+            allSignalData[batchInd] = self.normalizeSignals(allSignalData[batchInd], signalStopInds)
+
             # Calculate SNRs for each signal in the batch
-            signalSNRs = self.calculate_snr(signalBatchData, signalStopInds)
+            signalSNRs = self.calculate_snr(allSignalData[batchInd], signalStopInds)
 
             # Update the good feature mask based on an SNR threshold
             goodFeatureMask &= (1E-10 <= signalSNRs)
 
+        # Convert to tensor for easier handling
+        allSignalStopInds = torch.as_tensor(allSignalStopInds[:, goodFeatureMask])
+        allSignalData = torch.as_tensor(allSignalData[:, goodFeatureMask])
+        featureNames = torch.as_tensor(featureNames[goodFeatureMask])
+
         # Apply the mask to keep only the good signals and corresponding feature names
-        return allSignalData[:, goodFeatureMask], allSignalStopInds[:, goodFeatureMask], featureNames[goodFeatureMask]
+        return allSignalData, allSignalStopInds, featureNames
 
     @staticmethod
     def calculate_snr(signalBatchData, signalStopInds):
@@ -415,14 +390,11 @@ class compileModelDataHelpers:
         # For each signal in the batch.
         for signalInd in range(len(signalBatchData)):
             # Get the signal data for the current signal.
-            signalData = signalBatchData[signalInd, :signalStopInds[signalInd], 1]
-
-            # Standardize the signals (min-max scaling).
-            scaledData = minMaxScale_noInverse(signalData[:, :, 1], scale=1)
+            signalData = signalBatchData[signalInd, 0:signalStopInds[signalInd], 1]
 
             # Calculate the signal-to-noise ratio for each signal.
-            signal_power = np.mean(scaledData ** 2, axis=-1)
-            noise_power = np.var(scaledData, axis=-1)
+            signal_power = np.mean(signalData ** 2, axis=-1)
+            noise_power = np.var(signalData, axis=-1)
 
             # Handle the case when noise_power == 0 (avoid division by zero)
             signal_power[noise_power == 0] = 1E-10  # Prevent division by zero
@@ -432,5 +404,19 @@ class compileModelDataHelpers:
             snr_values[signalInd] = 10 * np.log10(signal_power / noise_power)
 
         return snr_values
+
+    def normalizeSignals(self, signalBatchData, signalStopInds):
+        # signalBatchData dimension: numSignals, maxSequenceLength, [time, signal]
+        # signalStopInds dimension: numSignals
+        # For each signal in the batch.
+        for signalInd in range(len(signalBatchData)):
+            # Get the signal data for the current signal.
+            scaledData = signalBatchData[signalInd, :signalStopInds[signalInd], 1]
+            minMaxScale = self.modelParameters.getSignalMinMaxScale()
+
+            # Standardize the signals (min-max scaling).
+            signalBatchData[signalInd, :signalStopInds[signalInd], 1] = minMaxScale_noInverse(scaledData, scale=minMaxScale)
+
+        return signalBatchData
 
     # ---------------------------------------------------------------------- #
