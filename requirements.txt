@@ -1,7 +1,3 @@
- pip
- setuptools
- wheel
-
 accelerate
 antropy
 dill
@@ -43,9 +39,10 @@ sympy
 tensorflow
 tensorly
 tools
-torch
+torch --index-url https://download.pytorch.org/whl/cu124
+torchvision --index-url https://download.pytorch.org/whl/cu124
+torchaudio --index-url https://download.pytorch.org/whl/cu124
 torchsummary
-torchvision
 torchviz
 transformers
 webdriver-manager
