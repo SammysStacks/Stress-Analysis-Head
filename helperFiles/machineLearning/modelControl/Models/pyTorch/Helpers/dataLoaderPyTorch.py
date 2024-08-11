@@ -19,8 +19,7 @@ class CustomDataset(Dataset):
         self.testingMasks = None
 
         # Pad and realign the data if needed.
-        if variableSequence:
-            features = torch.tensor(tf.keras.utils.pad_sequences(features, padding='pre', dtype=float))
+        if variableSequence: features = torch.tensor(tf.keras.utils.pad_sequences(features, padding='post', dtype=float))
 
         # Read in the feature and labels.
         self.labels = self.copyDataFormat(labels, dtype=torch.float)

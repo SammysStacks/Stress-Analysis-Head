@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 
 # Import excel data interface
 from helperFiles.dataAcquisitionAndAnalysis.metadataAnalysis.globalMetaAnalysis import globalMetaAnalysis
+from helperFiles.machineLearning.modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
 
 class wesadInterface(globalMetaAnalysis):
@@ -33,7 +34,7 @@ class wesadInterface(globalMetaAnalysis):
         self.numQuestionOptions.extend([4] * len(self.staiQuestions))
         self.numQuestionOptions.extend([9] * len(self.dimQuestions))
         # Specify the current dataset.
-        self.datasetName = "wesad"
+        self.datasetName = modelConstants.wesadDatasetName
 
         # Define WESAD-specific parameters
         self.empaticaEDA_Temp_samplingFreq = 4
@@ -307,7 +308,7 @@ if __name__ == "__main__":
         wesadStreamingOrder, wesadBiomarkerFeatureOrder, wesadFeatureAverageWindows, wesadFilteringOrders = wesadAnalysisClass.getStreamingInfo()
         # Analyze and save the metadata features
         wesadAnalysisClass.extractFeatures(wesadAllCompiledDatas, wesadSubjectOrder, wesadAllExperimentalTimes, wesadAllExperimentalNames, wesadAllSurveyAnswerTimes, wesadAllSurveyAnswersList, wesadAllContextualInfo,
-                                           wesadStreamingOrder, wesadBiomarkerFeatureOrder, wesadFeatureAverageWindows, wesadFilteringOrders, interfaceType='wesad', reanalyzeData=True, showPlots=False, analyzeSequentially=True)
+                                           wesadStreamingOrder, wesadBiomarkerFeatureOrder, wesadFeatureAverageWindows, wesadFilteringOrders, metaDatasetName=modelConstants.wesadDatasetName, reanalyzeData=True, showPlots=False, analyzeSequentially=True)
 
     if trainingData:
         # Prepare the data to go through the training interface.

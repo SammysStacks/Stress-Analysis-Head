@@ -7,6 +7,7 @@ from ...machineLearning.featureAnalysis.compiledFeatureNames.compileFeatureNames
 
 # Import files for machine learning
 from ...machineLearning.featureAnalysis.featurePlotting import featurePlotting
+from ...machineLearning.modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from ...machineLearning.trainingProtocols import trainingProtocols
 
 # Import files for data analysis
@@ -35,7 +36,7 @@ class globalMetaAnalysis(handlingExcelFormat):
     # ------------------ Interface with Training Protocols ----------------- #
 
     def extractFeatures(self, allCompiledDatas, subjectOrder, allExperimentalTimes, allExperimentalNames, allSurveyAnswerTimes, allSurveyAnswersList, allContextualInfo,
-                        streamingOrder, biomarkerFeatureOrder, featureAverageWindows, filteringOrders, interfaceType="emognition", reanalyzeData=False, showPlots=True, analyzeSequentially=False):
+                        streamingOrder, biomarkerFeatureOrder, featureAverageWindows, filteringOrders, metaDatasetName, reanalyzeData=False, showPlots=True, analyzeSequentially=False):
         # Prepare the data for each subject for parallel processing
         subjects_data = [
             (
@@ -50,14 +51,14 @@ class globalMetaAnalysis(handlingExcelFormat):
                 biomarkerFeatureOrder,
                 featureAverageWindows,
                 filteringOrders,
-                interfaceType,
+                metaDatasetName,
                 reanalyzeData,
                 showPlots
             ) for i in range(len(subjectOrder))
         ]
 
         # Analyze the data sequentially for plotting large datasets.
-        if showPlots and interfaceType in ["dapper", "case"]:
+        if showPlots and metaDatasetName in [modelConstants.dapperDatasetName, modelConstants.caseDatasetName]:
             print("\tAnalyzing sequentially")
             analyzeSequentially = True
 

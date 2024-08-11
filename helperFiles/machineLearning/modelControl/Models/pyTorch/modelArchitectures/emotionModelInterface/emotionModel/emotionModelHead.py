@@ -4,6 +4,7 @@ import time
 # PyTorch
 import torch
 
+from .emotionModelHelpers.modelConstants import modelConstants
 # Import submodels
 from .emotionModelHelpers.submodels.specificEmotionModel import specificEmotionModel
 from .emotionModelHelpers.submodels.trainingInformation import trainingInformation
@@ -18,14 +19,13 @@ from ..._globalPytorchModel import globalModel
 
 
 class emotionModelHead(globalModel):
-    def __init__(self, submodel, accelerator, finalDistributionLength, signalMinMaxScale, maxNumSignals, numSubjectIdentifiers, demographicLength, userInputParams,
+    def __init__(self, submodel, accelerator, finalDistributionLength, signalMinMaxScale, maxNumSignals, subjectIdentifiers, userInputParams,
                  timeWindows, emotionNames, activityNames, featureNames, numSubjects, datasetName, useFinalParams, debuggingResults=False):
         super(emotionModelHead, self).__init__()
         # General model parameters.
         self.sequenceBounds = (timeWindows[0], timeWindows[-1])  # The minimum and maximum sequence length for the model.
         self.finalDistributionLength = finalDistributionLength  # The final length of the signal distribution.
-        self.numSubjectIdentifiers = numSubjectIdentifiers  # The number of subject identifiers (subject index, etc.).
-        self.demographicLength = demographicLength  # The amount of demographic information (age, weight, etc.). Subject index is not included.
+        self.subjectIdentifiers = subjectIdentifiers  # The subject identifiers for the model (e.g., subjectIndex, datasetIndex, etc.)
         self.signalMinMaxScale = signalMinMaxScale  # The minimum and maximum values for the signals.
         self.debuggingResults = debuggingResults  # Whether to print debugging results. Type: bool
         self.numActivities = len(activityNames)  # The number of activities to predict.
@@ -67,11 +67,11 @@ class emotionModelHead(globalModel):
         self.trainingInformation = trainingInformation()
 
         # Initialize all the models.
-        self.signalEncoderModel = None
-        self.autoencoderModel = None
-        self.signalMappingModel = None
         self.specificEmotionModel = None
+        self.signalEncoderModel = None
+        self.signalMappingModel = None
         self.sharedEmotionModel = None
+        self.autoencoderModel = None
 
         # Populate the current models.
         self.initializeSubmodels(submodel)
@@ -105,7 +105,7 @@ class emotionModelHead(globalModel):
             accelerator=self.accelerator,
         )
 
-        if submodel == "signalEncoder": return None
+        if submodel == modelConstants.signalEncoderModel: return None
 
         # The autoencoder model reduces the incoming signal's dimension.
         self.autoencoderModel = autoencoderModel(
@@ -118,7 +118,7 @@ class emotionModelHead(globalModel):
             accelerator=self.accelerator,
         )
 
-        if submodel == "autoencoder": return None
+        if submodel == modelConstants.autoencoderModel: return None
 
         # -------------------- Final Emotion Prediction -------------------- #
 
@@ -241,13 +241,13 @@ class emotionModelHead(globalModel):
         autoencodingOutputs = (torch.tensor(data=0, device=self.device) for _ in range(4))
         emotionModelOutputs = (torch.tensor(data=0, device=self.device) for _ in range(6))
 
-        if submodel == "signalEncoder":
+        if submodel == modelConstants.signalEncoderModel:
             with self.accelerator.autocast():
                 # Only look at the signal encoder.
                 encodedData, reconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLayerLoss = self.signalEncoding(signalData, initialSignalData, decodeSignals=reconstructSignals, calculateLoss=compileVariables, trainingFlag=trainingFlag)
                 signalEncodingOutputs = encodedData.to('cpu'), reconstructedData.to('cpu'), predictedIndexProbabilities.to('cpu'), decodedPredictedIndexProbabilities.to('cpu'), signalEncodingLayerLoss.to('cpu')
 
-        elif submodel == "autoencoder":
+        elif submodel == modelConstants.autoencoderModel:
             # Only look at the autoencoder.
             signalEncodingOutputs, compressedData, reconstructedEncodedData, denoisedDoubleReconstructedData, autoencoderLayerLoss \
                 = self.compressData(signalData, initialSignalData, reconstructSignals=reconstructSignals, calculateLoss=compileVariables, compileVariables=compileVariables, compileLosses=compileVariables, fullReconstruction=True, trainingFlag=trainingFlag)
@@ -294,7 +294,7 @@ class emotionModelHead(globalModel):
             endIdx = startIdx + batchData.size(0)
 
             # Separate out the data.
-            allSignalData, allDemographicData, allSubjectIdentifiers = emotionDataInterface.separateData(batchData, self.finalDistributionLength, self.numSubjectIdentifiers, self.demographicLength)
+            allSignalData, allSubjectIdentifiers = emotionDataInterface.separateData(batchData)
             segmentedSignalData = emotionDataInterface.getRecentSignalPoints(allSignalData, timeWindow)  # Segment the data into its time window.
 
             # Forward pass for the current batch

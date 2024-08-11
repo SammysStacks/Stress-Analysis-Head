@@ -5,6 +5,7 @@ import random
 # Helper classes
 from helperFiles.machineLearning.modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.generalMethods.classWeightHelpers import classWeightHelpers
 from helperFiles.machineLearning.modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.generalMethods.generalMethods import generalMethods
+from helperFiles.machineLearning.modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
 
 class emotionDataInterface:
@@ -78,24 +79,25 @@ class emotionDataInterface:
     # ---------------------- Data Structure Interface ---------------------- #  
 
     @staticmethod
-    def separateData(inputData, sequenceLength, numSubjectIdentifiers, demographicLength):
+    def separateData(inputData):
         # Extract the incoming data's dimension and ensure a proper data format.
-        batchSize, numSignals, signalInfoLength = inputData.size()
-        # inputData = inputData.to(torch.float32)  # Floats are required for gradient tracking.
+        batchSize, numSignals, signalInfoLength, _ = inputData.size()
+
+        # Find the number of subject identifiers.
+        numSubjectIdentifiers = len(modelConstants.subjectIdentifiers)
+        maxSequencePoints = signalInfoLength - numSubjectIdentifiers
 
         # Assert the validity of the input data
-        assert signalInfoLength == sequenceLength + numSubjectIdentifiers + demographicLength, \
-            f"{signalInfoLength} != {sequenceLength} {numSubjectIdentifiers} {demographicLength}"
+        assert signalInfoLength == maxSequencePoints + numSubjectIdentifiers, \
+            f"{signalInfoLength} != {maxSequencePoints} {numSubjectIdentifiers}"
 
         # Separate the sequence and demographic information.
-        subjectIdentifiers = inputData[:, 0, sequenceLength:sequenceLength + numSubjectIdentifiers].to(torch.int)
-        demographicData = inputData[:, :, sequenceLength + numSubjectIdentifiers:]  # .to(torch.float32)
-        signalData = inputData[:, :, 0:sequenceLength]  # .to(torch.float32)
-        # demographicData dimension: batchSize, numSignals, demographicLength
+        subjectIdentifiers = inputData[:, 0, maxSequencePoints:signalInfoLength]
+        signalData = inputData[:, :, 0:maxSequencePoints]
         # signalData dimension: batchSize, numSignals, finalDistributionLength
         # subjectInds dimension: batchSize, numSubjectIdentifiers
 
-        return signalData, demographicData, subjectIdentifiers
+        return signalData, subjectIdentifiers
 
     def getReconstructionIndex(self, allTrainingMasks):
         # Find the first label index with training points.

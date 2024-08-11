@@ -1,7 +1,8 @@
 # General
-import torch.nn as nn
-import torch
 import os
+
+import torch
+import torch.nn as nn
 
 
 class modelMigration:
@@ -182,7 +183,7 @@ class modelMigration:
 
         return newModelAttributes
 
-    def _compileModelBaseName(self, modelName="emotionModel", submodel="autoencoder", datasetName="sharedData", trainingDate="2023-11-22", numEpochs=31, metaTraining=True, generalInformation=False):
+    def _compileModelBaseName(self, modelName, submodel, datasetName, trainingDate, numEpochs, metaTraining=True, generalInformation=False):
         # Organize information about the model.
         trainingType = "metaTrainingModels" if metaTraining else "trainingModels"
 

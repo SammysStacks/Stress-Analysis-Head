@@ -2,6 +2,8 @@
 import copy
 from torch import nn
 
+from helperFiles.machineLearning.modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
+
 
 class trainingInformation(nn.Module):
     def __init__(self):
@@ -67,12 +69,12 @@ class trainingInformation(nn.Module):
         if optimizerState is None:
             print("\tNo optimizer to overwrite.")
             return modelPipeline.optimizer.state_dict()
-        
+
         # Initialize a blank state
         filteredOptimizerState = modelPipeline.optimizer.state_dict()
         finalModelInd = self.getNumTrainedModels(submodelLoading)
         assert finalModelInd <= len(optimizerState['param_groups'])
-        
+
         # Do not load in any model we are not/have trained.
         filteredOptimizerState['param_groups'][0:finalModelInd] = optimizerState['param_groups'][0:finalModelInd]
 
@@ -99,7 +101,6 @@ class trainingInformation(nn.Module):
             if not isinstance(value, list):
                 continue
 
-
             # Update the state dictionary.
             filteredSchedulerState[key] = schedulerState[key][0:finalModelInd]
 
@@ -107,13 +108,13 @@ class trainingInformation(nn.Module):
 
     @staticmethod
     def getNumTrainedModels(submodel):
-        if submodel == "signalEncoder":
+        if submodel == modelConstants.signalEncoderModel:
             return 1
-        elif submodel == "autoencoder":
+        elif submodel == modelConstants.autoencoderModel:
             return 2
         elif submodel == "decipherSignalMeaningModel":
             return 4
-        elif submodel == "emotionPrediction":
+        elif submodel == modelConstants.emotionPredictionModel:
             return 10
         else:
             assert False, "No model initialized"

@@ -113,11 +113,11 @@ class signalEncoderPlots(trainingPlots):
 
                     # Load in the previous model attributes.
                     loadSubmodelDate = finalTrainingDataString.replace("XX", str(numLiftedChannels)).replace("YY", str(numExpandedSignals)).replace("ZZ", str(numEncodingLayers))
-                    allDummyModelPipelines = self.modelCompiler.onlyPreloadModelAttributes(self.modelName, self.datasetNames, loadSubmodel="signalEncoder", loadSubmodelDate=loadSubmodelDate, loadSubmodelEpochs=-1, allDummyModelPipelines=allDummyModelPipelines)
+                    allDummyModelPipelines = self.modelCompiler.onlyPreloadModelAttributes(self.modelName, self.datasetNames, loadSubmodel=modelConstants.signalEncoderModel, loadSubmodelDate=loadSubmodelDate, loadSubmodelEpochs=-1, allDummyModelPipelines=allDummyModelPipelines)
 
                     # For each model, get the losses.
                     for modelInd in range(len(allDummyModelPipelines)):
-                        currentModel = self.getSubmodel(allDummyModelPipelines[modelInd], submodel="signalEncoder")
+                        currentModel = self.getSubmodel(allDummyModelPipelines[modelInd], submodel=modelConstants.signalEncoderModel)
                         assert self.timeWindows == currentModel.timeWindows, f"Time windows do not match: {self.timeWindows} != {currentModel.timeWindows}"
 
                         # For each loss value we want:

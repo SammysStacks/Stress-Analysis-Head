@@ -7,7 +7,7 @@ srun accelerate launch ./../../metaTrainingControl.py \
     --numSigEncodingLayers "$2" \
     --numExpandedSignals "$3" \
     --deviceListed "HPC-$4" \
-    --submodel "signalEncoder" \
+    --submodel modelConstants.signalEncoderModel \
     --signalEncoderWaveletType "$5" \
     --optimizerType "$6" \
 

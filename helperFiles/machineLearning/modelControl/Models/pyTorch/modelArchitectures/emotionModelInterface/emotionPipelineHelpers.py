@@ -5,6 +5,7 @@ from .emotionModel.emotionModelHelpers.generalMethods.generalMethods import gene
 from .emotionModel.emotionModelHelpers.generalMethods.modelHelpers import modelHelpers
 from .emotionModel.emotionModelHelpers.generalMethods.weightInitialization import weightInitialization
 from .emotionModel.emotionModelHelpers.lossInformation.organizeTrainingLosses import organizeTrainingLosses
+from .emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from .emotionModel.emotionModelHelpers.modelParameters import modelParameters
 from .emotionModel.emotionModelHelpers.modelVisualizations.modelVisualizations import modelVisualizations
 from .emotionModel.emotionModelHelpers.optimizerMethods.optimizerMethods import optimizerMethods
@@ -13,12 +14,10 @@ from ...Helpers.modelMigration import modelMigration
 
 class emotionPipelineHelpers:
 
-    def __init__(self, accelerator, modelID, datasetName, modelName, allEmotionClasses, maxNumSignals,
-                 numSubjectIdentifiers, demographicLength, numSubjects, userInputParams, emotionNames,
-                 activityNames, featureNames, submodel, useFinalParams, debuggingResults=False):
+    def __init__(self, accelerator, modelID, datasetName, modelName, allEmotionClasses, maxNumSignals, numSubjects, userInputParams,
+                 emotionNames, activityNames, featureNames, submodel, useFinalParams, debuggingResults=False):
         # General parameters.
-        self.numSubjectIdentifiers = numSubjectIdentifiers  # The number of subject identifiers to consider. Dim: [numSubjectIdentifiers]
-        self.demographicLength = demographicLength  # The amount of demographic information provided to the model (age, weight, etc.). Dim: [numDemographics]
+        self.subjectIdentifiers = modelConstants.subjectIdentifiers  # The subject identifiers to consider. Dim: [numSubjects]
         self.debuggingResults = debuggingResults  # Whether to print debugging results. Type: bool
         self.useFinalParams = useFinalParams  # Whether to use the HPC parameters.
         self.accelerator = accelerator  # Hugging face interface to speed up the training process.
@@ -42,13 +41,13 @@ class emotionPipelineHelpers:
         self.datasetName = datasetName  # The name of the specific dataset being used in this model (case, wesad, etc.)
 
         # Store model parameters.
-        self.finalDistributionLength = modelParameters.getFinalDistributionLength()
+        self.finalDistributionLength = modelConstants.finalDistributionLength
         signalMinMaxScale = modelParameters.getSignalMinMaxScale()
         timeWindows = modelParameters.getTimeWindows()
 
         # Initialize the emotion model.
         if modelName == "emotionModel":
-            self.model = emotionModelHead(submodel, accelerator, self.finalDistributionLength, signalMinMaxScale, maxNumSignals, numSubjectIdentifiers, demographicLength, userInputParams,
+            self.model = emotionModelHead(submodel, accelerator, self.finalDistributionLength, signalMinMaxScale, maxNumSignals, self.subjectIdentifiers, userInputParams,
                                           timeWindows, emotionNames, activityNames, featureNames, numSubjects, datasetName, useFinalParams, debuggingResults)
         # Assert that the model has been initialized.
         assert hasattr(self, 'model'), f"Unknown Model Type Requested: {modelName}"
@@ -67,7 +66,7 @@ class emotionPipelineHelpers:
         self.generalMethods = generalMethods()
         self.modelHelpers = modelHelpers()
 
-        if submodel == "emotionPrediction":
+        if submodel == modelConstants.emotionPredictionModel:
             # Finalize model setup.
             self.model.sharedEmotionModel.lastActivityLayer = self.modelHelpers.getLastActivationLayer(self.organizeLossInfo.activityClass_lossType, predictingProb=True)  # Apply activation on the last layer: 'softmax', 'logsoftmax', or None.
             self.model.sharedEmotionModel.lastEmotionLayer = self.modelHelpers.getLastActivationLayer(self.organizeLossInfo.emotionDist_lossType, predictingProb=True)  # Apply activation on the last layer: 'softmax', 'logsoftmax', or None.
@@ -96,7 +95,7 @@ class emotionPipelineHelpers:
     def prepareInformation(self, dataLoader):
         # Load in all the data and labels for final predictions.
         allData, allLabels, allTrainingMasks, allTestingMasks = dataLoader.dataset.getAll()
-        allSignalData, allDemographicData, allSubjectIdentifiers = self.dataInterface.separateData(allData, self.finalDistributionLength, self.numSubjectIdentifiers, self.demographicLength)
+        allSignalData, allSubjectIdentifiers = self.dataInterface.separateData(allData)
         reconstructionIndex = self.dataInterface.getReconstructionIndex(allTrainingMasks)
         assert reconstructionIndex is not None
 
@@ -105,7 +104,7 @@ class emotionPipelineHelpers:
         assert allLabels.shape == allTrainingMasks.shape, "We should specify the training indices for each label"
         assert allLabels.shape == allTestingMasks.shape, "We should specify the testing indices for each label"
 
-        return allData, allLabels, allTrainingMasks, allTestingMasks, allSignalData, allDemographicData, allSubjectIdentifiers, reconstructionIndex
+        return allData, allLabels, allTrainingMasks, allTestingMasks, allSignalData, allSubjectIdentifiers, reconstructionIndex
 
     # ------------------------------------------------------------------ #
 
@@ -113,11 +112,11 @@ class emotionPipelineHelpers:
         # Get the models, while considering whether they are distributed or not.
         trainingInformation, signalEncoderModel, autoencoderModel, signalMappingModel, sharedEmotionModel, specificEmotionModel = self.getDistributedModels()
 
-        if submodel == "signalEncoder":
+        if submodel == modelConstants.signalEncoderModel:
             return max(0, len(signalEncoderModel.trainingLosses_timeReconstructionAnalysis[self.generalTimeWindowInd]) - 1)
-        elif submodel == "autoencoder":
+        elif submodel == modelConstants.autoencoderModel:
             return max(0, len(autoencoderModel.trainingLosses_timeReconstructionAnalysis[self.generalTimeWindowInd]) - 1)
-        elif submodel == "emotionPrediction":
+        elif submodel == modelConstants.emotionPredictionModel:
             return max(0, len(specificEmotionModel.trainingLosses_signalReconstruction) - 1)
         else:
             raise Exception()
@@ -130,11 +129,11 @@ class emotionPipelineHelpers:
         trainingInformation, signalEncoderModel, autoencoderModel, signalMappingModel, sharedEmotionModel, specificEmotionModel = self.getDistributedModels()
 
         # Label the model we are training.
-        if submodel == "signalEncoder":
+        if submodel == modelConstants.signalEncoderModel:
             self.setupTrainingFlags(signalEncoderModel, trainingFlag=True)
-        elif submodel == "autoencoder":
+        elif submodel == modelConstants.autoencoderModel:
             self.setupTrainingFlags(autoencoderModel, trainingFlag=True)
-        elif submodel == "emotionPrediction":
+        elif submodel == modelConstants.emotionPredictionModel:
             self.setupTrainingFlags(signalMappingModel, trainingFlag=True)
             self.setupTrainingFlags(specificEmotionModel, trainingFlag=True)
             self.setupTrainingFlags(sharedEmotionModel, trainingFlag=True)
@@ -175,20 +174,20 @@ class emotionPipelineHelpers:
         if model is None:
             model = self.getDistributedModel()
         # Get the specific models.
+        specificEmotionModel = model.specificEmotionModel
         trainingInformation = model.trainingInformation
         signalEncoderModel = model.signalEncoderModel
-        autoencoderModel = model.autoencoderModel
         signalMappingModel = model.signalMappingModel
         sharedEmotionModel = model.sharedEmotionModel
-        specificEmotionModel = model.specificEmotionModel
+        autoencoderModel = model.autoencoderModel
 
         if submodel == "trainingInformation":
             return trainingInformation
-        elif submodel == "signalEncoder":
+        elif submodel == modelConstants.signalEncoderModel:
             return signalEncoderModel
-        elif submodel == "autoencoder":
+        elif submodel == modelConstants.autoencoderModel:
             return autoencoderModel
-        elif submodel == "emotionPrediction":
+        elif submodel == modelConstants.emotionPredictionModel:
             return signalMappingModel, sharedEmotionModel, specificEmotionModel
         elif submodel is None:
             return trainingInformation, signalEncoderModel, autoencoderModel, signalMappingModel, sharedEmotionModel, specificEmotionModel

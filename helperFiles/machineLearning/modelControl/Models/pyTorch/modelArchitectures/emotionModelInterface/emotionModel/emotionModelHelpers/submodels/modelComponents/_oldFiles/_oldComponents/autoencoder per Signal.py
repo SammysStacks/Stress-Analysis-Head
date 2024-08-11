@@ -70,7 +70,7 @@ class encodingLayer(nn.Module):
         return compressedData
     
     def printParams(self, maxSeqLength = 150):
-        #encodingLayer(maxSeqLength = 150, compressedLength = 16).printParams(maxSeqLength = 150)
+        #encodingLayer(maxSeqTime = 150, compressedLength = 16).printParams(maxSeqTime = 150)
         summary(self, (maxSeqLength,)) # summary(model, inputShape)
         
     
@@ -138,12 +138,12 @@ class decodingLayer(nn.Module):
         # Match the original sequence length.
         inputData = inputData.view(inputData.size(0), -1) # Flatten the image
         inputData = self.flattenToSequence(inputData)
-        # The new dimension: batchSize, maxSeqLength
+        # The new dimension: batchSize, maxSeqTime
 
         return inputData
     
     def printParams(self, compressedLength = 16, maxSeqLength = 150):
-        #decodingLayer(compressedLength = 16, maxSeqLength = 150).printParams()
+        #decodingLayer(compressedLength = 16, maxSeqTime = 150).printParams()
         summary(self, (compressedLength,))
     
     

@@ -66,11 +66,11 @@ class signalEncoderPlots(trainingPlots):
         # Unpack the model information.
         allDummyModelPipelines = self.modelCompiler.onlyPreloadModelAttributes(self.modelName,
                                                                                self.datasetNames,
-                                                                               loadSubmodel="signalEncoder",
+                                                                               loadSubmodel=modelConstants.signalEncoderModel,
                                                                                loadSubmodelDate=finalTrainingDataString,
                                                                                loadSubmodelEpochs=-1,
                                                                                allDummyModelPipelines=[])
-        models = self.modelMigration.loadModels(allDummyModelPipelines, loadSubmodel="signalEncoder", loadSubmodelDate=finalTrainingDataString, loadSubmodelEpochs=-1,
+        models = self.modelMigration.loadModels(allDummyModelPipelines, loadSubmodel=modelConstants.signalEncoderModel, loadSubmodelDate=finalTrainingDataString, loadSubmodelEpochs=-1,
                                                 metaTraining=True, loadModelAttributes=True, loadModelWeights=True)
 
         # Initialize saving folder
@@ -114,7 +114,7 @@ class signalEncoderPlots(trainingPlots):
                         "ZZ", str(numLiftedChannels))
                     allDummyModelPipelines = self.modelCompiler.onlyPreloadModelAttributes(self.modelName,
                                                                                            self.datasetNames,
-                                                                                           loadSubmodel="signalEncoder",
+                                                                                           loadSubmodel=modelConstants.signalEncoderModel,
                                                                                            loadSubmodelDate=loadSubmodelDate,
                                                                                            loadSubmodelEpochs=-1,
                                                                                            allDummyModelPipelines=allDummyModelPipelines)
@@ -125,7 +125,7 @@ class signalEncoderPlots(trainingPlots):
                     smoothedLossCurves = np.empty((len(self.timeWindows), len(self.datasetNames)), dtype=object)
                     fig, axs = plt.subplots(1, 2, figsize=(15, 5), sharex=True, sharey=True)
                     for modelInd in range(len(allDummyModelPipelines)):
-                        currentModel = self.getSubmodel(allDummyModelPipelines[modelInd], submodel="signalEncoder")
+                        currentModel = self.getSubmodel(allDummyModelPipelines[modelInd], submodel=modelConstants.signalEncoderModel)
 
                         for timeWindowInd in range(len(self.timeWindows)):
                             trainLoss = currentModel.trainingLosses_timeReconstructionAnalysis[timeWindowInd]
@@ -308,12 +308,12 @@ class signalEncoderPlots(trainingPlots):
 
                     # Load in the previous model attributes.
                     loadSubmodelDate = finalTrainingDataString.replace("XX", str(numLiftedChannels)).replace("YY", str(numExpandedSignals)).replace("ZZ", str(numEncodingLayers))
-                    allDummyModelPipelines = self.modelCompiler.onlyPreloadModelAttributes(self.modelName, self.datasetNames, loadSubmodel="signalEncoder", loadSubmodelDate=loadSubmodelDate, loadSubmodelEpochs=-1,
+                    allDummyModelPipelines = self.modelCompiler.onlyPreloadModelAttributes(self.modelName, self.datasetNames, loadSubmodel=modelConstants.signalEncoderModel, loadSubmodelDate=loadSubmodelDate, loadSubmodelEpochs=-1,
                                                                                            allDummyModelPipelines=allDummyModelPipelines)
 
                     # For each model, get the losses.
                     for modelInd in range(len(allDummyModelPipelines)):
-                        currentModel = self.getSubmodel(allDummyModelPipelines[modelInd], submodel="signalEncoder")
+                        currentModel = self.getSubmodel(allDummyModelPipelines[modelInd], submodel=modelConstants.signalEncoderModel)
                         assert self.timeWindows == currentModel.timeWindows, f"Time windows do not match: {self.timeWindows} != {currentModel.timeWindows}"
 
                         # For each loss value we want:

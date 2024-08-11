@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 
 # Import excel data interface
 from helperFiles.dataAcquisitionAndAnalysis.metadataAnalysis.globalMetaAnalysis import globalMetaAnalysis
+from helperFiles.machineLearning.modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
 
 class emognitionInterface(globalMetaAnalysis):
@@ -26,7 +27,7 @@ class emognitionInterface(globalMetaAnalysis):
         self.numQuestionOptions = [5] * len(self.emotionQuestions)
         self.numQuestionOptions.extend([9] * len(self.dimQuestions))
         # Specify the current dataset.
-        self.datasetName = "emognition"
+        self.datasetName = modelConstants.emognitionDatasetName
 
         # Initialize the global meta protocol.
         super().__init__(self.subjectFolders, self.surveyQuestions)  # Initialize meta analysis.
@@ -325,7 +326,7 @@ if __name__ == "__main__":
         emognitionStreamingOrder, emognitionBiomarkerFeatureOrder, emognitionFeatureAverageWindows, emognitionFilteringOrders = emognitionAnalysisClass.getStreamingInfo()
         # Analyze and save the metadata features
         emognitionAnalysisClass.extractFeatures(emognitionAllCompiledDatas, emognitionSubjectOrder, emognitionAllExperimentalTimes, emognitionAllExperimentalNames, emognitionAllSurveyAnswerTimes, emognitionAllSurveyAnswersList, emognitionAllContextualInfo,
-                                                emognitionStreamingOrder, emognitionBiomarkerFeatureOrder, emognitionFeatureAverageWindows, emognitionFilteringOrders, interfaceType='emognition', reanalyzeData=True, showPlots=False, analyzeSequentially=False)
+                                                emognitionStreamingOrder, emognitionBiomarkerFeatureOrder, emognitionFeatureAverageWindows, emognitionFilteringOrders, metaDatasetName=modelConstants.emognitionDatasetName, reanalyzeData=True, showPlots=False, analyzeSequentially=False)
 
     if trainingData:
         # Prepare the data to go through the training interface.

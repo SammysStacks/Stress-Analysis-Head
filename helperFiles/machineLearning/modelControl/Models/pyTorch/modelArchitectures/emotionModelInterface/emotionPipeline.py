@@ -2,17 +2,18 @@
 import random
 import time
 
+from .emotionModel.emotionModelHelpers.modelConstants import modelConstants
 # Import files for machine learning
 from .emotionPipelineHelpers import emotionPipelineHelpers
 
 
 class emotionPipeline(emotionPipelineHelpers):
 
-    def __init__(self, accelerator, modelID, datasetName, modelName, allEmotionClasses, maxNumSignals, numSubjectIdentifiers, demographicLength,
-                 numSubjects, userInputParams, emotionNames, activityNames, featureNames, submodel, useFinalParams, debuggingResults=False):
+    def __init__(self, accelerator, modelID, datasetName, modelName, allEmotionClasses, maxNumSignals, numSubjects, userInputParams,
+                 emotionNames, activityNames, featureNames, submodel, useFinalParams, debuggingResults=False):
         # General parameters.
-        super().__init__(accelerator, modelID, datasetName, modelName, allEmotionClasses, maxNumSignals, numSubjectIdentifiers, demographicLength,
-                         numSubjects, userInputParams, emotionNames, activityNames, featureNames, submodel, useFinalParams, debuggingResults)
+        super().__init__(accelerator, modelID, datasetName, modelName, allEmotionClasses, maxNumSignals, numSubjects, userInputParams,
+                         emotionNames, activityNames, featureNames, submodel, useFinalParams, debuggingResults)
         # General parameters.
         self.maxBatchSignals = maxNumSignals
         self.calculateFullLoss = False
@@ -38,14 +39,8 @@ class emotionPipeline(emotionPipelineHelpers):
         model = self.getDistributedModel()
 
         # Load in all the data and labels for final predictions and calculate the activity and emotion class weights.
-        allData, allLabels, allTrainingMasks, allTestingMasks, allSignalData, allDemographicData, allSubjectIdentifiers, reconstructionIndex = self.prepareInformation(dataLoader)
+        allData, allLabels, allTrainingMasks, allTestingMasks, allSignalData, allSubjectIdentifiers, reconstructionIndex = self.prepareInformation(dataLoader)
         allEmotionClassWeights, activityClassWeights = self.organizeLossInfo.getClassWeights(allLabels, allTrainingMasks, allTestingMasks, self.numActivities)
-
-        # Assert valid input parameters.
-        assert allLabels.shape[1] == self.numEmotions + 1, f"Found {allLabels.shape[1]} labels, but expected {self.numEmotions} emotions + 1 activity label."
-        assert allLabels.shape == allTrainingMasks.shape, "We should specify the training indices for each label"
-        assert allLabels.shape == allTestingMasks.shape, "We should specify the testing indices for each label"
-        assert numEpochs == 1, f"numEpochs: {numEpochs}"
 
         # Prepare the model for training.
         self.setupTraining(submodel)
@@ -69,7 +64,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     numPointsAnalyzed += batchData.size(0)
 
                     # Only analyze data that can produce meaningful training results.
-                    if submodel in ["signalEncoder", "autoencoder"]:
+                    if submodel in [modelConstants.signalEncoderModel, modelConstants.autoencoderModel]:
                         # Get the current training data mask.
                         trainingColumn = self.dataInterface.getEmotionColumn(batchTrainingMask, reconstructionIndex)
 
@@ -83,7 +78,7 @@ class emotionPipeline(emotionPipelineHelpers):
                             continue  # We are not training on any points (or need to refresh training)
 
                     # Separate the data into signal, demographic, and subject identifier information.
-                    signalData, demographicData, subjectIdentifiers = self.dataInterface.separateData(batchData, self.finalDistributionLength, self.numSubjectIdentifiers, self.demographicLength)
+                    signalData, subjectIdentifiers = self.dataInterface.separateData(batchData)
                     # demographicData dimension: batchSize, numSignals, demographicLength
                     # signalData dimension: batchSize, numSignals, finalDistributionLength
                     # subjectInds dimension: batchSize, numSubjectIdentifiers
@@ -107,7 +102,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     # ------------ Forward pass through the model  ------------- #
 
                     # Train the signal encoder
-                    if submodel == "signalEncoder":
+                    if submodel == modelConstants.signalEncoderModel:
                         if self.accelerator.sync_gradients:
                             # Randomly choose to use an inflated number of signals.
                             maxBatchSignals = max(model.maxNumSignals, model.signalEncoderModel.encodeSignals.positionalEncodingInterface.maxNumEncodedSignals)
@@ -160,7 +155,7 @@ class emotionPipeline(emotionPipelineHelpers):
                         self.accelerator.print("Final-Recon-Mean-MinMax-PE-PEDec-Layer", finalLoss.item(), signalReconstructedLoss.item(), encodedSignalMeanLoss.item(), encodedSignalMinMaxLoss.item(), positionalEncodingTrainingLoss.item(), decodedPositionalEncodingLoss.item(), signalEncodingTrainingLayerLoss.item(), "\n")
 
                     # Train the autoencoder
-                    elif submodel == "autoencoder":
+                    elif submodel == modelConstants.autoencoderModel:
                         # Augment the time series length to train an arbitrary sequence length.
                         initialSignalData, augmentedSignalData = self.dataInterface.changeSignalLength(model.timeWindows[0], (signalData, augmentedSignalData))
                         print("Input size:", augmentedSignalData.size())
@@ -202,7 +197,7 @@ class emotionPipeline(emotionPipelineHelpers):
                         # Update the user.
                         self.accelerator.print(finalLoss.item(), encodedReconstructedLoss.item(), compressedMeanLoss.item(), compressedMinMaxLoss.item(), autoencoderTrainingLayerLoss.item(), signalReconstructedLoss.item(), "\n")
 
-                    elif submodel == "emotionPrediction":
+                    elif submodel == modelConstants.emotionPredictionModel:
                         # Perform the forward pass through the model.
                         _, _, _, compressedData, _, _, _, mappedSignalData, reconstructedCompressedData, featureData, activityDistribution, eachBasicEmotionDistribution, finalEmotionDistributions \
                             = model.emotionPrediction(augmentedSignalData, signalData, subjectIdentifiers, remapSignals=True, compileVariables=False, trainingFlag=True)

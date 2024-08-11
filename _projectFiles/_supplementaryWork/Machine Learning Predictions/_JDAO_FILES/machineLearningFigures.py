@@ -3,6 +3,8 @@ import os
 import sys
 import accelerate
 
+from helperFiles.machineLearning.modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
+
 # Set specific environmental parameters.
 os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
@@ -20,7 +22,7 @@ from helperMethods.signalEncoderPlots import signalEncoderPlots
 if __name__ == "__main__":
     # Specify the general model information.
     sharedModelWeights = ["signalEncoderModel", "autoencoderModel", "sharedEmotionModel"]  # Possible models: ["trainingInformation", "signalEncoderModel", "autoencoderModel", "signalMappingModel", "specificEmotionModel", "sharedEmotionModel"]
-    datasetNames = ["wesad", "emognition", "amigos", "dapper", "case", 'empatch']  # Specify which metadata analyses to compile
+    datasetNames = [modelConstants.wesadDatasetName, modelConstants.emognitionDatasetName, modelConstants.amigosDatasetName, modelConstants.dapperDatasetName, modelConstants.caseDatasetName, modelConstants.empatchDatasetName]  # Specify which metadata analyses to compile
     modelName = "emotionModel"  # The emotion model's unique identifier. Options: emotionModel
 
     # Testing parameters.

@@ -4,6 +4,7 @@ import torch
 
 # Helper classes
 from .lossCalculations import lossCalculations
+from ..modelConstants import modelConstants
 
 
 class organizeTrainingLosses(lossCalculations):
@@ -24,14 +25,14 @@ class organizeTrainingLosses(lossCalculations):
 
         # Load in all the data and labels for final predictions.
         allData, allLabels, allTrainingMasks, allTestingMasks = lossDataLoader.dataset.getAll()
-        allSignalData, allDemographicData, allSubjectIdentifiers = self.dataInterface.separateData(allData, model.finalDistributionLength, model.numSubjectIdentifiers, model.demographicLength)
+        allSignalData, allSubjectIdentifiers = self.dataInterface.separateData(allData)
         reconstructionIndex = self.dataInterface.getReconstructionIndex(allTrainingMasks)
         assert reconstructionIndex is not None
 
         # Stop gradient tracking.
         with torch.no_grad():
 
-            if submodel == "emotionPrediction":
+            if submodel == modelConstants.emotionPredictionModel:
                 # Segment the data into its time window.
                 segmentedSignalData = self.dataInterface.getRecentSignalPoints(allSignalData, self.generalTimeWindow)
 
@@ -93,7 +94,7 @@ class organizeTrainingLosses(lossCalculations):
                 segmentedEncodedData, segmentedReconstructedData, segmentedPredictedIndexProbabilities, segmentedDecodedPredictedIndexProbabilities, segmentedSignalEncodingLayerLoss = signalEncodingOutputs
                 segmentedMappedSignalData, segmentedReconstructedCompressedData, segmentedFeatureData, segmentedActivityDistributions, segmentedBasicEmotionDistributions, segmentedFinalEmotionDistributions = emotionModelOutputs
 
-                if submodel == "signalEncoder":
+                if submodel == modelConstants.signalEncoderModel:
                     # Calculate the signal encoding loss.
                     signalReconstructedTestingLoss, encodedMeanTestingLoss, encodedMinMaxTestingLoss, positionalEncodingTestingLoss, decodedPositionalEncodingTestingLoss, signalEncodingTestingLayerLoss = \
                         self.calculateSignalEncodingLoss(segmentedSignalData, segmentedEncodedData, segmentedReconstructedData, segmentedPredictedIndexProbabilities, segmentedDecodedPredictedIndexProbabilities, segmentedSignalEncodingLayerLoss, allTestingMasks, reconstructionIndex)
@@ -116,7 +117,7 @@ class organizeTrainingLosses(lossCalculations):
                     # Inform the user about the final loss.
                     print(f"\tSignal encoder {timeWindow} second losses:", signalReconstructedTrainingLoss.item(), signalReconstructedTestingLoss.item())
 
-                elif submodel == "autoencoder":
+                elif submodel == modelConstants.autoencoderModel:
                     # Calculate the error in signal reconstruction (autoencoder loss).
                     reconstructedEncodedTestingLoss, compressedMeanTestingLoss, compressedMinMaxTestingLoss, autoencoderTestingLayerLoss = \
                         self.calculateAutoencoderLoss(segmentedEncodedData, segmentedCompressedData, segmentedReconstructedEncodedData, segmentedAutoencoderLayerLoss, allTestingMasks, reconstructionIndex)

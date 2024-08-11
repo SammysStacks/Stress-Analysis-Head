@@ -110,7 +110,7 @@ class decodingLayer(nn.Module):
         # Apply ANN architecture.
         inputData = inputData.view(inputData.size(0), -1) # Flatten the image to contain a list of features
         inputData = self.fc_layers(inputData)
-        # The new dimension: batchSize, maxSeqLength
+        # The new dimension: batchSize, maxSeqTime
 
         return inputData
     

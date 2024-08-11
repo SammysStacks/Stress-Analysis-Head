@@ -3,6 +3,7 @@ import torch.optim as optim
 import transformers
 from torch.optim.lr_scheduler import SequentialLR
 
+from helperFiles.machineLearning.modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
 
 
@@ -18,11 +19,11 @@ class optimizerMethods:
         modelParams = [
             # Specify the model parameters for the signal encoding.
             {'params': signalEncoderModel.parameters(), 'weight_decay': 0, 'lr': 5E-5}]  # Empirically: 1E-10 < weight_decay < 1E-6; 5E-5 < lr < 5E-4
-        if submodel in ["autoencoder", "emotionPrediction"]:
+        if submodel in [modelConstants.autoencoderModel, modelConstants.emotionPredictionModel]:
             modelParams.append(
                 # Specify the model parameters for the autoencoder.
                 {'params': autoencoderModel.parameters(), 'weight_decay': 1E-6, 'lr': 1E-4})
-        if submodel == "emotionPrediction":
+        if submodel == modelConstants.emotionPredictionModel:
             modelParams.extend([
                 # Specify the model parameters for the signal mapping.
                 {'params': signalMappingModel.parameters(), 'weight_decay': 1E-6, 'lr': 1E-4},
@@ -54,7 +55,7 @@ class optimizerMethods:
         return optimizer, scheduler
 
     def setOptimizer(self, params, lr, weight_decay, submodel, optimizerType):
-        if submodel == "signalEncoder":
+        if submodel == modelConstants.signalEncoderModel:
             # Observations on properties:
             #     Momentum is not good (Used value of 0.9)
             # Observations on encoding:
@@ -68,9 +69,9 @@ class optimizerMethods:
             #     Noisy reconstruction: Adamax, Adam, NAdam
             #     Okay reconstruction: Rprop, AdamW, RMSprop
             return self.getOptimizer(optimizerType=optimizerType, params=params, lr=lr, weight_decay=weight_decay, momentum=0.2)
-        elif submodel == "autoencoder":
+        elif submodel == modelConstants.autoencoderModel:
             return optim.AdamW(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=weight_decay, amsgrad=False, maximize=False)
-        elif submodel == "emotionPrediction":
+        elif submodel == modelConstants.emotionPredictionModel:
             # adam and RAdam are okay, AdamW is a bit better (best?); NAdam is also a bit better
             return optim.AdamW(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=weight_decay, amsgrad=False, maximize=False)
         else:
@@ -88,7 +89,7 @@ class optimizerMethods:
         numConstrainedEpochs, numEpoch = modelParameters.getNumEpochs(submodel)
 
         # Train the autoencoder
-        if submodel == "signalEncoder":
+        if submodel == modelConstants.signalEncoderModel:
             return SequentialLR(
                 optimizer=optimizer, last_epoch=-1,
                 schedulers=[
@@ -96,9 +97,9 @@ class optimizerMethods:
                     optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=5, eta_min=1e-5, last_epoch=-1),
                 ], milestones=[numConstrainedEpochs],
             )
-        elif submodel == "autoencoder":
+        elif submodel == modelConstants.autoencoderModel:
             return transformers.get_constant_schedule_with_warmup(optimizer=optimizer, num_warmup_steps=20)
-        elif submodel == "emotionPrediction":
+        elif submodel == modelConstants.emotionPredictionModel:
             return transformers.get_constant_schedule_with_warmup(optimizer=optimizer, num_warmup_steps=20)
         else:
             assert False, "No model initialized"

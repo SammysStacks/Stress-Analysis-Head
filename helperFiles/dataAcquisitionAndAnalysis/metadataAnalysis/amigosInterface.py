@@ -8,6 +8,7 @@ from natsort import natsorted
 
 # Import excel data interface
 from helperFiles.dataAcquisitionAndAnalysis.metadataAnalysis.globalMetaAnalysis import globalMetaAnalysis
+from helperFiles.machineLearning.modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
 
 class amigosInterface(globalMetaAnalysis):
@@ -26,7 +27,7 @@ class amigosInterface(globalMetaAnalysis):
         self.numQuestionOptions = [9] * len(self.dimQuestions)  # NOTE: this is a float from 1 to 9
         self.numQuestionOptions.extend([2] * len(self.emotionQuestions))  # NOTE: this is binary 0, 1 (which is why I add +1 to match others)
         # Specify the current dataset.
-        self.datasetName = "amigos"
+        self.datasetName = modelConstants.amigosDatasetName
 
         # Define AMIGOS-specific parameters
         self.samplingFreq_processedData = 128
@@ -262,7 +263,7 @@ if __name__ == "__main__":
         streamingOrder, biomarkerFeatureOrder, featureAverageWindows, filteringOrders = amigosAnalysisClass.getStreamingInfo()
         # Analyze and save the metadata features
         amigosAnalysisClass.extractFeatures(allCompiledDatas, subjectOrder, allExperimentalTimes, allExperimentalNames, allSurveyAnswerTimes, allSurveyAnswersList, allContextualInfo,
-                                            streamingOrder, biomarkerFeatureOrder, featureAverageWindows, filteringOrders, interfaceType='amigos', reanalyzeData=True, showPlots=False, analyzeSequentially=False)
+                                            streamingOrder, biomarkerFeatureOrder, featureAverageWindows, filteringOrders, metaDatasetName=modelConstants.amigosDatasetName, reanalyzeData=True, showPlots=False, analyzeSequentially=False)
     if trainingData:
         # Prepare the data to go through the training interface.
         streamingOrder, biomarkerFeatureOrder, featureAverageWindows, featureNames, biomarkerFeatureNames = amigosAnalysisClass.compileTrainingInfo()

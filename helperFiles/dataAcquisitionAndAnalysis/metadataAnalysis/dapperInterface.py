@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 
 # Import excel data interface
 from helperFiles.dataAcquisitionAndAnalysis.metadataAnalysis.globalMetaAnalysis import globalMetaAnalysis
+from helperFiles.machineLearning.modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
 
 class dapperInterface(globalMetaAnalysis):
@@ -16,7 +17,7 @@ class dapperInterface(globalMetaAnalysis):
         self.debug = False
         self.subjectFolders = os.path.dirname(__file__) + "/../../../_experimentalData/_metaDatasets/DAPPER/"
         # Specify the current dataset.
-        self.datasetName = "dapper"
+        self.datasetName = modelConstants.dapperDatasetName
 
         # Initialize DAPPER survey information.
         self.emotionQuestions = ['UPSET', 'HOSTILE', 'ALERT', 'ASHAMED', 'INSPIRED', 'NERVOUS', 'DETERMINED',
@@ -339,7 +340,7 @@ if __name__ == "__main__":
         dapperStreamingOrder, dapperBiomarkerFeatureOrder, dapperFeatureAverageWindows, dapperFilteringOrders = dapperAnalysisClass.getStreamingInfo()
         # Analyze and save the metadata features
         dapperAnalysisClass.extractFeatures(dapperAllCompiledDatas, dapperSubjectOrder, dapperAllExperimentalTimes, dapperAllExperimentalNames, dapperAllSurveyAnswerTimes, dapperAllSurveyAnswersList, dapperAllContextualInfo,
-                                            dapperStreamingOrder, dapperBiomarkerFeatureOrder, dapperFeatureAverageWindows, dapperFilteringOrders, interfaceType='dapper', reanalyzeData=True, showPlots=False, analyzeSequentially=False)
+                                            dapperStreamingOrder, dapperBiomarkerFeatureOrder, dapperFeatureAverageWindows, dapperFilteringOrders, metaDatasetName=modelConstants.dapperDatasetName, reanalyzeData=True, showPlots=False, analyzeSequentially=False)
 
     if trainingData:
         # Prepare the data to go through the training interface.

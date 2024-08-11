@@ -56,11 +56,11 @@ class trainingPlots(globalPlottingProtocols):
 
     @staticmethod
     def getSubmodel(metaModel, submodel):
-        if submodel == "signalEncoder":
+        if submodel == modelConstants.signalEncoderModel:
             return metaModel.model.signalEncoderModel
-        elif submodel == "autoencoder":
+        elif submodel == modelConstants.autoencoderModel:
             return metaModel.model.autoencoderModel
-        elif submodel == "emotionPrediction":
+        elif submodel == modelConstants.emotionPredictionModel:
             return metaModel.model.sharedEmotionModel
         else:
             raise Exception()

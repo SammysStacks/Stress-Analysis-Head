@@ -10,6 +10,7 @@ from natsort import natsorted
 from openpyxl import load_workbook
 
 from .featureAnalysis.featurePlotting import featurePlotting
+from .modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 # Import Files for Machine Learning
 from .modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
 from .modelControl.modelSpecifications.compileModelInfo import compileModelInfo
@@ -179,12 +180,12 @@ class trainingProtocols(extractData):
             # ----------- Segment the Experimental Feature Signals ----------- #
 
             # Calculate a buffer for the experiment.
-            modelFeatureTimeBuffer = self.modelParameters.getMaxBufferLength()
+            modelFeatureTimeBuffer = modelConstants.timeWindows[-1]*2
 
             badExperimentalInds = []
             # For each experiment performed in the trial.
             for experimentInd in range(len(experimentTimes)):
-                startIntervalTime = currentSurveyAnswerTimes[experimentInd] - modelFeatureTimeBuffer
+                startIntervalTime = max(0, currentSurveyAnswerTimes[experimentInd] - modelFeatureTimeBuffer)
                 startSurveyTime = currentSurveyAnswerTimes[experimentInd]
 
                 # Calculate the feature intervals

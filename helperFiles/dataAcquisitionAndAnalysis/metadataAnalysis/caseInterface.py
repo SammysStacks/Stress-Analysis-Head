@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 
 # Import excel data interface
 from helperFiles.dataAcquisitionAndAnalysis.metadataAnalysis.globalMetaAnalysis import globalMetaAnalysis
+from helperFiles.machineLearning.modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
 
 class caseInterface(globalMetaAnalysis):
@@ -23,7 +24,7 @@ class caseInterface(globalMetaAnalysis):
         # Compile the scoring ranges
         self.numQuestionOptions = [10] * len(self.surveyQuestions)  # 0.5 through 9.5
         # Specify the current dataset.
-        self.datasetName = "case"
+        self.datasetName = modelConstants.caseDatasetName
 
         # Define CASE-specific parameters
         self.case_streamingOrder = ['ecg', 'bvp', 'gsr', 'rsp', 'skt']  # 'ecg', 'bvp', 'gsr', 'rsp', 'skt', 'emg_zygo', 'emg_coru', 'emg_trap'
@@ -269,7 +270,7 @@ if __name__ == "__main__":
         streamingOrder, biomarkerFeatureOrder, featureAverageWindows, filteringOrders = caseAnalysisClass.getStreamingInfo()
         # # Analyze and save the metadata features
         caseAnalysisClass.extractFeatures(allCompiledDatas, subjectOrder, allExperimentalTimes, allExperimentalNames, allSurveyAnswerTimes, allSurveyAnswersList, allContextualInfo,
-                                          streamingOrder, biomarkerFeatureOrder, featureAverageWindows, filteringOrders, interfaceType='case', reanalyzeData=False, showPlots=False, analyzeSequentially=True)  # Keep reanalyzeData=True for memory reasons.
+                                          streamingOrder, biomarkerFeatureOrder, featureAverageWindows, filteringOrders, metaDatasetName=modelConstants.caseDatasetName, reanalyzeData=False, showPlots=False, analyzeSequentially=True)  # Keep reanalyzeData=True for memory reasons.
 
     if trainingData:
         # Prepare the data to go through the training interface.

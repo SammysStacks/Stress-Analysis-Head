@@ -61,8 +61,8 @@ class modelVisualizations(globalPlottingProtocols):
         # Plot the loss on the primary GPU.
         if self.accelerator.is_local_main_process:
 
-            if submodel in ["signalEncoder", "autoencoder"]:
-                if submodel == "signalEncoder":
+            if submodel in [modelConstants.signalEncoderModel, modelConstants.autoencoderModel]:
+                if submodel == modelConstants.signalEncoderModel:
                     specificModels = [modelPipeline.model.signalEncoderModel for modelPipeline in allModelPipelines]
                 else:
                     specificModels = [modelPipeline.model.autoencoderModel for modelPipeline in allModelPipelines]
@@ -128,14 +128,14 @@ class modelVisualizations(globalPlottingProtocols):
             # Plot the loss on the primary GPU.
             if self.accelerator.is_local_main_process:
 
-                if submodel == "signalEncoder":
+                if submodel == modelConstants.signalEncoderModel:
                     # Plot autoencoder loss for each time.
                     self.generalViz.plotTrainingLosses(model.signalEncoderModel.trainingLosses_timeReconstructionAnalysis, model.signalEncoderModel.testingLosses_timeReconstructionAnalysis, lossLabels=model.timeWindows, plotTitle="trainingLosses/Signal Encoder Convergence Loss")
                     self.generalViz.plotTrainingLosses(model.signalEncoderModel.trainingLosses_timePosEncAnalysis, model.signalEncoderModel.testingLosses_timePosEncAnalysis, lossLabels=model.timeWindows, plotTitle="trainingLosses/Positional Encoder Convergence Loss")
                     self.generalViz.plotTrainingLosses(model.signalEncoderModel.trainingLosses_timeMeanAnalysis, model.signalEncoderModel.testingLosses_timeMeanAnalysis, lossLabels=model.timeWindows, plotTitle="trainingLosses/Signal Encoder Mean Loss")
                     self.generalViz.plotTrainingLosses(model.signalEncoderModel.trainingLosses_timeMinMaxAnalysis, model.signalEncoderModel.testingLosses_timeMinMaxAnalysis, lossLabels=model.timeWindows, plotTitle="trainingLosses/Signal Encoder MinMax Loss")
 
-                if submodel == "autoencoder":
+                if submodel == modelConstants.autoencoderModel:
                     # Plot autoencoder loss for each time.
                     self.generalViz.plotTrainingLosses(model.autoencoderModel.trainingLosses_timeReconstructionAnalysis, model.autoencoderModel.testingLosses_timeReconstructionAnalysis, lossLabels=model.timeWindows, plotTitle="trainingLosses/Autoencoder Convergence Loss")
                     self.generalViz.plotTrainingLosses(model.autoencoderModel.trainingLosses_timeMeanAnalysis, model.autoencoderModel.testingLosses_timeMeanAnalysis, lossLabels=model.timeWindows, plotTitle="trainingLosses/Autoencoder Mean Loss")
@@ -203,7 +203,7 @@ class modelVisualizations(globalPlottingProtocols):
 
             # ------------------- Signal Encoding Plots -------------------- # 
 
-            if submodel == "signalEncoder":
+            if submodel == modelConstants.signalEncoderModel:
                 with torch.no_grad():
                     # Calculate the positional encoding.
                     positionEncodedTrainingData = model.signalEncoderModel.encodeSignals.positionalEncodingInterface.addPositionalEncoding(trainingSignalData.to(self.accelerator.device))
@@ -230,11 +230,11 @@ class modelVisualizations(globalPlottingProtocols):
             self.autoencoderViz.plotEncoder(trainingSignalData.detach().cpu(), trainingReconstructedData.detach().cpu(), epoch=currentEpoch, plotTitle="signalReconstruction/Signal Encoding Training Reconstruction", numSignalPlots=1)
 
             # Dont keep plotting untrained models.
-            if submodel == "signalEncoder": return None
+            if submodel == modelConstants.signalEncoderModel: return None
 
             # --------------------- Autoencoder Plots ---------------------- # 
 
-            if submodel == "autoencoder":
+            if submodel == modelConstants.autoencoderModel:
                 with torch.no_grad():
                     # Reconstruct the initial data.
                     numSignalForwardPath = model.signalEncoderModel.encodeSignals.simulateSignalPath(numSignals, targetNumSignals=model.numEncodedSignals)[0]
@@ -274,11 +274,11 @@ class modelVisualizations(globalPlottingProtocols):
             self.autoencoderViz.plotSignalComparison(trainingEncodedData.detach().cpu(), trainingCompressedData.detach().cpu(), epoch=currentEpoch, plotTitle="autoencoder/Autoencoding Training Compression", numSignalPlots=1)
 
             # Dont keep plotting untrained models.
-            if submodel == "autoencoder": return None
+            if submodel == modelConstants.autoencoderModel: return None
 
             # ------------------ Manifold Projection Plots ----------------- # 
 
-            if submodel == "emotionPrediction":
+            if submodel == modelConstants.emotionPredictionModel:
                 # Plot latent encoding loss.
                 self.generalViz.plotTrainingLosses([model.mapSignals.trainingLosses_timeReconstructionAnalysis, model.mapSignals.trainingLosses_mappedMean,
                                                     model.mapSignals.trainingLosses_mappedMinMax],
@@ -295,7 +295,7 @@ class modelVisualizations(globalPlottingProtocols):
             self.autoencoderViz.plotEncoder(trainingEncodedData.detach().cpu(), trainingReconstructedEncodedData.detach().cpu(), epoch=currentEpoch, plotTitle="signalReconstruction/Manifold Training Reconstruction", numSignalPlots=1)
 
             # Dont keep plotting untrained models.
-            if submodel == "emotionPrediction": return None
+            if submodel == modelConstants.emotionPredictionModel: return None
 
             # ------------------ Emotion Prediction Plots ------------------ # 
 
