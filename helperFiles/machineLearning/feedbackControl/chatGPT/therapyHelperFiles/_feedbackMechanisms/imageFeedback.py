@@ -78,7 +78,7 @@ class ImageFeedback:
         # Open the image URL with the webdriver.
         self.browserController.open_url(image_url)
 
-    def saveImage(self, response, org_prompt, save_path="/Helper Files/_savedImages/"):
+    def saveImage(self, response, org_prompt, save_path="/Helper Files/_savedImages/"): # change this to therapyHelperFiles/_savedImages/ for the right directory name
         # Get the image from image URL.
         image_url = self.getImageURL(response)
         imageRGBA = self.imageController.pullDownWebImage(image_url)
@@ -103,4 +103,4 @@ class ImageFeedback:
         
     @staticmethod
     def getImageURL(response):
-        return response.channelData[0].url
+        return response.data[0].url
