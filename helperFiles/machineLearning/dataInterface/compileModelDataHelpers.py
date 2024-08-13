@@ -105,7 +105,7 @@ class compileModelDataHelpers:
         # numSignals: The number of signals in the dataset
         # Convert to tensor and initialize lists
         batchSize, numLabels = allFeatureLabels.shape
-        allSingleClassIndices = [[]]*numLabels
+        allSingleClassIndices = [[] for _ in range(numLabels)]
 
         # Iterate over each label type (emotion)
         for labelTypeInd in range(numLabels):
@@ -199,9 +199,9 @@ class compileModelDataHelpers:
 
             currentSignalInd = 0
             # For each biomarker in the batch.
-            for biomarkerInd in range(len(batchData)):
-                biomarkerData = torch.as_tensor(batchData[biomarkerInd]).T  # Dim: numBiomarkerFeatures, batchSpecificFeatureLength
-                biomarkerTimes = torch.as_tensor(batchTimes[biomarkerInd])  # Dim: batchSpecificFeatureLength
+            for biomarkerInd, (biomarkerData, biomarkerTimes) in enumerate(zip(batchData, batchTimes)):
+                biomarkerData = torch.tensor(biomarkerData, dtype=torch.float32).T  # Dim: numBiomarkerFeatures, batchSpecificFeatureLength
+                biomarkerTimes = torch.tensor(biomarkerTimes, dtype=torch.float32)  # Dim: batchSpecificFeatureLength
 
                 # Get the number of signals in the current biomarker.
                 numBiomarkerFeatures, batchSpecificFeatureLength = biomarkerData.shape
@@ -220,7 +220,8 @@ class compileModelDataHelpers:
                 allSignalData[experimentalInd, currentSignalInd:finalSignalInd, 0:batchSpecificFeatureLength, 3] = biomarkerTimes[-1] - biomarkerTimes
                 allNumSignalPoints[experimentalInd, currentSignalInd:finalSignalInd] = batchSpecificFeatureLength
 
-                # Make sure the padded data does not change the signal range
+                # Make sure the padded data does not change the signal range.
+                allSignalData[experimentalInd, currentSignalInd:finalSignalInd, batchSpecificFeatureLength:, 0] = biomarkerData[:, -1].unsqueeze(-1)
 
                 # Update the current signal index
                 currentSignalInd = finalSignalInd

@@ -286,13 +286,13 @@ class modelMigration:
     # ---------------------------------------------------------------------- #
     # ------------------------ Loading Model Methods ----------------------- #
     
-    def loadModels(self, modelPipelines, submodel, trainingDate, numEpochs, metaTraining, loadModelAttributes=True, loadModelWeights=True):
+    def loadModels(self, allModelPipelines, submodel, trainingDate, numEpochs, metaTraining, loadModelAttributes=True, loadModelWeights=True):
         # Update the user on the loading process.
         trainingType = "metaTrainingModels" if metaTraining else "trainingModels"
         print(f"Loading in previous {trainingType} weights and attributes")
 
         # Iterate over each model pipeline and dataset name
-        for modelPipeline in modelPipelines:
+        for modelPipeline in allModelPipelines:
             # Save the individual model's information.
             self._loadModel(modelPipeline.model, modelPipeline.modelName, modelPipeline.datasetName, submodel, trainingDate, numEpochs, metaTraining, loadModelAttributes, loadModelWeights)
 

@@ -165,7 +165,7 @@ class compileModelData(compileModelDataHelpers):
     def compileModels(self, metaRawFeatureTimeIntervals, metaCompiledFeatureIntervals, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions,
                       metaSubjectOrder, metaFeatureNames, metaDatasetNames, modelName, submodel, testSplitRatio, metaTraining, specificInfo=None, useFinalParams=False, random_state=42):
         # Initialize relevant holders.
-        allModelPipelines, lossDataHolders, allDataLoaders = [[]]*3
+        allModelPipelines, lossDataHolders, allDataLoaders = [], [], []
 
         # Specify model parameters
         loadSubmodelDate, loadSubmodelEpochs, loadSubmodel = self.modelParameters.getModelInfo(submodel, specificInfo)
@@ -297,7 +297,6 @@ class compileModelData(compileModelDataHelpers):
             allModelPipelines.append(modelPipeline)
             allDataLoaders.append(modelDataLoader)
 
-        print(allModelPipelines)
         # Load in the previous model weights and attributes.
         self.modelMigration.loadModels(allModelPipelines, loadSubmodel, loadSubmodelDate, loadSubmodelEpochs, metaTraining=True, loadModelAttributes=True, loadModelWeights=True)
 

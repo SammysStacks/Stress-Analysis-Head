@@ -35,12 +35,12 @@ class modelParameters:
         return self.generalMethods.biased_high_sample(*addingNoiseRange, randomValue=random.uniform(a=0, b=1)), addingNoiseRange
 
     def getTrainingBatchSize(self, submodel, numExperiments):
-        # Wesad: Found 32 (out of 32) well-labeled emotions across 60 experiments with 68 signals.
+        # Wesad: Found 32 (out of 32) well-labeled emotions across 58 experiments with 70 signals.
         # Emognition: Found 12 (out of 12) well-labeled emotions across 407 experiments with 55 signals.
-        # Amigos: Found 12 (out of 12) well-labeled emotions across 707 experiments with 118 signals.
-        # Dapper: Found 12 (out of 12) well-labeled emotions across 364 experiments with 21 signals.
-        # Case: Found 2 (out of 2) well-labeled emotions across 1586 experiments with 47 signals.
-        # Collected: Found 30 (out of 30) well-labeled emotions across 152 experiments with 79 signals.
+        # Amigos: Found 12 (out of 12) well-labeled emotions across 707 experiments with 127 signals.
+        # Dapper: Found 12 (out of 12) well-labeled emotions across 364 experiments with 22 signals.
+        # Case: Found 2 (out of 2) well-labeled emotions across 1582 experiments with 51 signals.
+        # Collected: Found 30 (out of 30) well-labeled emotions across 150 experiments with 81 signals.
 
         if submodel == modelConstants.signalEncoderModel:
             totalMinBatchSize = 16
@@ -59,18 +59,18 @@ class modelParameters:
         assert gradientAccumulation <= totalMinBatchSize, "The gradient accumulation steps must be less than the total batch size."
 
         # Adjust the batch size based on the total size.
-        batchSize = int(minimumBatchSize * numExperiments / 1) # TODO: Change the denominator to min signals
+        batchSize = int(minimumBatchSize * numExperiments / 58)
         batchSize = min(batchSize, numExperiments)
 
         return batchSize
 
     def getInferenceBatchSize(self, submodel, numSignals):
-        # Wesad: Found 32 (out of 32) well-labeled emotions across 61 experiments with 70 signals.
+        # Wesad: Found 32 (out of 32) well-labeled emotions across 58 experiments with 70 signals.
         # Emognition: Found 12 (out of 12) well-labeled emotions across 407 experiments with 55 signals.
-        # Amigos: Found 12 (out of 12) well-labeled emotions across 318 experiments with 120 signals.
-        # Dapper: Found 12 (out of 12) well-labeled emotions across 364 experiments with 19 signals.
-        # Case: Found 2 (out of 2) well-labeled emotions across 1523 experiments with 49 signals.
-        # Collected: Found 30 (out of 30) well-labeled emotions across 177 experiments with 79 signals.
+        # Amigos: Found 12 (out of 12) well-labeled emotions across 707 experiments with 127 signals.
+        # Dapper: Found 12 (out of 12) well-labeled emotions across 364 experiments with 22 signals.
+        # Case: Found 2 (out of 2) well-labeled emotions across 1582 experiments with 51 signals.
+        # Collected: Found 30 (out of 30) well-labeled emotions across 150 experiments with 81 signals.
         # Set the minimum batch size.
         minimumBatchSize = 32 if self.gpuFlag else 16
 
