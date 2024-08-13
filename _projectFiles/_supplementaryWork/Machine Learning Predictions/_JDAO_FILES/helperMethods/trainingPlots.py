@@ -16,7 +16,7 @@ class trainingPlots(globalPlottingProtocols):
         super(trainingPlots, self).__init__()
         # General parameters
         self.timeWindows = [90, 120, 150, 180, 210, 240]  # A list of all time windows to consider for the encoding.
-        self.sharedModelWeights = sharedModelWeights  # Possible models: ["trainingInformation", "signalEncoderModel", "autoencoderModel", "signalMappingModel", "specificEmotionModel", "sharedEmotionModel"]
+        self.sharedModelWeights = sharedModelWeights  # Possible models: ["trainingInformation", modelConstants.signalEncoderModel, "autoencoderModel", "signalMappingModel", "specificEmotionModel", "sharedEmotionModel"]
         self.datasetNames = datasetNames  # Specify which datasets to compile
         self.savingFolder = savingBaseFolder  # The folder to save the figures.
         self.accelerator = accelerator  # Hugging face model optimizations.

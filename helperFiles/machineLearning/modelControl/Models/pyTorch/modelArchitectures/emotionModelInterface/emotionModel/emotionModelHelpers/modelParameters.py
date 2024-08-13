@@ -215,22 +215,15 @@ class modelParameters:
     def getSubmodelsSaving(submodel):
         # Get the submodels to save
         if submodel == modelConstants.signalEncoderModel:
-            submodelsSaving = ["trainingInformation", "signalEncoderModel"]
+            submodelsSaving = ["trainingInformation", modelConstants.signalEncoderModel]
         elif submodel == modelConstants.autoencoderModel:
-            submodelsSaving = ["trainingInformation", "signalEncoderModel", "autoencoderModel"]
+            submodelsSaving = ["trainingInformation", modelConstants.signalEncoderModel, "autoencoderModel"]
         elif submodel == modelConstants.emotionPredictionModel:
-            submodelsSaving = ["trainingInformation", "signalEncoderModel", "autoencoderModel", "signalMappingModel", "specificEmotionModel", "sharedEmotionModel"]
+            submodelsSaving = ["trainingInformation", modelConstants.signalEncoderModel, "autoencoderModel", "signalMappingModel", "specificEmotionModel", "sharedEmotionModel"]
         else:
             assert False, "No model initialized"
 
         return submodelsSaving
-
-    @staticmethod
-    def getSharedModels():
-        # Possible models: ["trainingInformation", "signalEncoderModel", "autoencoderModel", "signalMappingModel", "specificEmotionModel", "sharedEmotionModel"]
-        sharedModelWeights = ["signalEncoderModel", "autoencoderModel", "sharedEmotionModel"]
-
-        return sharedModelWeights
 
     # -------------------------- Organizational Methods ------------------------- #
 
@@ -238,7 +231,7 @@ class modelParameters:
     def compileModelNames():
         # Specify which metadata analyses to compile
         metaDatasetNames = [modelConstants.wesadDatasetName, modelConstants.emognitionDatasetName, modelConstants.amigosDatasetName, modelConstants.dapperDatasetName, modelConstants.caseDatasetName]
-        datasetNames = ['empatch']
+        datasetNames = [modelConstants.empatchDatasetName]
         allDatasetNames = metaDatasetNames + datasetNames
 
         # Assert the integrity of dataset collection.

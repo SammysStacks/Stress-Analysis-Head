@@ -83,7 +83,6 @@ if __name__ == "__main__":
 
     # Organize all the model parameters.
     storeLoss, fastPass = modelParameters.alterProtocolParams(storeLoss, fastPass, useFinalParams)  # Set the HPC parameters.
-    sharedModelWeights = modelParameters.getSharedModels()  # The shared model weights.
 
     # Specify training parameters
     numEpoch_toPlot, numEpoch_toSaveFull = modelParameters.getEpochInfo(submodel, useFinalParams)  # The number of epochs to plot and save the model.
@@ -93,7 +92,7 @@ if __name__ == "__main__":
     submodelsSaving = modelParameters.getSubmodelsSaving(submodel)  # The submodels to save.
 
     # Initialize helper classes
-    trainingProtocols = trainingProtocolHelpers(accelerator, sharedModelWeights, submodelsSaving)  # Initialize the training protocols.
+    trainingProtocols = trainingProtocolHelpers(accelerator=accelerator, sharedModelWeights=modelConstants.sharedModelWeights, submodelsSaving=submodelsSaving)  # Initialize the training protocols.
     modelMigration = modelMigration(accelerator)  # Initialize the model migration class.
     featureAnalysis = featureImportance("")  # Initialize the feature analysis class.
 
@@ -101,7 +100,7 @@ if __name__ == "__main__":
 
     # Compile the final modules.
     allModels, allDataLoaders, allLossDataHolders, allMetaModels, allMetaDataLoaders, allMetaLossDataHolders, _ = modelCompiler.compileModelsFull(metaDatasetNames, modelName, submodel, testSplitRatio, datasetNames, useFinalParams)
-    unifiedLayerData = modelMigration.copyModelWeights(allMetaModels[0], sharedModelWeights)  # Unify all the fixed weights in the models
+    unifiedLayerData = modelMigration.copyModelWeights(allMetaModels[0], sharedModelWeights=modelConstants.sharedModelWeights)  # Unify all the fixed weights in the models
 
     # -------------------------- Meta-model Training ------------------------- #
 
@@ -137,9 +136,9 @@ if __name__ == "__main__":
     # -------------------------- Empatch Training ------------------------- #
 
     # # Unify all the fixed weights in the models
-    # unifiedLayerData = modelMigration.copyModelWeights(modelPipeline, sharedModelWeights)
-    # modelMigration.unifyModelWeights(allMetaModels, sharedModelWeights, unifiedLayerData)
-    # modelMigration.unifyModelWeights(allModels, sharedModelWeights, unifiedLayerData)
+    # unifiedLayerData = modelMigration.copyModelWeights(modelPipeline, sharedModelWeights=modelConstants.sharedModelWeights)
+    # modelMigration.unifyModelWeights(allMetaModels, sharedModelWeights=modelConstants.sharedModelWeights, unifiedLayerData)
+    # modelMigration.unifyModelWeights(allModels, sharedModelWeights=modelConstants.sharedModelWeights, unifiedLayerData)
     #
     # # SHAP analysis on the metalearning models.
     # featureAnalysis = _featureImportance.featureImportance(modelCompiler.saveTrainingData)

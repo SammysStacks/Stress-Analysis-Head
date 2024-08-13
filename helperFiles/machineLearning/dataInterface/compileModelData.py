@@ -164,9 +164,7 @@ class compileModelData(compileModelDataHelpers):
     def compileModels(self, metaRawFeatureTimeIntervals, metaCompiledFeatureIntervals, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions,
                       metaSubjectOrder, metaFeatureNames, metaDatasetNames, modelName, submodel, testSplitRatio, metaTraining, specificInfo=None, useFinalParams=False, random_state=42):
         # Initialize relevant holders.
-        allModelPipelines = []
-        lossDataHolders = []
-        allDataLoaders = []
+        allModelPipelines, lossDataHolders, allDataLoaders = [[]]*3
 
         # Specify model parameters
         loadSubmodelDate, loadSubmodelEpochs, loadSubmodel = self.modelParameters.getModelInfo(submodel, specificInfo)
@@ -177,13 +175,14 @@ class compileModelData(compileModelDataHelpers):
             allRawFeatureTimeIntervals = metaRawFeatureTimeIntervals[metadataInd].copy()
             allCompiledFeatureIntervals = metaCompiledFeatureIntervals[metadataInd].copy()
             numQuestionOptions = metaNumQuestionOptions[metadataInd].copy()
-            subjectOrder = np.asarray(metaSubjectOrder[metadataInd]).copy()
             surveyAnswersList = metaSurveyAnswersList[metadataInd].copy() - 1
             surveyQuestions = metaSurveyQuestions[metadataInd].copy()
             activityLabels = metaActivityLabels[metadataInd].copy()
             activityNames = metaActivityNames[metadataInd].copy()
             featureNames = metaFeatureNames[metadataInd].copy()
             metaDatasetName = metaDatasetNames[metadataInd]
+            subjectOrder = metaSubjectOrder[metadataInd]
+            activityLabelInd = len(surveyQuestions)
 
             # Assert the assumptions made about the incoming data
             assert surveyAnswersList.min().item() >= -2, "All ratings must be greater than 0 (exception for -2, which is reserved for missing)."
@@ -197,7 +196,7 @@ class compileModelData(compileModelDataHelpers):
             # Add the human activity recognition to the end.
             activityLabels = np.asarray(activityLabels, dtype=int).reshape(-1, 1)
             surveyAnswersList = np.hstack((surveyAnswersList, activityLabels))
-            activityLabelInd = -1
+            # surveyAnswersList dimension: batchSize, numQuestions + 1
 
             # Remove any experiments and signals that are bad.
             allSignalData, allSignalStopInds = self._padSignalData(allRawFeatureTimeIntervals, allCompiledFeatureIntervals)
