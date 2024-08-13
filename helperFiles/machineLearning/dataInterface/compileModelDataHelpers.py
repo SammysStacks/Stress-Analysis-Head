@@ -1,7 +1,6 @@
 import gzip
 import os
 import pickle
-from bisect import bisect_right
 
 import numpy as np
 import torch
@@ -10,6 +9,7 @@ from .dataPreparation import minMaxScale_noInverse
 from ..modelControl.Models.pyTorch.Helpers.modelMigration import modelMigration
 # Import helper files.
 from ..modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
+from ..modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.generalMethods.generalMethods import generalMethods
 from ..modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from ..modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
 
@@ -32,6 +32,7 @@ class compileModelDataHelpers:
         self.modelParameters = modelParameters(userInputParams,  accelerator)
         self.modelMigration = modelMigration(accelerator, debugFlag=False)
         self.dataInterface = emotionDataInterface
+        self.generalMethods = generalMethods()
 
         # Submodel-specific parameters
         self.emotionPredictionModelInfo = None
@@ -93,17 +94,16 @@ class compileModelDataHelpers:
         assert len(activityLabels) == len(validActivityLabels), f"{len(activityLabels)} != {len(validActivityLabels)}"
 
         # Get the corresponding unique activity names
-        uniqueActivityNames = np.asarray(activityNames)[uniqueActivityLabels.int()]
+        uniqueActivityNames = np.asarray(activityNames)[uniqueActivityLabels.to(torch.int)]
 
-        return uniqueActivityNames, validActivityLabels.to(torch.int)
+        return uniqueActivityNames, validActivityLabels.to(torch.float32)
 
     def organizeLabels(self, allFeatureLabels, metaTraining, metaDatasetName, numSignals):
-        # allFeatureLabels: A numpy array or list of size (batchSize, numLabels)
+        # allFeatureLabels: A torch array or list of size (batchSize, numLabels)
         # metaTraining: Boolean indicating if the data is for training
         # metaDatasetName: String representing the name of the dataset
         # numSignals: The number of signals in the dataset
         # Convert to tensor and initialize lists
-        allFeatureLabels = torch.as_tensor(allFeatureLabels)
         batchSize, numLabels = allFeatureLabels.shape
         allSingleClassIndices = [[]]*numLabels
 
@@ -124,7 +124,7 @@ class compileModelDataHelpers:
                 # Remove labels belonging to small classes
                 smallClassLabels = unique_classes[smallClassMask]
                 smallClassLabelMask = torch.isin(featureLabels, smallClassLabels)
-                allSingleClassIndices[labelTypeInd].extend(smallClassLabelMask.cpu().numpy().tolist())
+                allSingleClassIndices[labelTypeInd] = smallClassLabelMask.cpu().numpy()
                 featureLabels[smallClassLabelMask] = self.missingLabelValue
 
                 # Recalculate unique classes.
@@ -146,9 +146,9 @@ class compileModelDataHelpers:
 
     @staticmethod
     def addDemographicInfo(allSignalData, allNumSignalPoints, allSubjectInds, datasetInd):
-        # allSignalData: A numpy array of size (batchSize, numSignals, maxSequenceLength, [signal, dTimeBack, dTimeForward, time])
-        # allNumSignalPoints: A numpy array of size (batchSize, numSignals)
-        # allSubjectInds: A numpy array of size batchSize
+        # allSignalData: A torch array of size (batchSize, numSignals, maxSequenceLength, [signal, dTimeBack, dTimeForward, time])
+        # allNumSignalPoints: A torch array of size (batchSize, numSignals)
+        # allSubjectInds: A torch array of size batchSize
         numExperiments, numSignals, maxSequenceLength, numChannels = allSignalData.shape
         assert len(modelConstants.signalChannelNames) == numChannels - 1
         numSubjectIdentifiers = len(modelConstants.subjectIdentifiers)
@@ -220,14 +220,16 @@ class compileModelDataHelpers:
                 allSignalData[experimentalInd, currentSignalInd:finalSignalInd, 0:batchSpecificFeatureLength, 3] = biomarkerTimes[-1] - biomarkerTimes
                 allNumSignalPoints[experimentalInd, currentSignalInd:finalSignalInd] = batchSpecificFeatureLength
 
+                # Make sure the padded data does not change the signal range
+
                 # Update the current signal index
                 currentSignalInd = finalSignalInd
 
         return allSignalData, allNumSignalPoints
 
     def getSignalIntervals(self, experimentalData, eachSignal_numPoints, timeWindow, channelInds):
-        # signalData: A numpy array of size (numSignals, maxSequenceLength, [signal, dTimeBack, dTimeForward, time])
-        # eachSignal_numPoints: A numpy array of size (numSignals)
+        # signalData: A torch array of size (numSignals, maxSequenceLength, [signal, dTimeBack, dTimeForward, time])
+        # eachSignal_numPoints: A torch array of size (numSignals)
         assert isinstance(channelInds, list), f"Expected a list of channel indices, but got {type(channelInds)}"
 
         experimentalIntervalData = []
@@ -258,8 +260,12 @@ class compileModelDataHelpers:
         timeData = torch.as_tensor(timeData)  # Ensure timeData is a torch tensor
 
         # Find the index of the time point in the time data
-        timeInd = torch.where(timePoint <= timeData)[0][0].item()
+        timeInd = torch.where(timePoint <= timeData)[0]
+        if len(timeInd) == 0: return 0
+
+        # Determine if the time point is included in the time data
         isTimePointIncluded = timeData[0] <= timePoint
+        timeInd = timeInd[0].item()
 
         # Include the time point if necessary
         if not isTimePointIncluded and mustIncludeTimePoint:
@@ -271,113 +277,81 @@ class compileModelDataHelpers:
         """
         Purpose: Remove bad experiments from the data list.
         --------------------------------------------
-        allSignalData : A numpy array of size (batchSize, numSignals, maxSequenceLength, [signal, dTimeBack, dTimeForward, time])
-        allNumSignalPoints : A numpy array of size (batchSize, numSignals)
-        allLabels : A numpy array of size (batchSize, numLabels)
-        subjectInds : A numpy array of size (batchSize,)
+        allSignalData : A torch array of size (batchSize, numSignals, maxSequenceLength, [signal, dTimeBack, dTimeForward, time])
+        allNumSignalPoints : A torch array of size (batchSize, numSignals)
+        allLabels : A torch array of size (batchSize, numLabels)
+        subjectInds : A torch array of size (batchSize,)
         """
-        # Initialize data holders.
-        batchSize, numSignals, maxSequenceLength, numChannels = allSignalData.shape
+        # Calculate the longest time gap within the longest time window.
+        maxTimeGap = allSignalData[:, :, :, 1].max(dim=2).values.max(dim=1).values
 
-        validExperimentalInds = []
-        # For each experimental batch
-        for experimentalInd in range(batchSize):
-            eachSignal_numPoints = allNumSignalPoints[experimentalInd]
-            experimentalData = allSignalData[experimentalInd]
+        # Calculate the number of points within the smallest time window.
+        numMinWindowPoints = allNumSignalPoints.min(dim=1).values
 
-            # Get the time intervals of the signals.
-            maxTimeDiffIntervalData = self.getSignalIntervals(experimentalData, eachSignal_numPoints, modelConstants.timeWindows[-1], channelInds=[1])
-            minTimeIntervalData = self.getSignalIntervals(experimentalData, eachSignal_numPoints, modelConstants.timeWindows[0], channelInds=[-1])
-            # minSignalIntervalData, maxSignalIntervalData Dim: numSignals, *numIntervalPoints  ->  *numIntervalPoints is not constant
+        # Remove the batch if the gap is large.
+        validExperimentMask = ((maxTimeGap <= self.maxTimeGap_perLargestTimeWindow) &
+                               (numMinWindowPoints >= self.minSequencePoints_perSmallestTimeWindow))
 
-            # Calculate the longest time gap within the longest time window.
-            maxTimeGap = max(max(timeDiffIntervalData) for timeDiffIntervalData in maxTimeDiffIntervalData)
-
-            # Remove the batch if the gap is large.
-            if self.maxTimeGap_perLargestTimeWindow < maxTimeGap:
-                if self.verbose: print(f"\t\tBatch {experimentalInd} has a time gap of {maxTimeGap} which is too large. Removing this batch.", flush=True)
-                continue
-
-            # Calculate the number of points within the smallest time window.
-            numMinWindowPoints = min(len(timeIntervalData) for timeIntervalData in minTimeIntervalData)
-
-            # Remove the batch if the signal is too short.
-            if numMinWindowPoints < self.minSequencePoints_perSmallestTimeWindow:
-                if self.verbose: print(f"\t\tBatch {experimentalInd} has a signal that is too short ({numMinWindowPoints}). Removing this batch.", flush=True)
-                continue
-
-            # Compile the good batches.
-            validExperimentalInds.append(experimentalInd)
-
-        return allSignalData[validExperimentalInds], allNumSignalPoints[validExperimentalInds], allLabels[validExperimentalInds], subjectInds[validExperimentalInds]
-
-    def _preprocessSignals(self, allSignalData, allNumSignalPoints, featureNames):
-        # allSignalData: A numpy array of size (batchSize, numSignals, maxSequenceLength, [signal, dTimeBack, dTimeForward])
-        # allNumSignalPoints: A numpy array of size (batchSize, numSignals)
-        # featureNames: A numpy array of size numSignals
-        # Ensure the feature names match the number of signals
-        assert len(allSignalData) == 0 or len(featureNames) == allSignalData.shape[1], \
-            f"Feature names do not match data dimensions. {len(featureNames)} != {allSignalData.shape[1]}"
-
-        # Initialize a mask for good features (start with all features assumed good)
-        validSignalInds = np.ones(len(featureNames), dtype=bool)
-
-        # For each batch of signals
-        for experimentalInd in range(allSignalData.shape[0]):
-            eachSignal_numPoints = allNumSignalPoints[experimentalInd]
-
-            # Standardize the signals.
-            allSignalData[experimentalInd] = self.normalizeSignals(allSignalData[experimentalInd], eachSignal_numPoints)
-
-            # Calculate SNRs for each signal in the batch
-            signalSNRs = self.calculate_snr(allSignalData[experimentalInd, :, :, 0], eachSignal_numPoints)
-
-            # Update the good feature mask based on an SNR threshold
-            validSignalInds &= (1E-10 <= signalSNRs)
-
-        # Convert to tensor for easier handling
-        allNumSignalPoints = torch.as_tensor(allNumSignalPoints[:, validSignalInds], dtype=torch.int)
-        allSignalData = torch.as_tensor(allSignalData[:, validSignalInds], dtype=torch.float32)
-
-        # Apply the mask to keep only the good signals and corresponding feature names
-        return allSignalData, allNumSignalPoints, featureNames[validSignalInds]
+        return allSignalData[validExperimentMask], allNumSignalPoints[validExperimentMask], allLabels[validExperimentMask], subjectInds[validExperimentMask]
 
     import torch
 
+    def _preprocessSignals(self, allSignalData, allNumSignalPoints, featureNames):
+        # allSignalData: A torch array of size (batchSize, numSignals, maxSequenceLength, [signal, dTimeBack, dTimeForward])
+        # allNumSignalPoints: A torch array of size (batchSize, numSignals)
+        # featureNames: A torch array of size numSignals
+        # Ensure the feature names match the number of signals
+        assert len(allSignalData) == 0 or len(featureNames) == allSignalData.shape[1], \
+            f"Feature names do not match data dimensions. {len(featureNames)} != {allSignalData.shape[1]}"
+        batchSize, numSignals, maxSequenceLength, _ = allSignalData.shape
+
+        # Standardize all signals at once for the entire batch
+        allSignalData = self.normalizeSignals(allSignalData)
+
+        # Calculate SNRs for all signals in the batch
+        signalSNRs = self.calculate_snr(allSignalData[:, :, :, 0])
+
+        # Generate a valid signal mask across the batch
+        validSignalInds = (signalSNRs > 1E-10)
+
+        # Apply the mask to filter valid signals and their corresponding points
+        filteredSignalData = allSignalData[:, validSignalInds, :, :]
+        filteredNumSignalPoints = allNumSignalPoints[:, validSignalInds]
+
+        return filteredSignalData, filteredNumSignalPoints, featureNames[validSignalInds]
+
     @staticmethod
-    def calculate_snr(signalBatchData, eachSignal_numPoints):
-        # signalBatchData dimension: numSignals, maxSequenceLength
-        # eachSignal_numPoints dimension: numSignals
-        snr_values = torch.zeros(len(signalBatchData))
+    def calculate_snr(allSignalData):
+        # signalBatchData dimension: numExperiments, numSignals, maxSequenceLength
+        snr_values = torch.zeros(len(allSignalData[0]))
 
         # For each signal in the batch.
-        for signalInd in range(len(signalBatchData)):
+        for signalInd in range(len(allSignalData[0])):
             # Get the signal data for the current signal.
-            signalData = signalBatchData[signalInd, 0:eachSignal_numPoints[signalInd]]  # Dim: eachSignal_numPoints
+            signalData = allSignalData[:, signalInd, :]  # Dim: eachSignal_numPoints
+            signalData = signalData[signalData != 0]
 
             # Calculate the signal power and noise power for the current signal.
-            signal_power = torch.mean(signalData ** 2)
-            noise_power = torch.var(signalData)
+            signal_power = torch.mean(signalData ** 2, dim=-1)  # Dim: numExperiments
+            noise_power = torch.var(signalData, dim=-1)  # Dim: numExperiments
 
             # Calculate the signal-to-noise ratio for each signal.
-            if signal_power == 0 or noise_power == 0: snr_values[signalInd] = 0
-            else: snr_values[signalInd] = 10 * torch.log10(signal_power / noise_power)
+            if signal_power.any() == 0 or noise_power.any() == 0: snr_values[signalInd] = 0
+            else: snr_values[signalInd] = 10 * torch.log10(signal_power / noise_power).min()
 
         return snr_values
 
-    def normalizeSignals(self, signalBatchData, eachSignal_numPoints):
-        # signalBatchData dimension: numSignals, maxSequenceLength, [signal, dTimeBack, dTimeForward]
-        # eachSignal_numPoints dimension: numSignals
+    def normalizeSignals(self, signalBatchData):
+        # signalBatchData dimension: numExperiments, numSignals, maxSequenceLength, [signal, dTimeBack, dTimeForward]
+        # eachSignal_numPoints dimension: numExperiments, numSignals
         # For each signal in the batch.
-        for signalInd in range(len(signalBatchData)):
-            numSignalPoints = eachSignal_numPoints[signalInd]
-
+        for signalInd in range(len(signalBatchData[0])):
             # Standardize the signals (min-max scaling).
-            signalBatchData[signalInd, 0:numSignalPoints, 0] = minMaxScale_noInverse(signalBatchData[signalInd, 0:numSignalPoints, 0], scale=modelConstants.minMaxScale)
+            signalBatchData[:, signalInd, :, 0] = self.generalMethods.minMaxScale_noInverse(signalBatchData[:, signalInd, :, 0], scale=modelConstants.minMaxScale)
 
             # Standardize the times (min-max scaling).
-            signalBatchData[signalInd, 0:numSignalPoints, 1] /= self.maxTimeGap_perLargestTimeWindow
-            signalBatchData[signalInd, 0:numSignalPoints, 2] /= self.maxTimeGap_perLargestTimeWindow
+            signalBatchData[:, signalInd, :, 1] /= self.maxTimeGap_perLargestTimeWindow
+            signalBatchData[:, signalInd, :, 2] /= self.maxTimeGap_perLargestTimeWindow
 
         return signalBatchData
 

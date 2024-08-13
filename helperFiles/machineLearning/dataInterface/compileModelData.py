@@ -1,4 +1,5 @@
 import os
+import time
 
 import numpy as np
 import torch
@@ -206,7 +207,7 @@ class compileModelData(compileModelDataHelpers):
             allSignalData, allNumSignalPoints = self._padSignalData(allRawFeatureTimeIntervals, allCompiledFeatureIntervals)
             allSignalData, allNumSignalPoints, allFeatureLabels, allSubjectInds = self._removeBadExperiments(allSignalData, allNumSignalPoints, surveyAnswersList, subjectOrder)
             allSignalData, allNumSignalPoints, featureNames = self._preprocessSignals(allSignalData, allNumSignalPoints, featureNames)
-            allFeatureLabels, allSmallClassIndices = self.organizeLabels(allFeatureLabels, metaTraining, metaDatasetName, numSignals=len(allSignalData[0]))
+            allFeatureLabels, allSmallClassIndices = self.organizeLabels(allFeatureLabels, metaTraining, metaDatasetName, numSignals=allSignalData.shape[1])
             # allSignalData dimension: batchSize, numSignals, maxSequenceLength, [signal, dTimeBack, dTimeForward, time]
             # allSmallClassIndices dimension: numLabels, batchSize*  →  *if there are no small classes, the dimension is empty
             # allNumSignalPoints dimension: batchSize, numSignals
@@ -296,6 +297,7 @@ class compileModelData(compileModelDataHelpers):
             allModelPipelines.append(modelPipeline)
             allDataLoaders.append(modelDataLoader)
 
+        print(allModelPipelines)
         # Load in the previous model weights and attributes.
         self.modelMigration.loadModels(allModelPipelines, loadSubmodel, loadSubmodelDate, loadSubmodelEpochs, metaTraining=True, loadModelAttributes=True, loadModelWeights=True)
 

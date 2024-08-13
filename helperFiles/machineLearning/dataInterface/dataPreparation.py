@@ -8,8 +8,8 @@ def minMaxScale_noInverse(X, scale=1):
     if not isinstance(X, torch.Tensor): X = np.array(X)
 
     # Find the minimum and maximum along the last dimension
-    min_val = X.min(axis=-1, keepdims=True)
-    max_val = X.max(axis=-1, keepdims=True)
+    min_val = X[X != 0].min(axis=-1, keepdims=True)
+    max_val = X[X != 0].max(axis=-1, keepdims=True)
 
     # Handle the torch.tensor case.
     if hasattr(X, "values"):
