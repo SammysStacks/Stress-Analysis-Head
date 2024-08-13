@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
+from helperFiles.machineLearning.modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 # Import files for machine learning
 from .trainingPlots import trainingPlots
 
@@ -40,7 +41,7 @@ class signalEncoderPlots(trainingPlots):
         numLiftedChannelsTested, numExpandedSignalsTested, numEncodingLayersTested = trainingLossHolders[0][0].shape
 
         # Plot the heatmaps for each combination of losses
-        for time_index, time_window in enumerate(self.timeWindows):
+        for time_index, time_window in enumerate(modelConstants.timeWindows):
             for dataset_index, dataset_name in enumerate(self.datasetNames):
                 data = trainingLossHolders[time_index, dataset_index, :, :, :]
 
@@ -95,7 +96,7 @@ class signalEncoderPlots(trainingPlots):
         lossHolders = []
         for _ in lossStrings:
             # Initialize the holders.
-            lossHolders.append(np.zeros((len(self.timeWindows), len(self.datasetNames), numLiftedChannelsTested, numExpandedSignalsTested, numEncodingLayersTested)))
+            lossHolders.append(np.zeros((len(modelConstants.timeWindows), len(self.datasetNames), numLiftedChannelsTested, numExpandedSignalsTested, numEncodingLayersTested)))
             # Dimension: (len(lossStrings), numTimeWindows, numDatasets, numLiftedChannelsTested, numExpandedSignalsTested, numEncodingLayersTested)
 
         allDummyModelPipelines = []
@@ -118,7 +119,7 @@ class signalEncoderPlots(trainingPlots):
                     # For each model, get the losses.
                     for modelInd in range(len(allDummyModelPipelines)):
                         currentModel = self.getSubmodel(allDummyModelPipelines[modelInd], submodel=modelConstants.signalEncoderModel)
-                        assert self.timeWindows == currentModel.timeWindows, f"Time windows do not match: {self.timeWindows} != {currentModel.timeWindows}"
+                        assert modelConstants.timeWindows == modelConstants.timeWindows, f"Time windows do not match: {modelConstants.timeWindows} != {modelConstants.timeWindows}"
 
                         # For each loss value we want:
                         for lossInd, lossString in enumerate(lossStrings):

@@ -11,14 +11,14 @@ from helperFiles.machineLearning.dataInterface.compileModelData import compileMo
 # Import files for machine learning
 from helperFiles.machineLearning.modelControl.Models.pyTorch.Helpers.modelMigration import modelMigration
 from helperFiles.globalPlottingProtocols import globalPlottingProtocols
+from helperFiles.machineLearning.modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
 
 class trainingPlots(globalPlottingProtocols):
     def __init__(self, modelName, datasetNames, sharedModelWeights, savingBaseFolder, accelerator=None):
         super(trainingPlots, self).__init__()
         # General parameters
-        self.timeWindows = [90, 120, 150, 180, 210, 240]  # A list of all time windows to consider for the encoding.
-        self.sharedModelWeights = sharedModelWeights  # Possible models: ["trainingInformation", modelConstants.signalEncoderModel, "autoencoderModel", "signalMappingModel", "specificEmotionModel", "sharedEmotionModel"]
+        self.sharedModelWeights = sharedModelWeights  # Possible models: [modelConstants.trainingInformation, modelConstants.signalEncoderModel, modelConstants.autoencoderModel, modelConstants.signalMappingModel, modelConstants.specificEmotionModel, modelConstants.sharedEmotionModel]
         self.datasetNames = datasetNames  # Specify which datasets to compile
         self.savingFolder = savingBaseFolder  # The folder to save the figures.
         self.accelerator = accelerator  # Hugging face model optimizations.

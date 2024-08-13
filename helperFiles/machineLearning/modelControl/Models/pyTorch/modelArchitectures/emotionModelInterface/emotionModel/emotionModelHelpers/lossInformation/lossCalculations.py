@@ -7,6 +7,7 @@ import math
 from helperFiles.machineLearning.modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.generalMethods.modelHelpers import modelHelpers
 from ..generalMethods.generalMethods import generalMethods
 from ..emotionDataInterface import emotionDataInterface
+from ..modelConstants import modelConstants
 from ..modelParameters import modelParameters
 
 # Loss methods
@@ -107,7 +108,7 @@ class lossCalculations:
         signalReconstructedLoss = signalReconstructedLoss.mean(dim=2).mean(dim=1).mean()
 
         # Enforce that the compressed data has a mean of 0 and a standard deviation of 1.
-        encodedSignalMeanLoss, encodedSignalMinMaxLoss = self.calculateMinMaxLoss(encodedData, expectedMean=0, expectedMinMax=self.modelParameters.getSignalMinMaxScale(), dim=-1, minMaxBuffer=0.1)
+        encodedSignalMeanLoss, encodedSignalMinMaxLoss = self.calculateMinMaxLoss(encodedData, expectedMean=0, expectedMinMax=modelConstants.minMaxScale, dim=-1, minMaxBuffer=0.1)
         # Reduce the loss to a singular value.
         encodedSignalMinMaxLoss = encodedSignalMinMaxLoss.mean(dim=2).mean(dim=1).mean()
         encodedSignalMeanLoss = encodedSignalMeanLoss.mean(dim=1).mean()
@@ -144,7 +145,7 @@ class lossCalculations:
         reconstructedLoss = reconstructedLoss.mean(dim=2).mean(dim=1).mean()
 
         # Enforce that the compressed data has a mean of 0 and a standard deviation of 1.
-        compressedMeanLoss, compressedMinMaxLoss = self.calculateMinMaxLoss(compressedData, expectedMean=0, expectedMinMax=self.modelParameters.getSignalMinMaxScale(), dim=-1, minMaxBuffer=0.1)
+        compressedMeanLoss, compressedMinMaxLoss = self.calculateMinMaxLoss(compressedData, expectedMean=0, expectedMinMax=modelConstants.minMaxScale, dim=-1, minMaxBuffer=0.1)
         # Reduce the loss to a singular value.
         compressedMinMaxLoss = compressedMinMaxLoss.mean(dim=1).mean()
         compressedMeanLoss = compressedMeanLoss.mean(dim=1).mean()
@@ -175,7 +176,7 @@ class lossCalculations:
         manifoldReconstructedLoss = manifoldReconstructedLoss.mean(axis=2).mean()
 
         # Enforce that the compressed data has a mean of 0 and a standard deviation of 1.
-        manifoldMeanLoss, manifoldMinMaxLoss = self.calculateMinMaxLoss(manifoldData, expectedMean=0, expectedMinMax=self.modelParameters.getSignalMinMaxScale(), dim=-1, minMaxBuffer=0.1)
+        manifoldMeanLoss, manifoldMinMaxLoss = self.calculateMinMaxLoss(manifoldData, expectedMean=0, expectedMinMax=modelConstants.minMaxScale, dim=-1, minMaxBuffer=0.1)
         # Reduce the loss to a singular value.
         manifoldMeanLoss = manifoldMeanLoss.mean()
         manifoldMinMaxLoss = manifoldMinMaxLoss.mean()

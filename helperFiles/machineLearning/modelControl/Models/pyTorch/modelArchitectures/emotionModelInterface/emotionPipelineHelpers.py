@@ -42,8 +42,8 @@ class emotionPipelineHelpers:
 
         # Store model parameters.
         self.finalDistributionLength = modelConstants.finalDistributionLength
-        signalMinMaxScale = modelParameters.getSignalMinMaxScale()
-        timeWindows = modelParameters.getTimeWindows()
+        signalMinMaxScale = modelConstants.minMaxScale
+        timeWindows = modelConstants.timeWindows
 
         # Initialize the emotion model.
         if modelName == "emotionModel":
@@ -53,7 +53,7 @@ class emotionPipelineHelpers:
         assert hasattr(self, 'model'), f"Unknown Model Type Requested: {modelName}"
 
         # Extract relevant properties from the model.
-        self.generalTimeWindow = self.model.timeWindows[-1]  # The default time window to use for training and testing.
+        self.generalTimeWindow = modelConstants.timeWindows[-1]  # The default time window to use for training and testing.
 
         # Initialize helper classes.
         self.organizeLossInfo = organizeTrainingLosses(accelerator, self.model, allEmotionClasses, self.activityLabelInd, self.generalTimeWindow, self.useFinalParams)
@@ -71,7 +71,7 @@ class emotionPipelineHelpers:
             self.model.sharedEmotionModel.lastActivityLayer = self.modelHelpers.getLastActivationLayer(self.organizeLossInfo.activityClass_lossType, predictingProb=True)  # Apply activation on the last layer: 'softmax', 'logsoftmax', or None.
             self.model.sharedEmotionModel.lastEmotionLayer = self.modelHelpers.getLastActivationLayer(self.organizeLossInfo.emotionDist_lossType, predictingProb=True)  # Apply activation on the last layer: 'softmax', 'logsoftmax', or None.
         else:
-            self.generalTimeWindowInd = self.model.timeWindows.index(self.generalTimeWindow)
+            self.generalTimeWindowInd = modelConstants.timeWindows.index(self.generalTimeWindow)
 
         # Assert data integrity of the inputs.
         assert len(self.emotionNames) == len(self.allEmotionClasses), f"Found {len(self.emotionNames)} emotions with {len(self.allEmotionClasses)} classes specified."
@@ -181,7 +181,7 @@ class emotionPipelineHelpers:
         sharedEmotionModel = model.sharedEmotionModel
         autoencoderModel = model.autoencoderModel
 
-        if submodel == "trainingInformation":
+        if submodel == modelConstants.trainingInformation:
             return trainingInformation
         elif submodel == modelConstants.signalEncoderModel:
             return signalEncoderModel

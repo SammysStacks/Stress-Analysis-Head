@@ -4,17 +4,16 @@ import time
 # PyTorch
 import torch
 
+# Import helper modules
+from .emotionModelHelpers.emotionDataInterface import emotionDataInterface
 from .emotionModelHelpers.modelConstants import modelConstants
+from .emotionModelHelpers.submodels.autoencoderModel import autoencoderModel  # An autoencoder pipeline for compressing individual signals.
+from .emotionModelHelpers.submodels.sharedEmotionModel import sharedEmotionModel
+from .emotionModelHelpers.submodels.signalEncoderModel import signalEncoderModel  # A signal encoder pipeline to make a universal feature vector.
+from .emotionModelHelpers.submodels.signalMappingModel import signalMappingModel
 # Import submodels
 from .emotionModelHelpers.submodels.specificEmotionModel import specificEmotionModel
 from .emotionModelHelpers.submodels.trainingInformation import trainingInformation
-from .emotionModelHelpers.submodels.sharedEmotionModel import sharedEmotionModel
-from .emotionModelHelpers.submodels.signalMappingModel import signalMappingModel
-from .emotionModelHelpers.submodels.signalEncoderModel import signalEncoderModel  # A signal encoder pipeline to make a universal feature vector.
-from .emotionModelHelpers.submodels.autoencoderModel import autoencoderModel  # An autoencoder pipeline for compressing individual signals.
-
-# Import helper modules
-from .emotionModelHelpers.emotionDataInterface import emotionDataInterface
 from ..._globalPytorchModel import globalModel
 
 
@@ -40,7 +39,6 @@ class emotionModelHead(globalModel):
         self.numSubjects = numSubjects  # The maximum number of subjects the model is training on.
         self.accelerator = accelerator  # Hugging face model optimizations.
         self.datasetName = datasetName  # The name of the dataset the model is training on.
-        self.timeWindows = timeWindows  # A list of all time windows to consider for the encoding.
 
         # Signal encoder parameters.
         self.signalEncoderWaveletType = userInputParams['signalEncoderWaveletType']         # The number of signals to group when you begin compression or finish expansion.
@@ -101,7 +99,6 @@ class emotionModelHead(globalModel):
             useFinalParams=self.useFinalParams,
             sequenceBounds=self.sequenceBounds,
             maxNumSignals=self.maxNumSignals,
-            timeWindows=self.timeWindows,
             accelerator=self.accelerator,
         )
 
@@ -114,7 +111,6 @@ class emotionModelHead(globalModel):
             debuggingResults=self.debuggingResults,
             expansionFactor=self.expansionFactor,
             useFinalParams=self.useFinalParams,
-            timeWindows=self.timeWindows,
             accelerator=self.accelerator,
         )
 
@@ -127,7 +123,6 @@ class emotionModelHead(globalModel):
             numEncodedSignals=self.numEncodedSignals,
             compressedLength=self.compressedLength,
             featureNames=self.featureNames,
-            timeWindows=self.timeWindows,
         )
 
         self.specificEmotionModel = specificEmotionModel(

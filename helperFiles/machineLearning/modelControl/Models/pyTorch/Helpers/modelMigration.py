@@ -4,6 +4,8 @@ import os
 import torch
 import torch.nn as nn
 
+from helperFiles.machineLearning.modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
+
 
 class modelMigration:
 
@@ -226,7 +228,7 @@ class modelMigration:
         # For each model, save the shared and specific weights
         for datasetInd, (modelPipeline, datasetName) in enumerate(zip(modelPipelines, datasetNames)):
             # Update the specific model information to save.
-            trainingInformation = modelPipeline.getDistributedModels(model=modelPipeline.model, submodel="trainingInformation")
+            trainingInformation = modelPipeline.getDistributedModels(model=modelPipeline.model, submodel=modelConstants.trainingInformation)
             trainingInformation.storeOptimizer(modelPipeline.optimizer, storeOptimizer)
             trainingInformation.storeScheduler(modelPipeline.scheduler, storeOptimizer)
 
@@ -296,7 +298,7 @@ class modelMigration:
 
             if loadModelWeights:
                 # Load in the specific model information.
-                trainingInformation = modelPipeline.getDistributedModels(model=modelPipeline.model, submodel="trainingInformation")
+                trainingInformation = modelPipeline.getDistributedModels(model=modelPipeline.model, submodel=modelConstants.trainingInformation)
                 trainingInformation.setSubmodelInfo(modelPipeline, submodel)
 
     def _loadModel(self, model, modelName, datasetName, submodel, trainingDate, numEpochs, metaTraining, loadModelAttributes=True, loadModelWeights=True):

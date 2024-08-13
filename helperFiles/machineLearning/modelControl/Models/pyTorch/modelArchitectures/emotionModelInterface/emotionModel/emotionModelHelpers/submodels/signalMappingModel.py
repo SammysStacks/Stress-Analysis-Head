@@ -3,18 +3,18 @@ import torch
 
 # Import files for machine learning
 from .modelComponents.signalMappingHead import signalMappingHead
+from ..modelConstants import modelConstants
 from ....._globalPytorchModel import globalModel
 
 
 class signalMappingModel(globalModel):
-    def __init__(self, compressedLength, numEncodedSignals, featureNames, timeWindows):
+    def __init__(self, compressedLength, numEncodedSignals, featureNames):
         super(signalMappingModel, self).__init__()
         # General model parameters.
         self.numEncodedSignals = numEncodedSignals  # The dimensionality of the encoded data.
         self.compressedLength = compressedLength  # The initial length of each incoming signal.
         self.numSignals = len(featureNames)  # The number of original signals from the specific dataset.
         self.featureNames = featureNames  # The names of the original feature/signal in the model. Dim: numSignals
-        self.timeWindows = timeWindows
 
         # Method to find a common signal-agnostic space.
         self.mapSignals = signalMappingHead(maxSequenceLength=self.compressedLength)
@@ -45,8 +45,8 @@ class signalMappingModel(globalModel):
         self.testingLosses_mappedSTD = []  # List of manifold standard deviation (autoencoder) testing losses. Dim: numEpochs
 
         # Time analysis loss methods.
-        self.trainingLosses_timeAnalysis = [[] for _ in self.timeWindows]  # List of list of data reconstruction training losses. Dim: numEpochs
-        self.testingLosses_timeAnalysis = [[] for _ in self.timeWindows]  # List of list of data reconstruction testing losses. Dim: numEpochs
+        self.trainingLosses_timeAnalysis = [[] for _ in modelConstants.timeWindows]  # List of list of data reconstruction training losses. Dim: numEpochs
+        self.testingLosses_timeAnalysis = [[] for _ in modelConstants.timeWindows]  # List of list of data reconstruction testing losses. Dim: numEpochs
 
     def forward(self, compressedData, remapSignals=False, trainingFlag=False):
         """ The shape of inputData: (batchSize, combinedSignalLength) """

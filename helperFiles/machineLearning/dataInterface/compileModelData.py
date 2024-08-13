@@ -154,8 +154,8 @@ class compileModelData(compileModelDataHelpers):
                                                                                        metaSubjectOrder, metaFeatureNames, metaDatasetNames, modelName, submodel, testSplitRatio, metaTraining=True, specificInfo=None,
                                                                                        useFinalParams=useFinalParams, random_state=42)
         # Compile the final modules.
-        allModels, allDataLoaders, allLossDataHolders = self.compileModels([allRawFeatureIntervalTimes], [allCompiledFeatureIntervals], [surveyAnswersList], [surveyQuestions], [activityLabels], [activityNames], [numQuestionOptions], [subjectOrder],
-                                                                           [featureNames], datasetNames, modelName, submodel, testSplitRatio, metaTraining=False, specificInfo=None, useFinalParams=useFinalParams, random_state=42)
+        allModels, allDataLoaders, allLossDataHolders = self.compileModels(metaRawFeatureTimeIntervals=[allRawFeatureIntervalTimes], metaCompiledFeatureIntervals=[allCompiledFeatureIntervals], metaSurveyAnswersList=[surveyAnswersList], metaSurveyQuestions=[surveyQuestions], metaActivityLabels=[activityLabels], metaActivityNames=[activityNames], metaNumQuestionOptions=[numQuestionOptions], metaSubjectOrder=[subjectOrder],
+                                                                           metaFeatureNames=[featureNames], metaDatasetNames=datasetNames, modelName=modelName, submodel=submodel, testSplitRatio=testSplitRatio, metaTraining=False, specificInfo=None, useFinalParams=useFinalParams, random_state=42)
         # Create the meta-loss models and data loaders.
         allMetaLossDataHolders.extend(allLossDataHolders)
 
@@ -194,18 +194,19 @@ class compileModelData(compileModelDataHelpers):
             # ---------------------- Data Preparation ---------------------- #
 
             # Add the human activity recognition to the end.
-            activityLabels = np.asarray(activityLabels, dtype=int).reshape(-1, 1)
-            surveyAnswersList = np.hstack((surveyAnswersList, activityLabels))
+            activityLabels = torch.as_tensor(activityLabels, dtype=torch.float32).reshape(-1, 1)
+            surveyAnswersList = torch.as_tensor(surveyAnswersList, dtype=torch.float32)
+            surveyAnswersList = torch.hstack((surveyAnswersList, activityLabels))
             # surveyAnswersList dimension: batchSize, numQuestions + 1
 
             # Remove any experiments and signals that are bad.
-            allSignalData, allSignalStopInds = self._padSignalData(allRawFeatureTimeIntervals, allCompiledFeatureIntervals)
-            allSignalData, allSignalStopInds, allFeatureLabels, allSubjectInds = self._removeBadExperiments(allSignalData, allSignalStopInds, surveyAnswersList, subjectOrder)
-            allSignalData, allSignalStopInds, featureNames = self._preprocessSignals(allSignalData, allSignalStopInds, featureNames)
+            allSignalData, allNumSignalPoints = self._padSignalData(allRawFeatureTimeIntervals, allCompiledFeatureIntervals)
+            allSignalData, allNumSignalPoints, allFeatureLabels, allSubjectInds = self._removeBadExperiments(allSignalData, allNumSignalPoints, surveyAnswersList, subjectOrder)
+            allSignalData, allNumSignalPoints, featureNames = self._preprocessSignals(allSignalData, allNumSignalPoints, featureNames)
             allFeatureLabels, allSmallClassIndices = self.organizeLabels(allFeatureLabels, metaTraining, metaDatasetName, numSignals=len(allSignalData[0]))
             # allSignalData dimension: batchSize, numSignals, maxSequenceLength, [signal, dTimeBack, dTimeForward, time]
             # allSmallClassIndices dimension: numLabels, batchSize*  →  *if there are no small classes, the dimension is empty
-            # allSignalStopInds dimension: batchSize, numSignals
+            # allNumSignalPoints dimension: batchSize, numSignals
             # allFeatureLabels dimension: batchSize, numLabels
             # allSubjectInds dimension: batchSize
             # featureNames dimension: numSignals
@@ -267,7 +268,7 @@ class compileModelData(compileModelDataHelpers):
             allFeatureLabels[~goodActivityMask] = self.missingLabelValue  # Remove any unused activity indices (as the good indices were rehashed)
 
             # Add the demographic information.
-            allSignalData, subjectIdentifiers = self.addDemographicInfo(allSignalData, allSignalStopInds, allSubjectInds, metadataInd)
+            allSignalData = self.addDemographicInfo(allSignalData, allNumSignalPoints, allSubjectInds, metadataInd)
 
             # ---------------------- Create the Model ---------------------- #
 
@@ -284,7 +285,7 @@ class compileModelData(compileModelDataHelpers):
                                             featureNames=featureNames, submodel=submodel, useFinalParams=useFinalParams, debuggingResults=True)
 
             # Hugging face integration.
-            trainingInformation = modelPipeline.getDistributedModels(model=None, submodel="trainingInformation")
+            trainingInformation = modelPipeline.getDistributedModels(model=None, submodel=modelConstants.trainingInformation)
             modelDataLoader = modelPipeline.acceleratorInterface(modelDataLoader)
             trainingInformation.addSubmodel(submodel)
 

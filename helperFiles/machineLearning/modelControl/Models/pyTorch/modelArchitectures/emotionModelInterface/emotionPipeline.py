@@ -105,12 +105,12 @@ class emotionPipeline(emotionPipelineHelpers):
                     if submodel == modelConstants.signalEncoderModel:
                         if self.accelerator.sync_gradients:
                             # Randomly choose to use an inflated number of signals.
-                            maxBatchSignals = max(model.maxNumSignals, model.signalEncoderModel.encodeSignals.positionalEncodingInterface.maxNumEncodedSignals)
-                            self.maxBatchSignals = random.choices(population=[model.maxNumSignals, maxBatchSignals], weights=[0.6, 0.4], k=1)[0]
+                            maxBatchSignals = max(modelConstants.maxNumSignals, model.signalEncoderModel.encodeSignals.positionalEncodingInterface.maxNumEncodedSignals)
+                            self.maxBatchSignals = random.choices(population=[modelConstants.maxNumSignals, maxBatchSignals], weights=[0.6, 0.4], k=1)[0]
 
                         # Augment the signals to train an arbitrary sequence length and order.
                         initialSignalData, augmentedSignalData = self.dataInterface.changeNumSignals(signalDatas=(signalData, augmentedSignalData), minNumSignals=model.numEncodedSignals, maxNumSignals=self.maxBatchSignals, alteredDim=1)
-                        initialSignalData, augmentedSignalData = self.dataInterface.changeSignalLength(model.timeWindows[0], signalDatas=(initialSignalData, augmentedSignalData))
+                        initialSignalData, augmentedSignalData = self.dataInterface.changeSignalLength(modelConstants.timeWindows[0], signalDatas=(initialSignalData, augmentedSignalData))
                         print("Input size:", augmentedSignalData.size())
 
                         # Perform the forward pass through the model.
@@ -157,7 +157,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     # Train the autoencoder
                     elif submodel == modelConstants.autoencoderModel:
                         # Augment the time series length to train an arbitrary sequence length.
-                        initialSignalData, augmentedSignalData = self.dataInterface.changeSignalLength(model.timeWindows[0], (signalData, augmentedSignalData))
+                        initialSignalData, augmentedSignalData = self.dataInterface.changeSignalLength(modelConstants.timeWindows[0], (signalData, augmentedSignalData))
                         print("Input size:", augmentedSignalData.size())
 
                         # Perform the forward pass through the model.

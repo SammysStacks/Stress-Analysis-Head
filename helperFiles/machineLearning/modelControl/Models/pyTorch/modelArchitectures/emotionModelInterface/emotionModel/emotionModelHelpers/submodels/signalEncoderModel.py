@@ -8,17 +8,17 @@ from helperFiles.globalPlottingProtocols import globalPlottingProtocols
 from .modelComponents.generalSignalEncoder import generalSignalEncoding  # Framework for encoding/decoding of all signals.
 from .helperModules.trainingSignalEncoder import trainingSignalEncoder
 from ..generalMethods.generalMethods import generalMethods
+from ..modelConstants import modelConstants
 from ....._globalPytorchModel import globalModel
 
 
 class signalEncoderModel(globalModel):
-    def __init__(self, sequenceBounds, maxNumSignals, numEncodedSignals, numExpandedSignals, numSigEncodingLayers, numSigLiftedChannels, waveletType, signalMinMaxScale, timeWindows, accelerator, useFinalParams=False, debuggingResults=False):
+    def __init__(self, sequenceBounds, maxNumSignals, numEncodedSignals, numExpandedSignals, numSigEncodingLayers, numSigLiftedChannels, waveletType, signalMinMaxScale, accelerator, useFinalParams=False, debuggingResults=False):
         super(signalEncoderModel, self).__init__()
         # General model parameters.
         self.signalMinMaxScale = signalMinMaxScale  # The minimum and maximum signal values to consider for scaling. Type: tuple
         self.debuggingResults = debuggingResults  # Whether to print debugging results. Type: bool
         self.useFinalParams = useFinalParams  # Whether to use the final parameters for the model. Type: bool
-        self.timeWindows = timeWindows  # A list of all time windows to consider for the encoding.
         self.accelerator = accelerator  # Hugging face interface for model and data optimizations.
 
         # Signal encoder parameters.
@@ -64,26 +64,26 @@ class signalEncoderModel(globalModel):
 
     def resetModel(self):
         # Signal encoder reconstructed loss holders.
-        self.trainingLosses_timeReconstructionAnalysis = [[] for _ in self.timeWindows]  # List of list of data reconstruction training losses. Dim: numTimeWindows, numEpochs
-        self.testingLosses_timeReconstructionAnalysis = [[] for _ in self.timeWindows]  # List of list of data reconstruction testing losses. Dim: numTimeWindows, numEpochs
+        self.trainingLosses_timeReconstructionAnalysis = [[] for _ in modelConstants.timeWindows]  # List of list of data reconstruction training losses. Dim: numTimeWindows, numEpochs
+        self.testingLosses_timeReconstructionAnalysis = [[] for _ in modelConstants.timeWindows]  # List of list of data reconstruction testing losses. Dim: numTimeWindows, numEpochs
 
         # Signal encoder mean loss holders.
-        self.trainingLosses_timeMeanAnalysis = [[] for _ in self.timeWindows]  # List of list of encoded mean training losses. Dim: numTimeWindows, numEpochs
-        self.testingLosses_timeMeanAnalysis = [[] for _ in self.timeWindows]  # List of list of encoded mean testing losses. Dim: numTimeWindows, numEpochs
+        self.trainingLosses_timeMeanAnalysis = [[] for _ in modelConstants.timeWindows]  # List of list of encoded mean training losses. Dim: numTimeWindows, numEpochs
+        self.testingLosses_timeMeanAnalysis = [[] for _ in modelConstants.timeWindows]  # List of list of encoded mean testing losses. Dim: numTimeWindows, numEpochs
         # Signal encoder standard deviation loss holders.
-        self.trainingLosses_timeMinMaxAnalysis = [[] for _ in self.timeWindows]  # List of list of encoded standard deviation training losses. Dim: numTimeWindows, numEpochs
-        self.testingLosses_timeMinMaxAnalysis = [[] for _ in self.timeWindows]  # List of list of encoded standard deviation testing losses. Dim: numTimeWindows, numEpochs
+        self.trainingLosses_timeMinMaxAnalysis = [[] for _ in modelConstants.timeWindows]  # List of list of encoded standard deviation training losses. Dim: numTimeWindows, numEpochs
+        self.testingLosses_timeMinMaxAnalysis = [[] for _ in modelConstants.timeWindows]  # List of list of encoded standard deviation testing losses. Dim: numTimeWindows, numEpochs
 
         # Positional encoding analysis.
-        self.trainingLosses_timePosEncAnalysis = [[] for _ in self.timeWindows]  # List of list of positional encoding reconstruction losses. Dim: numTimeWindows, numEpochs
-        self.testingLosses_timePosEncAnalysis = [[] for _ in self.timeWindows]  # List of list of positional encoding reconstruction losses. Dim: numTimeWindows, numEpochs
+        self.trainingLosses_timePosEncAnalysis = [[] for _ in modelConstants.timeWindows]  # List of list of positional encoding reconstruction losses. Dim: numTimeWindows, numEpochs
+        self.testingLosses_timePosEncAnalysis = [[] for _ in modelConstants.timeWindows]  # List of list of positional encoding reconstruction losses. Dim: numTimeWindows, numEpochs
         # Positional encoding analysis.
-        self.trainingLosses_timeDecodedPosEncAnalysis = [[] for _ in self.timeWindows]  # List of list of positional encoding reconstruction losses. Dim: numTimeWindows, numEpochs
-        self.testingLosses_timeDecodedPosEncAnalysis = [[] for _ in self.timeWindows]  # List of list of positional encoding reconstruction losses. Dim: numTimeWindows, numEpochs
+        self.trainingLosses_timeDecodedPosEncAnalysis = [[] for _ in modelConstants.timeWindows]  # List of list of positional encoding reconstruction losses. Dim: numTimeWindows, numEpochs
+        self.testingLosses_timeDecodedPosEncAnalysis = [[] for _ in modelConstants.timeWindows]  # List of list of positional encoding reconstruction losses. Dim: numTimeWindows, numEpochs
 
         # Signal encoder optimal reconstruction loss holders
-        self.trainingLosses_timeReconstructionOptimalAnalysis = [[] for _ in self.timeWindows]  # List of list of data reconstruction training losses. Dim: numTimeWindows, numEpochs
-        self.testingLosses_timeReconstructionOptimalAnalysis = [[] for _ in self.timeWindows]  # List of list of data reconstruction testing losses. Dim: numTimeWindows, numEpochs
+        self.trainingLosses_timeReconstructionOptimalAnalysis = [[] for _ in modelConstants.timeWindows]  # List of list of data reconstruction training losses. Dim: numTimeWindows, numEpochs
+        self.testingLosses_timeReconstructionOptimalAnalysis = [[] for _ in modelConstants.timeWindows]  # List of list of data reconstruction testing losses. Dim: numTimeWindows, numEpochs
 
     def setDebuggingResults(self, debuggingResults):
         self.encodeSignals.debuggingResults = debuggingResults

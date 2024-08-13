@@ -6,6 +6,7 @@ import os
 
 # Import files for machine learning
 from ..emotionDataInterface import emotionDataInterface
+from ..modelConstants import modelConstants
 
 # Visualization protocols
 from ..........globalPlottingProtocols import globalPlottingProtocols
@@ -56,7 +57,6 @@ class modelVisualizations(globalPlottingProtocols):
 
         # Prepare the model/data for evaluation.
         self.setSavingFolder(f"trainingFigures/{submodel}/{trainingDate}/modelComparison/")  # Label the correct folder to save this analysis.
-        timeWindows = allModelPipelines[0].model.timeWindows
 
         # Plot the loss on the primary GPU.
         if self.accelerator.is_local_main_process:
@@ -68,8 +68,8 @@ class modelVisualizations(globalPlottingProtocols):
                     specificModels = [modelPipeline.model.autoencoderModel for modelPipeline in allModelPipelines]
 
                 # For every time window.
-                for timeWindowInd in range(len(timeWindows)):
-                    timeWindow = timeWindows[timeWindowInd]
+                for timeWindowInd in range(len(modelConstants.timeWindows)):
+                    timeWindow = modelConstants.timeWindows[timeWindowInd]
 
                     # If we are testing, only plot one time.
                     if fastPass and timeWindow != self.generalTimeWindow: continue
@@ -110,12 +110,12 @@ class modelVisualizations(globalPlottingProtocols):
             # ---------------------- Time-Specific Plots ----------------------- #
 
             # For each time window we are analyzing.
-            for timeAnalysisInd in range(len(model.timeWindows)):
-                print(f"\tPlotting figures for the {model.timeWindows[timeAnalysisInd]} second time window")
-                timeWindow = model.timeWindows[timeAnalysisInd]
+            for timeAnalysisInd in range(len(modelConstants.timeWindows)):
+                print(f"\tPlotting figures for the {modelConstants.timeWindows[timeAnalysisInd]} second time window")
+                timeWindow = modelConstants.timeWindows[timeAnalysisInd]
 
                 # If we are testing, only plot one time.
-                if fastPass and timeWindow != model.timeWindows[5]: continue
+                if fastPass and timeWindow != modelConstants.timeWindows[5]: continue
 
                 # Go through all the plots at this specific time window.
                 self.plotTrainingEvent(model, currentEpoch, allSignalData, allSubjectIdentifiers, allTrainingMasks, allTestingMasks, reconstructionIndex, submodel, trainingDate, timeWindow, model.datasetName)
@@ -130,16 +130,16 @@ class modelVisualizations(globalPlottingProtocols):
 
                 if submodel == modelConstants.signalEncoderModel:
                     # Plot autoencoder loss for each time.
-                    self.generalViz.plotTrainingLosses(model.signalEncoderModel.trainingLosses_timeReconstructionAnalysis, model.signalEncoderModel.testingLosses_timeReconstructionAnalysis, lossLabels=model.timeWindows, plotTitle="trainingLosses/Signal Encoder Convergence Loss")
-                    self.generalViz.plotTrainingLosses(model.signalEncoderModel.trainingLosses_timePosEncAnalysis, model.signalEncoderModel.testingLosses_timePosEncAnalysis, lossLabels=model.timeWindows, plotTitle="trainingLosses/Positional Encoder Convergence Loss")
-                    self.generalViz.plotTrainingLosses(model.signalEncoderModel.trainingLosses_timeMeanAnalysis, model.signalEncoderModel.testingLosses_timeMeanAnalysis, lossLabels=model.timeWindows, plotTitle="trainingLosses/Signal Encoder Mean Loss")
-                    self.generalViz.plotTrainingLosses(model.signalEncoderModel.trainingLosses_timeMinMaxAnalysis, model.signalEncoderModel.testingLosses_timeMinMaxAnalysis, lossLabels=model.timeWindows, plotTitle="trainingLosses/Signal Encoder MinMax Loss")
+                    self.generalViz.plotTrainingLosses(model.signalEncoderModel.trainingLosses_timeReconstructionAnalysis, model.signalEncoderModel.testingLosses_timeReconstructionAnalysis, lossLabels=modelConstants.timeWindows, plotTitle="trainingLosses/Signal Encoder Convergence Loss")
+                    self.generalViz.plotTrainingLosses(model.signalEncoderModel.trainingLosses_timePosEncAnalysis, model.signalEncoderModel.testingLosses_timePosEncAnalysis, lossLabels=modelConstants.timeWindows, plotTitle="trainingLosses/Positional Encoder Convergence Loss")
+                    self.generalViz.plotTrainingLosses(model.signalEncoderModel.trainingLosses_timeMeanAnalysis, model.signalEncoderModel.testingLosses_timeMeanAnalysis, lossLabels=modelConstants.timeWindows, plotTitle="trainingLosses/Signal Encoder Mean Loss")
+                    self.generalViz.plotTrainingLosses(model.signalEncoderModel.trainingLosses_timeMinMaxAnalysis, model.signalEncoderModel.testingLosses_timeMinMaxAnalysis, lossLabels=modelConstants.timeWindows, plotTitle="trainingLosses/Signal Encoder MinMax Loss")
 
                 if submodel == modelConstants.autoencoderModel:
                     # Plot autoencoder loss for each time.
-                    self.generalViz.plotTrainingLosses(model.autoencoderModel.trainingLosses_timeReconstructionAnalysis, model.autoencoderModel.testingLosses_timeReconstructionAnalysis, lossLabels=model.timeWindows, plotTitle="trainingLosses/Autoencoder Convergence Loss")
-                    self.generalViz.plotTrainingLosses(model.autoencoderModel.trainingLosses_timeMeanAnalysis, model.autoencoderModel.testingLosses_timeMeanAnalysis, lossLabels=model.timeWindows, plotTitle="trainingLosses/Autoencoder Mean Loss")
-                    self.generalViz.plotTrainingLosses(model.autoencoderModel.trainingLosses_timeMinMaxAnalysis, model.autoencoderModel.testingLosses_timeMinMaxAnalysis, lossLabels=model.timeWindows, plotTitle="trainingLosses/Autoencoder MinMax Loss")
+                    self.generalViz.plotTrainingLosses(model.autoencoderModel.trainingLosses_timeReconstructionAnalysis, model.autoencoderModel.testingLosses_timeReconstructionAnalysis, lossLabels=modelConstants.timeWindows, plotTitle="trainingLosses/Autoencoder Convergence Loss")
+                    self.generalViz.plotTrainingLosses(model.autoencoderModel.trainingLosses_timeMeanAnalysis, model.autoencoderModel.testingLosses_timeMeanAnalysis, lossLabels=modelConstants.timeWindows, plotTitle="trainingLosses/Autoencoder Mean Loss")
+                    self.generalViz.plotTrainingLosses(model.autoencoderModel.trainingLosses_timeMinMaxAnalysis, model.autoencoderModel.testingLosses_timeMinMaxAnalysis, lossLabels=modelConstants.timeWindows, plotTitle="trainingLosses/Autoencoder MinMax Loss")
 
             # Wait before continuing.
             self.accelerator.wait_for_everyone()

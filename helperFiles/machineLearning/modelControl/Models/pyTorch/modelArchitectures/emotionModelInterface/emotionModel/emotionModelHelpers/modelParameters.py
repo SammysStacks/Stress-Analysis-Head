@@ -16,10 +16,6 @@ class modelParameters:
         self.hpcTrialRun = userInputParams['deviceListed'].startswith("HPC") if userInputParams else False  # The HPC trial run flag.
         self.gpuFlag = accelerator.device.type == 'cuda' if accelerator else False  # The GPU flag.
 
-        # General parameters
-        self.timeWindows = self.getTimeWindows()  # The time windows to consider.
-        self.maxNumSignals = 138  # The maximum number of signals to consider.
-
         # Helper classes.
         self.generalMethods = generalMethods()
 
@@ -88,7 +84,7 @@ class modelParameters:
             raise Exception()
 
         # Adjust the batch size based on the number of signals used.
-        maxBatchSize = int(minimumBatchSize * self.maxNumSignals / numSignals)
+        maxBatchSize = int(minimumBatchSize * modelConstants.maxNumSignals / numSignals)
         maxBatchSize = min(maxBatchSize, numSignals)  # Ensure the maximum batch size is not larger than the number of signals.
 
         return maxBatchSize
@@ -135,26 +131,13 @@ class modelParameters:
     # -------------------------- Compilation Parameters ------------------------- #
 
     @staticmethod
-    def getSubjectIdentifiers():
-        subjectIdentifiers = ["signalIndex", "subjectIndex", "datasetIndex"]  # The subject identifiers to consider.
-
-        return subjectIdentifiers
-
-    @staticmethod
-    def getSignalMinMaxScale():
-        return 1  # Some wavelets constrained to +/- 1.
-
-    @staticmethod
-    def getTimeWindows():
-        return [90, 120, 150, 180, 210, 240, 300]
-
-    def getSequenceLengthRange(self, submodel, sequenceLength):
+    def getSequenceLengthRange(submodel, sequenceLength):
         if submodel == modelConstants.signalEncoderModel:
-            return self.timeWindows[0], self.timeWindows[-1]
+            return modelConstants.timeWindows[0], modelConstants.timeWindows[-1]
         elif submodel == modelConstants.autoencoderModel:
-            return self.timeWindows[0], self.timeWindows[-1]
+            return modelConstants.timeWindows[0], modelConstants.timeWindows[-1]
         elif submodel == modelConstants.emotionPredictionModel:
-            assert self.timeWindows[0] <= sequenceLength <= self.timeWindows[-1], "The sequence length must be within the trained time windows."
+            assert modelConstants.timeWindows[0] <= sequenceLength <= modelConstants.timeWindows[-1], "The sequence length must be within the trained time windows."
             return sequenceLength, sequenceLength
         else:
             raise Exception()
@@ -215,11 +198,11 @@ class modelParameters:
     def getSubmodelsSaving(submodel):
         # Get the submodels to save
         if submodel == modelConstants.signalEncoderModel:
-            submodelsSaving = ["trainingInformation", modelConstants.signalEncoderModel]
+            submodelsSaving = [modelConstants.trainingInformation, modelConstants.signalEncoderModel]
         elif submodel == modelConstants.autoencoderModel:
-            submodelsSaving = ["trainingInformation", modelConstants.signalEncoderModel, "autoencoderModel"]
+            submodelsSaving = [modelConstants.trainingInformation, modelConstants.signalEncoderModel, modelConstants.autoencoderModel]
         elif submodel == modelConstants.emotionPredictionModel:
-            submodelsSaving = ["trainingInformation", modelConstants.signalEncoderModel, "autoencoderModel", "signalMappingModel", "specificEmotionModel", "sharedEmotionModel"]
+            submodelsSaving = [modelConstants.trainingInformation, modelConstants.signalEncoderModel, modelConstants.autoencoderModel, modelConstants.signalMappingModel, modelConstants.specificEmotionModel, modelConstants.sharedEmotionModel]
         else:
             assert False, "No model initialized"
 

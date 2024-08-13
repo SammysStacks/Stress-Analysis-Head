@@ -4,16 +4,16 @@ import torch
 # Import files for machine learning
 from .helperModules.trainingAutoEncoder import trainingAutoEncoder
 from .modelComponents.generalAutoencoder import generalAutoencoder
+from ..modelConstants import modelConstants
 from ....._globalPytorchModel import globalModel
 
 
 class autoencoderModel(globalModel):
-    def __init__(self, compressedLength, timeWindows, compressionFactor, expansionFactor, accelerator, useFinalParams=False, debuggingResults=False):
+    def __init__(self, compressedLength, compressionFactor, expansionFactor, accelerator, useFinalParams=False, debuggingResults=False):
         super(autoencoderModel, self).__init__()
         # General model parameters.
         self.debuggingResults = debuggingResults  # Whether to print debugging results. Type: bool
         self.useFinalParams = useFinalParams  # Whether to use the final parameters for the model. Type: bool
-        self.timeWindows = timeWindows  # A list of all time windows to consider for the encoding. Type: list
         self.accelerator = accelerator  # Hugging face model optimizations.
         self.plotEncoding = True  # Whether to plot the encoding process. Type: bool
 
@@ -47,23 +47,23 @@ class autoencoderModel(globalModel):
 
     def resetModel(self):
         # Autoencoder reconstructed loss holders.
-        self.trainingLosses_timeReconstructionAnalysis = [[] for _ in self.timeWindows]  # List of list of data reconstruction training losses. Dim: numTimeWindows, numEpochs
-        self.testingLosses_timeReconstructionAnalysis = [[] for _ in self.timeWindows]  # List of list of data reconstruction testing losses. Dim: numTimeWindows, numEpochs
+        self.trainingLosses_timeReconstructionAnalysis = [[] for _ in modelConstants.timeWindows]  # List of list of data reconstruction training losses. Dim: numTimeWindows, numEpochs
+        self.testingLosses_timeReconstructionAnalysis = [[] for _ in modelConstants.timeWindows]  # List of list of data reconstruction testing losses. Dim: numTimeWindows, numEpochs
 
         # Autoencoder mean loss holders.
-        self.trainingLosses_timeMeanAnalysis = [[] for _ in self.timeWindows]  # List of list of encoded mean training losses. Dim: numTimeWindows, numEpochs
-        self.testingLosses_timeMeanAnalysis = [[] for _ in self.timeWindows]  # List of list of encoded mean testing losses. Dim: numTimeWindows, numEpochs
+        self.trainingLosses_timeMeanAnalysis = [[] for _ in modelConstants.timeWindows]  # List of list of encoded mean training losses. Dim: numTimeWindows, numEpochs
+        self.testingLosses_timeMeanAnalysis = [[] for _ in modelConstants.timeWindows]  # List of list of encoded mean testing losses. Dim: numTimeWindows, numEpochs
         # Autoencoder standard deviation loss holders.
-        self.trainingLosses_timeMinMaxAnalysis = [[] for _ in self.timeWindows]  # List of list of encoded standard deviation training losses. Dim: numTimeWindows, numEpochs
-        self.testingLosses_timeMinMaxAnalysis = [[] for _ in self.timeWindows]  # List of list of encoded standard deviation testing losses. Dim: numTimeWindows, numEpochs
+        self.trainingLosses_timeMinMaxAnalysis = [[] for _ in modelConstants.timeWindows]  # List of list of encoded standard deviation training losses. Dim: numTimeWindows, numEpochs
+        self.testingLosses_timeMinMaxAnalysis = [[] for _ in modelConstants.timeWindows]  # List of list of encoded standard deviation testing losses. Dim: numTimeWindows, numEpochs
 
         # Compression analysis.
-        self.numEncodingsBufferPath_timeAnalysis = [[] for _ in self.timeWindows]  # List of list of buffers at each epoch. Dim: numTimeWindows, numEpochs
-        self.numEncodingsPath_timeAnalysis = [[] for _ in self.timeWindows]  # List of list of the number of compressions at each epoch. Dim: numTimeWindows, numEpochs
+        self.numEncodingsBufferPath_timeAnalysis = [[] for _ in modelConstants.timeWindows]  # List of list of buffers at each epoch. Dim: numTimeWindows, numEpochs
+        self.numEncodingsPath_timeAnalysis = [[] for _ in modelConstants.timeWindows]  # List of list of the number of compressions at each epoch. Dim: numTimeWindows, numEpochs
 
         # Autoencoder optimal reconstruction loss holders
-        self.trainingLosses_timeReconstructionOptimalAnalysis = [[] for _ in self.timeWindows]  # List of list of data reconstruction training losses. Dim: numTimeWindows, numEpochs
-        self.testingLosses_timeReconstructionOptimalAnalysis = [[] for _ in self.timeWindows]  # List of list of data reconstruction testing losses. Dim: numTimeWindows, numEpochs
+        self.trainingLosses_timeReconstructionOptimalAnalysis = [[] for _ in modelConstants.timeWindows]  # List of list of data reconstruction training losses. Dim: numTimeWindows, numEpochs
+        self.testingLosses_timeReconstructionOptimalAnalysis = [[] for _ in modelConstants.timeWindows]  # List of list of data reconstruction testing losses. Dim: numTimeWindows, numEpochs
 
     def forward(self, encodedData, reconstructSignals=False, calculateLoss=False, trainingFlag=False):
         """ The shape of inputData: (batchSize, numSignals, finalDistributionLength) """
