@@ -286,12 +286,12 @@ class compileModelDataHelpers:
             experimentalData = allSignalData[experimentalInd]
 
             # Get the time intervals of the signals.
-            maxTimeIntervalData = self.getSignalIntervals(experimentalData, eachSignal_numPoints, modelConstants.timeWindows[-1], channelInds=[-1])
+            maxTimeDiffIntervalData = self.getSignalIntervals(experimentalData, eachSignal_numPoints, modelConstants.timeWindows[-1], channelInds=[1])
             minTimeIntervalData = self.getSignalIntervals(experimentalData, eachSignal_numPoints, modelConstants.timeWindows[0], channelInds=[-1])
             # minSignalIntervalData, maxSignalIntervalData Dim: numSignals, *numIntervalPoints  ->  *numIntervalPoints is not constant
 
             # Calculate the longest time gap within the longest time window.
-            maxTimeGap = max((max(torch.diff(timeIntervalData, n=1, dim=-1, prepend=timeIntervalData[0])) for timeIntervalData in maxTimeIntervalData))
+            maxTimeGap = max(max(timeDiffIntervalData) for timeDiffIntervalData in maxTimeDiffIntervalData)
 
             # Remove the batch if the gap is large.
             if self.maxTimeGap_perLargestTimeWindow < maxTimeGap:
@@ -309,17 +309,7 @@ class compileModelDataHelpers:
             # Compile the good batches.
             validExperimentalInds.append(experimentalInd)
 
-        # Convert to tensor arrays for easier handling
-        allNumSignalPoints = torch.as_tensor(allNumSignalPoints, dtype=torch.float32)[validExperimentalInds]
-        allSignalData = torch.as_tensor(allSignalData, dtype=torch.float32)[validExperimentalInds]
-        subjectInds = torch.as_tensor(subjectInds, dtype=torch.int)[validExperimentalInds]
-        allLabels = torch.as_tensor(allLabels, dtype=torch.float32)[validExperimentalInds]
-        # allSignalData dim: numValidExperiments, numSignals, maxSequenceLength, [signal, dTimeBack, dTimeForward, time]
-        # allNumSignalPoints dim: numValidExperiments, numSignals
-        # allLabels dim: numValidExperiments, numLabels
-        # subjectInds dim: numValidExperiments
-
-        return allSignalData, allNumSignalPoints, allLabels, subjectInds
+        return allSignalData[validExperimentalInds], allNumSignalPoints[validExperimentalInds], allLabels[validExperimentalInds], subjectInds[validExperimentalInds]
 
     def _preprocessSignals(self, allSignalData, allNumSignalPoints, featureNames):
         # allSignalData: A numpy array of size (batchSize, numSignals, maxSequenceLength, [signal, dTimeBack, dTimeForward])
@@ -352,24 +342,26 @@ class compileModelDataHelpers:
         # Apply the mask to keep only the good signals and corresponding feature names
         return allSignalData, allNumSignalPoints, featureNames[validSignalInds]
 
+    import torch
+
     @staticmethod
     def calculate_snr(signalBatchData, eachSignal_numPoints):
         # signalBatchData dimension: numSignals, maxSequenceLength
         # eachSignal_numPoints dimension: numSignals
-        snr_values = np.zeros(len(signalBatchData))
+        snr_values = torch.zeros(len(signalBatchData))
 
         # For each signal in the batch.
         for signalInd in range(len(signalBatchData)):
             # Get the signal data for the current signal.
-            signalData = signalBatchData[signalInd, 0:eachSignal_numPoints[signalInd]]  # Dim: maxSequenceLength
+            signalData = signalBatchData[signalInd, 0:eachSignal_numPoints[signalInd]]  # Dim: eachSignal_numPoints
 
-            # Calculate the signal-to-noise ratio for each signal.
-            signal_power = np.mean(signalData ** 2, axis=-1)
-            noise_power = np.var(signalData, axis=-1)
+            # Calculate the signal power and noise power for the current signal.
+            signal_power = torch.mean(signalData ** 2)
+            noise_power = torch.var(signalData)
 
             # Calculate the signal-to-noise ratio for each signal.
             if signal_power == 0 or noise_power == 0: snr_values[signalInd] = 0
-            else: snr_values[signalInd] = 10 * np.log10(signal_power / noise_power)
+            else: snr_values[signalInd] = 10 * torch.log10(signal_power / noise_power)
 
         return snr_values
 

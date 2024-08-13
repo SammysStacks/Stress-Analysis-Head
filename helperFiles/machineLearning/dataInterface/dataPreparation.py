@@ -1,14 +1,20 @@
 import numpy as np
+import torch
 
 
 # Standardize data class
 def minMaxScale_noInverse(X, scale=1):
     # Ensure the proper data type
-    X = np.asarray(X)
+    if not isinstance(X, torch.Tensor): X = np.array(X)
 
     # Find the minimum and maximum along the last dimension
     min_val = X.min(axis=-1, keepdims=True)
     max_val = X.max(axis=-1, keepdims=True)
+
+    # Handle the torch.tensor case.
+    if hasattr(X, "values"):
+        min_val = min_val.values
+        max_val = max_val.values
 
     # Handle the case when max_val == min_val (avoid division by zero)
     range_val = max_val - min_val

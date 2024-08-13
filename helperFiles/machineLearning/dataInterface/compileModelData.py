@@ -193,9 +193,12 @@ class compileModelData(compileModelDataHelpers):
 
             # ---------------------- Data Preparation ---------------------- #
 
-            # Add the human activity recognition to the end.
+            # Convert the incoming information to torch tensors.
             activityLabels = torch.as_tensor(activityLabels, dtype=torch.float32).reshape(-1, 1)
             surveyAnswersList = torch.as_tensor(surveyAnswersList, dtype=torch.float32)
+            subjectOrder = torch.as_tensor(subjectOrder, dtype=torch.int)
+
+            # Add the human activity recognition to the end.
             surveyAnswersList = torch.hstack((surveyAnswersList, activityLabels))
             # surveyAnswersList dimension: batchSize, numQuestions + 1
 
