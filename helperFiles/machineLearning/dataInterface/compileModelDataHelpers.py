@@ -78,7 +78,7 @@ class compileModelDataHelpers:
     # ---------------------- Saving/Loading Model Data --------------------- #
     def saveCompiledInfo(self, data_to_store, saveDataName):
         with gzip.open(filename=f'{self.compiledInfoLocation}{saveDataName}{self.compiledExtension}', mode='wb') as file:
-            file.write(data_to_store.encode("utf-8"))  # Encode string to bytes
+            pickle.dump(data_to_store, file)
 
     def loadCompiledInfo(self, loadDataName):
         with gzip.open(filename=f'{self.compiledInfoLocation}{loadDataName}{self.compiledExtension}', mode='rb') as file:
