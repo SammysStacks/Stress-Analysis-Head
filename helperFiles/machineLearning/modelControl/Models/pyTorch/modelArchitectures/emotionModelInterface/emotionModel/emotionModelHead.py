@@ -54,7 +54,7 @@ class emotionModelHead(globalModel):
         self.numBasicEmotions = userInputParams['numBasicEmotions']         # The number of basic emotions (basis states of emotions).
 
         # Tunable encoding parameters.
-        self.numEncodedSignals = 8  # The final number of signals to accept, encoding all signal information.
+        self.numEncodedSignals = 1  # The final number of signals to accept, encoding all signal information.
         self.compressedLength = 64  # The final length of the compressed signal after the autoencoder.
         # Feature parameters (code changes required if you change these!!!)
         self.numCommonSignals = 8    # The number of features from considering all the signals.
@@ -148,9 +148,9 @@ class emotionModelHead(globalModel):
     # ---------------------------------------------------------------------- #  
     # -------------------------- Model Components -------------------------- #
 
-    def signalEncoding(self, signalData, initialSignalData, decodeSignals=True, calculateLoss=True, trainingFlag=False):
+    def signalEncoding(self, signalTimes, signalData, subjectIdentifiers, allStartSignalInds, decodeSignals=True, calculateLoss=True, trainingFlag=False):
         # Add the data, labels, and training/testing indices to the device (GPU/CPU)
-        signalData, initialSignalData = signalData.to(self.device), initialSignalData.to(self.device)
+        signalData, signalTimes, subjectIdentifiers, allStartSignalInds = signalData.to(self.device), signalTimes.to(self.device), subjectIdentifiers.to(self.device), allStartSignalInds.to(self.device)
 
         t1 = time.time()
         # Forward pass through the signal encoder to reduce to a common signal number.
@@ -289,7 +289,7 @@ class emotionModelHead(globalModel):
             endIdx = startIdx + batchData.size(0)
 
             # Separate out the data.
-            allSignalData, allSubjectIdentifiers = emotionDataInterface.separateData(batchData)
+            allSignalTimes, allSignalData, allSubjectIdentifiers = emotionDataInterface.separateData(batchData)
             segmentedSignalData = emotionDataInterface.getRecentSignalPoints(allSignalData, timeWindow)  # Segment the data into its time window.
 
             # Forward pass for the current batch

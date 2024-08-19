@@ -25,7 +25,7 @@ class organizeTrainingLosses(lossCalculations):
 
         # Load in all the data and labels for final predictions.
         allData, allLabels, allTrainingMasks, allTestingMasks = lossDataLoader.dataset.getAll()
-        allSignalData, allSubjectIdentifiers = self.dataInterface.separateData(allData)
+        allSignalTimes, allSignalData, allSubjectIdentifiers = self.dataInterface.separateData(allData)
         reconstructionIndex = self.dataInterface.getReconstructionIndex(allTrainingMasks)
         assert reconstructionIndex is not None
 
@@ -176,6 +176,8 @@ class organizeTrainingLosses(lossCalculations):
 
         # Accumulate counts for each class
         for label in class_labels:
+            if torch.isnan(label): continue
+
             lower_class = int(label)
             # Distribute weight for classes around the floating point
             if lower_class == label:

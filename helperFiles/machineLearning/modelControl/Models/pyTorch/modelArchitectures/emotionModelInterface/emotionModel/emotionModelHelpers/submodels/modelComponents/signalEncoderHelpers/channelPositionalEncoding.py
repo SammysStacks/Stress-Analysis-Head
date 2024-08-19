@@ -1,6 +1,5 @@
 # PyTorch
 import torch
-import torch.nn as nn
 from pytorch_wavelets import DWT1DForward
 
 # Import machine learning files

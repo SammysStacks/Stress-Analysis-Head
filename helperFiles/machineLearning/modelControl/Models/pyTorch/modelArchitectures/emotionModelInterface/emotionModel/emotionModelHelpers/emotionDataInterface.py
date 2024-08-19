@@ -13,28 +13,45 @@ class emotionDataInterface:
     @staticmethod
     def addNoise(data, trainingFlag, noiseSTD=0.01):
         # If we are training, add noise to the final state to ensure continuity of the latent space.
-        return data + torch.randn_like(data, device=data.device) * noiseSTD if trainingFlag else data
+        return data + torch.randn_like(data, device=data.device) * noiseSTD if trainingFlag or noiseSTD == 0 else data
+
+    @staticmethod
+    def getTimeIntervalInd(timeData, timePoint, mustIncludeTimePoint=False):
+        # timeData is a torch array of size (maxSequenceLength)
+        # Assert the validity of the input parameters.
+        assert 0 <= timePoint, f"Expected a positive time point, but got {timePoint}"
+        timeData = torch.as_tensor(timeData)  # Ensure timeData is a torch tensor
+
+        # Find the index of the time point in the time data
+        timeInd = torch.where(timePoint <= timeData)[0]
+        if len(timeInd) == 0: return 0
+
+        # Determine if the time point is included in the time data
+        isTimePointIncluded = timeData[0] <= timePoint
+        timeInd = timeInd[0].item()
+
+        # Include the time point if necessary
+        if not isTimePointIncluded and mustIncludeTimePoint:
+            timeInd = max(timeInd - 1, 0)
+
+        return timeInd
 
     @staticmethod
     def shuffleDimension(signalDatas):
-        # Ensure that all tensors have the same shape
-        assert all(signalDatas[0].shape == signalDatas[i].shape for i in range(1, len(signalDatas)))
-
         # Get the shape of the tensors
-        batchSize, numSignals, sequenceLength = signalDatas[0].shape
+        batchSize, numSignals, maxSequenceLength, numChannels = signalDatas[0].shape
 
         # Generate random permutation indices for shuffling
         shuffle_indices = torch.randperm(numSignals)
 
         # Shuffle each tensor in the batch along the numSignals dimension
-        augmentedSignalDatas = (signalData[:, shuffle_indices, :] for signalData in signalDatas)
+        augmentedSignalDatas = (signalData[:, shuffle_indices, :, :] for signalData in signalDatas)
 
         return augmentedSignalDatas
 
     def changeSignalLength(self, minimumSignalLength, signalDatas):
-        # Assuming signalData is your tensor with dimensions [batchSize, numSignals, finalDistributionLength]
-        assert all(signalDatas[0].shape == signalDatas[i].shape for i in range(len(signalDatas)))
-        batchSize, numSignals, sequenceLength = signalDatas[0].shape
+        # Assuming signalDatas is your tensor with dimensions [numExperiments, numSignals, maxSequenceLength, numChannels]
+        batchSize, numSignals, sequenceLength, numChannels = signalDatas[0].shape
 
         # Find a random place to cut the data.
         randomSignalEnd = torch.tensor(generalMethods.biased_high_sample(minimumSignalLength, sequenceLength, randomValue=random.uniform(0, 1)), dtype=torch.int32).item()
@@ -44,44 +61,77 @@ class emotionDataInterface:
 
         return augmentedSignalDatas
 
+    @staticmethod
+    def getRandomTimeInterval(minTimeWindow, maxTimeWindow):
+        return torch.tensor(generalMethods.biased_high_sample(minTimeWindow, maxTimeWindow, randomValue=random.uniform(a=0, b=1)), dtype=torch.int32).item()
+
+    def getRandomSignalCutOff(self, allSignalTimes, minTimeWindow, maxTimeWindow):
+        # allSignalTimes: A torch array of size (batchSize, numSignals, maxSequenceLength)
+        newTimeWindow = self.getRandomTimeInterval(minTimeWindow, maxTimeWindow)
+        batchSize, numSignals, maxSequenceLength = allSignalTimes.size()
+
+        # Find the random starting point for the signal.
+        allStartSignalInds = torch.zeros(batchSize, numSignals, dtype=torch.int32)
+
+        # For each batch.
+        for batchInd in range(batchSize):
+            eachSignalTimes = allSignalTimes[batchInd]  # Dim: (numSignals, maxSequenceLength)
+
+            # For each signal in the batch.
+            for signalInd in range(numSignals):
+                # Find the number of points in the signal.
+                signalTimes = eachSignalTimes[signalInd]  # Dim: (maxSequenceLength)
+
+                # Find the time window for the signal.
+                allStartSignalInds[batchInd, signalInd] = self.getTimeIntervalInd(signalTimes, timePoint=newTimeWindow, mustIncludeTimePoint=False)
+
+        return allStartSignalInds
+
     def changeNumSignals(self, signalDatas, minNumSignals, maxNumSignals, alteredDim=1):
-        # Assuming signalData is your tensor with dimensions [batchSize, numSignals, finalDistributionLength]
-        assert all(signalDatas[0].shape == signalDatas[i].shape for i in range(len(signalDatas)))
+        # Assuming signalDatas is your tensor with dimensions [numCopies, numExperiments, numSignals, maxSequenceLength, numChannels]
         numSignals = signalDatas[0].size(alteredDim)
-        minValue = max(minNumSignals+1, int(numSignals/3))
+        minValue = max(minNumSignals + 1, int(numSignals / 3))
+        repeat_times = (maxNumSignals + numSignals - 1) // numSignals  # Calculate the number of times we need to repeat the tensor
 
         # Expand the number of signals.
-        repeat_times = (maxNumSignals + numSignals - 1) // numSignals  # Calculate the number of times we need to repeat the tensor
-        signalDatas = [signalData.repeat_interleave(repeat_times, dim=alteredDim)[:, 0:maxNumSignals, :] for signalData in signalDatas]  # Repeat the tensor along the second dimension
+        signalDatas = torch.stack(signalDatas).repeat_interleave(repeat_times, dim=alteredDim)[:, :maxNumSignals, :, :]
 
         # Shuffle the signals to ensure that we are not always removing the same signals.
         signalDatas = self.shuffleDimension(signalDatas)
 
         # Find a random place to cut the data.
-        randomEnd = torch.tensor(generalMethods.biased_high_sample(minValue, maxNumSignals, randomValue=random.uniform(0, 1)), dtype=torch.int32).item()
+        randomEnd = torch.tensor(generalMethods.biased_high_sample(minValue, maxNumSignals, randomValue=random.uniform(a=0, b=1)), dtype=torch.int32).item()
 
         finalDatas = []
         for signalData in signalDatas:
             # Slice all the data at the same index
-            finalDatas.append(self.getRecentSignals(signalData, randomEnd))
+            finalDatas.append(self.getInitialSignals(signalData, randomEnd))
 
         return finalDatas
 
     @staticmethod
     def getRecentSignalPoints(signalData, finalLength):
-        return signalData[:, :, :finalLength].contiguous()
+        assert False  # return signalData[:, :, :finalLength].contiguous()
 
     @staticmethod
-    def getRecentSignals(signalData, finalLength):
-        return signalData[:, 0:finalLength, :].contiguous()
+    def getInitialSignals(signalData, finalLength):
+        return signalData[:, 0:finalLength, :, :].contiguous()
 
     # ---------------------------------------------------------------------- #
-    # ---------------------- Data Structure Interface ---------------------- #  
+    # ---------------------- Data Structure Interface ---------------------- #
+
+    @staticmethod
+    def indexSubjectIdentifiers(subjectIdentifiers, subjectIdentifierName):
+        # subjectIdentifiers: A torch array of size (batchSize, numSubjectIdentifiers)
+        subjectIdentifierInd = modelConstants.subjectIdentifiers.index(subjectIdentifierName)
+
+        return subjectIdentifiers[:, subjectIdentifierInd]
 
     @staticmethod
     def separateData(inputData):
+        # allSignalData: A torch array of size (batchSize, numSignals, maxSequenceLength + numSubjectIdentifiers, [signalData, previousSignalPoints, nextDeltaTimes, previousDeltaTimes, nextDeltaTimes, time])
         # Extract the incoming data's dimension and ensure a proper data format.
-        batchSize, numSignals, signalInfoLength, _ = inputData.size()
+        batchSize, numSignals, signalInfoLength, numChannels = inputData.size()
 
         # Find the number of subject identifiers.
         numSubjectIdentifiers = len(modelConstants.subjectIdentifiers)
@@ -92,12 +142,14 @@ class emotionDataInterface:
             f"{signalInfoLength} != {maxSequencePoints} {numSubjectIdentifiers}"
 
         # Separate the sequence and demographic information.
-        subjectIdentifiers = inputData[:, 0, maxSequencePoints:signalInfoLength]
-        signalData = inputData[:, :, 0:maxSequencePoints]
-        # signalData dimension: batchSize, numSignals, finalDistributionLength
+        signalData = inputData[:, :, 0:maxSequencePoints, 0:len(modelConstants.signalChannelNames)]
+        signalTimes = inputData[:, :, 0:maxSequencePoints, len(modelConstants.signalChannelNames)]
+        subjectIdentifiers = inputData[:, 0, maxSequencePoints:signalInfoLength, 0]
+        # signalData dimension: batchSize, numSignals, maxSequenceLength, [signalData, previousSignalPoints, nextDeltaTimes, previousDeltaTimes, nextDeltaTimes]
+        # signalTimes dimension: batchSize, numSignals, maxSequenceLength
         # subjectInds dimension: batchSize, numSubjectIdentifiers
 
-        return signalData, subjectIdentifiers
+        return signalTimes, signalData, subjectIdentifiers
 
     def getReconstructionIndex(self, allTrainingMasks):
         # Find the first label index with training points.

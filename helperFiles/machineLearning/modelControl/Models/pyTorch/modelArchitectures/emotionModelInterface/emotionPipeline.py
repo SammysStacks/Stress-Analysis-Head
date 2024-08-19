@@ -27,7 +27,7 @@ class emotionPipeline(emotionPipelineHelpers):
     def trainModel(self, dataLoader, submodel, numEpochs=500, constrainedTraining=False):
         """
         Stored items in the dataLoader.dataset:
-            allData: The standardized testing and training data. numExperiments, numSignals, signalInfoLength
+            allData: The standardized testing and training data → Dim: numExperiments, numSignals, signalInfoLength, numChannels
             allLabels: Integer labels representing class indices. Dim: numExperiments, numLabels (where numLabels = numEmotions + 1)
             allTestingMasks: Boolean flags representing if the label is a testing label. Dim: numExperiments, numLabels (where numLabels = numEmotions + 1)
             allTrainingMasks: Boolean flags representing if the label is a training label. Dim: numExperiments, numLabels (where numLabels = numEmotions + 1)
@@ -39,7 +39,7 @@ class emotionPipeline(emotionPipelineHelpers):
         model = self.getDistributedModel()
 
         # Load in all the data and labels for final predictions and calculate the activity and emotion class weights.
-        allData, allLabels, allTrainingMasks, allTestingMasks, allSignalData, allSubjectIdentifiers, reconstructionIndex = self.prepareInformation(dataLoader)
+        allData, allLabels, allTrainingMasks, allTestingMasks, allSignalTimes, allSignalData, allSubjectIdentifiers, reconstructionIndex = self.prepareInformation(dataLoader)
         allEmotionClassWeights, activityClassWeights = self.organizeLossInfo.getClassWeights(allLabels, allTrainingMasks, allTestingMasks, self.numActivities)
 
         # Prepare the model for training.
@@ -78,9 +78,8 @@ class emotionPipeline(emotionPipelineHelpers):
                             continue  # We are not training on any points (or need to refresh training)
 
                     # Separate the data into signal, demographic, and subject identifier information.
-                    signalData, subjectIdentifiers = self.dataInterface.separateData(batchData)
-                    # demographicData dimension: batchSize, numSignals, demographicLength
-                    # signalData dimension: batchSize, numSignals, finalDistributionLength
+                    signalTimes, signalData, subjectIdentifiers = self.dataInterface.separateData(batchData)
+                    # signalData dimension: batchSize, numSignals, maxSequenceLength, [signalData, previousSignalPoints, nextDeltaTimes, previousDeltaTimes, nextDeltaTimes, time]
                     # subjectInds dimension: batchSize, numSubjectIdentifiers
 
                     # Randomly choose to add noise to the model.
@@ -110,11 +109,11 @@ class emotionPipeline(emotionPipelineHelpers):
 
                         # Augment the signals to train an arbitrary sequence length and order.
                         initialSignalData, augmentedSignalData = self.dataInterface.changeNumSignals(signalDatas=(signalData, augmentedSignalData), minNumSignals=model.numEncodedSignals, maxNumSignals=self.maxBatchSignals, alteredDim=1)
-                        initialSignalData, augmentedSignalData = self.dataInterface.changeSignalLength(modelConstants.timeWindows[0], signalDatas=(initialSignalData, augmentedSignalData))
+                        allStartSignalInds = self.dataInterface.getRandomSignalCutOff(allSignalTimes=allSignalTimes, minTimeWindow=modelConstants.timeWindows[0], maxTimeWindow=modelConstants.timeWindows[-1])
                         print("Input size:", augmentedSignalData.size())
 
                         # Perform the forward pass through the model.
-                        encodedData, reconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLayerLoss = model.signalEncoding(augmentedSignalData, initialSignalData, decodeSignals=True, calculateLoss=self.calculateFullLoss, trainingFlag=True)
+                        encodedData, reconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLayerLoss = model.signalEncoding(signalTimes, initialSignalData, subjectIdentifiers, allStartSignalInds, decodeSignals=True, calculateLoss=self.calculateFullLoss, trainingFlag=True)
                         # decodedPredictedIndexProbabilities dimension: batchSize, numSignals, maxNumEncodedSignals
                         # predictedIndexProbabilities dimension: batchSize, numSignals, maxNumEncodedSignals
                         # encodedData dimension: batchSize, numEncodedSignals, finalDistributionLength

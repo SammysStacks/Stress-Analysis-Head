@@ -1,5 +1,4 @@
 import os
-import time
 
 import numpy as np
 import torch
@@ -208,7 +207,7 @@ class compileModelData(compileModelDataHelpers):
             allSignalData, allNumSignalPoints, allFeatureLabels, allSubjectInds = self._removeBadExperiments(allSignalData, allNumSignalPoints, surveyAnswersList, subjectOrder)
             allSignalData, allNumSignalPoints, featureNames = self._preprocessSignals(allSignalData, allNumSignalPoints, featureNames)
             allFeatureLabels, allSmallClassIndices = self.organizeLabels(allFeatureLabels, metaTraining, metaDatasetName, numSignals=allSignalData.shape[1])
-            # allSignalData dimension: batchSize, numSignals, maxSequenceLength, [signal, dTimeBack, dTimeForward, time]
+            # allSignalData dimension: batchSize, numSignals, maxSequenceLength, [signalData, previousSignalPoints, nextDeltaTimes, previousDeltaTimes, nextDeltaTimes, time]
             # allSmallClassIndices dimension: numLabels, batchSize*  →  *if there are no small classes, the dimension is empty
             # allNumSignalPoints dimension: batchSize, numSignals
             # allFeatureLabels dimension: batchSize, numLabels
@@ -273,6 +272,7 @@ class compileModelData(compileModelDataHelpers):
 
             # Add the demographic information.
             allSignalData = self.addDemographicInfo(allSignalData, allNumSignalPoints, allSubjectInds, metadataInd)
+            # allSignalData: A torch array of size (batchSize, numSignals, maxSequenceLength + numSubjectIdentifiers, [signalData, previousSignalPoints, nextDeltaTimes, previousDeltaTimes, nextDeltaTimes, time])
 
             # ---------------------- Create the Model ---------------------- #
 

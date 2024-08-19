@@ -4,13 +4,12 @@ import random
 
 
 class generalMethods:
-    import torch
 
     @staticmethod
-    def minMaxScale_noInverse(inputData, scale=1, buffer=None):
+    def minMaxScale_noInverse(inputData, scale=1, buffer=None, min_val=None, max_val=None):
         # Find the minimum and maximum along the last dimension
-        min_val = inputData.min(dim=-1, keepdim=True).values
-        max_val = inputData.max(dim=-1, keepdim=True).values
+        if min_val is None: min_val = inputData.min(dim=-1, keepdim=True).values
+        if max_val is None: max_val = inputData.max(dim=-1, keepdim=True).values
 
         if buffer is not None:
             # Check if it is within the buffer range of the scale

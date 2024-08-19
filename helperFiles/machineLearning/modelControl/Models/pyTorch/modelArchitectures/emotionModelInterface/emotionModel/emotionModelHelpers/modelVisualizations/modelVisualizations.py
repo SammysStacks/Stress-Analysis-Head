@@ -102,7 +102,7 @@ class modelVisualizations(globalPlottingProtocols):
 
         # Load in all the data and labels for final predictions.
         allData, allLabels, allTrainingMasks, allTestingMasks = lossDataLoader.dataset.getAll()
-        allSignalData, allDemographicData, allSubjectIdentifiers = self.dataInterface.separateData(allData, model.finalDistributionLength, model.numSubjectIdentifiers, model.demographicLength)
+        allSignalTimes, allSignalData, allDemographicData, allSubjectIdentifiers = self.dataInterface.separateData(allData)
         reconstructionIndex = self.dataInterface.getReconstructionIndex(allTrainingMasks)
         assert reconstructionIndex is not None
 

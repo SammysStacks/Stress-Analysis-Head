@@ -95,7 +95,7 @@ class emotionPipelineHelpers:
     def prepareInformation(self, dataLoader):
         # Load in all the data and labels for final predictions.
         allData, allLabels, allTrainingMasks, allTestingMasks = dataLoader.dataset.getAll()
-        allSignalData, allSubjectIdentifiers = self.dataInterface.separateData(allData)
+        allSignalTimes, allSignalData, allSubjectIdentifiers = self.dataInterface.separateData(allData)
         reconstructionIndex = self.dataInterface.getReconstructionIndex(allTrainingMasks)
         assert reconstructionIndex is not None
 
@@ -104,7 +104,7 @@ class emotionPipelineHelpers:
         assert allLabels.shape == allTrainingMasks.shape, "We should specify the training indices for each label"
         assert allLabels.shape == allTestingMasks.shape, "We should specify the testing indices for each label"
 
-        return allData, allLabels, allTrainingMasks, allTestingMasks, allSignalData, allSubjectIdentifiers, reconstructionIndex
+        return allData, allLabels, allTrainingMasks, allTestingMasks, allSignalTimes, allSignalData, allSubjectIdentifiers, reconstructionIndex
 
     # ------------------------------------------------------------------ #
 
