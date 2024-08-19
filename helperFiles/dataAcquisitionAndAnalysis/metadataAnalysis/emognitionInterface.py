@@ -335,6 +335,5 @@ if __name__ == "__main__":
         plotTrainingData = False
         # Collected the training data.
         emognitionAllRawFeatureTimesHolders, emognitionAllRawFeatureHolders, emognitionAllRawFeatureIntervals, emognitionAllRawFeatureIntervalTimes, \
-            allAlignedFeatureTimes, emognitionAllAlignedFeatureHolder, emognitionAllAlignedFeatureIntervals, emognitionAllAlignedFeatureIntervalTimes, emognitionSubjectOrder, \
-            experimentOrder, emognitionActivityNames, emognitionActivityLabels, emognitionAllFinalLabels, emognitionFeatureLabelTypes, emognitionSurveyQuestions, emognitionSurveyAnswersList, emognitionSurveyAnswerTimes \
+            emognitionSubjectOrder, experimentOrder, emognitionActivityNames, emognitionActivityLabels, emognitionAllFinalLabels, emognitionFeatureLabelTypes, emognitionSurveyQuestions, emognitionSurveyAnswersList, emognitionSurveyAnswerTimes \
             = emognitionAnalysisClass.trainingProtocolInterface(emognitionStreamingOrder, emognitionBiomarkerFeatureOrder, emognitionFeatureAverageWindows, emognitionFeatureNames, emognitionBiomarkerFeatureNames, plotTrainingData, metaTraining=True)

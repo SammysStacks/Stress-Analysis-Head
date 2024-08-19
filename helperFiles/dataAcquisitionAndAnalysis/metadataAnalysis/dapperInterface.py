@@ -349,6 +349,5 @@ if __name__ == "__main__":
         plotTrainingData = False
         # Collected the training data.
         dapperAllRawFeatureTimesHolders, dapperAllRawFeatureHolders, dapperAllRawFeatureIntervals, dapperAllRawFeatureIntervalTimes, \
-            allAlignedFeatureTimes, dapperAllAlignedFeatureHolder, dapperAllAlignedFeatureIntervals, dapperAllAlignedFeatureIntervalTimes, dapperSubjectOrder, \
-            experimentOrder, dapperActivityNames, dapperActivityLabels, dapperAllFinalLabels, dapperFeatureLabelTypes, dapperSurveyQuestions, dapperSurveyAnswersList, dapperSurveyAnswerTimes \
+            dapperSubjectOrder, experimentOrder, dapperActivityNames, dapperActivityLabels, dapperAllFinalLabels, dapperFeatureLabelTypes, dapperSurveyQuestions, dapperSurveyAnswersList, dapperSurveyAnswerTimes \
             = dapperAnalysisClass.trainingProtocolInterface(dapperStreamingOrder, dapperBiomarkerFeatureOrder, dapperFeatureAverageWindows, dapperBiomarkerFeatureNames, plotTrainingData, metaTraining=True)

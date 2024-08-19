@@ -42,9 +42,9 @@ class trainingProtocols(extractData):
 
     def streamTrainingData(self, featureAverageWindows, plotTrainingData=False, reanalyzeData=False, metaTraining=False, reverseOrder=False):
         # Hold time series analysis of features.
-        allRawFeatureIntervalTimes, allRawFeatureIntervals, allCompiledFeatureIntervals, allAlignedFeatureIntervals, allAlignedFeatureIntervalTimes = [], [], [], [], []
+        allRawFeatureIntervalTimes, allRawFeatureIntervals, allCompiledFeatureIntervals = [], [], []
         # Hold features extraction information.
-        allRawFeatureHolders, allRawFeatureTimesHolders, allCompiledFeatureHolders, allAlignedFeatureHolder, allAlignedFeatureTimes = [], [], [], [], []
+        allRawFeatureHolders, allRawFeatureTimesHolders, allCompiledFeatureHolders = [], [], []
         # Hold survey information.
         subjectInformationQuestions, surveyAnswersList, surveyAnswerTimes, surveyQuestions = [], [], [], []
         # Hold experimental information.
@@ -149,31 +149,6 @@ class trainingProtocols(extractData):
             assert len(compiledFeatureHolder[0]) == len(rawFeatureHolder[0]), "Compiled features are not the same length as the raw features"
             assert len(compiledFeatureHolder) == len(rawFeatureHolder), "Compiled features are not the same length as the raw features"
 
-            # For each unique analysis with features.
-            for analysis in self.readData.featureAnalysisList:
-                for featureChannelInd in range(len(analysis.featureChannelIndices)):
-                    biomarkerInd = analysis.featureChannelIndices[featureChannelInd]
-
-                    # Add back the relevant feature information.
-                    analysis.compiledFeatures[featureChannelInd] = compiledFeatureHolder[biomarkerInd]
-                    analysis.rawFeatureTimes[featureChannelInd] = rawFeatureTimesHolder[biomarkerInd]
-                    analysis.rawFeatures[featureChannelInd] = rawFeatureHolder[biomarkerInd]
-
-            # ------------------ Align and Predict Labels ------------------ #
-
-            # Align all the features.
-            self.readData.alignFeatures()
-            # Extract the aligned features
-            alignedFeatureTimes = np.asarray(self.readData.alignedFeatureTimes)
-            alignedFeatures = np.asarray(self.readData.alignedFeatures).T
-            # alignedFeatures dim: numTimePoints, numFeatures
-            # alignedFeatureTimes dim: numTimePoints
-
-            # If there are no aligned features.
-            if len(self.readData.alignedFeatureTimes) == 0:
-                print("No aligned features found!? Wierd... why did you waste my time!")
-                continue
-
             # Finished analyzing the data
             self.readData.resetGlobalVariables()
 
@@ -195,21 +170,14 @@ class trainingProtocols(extractData):
                 # newRawFeatureIntervals dim: numBiomarkers, numTimePoints, numBiomarkerFeatures
                 # newRawFeatureIntervalTimes dim: numBiomarkers, numTimePoints
 
-                # Calculate the aligned feature intervals
-                alignedFeatureIntervals, alignedFeatureIntervalTimes = self.readData.compileModelFeatures(startIntervalTime, startSurveyTime, alignedFeatureTimes, alignedFeatures)
-                # alignedFeatureIntervals dim: numTimePoints, numFeatures
-                # alignedFeatureIntervalTimes dim: numTimePoints
-
                 # Check the features.
-                if newRawFeatureIntervalTimes is None or alignedFeatureIntervals is None:
+                if newRawFeatureIntervalTimes is None:
                     badExperimentalInds.append(experimentInd)
                     continue
 
                 # Save the interval information
-                allAlignedFeatureIntervalTimes.append(alignedFeatureIntervalTimes)
                 allCompiledFeatureIntervals.append(newCompiledFeatureIntervals)
                 allRawFeatureIntervalTimes.append(newRawFeatureIntervalTimes)
-                allAlignedFeatureIntervals.append(alignedFeatureIntervals)
                 experimentalOrder.append(experimentNames[experimentInd])
                 allRawFeatureIntervals.append(newRawFeatureIntervals)
 
@@ -224,19 +192,6 @@ class trainingProtocols(extractData):
 
             # -------------------- Plot the features ------------------- #
 
-            if not metaTraining and False:
-                # Get the predicted data
-                alignedFeatureLabels = self.readData.predictLabels()
-                _, allTrueLabels = self.compileModelInfo.extractFinalLabels(currentSurveyAnswersList, finalLabels=[])
-
-                # Plot the predicted stress of each person if model provided
-                for modelInd in range(len(self.compileModelInfo.predictionOrder)):
-                    providedLabels = allTrueLabels[modelInd][0] * np.ones(len(alignedFeatureTimes))
-                    self.analyzeFeatures.plotPredictedScores(alignedFeatureTimes, providedLabels, allTrueLabels[modelInd], currentSurveyAnswerTimes, experimentTimes, experimentNames,
-                                                             predictionType=self.compileModelInfo.predictionOrder[modelInd], folderName=excelFileName + "/realTimePredictions/")
-                    self.analyzeFeatures.plotPredictedScores(alignedFeatureTimes, alignedFeatureLabels[modelInd], allTrueLabels[modelInd], currentSurveyAnswerTimes, experimentTimes, experimentNames,
-                                                             predictionType=self.compileModelInfo.predictionOrder[modelInd], folderName=excelFileName + "/realTimePredictions/")
-
             if plotTrainingData:
                 startBiomarkerFeatureIndex = 0
                 for biomarkerInd in range(len(rawFeatureHolder)):
@@ -245,26 +200,20 @@ class trainingProtocols(extractData):
                     # rawFeatures dim: numTimePoints, numBiomarkerFeatures
                     # rawFeatureTimes dim: numTimePoints
 
-                    # Get the training data's aligned features information
+                    # Get the training data's features information
                     endBiomarkerFeatureIndex = startBiomarkerFeatureIndex + len(self.biomarkerFeatureNames[biomarkerInd])
-                    alignedFeatureSet = np.asarray(alignedFeatures)[:, startBiomarkerFeatureIndex:endBiomarkerFeatureIndex]
                     startBiomarkerFeatureIndex = endBiomarkerFeatureIndex
 
                     # Plot each biomarker's features from the training file.
                     self.analyzeFeatures.singleFeatureAnalysis(self.readData, rawFeatureTimes, rawFeatures, self.biomarkerFeatureNames[biomarkerInd], preAveragingSeconds=0, averageIntervalList=[30, 60, 90],
                                                                surveyCollectionTimes=currentSurveyAnswerTimes, experimentTimes=experimentTimes, experimentNames=experimentNames,
                                                                folderName=excelFileName + "/Feature Analysis/singleFeatureAnalysis - " + self.biomarkerFeatureOrder[biomarkerInd].upper() + "/")
-                    self.analyzeFeatures.singleFeatureAnalysis(self.readData, alignedFeatureTimes, alignedFeatureSet, self.biomarkerFeatureNames[biomarkerInd], preAveragingSeconds=featureAverageWindows[biomarkerInd], averageIntervalList=[0],
-                                                               surveyCollectionTimes=currentSurveyAnswerTimes, experimentTimes=experimentTimes, experimentNames=experimentNames,
-                                                               folderName=excelFileName + "/Feature Analysis/alignedFeatureAnalysis - " + self.biomarkerFeatureOrder[biomarkerInd].upper() + "/")
 
             # ------------------ Organize Information ------------------ #
 
             # Set up the compilation variables
             allCompiledFeatureHolders.append(compiledFeatureHolder)
             allRawFeatureTimesHolders.append(rawFeatureTimesHolder)
-            allAlignedFeatureTimes.append(alignedFeatureTimes)
-            allAlignedFeatureHolder.append(alignedFeatures)
             allRawFeatureHolders.append(rawFeatureHolder)
 
             # Save the survey labels.
@@ -287,12 +236,11 @@ class trainingProtocols(extractData):
         print(f'surveyQuestions: {surveyQuestions}')
 
         # Assert consistency across training data.
-        assert len(allRawFeatureIntervals) == len(allRawFeatureIntervalTimes) == len(allCompiledFeatureIntervals) == len(allAlignedFeatureIntervals) == len(allAlignedFeatureIntervalTimes)
-        assert len(allRawFeatureTimesHolders) == len(allRawFeatureHolders) == len(allAlignedFeatureTimes) == len(allAlignedFeatureHolder)
+        assert len(allRawFeatureIntervals) == len(allRawFeatureIntervalTimes) == len(allCompiledFeatureIntervals)
+        assert len(allRawFeatureTimesHolders) == len(allRawFeatureHolders)
 
         # Return Training Data and Labels
         return allRawFeatureTimesHolders, allRawFeatureHolders, allRawFeatureIntervalTimes, allRawFeatureIntervals, allCompiledFeatureIntervals, \
-            allAlignedFeatureTimes, allAlignedFeatureHolder, allAlignedFeatureIntervals, allAlignedFeatureIntervalTimes, \
             subjectOrder, experimentalOrder, allFinalLabels, featureLabelTypes, surveyQuestions, surveyAnswersList, surveyAnswerTimes
 
     def organizeRawFeatureIntervals(self, startExperimentTime, startSurveyTime, rawFeatureTimesHolder, rawFeatureHolder):
@@ -315,7 +263,7 @@ class trainingProtocols(extractData):
                 newRawFeatureIntervalTimes, newRawFeatureIntervals = None, None
                 break
 
-            # Save raw and aligned interval information
+            # Save raw interval information
             newRawFeatureIntervalTimes.append(featureIntervalTimes)
             newRawFeatureIntervals.append(featureIntervals)
 

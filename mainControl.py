@@ -1,10 +1,11 @@
 """ Written by Samuel Solomon: https://scholar.google.com/citations?user=9oq12oMAAAAJ&hl=en """
 
+import os
+import sys
+import threading
+
 # General
 import numpy as np
-import threading
-import sys
-import os
 
 # Compiler flags.
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
@@ -12,7 +13,6 @@ os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 # Import helper files.
 from helperFiles.dataAcquisitionAndAnalysis.excelProcessing import extractDataProtocols, saveDataProtocols  # Import interfaces for reading/writing data
 from helperFiles.machineLearning.modelControl.modelSpecifications.compileModelInfo import compileModelInfo  # Import files for machine learning
-from helperFiles.machineLearning.dataInterface.dataPreparation import standardizeData  # Import interface for the data
 from helperFiles.surveyInformation.questionaireGUI import stressQuestionnaireGUI  # Import file for GUI control
 from helperFiles.dataAcquisitionAndAnalysis import streamingProtocols  # Import interfaces for reading/writing data
 from helperFiles.machineLearning import trainingProtocols  # Import interfaces for reading/writing data
@@ -114,11 +114,10 @@ if __name__ == "__main__":
 
         # Extract the features from the training files and organize them.
         allRawFeatureTimesHolders, allRawFeatureHolders, allRawFeatureIntervalTimes, allRawFeatureIntervals, allCompiledFeatureIntervals, \
-            allAlignedFeatureTimes, allAlignedFeatureHolder, allAlignedFeatureIntervals, allAlignedFeatureIntervalTimes, \
             subjectOrder, experimentalOrder, allFinalLabels, featureLabelTypes, surveyQuestions, surveyAnswersList, surveyAnswerTimes \
             = trainingInterface.streamTrainingData(featureAverageWindows, plotTrainingData=plotTrainingData, reanalyzeData=reanalyzeData, metaTraining=False, reverseOrder=reverseOrder)
         # Assert the validity of the feature extraction
-        assert len(allAlignedFeatureHolder[0][0]) == len(featureNames), "Incorrect number of compiled features extracted"
+        assert len(allCompiledFeatureIntervals[0][0]) == len(featureNames), "Incorrect number of compiled features extracted"
         for analysisInd in range(len(allRawFeatureHolders[0])):
             assert len(allRawFeatureHolders[0][analysisInd][0]) == len(biomarkerFeatureNames[analysisInd]), "Incorrect number of raw features extracted"
         print("\nFinished Feature Extraction")

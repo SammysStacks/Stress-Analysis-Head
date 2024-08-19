@@ -317,6 +317,5 @@ if __name__ == "__main__":
         plotTrainingData = False
         # Collected the training data.
         wesadAllRawFeatureTimesHolders, wesadAllRawFeatureHolders, wesadAllRawFeatureIntervals, wesadAllRawFeatureIntervalTimes, \
-            wesadAllAlignedFeatureTimes, wesadAllAlignedFeatureHolder, wesadAllAlignedFeatureIntervals, wesadAllAlignedFeatureIntervalTimes, wesadSubjectOrder, \
-            wesadExperimentOrder, wesadActivityNames, wesadActivityLabels, wesadAllFinalLabels, wesadFeatureLabelTypes, wesadSurveyQuestions, wesadSurveyAnswersList, wesadSurveyAnswerTimes \
+            wesadSubjectOrder, wesadExperimentOrder, wesadActivityNames, wesadActivityLabels, wesadAllFinalLabels, wesadFeatureLabelTypes, wesadSurveyQuestions, wesadSurveyAnswersList, wesadSurveyAnswerTimes \
             = wesadAnalysisClass.trainingProtocolInterface(wesadStreamingOrder, wesadBiomarkerFeatureOrder, wesadFeatureAverageWindows, wesadBiomarkerFeatureNames, plotTrainingData, metaTraining=True)
