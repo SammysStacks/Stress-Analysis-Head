@@ -97,7 +97,7 @@ class signalEncoderModel(globalModel):
 
         # Prepare the data for compression/expansion
         batchSize, numSignals, sequenceLength = signalData.size()
-        # signalData dimension: batchSize, numSignals, finalDistributionLength
+        # signalChannel dimension: batchSize, numSignals, finalDistributionLength
 
         # Create placeholders for the final variables.
         decodedPredictedIndexProbabilities = torch.ones((batchSize, numSignals), device=signalData.device)

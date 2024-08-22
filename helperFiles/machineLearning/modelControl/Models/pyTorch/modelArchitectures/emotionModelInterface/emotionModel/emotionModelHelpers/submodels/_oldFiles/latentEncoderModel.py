@@ -66,7 +66,7 @@ class latentEncoderModel(_globalPytorchModel.globalModel):
 
         # Extract the incoming data's dimension and ensure proper data format.
         batchSize, combinedSignalLength = compressedData.size()
-        # signalData dimension: batchSize, combinedSignalLength
+        # signalChannel dimension: batchSize, combinedSignalLength
         
         # Assert the integrity of the incoming data.
         assert self.numSignals == numSignals, f"The model was expecting {self.numSignals} signals, but recieved {numSignals}"

@@ -89,7 +89,7 @@ class embeddingLayer(_convolutionalHelpers.convolutionalHelpers):
         
         # Reshape the data to the expected input into the CNN architecture.
         signalData = inputData.view(batchSize * numSignals, 1, sequenceLength) # Seperate out indivisual signals.
-        # signalData dimension: batchSize*numSignals, 1, finalDistributionLength
+        # signalChannel dimension: batchSize*numSignals, 1, finalDistributionLength
         
         import matplotlib.pyplot as plt
         plt.plot(signalData[0][0].detach().cpu())

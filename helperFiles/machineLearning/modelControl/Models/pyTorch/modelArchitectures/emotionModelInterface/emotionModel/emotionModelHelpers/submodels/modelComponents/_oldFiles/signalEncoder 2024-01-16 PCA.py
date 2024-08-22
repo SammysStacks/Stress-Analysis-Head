@@ -472,7 +472,7 @@ class signalEncoderBase(_convolutionalHelpers.convolutionalHelpers):
         
         # Recompile the signals to their original dimension.
         signalData = self.recompileSignals(expandedData, frozenData)
-        # signalData dimension: batchSize, 2*numSignalPairs + numFrozenSignals, signalDimension
+        # signalChannel dimension: batchSize, 2*numSignalPairs + numFrozenSignals, signalDimension
         
         return originalData, signalData
         
@@ -488,7 +488,7 @@ class signalEncoderBase(_convolutionalHelpers.convolutionalHelpers):
 
         # Recompile the signals to their original dimension.
         signalData = self.recompileSignals(reducedPairedData, frozenData)
-        # signalData dimension: batchSize, numSignalPairs + numFrozenSignals, signalDimension
+        # signalChannel dimension: batchSize, numSignalPairs + numFrozenSignals, signalDimension
         
         return originalData, signalData
     
@@ -500,7 +500,7 @@ class signalEncoding(signalEncoderBase):
         super(signalEncoding, self).__init__(signalDimension, numExpandedSignals)        
                         
     def forward(self, signalData, targetNumSignals = 64, signalEncodingLayerLoss = 0, calculateLoss = True):
-        """ The shape of signalData: (batchSize, numSignals, compressedLength) """
+        """ The shape of signalChannel: (batchSize, numSignals, compressedLength) """
         # Setup the variables for signal encoding.
         batchSize, numSignals, signalDimension = signalData.size()
         numSignalPath = [numSignals] # Keepn track of the signal's at each iteration.

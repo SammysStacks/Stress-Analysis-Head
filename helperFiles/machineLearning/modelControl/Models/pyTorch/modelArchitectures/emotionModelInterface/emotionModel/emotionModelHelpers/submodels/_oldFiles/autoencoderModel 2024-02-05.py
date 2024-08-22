@@ -69,7 +69,7 @@ class autoencoderModel(_globalPytorchModel.globalModel):
         # Extract the incoming data's dimension and ensure proper data format.
         batchSize, numSignals, sequenceLength = signalData.size()
         signalData = signalData.to(torch.float32) # Floats are required for gradient tracking.
-        # signalData dimension: batchSize, numSignals, finalDistributionLength
+        # signalChannel dimension: batchSize, numSignals, finalDistributionLength
         
         # Assert the integrity of the incoming data.
         assert sequenceLength == self.sequenceLength, f"The signals have length {sequenceLength}, but the model expected {self.sequenceLength} points."

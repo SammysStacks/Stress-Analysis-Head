@@ -320,7 +320,7 @@ class signalEncoding(signalEncoderBase):
         super(signalEncoding, self).__init__(signalDimension, numExpandedSignals)        
                         
     def forward(self, signalData, targetNumSignals = 64, signalEncodingLayerLoss = 0, numIterations = 1e-15, calculateLoss = True):
-        """ The shape of signalData: (batchSize, numSignals, compressedLength) """
+        """ The shape of signalChannel: (batchSize, numSignals, compressedLength) """
         # Setup the variables for signal encoding.
         batchSize, numSignals, signalDimension = signalData.size()
         numSignalPath = [numSignals] # Keepn track of the signal's at each iteration.
@@ -345,7 +345,7 @@ class signalEncoding(signalEncoderBase):
 
             # Recompile the signals to their original dimension.
             signalData = self.recompileSignals(reducedPairedData, frozenData)
-            # signalData dimension: batchSize, numSignalPairs + numFrozenSignals, signalDimension
+            # signalChannel dimension: batchSize, numSignalPairs + numFrozenSignals, signalDimension
 
             # Keepn track of the signal's at each iteration.
             numSignalPath.append(signalData.size(1))
@@ -375,7 +375,7 @@ class signalEncoding(signalEncoderBase):
             
             # Recompile the signals to their original dimension.
             signalData = self.recompileSignals(expandedData, frozenData)
-            # signalData dimension: batchSize, 2*numSignalPairs + numFrozenSignals, signalDimension
+            # signalChannel dimension: batchSize, 2*numSignalPairs + numFrozenSignals, signalDimension
                         
             # Keepn track of the signal's at each iteration.
             numSignalPath.append(signalData.size(1))

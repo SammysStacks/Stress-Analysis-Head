@@ -452,7 +452,7 @@ class signalEncoderBase(_signalEncoderModules.signalEncoderModules):
 
         # Recompile the signals to their original dimension.
         signalData = self.recompileSignals(expandedData, frozenData)
-        # signalData dimension: batchSize, 2*numSignalPairs + numFrozenSignals, signalDimension
+        # signalChannel dimension: batchSize, 2*numSignalPairs + numFrozenSignals, signalDimension
         
         # Free up memory.
         freeMemory()
@@ -481,7 +481,7 @@ class signalEncoderBase(_signalEncoderModules.signalEncoderModules):
             
         # Recompile the signals to their original dimension.
         signalData = self.recompileSignals(reducedPairedData, frozenData)
-        # signalData dimension: batchSize, numSignalPairs + numFrozenSignals, signalDimension
+        # signalChannel dimension: batchSize, numSignalPairs + numFrozenSignals, signalDimension
         
         # Free up memory.
         freeMemory()
@@ -496,7 +496,7 @@ class signalEncoding(signalEncoderBase):
         super(signalEncoding, self).__init__(signalDimension, numExpandedSignals, accelerator) 
                         
     def forward(self, signalData, targetNumSignals = 32, numCompressionsMap = None, nextCompressionMap = None, signalEncodingLayerLoss = None, calculateLoss = True):
-        """ The shape of signalData: (batchSize, numSignals, compressedLength) """
+        """ The shape of signalChannel: (batchSize, numSignals, compressedLength) """
         # Initialize first time parameters for signal encoding.
         if numCompressionsMap == None: numCompressionsMap = torch.ones((signalData.size(1),), device=signalData.device)
         if signalEncodingLayerLoss == None: signalEncodingLayerLoss = torch.zeros((signalData.size(0),), device=signalData.device)

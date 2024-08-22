@@ -65,7 +65,7 @@ class transformerEncoder(nn.Module):
         self.allAttentionWeights = []  # Dimension: numEpochs, numLayers, attentionWeightDim, where attentionWeightDim = batch_size, numHeads, seq_length, seq_length
 
     def forward(self, signalData, allTrainingData = False):
-        """ The shape of signalData = (batchSize, numSignals, compressedLength) """
+        """ The shape of signalChannel = (batchSize, numSignals, compressedLength) """
         # if allTrainingData: self.allAttentionWeights.append([]);
         
         # Calculate the size information of each tensor.

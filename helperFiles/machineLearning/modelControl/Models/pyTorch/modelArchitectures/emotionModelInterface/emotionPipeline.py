@@ -79,7 +79,7 @@ class emotionPipeline(emotionPipelineHelpers):
 
                     # Separate the data into signal, demographic, and subject identifier information.
                     signalTimes, signalData, subjectIdentifiers = self.dataInterface.separateData(batchData)
-                    # signalData dimension: batchSize, numSignals, maxSequenceLength, [signalData, previousSignalPoints, nextDeltaTimes, previousDeltaTimes, nextDeltaTimes, time]
+                    # signalChannel dimension: batchSize, numSignals, maxSequenceLength, [signalChannel, previousSignalPoints, nextDeltaTimes, previousDeltaTimes, nextDeltaTimes, time]
                     # subjectInds dimension: batchSize, numSubjectIdentifiers
 
                     # Randomly choose to add noise to the model.

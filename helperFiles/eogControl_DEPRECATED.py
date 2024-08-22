@@ -183,7 +183,7 @@ if __name__ == "__main__":
                 blinkFeatures = np.array(blinkFeatures[1:])
 
                 analyzeFeatures = featureAnalysis.featureAnalysis(blinkFeatures, [], saveDataFolder)
-                #analyzeFeatures.correlationMatrix(signalData, folderName = "correlationMatrix/")
+                #analyzeFeatures.correlationMatrix(signalChannel, folderName = "correlationMatrix/")
                 analyzeFeatures.singleFeatureAnalysis(timePoints[signalLabels == 3], signalData[signalLabels == 3], averageIntervalList = [60, 2*60, 3*60], folderName = "singleFeatureAnalysis - Full/")
                 analyzeFeatures.featureDistribution(signalData, signalLabels, labelDict, folderName = "Feature Distribution/")
             
@@ -479,38 +479,38 @@ for i in range(len(personListBlink[0][0])):
         
         
         
-signalData = []; signalLabels = []
+signalChannel = []; signalLabels = []
 for personNum in range(len(personListBlink)):
     personFeatures = personListBlink[personNum]
     for personFeature in personFeatures:
-        signalData.append(personFeature)
+        signalChannel.append(personFeature)
         signalLabels.append(0)
 
 for personNum in range(len(personListDoubleBlink)):
     personFeatures = personListDoubleBlink[personNum]
     for personFeature in personFeatures:
-        signalData.append(personFeature)
+        signalChannel.append(personFeature)
         signalLabels.append(0)
 
 for personNum in range(len(personListRelaxed)):
     personFeatures = personListRelaxed[personNum]
     for personFeature in personFeatures:
-        signalData.append(personFeature)
+        signalChannel.append(personFeature)
         signalLabels.append(0)
 
 for personNum in range(len(personListCold)):
     personFeatures = personListCold[personNum]
     for personFeature in personFeatures:
-        signalData.append(personFeature)
+        signalChannel.append(personFeature)
         signalLabels.append(1)
         
-signalData = np.array(signalData); signalLabels = np.array(signalLabels)
+signalChannel = np.array(signalChannel); signalLabels = np.array(signalLabels)
 
 model = neighbors.KNeighborsClassifier(n_neighbors = 2, weights = 'distance', algorithm = 'auto', 
                         leaf_size = 30, p = 1, metric = 'minkowski', metric_params = None, n_jobs = None)
-Training_Data, Testing_Data, Training_Labels, Testing_Labels = train_test_split(signalData, signalLabels, test_size=0.33, shuffle= True, stratify=signalLabels)
+Training_Data, Testing_Data, Training_Labels, Testing_Labels = train_test_split(signalChannel, signalLabels, test_size=0.33, shuffle= True, stratify=signalLabels)
 model.fit(Training_Data, Training_Labels)
-model.score(signalData, signalLabels)
+model.score(signalChannel, signalLabels)
 
 
 
@@ -526,8 +526,8 @@ for featureInd in range(len(blinkFeatures)):
     fig = plt.figure()
 
     features = []
-    allFeatures = signalData[:,featureInd]
-    time = signalData[:,0]
+    allFeatures = signalChannel[:,featureInd]
+    time = signalChannel[:,0]
     for pointInd in range(len(allFeatures)):
         feature = allFeatures[pointInd]
         label = signalLabels[pointInd]
@@ -552,12 +552,12 @@ for featureInd in range(len(blinkFeatures)):
     
 from scipy import stats
 featureDict = {}
-signalData = np.array(signalData); signalLabels = np.array(signalLabels)
+signalChannel = np.array(signalChannel); signalLabels = np.array(signalLabels)
 
-time = signalData[:,0][signalLabels == 2]
+time = signalChannel[:,0][signalLabels == 2]
 for featureInd in range(len(blinkFeatures)):
 
-    allFeatures = signalData[:,featureInd][signalLabels == 2]
+    allFeatures = signalChannel[:,featureInd][signalLabels == 2]
     for ind, averageTogether in enumerate([60*3]):
         features = []
         for pointInd in range(len(allFeatures)):
@@ -571,11 +571,11 @@ for featureInd in range(len(blinkFeatures)):
     
     
 import matplotlib.pyplot as plt
-time = signalData[:,0][signalLabels == 2]
+time = signalChannel[:,0][signalLabels == 2]
 for featureInd in range(len(blinkFeatures)):
     fig = plt.figure()
 
-    allFeatures = signalData[:,featureInd][signalLabels == 2]
+    allFeatures = signalChannel[:,featureInd][signalLabels == 2]
     colors = ['ko', 'ro', 'bo', 'go', 'mo']
     for ind, averageTogether in enumerate([60*3]):
         features = []
@@ -611,13 +611,13 @@ def sigmoid(x):
 featureDict = {}
 saveFolder = '../Time Graph Music/Average 1 2 3 Back/'
 os.makedirs(saveFolder, exist_ok=True)
-signalData = np.array(signalData); signalLabels = np.array(signalLabels)
+signalChannel = np.array(signalChannel); signalLabels = np.array(signalLabels)
 for featureInd in range(len(blinkFeatures)):
     fig = plt.figure()
 
 
-    allFeatures = signalData[:,featureInd][signalLabels == 2]
-    time = signalData[:,0][signalLabels == 2]
+    allFeatures = signalChannel[:,featureInd][signalLabels == 2]
+    time = signalChannel[:,0][signalLabels == 2]
     colors = ['ko', 'ro', 'bo', 'go', 'mo']
     for ind, averageTogether in enumerate([60*1, 60*2, 60*3]):
         features = []
@@ -663,16 +663,16 @@ for featureInd in range(len(blinkFeatures)):
 
 
 
-time = signalData[:,0][signalLabels == 2]
+time = signalChannel[:,0][signalLabels == 2]
 for compareFeatureInd in range(1,len(blinkFeatures)):
     saveFolder = '../Feature Comparison/' + blinkFeatures[compareFeatureInd] + "/"
     os.makedirs(saveFolder, exist_ok=True)
 
-    compareFeature = signalData[:,compareFeatureInd][signalLabels == 2]
+    compareFeature = signalChannel[:,compareFeatureInd][signalLabels == 2]
     for featureInd in range(1,len(blinkFeatures)):
         fig, ax = plt.subplots(figsize=(12, 6))
     
-        allFeatures = signalData[:,featureInd][signalLabels == 2]
+        allFeatures = signalChannel[:,featureInd][signalLabels == 2]
         colors = ['ko', 'ro', 'bo', 'go', 'mo']
         for ind, averageTogether in enumerate([60*10E-10]):
             features = []
@@ -705,13 +705,13 @@ import matplotlib.pyplot as plt
 saveFolder = '../Vol Vs Invol Blinks/'
 os.makedirs(saveFolder, exist_ok=True)
 colors = ['ko', 'ro', 'bo', 'go', 'mo']
-signalData = np.array(signalData); signalLabels = np.array(signalLabels)
+signalChannel = np.array(signalChannel); signalLabels = np.array(signalLabels)
 
 for featureInd in range(1,len(blinkFeatures)):
     fig = plt.subplots()
 
-    allFeatures0 = signalData[:,featureInd][signalLabels == 0]
-    allFeatures1 = signalData[:,featureInd][signalLabels == 1]
+    allFeatures0 = signalChannel[:,featureInd][signalLabels == 0]
+    allFeatures1 = signalChannel[:,featureInd][signalLabels == 1]
 
     plt.plot(allFeatures0, 'bo', markersize=5, zorder=100)
     plt.plot(allFeatures1, 'ro', markersize=5)
@@ -732,12 +732,12 @@ for featureInd in range(1,len(blinkFeatures)):
 
 from scipy import stats
 import matplotlib.pyplot as plt
-signalData = np.array(signalData); signalLabels = np.array(signalLabels)
-time = signalData[:,0][signalLabels == 2]
+signalChannel = np.array(signalChannel); signalLabels = np.array(signalLabels)
+time = signalChannel[:,0][signalLabels == 2]
 for featureInd in range(len(blinkFeatures)):
     fig = plt.figure()
 
-    allFeatures = signalData[:,featureInd][signalLabels == 2]
+    allFeatures = signalChannel[:,featureInd][signalLabels == 2]
     colors = ['k-o', 'r-o', 'bo', 'go', 'mo']
     for ind, averageTogether in enumerate([60*3]):
         stopLines = np.array([0, 1, 2, 3, 4, 5, 6, 7])*60*6
@@ -772,12 +772,12 @@ for featureInd in range(len(blinkFeatures)):
 
 from scipy import stats
 import matplotlib.pyplot as plt
-signalData = np.array(signalData); signalLabels = np.array(signalLabels)
-time = signalData[:,0][signalLabels == 2]
+signalChannel = np.array(signalChannel); signalLabels = np.array(signalLabels)
+time = signalChannel[:,0][signalLabels == 2]
 for featureInd in range(len(blinkFeatures)):
     fig = plt.figure()
 
-    allFeatures = signalData[:,featureInd][signalLabels == 2]
+    allFeatures = signalChannel[:,featureInd][signalLabels == 2]
     colors = ['k-o', 'r-o', 'bo', 'go', 'mo']
     for ind, averageTogether in enumerate([60*3]):
         features = []
@@ -833,11 +833,11 @@ plt.show()
 # --------- Scale by allFeatures
 from scipy import stats
 import matplotlib.pyplot as plt
-signalData = np.array(signalData); signalLabels = np.array(signalLabels)
+signalChannel = np.array(signalChannel); signalLabels = np.array(signalLabels)
 
-signalDataJose = np.array(signalData); signalLabelsJose = np.array(signalLabels)
-signalDataJiahong = np.array(signalData); signalLabelsJiahong = np.array(signalLabels)
-signalDataSam = np.array(signalData); signalLabelsSam = np.array(signalLabels)
+signalDataJose = np.array(signalChannel); signalLabelsJose = np.array(signalLabels)
+signalDataJiahong = np.array(signalChannel); signalLabelsJiahong = np.array(signalLabels)
+signalDataSam = np.array(signalChannel); signalLabelsSam = np.array(signalLabels)
 
 signalDataJose[:,0] = signalDataJose[:,0] - signalDataJose[:,0][0]
 signalDataJiahong[:,0]  = signalDataJiahong[:,0] - signalDataJiahong[:,0][0]
@@ -904,11 +904,11 @@ for featureIndDict in range(1,len(blinkFeatures)):
 
 from scipy import stats
 import matplotlib.pyplot as plt
-signalData = np.array(signalData); signalLabels = np.array(signalLabels)
+signalChannel = np.array(signalChannel); signalLabels = np.array(signalLabels)
 
-signalDataJose = np.array(signalData); signalLabelsJose = np.array(signalLabels)
-signalDataJiahong = np.array(signalData); signalLabelsJiahong = np.array(signalLabels)
-signalDataSam = np.array(signalData); signalLabelsSam = np.array(signalLabels)
+signalDataJose = np.array(signalChannel); signalLabelsJose = np.array(signalLabels)
+signalDataJiahong = np.array(signalChannel); signalLabelsJiahong = np.array(signalLabels)
+signalDataSam = np.array(signalChannel); signalLabelsSam = np.array(signalLabels)
 
 signalDataJose[:,0] = signalDataJose[:,0] - signalDataJose[:,0][0]
 signalDataJiahong[:,0]  = signalDataJiahong[:,0] - signalDataJiahong[:,0][0]
@@ -968,11 +968,11 @@ for featureIndDict in range(1,len(blinkFeatures)):
 
 from scipy import stats
 import matplotlib.pyplot as plt
-signalData = np.array(signalData); signalLabels = np.array(signalLabels)
+signalChannel = np.array(signalChannel); signalLabels = np.array(signalLabels)
 
-signalDataJose = np.array(signalData); signalLabelsJose = np.array(signalLabels)
-signalDataJiahong = np.array(signalData); signalLabelsJiahong = np.array(signalLabels)
-signalDataSam = np.array(signalData); signalLabelsSam = np.array(signalLabels)
+signalDataJose = np.array(signalChannel); signalLabelsJose = np.array(signalLabels)
+signalDataJiahong = np.array(signalChannel); signalLabelsJiahong = np.array(signalLabels)
+signalDataSam = np.array(signalChannel); signalLabelsSam = np.array(signalLabels)
 
 signalDataJose[:,0] = signalDataJose[:,0] - signalDataJose[:,0][0]
 signalDataJiahong[:,0]  = signalDataJiahong[:,0] - signalDataJiahong[:,0][0]
@@ -1044,20 +1044,20 @@ plt.hist(c, bins=100, alpha=0.5, label="avJH/avSM")
 # --------- Correlation Matrix
 import seaborn as sns;
 from copy import copy, deepcopy
-signalData = np.array(signalData); signalLabels = np.array(signalLabels)
+signalChannel = np.array(signalChannel); signalLabels = np.array(signalLabels)
 
-signalDataSam = signalData; signalLabelsSam = signalLabels
-signalDataJosh = signalData; signalLabelsJosh = signalLabels
-signalDataSarah = signalData; signalLabelsSarah = signalLabels
+signalDataSam = signalChannel; signalLabelsSam = signalLabels
+signalDataJosh = signalChannel; signalLabelsJosh = signalLabels
+signalDataSarah = signalChannel; signalLabelsSarah = signalLabels
 
-signalData = deepcopy(signalDataSarah); signalLabels = deepcopy(signalLabelsSarah)
-signalData.extend(signalDataJosh); signalLabels.extend(signalLabelsJosh)
-signalData.extend(signalDataSam); signalLabels.extend(signalLabelsSam)
+signalChannel = deepcopy(signalDataSarah); signalLabels = deepcopy(signalLabelsSarah)
+signalChannel.extend(signalDataJosh); signalLabels.extend(signalLabelsJosh)
+signalChannel.extend(signalDataSam); signalLabels.extend(signalLabelsSam)
 
 
-signalData = deepcopy(signalData); signalLabels = deepcopy(signalLabels)
+signalChannel = deepcopy(signalChannel); signalLabels = deepcopy(signalLabels)
 # Standardize Feature
-signalDataStandard = deepcopy(signalData[signalData[:,0] > 60*6])
+signalDataStandard = deepcopy(signalChannel[signalChannel[:,0] > 60*6])
 blinkFeaturesX = np.array(blinkFeatures)
 blinkFeaturesY = np.array(blinkFeatures)
 # for i in range(len(signalDataStandard[0])):

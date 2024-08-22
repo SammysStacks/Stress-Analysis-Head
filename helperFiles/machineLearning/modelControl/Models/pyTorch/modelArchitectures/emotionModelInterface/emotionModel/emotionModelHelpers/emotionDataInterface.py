@@ -111,7 +111,7 @@ class emotionDataInterface:
 
     @staticmethod
     def getRecentSignalPoints(signalData, finalLength):
-        assert False  # return signalData[:, :, :finalLength].contiguous()
+        assert False  # return signalChannel[:, :, :finalLength].contiguous()
 
     @staticmethod
     def getInitialSignals(signalData, finalLength):
@@ -129,7 +129,7 @@ class emotionDataInterface:
 
     @staticmethod
     def separateData(inputData):
-        # allSignalData: A torch array of size (batchSize, numSignals, maxSequenceLength + numSubjectIdentifiers, [signalData, previousSignalPoints, nextDeltaTimes, previousDeltaTimes, nextDeltaTimes, time])
+        # allSignalData: A torch array of size (batchSize, numSignals, maxSequenceLength + numSubjectIdentifiers, [signalChannel, previousSignalPoints, nextDeltaTimes, previousDeltaTimes, nextDeltaTimes, time])
         # Extract the incoming data's dimension and ensure a proper data format.
         batchSize, numSignals, signalInfoLength, numChannels = inputData.size()
 
@@ -145,7 +145,7 @@ class emotionDataInterface:
         signalData = inputData[:, :, 0:maxSequencePoints, 0:len(modelConstants.signalChannelNames)]
         signalTimes = inputData[:, :, 0:maxSequencePoints, len(modelConstants.signalChannelNames)]
         subjectIdentifiers = inputData[:, 0, maxSequencePoints:signalInfoLength, 0]
-        # signalData dimension: batchSize, numSignals, maxSequenceLength, [signalData, previousSignalPoints, nextDeltaTimes, previousDeltaTimes, nextDeltaTimes]
+        # signalChannel dimension: batchSize, numSignals, maxSequenceLength, [signalChannel, previousSignalPoints, nextDeltaTimes, previousDeltaTimes, nextDeltaTimes]
         # signalTimes dimension: batchSize, numSignals, maxSequenceLength
         # subjectInds dimension: batchSize, numSubjectIdentifiers
 

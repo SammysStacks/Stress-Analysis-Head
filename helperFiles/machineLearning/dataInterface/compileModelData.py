@@ -202,8 +202,8 @@ class compileModelData(compileModelDataHelpers):
             allSignalData, allNumSignalPoints, allFeatureLabels, allSubjectInds = self._removeBadExperiments(allSignalData, allNumSignalPoints, surveyAnswersList, subjectOrder)
             allSignalData, allNumSignalPoints, featureNames = self._preprocessSignals(allSignalData, allNumSignalPoints, featureNames)
             allFeatureLabels, allSmallClassIndices = self.organizeLabels(allFeatureLabels, metaTraining, metaDatasetName, numSignals=allSignalData.shape[1])
-            # allSignalData dimension: batchSize, numSignals, maxSequenceLength, [signalData, previousSignalPoints, nextDeltaTimes, previousDeltaTimes, nextDeltaTimes, time]
             # allSmallClassIndices dimension: numLabels, batchSize*  →  *if there are no small classes, the dimension is empty
+            # allSignalData dimension: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
             # allNumSignalPoints dimension: batchSize, numSignals
             # allFeatureLabels dimension: batchSize, numLabels
             # allSubjectInds dimension: batchSize
@@ -266,8 +266,8 @@ class compileModelData(compileModelDataHelpers):
             allFeatureLabels[~goodActivityMask] = self.missingLabelValue  # Remove any unused activity indices (as the good indices were rehashed)
 
             # Add the demographic information.
-            allSignalData = self.addDemographicInfo(allSignalData, allNumSignalPoints, allSubjectInds, metadataInd)
-            # allSignalData: A torch array of size (batchSize, numSignals, maxSequenceLength + numSubjectIdentifiers, [signalData, previousSignalPoints, nextDeltaTimes, previousDeltaTimes, nextDeltaTimes, time])
+            allSignalData = self.addMetaDataInfo(allSignalData, allNumSignalPoints, allSubjectInds, metadataInd)
+            # allSignalData: A torch array of size (batchSize, numSignals, maxSequenceLength + numSubjectIdentifiers, [timeChannel, signalChannel])
 
             # ---------------------- Create the Model ---------------------- #
 

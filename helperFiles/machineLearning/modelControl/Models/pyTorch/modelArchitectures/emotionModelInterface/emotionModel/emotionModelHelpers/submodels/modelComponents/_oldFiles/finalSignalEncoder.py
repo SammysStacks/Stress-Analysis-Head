@@ -133,7 +133,7 @@ class signalEncoding(signalEncoderBase):
         super(signalEncoding, self).__init__(signalDimension, numExpandedSignals, numCompressedSignals)        
                         
     def forward(self, signalData):
-        """ The shape of signalData: (batchSize, numSignals, finalDistributionLength) """
+        """ The shape of signalChannel: (batchSize, numSignals, finalDistributionLength) """
         # Specify the current input shape of the data.
         batchSize, numExpandedSignals, signalDimension = signalData.size()
         assert self.numExpandedSignals == numExpandedSignals
@@ -142,9 +142,9 @@ class signalEncoding(signalEncoderBase):
         # ------------------------ CNN Architecture ------------------------ # 
 
         # Apply CNN architecture to compress the data.
-        # encodedSignals = self.compressSignals(signalData) + self.simpleCompression(signalData)
+        # encodedSignals = self.compressSignals(signalChannel) + self.simpleCompression(signalChannel)
         encodedSignals = self.simpleCompression(signalData)
-        # signalData dimension: batchSize, numCompressedSignals, signalDimension
+        # signalChannel dimension: batchSize, numCompressedSignals, signalDimension
         
         # ------------------------------------------------------------------ # 
         
@@ -165,7 +165,7 @@ class signalDecoding(signalEncoderBase):
         super(signalDecoding, self).__init__(signalDimension, numExpandedSignals, numCompressedSignals)        
                         
     def forward(self, signalData):
-        """ The shape of signalData: (batchSize, numSignals, finalDistributionLength) """
+        """ The shape of signalChannel: (batchSize, numSignals, finalDistributionLength) """
         # Specify the current input shape of the data.
         batchSize, numCompressedSignals, signalDimension = signalData.size()
         assert self.numCompressedSignals == numCompressedSignals
@@ -174,9 +174,9 @@ class signalDecoding(signalEncoderBase):
         # ------------------------ CNN Architecture ------------------------ # 
 
         # Apply CNN architecture to compress the data.
-        # encodedSignals = self.expandSignals(signalData) + self.simpleExpansion(signalData)
+        # encodedSignals = self.expandSignals(signalChannel) + self.simpleExpansion(signalChannel)
         encodedSignals = self.simpleExpansion(signalData)
-        # signalData dimension: batchSize, numCompressedSignals, signalDimension
+        # signalChannel dimension: batchSize, numCompressedSignals, signalDimension
         
         # ------------------------------------------------------------------ # 
         

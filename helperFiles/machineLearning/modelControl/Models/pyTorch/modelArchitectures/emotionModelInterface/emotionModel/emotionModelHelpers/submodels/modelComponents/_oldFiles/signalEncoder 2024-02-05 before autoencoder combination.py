@@ -335,7 +335,7 @@ class signalEncoderBase(_signalEncoderModules.signalEncoderModules):
         
         # Recompile the signals to their original dimension.
         signalData = self.recompileSignals(expandedData, frozenData)
-        # signalData dimension: batchSize, 2*numSignalPairs + numFrozenSignals, signalDimension
+        # signalChannel dimension: batchSize, 2*numSignalPairs + numFrozenSignals, signalDimension
         
         # Free up memory.
         gc.collect(); torch.cuda.empty_cache();
@@ -354,7 +354,7 @@ class signalEncoderBase(_signalEncoderModules.signalEncoderModules):
 
         # Recompile the signals to their original dimension.
         signalData = self.recompileSignals(reducedPairedData, frozenData)
-        # signalData dimension: batchSize, numSignalPairs + numFrozenSignals, signalDimension
+        # signalChannel dimension: batchSize, numSignalPairs + numFrozenSignals, signalDimension
         
         # Free up memory.
         gc.collect(); torch.cuda.empty_cache();
@@ -384,7 +384,7 @@ class signalEncoding(signalEncoderBase):
         return signalData
                         
     def forward(self, signalData, targetNumSignals = 32, signalEncodingLayerLoss = 0, calculateLoss = True):
-        """ The shape of signalData: (batchSize, numSignals, compressedLength) """
+        """ The shape of signalChannel: (batchSize, numSignals, compressedLength) """
         # Setup the variables for signal encoding.
         batchSize, numSignals, signalDimension = signalData.size()
         numSignalPath = [numSignals] # Keep track of the signal's at each iteration.

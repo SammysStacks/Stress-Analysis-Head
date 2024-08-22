@@ -215,7 +215,7 @@ class generalAutoencoder(generalAutoencoderBase):
         return signalData
                         
     def forward(self, signalData, targetSequenceLength = 64, autoencoderLayerLoss = 0, calculateLoss = True):
-        """ The shape of signalData: (batchSize, numSignals, compressedLength) """
+        """ The shape of signalChannel: (batchSize, numSignals, compressedLength) """
         # Setup the variables for signal encoding.
         batchSize, numSignals, signalDimension = signalData.size()
         numSignalPath = [signalDimension] # Keep track of the signal's length at each iteration.
@@ -225,7 +225,7 @@ class generalAutoencoder(generalAutoencoderBase):
         
         # Reshape the data to the expected input into the CNN architecture.
         signalData = signalData.view(batchSize * numSignals, 1, signalDimension) # Seperate out indivisual signals.
-        # signalData dimension: batchSize*numSignals, 1, finalDistributionLength
+        # signalChannel dimension: batchSize*numSignals, 1, finalDistributionLength
         
         # ------------- Signal Compression/Expansion Algorithm ------------- #       
         

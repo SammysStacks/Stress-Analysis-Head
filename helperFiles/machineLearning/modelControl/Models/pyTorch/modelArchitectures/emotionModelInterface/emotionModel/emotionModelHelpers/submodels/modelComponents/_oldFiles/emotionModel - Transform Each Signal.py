@@ -133,7 +133,7 @@ class modelHead(_globalPytorchModel.globalModel):
         signalData = signalInfo[:, 0:self.maxSeqLength].to(torch.float32)
         contextualData = signalInfo[:, self.maxSeqLength:]
         # contextualData dimension = batchSize*numSignals, contextualLength
-        # signalData dimension = batchSize*numSignals, finalDistributionLength
+        # signalChannel dimension = batchSize*numSignals, finalDistributionLength
         assert self.contextualLength == contextualData.size(1)
 
         # ----------------------- Signal Compression ----------------------- #  

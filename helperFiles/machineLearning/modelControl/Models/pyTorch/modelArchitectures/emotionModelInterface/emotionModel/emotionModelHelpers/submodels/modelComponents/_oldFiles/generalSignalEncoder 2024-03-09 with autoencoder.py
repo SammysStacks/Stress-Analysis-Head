@@ -491,7 +491,7 @@ class signalEncoderBase(signalEncoderModules):
 
         # Recompile the signals to their original dimension.
         signalData = self.recompileSignals(expandedData, frozenData)
-        # signalData dimension: batchSize, 2*numSignalPairs + numFrozenSignals, signalDimension
+        # signalChannel dimension: batchSize, 2*numSignalPairs + numFrozenSignals, signalDimension
 
         # Free up memory.
         freeMemory()
@@ -518,7 +518,7 @@ class signalEncoderBase(signalEncoderModules):
 
         # Recompile the signals to their original dimension.
         signalData = self.recompileSignals(reducedPairedData, frozenData)
-        # signalData dimension: batchSize, numSignalPairs + numFrozenSignals, signalDimension
+        # signalChannel dimension: batchSize, numSignalPairs + numFrozenSignals, signalDimension
 
         # Free up memory.
         freeMemory()
@@ -534,7 +534,7 @@ class generalSignalEncoding(signalEncoderBase):
         super(generalSignalEncoding, self).__init__(maxSequenceLength, numExpandedSignals, accelerator)
 
     def forward(self, signalData, targetNumSignals=32, stateMap = None, totalNodesInMap = None, initialNumSignals = None, finalNumSignals = None, signalEncodingLayerLoss=None, calculateLoss=True):
-        """ The shape of signalData: (batchSize, numSignals, compressedLength) """
+        """ The shape of signalChannel: (batchSize, numSignals, compressedLength) """
         # Initialize first time parameters for signal encoding.
         if signalEncodingLayerLoss is None: signalEncodingLayerLoss = torch.zeros((signalData.size(0),), device=signalData.device)
         if stateMap is None: stateMap, totalNodesInMap = self.getStateMapfromRoot(signalData.size(1), targetNumSignals, signalData.device)

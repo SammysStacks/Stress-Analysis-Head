@@ -370,33 +370,33 @@ class signalDecoding(encodingHead):
             
             # Transform the latent data into its respective signal-space
             signalData = self.signalDecodingModules_ANN[signalInd](decodedLatentData)
-            # signalData dimension: batchSize, self.signalDimension
+            # signalChannel dimension: batchSize, self.signalDimension
             
             # t2 = time.time(); print(1, t2-t1)
-            # if signalInd == 0:  plt.plot(signalData[0].detach().cpu())
+            # if signalInd == 0:  plt.plot(signalChannel[0].detach().cpu())
             # t1 = time.time()
             
             
             # Apply batch norm.
-            # signalData = self.signalDecodingModules_BatchNorm[signalInd](signalData)
-            # # signalData dimension: batchSize, self.signalDimension
+            # signalChannel = self.signalDecodingModules_BatchNorm[signalInd](signalChannel)
+            # # signalChannel dimension: batchSize, self.signalDimension
             
-            # signalData = decodedLatentData.clone()
+            # signalChannel = decodedLatentData.clone()
             
             # # t2 = time.time(); print(2, t2-t1)
-            # if signalInd == 0:  plt.plot(signalData[0].detach().cpu())
+            # if signalInd == 0:  plt.plot(signalChannel[0].detach().cpu())
             # # t1 = time.time()
 
             # Reshape the data for a CNN.
-            # signalData = signalData.unsqueeze(1)
-            # signalData dimension: batchSize, 1, self.signalDimension
+            # signalChannel = signalChannel.unsqueeze(1)
+            # signalChannel dimension: batchSize, 1, self.signalDimension
                         
             # Reconstruct the signalplt.shpw() from the signal-space.
-            # signalData = self.signalDecodingModules_CNN[signalInd](signalData).squeeze(1)          
-            # signalData dimension: batchSize, self.signalDimension 
+            # signalChannel = self.signalDecodingModules_CNN[signalInd](signalChannel).squeeze(1)
+            # signalChannel dimension: batchSize, self.signalDimension
             
             # t2 = time.time(); print(3, t2-t1)
-            # if signalInd == 0:  plt.plot(signalData[0].detach().cpu())
+            # if signalInd == 0:  plt.plot(signalChannel[0].detach().cpu())
             # t1 = time.time()
             
 

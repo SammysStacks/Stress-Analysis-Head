@@ -379,23 +379,23 @@ class signalDecoding(encodingHead):
             # t1 = time.time()
             # Reduce the number of channels.
             signalData = self.channelReduction_CNN[signalInd](decodedLatentData).squeeze(1)
-            # signalData dimension: batchSize, self.signalDimension
+            # signalChannel dimension: batchSize, self.signalDimension
                         
             # Reconstruct the signalplt.shpw() from the signal-space.
-            # signalData = self.signalDecodingModules_CNN[signalInd](signalData).squeeze(1)          
-            # signalData dimension: batchSize, self.signalDimension 
+            # signalChannel = self.signalDecodingModules_CNN[signalInd](signalChannel).squeeze(1)
+            # signalChannel dimension: batchSize, self.signalDimension
             
-            # if signalInd == 0:  plt.plot(signalData[0].detach().cpu())
+            # if signalInd == 0:  plt.plot(signalChannel[0].detach().cpu())
             # t2 = time.time(); print(2, t2-t1)
             # t1 = time.time()
             
             # Transform the latent data into its respective signal-space
             # linearConvLayer = self.signalDecodingModules_LinearConv[signalInd]
-            # signalData = self.signalDecodingModules_ANN[signalInd](signalData, linearConvLayer)
-            # # signalData dimension: batchSize, self.signalDimension
+            # signalChannel = self.signalDecodingModules_ANN[signalInd](signalChannel, linearConvLayer)
+            # # signalChannel dimension: batchSize, self.signalDimension
             # t2 = time.time(); print(3, t2-t1)
             
-            # if signalInd == 0:  plt.plot(signalData[0].detach().cpu())
+            # if signalInd == 0:  plt.plot(signalChannel[0].detach().cpu())
 
             
             # Store the final results.

@@ -82,7 +82,7 @@ class encodingLayer(autoencoderParameters):
         
         # Reshape the data to the expected input into the ANN architecture.
         signalData = inputData.view(batchSize * numSignals, sequenceLength) # Seperate out indivisual signals.
-        # signalData dimension: batchSize*numSignals, finalDistributionLength
+        # signalChannel dimension: batchSize*numSignals, finalDistributionLength
                 
         # ------------------------ ANN Architecture ------------------------ # 
         

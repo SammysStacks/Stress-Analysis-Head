@@ -179,7 +179,7 @@ class emotionModelHead(globalModel):
         compressedData, reconstructedEncodedData, autoencoderLayerLoss = self.autoencoderModel(encodedData, reconstructSignals, calculateLoss, trainingFlag)
         # compressedData dimension: batchSize, numSignals, compressedLength
         # reconstructedEncodedData dimension: batchSize, numSignals, finalDistributionLength
-        # signalData dimension: batchSize, numSignals, finalDistributionLength
+        # signalChannel dimension: batchSize, numSignals, finalDistributionLength
         # autoencoderLayerLoss dimension: batchSize
         t2 = time.time(); print("\tAutoencoder:", t2 - t1)
 

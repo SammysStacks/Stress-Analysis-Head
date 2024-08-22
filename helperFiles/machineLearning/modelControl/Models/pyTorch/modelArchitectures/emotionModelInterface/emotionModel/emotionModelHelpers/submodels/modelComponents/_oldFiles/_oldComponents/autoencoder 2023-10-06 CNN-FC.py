@@ -59,7 +59,7 @@ class encodingLayer(nn.Module):
         # Reshape the data to the expected input into the CNN architecture.
         signalData = inputData.view(batchSize * numSignals, sequenceLength) # Seperate out indivisual signals.
         signalData = signalData.unsqueeze(1) # Add one channel to the signal.
-        # signalData dimension: batchSize*numSignals, 1, finalDistributionLength
+        # signalChannel dimension: batchSize*numSignals, 1, finalDistributionLength
         
         # Apply CNN architecture to reduce spatial dimension.
         compressedSignals = self.compressSignals(signalData) # The new dimension: batchSize*numSignals, numChannels = 1, imageLength

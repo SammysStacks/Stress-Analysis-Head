@@ -63,7 +63,7 @@ class signalEncoderModel(_globalPytorchModel.globalModel):
 
         # Extract the incoming data's dimension.
         batchSize, numSignals, compressedLength = compressedData.size()
-        # signalData dimension: batchSize, numSignals, compressedLength
+        # signalChannel dimension: batchSize, numSignals, compressedLength
         
         # Assert the validity
         assert self.encodeSignals.numCompressedSignals <= numSignals

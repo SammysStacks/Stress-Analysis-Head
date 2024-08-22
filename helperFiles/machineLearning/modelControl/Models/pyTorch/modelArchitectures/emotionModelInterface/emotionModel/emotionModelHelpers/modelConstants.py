@@ -26,17 +26,14 @@ class modelConstants:
     numSignalPointsSI = "numSignalPoints"
     subjectIndexSI = "subjectIndex"
     datasetIndexSI = "datasetIndex"
+    signalIndexSI = "signalIndex"
 
     # Specify the channel information.
-    previousSignalPoints = "previousSignalPoints"
-    previousDeltaTimes = "previousDeltaTimes"
-    nextSignalPoints = "nextSignalPoints"
-    nextDeltaTimes = "nextDeltaTimes"
-    signalData = "signalPoints"
+    signalChannel = "signalPoints"
     timeChannel = "time"
 
     # Compile the subject identifiers.
-    subjectIdentifiers = [numSignalPointsSI, subjectIndexSI, datasetIndexSI]
+    subjectIdentifiers = [numSignalPointsSI, datasetIndexSI, subjectIndexSI, signalIndexSI]
 
     # Specify the data interface parameters.
     timeWindows = [90, 120, 150, 180, 210, 240, 300]
@@ -47,7 +44,7 @@ class modelConstants:
     minMaxScale = 1
 
     # Specify the data interface parameter names.
-    signalChannelNames = [signalData, previousSignalPoints, nextSignalPoints, previousDeltaTimes, nextDeltaTimes]
+    signalChannelNames = [timeChannel, signalChannel]
 
     # Specify the saving parameters.
     sharedModelWeights = ["signalEncoderModel", "autoencoderModel", "sharedEmotionModel"]

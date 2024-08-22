@@ -56,7 +56,7 @@ class autoencoderModel(_globalPytorchModel.globalModel):
         # Prepare the data for compression/expansion
         signalData = signalData.to(torch.float32) # Floats are required for gradient tracking.
         autoencoderLayerLoss = torch.zeros((signalData.size(0)), device=signalData.device)
-        # signalData dimension: batchSize, numSignals, finalDistributionLength
+        # signalChannel dimension: batchSize, numSignals, finalDistributionLength
         # autoencoderLayerLoss dimension: batchSize
             
         # --------------------- Signal Compression --------------------- # 
