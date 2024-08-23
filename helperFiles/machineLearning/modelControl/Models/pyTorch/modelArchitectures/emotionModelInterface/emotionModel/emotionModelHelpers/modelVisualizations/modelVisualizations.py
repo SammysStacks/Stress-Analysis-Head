@@ -102,7 +102,7 @@ class modelVisualizations(globalPlottingProtocols):
 
         # Load in all the data and labels for final predictions.
         allData, allLabels, allTrainingMasks, allTestingMasks = lossDataLoader.dataset.getAll()
-        allSignalTimes, allSignalData, allDemographicData, allSubjectIdentifiers = self.dataInterface.separateData(allData)
+        allSignalData, allSignalIdentifiers, allMetadata = self.dataInterface.separateData(allData)
         reconstructionIndex = self.dataInterface.getReconstructionIndex(allTrainingMasks)
         assert reconstructionIndex is not None
 
@@ -118,7 +118,7 @@ class modelVisualizations(globalPlottingProtocols):
                 if fastPass and timeWindow != modelConstants.timeWindows[5]: continue
 
                 # Go through all the plots at this specific time window.
-                self.plotTrainingEvent(model, currentEpoch, allSignalData, allSubjectIdentifiers, allTrainingMasks, allTestingMasks, reconstructionIndex, submodel, trainingDate, timeWindow, model.datasetName)
+                self.plotTrainingEvent(model, currentEpoch, allSignalData, allMetadata, allTrainingMasks, allTestingMasks, reconstructionIndex, submodel, trainingDate, timeWindow, model.datasetName)
 
             # ---------------------- Time-Agnostic Plots ----------------------- #
 
@@ -146,7 +146,7 @@ class modelVisualizations(globalPlottingProtocols):
 
         # ------------------------------------------------------------------ #
 
-    def plotTrainingEvent(self, model, currentEpoch, allSignalData, allSubjectIdentifiers, allTrainingMasks, allTestingMasks, reconstructionIndex, submodel, trainingDate, timeWindow, datasetName):
+    def plotTrainingEvent(self, model, currentEpoch, allSignalData, allMetadata, allTrainingMasks, allTestingMasks, reconstructionIndex, submodel, trainingDate, timeWindow, datasetName):
         # Prepare the model/data for evaluation.
         self.setSavingFolder(f"trainingFigures/{submodel}/{trainingDate}/{datasetName}/{timeWindow}/")  # Label the correct folder to save this analysis.
         model.eval()
@@ -155,7 +155,7 @@ class modelVisualizations(globalPlottingProtocols):
         _, numSignals, _ = allSignalData.shape
 
         # Augment the time axis.
-        segmentedSignalData = self.dataInterface.getRecentSignalPoints(allSignalData, timeWindow)
+        segmentedSignalData = self.dataAugmentation.getRecentSignalPoints(allSignalData, timeWindow)
 
         # ---------------------- Get the Data to Plot ---------------------- # 
 
@@ -172,15 +172,15 @@ class modelVisualizations(globalPlottingProtocols):
 
         # Compile the training data to plot
         trainingSignalData = segmentedSignalData[reconstructionDataTrainingMask][0: numTrainingInstances]
-        trainingSubjectIdentifiers = allSubjectIdentifiers[reconstructionDataTrainingMask][0: numTrainingInstances]
+        trainingmetadata = allMetadata[reconstructionDataTrainingMask][0: numTrainingInstances]
         # Compile the training data to plot
         testingSignalData = segmentedSignalData[reconstructionDataTestingMask][0: numTestingInstances]
-        testingSubjectIdentifiers = allSubjectIdentifiers[reconstructionDataTestingMask][0: numTestingInstances]
+        testingmetadata = allMetadata[reconstructionDataTestingMask][0: numTestingInstances]
 
         # Stop gradient tracking
         with torch.no_grad():
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
-            signalEncodingTrainingOutputs, autoencodingTrainingOutputs, emotionModelTrainingOutputs = model(trainingSignalData, trainingSubjectIdentifiers, trainingSignalData, reconstructSignals=True, compileVariables=False, submodel=submodel, trainingFlag=False)
+            signalEncodingTrainingOutputs, autoencodingTrainingOutputs, emotionModelTrainingOutputs = model(trainingSignalData, trainingmetadata, trainingSignalData, reconstructSignals=True, compileVariables=False, submodel=submodel, trainingFlag=False)
 
             # Unpack all the data.
             trainingCompressedData, trainingReconstructedEncodedData, trainingDenoisedDoubleReconstructedData, trainingAutoencoderLayerLoss = autoencodingTrainingOutputs
@@ -188,7 +188,7 @@ class modelVisualizations(globalPlottingProtocols):
             trainingMappedSignalData, trainingReconstructedCompressedData, trainingFeatureData, trainingActivityDistributions, trainingBasicEmotionDistributions, trainingFinalEmotionDistributions = emotionModelTrainingOutputs
 
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
-            signalEncodingTestingOutputs, autoencodingTestingOutputs, emotionModelTestingOutputs = model(testingSignalData, testingSubjectIdentifiers, testingSignalData, reconstructSignals=True, compileVariables=False, submodel=submodel, trainingFlag=False)
+            signalEncodingTestingOutputs, autoencodingTestingOutputs, emotionModelTestingOutputs = model(testingSignalData, testingmetadata, testingSignalData, reconstructSignals=True, compileVariables=False, submodel=submodel, trainingFlag=False)
 
             # Unpack all the data.
             testingCompressedData, testingReconstructedEncodedData, testingDenoisedDoubleReconstructedData, testingAutoencoderLayerLoss = autoencodingTestingOutputs

@@ -15,7 +15,7 @@ class dapperInterface(globalMetaAnalysis):
     def __init__(self):
         # Specify the metadata file locations.
         self.debug = False
-        self.subjectFolders = os.path.dirname(__file__) + "/../../../_experimentalData/_metaDatasets/DAPPER/"
+        self.subjectFolders = os.path.dirname(__file__) + "/../../../_experimentalData/_metadatasets/DAPPER/"
         # Specify the current dataset.
         self.datasetName = modelConstants.dapperDatasetName
 
@@ -340,7 +340,7 @@ if __name__ == "__main__":
         dapperStreamingOrder, dapperBiomarkerFeatureOrder, dapperFeatureAverageWindows, dapperFilteringOrders = dapperAnalysisClass.getStreamingInfo()
         # Analyze and save the metadata features
         dapperAnalysisClass.extractFeatures(dapperAllCompiledDatas, dapperSubjectOrder, dapperAllExperimentalTimes, dapperAllExperimentalNames, dapperAllSurveyAnswerTimes, dapperAllSurveyAnswersList, dapperAllContextualInfo,
-                                            dapperStreamingOrder, dapperBiomarkerFeatureOrder, dapperFeatureAverageWindows, dapperFilteringOrders, metaDatasetName=modelConstants.dapperDatasetName, reanalyzeData=True, showPlots=False, analyzeSequentially=False)
+                                            dapperStreamingOrder, dapperBiomarkerFeatureOrder, dapperFeatureAverageWindows, dapperFilteringOrders, metadatasetName=modelConstants.dapperDatasetName, reanalyzeData=True, showPlots=False, analyzeSequentially=False)
 
     if trainingData:
         # Prepare the data to go through the training interface.

@@ -15,7 +15,7 @@ class emognitionInterface(globalMetaAnalysis):
 
     def __init__(self):
         # Specify the metadata file locations.
-        self.subjectFolders = os.path.dirname(__file__) + "/../../../_experimentalData/_metaDatasets/EMOGNITION/"
+        self.subjectFolders = os.path.dirname(__file__) + "/../../../_experimentalData/_metadatasets/EMOGNITION/"
 
         # Initialize EMOGNITION survey information.
         self.emotionQuestions = ['AWE', 'DISGUST', 'SURPRISE', 'ANGER', 'ENTHUSIASM', 'LIKING', 'FEAR', 'AMUSEMENT', 'SADNESS']  # Rated 1 to 5
@@ -326,7 +326,7 @@ if __name__ == "__main__":
         emognitionStreamingOrder, emognitionBiomarkerFeatureOrder, emognitionFeatureAverageWindows, emognitionFilteringOrders = emognitionAnalysisClass.getStreamingInfo()
         # Analyze and save the metadata features
         emognitionAnalysisClass.extractFeatures(emognitionAllCompiledDatas, emognitionSubjectOrder, emognitionAllExperimentalTimes, emognitionAllExperimentalNames, emognitionAllSurveyAnswerTimes, emognitionAllSurveyAnswersList, emognitionAllContextualInfo,
-                                                emognitionStreamingOrder, emognitionBiomarkerFeatureOrder, emognitionFeatureAverageWindows, emognitionFilteringOrders, metaDatasetName=modelConstants.emognitionDatasetName, reanalyzeData=True, showPlots=False, analyzeSequentially=False)
+                                                emognitionStreamingOrder, emognitionBiomarkerFeatureOrder, emognitionFeatureAverageWindows, emognitionFilteringOrders, metadatasetName=modelConstants.emognitionDatasetName, reanalyzeData=True, showPlots=False, analyzeSequentially=False)
 
     if trainingData:
         # Prepare the data to go through the training interface.

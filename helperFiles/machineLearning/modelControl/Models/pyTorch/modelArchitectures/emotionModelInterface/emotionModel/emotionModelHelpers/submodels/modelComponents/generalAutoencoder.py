@@ -109,7 +109,7 @@ class generalAutoencoderBase(autoencoderModules):
         originalSignalDimension = originalData.size(2)
 
         # Add noise to the encoded data before the reverse operation.
-        decodedData = self.dataInterface.addNoise(encodedData, trainingFlag=True, noiseSTD=0.001)
+        decodedData = self.dataAugmentation.addNoise(encodedData, trainingFlag=True, noiseSTD=0.001)
 
         # Reconstruct the original data.
         if encodedData.size(2) < originalSignalDimension:

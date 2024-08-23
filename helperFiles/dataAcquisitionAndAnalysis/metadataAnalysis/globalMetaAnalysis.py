@@ -36,7 +36,7 @@ class globalMetaAnalysis(handlingExcelFormat):
     # ------------------ Interface with Training Protocols ----------------- #
 
     def extractFeatures(self, allCompiledDatas, subjectOrder, allExperimentalTimes, allExperimentalNames, allSurveyAnswerTimes, allSurveyAnswersList, allContextualInfo,
-                        streamingOrder, biomarkerFeatureOrder, featureAverageWindows, filteringOrders, metaDatasetName, reanalyzeData=False, showPlots=True, analyzeSequentially=False):
+                        streamingOrder, biomarkerFeatureOrder, featureAverageWindows, filteringOrders, metadatasetName, reanalyzeData=False, showPlots=True, analyzeSequentially=False):
         # Prepare the data for each subject for parallel processing
         subjects_data = [
             (
@@ -51,14 +51,14 @@ class globalMetaAnalysis(handlingExcelFormat):
                 biomarkerFeatureOrder,
                 featureAverageWindows,
                 filteringOrders,
-                metaDatasetName,
+                metadatasetName,
                 reanalyzeData,
                 showPlots
             ) for i in range(len(subjectOrder))
         ]
 
         # Analyze the data sequentially for plotting large datasets.
-        if showPlots and metaDatasetName in [modelConstants.dapperDatasetName, modelConstants.caseDatasetName]:
+        if showPlots and metadatasetName in [modelConstants.dapperDatasetName, modelConstants.caseDatasetName]:
             print("\tAnalyzing sequentially")
             analyzeSequentially = True
 

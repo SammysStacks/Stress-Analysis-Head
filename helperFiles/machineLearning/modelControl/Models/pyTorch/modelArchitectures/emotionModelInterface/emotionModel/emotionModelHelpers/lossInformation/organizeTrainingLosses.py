@@ -25,7 +25,7 @@ class organizeTrainingLosses(lossCalculations):
 
         # Load in all the data and labels for final predictions.
         allData, allLabels, allTrainingMasks, allTestingMasks = lossDataLoader.dataset.getAll()
-        allSignalTimes, allSignalData, allSubjectIdentifiers = self.dataInterface.separateData(allData)
+        allSignalData, allSignalIdentifiers, allMetadata = self.dataInterface.separateData(allData)
         reconstructionIndex = self.dataInterface.getReconstructionIndex(allTrainingMasks)
         assert reconstructionIndex is not None
 
@@ -34,7 +34,7 @@ class organizeTrainingLosses(lossCalculations):
 
             if submodel == modelConstants.emotionPredictionModel:
                 # Segment the data into its time window.
-                segmentedSignalData = self.dataInterface.getRecentSignalPoints(allSignalData, self.generalTimeWindow)
+                segmentedSignalData = self.dataAugmentation.getRecentSignalPoints(allSignalData, self.generalTimeWindow)
 
                 t1 = time.time()
                 # Pass all the data through the model and store the emotions, activity, and intermediate variables.
@@ -82,7 +82,7 @@ class organizeTrainingLosses(lossCalculations):
                 if fastPass and timeWindow != self.generalTimeWindow: continue
 
                 # Segment the data into its time window.
-                segmentedSignalData = self.dataInterface.getRecentSignalPoints(allSignalData, timeWindow)
+                segmentedSignalData = self.dataAugmentation.getRecentSignalPoints(allSignalData, timeWindow)
 
                 t1 = time.time()
                 # Pass all the data through the model and store the emotions, activity, and intermediate variables.

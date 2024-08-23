@@ -6,6 +6,7 @@ import torch
 
 # Import helper modules
 from .emotionModelHelpers.emotionDataInterface import emotionDataInterface
+from .emotionModelHelpers.generalMethods.dataAugmentation import dataAugmentation
 from .emotionModelHelpers.modelConstants import modelConstants
 from .emotionModelHelpers.submodels.autoencoderModel import autoencoderModel  # An autoencoder pipeline for compressing individual signals.
 from .emotionModelHelpers.submodels.sharedEmotionModel import sharedEmotionModel
@@ -18,13 +19,13 @@ from ..._globalPytorchModel import globalModel
 
 
 class emotionModelHead(globalModel):
-    def __init__(self, submodel, accelerator, finalDistributionLength, signalMinMaxScale, maxNumSignals, subjectIdentifiers, userInputParams,
+    def __init__(self, submodel, accelerator, finalDistributionLength, signalMinMaxScale, maxNumSignals, metadata, userInputParams,
                  timeWindows, emotionNames, activityNames, featureNames, numSubjects, datasetName, useFinalParams, debuggingResults=False):
         super(emotionModelHead, self).__init__()
         # General model parameters.
         self.sequenceBounds = (timeWindows[0], timeWindows[-1])  # The minimum and maximum sequence length for the model.
         self.finalDistributionLength = finalDistributionLength  # The final length of the signal distribution.
-        self.subjectIdentifiers = subjectIdentifiers  # The subject identifiers for the model (e.g., subjectIndex, datasetIndex, etc.)
+        self.metadata = metadata  # The subject identifiers for the model (e.g., subjectIndex, datasetIndex, etc.)
         self.signalMinMaxScale = signalMinMaxScale  # The minimum and maximum values for the signals.
         self.debuggingResults = debuggingResults  # Whether to print debugging results. Type: bool
         self.numActivities = len(activityNames)  # The number of activities to predict.
@@ -148,17 +149,17 @@ class emotionModelHead(globalModel):
     # ---------------------------------------------------------------------- #  
     # -------------------------- Model Components -------------------------- #
 
-    def signalEncoding(self, signalTimes, signalData, subjectIdentifiers, allStartSignalInds, decodeSignals=True, calculateLoss=True, trainingFlag=False):
+    def signalEncoding(self, signalData, startTimeIndices, signalIdentifiers, metadata, decodeSignals=True, calculateLoss=True, trainingFlag=False):
         # Add the data, labels, and training/testing indices to the device (GPU/CPU)
-        signalData, signalTimes, subjectIdentifiers, allStartSignalInds = signalData.to(self.device), signalTimes.to(self.device), subjectIdentifiers.to(self.device), allStartSignalInds.to(self.device)
+        signalData, startTimeIndices, signalIdentifiers, metadata = signalData.to(self.device), startTimeIndices.to(self.device), signalIdentifiers.to(self.device), metadata.to(self.device)
 
         t1 = time.time()
         # Forward pass through the signal encoder to reduce to a common signal number.
-        encodedData, reconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLayerLoss = self.signalEncoderModel(signalData, initialSignalData, decodeSignals, calculateLoss, trainingFlag)
+        encodedData, reconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLayerLoss = self.signalEncoderModel(signalData, startTimeIndices, signalIdentifiers, metadata, decodeSignals, calculateLoss, trainingFlag)
         # decodedPredictedIndexProbabilities dimension: batchSize, numSignals
-        # predictedIndexProbabilities dimension: batchSize, numSignals
         # encodedData dimension: batchSize, numEncodedSignals, finalDistributionLength
         # reconstructedData dimension: batchSize, numSignals, finalDistributionLength
+        # predictedIndexProbabilities dimension: batchSize, numSignals
         # signalEncodingLayerLoss dimension: batchSize
         t2 = time.time(); print("\tSignal Encoder:", t2 - t1)
 
@@ -171,7 +172,7 @@ class emotionModelHead(globalModel):
 
         with torch.no_grad():
             # Compile the variables from signal encoding.
-            encodedData, reconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLayerLoss = self.signalEncoding(signalData, initialSignalData, decodeSignals=compileVariables, calculateLoss=calculateLoss and compileLosses, trainingFlag=False)
+            encodedData, reconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLayerLoss = self.signalEncoding(signalData, startTimeIndices, signalIdentifiers, metadata, decodeSignals=compileVariables, calculateLoss=calculateLoss and compileLosses, trainingFlag=False)
             signalEncodingOutputs = encodedData, reconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLayerLoss
 
         t1 = time.time()
@@ -212,25 +213,25 @@ class emotionModelHead(globalModel):
 
         return signalEncodingOutputs, autoencodingOutputs, mappedSignalData, reconstructedCompressedData
 
-    def emotionPrediction(self, signalData, initialSignalData, subjectIdentifiers, remapSignals=True, compileVariables=False, trainingFlag=False):
+    def emotionPrediction(self, signalData, initialSignalData, metadata, remapSignals=True, compileVariables=False, trainingFlag=False):
         # Add the data, labels, and training/testing indices to the device (GPU/CPU)
-        signalData, subjectIdentifiers, initialSignalData = signalData.to(self.device), subjectIdentifiers.to(self.device), initialSignalData.to(self.device)
+        signalData, metadata, initialSignalData = signalData.to(self.device), metadata.to(self.device), initialSignalData.to(self.device)
 
         # Compile the manifold projection data.
         signalEncodingOutputs, autoencodingOutputs, mappedSignalData, reconstructedCompressedData = self.mapSignals(signalData, initialSignalData, remapSignals, compileVariables, trainingFlag=False)
 
         t1 = time.time()
         # Forward pass through the emotion model to predict complex emotions.
-        featureData, activityDistribution, eachBasicEmotionDistribution, finalEmotionDistributions = self.sharedEmotionModel(mappedSignalData, subjectIdentifiers, self.specificEmotionModel, trainingFlag)
+        featureData, activityDistribution, eachBasicEmotionDistribution, finalEmotionDistributions = self.sharedEmotionModel(mappedSignalData, metadata, self.specificEmotionModel, trainingFlag)
         t2 = time.time(); print("\tEmotion Prediction:", t2 - t1)
 
         return signalEncodingOutputs, autoencodingOutputs, mappedSignalData, reconstructedCompressedData, featureData, activityDistribution, eachBasicEmotionDistribution, finalEmotionDistributions
 
     # ------------------------- Full Forward Calls ------------------------- #  
 
-    def forward(self, signalData, subjectIdentifiers, initialSignalData, reconstructSignals=True, compileVariables=False, submodel=None, trainingFlag=False):
+    def forward(self, signalData, metadata, initialSignalData, reconstructSignals=True, compileVariables=False, submodel=None, trainingFlag=False):
         # Add the data, labels, and training/testing indices to the device (GPU/CPU)
-        signalData, subjectIdentifiers, initialSignalData = signalData.to(self.device), subjectIdentifiers.to(self.device), initialSignalData.to(self.device)
+        signalData, metadata, initialSignalData = signalData.to(self.device), metadata.to(self.device), initialSignalData.to(self.device)
 
         # Initialize the output tensors.
         autoencodingOutputs = (torch.tensor(data=0, device=self.device) for _ in range(4))
@@ -239,7 +240,7 @@ class emotionModelHead(globalModel):
         if submodel == modelConstants.signalEncoderModel:
             with self.accelerator.autocast():
                 # Only look at the signal encoder.
-                encodedData, reconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLayerLoss = self.signalEncoding(signalData, initialSignalData, decodeSignals=reconstructSignals, calculateLoss=compileVariables, trainingFlag=trainingFlag)
+                encodedData, reconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLayerLoss = self.signalEncoding(signalData, startTimeIndices, signalIdentifiers, metadata, decodeSignals=reconstructSignals, calculateLoss=compileVariables, trainingFlag=trainingFlag)
                 signalEncodingOutputs = encodedData.to('cpu'), reconstructedData.to('cpu'), predictedIndexProbabilities.to('cpu'), decodedPredictedIndexProbabilities.to('cpu'), signalEncodingLayerLoss.to('cpu')
 
         elif submodel == modelConstants.autoencoderModel:
@@ -250,7 +251,7 @@ class emotionModelHead(globalModel):
 
         else:
             # Analyze the full model.
-            signalEncodingOutputs, autoencodingOutputs, mappedSignalData, reconstructedCompressedData, featureData, activityDistribution, eachBasicEmotionDistribution, finalEmotionDistributions = self.emotionPrediction(signalData, subjectIdentifiers, compileVariables, compileVariables)
+            signalEncodingOutputs, autoencodingOutputs, mappedSignalData, reconstructedCompressedData, featureData, activityDistribution, eachBasicEmotionDistribution, finalEmotionDistributions = self.emotionPrediction(signalData, metadata, compileVariables, compileVariables)
             emotionModelOutputs = mappedSignalData.to('cpu'), reconstructedCompressedData.to('cpu'), mappedSignalData.to('cpu'), featureData.to('cpu'), activityDistribution.to('cpu'), eachBasicEmotionDistribution.to('cpu'), finalEmotionDistributions.to('cpu')
 
         return signalEncodingOutputs, autoencodingOutputs, emotionModelOutputs
@@ -289,11 +290,11 @@ class emotionModelHead(globalModel):
             endIdx = startIdx + batchData.size(0)
 
             # Separate out the data.
-            allSignalTimes, allSignalData, allSubjectIdentifiers = emotionDataInterface.separateData(batchData)
-            segmentedSignalData = emotionDataInterface.getRecentSignalPoints(allSignalData, timeWindow)  # Segment the data into its time window.
+            allSignalData, allSignalIdentifiers, allMetadata = emotionDataInterface.separateData(batchData)
+            segmentedSignalData = dataAugmentation.getRecentSignalPoints(allSignalData, timeWindow)  # Segment the data into its time window.
 
             # Forward pass for the current batch
-            signalEncodingOutputs, autoencodingOutputs, emotionModelOutputs = self.forward(segmentedSignalData, allSubjectIdentifiers, segmentedSignalData, reconstructSignals, compileVariables, submodel, trainingFlag=trainingFlag)
+            signalEncodingOutputs, autoencodingOutputs, emotionModelOutputs = self.forward(segmentedSignalData, allMetadata, segmentedSignalData, reconstructSignals, compileVariables, submodel, trainingFlag=trainingFlag)
             # Unpack all the parameters.
             encodedBatchData, reconstructedBatchData, batchPredictedIndexProbabilities, batchDecodedPredictedIndexProbabilities, batchSignalEncodingLayerLoss = signalEncodingOutputs
             compressedBatchData, reconstructedEncodedBatchData, batchDenoisedDoubleReconstructedData, batchAutoencoderLayerLoss = autoencodingOutputs

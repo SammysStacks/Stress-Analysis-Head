@@ -89,15 +89,17 @@ class signalEncoderModel(globalModel):
         self.encodeSignals.debuggingResults = debuggingResults
         self.debuggingResults = debuggingResults
 
-    def forward(self, signalData, initialSignalData, decodeSignals=False, calculateLoss=False, trainingFlag=False):
-        """ The shape of inputData: (batchSize, numSignals, finalDistributionLength) """
+    def forward(self, signalData, startTimeIndices, signalIdentifiers, metadata, decodeSignals=False, calculateLoss=False, trainingFlag=False):
+        # signalData dimension: batchSize, numSignals, maxSequenceLength, numChannels
+        # signalIdentifiers dimension: batchSize, numSignals, numSignalIdentifiers
+        # startTimeIndices dimension: batchSize, numSignals
+        # metadata dimension: batchSize, numMetadata
         if self.debuggingResults: print("\nEntering signal encoder model")
 
         # ----------------------- Data Preprocessing ----------------------- #  
 
         # Prepare the data for compression/expansion
-        batchSize, numSignals, sequenceLength = signalData.size()
-        # signalChannel dimension: batchSize, numSignals, finalDistributionLength
+        batchSize, numSignals, maxSequenceLength, numChannels = signalData.size()
 
         # Create placeholders for the final variables.
         decodedPredictedIndexProbabilities = torch.ones((batchSize, numSignals), device=signalData.device)
@@ -110,34 +112,14 @@ class signalEncoderModel(globalModel):
         reconstructedData = None
         decodedData = None
 
-        # ---------------------- Training Augmentation --------------------- #  
-
-        # Initialize augmentation parameters
-        numEncodedSignals = self.numEncodedSignals
-
-        if trainingFlag:
-            if self.accelerator.sync_gradients:
-                # Randomly change encoding directions.
-                self.trainingMethods.randomlyChangeDirections()
-
-            # Set up the training parameters
-            numEncodedSignals = self.trainingMethods.augmentFinalTarget(numSignals)
-
         # ------------------- Learned Signal Compression ------------------- #
 
-        # Learn how to add positional encoding to each signal's position.
-        positionEncodedData = self.encodeSignals.positionalEncodingInterface.addPositionalEncoding(signalData)
-        predictedIndexProbabilities = self.predictPositionClasses(positionEncodedData)  # Predict the positional encoding index.
-        # positionEncodedData dimension: batchSize, numSignals, finalDistributionLength
-        # predictedIndexProbabilities dimension: batchSize, numSignals
-
         # Compress the signal space into numEncodedSignals.
-        encodedData, numSignalForwardPath, signalEncodingLayerLoss = self.encodeSignals(signalData=positionEncodedData, targetNumSignals=numEncodedSignals, signalEncodingLayerLoss=None, calculateLoss=calculateLoss, forward=True)
+        encodedData, numSignalForwardPath, signalEncodingLayerLoss = self.encodeSignals(signalData=signalData, targetNumSignals=self.numEncodedSignals, signalEncodingLayerLoss=None, calculateLoss=calculateLoss, forward=True)
+        if self.debuggingResults: print("Signal Encoding Downward Path:", numSignals, numSignalForwardPath, self.numEncodedSignals)
         # encodedData dimension: batchSize, numEncodedSignals, finalDistributionLength
 
         # ---------------------- Signal Reconstruction --------------------- #
-
-        if self.debuggingResults: print("Signal Encoding Downward Path:", numSignals, numSignalForwardPath, numEncodedSignals)
 
         if decodeSignals:
             # Perform the reverse operation.
@@ -154,7 +136,7 @@ class signalEncoderModel(globalModel):
             # Calculate the loss by comparing encoder/decoder outputs.
             encodingReconstructionStateLoss = (positionEncodedData - decodedData).pow(2).mean(dim=2).mean(dim=1)
             finalReconstructionStateLoss = (signalData - reconstructedData).pow(2).mean(dim=2).mean(dim=1)
-            finalDenoisedReconstructionStateLoss = (initialSignalData - denoisedReconstructedData).pow(2).mean(dim=2).mean(dim=1)
+            finalDenoisedReconstructionStateLoss = (signalData - denoisedReconstructedData).pow(2).mean(dim=2).mean(dim=1)
             if self.debuggingResults: print("State Losses (EF-D):", encodingReconstructionStateLoss.detach().mean().item(), finalReconstructionStateLoss.detach().mean().item(), finalDenoisedReconstructionStateLoss.detach().mean().item())
             # Calculate the loss from taking other routes
             positionReconstructionLoss = (signalData - removedStampEncoding).pow(2).mean(dim=2).mean(dim=1)
@@ -174,7 +156,7 @@ class signalEncoderModel(globalModel):
                 signalEncodingLoss = signalEncodingLoss + signalEncodingLayerLoss
 
             if not self.useFinalParams and random.random() < 0.01:
-                self.plotDataFlowDetails(initialSignalData, positionEncodedData, encodedData, decodedData, reconstructedData, denoisedReconstructedData)
+                self.plotDataFlowDetails(signalData, positionEncodedData, encodedData, decodedData, reconstructedData, denoisedReconstructedData)
 
         return encodedData, denoisedReconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLoss
 

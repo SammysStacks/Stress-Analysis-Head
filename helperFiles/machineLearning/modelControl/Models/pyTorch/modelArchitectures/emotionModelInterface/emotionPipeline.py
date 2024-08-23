@@ -27,93 +27,80 @@ class emotionPipeline(emotionPipelineHelpers):
     def trainModel(self, dataLoader, submodel, numEpochs=500, constrainedTraining=False):
         """
         Stored items in the dataLoader.dataset:
-            allData: The standardized testing and training data → Dim: numExperiments, numSignals, signalInfoLength, numChannels
+            allData: The standardized testing and training data → Dim: numExperiments, numSignals, totalLength, numChannels
             allLabels: Integer labels representing class indices. Dim: numExperiments, numLabels (where numLabels = numEmotions + 1)
             allTestingMasks: Boolean flags representing if the label is a testing label. Dim: numExperiments, numLabels (where numLabels = numEmotions + 1)
             allTrainingMasks: Boolean flags representing if the label is a training label. Dim: numExperiments, numLabels (where numLabels = numEmotions + 1)
-                Note: signalInfoLength = finalDistributionLength + 1 + demographicLength (The extra +1 is for the subject index)
+                Note: totalLength = finalDistributionLength + 1 + demographicLength (The extra +1 is for the subject index)
                 Note: the last dimension in allLabels is for human activity recognition.
         """
-        # Hugging face integration.
         self.accelerator.print(f"\nTraining {self.datasetName} model", flush=True)
-        model = self.getDistributedModel()
 
         # Load in all the data and labels for final predictions and calculate the activity and emotion class weights.
-        allData, allLabels, allTrainingMasks, allTestingMasks, allSignalTimes, allSignalData, allSubjectIdentifiers, reconstructionIndex = self.prepareInformation(dataLoader)
+        allData, allLabels, allTrainingMasks, allTestingMasks, allSignalData, allMetadata, reconstructionIndex = self.prepareInformation(dataLoader)
         allEmotionClassWeights, activityClassWeights = self.organizeLossInfo.getClassWeights(allLabels, allTrainingMasks, allTestingMasks, self.numActivities)
 
         # Prepare the model for training.
+        model = self.getDistributedModel()
         self.setupTraining(submodel)
 
         # For each training epoch.
         for epoch in range(numEpochs):
-            if 5 < numEpochs: self.accelerator.print(f"\tRound: {epoch}", flush=True)
             numPointsAnalyzed = 0
 
-            # For each minibatch.
-            for dataInd, data in enumerate(dataLoader):
-                # Accumulate gradients.
-                with self.accelerator.accumulate(model):
+            # For each data batch in the epoch.
+            for batchDataInd, batchData in enumerate(dataLoader):
+                with self.accelerator.accumulate(model):  # Accumulate gradients.
                     # Extract the data, labels, and testing/training indices.
-                    batchData, trueBatchLabels, batchTrainingMask, batchTestingMask = data
-                    # Add the data, labels, and training/testing indices to the device (GPU/CPU)
-                    batchTrainingMask, batchTestingMask = batchTrainingMask.to(self.accelerator.device), batchTestingMask.to(self.accelerator.device)
-                    batchData, trueBatchLabels = batchData.to(self.accelerator.device), trueBatchLabels.to(self.accelerator.device)
+                    batchSignalInfo, batchSignalLabels, batchTrainingMask, batchTestingMask = self.extractBatchInformation(batchData)
+                    numPointsAnalyzed += batchSignalInfo.size(0)
 
-                    # Set the model intro the training mode.
-                    numPointsAnalyzed += batchData.size(0)
-
-                    # Only analyze data that can produce meaningful training results.
+                    # Interface for non-emotion modeling, where only the signal data is used (no labels).
                     if submodel in [modelConstants.signalEncoderModel, modelConstants.autoencoderModel]:
-                        # Get the current training data mask.
-                        trainingColumn = self.dataInterface.getEmotionColumn(batchTrainingMask, reconstructionIndex)
+                        batchTrainingMask, batchSignalLabels, batchSignalInfo = self.dataInterface.getReconstructionData(batchTrainingMask, batchSignalLabels, batchSignalInfo, reconstructionIndex)
+                        
+                        # If there is no training data.
+                        if batchSignalInfo.size(0) == 0:
+                            # We can skip this batch, and backpropagate the model if necessary.
+                            if self.accelerator.sync_gradients: self.backpropogateModel()
+                            continue
 
-                        # Apply the training data mask
-                        batchTrainingMask = batchTrainingMask[trainingColumn]
-                        trueBatchLabels = trueBatchLabels[trainingColumn]
-                        batchData = batchData[trainingColumn]
-                        if batchData.size(0) == 0:
-                            if self.accelerator.sync_gradients:
-                                self.backpropogateModel()
-                            continue  # We are not training on any points (or need to refresh training)
-
-                    # Separate the data into signal, demographic, and subject identifier information.
-                    signalTimes, signalData, subjectIdentifiers = self.dataInterface.separateData(batchData)
-                    # signalChannel dimension: batchSize, numSignals, maxSequenceLength, [signalChannel, previousSignalPoints, nextDeltaTimes, previousDeltaTimes, nextDeltaTimes, time]
-                    # subjectInds dimension: batchSize, numSubjectIdentifiers
+                    # Separate the data into signal and metadata information.
+                    signalBatchData, batchSignalIdentifiers, metaBatchInfo = self.dataInterface.separateData(batchSignalInfo)
+                    # signalBatchData dimension: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
+                    # batchSignalIdentifiers dimension: batchSize, numSignals, numSignalIdentifiers
+                    # metaBatchInfo dimension: batchSize, numMetadata
 
                     # Randomly choose to add noise to the model.
-                    if self.accelerator.sync_gradients:
-                        self.calculateFullLoss = random.random() < 0.5 and not constrainedTraining
-                        self.addingNoiseFlag = random.random() < 0.5 and not constrainedTraining
+                    if self.accelerator.sync_gradients and not constrainedTraining:
+                        self.addingNoiseFlag = submodel == modelConstants.emotionPredictionModel and random.random() < 0.5
+                        self.calculateFullLoss = random.random() < 0.5
 
                     # Randomly choose to add noise to the model.
-                    augmentedSignalData = signalData.clone()
-                    addingNoiseRange = [0, 1]
-                    addingNoiseSTD = 0
-
-                    if self.addingNoiseFlag:
+                    if self.addingNoiseFlag and not constrainedTraining:
                         # Augment the data to add some noise to the model.
                         addingNoiseSTD, addingNoiseRange = self.modelParameters.getAugmentationDeviation(submodel)
-                        augmentedSignalData = self.dataInterface.addNoise(augmentedSignalData, trainingFlag=True, noiseSTD=addingNoiseSTD)
-                        # augmentedSignalData dimension: batchSize, numSignals, finalDistributionLength
+                        augmentedBatchData = self.dataAugmentation.addNoise(signalBatchData.clone(), trainingFlag=True, noiseSTD=addingNoiseSTD)
+                        # augmentedBatchData dimension: batchSize, numSignals, finalDistributionLength
+                    else:
+                        addingNoiseSTD, addingNoiseRange = 0, (0, 1)
+                        augmentedBatchData = signalBatchData.clone()
 
                     # ------------ Forward pass through the model  ------------- #
 
                     # Train the signal encoder
                     if submodel == modelConstants.signalEncoderModel:
+                        # Randomly choose to use an inflated number of signals.
                         if self.accelerator.sync_gradients:
-                            # Randomly choose to use an inflated number of signals.
-                            maxBatchSignals = max(modelConstants.maxNumSignals, model.signalEncoderModel.encodeSignals.positionalEncodingInterface.maxNumEncodedSignals)
-                            self.maxBatchSignals = random.choices(population=[modelConstants.maxNumSignals, maxBatchSignals], weights=[0.6, 0.4], k=1)[0]
+                            self.maxBatchSignals = random.choices(population=[modelConstants.maxNumSignals, signalBatchData.shape[1]], weights=[0.6, 0.4], k=1)[0]
 
                         # Augment the signals to train an arbitrary sequence length and order.
-                        initialSignalData, augmentedSignalData = self.dataInterface.changeNumSignals(signalDatas=(signalData, augmentedSignalData), minNumSignals=model.numEncodedSignals, maxNumSignals=self.maxBatchSignals, alteredDim=1)
-                        allStartSignalInds = self.dataInterface.getRandomSignalCutOff(allSignalTimes=allSignalTimes, minTimeWindow=modelConstants.timeWindows[0], maxTimeWindow=modelConstants.timeWindows[-1])
-                        print("Input size:", augmentedSignalData.size())
+                        signalBatchData = self.dataAugmentation.changeNumSignals(signalBatchData, minNumSignals=model.numEncodedSignals, maxNumSignals=self.maxBatchSignals, alteredDim=1)
+                        batchStartTimeIndices = self.dataAugmentation.getNewStartTimeIndices(signalData=augmentedBatchData, minTimeWindow=modelConstants.timeWindows[0], maxTimeWindow=modelConstants.timeWindows[-1])
+                        print("Input size:", augmentedBatchData.size())
 
                         # Perform the forward pass through the model.
-                        encodedData, reconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLayerLoss = model.signalEncoding(signalTimes, initialSignalData, subjectIdentifiers, allStartSignalInds, decodeSignals=True, calculateLoss=self.calculateFullLoss, trainingFlag=True)
+                        encodedData, reconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLayerLoss = model.signalEncoding(signalBatchData, batchStartTimeIndices, batchSignalIdentifiers, metaBatchInfo, decodeSignals=True, calculateLoss=self.calculateFullLoss, trainingFlag=True)
                         # decodedPredictedIndexProbabilities dimension: batchSize, numSignals, maxNumEncodedSignals
                         # predictedIndexProbabilities dimension: batchSize, numSignals, maxNumEncodedSignals
                         # encodedData dimension: batchSize, numEncodedSignals, finalDistributionLength
@@ -124,18 +111,16 @@ class emotionPipeline(emotionPipelineHelpers):
                         self.modelHelpers.assertVariableIntegrity(predictedIndexProbabilities, variableName="signal encoder index probabilities", assertGradient=False)
                         self.modelHelpers.assertVariableIntegrity(signalEncodingLayerLoss, variableName="signal encoder layer loss", assertGradient=False)
                         self.modelHelpers.assertVariableIntegrity(reconstructedData, variableName="reconstructed signal data", assertGradient=False)
-                        self.modelHelpers.assertVariableIntegrity(augmentedSignalData, variableName="augmented signal data", assertGradient=False)
-                        self.modelHelpers.assertVariableIntegrity(signalData, variableName="initial signal data", assertGradient=False)
+                        self.modelHelpers.assertVariableIntegrity(signalBatchData, variableName="initial signal data", assertGradient=False)
                         self.modelHelpers.assertVariableIntegrity(encodedData, variableName="encoded data", assertGradient=False)
 
                         # Calculate the error in signal compression (signal encoding loss).
                         signalReconstructedLoss, encodedSignalMeanLoss, encodedSignalMinMaxLoss, positionalEncodingTrainingLoss, decodedPositionalEncodingLoss, signalEncodingTrainingLayerLoss \
-                            = self.organizeLossInfo.calculateSignalEncodingLoss(initialSignalData, encodedData, reconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLayerLoss, batchTrainingMask, reconstructionIndex)
+                            = self.organizeLossInfo.calculateSignalEncodingLoss(signalBatchData, encodedData, reconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLayerLoss, batchTrainingMask, reconstructionIndex)
                         if signalReconstructedLoss.item() == 0: self.accelerator.print("Not useful\n\n\n\n\n\n"); continue
 
                         # Initialize basic core loss value.
-                        compressionFactor = augmentedSignalData.size(1) / encodedData.size(1)  # Increase the learning rate for larger compressions.
-                        noiseFactor = 1 - (addingNoiseSTD / addingNoiseRange[1]) + 0.5  # Lower the learning rate for high noise levels.
+                        compressionFactor = augmentedBatchData.size(1) / encodedData.size(1)  # Increase the learning rate for larger compressions.
                         finalLoss = compressionFactor * signalReconstructedLoss
 
                         # Compile the loss into one value
@@ -148,7 +133,7 @@ class emotionPipeline(emotionPipelineHelpers):
                         if signalReconstructedLoss < 0.1 < decodedPositionalEncodingLoss:
                             finalLoss = finalLoss + 0.25*decodedPositionalEncodingLoss
                         # Account for the current training state when calculating the loss.
-                        finalLoss = noiseFactor * finalLoss + 0.25*positionalEncodingTrainingLoss
+                        finalLoss = finalLoss + 0.25*positionalEncodingTrainingLoss
 
                         # Update the user.
                         self.accelerator.print("Final-Recon-Mean-MinMax-PE-PEDec-Layer", finalLoss.item(), signalReconstructedLoss.item(), encodedSignalMeanLoss.item(), encodedSignalMinMaxLoss.item(), positionalEncodingTrainingLoss.item(), decodedPositionalEncodingLoss.item(), signalEncodingTrainingLayerLoss.item(), "\n")
@@ -156,12 +141,12 @@ class emotionPipeline(emotionPipelineHelpers):
                     # Train the autoencoder
                     elif submodel == modelConstants.autoencoderModel:
                         # Augment the time series length to train an arbitrary sequence length.
-                        initialSignalData, augmentedSignalData = self.dataInterface.changeSignalLength(modelConstants.timeWindows[0], (signalData, augmentedSignalData))
-                        print("Input size:", augmentedSignalData.size())
+                        initialSignalData, augmentedBatchData = self.dataAugmentation.changeSignalLength(modelConstants.timeWindows[0], (signalBatchData, augmentedBatchData))
+                        print("Input size:", augmentedBatchData.size())
 
                         # Perform the forward pass through the model.
                         encodedData, reconstructedData, signalEncodingLayerLoss, compressedData, reconstructedEncodedData, denoisedDoubleReconstructedData, autoencoderLayerLoss = \
-                            model.compressData(augmentedSignalData, initialSignalData, reconstructSignals=True, calculateLoss=True, compileVariables=False, compileLosses=False, fullReconstruction=True, trainingFlag=True)
+                            model.compressData(augmentedBatchData, initialSignalData, reconstructSignals=True, calculateLoss=True, compileVariables=False, compileLosses=False, fullReconstruction=True, trainingFlag=True)
                         # denoisedDoubleReconstructedData dimension: batchSize, numSignals, finalDistributionLength
                         # reconstructedEncodedData dimension: batchSize, numEncodedSignals, finalDistributionLength
                         # compressedData dimension: batchSize, numEncodedSignals, compressedLength
@@ -180,8 +165,8 @@ class emotionPipeline(emotionPipelineHelpers):
                         signalReconstructedLoss = self.organizeLossInfo.signalEncodingLoss(initialSignalData, denoisedDoubleReconstructedData).mean(dim=2).mean(dim=1).mean()
 
                         # Initialize basic core loss value.
-                        compressionFactorSE = augmentedSignalData.size(1) / self.model.numEncodedSignals
-                        compressionFactor = augmentedSignalData.size(2) / self.model.compressedLength
+                        compressionFactorSE = augmentedBatchData.size(1) / self.model.numEncodedSignals
+                        compressionFactor = augmentedBatchData.size(2) / self.model.compressedLength
                         finalLoss = encodedReconstructedLoss
 
                         # Compile the loss into one value
@@ -199,7 +184,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     elif submodel == modelConstants.emotionPredictionModel:
                         # Perform the forward pass through the model.
                         _, _, _, compressedData, _, _, _, mappedSignalData, reconstructedCompressedData, featureData, activityDistribution, eachBasicEmotionDistribution, finalEmotionDistributions \
-                            = model.emotionPrediction(augmentedSignalData, signalData, subjectIdentifiers, remapSignals=True, compileVariables=False, trainingFlag=True)
+                            = model.emotionPrediction(augmentedBatchData, signalBatchData, metaBatchInfo, remapSignals=True, compileVariables=False, trainingFlag=True)
                         # eachBasicEmotionDistribution dimension: batchSize, self.numInterpreterHeads, self.numBasicEmotions, self.emotionLength
                         # finalEmotionDistributions dimension: self.numEmotions, batchSize, self.emotionLength
                         # activityDistribution dimension: batchSize, self.numActivities
@@ -216,8 +201,8 @@ class emotionPipeline(emotionPipelineHelpers):
                         # Calculate the error in emotion and activity prediction models.
                         manifoldReconstructedLoss, manifoldMeanLoss, manifoldMinMaxLoss = self.organizeLossInfo.calculateSignalMappingLoss(
                             encodedData, manifoldData, transformedManifoldData, reconstructedEncodedData, batchTrainingMask, reconstructionIndex)
-                        emotionLoss, emotionOrthogonalityLoss, modelSpecificWeights = self.organizeLossInfo.calculateEmotionsLoss(activityDistribution, trueBatchLabels, batchTrainingMask, activityClassWeights)
-                        activityLoss = self.organizeLossInfo.calculateActivityLoss(activityDistribution, trueBatchLabels, batchTrainingMask, activityClassWeights)
+                        emotionLoss, emotionOrthogonalityLoss, modelSpecificWeights = self.organizeLossInfo.calculateEmotionsLoss(activityDistribution, batchSignalLabels, batchTrainingMask, activityClassWeights)
+                        activityLoss = self.organizeLossInfo.calculateActivityLoss(activityDistribution, batchSignalLabels, batchTrainingMask, activityClassWeights)
 
                         # Compile the loss into one value
                         manifoldLoss = 0.8 * manifoldReconstructedLoss + 0.1 * manifoldMeanLoss + 0.1 * manifoldMinMaxLoss
@@ -251,3 +236,12 @@ class emotionPipeline(emotionPipelineHelpers):
         self.optimizer.step()  # Adjust the weights.
         self.optimizer.zero_grad()  # Zero your gradients to restart the gradient tracking.
         self.accelerator.print("LR:", self.scheduler.get_last_lr())
+        
+    def extractBatchInformation(self, batchData):
+        # Extract the data, labels, and testing/training indices.
+        batchSignalInfo, batchSignalLabels, batchTrainingMask, batchTestingMask = batchData
+        # Add the data, labels, and training/testing indices to the device (GPU/CPU)
+        batchTrainingMask, batchTestingMask = batchTrainingMask.to(self.accelerator.device), batchTestingMask.to(self.accelerator.device)
+        batchSignalInfo, batchSignalLabels = batchSignalInfo.to(self.accelerator.device), batchSignalLabels.to(self.accelerator.device)
+        
+        return batchSignalInfo, batchSignalLabels, batchTrainingMask, batchTestingMask

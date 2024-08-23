@@ -15,7 +15,7 @@ class amigosInterface(globalMetaAnalysis):
 
     def __init__(self):
         # Specify the metadata file locations.
-        self.subjectFolders = os.path.normpath(os.path.dirname(__file__) + "/../../../_experimentalData/_metaDatasets/AMIGOS/") + "/"
+        self.subjectFolders = os.path.normpath(os.path.dirname(__file__) + "/../../../_experimentalData/_metadatasets/AMIGOS/") + "/"
 
         # Initialize AMIGOS survey information.
         self.dimQuestions = ['arousal', 'valence', 'dominance', 'liking', 'familiarity']  # Rated 1 to 9
@@ -263,7 +263,7 @@ if __name__ == "__main__":
         streamingOrder, biomarkerFeatureOrder, featureAverageWindows, filteringOrders = amigosAnalysisClass.getStreamingInfo()
         # Analyze and save the metadata features
         amigosAnalysisClass.extractFeatures(allCompiledDatas, subjectOrder, allExperimentalTimes, allExperimentalNames, allSurveyAnswerTimes, allSurveyAnswersList, allContextualInfo,
-                                            streamingOrder, biomarkerFeatureOrder, featureAverageWindows, filteringOrders, metaDatasetName=modelConstants.amigosDatasetName, reanalyzeData=True, showPlots=False, analyzeSequentially=False)
+                                            streamingOrder, biomarkerFeatureOrder, featureAverageWindows, filteringOrders, metadatasetName=modelConstants.amigosDatasetName, reanalyzeData=True, showPlots=False, analyzeSequentially=False)
     if trainingData:
         # Prepare the data to go through the training interface.
         streamingOrder, biomarkerFeatureOrder, featureAverageWindows, featureNames, biomarkerFeatureNames = amigosAnalysisClass.compileTrainingInfo()

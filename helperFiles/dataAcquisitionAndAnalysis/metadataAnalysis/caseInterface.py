@@ -15,9 +15,9 @@ class caseInterface(globalMetaAnalysis):
     def __init__(self):
         self.debug = False
         # Specify the metadata file locations.
-        self.subjectFolders = os.path.dirname(__file__) + "/../../../_experimentalData/_metaDatasets/CASE/data/interpolated/physiological/"
-        self.subjectFoldersAnnotations = os.path.dirname(__file__) + "/../../../_experimentalData/_metaDatasets/CASE/data/interpolated/annotations/"
-        self.subjectFoldersMetaData = os.path.dirname(__file__) + "/../../../_experimentalData/_metaDatasets/CASE/metadata/"
+        self.subjectFolders = os.path.dirname(__file__) + "/../../../_experimentalData/_metadatasets/CASE/data/interpolated/physiological/"
+        self.subjectFoldersAnnotations = os.path.dirname(__file__) + "/../../../_experimentalData/_metadatasets/CASE/data/interpolated/annotations/"
+        self.subjectFoldersMetadata = os.path.dirname(__file__) + "/../../../_experimentalData/_metadatasets/CASE/metadata/"
         # Initialize CASE survey information.
         self.surveyQuestions = ["valence", "arousal"]
         self.demographicsQuestions = ['Age', 'Gender']
@@ -30,7 +30,7 @@ class caseInterface(globalMetaAnalysis):
         self.case_streamingOrder = ['ecg', 'bvp', 'gsr', 'rsp', 'skt']  # 'ecg', 'bvp', 'gsr', 'rsp', 'skt', 'emg_zygo', 'emg_coru', 'emg_trap'
         self.case_streamingConversions = [10 ** -3, 1, 10 ** -6, 1, 1]
 
-        df_videos = pd.read_excel(self.subjectFoldersMetaData + 'videos.xlsx', engine='openpyxl')
+        df_videos = pd.read_excel(self.subjectFoldersMetadata + 'videos.xlsx', engine='openpyxl')
         self.videoIDtoName = {row['Video-ID']: row['Source (Year)'] + ', ' + row['Video-label'] for index, row in df_videos.dropna(subset=['Video-ID']).iterrows()}
         self.activityNames = ['amusing', 'blue screen', 'boring', 'relaxed', 'scary', 'startVid']
         self.trialDuration = 5 * 60  # 5-minute sliding window per trial in experiment
@@ -61,7 +61,7 @@ class caseInterface(globalMetaAnalysis):
         givenSubjectOrder = []
         givenContextualInfo = []
 
-        df_metadata = pd.read_excel(self.subjectFoldersMetaData + 'participants.xlsx', engine='openpyxl')
+        df_metadata = pd.read_excel(self.subjectFoldersMetadata + 'participants.xlsx', engine='openpyxl')
 
         # For each subject in the training folder.
         for subjectSignalDataName in natsorted(os.listdir(self.subjectFolders)):
@@ -270,7 +270,7 @@ if __name__ == "__main__":
         streamingOrder, biomarkerFeatureOrder, featureAverageWindows, filteringOrders = caseAnalysisClass.getStreamingInfo()
         # # Analyze and save the metadata features
         caseAnalysisClass.extractFeatures(allCompiledDatas, subjectOrder, allExperimentalTimes, allExperimentalNames, allSurveyAnswerTimes, allSurveyAnswersList, allContextualInfo,
-                                          streamingOrder, biomarkerFeatureOrder, featureAverageWindows, filteringOrders, metaDatasetName=modelConstants.caseDatasetName, reanalyzeData=False, showPlots=False, analyzeSequentially=True)  # Keep reanalyzeData=True for memory reasons.
+                                          streamingOrder, biomarkerFeatureOrder, featureAverageWindows, filteringOrders, metadatasetName=modelConstants.caseDatasetName, reanalyzeData=False, showPlots=False, analyzeSequentially=True)  # Keep reanalyzeData=True for memory reasons.
 
     if trainingData:
         # Prepare the data to go through the training interface.

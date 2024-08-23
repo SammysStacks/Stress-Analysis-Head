@@ -1,6 +1,7 @@
 # Import files for machine learning
 from .emotionModel.emotionModelHead import emotionModelHead
 from .emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
+from .emotionModel.emotionModelHelpers.generalMethods.dataAugmentation import dataAugmentation
 from .emotionModel.emotionModelHelpers.generalMethods.generalMethods import generalMethods
 from .emotionModel.emotionModelHelpers.generalMethods.modelHelpers import modelHelpers
 from .emotionModel.emotionModelHelpers.generalMethods.weightInitialization import weightInitialization
@@ -17,7 +18,7 @@ class emotionPipelineHelpers:
     def __init__(self, accelerator, modelID, datasetName, modelName, allEmotionClasses, maxNumSignals, numSubjects, userInputParams,
                  emotionNames, activityNames, featureNames, submodel, useFinalParams, debuggingResults=False):
         # General parameters.
-        self.subjectIdentifiers = modelConstants.subjectIdentifiers  # The subject identifiers to consider. Dim: [numSubjects]
+        self.metadata = modelConstants.metadata  # The subject identifiers to consider. Dim: [numSubjects]
         self.debuggingResults = debuggingResults  # Whether to print debugging results. Type: bool
         self.useFinalParams = useFinalParams  # Whether to use the HPC parameters.
         self.accelerator = accelerator  # Hugging face interface to speed up the training process.
@@ -47,7 +48,7 @@ class emotionPipelineHelpers:
 
         # Initialize the emotion model.
         if modelName == "emotionModel":
-            self.model = emotionModelHead(submodel, accelerator, self.finalDistributionLength, signalMinMaxScale, maxNumSignals, self.subjectIdentifiers, userInputParams,
+            self.model = emotionModelHead(submodel, accelerator, self.finalDistributionLength, signalMinMaxScale, maxNumSignals, self.metadata, userInputParams,
                                           timeWindows, emotionNames, activityNames, featureNames, numSubjects, datasetName, useFinalParams, debuggingResults)
         # Assert that the model has been initialized.
         assert hasattr(self, 'model'), f"Unknown Model Type Requested: {modelName}"
@@ -63,6 +64,7 @@ class emotionPipelineHelpers:
         self.weightInitialization = weightInitialization()
         self.modelMigration = modelMigration(accelerator)
         self.dataInterface = emotionDataInterface()
+        self.dataAugmentation = dataAugmentation()
         self.generalMethods = generalMethods()
         self.modelHelpers = modelHelpers()
 
@@ -95,7 +97,7 @@ class emotionPipelineHelpers:
     def prepareInformation(self, dataLoader):
         # Load in all the data and labels for final predictions.
         allData, allLabels, allTrainingMasks, allTestingMasks = dataLoader.dataset.getAll()
-        allSignalTimes, allSignalData, allSubjectIdentifiers = self.dataInterface.separateData(allData)
+        allSignalData, allSignalIdentifiers, allMetadata = self.dataInterface.separateData(allData)
         reconstructionIndex = self.dataInterface.getReconstructionIndex(allTrainingMasks)
         assert reconstructionIndex is not None
 
@@ -104,7 +106,7 @@ class emotionPipelineHelpers:
         assert allLabels.shape == allTrainingMasks.shape, "We should specify the training indices for each label"
         assert allLabels.shape == allTestingMasks.shape, "We should specify the testing indices for each label"
 
-        return allData, allLabels, allTrainingMasks, allTestingMasks, allSignalTimes, allSignalData, allSubjectIdentifiers, reconstructionIndex
+        return allData, allLabels, allTrainingMasks, allTestingMasks, allSignalData, allMetadata, reconstructionIndex
 
     # ------------------------------------------------------------------ #
 

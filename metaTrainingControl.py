@@ -86,7 +86,7 @@ if __name__ == "__main__":
 
     # Specify training parameters
     numEpoch_toPlot, numEpoch_toSaveFull = modelParameters.getEpochInfo(submodel, useFinalParams)  # The number of epochs to plot and save the model.
-    datasetNames, metaDatasetNames, allDatasetNames = modelParameters.compileModelNames()  # Compile the model names.
+    datasetNames, metadatasetNames, allDatasetNames = modelParameters.compileModelNames()  # Compile the model names.
     numConstrainedEpochs, numEpochs = modelParameters.getNumEpochs(submodel)  # The number of epochs to train the model.
     trainingDate = modelCompiler.embedInformation(submodel, trainingDate)  # Embed training information into the name.
     submodelsSaving = modelParameters.getSubmodelsSaving(submodel)  # The submodels to save.
@@ -99,13 +99,13 @@ if __name__ == "__main__":
     # -------------------------- Model Compilation ------------------------- #
 
     # Compile the final modules.
-    allModels, allDataLoaders, allLossDataHolders, allMetaModels, allMetaDataLoaders, allMetaLossDataHolders, _ = modelCompiler.compileModelsFull(metaDatasetNames, modelName, submodel, testSplitRatio, datasetNames, useFinalParams)
+    allModels, allDataLoaders, allLossDataHolders, allMetaModels, allMetadataLoaders, allMetaLossDataHolders, _ = modelCompiler.compileModelsFull(metadatasetNames, modelName, submodel, testSplitRatio, datasetNames, useFinalParams)
     unifiedLayerData = modelMigration.copyModelWeights(allMetaModels[0], sharedModelWeights=modelConstants.sharedModelWeights)  # Unify all the fixed weights in the models
 
     # -------------------------- Meta-model Training ------------------------- #
 
     # Store the initial loss information.
-    trainingProtocols.calculateLossInformation(unifiedLayerData, allMetaLossDataHolders, allMetaModels, allModels, submodel, metaDatasetNames, fastPass, storeLoss, stepScheduler=True)
+    trainingProtocols.calculateLossInformation(unifiedLayerData, allMetaLossDataHolders, allMetaModels, allModels, submodel, metadatasetNames, fastPass, storeLoss, stepScheduler=True)
 
     # For each training epoch
     for epoch in range(1, numEpochs + 1):
@@ -117,11 +117,11 @@ if __name__ == "__main__":
         constrainedTraining = epoch <= numConstrainedEpochs
 
         # Train the model for a single epoch.
-        unifiedLayerData = trainingProtocols.trainEpoch(submodel, allMetaDataLoaders, allMetaModels, allModels, unifiedLayerData, constrainedTraining=constrainedTraining)
+        unifiedLayerData = trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, unifiedLayerData, constrainedTraining=constrainedTraining)
 
         # Store the initial loss information and plot.
-        if storeLoss: trainingProtocols.calculateLossInformation(unifiedLayerData, allMetaLossDataHolders, allMetaModels, allModels, submodel, metaDatasetNames, fastPass, storeLoss, stepScheduler=False)
-        if plotSteps: trainingProtocols.plotModelState(epoch, unifiedLayerData, allMetaLossDataHolders, allMetaModels, allModels, submodel, metaDatasetNames, trainingDate, fastPass=fastPass)
+        if storeLoss: trainingProtocols.calculateLossInformation(unifiedLayerData, allMetaLossDataHolders, allMetaModels, allModels, submodel, metadatasetNames, fastPass, storeLoss, stepScheduler=False)
+        if plotSteps: trainingProtocols.plotModelState(epoch, unifiedLayerData, allMetaLossDataHolders, allMetaModels, allModels, submodel, metadatasetNames, trainingDate, fastPass=fastPass)
 
         # Save the model sometimes (only on the main device).
         if saveFullModel and accelerator.is_local_main_process:
@@ -145,7 +145,7 @@ if __name__ == "__main__":
     #
     # # For each metatraining model.
     # for modelInd in metaModelIndices:
-    #     dataLoader = allMetaDataLoaders[modelInd]
+    #     dataLoader = allMetadataLoaders[modelInd]
     #     modelPipeline = allMetaModels[modelInd]
     #     # Place model in eval mode.
     #     modelPipeline.model.eval()

@@ -155,7 +155,7 @@ class trainingProtocols(extractData):
             # ----------- Segment the Experimental Feature Signals ----------- #
 
             # Calculate a buffer for the experiment.
-            modelFeatureTimeBuffer = modelConstants.timeWindows[-1] + modelConstants.timeWindowBuffer
+            modelFeatureTimeBuffer = modelConstants.maxTimeWindow
 
             badExperimentalInds = []
             # For each experiment performed in the trial.

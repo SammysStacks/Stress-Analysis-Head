@@ -9,6 +9,7 @@ import torch
 from ..modelControl.Models.pyTorch.Helpers.modelMigration import modelMigration
 # Import helper files.
 from ..modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
+from ..modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.generalMethods.dataAugmentation import dataAugmentation
 from ..modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.generalMethods.generalMethods import generalMethods
 from ..modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from ..modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
@@ -31,7 +32,8 @@ class compileModelDataHelpers:
         # Initialize relevant classes.
         self.modelParameters = modelParameters(userInputParams,  accelerator)
         self.modelMigration = modelMigration(accelerator, debugFlag=False)
-        self.dataInterface = emotionDataInterface
+        self.dataInterface = emotionDataInterface()
+        self.dataAugmentation = dataAugmentation()
         self.generalMethods = generalMethods()
 
         # Submodel-specific parameters
@@ -99,10 +101,10 @@ class compileModelDataHelpers:
 
         return uniqueActivityNames, validActivityLabels.to(torch.float32)
 
-    def organizeLabels(self, allFeatureLabels, metaTraining, metaDatasetName, numSignals):
+    def organizeLabels(self, allFeatureLabels, metaTraining, metadatasetName, numSignals):
         # allFeatureLabels: A torch array or list of size (batchSize, numLabels)
         # metaTraining: Boolean indicating if the data is for training
-        # metaDatasetName: String representing the name of the dataset
+        # metadatasetName: String representing the name of the dataset
         # numSignals: The number of signals in the dataset
         # Convert to tensor and initialize lists
         batchSize, numLabels = allFeatureLabels.shape
@@ -141,45 +143,47 @@ class compileModelDataHelpers:
 
         # Report the information from this dataset.
         numGoodEmotions = torch.sum(~torch.all(torch.isnan(allFeatureLabels), dim=0)).item()
-        print(f"\t{metaDatasetName.capitalize()}: Found {numGoodEmotions - 1} (out of {numLabels - 1}) well-labeled emotions across {batchSize} experiments with {numSignals} signals.", flush=True)
+        print(f"\t{metadatasetName.capitalize()}: Found {numGoodEmotions - 1} (out of {numLabels - 1}) well-labeled emotions across {batchSize} experiments with {numSignals} signals.", flush=True)
 
         return allFeatureLabels, allSingleClassIndices
 
     @staticmethod
-    def addMetaDataInfo(allSignalData, allNumSignalPoints, allSubjectInds, datasetInd):
+    def addContextualInfo(allSignalData, allNumSignalPoints, allSubjectInds, datasetInd):
         # allSignalData: A torch array of size (batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel])
         # allNumSignalPoints: A torch array of size (batchSize, numSignals)
         # allSubjectInds: A torch array of size batchSize
         numExperiments, numSignals, maxSequenceLength, numChannels = allSignalData.shape
-        numSubjectIdentifiers = len(modelConstants.subjectIdentifiers)
-        assert len(modelConstants.signalChannelNames) == numChannels
+        numSignalIdentifiers = len(modelConstants.signalIdentifiers)
+        numMetadata = len(modelConstants.metadata)
 
         # Create lists to store the new augmented data.
-        compiledSignalData = torch.zeros((numExperiments, numSignals, maxSequenceLength + numSubjectIdentifiers, numChannels))
+        compiledSignalData = torch.zeros((numExperiments, numSignals, maxSequenceLength + numSignalIdentifiers + numMetadata, numChannels))
+        assert len(modelConstants.signalChannelNames) == numChannels
 
         # For each recorded experiment.
         for experimentInd in range(numExperiments):
-            # Compile an array of subject indices.
+            # Compile all the metadata information: dataset specific.
             subjectInds = torch.full(size=(numSignals, 1, numChannels), fill_value=allSubjectInds[experimentInd])
-            signalInds = torch.arange(numSignals).unsqueeze(-1).unsqueeze(-1).repeat(1, 1, numChannels)
             datasetInds = torch.full(size=(numSignals, 1, numChannels), fill_value=datasetInd)
-            # Dim: numSignals, 1, numChannels
+            metadata = torch.hstack((datasetInds, subjectInds))
+            # metadata dim: numSignals, 2, numChannels
 
-            # Compile an array of signal stop indices.
+            # Compile all the signal information: signal specific.
             eachSignal_numPoints = allNumSignalPoints[experimentInd].unsqueeze(-1).unsqueeze(-1).repeat(1, 1, numChannels)
+            signalInds = torch.arange(numSignals).unsqueeze(-1).unsqueeze(-1).repeat(1, 1, numChannels)
+            signalIdentifiers = torch.hstack((eachSignal_numPoints, signalInds))
+            # signalIdentifiers dim: numSignals, 2, numChannels
 
             # Assert the correct hardcoded dimensions.
-            assert modelConstants.subjectIdentifiers.index(modelConstants.numSignalPointsSI) == 0, "Asserting I am self-consistent. Hardcoded assertion"
-            assert modelConstants.subjectIdentifiers.index(modelConstants.datasetIndexSI) == 1, "Asserting I am self-consistent. Hardcoded assertion"
-            assert modelConstants.subjectIdentifiers.index(modelConstants.subjectIndexSI) == 2, "Asserting I am self-consistent. Hardcoded assertion"
-            assert modelConstants.subjectIdentifiers.index(modelConstants.signalIndexSI) == 3, "Asserting I am self-consistent. Hardcoded assertion"
-
-            # Collect the demographic information.
-            demographicContext = torch.hstack((eachSignal_numPoints, datasetInds, subjectInds, signalInds))
-            assert numSubjectIdentifiers == demographicContext.shape[1], "Asserting I am self-consistent. Hardcoded assertion"
+            assert emotionDataInterface.getSignalIdentifierIndex(identifierName=modelConstants.numSignalPointsSI) == 0, "Asserting I am self-consistent. Hardcoded assertion"
+            assert emotionDataInterface.getSignalIdentifierIndex(identifierName=modelConstants.signalIndexSI) == 1, "Asserting I am self-consistent. Hardcoded assertion"
+            assert emotionDataInterface.getMetadataIndex(metadataName=modelConstants.datasetIndexSI) == 0, "Asserting I am self-consistent. Hardcoded assertion"
+            assert emotionDataInterface.getMetadataIndex(metadataName=modelConstants.subjectIndexSI) == 1, "Asserting I am self-consistent. Hardcoded assertion"
+            assert numSignalIdentifiers == 2, "Asserting I am self-consistent. Hardcoded assertion"
+            assert numMetadata == 2, "Asserting I am self-consistent. Hardcoded assertion"
 
             # Add the demographic data to the feature array.
-            compiledSignalData[experimentInd] = torch.hstack((allSignalData[experimentInd], demographicContext))
+            compiledSignalData[experimentInd] = torch.hstack((allSignalData[experimentInd], signalIdentifiers, metadata))
 
         return compiledSignalData
 
@@ -202,8 +206,8 @@ class compileModelDataHelpers:
         allNumSignalPoints = torch.zeros(size=(numExperiments, numSignals), dtype=torch.int)
 
         # Get the indices for each of the signal information.
-        dataChannelInd = modelConstants.signalChannelNames.index(modelConstants.signalChannel)
-        timeChannelInd = modelConstants.signalChannelNames.index(modelConstants.timeChannel)
+        dataChannelInd = emotionDataInterface.getChannelInd(channelName=modelConstants.signalChannel)
+        timeChannelInd = emotionDataInterface.getChannelInd(channelName=modelConstants.timeChannel)
 
         # For each batch of biomarkers.
         for experimentalInd in range(numExperiments):
@@ -243,7 +247,7 @@ class compileModelDataHelpers:
         subjectInds : A torch array of size (batchSize)
         """
         # Calculate the time gap within the longest time window.
-        timeChannelInd = modelConstants.signalChannelNames.index(modelConstants.timeChannel)
+        timeChannelInd = emotionDataInterface.getChannelInd(channelName=modelConstants.timeChannel)
         biomarkerTimes = allSignalData[:, :, :, timeChannelInd]
 
         # Calculate the longest time gap within the longest time window.
@@ -268,11 +272,11 @@ class compileModelDataHelpers:
             f"Feature names do not match data dimensions. {len(featureNames)} != {allSignalData.shape[1]}"
 
         # Standardize all signals at once for the entire batch
-        signalDataInd = modelConstants.signalChannelNames.index(modelConstants.signalChannel)
-        allSignalData[:, :, :, signalDataInd] = self.normalizeSignals(allSignalData[:, :, :, signalDataInd])
+        allSignalData = self.normalizeSignals(allSignalData)
 
         # Calculate SNRs for all signals in the batch
-        signalSNRs = self.calculate_snr(allSignalData[:, :, :, signalDataInd])
+        signalChannelInd = emotionDataInterface.getChannelInd(channelName=modelConstants.signalChannel)
+        signalSNRs = self.calculate_snr(allSignalData[:, :, :, signalChannelInd])
 
         # Generate a valid signal mask across the batch
         validSignalInds = (signalSNRs > 1E-10)
@@ -301,7 +305,7 @@ class compileModelDataHelpers:
             # channelTimes dim: maxSequenceLength
 
             # Get the signal interval.
-            startSignalInd = self.dataInterface.getTimeIntervalInd(channelTimes, timeWindow, mustIncludeTimePoint=False)
+            startSignalInd = self.dataAugmentation.getTimeIntervalInd(channelTimes, timeWindow, mustIncludeTimePoint=False)
             timeInterval = channelData[startSignalInd:numSignalPoints, :]
 
             # Store the interval information.
@@ -332,9 +336,13 @@ class compileModelDataHelpers:
 
     def normalizeSignals(self, signalBatchData):
         # signalBatchData dimension: numExperiments, numSignals, maxSequenceLength, [timeChannel, signalChannel]
+        signalChannelInd = emotionDataInterface.getChannelInd(channelName=modelConstants.signalChannel)
+        timeChannelInd = emotionDataInterface.getChannelInd(channelName=modelConstants.timeChannel)
+
         for signalInd in range(len(signalBatchData[0])):
             # Standardize the signals (min-max scaling).
-            signalBatchData[:, signalInd, :] = self.generalMethods.minMaxScale_noInverse(signalBatchData[:, signalInd, :], scale=modelConstants.minMaxScale)
+            signalBatchData[:, signalInd, :, signalChannelInd] = self.generalMethods.minMaxScale_noInverse(signalBatchData[:, signalInd, :, signalChannelInd], scale=modelConstants.minMaxScale)
+            signalBatchData[:, signalInd, :, timeChannelInd] = signalBatchData[:, signalInd, :, timeChannelInd] / modelConstants.maxTimeWindow
 
         return signalBatchData
     

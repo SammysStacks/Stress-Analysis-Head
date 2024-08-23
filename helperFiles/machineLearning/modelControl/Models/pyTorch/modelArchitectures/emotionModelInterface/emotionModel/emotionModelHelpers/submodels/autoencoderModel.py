@@ -100,7 +100,7 @@ class autoencoderModel(globalModel):
         # --------------------- Signal Compression --------------------- # 
 
         # Data reduction: remove unnecessary timepoints from the signals.
-        noisyEncodedData = self.generalAutoencoder.dataInterface.addNoise(encodedData, trainingFlag, noiseSTD=0.01)
+        noisyEncodedData = self.generalAutoencoder.dataAugmentation.addNoise(encodedData, trainingFlag, noiseSTD=0.01)
         initialCompressedData, numSignalPath, autoencoderLayerLoss = self.generalAutoencoder(inputData=noisyEncodedData, targetSequenceLength=compressedLength, initialSequenceLength=initialSequenceLength, autoencoderLayerLoss=None, calculateLoss=calculateLoss)
         # compressedData dimension: batchSize, numSignals, compressedLength
         print("Autoencoder Downward path:", encodedData.size(2), numSignalPath, initialCompressedData.size(2), flush=True)

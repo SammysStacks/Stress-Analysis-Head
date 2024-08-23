@@ -32,8 +32,9 @@ class modelConstants:
     signalChannel = "signalPoints"
     timeChannel = "time"
 
-    # Compile the subject identifiers.
-    subjectIdentifiers = [numSignalPointsSI, datasetIndexSI, subjectIndexSI, signalIndexSI]
+    # Compile the contextual identifiers.
+    signalIdentifiers = [numSignalPointsSI, signalIndexSI]
+    metadata = [datasetIndexSI, subjectIndexSI]
 
     # Specify the data interface parameters.
     timeWindows = [90, 120, 150, 180, 210, 240, 300]
@@ -42,6 +43,9 @@ class modelConstants:
     minNumExperiments = 59
     maxNumSignals = 128  # The maximum number of signals that can be used in the model (2**n)
     minMaxScale = 1
+
+    # Compile final parameters.
+    maxTimeWindow = timeWindows[-1] + timeWindowBuffer
 
     # Specify the data interface parameter names.
     signalChannelNames = [timeChannel, signalChannel]

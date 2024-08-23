@@ -14,7 +14,7 @@ class wesadInterface(globalMetaAnalysis):
 
     def __init__(self):
         # Specify the metadata file locations.
-        self.subjectFolders = os.path.dirname(__file__) + "/../../../_experimentalData/_metaDatasets/WESAD/"
+        self.subjectFolders = os.path.dirname(__file__) + "/../../../_experimentalData/_metadatasets/WESAD/"
 
         # Initialize WESAD survey information.
         self.panasQuestions = ["Active", "Distressed", "Interested", "Inspired", "Annoyed", "Strong", "Guilty", "Scared",
@@ -308,7 +308,7 @@ if __name__ == "__main__":
         wesadStreamingOrder, wesadBiomarkerFeatureOrder, wesadFeatureAverageWindows, wesadFilteringOrders = wesadAnalysisClass.getStreamingInfo()
         # Analyze and save the metadata features
         wesadAnalysisClass.extractFeatures(wesadAllCompiledDatas, wesadSubjectOrder, wesadAllExperimentalTimes, wesadAllExperimentalNames, wesadAllSurveyAnswerTimes, wesadAllSurveyAnswersList, wesadAllContextualInfo,
-                                           wesadStreamingOrder, wesadBiomarkerFeatureOrder, wesadFeatureAverageWindows, wesadFilteringOrders, metaDatasetName=modelConstants.wesadDatasetName, reanalyzeData=True, showPlots=False, analyzeSequentially=True)
+                                           wesadStreamingOrder, wesadBiomarkerFeatureOrder, wesadFeatureAverageWindows, wesadFilteringOrders, metadatasetName=modelConstants.wesadDatasetName, reanalyzeData=True, showPlots=False, analyzeSequentially=True)
 
     if trainingData:
         # Prepare the data to go through the training interface.

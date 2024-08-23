@@ -42,14 +42,14 @@ class sharedEmotionModel(globalModel):
             emotionLength=self.compressedLength,
         )
 
-    def forward(self, mappedSignalData, subjectIdentifiers, specificEmotionModel, trainingFlag=False):
+    def forward(self, mappedSignalData, metadata, specificEmotionModel, trainingFlag=False):
         """ The shape of manifoldData: (batchSize, numEncodedSignals, compressedLength) """
 
         # ----------------------- Data Preprocessing ----------------------- #  
 
         # Extract the incoming data's dimension.
         batchSize, numEncodedSignals, compressedLength = mappedSignalData.size()
-        subjectInds = subjectIdentifiers[:, 0]  # The first subject identifier is the subject index. subjectInds dimension: batchSize
+        subjectInds = metadata[:, 0]  # The first subject identifier is the subject index. subjectInds dimension: batchSize
 
         # Assert the integrity of the incoming data.
         assert numEncodedSignals == self.numEncodedSignals, f"The model was expecting {self.numEncodedSignals} signals, but received {numEncodedSignals}"

@@ -22,17 +22,11 @@ class modelParameters:
     # -------------------------- Training Parameters ------------------------- #
 
     def getAugmentationDeviation(self, submodel):
-        # Get the submodels to save
-        if submodel == modelConstants.signalEncoderModel:
-            return 0, (0, 1)
-        elif submodel == modelConstants.autoencoderModel:
-            return 0, (0, 1)
-        elif submodel == modelConstants.emotionPredictionModel:
+        if submodel == modelConstants.emotionPredictionModel:
             addingNoiseRange = (0, 0.01)
-        else:
-            assert False, "No model initialized"
+            return self.generalMethods.biased_high_sample(*addingNoiseRange, randomValue=random.uniform(a=0, b=1)), addingNoiseRange
 
-        return self.generalMethods.biased_high_sample(*addingNoiseRange, randomValue=random.uniform(a=0, b=1)), addingNoiseRange
+        return 0, (0, 1)
 
     def getTrainingBatchSize(self, submodel, numExperiments):
         # Wesad: Found 32 (out of 32) well-labeled emotions across 59 experiments with 68 signals.
@@ -213,14 +207,14 @@ class modelParameters:
     @staticmethod
     def compileModelNames():
         # Specify which metadata analyses to compile
-        metaDatasetNames = [modelConstants.wesadDatasetName, modelConstants.emognitionDatasetName, modelConstants.amigosDatasetName, modelConstants.dapperDatasetName, modelConstants.caseDatasetName]
+        metadatasetNames = [modelConstants.wesadDatasetName, modelConstants.emognitionDatasetName, modelConstants.amigosDatasetName, modelConstants.dapperDatasetName, modelConstants.caseDatasetName]
         datasetNames = [modelConstants.empatchDatasetName]
-        allDatasetNames = metaDatasetNames + datasetNames
+        allDatasetNames = metadatasetNames + datasetNames
 
         # Assert the integrity of dataset collection.
         assert len(datasetNames) == 1
 
-        return datasetNames, metaDatasetNames, allDatasetNames
+        return datasetNames, metadatasetNames, allDatasetNames
 
     @staticmethod
     def compileParameters(args):

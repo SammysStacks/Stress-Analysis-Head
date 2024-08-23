@@ -85,15 +85,15 @@ class compileModelData(compileModelDataHelpers):
 
         return allRawFeatureIntervalTimes, allCompiledFeatureIntervals, surveyAnswersList, surveyQuestions, activityLabels, activityNames, numQuestionOptions, subjectOrder, featureNames
 
-    def compileMetaAnalyses(self, metaDatasetNames, loadCompiledData=False, compiledModelName="compiledMetaTrainingInfo"):
+    def compileMetaAnalyses(self, metadatasetNames, loadCompiledData=False, compiledModelName="compiledMetaTrainingInfo"):
         # Prepare to compile all the metadata analyses.
         metaSurveyQuestions, metaSurveyAnswersList, metaNumQuestionOptions, metaSubjectOrder = [], [], [], []
         metaRawFeatureTimeIntervals, metaCompiledFeatureIntervals, metaFeatureNames, metaActivityNames, metaActivityLabels = [], [], [], [], []
 
         plotTrainingData = False
         # For each meta-analysis protocol
-        for metaDatasetName in metaDatasetNames:
-            metaAnalysisProtocol = self.metaProtocolMap[metaDatasetName]
+        for metadatasetName in metadatasetNames:
+            metaAnalysisProtocol = self.metaProtocolMap[metadatasetName]
 
             # Prepare the data to go through the training interface.
             streamingOrder, biomarkerFeatureOrder, featureAverageWindows, featureNames, biomarkerFeatureNames = metaAnalysisProtocol.compileTrainingInfo()
@@ -132,32 +132,32 @@ class compileModelData(compileModelDataHelpers):
             metaFeatureNames.append(featureNames)
             metaSubjectOrder.append(subjectOrder)
 
-        return metaRawFeatureTimeIntervals, metaCompiledFeatureIntervals, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions, metaSubjectOrder, metaFeatureNames, metaDatasetNames
+        return metaRawFeatureTimeIntervals, metaCompiledFeatureIntervals, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions, metaSubjectOrder, metaFeatureNames, metadatasetNames
 
     # -------------------- Machine Learning Preparation -------------------- #
 
-    def compileModelsFull(self, metaDatasetNames, modelName, submodel, testSplitRatio, datasetNames, useFinalParams=False):
+    def compileModelsFull(self, metadatasetNames, modelName, submodel, testSplitRatio, datasetNames, useFinalParams=False):
         # Compile the metadata together.
         metaRawFeatureTimeIntervals, metaCompiledFeatureIntervals, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions, \
-            metaSubjectOrder, metaFeatureNames, metaDatasetNames = self.compileMetaAnalyses(metaDatasetNames, loadCompiledData=True)
+            metaSubjectOrder, metaFeatureNames, metadatasetNames = self.compileMetaAnalyses(metadatasetNames, loadCompiledData=True)
 
         # Compile the project data together
         allRawFeatureIntervalTimes, allCompiledFeatureIntervals, surveyAnswersList, surveyQuestions, activityLabels, activityNames, numQuestionOptions, subjectOrder, featureNames = self.compileProjectAnalysis(loadCompiledData=True)
 
         # Compile the meta-learning modules.
-        allMetaModels, allMetaDataLoaders, allMetaLossDataHolders = self.compileModels(metaRawFeatureTimeIntervals, metaCompiledFeatureIntervals, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions,
-                                                                                       metaSubjectOrder, metaFeatureNames, metaDatasetNames, modelName, submodel, testSplitRatio, metaTraining=True, specificInfo=None,
+        allMetaModels, allMetadataLoaders, allMetaLossDataHolders = self.compileModels(metaRawFeatureTimeIntervals, metaCompiledFeatureIntervals, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions,
+                                                                                       metaSubjectOrder, metaFeatureNames, metadatasetNames, modelName, submodel, testSplitRatio, metaTraining=True, specificInfo=None,
                                                                                        useFinalParams=useFinalParams, random_state=42)
         # Compile the final modules.
         allModels, allDataLoaders, allLossDataHolders = self.compileModels(metaRawFeatureTimeIntervals=[allRawFeatureIntervalTimes], metaCompiledFeatureIntervals=[allCompiledFeatureIntervals], metaSurveyAnswersList=[surveyAnswersList], metaSurveyQuestions=[surveyQuestions], metaActivityLabels=[activityLabels], metaActivityNames=[activityNames], metaNumQuestionOptions=[numQuestionOptions], metaSubjectOrder=[subjectOrder],
-                                                                           metaFeatureNames=[featureNames], metaDatasetNames=datasetNames, modelName=modelName, submodel=submodel, testSplitRatio=testSplitRatio, metaTraining=False, specificInfo=None, useFinalParams=useFinalParams, random_state=42)
+                                                                           metaFeatureNames=[featureNames], metadatasetNames=datasetNames, modelName=modelName, submodel=submodel, testSplitRatio=testSplitRatio, metaTraining=False, specificInfo=None, useFinalParams=useFinalParams, random_state=42)
         # Create the meta-loss models and data loaders.
         allMetaLossDataHolders.extend(allLossDataHolders)
 
-        return allModels, allDataLoaders, allLossDataHolders, allMetaModels, allMetaDataLoaders, allMetaLossDataHolders, metaDatasetNames
+        return allModels, allDataLoaders, allLossDataHolders, allMetaModels, allMetadataLoaders, allMetaLossDataHolders, metadatasetNames
 
     def compileModels(self, metaRawFeatureTimeIntervals, metaCompiledFeatureIntervals, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions,
-                      metaSubjectOrder, metaFeatureNames, metaDatasetNames, modelName, submodel, testSplitRatio, metaTraining, specificInfo=None, useFinalParams=False, random_state=42):
+                      metaSubjectOrder, metaFeatureNames, metadatasetNames, modelName, submodel, testSplitRatio, metaTraining, specificInfo=None, useFinalParams=False, random_state=42):
         # Initialize relevant holders.
         allModelPipelines, lossDataHolders, allDataLoaders = [], [], []
 
@@ -175,7 +175,7 @@ class compileModelData(compileModelDataHelpers):
             activityLabels = metaActivityLabels[metadataInd].copy()
             activityNames = metaActivityNames[metadataInd].copy()
             featureNames = metaFeatureNames[metadataInd].copy()
-            metaDatasetName = metaDatasetNames[metadataInd]
+            metadatasetName = metadatasetNames[metadataInd]
             subjectOrder = metaSubjectOrder[metadataInd]
             activityLabelInd = len(surveyQuestions)
 
@@ -201,7 +201,7 @@ class compileModelData(compileModelDataHelpers):
             allSignalData, allNumSignalPoints = self._padSignalData(allRawFeatureTimeIntervals, allCompiledFeatureIntervals)
             allSignalData, allNumSignalPoints, allFeatureLabels, allSubjectInds = self._removeBadExperiments(allSignalData, allNumSignalPoints, surveyAnswersList, subjectOrder)
             allSignalData, allNumSignalPoints, featureNames = self._preprocessSignals(allSignalData, allNumSignalPoints, featureNames)
-            allFeatureLabels, allSmallClassIndices = self.organizeLabels(allFeatureLabels, metaTraining, metaDatasetName, numSignals=allSignalData.shape[1])
+            allFeatureLabels, allSmallClassIndices = self.organizeLabels(allFeatureLabels, metaTraining, metadatasetName, numSignals=allSignalData.shape[1])
             # allSmallClassIndices dimension: numLabels, batchSize*  →  *if there are no small classes, the dimension is empty
             # allSignalData dimension: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
             # allNumSignalPoints dimension: batchSize, numSignals
@@ -266,8 +266,8 @@ class compileModelData(compileModelDataHelpers):
             allFeatureLabels[~goodActivityMask] = self.missingLabelValue  # Remove any unused activity indices (as the good indices were rehashed)
 
             # Add the demographic information.
-            allSignalData = self.addMetaDataInfo(allSignalData, allNumSignalPoints, allSubjectInds, metadataInd)
-            # allSignalData: A torch array of size (batchSize, numSignals, maxSequenceLength + numSubjectIdentifiers, [timeChannel, signalChannel])
+            allSignalData = self.addContextualInfo(allSignalData, allNumSignalPoints, allSubjectInds, metadataInd)
+            # allSignalData: A torch array of size (batchSize, numSignals, fullDataLength, [timeChannel, signalChannel])
 
             # ---------------------- Create the Model ---------------------- #
 
@@ -279,7 +279,7 @@ class compileModelData(compileModelDataHelpers):
             modelDataLoader = pytorchDataClass.getDataLoader(allSignalData, allFeatureLabels, currentTrainingMask, currentTestingMask)
 
             # Initialize and train the model class.
-            modelPipeline = emotionPipeline(accelerator=self.accelerator, modelID=metadataInd, datasetName=metaDatasetName, modelName=modelName, allEmotionClasses=numQuestionOptions,
+            modelPipeline = emotionPipeline(accelerator=self.accelerator, modelID=metadataInd, datasetName=metadatasetName, modelName=modelName, allEmotionClasses=numQuestionOptions,
                                             maxNumSignals=numSignals, numSubjects=numSubjects, userInputParams=self.userInputParams, emotionNames=surveyQuestions, activityNames=activityNames,
                                             featureNames=featureNames, submodel=submodel, useFinalParams=useFinalParams, debuggingResults=True)
 

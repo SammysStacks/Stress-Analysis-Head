@@ -398,7 +398,7 @@ class signalEncoderBase(_signalEncoderModules.signalEncoderModules):
         numEncodedSignals = encodedData.size(1)
         
         # If we are training, add noise to the final state to ensure continuity of the latent space.
-        noisyEncodedData = self.dataInterface.addNoise(encodedData, trainingFlag = True, noiseSTD = 0.005)
+        noisyEncodedData = self.dataAugmentation.addNoise(encodedData, trainingFlag = True, noiseSTD = 0.005)
         
         # Reverse operation
         if numEncodedSignals < originalNumSignals:
