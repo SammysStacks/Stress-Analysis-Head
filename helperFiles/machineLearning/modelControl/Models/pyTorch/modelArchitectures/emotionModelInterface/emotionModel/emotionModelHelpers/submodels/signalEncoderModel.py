@@ -52,12 +52,12 @@ class signalEncoderModel(globalModel):
         self.testingLosses_timeReconstructionAnalysis = None
         self.trainingLosses_timeDecodedPosEncAnalysis = None
         self.testingLosses_timeDecodedPosEncAnalysis = None
+        self.trainingLosses_timeMinMaxAnalysis = None
+        self.testingLosses_timeMinMaxAnalysis = None
         self.trainingLosses_timePosEncAnalysis = None
         self.testingLosses_timePosEncAnalysis = None
         self.trainingLosses_timeMeanAnalysis = None
         self.testingLosses_timeMeanAnalysis = None
-        self.trainingLosses_timeMinMaxAnalysis = None
-        self.testingLosses_timeMinMaxAnalysis = None
 
         # Reset the model.
         self.resetModel()

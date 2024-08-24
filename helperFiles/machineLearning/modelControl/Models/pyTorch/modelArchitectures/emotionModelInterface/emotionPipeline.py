@@ -81,7 +81,7 @@ class emotionPipeline(emotionPipelineHelpers):
                         # Augment the data to add some noise to the model.
                         addingNoiseSTD, addingNoiseRange = self.modelParameters.getAugmentationDeviation(submodel)
                         augmentedBatchData = self.dataAugmentation.addNoise(signalBatchData.clone(), trainingFlag=True, noiseSTD=addingNoiseSTD)
-                        # augmentedBatchData dimension: batchSize, numSignals, finalDistributionLength
+                        # augmentedBatchData dimension: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
                     else:
                         addingNoiseSTD, addingNoiseRange = 0, (0, 1)
                         augmentedBatchData = signalBatchData.clone()
@@ -95,8 +95,10 @@ class emotionPipeline(emotionPipelineHelpers):
                             self.maxBatchSignals = random.choices(population=[modelConstants.maxNumSignals, signalBatchData.shape[1]], weights=[0.6, 0.4], k=1)[0]
 
                         # Augment the signals to train an arbitrary sequence length and order.
-                        augmentedBatchData, = self.dataAugmentation.changeNumSignals(signalBatchData, minNumSignals=model.numEncodedSignals, maxNumSignals=self.maxBatchSignals, alteredDim=1)
+                        augmentedBatchData = self.dataAugmentation.changeNumSignals(signalBatchData, minNumSignals=model.numEncodedSignals, maxNumSignals=self.maxBatchSignals, alteredDim=1)
                         batchStartTimeIndices = self.dataAugmentation.getNewStartTimeIndices(signalData=augmentedBatchData, minTimeWindow=modelConstants.timeWindows[0], maxTimeWindow=modelConstants.timeWindows[-1])
+                        # augmentedBatchData dimension: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
+                        # batchStartTimeIndices dimension: batchSize, numSignals
                         print("Input size:", augmentedBatchData.size())
 
                         # Perform the forward pass through the model.

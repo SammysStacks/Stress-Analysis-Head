@@ -43,7 +43,7 @@ class dataAugmentation:
         batchSize, numSignals, maxSequenceLength, numChannels = signalData.shape
 
         # Shuffle each tensor in the batch along the numSignals dimension
-        if shuffle_indices is not None: shuffle_indices = torch.randperm(numSignals)  # Generate random permutation indices for shuffling
+        if shuffle_indices is None: shuffle_indices = torch.randperm(numSignals)  # Generate random permutation indices for shuffling
         augmentedSignalData = signalData[:, shuffle_indices, :, :]  # Shuffle the signals
 
         return augmentedSignalData, shuffle_indices
@@ -79,9 +79,9 @@ class dataAugmentation:
 
         return startTimeIndices
 
-    def changeNumSignals(self, *signalDatas, minNumSignals=1, maxNumSignals=128, alteredDim=1):
-        # Assuming signalDatas is your tensor with dimensions [numCopies, batchSize, numSignals, maxSequenceLength, numChannels]
-        numSignals = signalDatas[0].size(alteredDim)
+    def changeNumSignals(self, signalData, minNumSignals=1, maxNumSignals=128, alteredDim=1):
+        # Assuming signalDatas is your tensor with dimensions [batchSize, numSignals, maxSequenceLength, numChannels]
+        numSignals = signalData.size(alteredDim)
 
         # Find a random place to cut the data.
         minNumSignals = max(minNumSignals + 1, int(numSignals / 3))
@@ -92,20 +92,17 @@ class dataAugmentation:
 
         # Set up the signal augmentation.
         shuffle_indices = None
-        finalDatas = []
 
-        # For each signal data.
-        for signalData in signalDatas:
-            # Expand the number of signals.
-            signalData = signalData.repeat_interleave(repeat_times, dim=alteredDim)[:, :maxNumSignals, :, :]
+        # Expand the number of signals.
+        signalData = signalData.repeat_interleave(repeat_times, dim=alteredDim)[:, :maxNumSignals, :, :]
 
-            # Shuffle the signals to ensure that we are not always removing the same signals.
-            signalData, shuffle_indices = self.shuffleDimension(signalData, shuffle_indices)
+        # Shuffle the signals to ensure that we are not always removing the same signals.
+        signalData, shuffle_indices = self.shuffleDimension(signalData, shuffle_indices)
 
-            # Slice all the data at the same index
-            finalDatas.append(self.getInitialSignals(signalData, randomEnd))
+        # Slice all the data at the same index
+        signalData = self.getInitialSignals(signalData, randomEnd)
 
-        return finalDatas
+        return signalData
 
     @staticmethod
     def getRecentSignalPoints(signalData, finalLength):

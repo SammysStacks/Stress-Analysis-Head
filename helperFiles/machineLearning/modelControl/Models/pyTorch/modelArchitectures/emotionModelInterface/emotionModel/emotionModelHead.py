@@ -152,7 +152,6 @@ class emotionModelHead(globalModel):
     def signalEncoding(self, signalData, startTimeIndices, signalIdentifiers, metadata, decodeSignals=True, calculateLoss=True, trainingFlag=False):
         # Add the data, labels, and training/testing indices to the device (GPU/CPU)
         signalData, signalIdentifiers, metadata = signalData.to(self.device), signalIdentifiers.to(self.device), metadata.to(self.device)
-        print(signalData.size())
 
         t1 = time.time()
         # Forward pass through the signal encoder to reduce to a common signal number.
