@@ -95,12 +95,12 @@ class emotionPipeline(emotionPipelineHelpers):
                             self.maxBatchSignals = random.choices(population=[modelConstants.maxNumSignals, signalBatchData.shape[1]], weights=[0.6, 0.4], k=1)[0]
 
                         # Augment the signals to train an arbitrary sequence length and order.
-                        signalBatchData = self.dataAugmentation.changeNumSignals(signalBatchData, minNumSignals=model.numEncodedSignals, maxNumSignals=self.maxBatchSignals, alteredDim=1)
+                        augmentedBatchData, = self.dataAugmentation.changeNumSignals(signalBatchData, minNumSignals=model.numEncodedSignals, maxNumSignals=self.maxBatchSignals, alteredDim=1)
                         batchStartTimeIndices = self.dataAugmentation.getNewStartTimeIndices(signalData=augmentedBatchData, minTimeWindow=modelConstants.timeWindows[0], maxTimeWindow=modelConstants.timeWindows[-1])
                         print("Input size:", augmentedBatchData.size())
 
                         # Perform the forward pass through the model.
-                        encodedData, reconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLayerLoss = model.signalEncoding(signalBatchData, batchStartTimeIndices, batchSignalIdentifiers, metaBatchInfo, decodeSignals=True, calculateLoss=self.calculateFullLoss, trainingFlag=True)
+                        encodedData, reconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLayerLoss = model.signalEncoding(augmentedBatchData, batchStartTimeIndices, batchSignalIdentifiers, metaBatchInfo, decodeSignals=True, calculateLoss=self.calculateFullLoss, trainingFlag=True)
                         # decodedPredictedIndexProbabilities dimension: batchSize, numSignals, maxNumEncodedSignals
                         # predictedIndexProbabilities dimension: batchSize, numSignals, maxNumEncodedSignals
                         # encodedData dimension: batchSize, numEncodedSignals, finalDistributionLength
@@ -111,12 +111,12 @@ class emotionPipeline(emotionPipelineHelpers):
                         self.modelHelpers.assertVariableIntegrity(predictedIndexProbabilities, variableName="signal encoder index probabilities", assertGradient=False)
                         self.modelHelpers.assertVariableIntegrity(signalEncodingLayerLoss, variableName="signal encoder layer loss", assertGradient=False)
                         self.modelHelpers.assertVariableIntegrity(reconstructedData, variableName="reconstructed signal data", assertGradient=False)
-                        self.modelHelpers.assertVariableIntegrity(signalBatchData, variableName="initial signal data", assertGradient=False)
+                        self.modelHelpers.assertVariableIntegrity(augmentedBatchData, variableName="initial signal data", assertGradient=False)
                         self.modelHelpers.assertVariableIntegrity(encodedData, variableName="encoded data", assertGradient=False)
 
                         # Calculate the error in signal compression (signal encoding loss).
                         signalReconstructedLoss, encodedSignalMeanLoss, encodedSignalMinMaxLoss, positionalEncodingTrainingLoss, decodedPositionalEncodingLoss, signalEncodingTrainingLayerLoss \
-                            = self.organizeLossInfo.calculateSignalEncodingLoss(signalBatchData, encodedData, reconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLayerLoss, batchTrainingMask, reconstructionIndex)
+                            = self.organizeLossInfo.calculateSignalEncodingLoss(augmentedBatchData, encodedData, reconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLayerLoss, batchTrainingMask, reconstructionIndex)
                         if signalReconstructedLoss.item() == 0: self.accelerator.print("Not useful\n\n\n\n\n\n"); continue
 
                         # Initialize basic core loss value.

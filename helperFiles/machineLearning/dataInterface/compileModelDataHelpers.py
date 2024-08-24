@@ -1,7 +1,6 @@
 import gzip
 import os
 import pickle
-from os import times
 
 import numpy as np
 import torch
@@ -101,10 +100,10 @@ class compileModelDataHelpers:
 
         return uniqueActivityNames, validActivityLabels.to(torch.float32)
 
-    def organizeLabels(self, allFeatureLabels, metaTraining, metadatasetName, numSignals):
+    def organizeLabels(self, allFeatureLabels, metaTraining, metaDatasetName, numSignals):
         # allFeatureLabels: A torch array or list of size (batchSize, numLabels)
         # metaTraining: Boolean indicating if the data is for training
-        # metadatasetName: String representing the name of the dataset
+        # metaDatasetName: String representing the name of the dataset
         # numSignals: The number of signals in the dataset
         # Convert to tensor and initialize lists
         batchSize, numLabels = allFeatureLabels.shape
@@ -143,7 +142,7 @@ class compileModelDataHelpers:
 
         # Report the information from this dataset.
         numGoodEmotions = torch.sum(~torch.all(torch.isnan(allFeatureLabels), dim=0)).item()
-        print(f"\t{metadatasetName.capitalize()}: Found {numGoodEmotions - 1} (out of {numLabels - 1}) well-labeled emotions across {batchSize} experiments with {numSignals} signals.", flush=True)
+        print(f"\t{metaDatasetName.capitalize()}: Found {numGoodEmotions - 1} (out of {numLabels - 1}) well-labeled emotions across {batchSize} experiments with {numSignals} signals.", flush=True)
 
         return allFeatureLabels, allSingleClassIndices
 

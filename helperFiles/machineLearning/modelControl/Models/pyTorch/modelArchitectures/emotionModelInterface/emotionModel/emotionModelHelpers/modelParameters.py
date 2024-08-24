@@ -207,14 +207,14 @@ class modelParameters:
     @staticmethod
     def compileModelNames():
         # Specify which metadata analyses to compile
-        metadatasetNames = [modelConstants.wesadDatasetName, modelConstants.emognitionDatasetName, modelConstants.amigosDatasetName, modelConstants.dapperDatasetName, modelConstants.caseDatasetName]
+        metaDatasetNames = [modelConstants.wesadDatasetName, modelConstants.emognitionDatasetName, modelConstants.amigosDatasetName, modelConstants.dapperDatasetName, modelConstants.caseDatasetName]
         datasetNames = [modelConstants.empatchDatasetName]
-        allDatasetNames = metadatasetNames + datasetNames
+        allDatasetNames = metaDatasetNames + datasetNames
 
         # Assert the integrity of dataset collection.
         assert len(datasetNames) == 1
 
-        return datasetNames, metadatasetNames, allDatasetNames
+        return datasetNames, metaDatasetNames, allDatasetNames
 
     @staticmethod
     def compileParameters(args):

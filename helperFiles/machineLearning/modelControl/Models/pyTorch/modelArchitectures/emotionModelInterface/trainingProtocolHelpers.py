@@ -61,7 +61,7 @@ class trainingProtocolHelpers:
 
         return unifiedLayerData
 
-    def calculateLossInformation(self, unifiedLayerData, allMetaLossDataHolders, allMetaModels, allModels, submodel, metadatasetNames, fastPass, storeLoss=True, stepScheduler=True):
+    def calculateLossInformation(self, unifiedLayerData, allMetaLossDataHolders, allMetaModels, allModels, submodel, metaDatasetNames, fastPass, storeLoss=True, stepScheduler=True):
         # Unify all the model weights.
         self.modelMigration.unifyModelWeights(allModels=allMetaModels, sharedModelWeights=self.sharedModelWeights, layerInfo=unifiedLayerData)
         self.modelMigration.unifyModelWeights(allModels=allModels, sharedModelWeights=self.sharedModelWeights, layerInfo=unifiedLayerData)
@@ -70,7 +70,7 @@ class trainingProtocolHelpers:
         # For each meta-training model.
         for modelInd in range(len(allMetaLossDataHolders)):
             lossDataLoader = allMetaLossDataHolders[modelInd]  # Contains the same information but with a different batch size.
-            modelPipeline = allMetaModels[modelInd] if modelInd < len(metadatasetNames) else allModels[0]  # Same pipeline instance in training loop.
+            modelPipeline = allMetaModels[modelInd] if modelInd < len(metaDatasetNames) else allModels[0]  # Same pipeline instance in training loop.
 
             with torch.no_grad():
                 # Calculate and store all the training and testing losses of the untrained model.
@@ -79,7 +79,7 @@ class trainingProtocolHelpers:
         t2 = time.time()
         self.accelerator.print("Total loss calculation time:", t2 - t1)
 
-    def plotModelState(self, epoch, unifiedLayerData, allMetaLossDataHolders, allMetaModels, allModels, submodel, metadatasetNames, trainingDate, fastPass=True):
+    def plotModelState(self, epoch, unifiedLayerData, allMetaLossDataHolders, allMetaModels, allModels, submodel, metaDatasetNames, trainingDate, fastPass=True):
         # Unify all the model weights.
         self.modelMigration.unifyModelWeights(allModels=allMetaModels, sharedModelWeights=self.sharedModelWeights, layerInfo=unifiedLayerData)
         self.modelMigration.unifyModelWeights(allModels=allModels, sharedModelWeights=self.sharedModelWeights, layerInfo=unifiedLayerData)
@@ -88,7 +88,7 @@ class trainingProtocolHelpers:
         # For each meta-training model.
         for modelInd in range(len(allMetaLossDataHolders)):
             lossDataLoader = allMetaLossDataHolders[modelInd]  # Contains the same information but with a different batch size.
-            modelPipeline = allMetaModels[modelInd] if modelInd < len(metadatasetNames) else allModels[0]  # Same pipeline instance in training loop.
+            modelPipeline = allMetaModels[modelInd] if modelInd < len(metaDatasetNames) else allModels[0]  # Same pipeline instance in training loop.
 
             with torch.no_grad():
                 numEpochs = modelPipeline.getTrainingEpoch(submodel) or epoch

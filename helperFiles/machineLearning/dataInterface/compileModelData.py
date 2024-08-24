@@ -85,14 +85,14 @@ class compileModelData(compileModelDataHelpers):
 
         return allRawFeatureIntervalTimes, allCompiledFeatureIntervals, surveyAnswersList, surveyQuestions, activityLabels, activityNames, numQuestionOptions, subjectOrder, featureNames
 
-    def compileMetaAnalyses(self, metadatasetNames, loadCompiledData=False, compiledModelName="compiledMetaTrainingInfo"):
+    def compileMetaAnalyses(self, metaDatasetNames, loadCompiledData=False, compiledModelName="compiledMetaTrainingInfo"):
         # Prepare to compile all the metadata analyses.
         metaSurveyQuestions, metaSurveyAnswersList, metaNumQuestionOptions, metaSubjectOrder = [], [], [], []
         metaRawFeatureTimeIntervals, metaCompiledFeatureIntervals, metaFeatureNames, metaActivityNames, metaActivityLabels = [], [], [], [], []
 
         plotTrainingData = False
         # For each meta-analysis protocol
-        for metadatasetName in metadatasetNames:
+        for metadatasetName in metaDatasetNames:
             metaAnalysisProtocol = self.metaProtocolMap[metadatasetName]
 
             # Prepare the data to go through the training interface.
@@ -132,32 +132,32 @@ class compileModelData(compileModelDataHelpers):
             metaFeatureNames.append(featureNames)
             metaSubjectOrder.append(subjectOrder)
 
-        return metaRawFeatureTimeIntervals, metaCompiledFeatureIntervals, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions, metaSubjectOrder, metaFeatureNames, metadatasetNames
+        return metaRawFeatureTimeIntervals, metaCompiledFeatureIntervals, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions, metaSubjectOrder, metaFeatureNames, metaDatasetNames
 
     # -------------------- Machine Learning Preparation -------------------- #
 
-    def compileModelsFull(self, metadatasetNames, modelName, submodel, testSplitRatio, datasetNames, useFinalParams=False):
+    def compileModelsFull(self, metaDatasetNames, modelName, submodel, testSplitRatio, datasetNames, useFinalParams=False):
         # Compile the metadata together.
         metaRawFeatureTimeIntervals, metaCompiledFeatureIntervals, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions, \
-            metaSubjectOrder, metaFeatureNames, metadatasetNames = self.compileMetaAnalyses(metadatasetNames, loadCompiledData=True)
+            metaSubjectOrder, metaFeatureNames, metaDatasetNames = self.compileMetaAnalyses(metaDatasetNames, loadCompiledData=True)
 
         # Compile the project data together
         allRawFeatureIntervalTimes, allCompiledFeatureIntervals, surveyAnswersList, surveyQuestions, activityLabels, activityNames, numQuestionOptions, subjectOrder, featureNames = self.compileProjectAnalysis(loadCompiledData=True)
 
         # Compile the meta-learning modules.
         allMetaModels, allMetadataLoaders, allMetaLossDataHolders = self.compileModels(metaRawFeatureTimeIntervals, metaCompiledFeatureIntervals, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions,
-                                                                                       metaSubjectOrder, metaFeatureNames, metadatasetNames, modelName, submodel, testSplitRatio, metaTraining=True, specificInfo=None,
+                                                                                       metaSubjectOrder, metaFeatureNames, metaDatasetNames, modelName, submodel, testSplitRatio, metaTraining=True, specificInfo=None,
                                                                                        useFinalParams=useFinalParams, random_state=42)
         # Compile the final modules.
         allModels, allDataLoaders, allLossDataHolders = self.compileModels(metaRawFeatureTimeIntervals=[allRawFeatureIntervalTimes], metaCompiledFeatureIntervals=[allCompiledFeatureIntervals], metaSurveyAnswersList=[surveyAnswersList], metaSurveyQuestions=[surveyQuestions], metaActivityLabels=[activityLabels], metaActivityNames=[activityNames], metaNumQuestionOptions=[numQuestionOptions], metaSubjectOrder=[subjectOrder],
-                                                                           metaFeatureNames=[featureNames], metadatasetNames=datasetNames, modelName=modelName, submodel=submodel, testSplitRatio=testSplitRatio, metaTraining=False, specificInfo=None, useFinalParams=useFinalParams, random_state=42)
+                                                                           metaFeatureNames=[featureNames], metaDatasetNames=datasetNames, modelName=modelName, submodel=submodel, testSplitRatio=testSplitRatio, metaTraining=False, specificInfo=None, useFinalParams=useFinalParams, random_state=42)
         # Create the meta-loss models and data loaders.
         allMetaLossDataHolders.extend(allLossDataHolders)
 
-        return allModels, allDataLoaders, allLossDataHolders, allMetaModels, allMetadataLoaders, allMetaLossDataHolders, metadatasetNames
+        return allModels, allDataLoaders, allLossDataHolders, allMetaModels, allMetadataLoaders, allMetaLossDataHolders, metaDatasetNames
 
     def compileModels(self, metaRawFeatureTimeIntervals, metaCompiledFeatureIntervals, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions,
-                      metaSubjectOrder, metaFeatureNames, metadatasetNames, modelName, submodel, testSplitRatio, metaTraining, specificInfo=None, useFinalParams=False, random_state=42):
+                      metaSubjectOrder, metaFeatureNames, metaDatasetNames, modelName, submodel, testSplitRatio, metaTraining, specificInfo=None, useFinalParams=False, random_state=42):
         # Initialize relevant holders.
         allModelPipelines, lossDataHolders, allDataLoaders = [], [], []
 
@@ -175,7 +175,7 @@ class compileModelData(compileModelDataHelpers):
             activityLabels = metaActivityLabels[metadataInd].copy()
             activityNames = metaActivityNames[metadataInd].copy()
             featureNames = metaFeatureNames[metadataInd].copy()
-            metadatasetName = metadatasetNames[metadataInd]
+            metadatasetName = metaDatasetNames[metadataInd]
             subjectOrder = metaSubjectOrder[metadataInd]
             activityLabelInd = len(surveyQuestions)
 
