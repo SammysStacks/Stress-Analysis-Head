@@ -18,7 +18,6 @@ from .modelControl.modelSpecifications.compileModelInfo import compileModelInfo
 from ..dataAcquisitionAndAnalysis.excelProcessing.extractDataProtocols import extractData
 from ..dataAcquisitionAndAnalysis.excelProcessing.saveDataProtocols import saveExcelData
 
-
 class trainingProtocols(extractData):
 
     def __init__(self, biomarkerFeatureNames, streamingOrder, biomarkerFeatureOrder, trainingFolder, readData):
