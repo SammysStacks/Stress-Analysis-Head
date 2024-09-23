@@ -276,5 +276,12 @@ class E4Streaming:
             self.tmp_df = pd.concat([self.tmp_df, data_df], ignore_index=True)
 
     def getCurrentTime(self):
-
-        return
+        """
+        Returns the elapsed time in seconds since the E4 started streaming.
+        """
+        if self.stream_experiment_time is None:
+            print("E4 streaming has not started yet.")
+            return None
+        # Calculate the elapsed time since the start of streaming
+        elapsed_time = time.perf_counter() - self.stream_experiment_time
+        return elapsed_time
