@@ -27,6 +27,9 @@ class E4Streaming:
         self.time_stamps_gsr = deque(maxlen=100)
         self.time_stamps_tmp = deque(maxlen=100)
 
+        # Normalize the time
+        self.start_time = None
+
         # DataFrames for saving to Excel sheets
         self.acc_df = pd.DataFrame(columns=['Timestamp', 'ACC_X', 'ACC_Y', 'ACC_Z'])
         self.bvp_df = pd.DataFrame(columns=['Timestamp', 'BVP'])
@@ -176,7 +179,13 @@ class E4Streaming:
                         stream_type = sample_data[0]
                         try:
                             timestamp = float(sample_data[1].replace(',', '.'))
-                            data_row = {'Timestamp': timestamp}
+                            # intialize start time
+                            if self.start_time is None:
+                                self.start_time = timestamp
+
+                            # Normalize the time
+                            normalized_timestamp = timestamp - self.start_time
+                            data_row = {'Timestamp': normalized_timestamp}
 
                             if stream_type == "E4_Acc":
                                 if len(sample_data) >= 5:
@@ -184,28 +193,28 @@ class E4Streaming:
                                             int(sample_data[3].replace(',', '.')),
                                             int(sample_data[4].replace(',', '.'))]
                                     self.acc_data.append(data)
-                                    self.time_stamps_acc.append(timestamp)
+                                    self.time_stamps_acc.append(normalized_timestamp)
                                     data_row.update({'ACC_X': data[0], 'ACC_Y': data[1], 'ACC_Z': data[2]})
                                     self.update_data_frames(data_row, "E4_Acc")
 
                             elif stream_type == "E4_Bvp":
                                 data = float(sample_data[2].replace(',', '.'))
                                 self.bvp_data.append(data)
-                                self.time_stamps_bvp.append(timestamp)
+                                self.time_stamps_bvp.append(normalized_timestamp)
                                 data_row.update({'BVP': data})
                                 self.update_data_frames(data_row, "E4_Bvp")
 
                             elif stream_type == "E4_Gsr":
                                 data = float(sample_data[2].replace(',', '.'))
                                 self.gsr_data.append(data)
-                                self.time_stamps_gsr.append(timestamp)
+                                self.time_stamps_gsr.append(normalized_timestamp)
                                 data_row.update({'GSR': data})
                                 self.update_data_frames(data_row, "E4_Gsr")
 
                             elif stream_type == "E4_Temperature":
                                 data = float(sample_data[2].replace(',', '.'))
                                 self.tmp_data.append(data)
-                                self.time_stamps_tmp.append(timestamp)
+                                self.time_stamps_tmp.append(normalized_timestamp)
                                 data_row.update({'Temp': data})
                                 self.update_data_frames(data_row, "E4_Temperature")
 

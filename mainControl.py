@@ -6,6 +6,9 @@ import threading
 
 # General
 import numpy as np
+from torch.xpu import device
+
+from E4Control_independent import serverPort
 
 # Compiler flags.
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
@@ -77,7 +80,15 @@ if __name__ == "__main__":
     # Initialize instance to analyze the data
     readData = streamingProtocols.streamingProtocols(boardSerialNum, modelClasses, actionControl, numPointsPerBatch, moveDataFinger, streamingOrder,
                                                      extractFeaturesFrom, featureAverageWindows, voltageRange, plotStreamedData)
-    e4_streamer = E4StreamingProtocols.E4Streaming(plotStreamedData)
+
+    # ----------------------------- Initialize E4 Wristband ----------------------------- #
+    server_address = '127.0.0.1'
+    server_port = 28000
+    device_id = 'B516C6'
+    buffer_size = 4096
+    output_file = "E4_data.xlsx"
+    plotStreamedData = True
+    e4_streamer = E4StreamingProtocols.E4Streaming(server_address, server_port, device_id, buffer_size, output_file, plotStreamedData)
 
     # ----------------------------- Stream the Data ----------------------------- #
     if streamData or E4Streaming:
