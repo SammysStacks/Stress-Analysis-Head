@@ -181,7 +181,13 @@ class E4Streaming:
                         continue
 
                     stream_type = sample_data[0]
-                    timestamp = float(sample_data[1].replace(',', '.'))
+
+                    # Add check to skip non-numeric values in timestamp
+                    try:
+                        timestamp = float(sample_data[1].replace(',', '.'))
+                    except ValueError:
+                        print(f"Skipping invalid timestamp: {sample_data[1]}")
+                        continue  # Skip this sample if timestamp is invalid
 
                     # Initialize start time on first sample
                     if self.start_time is None:
