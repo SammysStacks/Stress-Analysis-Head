@@ -15,6 +15,7 @@ from helperFiles.dataAcquisitionAndAnalysis.excelProcessing import extractDataPr
 from helperFiles.machineLearning.modelControl.modelSpecifications.compileModelInfo import compileModelInfo  # Import files for machine learning
 from helperFiles.surveyInformation.questionaireGUI import stressQuestionnaireGUI  # Import file for GUI control
 from helperFiles.dataAcquisitionAndAnalysis import streamingProtocols  # Import interfaces for reading/writing data
+from helperFiles.dataAcquisitionAndAnalysis import E4StreamingProtocols  # Import interfaces for reading/writing data from E4 wristband
 from helperFiles.machineLearning import trainingProtocols  # Import interfaces for reading/writing data
 from adjustInputParameters import adjustInputParameters  # Import the class to adjust the input parameters
 
@@ -26,14 +27,20 @@ if __name__ == "__main__":
     #    User Parameters to Edit (More Complex Edits are Inside the Files)   #
     # ---------------------------------------------------------------------- #
 
+    # specify if using the E4 watch for streaming
+    E4Streaming = True
+
     # Protocol switches: only the first true variably executes.
     readDataFromExcel = False  # For SINGLE FILE analysis. Analyze Data from Excel File called 'currentFilename' on Sheet Number 'testSheetNum'
     streamData = False  # Stream in Data from the Board and Analyze.
-    trainModel = True  # Train Model with ALL Data in 'collectedDataFolder'.
+    trainModel = False  # Train Model with ALL Data in 'collectedDataFolder'.
+
+    # Assert that only one of E4Streaming or streamData can be True, maybe be both, but right now use one
+    assert not (E4Streaming and streamData), "E4Streaming and streamData cannot both be True. Only one can be active at a time."
 
     # User options during the run: any number can be true.
     useModelPredictions = False or trainModel  # Apply the learning algorithm to decode the signals.
-    plotStreamedData = False  # Graph the data to show incoming signals.
+    plotStreamedData = True  # Graph the data to show incoming signals.
     useTherapyData = True  # Use the Therapy Data folder for any files.
 
     # Specify the user parameters.
@@ -70,23 +77,45 @@ if __name__ == "__main__":
     # Initialize instance to analyze the data
     readData = streamingProtocols.streamingProtocols(boardSerialNum, modelClasses, actionControl, numPointsPerBatch, moveDataFinger, streamingOrder,
                                                      extractFeaturesFrom, featureAverageWindows, voltageRange, plotStreamedData)
+    e4_streamer = E4StreamingProtocols.E4Streaming(plotStreamedData)
 
     # ----------------------------- Stream the Data ----------------------------- #
-
-    if streamData:
+    if streamData or E4Streaming:
         if not recordQuestionnaire:
+            # Stream in the data from the E4 wristband
+            if E4Streaming:
+                e4_streamer.connect()
+                e4_streamer.subscribe_to_data()
+                e4_streamer.stream()
             # Stream in the data from the circuit board
-            readData.streamArduinoData(adcResolution, stopTimeStreaming, currentFilename)
+            else:
+                readData.streamArduinoData(adcResolution, stopTimeStreaming, currentFilename)
         else:
-            # Stream in the data from the circuit board
-            streamingThread = threading.Thread(target=readData.streamArduinoData, args=(adcResolution, stopTimeStreaming, currentFilename), daemon=True)
-            streamingThread.start()
-            # Open the questionnaire GUI.
-            folderPath = "./helperFiles/surveyInformation/"
-            stressQuestionnaire = stressQuestionnaireGUI(readData, folderPath)
-            # When the streaming stops, close the GUI/Thread.
-            stressQuestionnaire.finishedRun()
-            streamingThread.join()
+            if E4Streaming:
+                e4_streaming_thread = threading.Thread(target=e4_streamer.stream, daemon=True)
+                e4_streamer.connect()
+                e4_streamer.subscribe_to_data()
+                e4_streaming_thread.start()
+
+                # Create thread for the questionnaire GUI
+                folderPath = "./helperFiles/surveyInformation/"
+                stressQuestionnaire = stressQuestionnaireGUI(e4_streamer, folderPath)
+                stressQuestionnaire_thread = threading.Thread(target=stressQuestionnaire.finishedRun, daemon=True)
+                stressQuestionnaire_thread.start()
+
+                # Wait for both threads to complete
+                e4_streaming_thread.join()
+                stressQuestionnaire_thread.join()
+            else:
+                # Stream in the data from the circuit board
+                streamingThread = threading.Thread(target=readData.streamArduinoData, args=(adcResolution, stopTimeStreaming, currentFilename), daemon=True)
+                streamingThread.start()
+                # Open the questionnaire GUI.
+                folderPath = "./helperFiles/surveyInformation/"
+                stressQuestionnaire = stressQuestionnaireGUI(readData, folderPath)
+                # When the streaming stops, close the GUI/Thread.
+                stressQuestionnaire.finishedRun()
+                streamingThread.join()
 
     # ------------------------ ReStream a Single Excel File ------------------------ #
 
