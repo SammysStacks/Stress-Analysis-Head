@@ -28,8 +28,11 @@ class E4Streaming:
         self.time_stamps_gsr = deque(maxlen=100)
         self.time_stamps_tmp = deque(maxlen=100)
 
-        # Initialize a single global start_time as None
-        self.start_time = None
+        # Initialize separate start_times for each sensor
+        self.start_time_acc = None
+        self.start_time_bvp = None
+        self.start_time_gsr = None
+        self.start_time_tmp = None
 
         # DataFrames for saving to Excel sheets
         self.acc_df = pd.DataFrame(columns=['Timestamp', 'ACC_X', 'ACC_Y', 'ACC_Z'])
@@ -189,15 +192,12 @@ class E4Streaming:
                         print(f"Skipping invalid timestamp: {sample_data[1]}")
                         continue  # Skip this sample if timestamp is invalid
 
-                    # Initialize start time once for all streams
-                    if self.start_time is None:
-                        self.start_time = timestamp
-                        print(f"Start time set to {self.start_time}")
-
-                    # Normalize timestamp here using a global start_time for all streams
-                    normalized_timestamp = timestamp - self.start_time
-
+                    # Normalize timestamps independently for each stream
                     if stream_type == "E4_Acc":
+                        if self.start_time_acc is None:
+                            self.start_time_acc = timestamp
+                            print(f"ACC start time set to {self.start_time_acc}")
+                        normalized_timestamp = timestamp - self.start_time_acc
                         if len(sample_data) >= 5:
                             data = [int(sample_data[2].replace(',', '.')),
                                     int(sample_data[3].replace(',', '.')),
@@ -208,6 +208,10 @@ class E4Streaming:
                             self.update_data_frames(data_row, "E4_Acc")
 
                     elif stream_type == "E4_Bvp":
+                        if self.start_time_bvp is None:
+                            self.start_time_bvp = timestamp
+                            print(f"BVP start time set to {self.start_time_bvp}")
+                        normalized_timestamp = timestamp - self.start_time_bvp
                         data = float(sample_data[2].replace(',', '.'))
                         self.bvp_data.append(data)
                         self.time_stamps_bvp.append(normalized_timestamp)
@@ -215,6 +219,10 @@ class E4Streaming:
                         self.update_data_frames(data_row, "E4_Bvp")
 
                     elif stream_type == "E4_Gsr":
+                        if self.start_time_gsr is None:
+                            self.start_time_gsr = timestamp
+                            print(f"GSR start time set to {self.start_time_gsr}")
+                        normalized_timestamp = timestamp - self.start_time_gsr
                         data = float(sample_data[2].replace(',', '.'))
                         self.gsr_data.append(data)
                         self.time_stamps_gsr.append(normalized_timestamp)
@@ -222,6 +230,10 @@ class E4Streaming:
                         self.update_data_frames(data_row, "E4_Gsr")
 
                     elif stream_type == "E4_Temperature":
+                        if self.start_time_tmp is None:
+                            self.start_time_tmp = timestamp
+                            print(f"Temp start time set to {self.start_time_tmp}")
+                        normalized_timestamp = timestamp - self.start_time_tmp
                         data = float(sample_data[2].replace(',', '.'))
                         self.tmp_data.append(data)
                         self.time_stamps_tmp.append(normalized_timestamp)
