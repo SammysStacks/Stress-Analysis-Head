@@ -132,7 +132,7 @@ class E4Streaming:
     def update_plots(self):
         # Only update plots if plotting is enabled
         if not self.plotStreamedData:
-            return  # Skip plotting if disabled
+            return
 
         if len(self.time_stamps_acc) == len(self.acc_data):
             for i in range(3):
