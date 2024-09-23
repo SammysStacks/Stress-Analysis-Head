@@ -29,7 +29,7 @@ class E4Streaming:
         self.time_stamps_gsr = deque(maxlen=100)
         self.time_stamps_tmp = deque(maxlen=100)
 
-        # Normalize the time
+        # Initialize start_time as None
         self.start_time = None
 
         # DataFrames for saving to Excel sheets
@@ -185,6 +185,7 @@ class E4Streaming:
                             # Initialize start time on first sample
                             if self.start_time is None:
                                 self.start_time = timestamp
+                                print(f"Start time set to {self.start_time}")
 
                             # Normalize the time
                             normalized_timestamp = timestamp - self.start_time  # Time normalization happens here
