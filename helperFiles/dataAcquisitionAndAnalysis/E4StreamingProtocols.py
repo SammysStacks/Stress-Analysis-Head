@@ -19,8 +19,9 @@ class E4Streaming:
         self.device_id = device_id
         self.buffer_size = buffer_size
         self.output_file = os.path.join(os.getcwd(), output_file)
-        self.plotStreamedData = plotStreamedData  # Control plotting with this flag
+        self.plotStreamedData = plotStreamedData
 
+        # 100 points for real-time plotting
         self.s = None
         self.acc_data = deque(maxlen=100)
         self.bvp_data = deque(maxlen=100)
@@ -158,7 +159,7 @@ class E4Streaming:
             self.axs[3].relim()
             self.axs[3].autoscale_view()
 
-        # Add safeguard for plotting to avoid crashes
+        # avoid overlapping of labels and titles and crashing
         try:
             plt.tight_layout()  # Prevent overlapping of labels and titles
             plt.draw()
