@@ -5,7 +5,7 @@ import pandas as pd
 from collections import deque
 import os
 
-# Set matplotlib backend for Tkinter only when plotting is enabled
+# Import matplotlib only when needed
 if matplotlib.get_backend() != 'TkAgg':
     matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
@@ -45,6 +45,7 @@ class E4Streaming:
 
         # Initialize plots only if plotting is enabled
         if self.plotStreamedData:
+            print("Plotting enabled. Initializing plots...")
             plt.ion()  # Enable interactive mode
             self.fig, self.axs = plt.subplots(4, 1, figsize=(12, 10))
             self.acc_lines = [self.axs[0].plot([], [], label="ACC_X")[0],
@@ -132,7 +133,7 @@ class E4Streaming:
     def update_plots(self):
         # Only update plots if plotting is enabled
         if not self.plotStreamedData:
-            return
+            return  # Skip plotting if disabled
 
         if len(self.time_stamps_acc) == len(self.acc_data):
             for i in range(3):
@@ -248,6 +249,7 @@ class E4Streaming:
                         data_row = {'Timestamp': normalized_timestamp, 'Temp': data}
                         self.update_data_frames(data_row, "E4_Temperature")
 
+                # Plot only if enabled
                 if self.plotStreamedData:
                     self.update_plots()
 
