@@ -1,11 +1,13 @@
 import socket
 import time
 import matplotlib
-matplotlib.use('TkAgg') # set backend plotting to Tkinter
+
+matplotlib.use('TkAgg')  # set backend plotting to Tkinter
 import matplotlib.pyplot as plt
 from collections import deque
 import pandas as pd
 import os
+
 
 class E4Streaming:
     def __init__(self, server_address='127.0.0.1', server_port=28000, device_id='B516C6',
@@ -179,13 +181,14 @@ class E4Streaming:
                         stream_type = sample_data[0]
                         try:
                             timestamp = float(sample_data[1].replace(',', '.'))
-                            # intialize start time
+
+                            # Initialize start time on first sample
                             if self.start_time is None:
                                 self.start_time = timestamp
 
                             # Normalize the time
-                            normalized_timestamp = timestamp - self.start_time
-                            data_row = {'Timestamp': normalized_timestamp}
+                            normalized_timestamp = timestamp - self.start_time  # Time normalization happens here
+                            data_row = {'Timestamp': normalized_timestamp}  # Store normalized time
 
                             if stream_type == "E4_Acc":
                                 if len(sample_data) >= 5:
@@ -193,28 +196,28 @@ class E4Streaming:
                                             int(sample_data[3].replace(',', '.')),
                                             int(sample_data[4].replace(',', '.'))]
                                     self.acc_data.append(data)
-                                    self.time_stamps_acc.append(normalized_timestamp)
+                                    self.time_stamps_acc.append(normalized_timestamp)  # Append normalized time
                                     data_row.update({'ACC_X': data[0], 'ACC_Y': data[1], 'ACC_Z': data[2]})
                                     self.update_data_frames(data_row, "E4_Acc")
 
                             elif stream_type == "E4_Bvp":
                                 data = float(sample_data[2].replace(',', '.'))
                                 self.bvp_data.append(data)
-                                self.time_stamps_bvp.append(normalized_timestamp)
+                                self.time_stamps_bvp.append(normalized_timestamp)  # Append normalized time
                                 data_row.update({'BVP': data})
                                 self.update_data_frames(data_row, "E4_Bvp")
 
                             elif stream_type == "E4_Gsr":
                                 data = float(sample_data[2].replace(',', '.'))
                                 self.gsr_data.append(data)
-                                self.time_stamps_gsr.append(normalized_timestamp)
+                                self.time_stamps_gsr.append(normalized_timestamp)  # Append normalized time
                                 data_row.update({'GSR': data})
                                 self.update_data_frames(data_row, "E4_Gsr")
 
                             elif stream_type == "E4_Temperature":
                                 data = float(sample_data[2].replace(',', '.'))
                                 self.tmp_data.append(data)
-                                self.time_stamps_tmp.append(normalized_timestamp)
+                                self.time_stamps_tmp.append(normalized_timestamp)  # Append normalized time
                                 data_row.update({'Temp': data})
                                 self.update_data_frames(data_row, "E4_Temperature")
 
@@ -235,7 +238,8 @@ class E4Streaming:
             self.s.close()
 
     def update_data_frames(self, data_row, stream_type):
-        data_df = pd.DataFrame([data_row])
+        """Update the data frames with normalized time."""
+        data_df = pd.DataFrame([data_row])  # Ensure we use the normalized timestamp
 
         if stream_type == "E4_Acc":
             self.acc_df = pd.concat([self.acc_df, data_df], ignore_index=True)
