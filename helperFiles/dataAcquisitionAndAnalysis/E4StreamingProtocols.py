@@ -128,13 +128,6 @@ class E4Streaming:
         if not self.plotStreamedData:
             return  # Do nothing if plotting is disabled
 
-        # Normalize time before plotting
-        if self.start_time is not None:
-            self.time_stamps_acc = [t - self.start_time for t in self.time_stamps_acc]
-            self.time_stamps_bvp = [t - self.start_time for t in self.time_stamps_bvp]
-            self.time_stamps_gsr = [t - self.start_time for t in self.time_stamps_gsr]
-            self.time_stamps_tmp = [t - self.start_time for t in self.time_stamps_tmp]
-
         if len(self.time_stamps_acc) == len(self.acc_data):
             for i in range(3):
                 self.acc_lines[i].set_data(self.time_stamps_acc, [d[i] for d in self.acc_data])  # ACC X, Y, Z axes
@@ -195,35 +188,38 @@ class E4Streaming:
                         self.start_time = timestamp
                         print(f"Start time set to {self.start_time}")
 
+                    # Normalize timestamp here
+                    normalized_timestamp = timestamp - self.start_time
+
                     if stream_type == "E4_Acc":
                         if len(sample_data) >= 5:
                             data = [int(sample_data[2].replace(',', '.')),
                                     int(sample_data[3].replace(',', '.')),
                                     int(sample_data[4].replace(',', '.'))]
                             self.acc_data.append(data)
-                            self.time_stamps_acc.append(timestamp)  # Raw time, normalization happens later
-                            data_row = {'ACC_X': data[0], 'ACC_Y': data[1], 'ACC_Z': data[2]}
+                            self.time_stamps_acc.append(normalized_timestamp)
+                            data_row = {'Timestamp': normalized_timestamp, 'ACC_X': data[0], 'ACC_Y': data[1], 'ACC_Z': data[2]}
                             self.update_data_frames(data_row, "E4_Acc")
 
                     elif stream_type == "E4_Bvp":
                         data = float(sample_data[2].replace(',', '.'))
                         self.bvp_data.append(data)
-                        self.time_stamps_bvp.append(timestamp)  # Raw time, normalization happens later
-                        data_row = {'BVP': data}
+                        self.time_stamps_bvp.append(normalized_timestamp)
+                        data_row = {'Timestamp': normalized_timestamp, 'BVP': data}
                         self.update_data_frames(data_row, "E4_Bvp")
 
                     elif stream_type == "E4_Gsr":
                         data = float(sample_data[2].replace(',', '.'))
                         self.gsr_data.append(data)
-                        self.time_stamps_gsr.append(timestamp)  # Raw time, normalization happens later
-                        data_row = {'GSR': data}
+                        self.time_stamps_gsr.append(normalized_timestamp)
+                        data_row = {'Timestamp': normalized_timestamp, 'GSR': data}
                         self.update_data_frames(data_row, "E4_Gsr")
 
                     elif stream_type == "E4_Temperature":
                         data = float(sample_data[2].replace(',', '.'))
                         self.tmp_data.append(data)
-                        self.time_stamps_tmp.append(timestamp)  # Raw time, normalization happens later
-                        data_row = {'Temp': data}
+                        self.time_stamps_tmp.append(normalized_timestamp)
+                        data_row = {'Timestamp': normalized_timestamp, 'Temp': data}
                         self.update_data_frames(data_row, "E4_Temperature")
 
                 if self.plotStreamedData:
@@ -237,19 +233,8 @@ class E4Streaming:
             self.s.close()
 
     def update_data_frames(self, data_row, stream_type):
-        """Update the data frames with normalized time."""
-        # Normalize time when saving data to DataFrame
-        if self.start_time is not None:
-            if stream_type == "E4_Acc":
-                self.acc_df['Timestamp'] = [t - self.start_time for t in self.time_stamps_acc]
-            elif stream_type == "E4_Bvp":
-                self.bvp_df['Timestamp'] = [t - self.start_time for t in self.time_stamps_bvp]
-            elif stream_type == "E4_Gsr":
-                self.gsr_df['Timestamp'] = [t - self.start_time for t in self.time_stamps_gsr]
-            elif stream_type == "E4_Temperature":
-                self.tmp_df['Timestamp'] = [t - self.start_time for t in self.time_stamps_tmp]
-
-        data_df = pd.DataFrame([data_row])  # Ensure we use the normalized timestamp
+        """Update the data frames."""
+        data_df = pd.DataFrame([data_row])  # Store normalized timestamp directly
 
         if stream_type == "E4_Acc":
             self.acc_df = pd.concat([self.acc_df, data_df], ignore_index=True)
