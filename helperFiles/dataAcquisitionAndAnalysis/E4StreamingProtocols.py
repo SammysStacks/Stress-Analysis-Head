@@ -1,11 +1,14 @@
 import socket
 import time
 import matplotlib
-matplotlib.use('TkAgg')  # set backend plotting to Tkinter
-import matplotlib.pyplot as plt
-from collections import deque
 import pandas as pd
+from collections import deque
 import os
+
+# Set matplotlib backend for Tkinter only when plotting is enabled
+if matplotlib.get_backend() != 'TkAgg':
+    matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
 
 
 class E4Streaming:
@@ -16,7 +19,7 @@ class E4Streaming:
         self.device_id = device_id
         self.buffer_size = buffer_size
         self.output_file = os.path.join(os.getcwd(), output_file)
-        self.plotStreamedData = plotStreamedData  # New argument to control plotting
+        self.plotStreamedData = plotStreamedData  # Control plotting with this flag
 
         self.s = None
         self.acc_data = deque(maxlen=100)
@@ -28,7 +31,7 @@ class E4Streaming:
         self.time_stamps_gsr = deque(maxlen=100)
         self.time_stamps_tmp = deque(maxlen=100)
 
-        # Initialize separate start_times for each sensor
+        # Initialize start_time as None
         self.start_time_acc = None
         self.start_time_bvp = None
         self.start_time_gsr = None
@@ -55,21 +58,21 @@ class E4Streaming:
             self.setup_plots()
 
     def setup_plots(self):
-        # This method sets up the plot labels and titles
-        # Only called if plotting is enabled
-        self.axs[0].set_title("3-axis Acceleration")
-        self.axs[0].set_ylabel("Acceleration (g)")
-        self.axs[0].legend()
+        # Only set up plots if plotting is enabled
+        if self.plotStreamedData:
+            self.axs[0].set_title("3-axis Acceleration")
+            self.axs[0].set_ylabel("Acceleration (g)")
+            self.axs[0].legend()
 
-        self.axs[1].set_title("Blood Volume Pulse (BVP)")
-        self.axs[1].set_ylabel("BVP (AU)")
+            self.axs[1].set_title("Blood Volume Pulse (BVP)")
+            self.axs[1].set_ylabel("BVP (AU)")
 
-        self.axs[2].set_title("Galvanic Skin Response (GSR)")
-        self.axs[2].set_ylabel("GSR (µS)")
+            self.axs[2].set_title("Galvanic Skin Response (GSR)")
+            self.axs[2].set_ylabel("GSR (µS)")
 
-        self.axs[3].set_title("Temperature (Temp)")
-        self.axs[3].set_ylabel("Temp (°C)")
-        self.axs[3].set_xlabel("Time (s)")
+            self.axs[3].set_title("Temperature (Temp)")
+            self.axs[3].set_ylabel("Temp (°C)")
+            self.axs[3].set_xlabel("Time (s)")
 
     def connect(self):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -129,7 +132,7 @@ class E4Streaming:
     def update_plots(self):
         # Only update plots if plotting is enabled
         if not self.plotStreamedData:
-            return  # Do nothing if plotting is disabled
+            return  # Skip plotting if disabled
 
         if len(self.time_stamps_acc) == len(self.acc_data):
             for i in range(3):
@@ -152,7 +155,7 @@ class E4Streaming:
             self.axs[3].relim()
             self.axs[3].autoscale_view()
 
-        # Add a safeguard for plotting to avoid crashes
+        # Add safeguard for plotting to avoid crashes
         try:
             plt.tight_layout()  # Prevent overlapping of labels and titles
             plt.draw()
@@ -192,12 +195,29 @@ class E4Streaming:
                         print(f"Skipping invalid timestamp: {sample_data[1]}")
                         continue  # Skip this sample if timestamp is invalid
 
-                    # Normalize timestamps independently for each stream
+                    # Initialize start time on first sample
+                    if stream_type == "E4_Acc" and self.start_time_acc is None:
+                        self.start_time_acc = timestamp
+                    elif stream_type == "E4_Bvp" and self.start_time_bvp is None:
+                        self.start_time_bvp = timestamp
+                    elif stream_type == "E4_Gsr" and self.start_time_gsr is None:
+                        self.start_time_gsr = timestamp
+                    elif stream_type == "E4_Temperature" and self.start_time_tmp is None:
+                        self.start_time_tmp = timestamp
+
+                    # Normalize timestamps
                     if stream_type == "E4_Acc":
-                        if self.start_time_acc is None:
-                            self.start_time_acc = timestamp
-                            print(f"ACC start time set to {self.start_time_acc}")
                         normalized_timestamp = timestamp - self.start_time_acc
+                    elif stream_type == "E4_Bvp":
+                        normalized_timestamp = timestamp - self.start_time_bvp
+                    elif stream_type == "E4_Gsr":
+                        normalized_timestamp = timestamp - self.start_time_gsr
+                    elif stream_type == "E4_Temperature":
+                        normalized_timestamp = timestamp - self.start_time_tmp
+                    else:
+                        continue
+
+                    if stream_type == "E4_Acc":
                         if len(sample_data) >= 5:
                             data = [int(sample_data[2].replace(',', '.')),
                                     int(sample_data[3].replace(',', '.')),
@@ -208,10 +228,6 @@ class E4Streaming:
                             self.update_data_frames(data_row, "E4_Acc")
 
                     elif stream_type == "E4_Bvp":
-                        if self.start_time_bvp is None:
-                            self.start_time_bvp = timestamp
-                            print(f"BVP start time set to {self.start_time_bvp}")
-                        normalized_timestamp = timestamp - self.start_time_bvp
                         data = float(sample_data[2].replace(',', '.'))
                         self.bvp_data.append(data)
                         self.time_stamps_bvp.append(normalized_timestamp)
@@ -219,10 +235,6 @@ class E4Streaming:
                         self.update_data_frames(data_row, "E4_Bvp")
 
                     elif stream_type == "E4_Gsr":
-                        if self.start_time_gsr is None:
-                            self.start_time_gsr = timestamp
-                            print(f"GSR start time set to {self.start_time_gsr}")
-                        normalized_timestamp = timestamp - self.start_time_gsr
                         data = float(sample_data[2].replace(',', '.'))
                         self.gsr_data.append(data)
                         self.time_stamps_gsr.append(normalized_timestamp)
@@ -230,10 +242,6 @@ class E4Streaming:
                         self.update_data_frames(data_row, "E4_Gsr")
 
                     elif stream_type == "E4_Temperature":
-                        if self.start_time_tmp is None:
-                            self.start_time_tmp = timestamp
-                            print(f"Temp start time set to {self.start_time_tmp}")
-                        normalized_timestamp = timestamp - self.start_time_tmp
                         data = float(sample_data[2].replace(',', '.'))
                         self.tmp_data.append(data)
                         self.time_stamps_tmp.append(normalized_timestamp)
