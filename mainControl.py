@@ -6,6 +6,7 @@ import threading
 
 # General
 import numpy as np
+
 # Compiler flags.
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
@@ -39,7 +40,7 @@ if __name__ == "__main__":
 
     # User options during the run: any number can be true.
     useModelPredictions = False or trainModel  # Apply the learning algorithm to decode the signals.
-    plotStreamedData = False  # Graph the data to show incoming signals.
+    plotStreamedData = True  # Graph the data to show incoming signals.
     useTherapyData = True  # Use the Therapy Data folder for any files.
 
     # Specify the user parameters.
@@ -77,52 +78,51 @@ if __name__ == "__main__":
     readData = streamingProtocols.streamingProtocols(boardSerialNum, modelClasses, actionControl, numPointsPerBatch, moveDataFinger, streamingOrder,
                                                      extractFeaturesFrom, featureAverageWindows, voltageRange, plotStreamedData)
 
-    # ----------------------------- Initialize E4 Wristband ----------------------------- #
-    server_address = '127.0.0.1'
-    server_port = 28000
-    device_id = 'B516C6'
-    buffer_size = 4096
-    output_file = "E4_data.xlsx"
-    plotStreamedData = True
-    e4_streamer = E4StreamingProtocols.E4Streaming(server_address, server_port, device_id, buffer_size, output_file, plotStreamedData)
-
-    # ----------------------------- Stream the Data ----------------------------- #
-    if streamData or E4StreamingIndicator:
-        if not recordQuestionnaire:
-            # Stream in the data from the E4 wristband
-            if E4StreamingIndicator:
-                e4_streamer.connect()
-                e4_streamer.subscribe_to_data()
-                e4_streamer.stream()
-            # Stream in the data from the circuit board
-            else:
-                readData.streamArduinoData(adcResolution, stopTimeStreaming, currentFilename)
+    # ----------------------------- Initialize E4 Wristband to stream the data ----------------------------- #
+    if E4StreamingIndicator and not streamData:
+        streamingOrder = inputParameterClass.getGeneralParameters_e4()
+        server_address = '127.0.0.1'
+        server_port = 28000
+        device_id = 'B516C6'
+        buffer_size = 4096
+        output_file = "E4_data.xlsx"
+        e4_streamer = E4StreamingProtocols.E4Streaming(server_address, server_port, device_id, buffer_size, output_file, plotStreamedData)
+        recordQuestionnaire_e4 = not plotStreamedData  # Only use one GUI: questionnaire or streaming
+        if not recordQuestionnaire_e4:
+            e4_streamer.connect()
+            e4_streamer.subscribe_to_data()
+            e4_streamer.stream()
         else:
-            if E4StreamingIndicator:
-                e4_streaming_thread = threading.Thread(target=e4_streamer.stream, daemon=True)
-                e4_streamer.connect()
-                e4_streamer.subscribe_to_data()
-                e4_streaming_thread.start()
+            e4_streaming_thread = threading.Thread(target=e4_streamer.stream, daemon=True)
+            e4_streamer.connect()
+            e4_streamer.subscribe_to_data()
+            e4_streaming_thread.start()
 
-                # Create thread for the questionnaire GUI
-                folderPath = "./helperFiles/surveyInformation/"
-                stressQuestionnaire = stressQuestionnaireGUI(e4_streamer, folderPath)
-                stressQuestionnaire_thread = threading.Thread(target=stressQuestionnaire.finishedRun, daemon=True)
-                stressQuestionnaire_thread.start()
+            # Create thread for the questionnaire GUI
+            folderPath = "./helperFiles/surveyInformation/"
+            stressQuestionnaire = stressQuestionnaireGUI(e4_streamer, folderPath)
+            stressQuestionnaire_thread = threading.Thread(target=stressQuestionnaire.finishedRun, daemon=True)
+            stressQuestionnaire_thread.start()
 
-                # Wait for both threads to complete
-                e4_streaming_thread.join()
-                stressQuestionnaire_thread.join()
-            else:
-                # Stream in the data from the circuit board
-                streamingThread = threading.Thread(target=readData.streamArduinoData, args=(adcResolution, stopTimeStreaming, currentFilename), daemon=True)
-                streamingThread.start()
-                # Open the questionnaire GUI.
-                folderPath = "./helperFiles/surveyInformation/"
-                stressQuestionnaire = stressQuestionnaireGUI(readData, folderPath)
-                # When the streaming stops, close the GUI/Thread.
-                stressQuestionnaire.finishedRun()
-                streamingThread.join()
+            # Wait for both threads to complete
+            e4_streaming_thread.join()
+            stressQuestionnaire_thread.join()
+
+    # ----------------------------- Stream the Data from circuit board ----------------------------- #
+    if streamData and not E4StreamingIndicator:
+        if not recordQuestionnaire:
+            # Stream in the data from the circuit board
+            readData.streamArduinoData(adcResolution, stopTimeStreaming, currentFilename)
+        else:
+            # Stream in the data from the circuit board
+            streamingThread = threading.Thread(target=readData.streamArduinoData, args=(adcResolution, stopTimeStreaming, currentFilename), daemon=True)
+            streamingThread.start()
+            # Open the questionnaire GUI.
+            folderPath = "./helperFiles/surveyInformation/"
+            stressQuestionnaire = stressQuestionnaireGUI(readData, folderPath)
+            # When the streaming stops, close the GUI/Thread.
+            stressQuestionnaire.finishedRun()
+            streamingThread.join()
 
     # ------------------------ ReStream a Single Excel File ------------------------ #
 

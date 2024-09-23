@@ -30,6 +30,12 @@ class adjustInputParameters:
 
         return streamingOrder, biomarkerFeatureOrder, featureAverageWindows, featureNames, biomarkerFeatureNames, extractFeaturesFrom
 
+    def getGeneralParameters_e4(self):
+        # Specify biomarker information.
+        streamingOrder = self.compileModelInfo.streamingOrder_e4
+
+        return streamingOrder
+
     def getSavingInformation(self, date, trialName, userName):
         # Specify the path to the collected data.
         collectedDataFolder = self.compileModelInfo.getTrainingDataFolder(self.useTherapyData)

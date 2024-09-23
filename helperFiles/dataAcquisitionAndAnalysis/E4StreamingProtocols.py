@@ -36,6 +36,7 @@ class E4Streaming:
         self.start_time_bvp = None
         self.start_time_gsr = None
         self.start_time_tmp = None
+        self.stream_experiment_time = None
 
         # DataFrames for saving to Excel sheets
         self.acc_df = pd.DataFrame(columns=['Timestamp', 'ACC_X', 'ACC_Y', 'ACC_Z'])
@@ -57,6 +58,7 @@ class E4Streaming:
 
             # Setup axis labels and titles
             self.setup_plots()
+
 
     def setup_plots(self):
         # Only set up plots if plotting is enabled
@@ -272,3 +274,7 @@ class E4Streaming:
             self.gsr_df = pd.concat([self.gsr_df, data_df], ignore_index=True)
         elif stream_type == "E4_Temperature":
             self.tmp_df = pd.concat([self.tmp_df, data_df], ignore_index=True)
+
+    def getCurrentTime(self):
+
+        return

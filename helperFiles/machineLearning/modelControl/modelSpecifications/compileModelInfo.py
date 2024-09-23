@@ -16,6 +16,8 @@ class compileModelInfo:
         self.therapyNames = np.array(["HeatingPad", "BinauralBeats", "Images", "Voice"])
         self.predictionOrder = ["Positive Affect", "Negative Affect", "State Anxiety"]
         self.streamingOrder = ["eog", "eeg", "eda", "temp"]
+        # Specifically for the E4
+        self.streamingOrder_e4 = ["acc", "bvp", "eda", "temp"]
 
         # Hardcoded feature information.
         self.featureAverageWindows = [60, 30, 30, 30]  # EOG: 120-180; EEG: 60-90; EDA: ?; Temp: 30 - 60  Old: [120, 75, 90, 45]
