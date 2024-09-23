@@ -156,9 +156,13 @@ class E4Streaming:
             self.axs[3].relim()
             self.axs[3].autoscale_view()
 
-        plt.tight_layout()  # Prevent overlapping of labels and titles
-        plt.draw()
-        plt.pause(0.001)  # Allow the plot to update
+        # Add a safeguard for plotting to avoid crashes
+        try:
+            plt.tight_layout()  # Prevent overlapping of labels and titles
+            plt.draw()
+            plt.pause(0.001)  # Allow the plot to update
+        except Exception as e:
+            print(f"Error during plotting: {e}")
 
     def save_to_excel(self):
         print("Saving data to Excel...")
@@ -191,7 +195,6 @@ class E4Streaming:
                         self.start_time = timestamp
                         print(f"Start time set to {self.start_time}")
 
-                    # Append the raw time (normalization will happen in update methods)
                     if stream_type == "E4_Acc":
                         if len(sample_data) >= 5:
                             data = [int(sample_data[2].replace(',', '.')),
@@ -223,8 +226,8 @@ class E4Streaming:
                         data_row = {'Temp': data}
                         self.update_data_frames(data_row, "E4_Temperature")
 
-            if self.plotStreamedData:
-                self.update_plots()
+                if self.plotStreamedData:
+                    self.update_plots()
 
         except KeyboardInterrupt:
             print("\nRecording stopped by user.")
