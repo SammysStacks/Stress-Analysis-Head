@@ -44,9 +44,9 @@ if __name__ == "__main__":
     useTherapyData = True  # Use the Therapy Data folder for any files.
 
     # Specify the user parameters.
-    userName = "Yadong".replace(" ", "")
+    userName = "Testing".replace(" ", "")
     trialName = "HeatingPad"
-    date = "2024-09-17"
+    date = "2024-09-23"
 
     # Specify experimental parameters.
     boardSerialNum = '12ba4cb61c85ec11bc01fc2b19c2d21c'  # Board's Serial Number (port.serial_number). Only used if streaming data, else it gets reset to None.
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------- #
 
     # Assert the proper use of the program
-    assert sum((readDataFromExcel, streamData, trainModel)) == 1, "Only one protocol can be be executed."
+    assert sum((readDataFromExcel, streamData, E4Streaming, trainModel)) == 1, "Only one protocol can be be executed."
 
     # Define helper classes.
     inputParameterClass = adjustInputParameters(plotStreamedData, streamData, readDataFromExcel, trainModel, useModelPredictions, useTherapyData)
