@@ -1,7 +1,6 @@
 import socket
 import time
 import matplotlib
-
 matplotlib.use('TkAgg')  # set backend plotting to Tkinter
 import matplotlib.pyplot as plt
 from collections import deque
