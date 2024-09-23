@@ -28,7 +28,7 @@ class E4Streaming:
         self.time_stamps_gsr = deque(maxlen=100)
         self.time_stamps_tmp = deque(maxlen=100)
 
-        # Initialize start_time as None
+        # Initialize a single global start_time as None
         self.start_time = None
 
         # DataFrames for saving to Excel sheets
@@ -189,12 +189,12 @@ class E4Streaming:
                         print(f"Skipping invalid timestamp: {sample_data[1]}")
                         continue  # Skip this sample if timestamp is invalid
 
-                    # Initialize start time on first sample
+                    # Initialize start time once for all streams
                     if self.start_time is None:
                         self.start_time = timestamp
                         print(f"Start time set to {self.start_time}")
 
-                    # Normalize timestamp here
+                    # Normalize timestamp here using a global start_time for all streams
                     normalized_timestamp = timestamp - self.start_time
 
                     if stream_type == "E4_Acc":
