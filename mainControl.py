@@ -6,10 +6,6 @@ import threading
 
 # General
 import numpy as np
-from torch.xpu import device
-
-from E4Control_independent import serverPort
-
 # Compiler flags.
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
@@ -31,7 +27,7 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------- #
 
     # specify if using the E4 watch for streaming
-    E4Streaming = True
+    E4StreamingIndicator = True
 
     # Protocol switches: only the first true variably executes.
     readDataFromExcel = False  # For SINGLE FILE analysis. Analyze Data from Excel File called 'currentFilename' on Sheet Number 'testSheetNum'
@@ -39,7 +35,7 @@ if __name__ == "__main__":
     trainModel = False  # Train Model with ALL Data in 'collectedDataFolder'.
 
     # Assert that only one of E4Streaming or streamData can be True, maybe be both, but right now use one
-    assert not (E4Streaming and streamData), "E4Streaming and streamData cannot both be True. Only one can be active at a time."
+    assert not (E4StreamingIndicator and streamData), "E4Streaming and streamData cannot both be True. Only one can be active at a time."
 
     # User options during the run: any number can be true.
     useModelPredictions = False or trainModel  # Apply the learning algorithm to decode the signals.
@@ -60,7 +56,7 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------- #
 
     # Assert the proper use of the program
-    assert sum((readDataFromExcel, streamData, E4Streaming, trainModel)) == 1, "Only one protocol can be be executed."
+    assert sum((readDataFromExcel, streamData, E4StreamingIndicator, trainModel)) == 1, "Only one protocol can be be executed."
 
     # Define helper classes.
     inputParameterClass = adjustInputParameters(plotStreamedData, streamData, readDataFromExcel, trainModel, useModelPredictions, useTherapyData)
@@ -91,10 +87,10 @@ if __name__ == "__main__":
     e4_streamer = E4StreamingProtocols.E4Streaming(server_address, server_port, device_id, buffer_size, output_file, plotStreamedData)
 
     # ----------------------------- Stream the Data ----------------------------- #
-    if streamData or E4Streaming:
+    if streamData or E4StreamingIndicator:
         if not recordQuestionnaire:
             # Stream in the data from the E4 wristband
-            if E4Streaming:
+            if E4StreamingIndicator:
                 e4_streamer.connect()
                 e4_streamer.subscribe_to_data()
                 e4_streamer.stream()
@@ -102,7 +98,7 @@ if __name__ == "__main__":
             else:
                 readData.streamArduinoData(adcResolution, stopTimeStreaming, currentFilename)
         else:
-            if E4Streaming:
+            if E4StreamingIndicator:
                 e4_streaming_thread = threading.Thread(target=e4_streamer.stream, daemon=True)
                 e4_streamer.connect()
                 e4_streamer.subscribe_to_data()
