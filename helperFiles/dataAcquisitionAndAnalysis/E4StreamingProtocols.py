@@ -1,13 +1,12 @@
 import socket
 import time
 import matplotlib
+if matplotlib.get_backend() != 'TkAgg':
+    matplotlib.use('TkAgg')
 import pandas as pd
 from collections import deque
 import os
 
-# Import matplotlib only when needed
-if matplotlib.get_backend() != 'TkAgg':
-    matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
 
@@ -39,7 +38,7 @@ class E4Streaming:
         self.start_time_tmp = None
         self.stream_experiment_time = None
 
-        # DataFrames for saving to Excel sheets
+        # DataFrames for saving to Excel sheets， need changes later to interface with questionnaires
         self.acc_df = pd.DataFrame(columns=['Timestamp', 'ACC_X', 'ACC_Y', 'ACC_Z'])
         self.bvp_df = pd.DataFrame(columns=['Timestamp', 'BVP'])
         self.gsr_df = pd.DataFrame(columns=['Timestamp', 'GSR'])
@@ -264,7 +263,6 @@ class E4Streaming:
             self.s.close()
 
     def update_data_frames(self, data_row, stream_type):
-        """Update the data frames."""
         data_df = pd.DataFrame([data_row])  # Store normalized timestamp directly
 
         if stream_type == "E4_Acc":
@@ -277,9 +275,6 @@ class E4Streaming:
             self.tmp_df = pd.concat([self.tmp_df, data_df], ignore_index=True)
 
     def getCurrentTime(self):
-        """
-        Returns the elapsed time in seconds since the E4 started streaming.
-        """
         if self.stream_experiment_time is None:
             print("E4 streaming has not started yet.")
             return None
