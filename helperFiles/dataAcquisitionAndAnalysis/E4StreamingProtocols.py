@@ -164,8 +164,23 @@ class E4Streaming(E4StreamingHelpers):
             print(f"Error during plotting: {e}")
 
     def save_to_excel(self):
-        print("Saving data to Excel...")
-        with pd.ExcelWriter(self.output_file, engine='openpyxl', mode='w') as writer:
+        # Define the folder structure
+        experimental_data_folder = "_experimentalData"
+        e4_watch_data_folder = os.path.join(experimental_data_folder, "e4WatchData")
+
+        # Check and create directories if they don't exist
+        if not os.path.exists(experimental_data_folder):
+            os.makedirs(experimental_data_folder)
+            print(f"Created folder: {experimental_data_folder}")
+        if not os.path.exists(e4_watch_data_folder):
+            os.makedirs(e4_watch_data_folder)
+            print(f"Created folder: {e4_watch_data_folder}")
+
+        # Save the file in the e4WatchData folder
+        output_path = os.path.join(e4_watch_data_folder, self.output_file)
+        print(f"Saving data to Excel at {output_path}...")
+
+        with pd.ExcelWriter(output_path, engine='openpyxl', mode='w') as writer:
             self.acc_df.to_excel(writer, sheet_name='ACC', index=False)
             self.bvp_df.to_excel(writer, sheet_name='BVP', index=False)
             self.gsr_df.to_excel(writer, sheet_name='GSR', index=False)

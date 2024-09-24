@@ -4,9 +4,6 @@ import sys
 from helperFiles.dataAcquisitionAndAnalysis import E4StreamingProtocols  # Import interfaces for reading/writing data from E4 wristband
 
 
-
-# TODO: add directory of the current path to the python file
-
 if __name__ == '__main__':
     # specify if using the E4 watch for streaming
     E4StreamingIndicator = True
