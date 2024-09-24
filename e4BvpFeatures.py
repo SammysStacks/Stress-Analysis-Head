@@ -1,9 +1,11 @@
 import os
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 from scipy.signal import find_peaks, welch
 from scipy.stats import skew, kurtosis
 import antropy as ant  # For entropy and DFA (Detrended Fluctuation Analysis)
+
 
 # Calculate RMSSD (Root Mean Square of Successive Differences)
 def rmssd(signal):
