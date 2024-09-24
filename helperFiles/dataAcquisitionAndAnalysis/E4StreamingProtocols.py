@@ -8,17 +8,13 @@ from collections import deque
 import os
 
 import matplotlib.pyplot as plt
+from .E4StreamingHelpers import E4StreamingHelpers
 
 
-class E4Streaming:
+class E4Streaming(E4StreamingHelpers):
     def __init__(self, server_address='127.0.0.1', server_port=28000, device_id='B516C6',
                  buffer_size=4096, output_file="E4_data.xlsx", plotStreamedData=True):
-        self.server_address = server_address
-        self.server_port = server_port
-        self.device_id = device_id
-        self.buffer_size = buffer_size
-        self.output_file = os.path.join(os.getcwd(), output_file)
-        self.plotStreamedData = plotStreamedData
+        super().__init__(server_address=server_address, server_port=server_port, device_id=device_id, buffer_size=buffer_size, output_file=output_file, plotStreamedData=plotStreamedData)
 
         # 100 points for real-time plotting
         self.s = None
