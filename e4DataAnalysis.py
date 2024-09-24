@@ -17,37 +17,63 @@ bvp_data = excel_data['BVP']  # BVP sheet
 gsr_data = excel_data['GSR']  # GSR sheet
 temp_data = excel_data['Temp']  # Temp sheet
 
+# Plot settings for scientific publications
+plt.rcParams.update({
+    "font.size": 14,               # General font size
+    "axes.labelsize": 16,          # Font size for axis labels
+    "axes.titlesize": 18,          # Font size for plot titles
+    "legend.fontsize": 14,         # Font size for legend
+    "lines.linewidth": 2.5,        # Line width for plot curves
+    "xtick.labelsize": 14,         # Font size for x-tick labels
+    "ytick.labelsize": 14,         # Font size for y-tick labels
+    "figure.dpi": 300,             # High DPI for publication quality
+    "figure.figsize": (8, 6),      # Default figure size
+    "axes.grid": True,             # Enable grid
+    "grid.alpha": 0.3,             # Grid line transparency
+    "legend.frameon": True,        # Box around legend
+    "legend.loc": 'upper right',   # Legend position
+    "savefig.format": "png"        # Save format (can also be 'pdf' or 'eps')
+})
+
 # Plot 3-axis ACC data
-plt.figure(figsize=(8, 6))
-plt.plot(acc_data['Timestamp'], acc_data['ACC_X'], label='ACC_X')
-plt.plot(acc_data['Timestamp'], acc_data['ACC_Y'], label='ACC_Y')
-plt.plot(acc_data['Timestamp'], acc_data['ACC_Z'], label='ACC_Z')
+plt.figure()
+plt.plot(acc_data['Timestamp'], acc_data['ACC_X'], label='ACC_X', color='b')
+plt.plot(acc_data['Timestamp'], acc_data['ACC_Y'], label='ACC_Y', color='g')
+plt.plot(acc_data['Timestamp'], acc_data['ACC_Z'], label='ACC_Z', color='r')
 plt.title('3-axis Acceleration')
 plt.xlabel('Time (s)')
 plt.ylabel('Acceleration (g)')
 plt.legend()
+plt.grid(True, which='both', linestyle='--', linewidth=0.5)
+plt.tight_layout()
 plt.show()
 
 # Plot BVP data
-plt.figure(figsize=(8, 6))
-plt.plot(bvp_data['Timestamp'], bvp_data['BVP'], color='purple')
+plt.figure()
+plt.plot(bvp_data['Timestamp'], bvp_data['BVP'], color='purple', linestyle='-')
 plt.title('Blood Volume Pulse (BVP)')
 plt.xlabel('Time (s)')
 plt.ylabel('BVP (AU)')
+plt.grid(True, which='both', linestyle='--', linewidth=0.5)
+plt.tight_layout()
 plt.show()
 
 # Plot GSR data
-plt.figure(figsize=(8, 6))
-plt.plot(gsr_data['Timestamp'], gsr_data['GSR'], color='orange')
+plt.figure()
+plt.plot(gsr_data['Timestamp'], gsr_data['GSR'], color='orange', linestyle='-')
 plt.title('Galvanic Skin Response (GSR)')
 plt.xlabel('Time (s)')
 plt.ylabel('GSR (µS)')
+plt.grid(True, which='both', linestyle='--', linewidth=0.5)
+plt.tight_layout()
 plt.show()
 
 # Plot Temperature data
-plt.figure(figsize=(8, 6))
-plt.plot(temp_data['Timestamp'], temp_data['Temp'], color='cyan')
+plt.figure()
+plt.plot(temp_data['Timestamp'], temp_data['Temp'], color='cyan', linestyle='-')
 plt.title('Temperature')
 plt.xlabel('Time (s)')
-plt.ylabel('Temp (°C)')
+plt.ylabel('Temperature (°C)')
+plt.grid(True, which='both', linestyle='--', linewidth=0.5)
+plt.tight_layout()
 plt.show()
