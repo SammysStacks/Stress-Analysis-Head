@@ -1,3 +1,4 @@
+# adapted from https://github.com/HectorCarral/Empatica-E4-LSL
 import socket
 import time
 import matplotlib
