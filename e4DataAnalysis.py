@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 script_dir = os.path.dirname(os.path.abspath(__file__))  # Get the directory of the current file
 experimental_data_folder = os.path.join(script_dir, "_experimentalData")
 e4_watch_data_folder = os.path.join(experimental_data_folder, "e4WatchData")
-excel_file = os.path.join(e4_watch_data_folder, "E4_data.xlsx")
+excel_file = os.path.join(e4_watch_data_folder, "E4_data_baseline_featureAnalysis.xlsx")
 
 # Read the Excel file
 excel_data = pd.read_excel(excel_file, sheet_name=None)  # sheet_name=None reads all sheets
