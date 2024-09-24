@@ -10,7 +10,7 @@ if __name__ == '__main__':
     # specify if using the E4 watch for streaming
     E4StreamingIndicator = True
     # specify if user wants to view the data in real time
-    plotStreamedData = True
+    plotStreamedData = False
 
     if E4StreamingIndicator:
         server_address = '127.0.0.1'
@@ -27,7 +27,7 @@ if __name__ == '__main__':
         os.makedirs(e4_watch_data_folder, exist_ok=True)
 
         # Set the output file path to save in the e4WatchData folder
-        output_file = os.path.join(e4_watch_data_folder, "E4_data.xlsx")
+        output_file = os.path.join(e4_watch_data_folder, "E4_data_baseline_featureAnalysis.xlsx")
 
         e4_streamer = E4StreamingProtocols.E4Streaming(server_address, server_port, device_id, buffer_size, output_file, plotStreamedData)
         e4_streamer.connect()
