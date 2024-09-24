@@ -176,10 +176,11 @@ class E4Streaming(E4StreamingHelpers):
             os.makedirs(e4_watch_data_folder)
             print(f"Created folder: {e4_watch_data_folder}")
 
-        # Save the file in the e4WatchData folder
+        # Update self.output_file to include the full path
         output_path = os.path.join(e4_watch_data_folder, self.output_file)
         print(f"Saving data to Excel at {output_path}...")
 
+        # Save the Excel file using the updated path
         with pd.ExcelWriter(output_path, engine='openpyxl', mode='w') as writer:
             self.acc_df.to_excel(writer, sheet_name='ACC', index=False)
             self.bvp_df.to_excel(writer, sheet_name='BVP', index=False)
