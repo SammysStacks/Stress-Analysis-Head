@@ -6,6 +6,7 @@ from scipy.stats import kurtosis, skew
 from scipy.signal import welch
 from scipy import integrate
 
+# feature selection reference: https://doi.org/10.3390/electronics8121461
 # calculate zero-crossing rate
 def zero_crossing_rate(signal):
     return ((signal[:-1] * signal[1:]) < 0).sum()

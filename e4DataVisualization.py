@@ -67,7 +67,7 @@ plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 plt.tight_layout()
 plt.show()
 
-# Plot Temperature data 
+# Plot Temperature data
 plt.figure()
 plt.plot(temp_data['Timestamp'], temp_data['Temp'], color='#20B2AA', linestyle='-', alpha=0.85)  # Light sea green
 plt.title('Temperature')
