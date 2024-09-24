@@ -1,4 +1,4 @@
-import os
+\import os
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 script_dir = os.path.dirname(os.path.abspath(__file__))  # Get the directory of the current file
 experimental_data_folder = os.path.join(script_dir, "_experimentalData")
 e4_watch_data_folder = os.path.join(experimental_data_folder, "e4WatchData")
-excel_file = os.path.join(e4_watch_data_folder, "E4_data.xlsx")
+excel_file = os.path.join(e4_watch_data_folder, "E4_data_baseline_featureAnalysis.xlsx")
 
 # Read the Excel file
 excel_data = pd.read_excel(excel_file, sheet_name=None)  # sheet_name=None reads all sheets
@@ -35,11 +35,11 @@ plt.rcParams.update({
     "savefig.format": "png"        # Save format (can also be 'pdf' or 'eps')
 })
 
-# Plot 3-axis ACC data with faded colors
+# Plot 3-axis ACC data with slightly more saturated colors
 plt.figure()
-plt.plot(acc_data['Timestamp'], acc_data['ACC_X'], label='ACC_X', color='lightblue', alpha=0.7)
-plt.plot(acc_data['Timestamp'], acc_data['ACC_Y'], label='ACC_Y', color='lightgreen', alpha=0.7)
-plt.plot(acc_data['Timestamp'], acc_data['ACC_Z'], label='ACC_Z', color='lightcoral', alpha=0.7)
+plt.plot(acc_data['Timestamp'], acc_data['ACC_X'], label='ACC_X', color='#6495ED', alpha=0.85)  # Cornflower blue
+plt.plot(acc_data['Timestamp'], acc_data['ACC_Y'], label='ACC_Y', color='#66CDAA', alpha=0.85)  # Medium aquamarine
+plt.plot(acc_data['Timestamp'], acc_data['ACC_Z'], label='ACC_Z', color='#FF6347', alpha=0.85)  # Tomato red
 plt.title('3-axis Acceleration')
 plt.xlabel('Time (s)')
 plt.ylabel('Acceleration (g)')
@@ -48,9 +48,9 @@ plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 plt.tight_layout()
 plt.show()
 
-# Plot BVP data with faded color
+# Plot BVP data with slightly more saturated color
 plt.figure()
-plt.plot(bvp_data['Timestamp'], bvp_data['BVP'], color='plum', linestyle='-', alpha=0.7)
+plt.plot(bvp_data['Timestamp'], bvp_data['BVP'], color='#BA55D3', linestyle='-', alpha=0.85)  # Medium orchid
 plt.title('Blood Volume Pulse (BVP)')
 plt.xlabel('Time (s)')
 plt.ylabel('BVP (AU)')
@@ -58,9 +58,9 @@ plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 plt.tight_layout()
 plt.show()
 
-# Plot GSR data with faded color
+# Plot GSR data with slightly more saturated color
 plt.figure()
-plt.plot(gsr_data['Timestamp'], gsr_data['GSR'], color='peachpuff', linestyle='-', alpha=0.7)
+plt.plot(gsr_data['Timestamp'], gsr_data['GSR'], color='#FFA07A', linestyle='-', alpha=0.85)  # Light salmon
 plt.title('Galvanic Skin Response (GSR)')
 plt.xlabel('Time (s)')
 plt.ylabel('GSR (µS)')
@@ -68,9 +68,9 @@ plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 plt.tight_layout()
 plt.show()
 
-# Plot Temperature data with faded color
+# Plot Temperature data with slightly more saturated color
 plt.figure()
-plt.plot(temp_data['Timestamp'], temp_data['Temp'], color='lightcyan', linestyle='-', alpha=0.7)
+plt.plot(temp_data['Timestamp'], temp_data['Temp'], color='#20B2AA', linestyle='-', alpha=0.85)  # Light sea green
 plt.title('Temperature')
 plt.xlabel('Time (s)')
 plt.ylabel('Temperature (°C)')
