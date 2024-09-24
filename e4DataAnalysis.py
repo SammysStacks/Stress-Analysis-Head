@@ -17,39 +17,37 @@ bvp_data = excel_data['BVP']  # BVP sheet
 gsr_data = excel_data['GSR']  # GSR sheet
 temp_data = excel_data['Temp']  # Temp sheet
 
-# Plotting the data
-plt.figure(figsize=(12, 10))
-
-# Plot ACC data (3-axis acceleration)
-plt.subplot(4, 1, 1)
+# Plot 3-axis ACC data
+plt.figure(figsize=(8, 6))
 plt.plot(acc_data['Timestamp'], acc_data['ACC_X'], label='ACC_X')
 plt.plot(acc_data['Timestamp'], acc_data['ACC_Y'], label='ACC_Y')
 plt.plot(acc_data['Timestamp'], acc_data['ACC_Z'], label='ACC_Z')
 plt.title('3-axis Acceleration')
+plt.xlabel('Time (s)')
 plt.ylabel('Acceleration (g)')
 plt.legend()
+plt.show()
 
 # Plot BVP data
-plt.subplot(4, 1, 2)
+plt.figure(figsize=(8, 6))
 plt.plot(bvp_data['Timestamp'], bvp_data['BVP'], color='purple')
 plt.title('Blood Volume Pulse (BVP)')
+plt.xlabel('Time (s)')
 plt.ylabel('BVP (AU)')
+plt.show()
 
 # Plot GSR data
-plt.subplot(4, 1, 3)
+plt.figure(figsize=(8, 6))
 plt.plot(gsr_data['Timestamp'], gsr_data['GSR'], color='orange')
 plt.title('Galvanic Skin Response (GSR)')
+plt.xlabel('Time (s)')
 plt.ylabel('GSR (µS)')
+plt.show()
 
 # Plot Temperature data
-plt.subplot(4, 1, 4)
+plt.figure(figsize=(8, 6))
 plt.plot(temp_data['Timestamp'], temp_data['Temp'], color='cyan')
 plt.title('Temperature')
-plt.ylabel('Temp (°C)')
 plt.xlabel('Time (s)')
-
-# Adjust the layout to prevent overlap
-plt.tight_layout()
-
-# Show the plots
+plt.ylabel('Temp (°C)')
 plt.show()
