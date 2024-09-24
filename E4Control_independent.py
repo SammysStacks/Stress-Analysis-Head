@@ -15,7 +15,7 @@ if __name__ == '__main__':
         server_port = 28000
         device_id = 'B516C6'
         buffer_size = 4096
-        output_file = "E4_data.xlsx"
+        output_file = "E4_data.xlsx"  # Specify the output file name
         e4_streamer = E4StreamingProtocols.E4Streaming(server_address, server_port, device_id, buffer_size, output_file, plotStreamedData)
         e4_streamer.connect()
         e4_streamer.subscribe_to_data()
