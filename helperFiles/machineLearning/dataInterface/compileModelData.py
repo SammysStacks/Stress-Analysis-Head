@@ -13,6 +13,7 @@ from helperFiles.dataAcquisitionAndAnalysis.metadataAnalysis.wesadInterface impo
 from .compileModelDataHelpers import compileModelDataHelpers
 from ..featureAnalysis.compiledFeatureNames.compileFeatureNames import compileFeatureNames  # Functions to extract feature names
 from ..modelControl.Models.pyTorch.Helpers.dataLoaderPyTorch import pytorchDataInterface
+from ..modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
 from ..modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 # Import files for training and testing the model
 from ..modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionPipeline import emotionPipeline
@@ -201,7 +202,7 @@ class compileModelData(compileModelDataHelpers):
             allSignalData, allNumSignalPoints = self._padSignalData(allRawFeatureTimeIntervals, allCompiledFeatureIntervals)
             allSignalData, allNumSignalPoints, allFeatureLabels, allSubjectInds = self._removeBadExperiments(allSignalData, allNumSignalPoints, surveyAnswersList, subjectOrder)
             allSignalData, allNumSignalPoints, featureNames = self._preprocessSignals(allSignalData, allNumSignalPoints, featureNames)
-            allFeatureLabels, allSmallClassIndices = self.organizeLabels(allFeatureLabels, metaTraining, metadatasetName, numSignals=allSignalData.shape[1])
+            allFeatureLabels, allSmallClassIndices = self.organizeLabels(allFeatureLabels, metaTraining)
             # allSmallClassIndices dimension: numLabels, batchSize*  →  *if there are no small classes, the dimension is empty
             # allSignalData dimension: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
             # allNumSignalPoints dimension: batchSize, numSignals
@@ -219,6 +220,16 @@ class compileModelData(compileModelDataHelpers):
             assert len(featureNames) == numSignals, "The number of feature names must match the number of signals."
             if numExperiments == 0: continue
             if numSignals == 0: continue
+
+            # Gather the number of bits of information per second.
+            allSignalTimes = emotionDataInterface.getChannelData(allSignalData, channelName=modelConstants.timeChannel)
+            allDataFrequencies = allNumSignalPoints / (allSignalTimes[:, :, 0] * modelConstants.maxTimeWindow)
+            maxExperimentalBits = round(allDataFrequencies.sum(dim=-1).max().item(), 2)
+            maxSignalBits = round(allDataFrequencies.max().item(), 2)
+
+            # Print the data information.
+            numGoodEmotions = torch.sum(~torch.all(torch.isnan(allFeatureLabels), dim=0)).item()
+            print(f"\t{metadatasetName.capitalize()}: Found {numGoodEmotions - 1} (out of {numLabels - 1}) well-labeled emotions across {numExperiments} experiments with {numSignals} signals with a maximum of {maxExperimentalBits}/experiment and {maxSignalBits}/signal bits of information/second.", flush=True)
 
             # ---------------------- Test/Train Split ---------------------- #
 
@@ -268,6 +279,9 @@ class compileModelData(compileModelDataHelpers):
             # Add the demographic information.
             allSignalData = self.addContextualInfo(allSignalData, allNumSignalPoints, allSubjectInds, metadataInd)
             # allSignalData: A torch array of size (batchSize, numSignals, fullDataLength, [timeChannel, signalChannel])
+
+            # Round the data to remove uncertainties.
+            allSignalData = torch.round(allSignalData, decimals=4)
 
             # ---------------------- Create the Model ---------------------- #
 

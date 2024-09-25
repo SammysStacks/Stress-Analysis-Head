@@ -37,6 +37,10 @@ class signalEncoderHelpers(nn.Module):
     # ----------------------- Signal Pairing Methods ----------------------- #
 
     @staticmethod
+    def interpolateSignals(inputData):
+        torch.nn.functional.interpolate(inputData, size=None, scale_factor=None, mode='nearest', align_corners=None, recompute_scale_factor=None, antialias=False)
+
+    @staticmethod
     def roundNextSignal(compressingSignalFlag, numActiveSignals, expansionFactor):
         if compressingSignalFlag:
             return math.ceil(numActiveSignals / expansionFactor)

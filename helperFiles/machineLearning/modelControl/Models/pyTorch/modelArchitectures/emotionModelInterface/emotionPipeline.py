@@ -61,7 +61,7 @@ class emotionPipeline(emotionPipelineHelpers):
                         
                         # If there is no training data.
                         if batchSignalInfo.size(0) == 0:
-                            # We can skip this batch, and backpropagate the model if necessary.
+                            # We can skip this batch, and backpropagation if necessary.
                             if self.accelerator.sync_gradients: self.backpropogateModel()
                             continue
 
@@ -73,18 +73,7 @@ class emotionPipeline(emotionPipelineHelpers):
 
                     # Randomly choose to add noise to the model.
                     if self.accelerator.sync_gradients and not constrainedTraining:
-                        self.addingNoiseFlag = submodel == modelConstants.emotionPredictionModel and random.random() < 0.5
                         self.calculateFullLoss = random.random() < 0.5
-
-                    # Randomly choose to add noise to the model.
-                    if self.addingNoiseFlag and not constrainedTraining:
-                        # Augment the data to add some noise to the model.
-                        addingNoiseSTD, addingNoiseRange = self.modelParameters.getAugmentationDeviation(submodel)
-                        augmentedBatchData = self.dataAugmentation.addNoise(signalBatchData.clone(), trainingFlag=True, noiseSTD=addingNoiseSTD)
-                        # augmentedBatchData dimension: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
-                    else:
-                        addingNoiseSTD, addingNoiseRange = 0, (0, 1)
-                        augmentedBatchData = signalBatchData.clone()
 
                     # ------------ Forward pass through the model  ------------- #
 
@@ -110,15 +99,15 @@ class emotionPipeline(emotionPipelineHelpers):
                         # signalEncodingLayerLoss dimension: batchSize
 
                         # Assert that nothing is wrong with the predictions.
-                        self.modelHelpers.assertVariableIntegrity(predictedIndexProbabilities, variableName="signal encoder index probabilities", assertGradient=False)
                         self.modelHelpers.assertVariableIntegrity(signalEncodingLayerLoss, variableName="signal encoder layer loss", assertGradient=False)
                         self.modelHelpers.assertVariableIntegrity(reconstructedData, variableName="reconstructed signal data", assertGradient=False)
-                        self.modelHelpers.assertVariableIntegrity(augmentedBatchData, variableName="initial signal data", assertGradient=False)
+                        self.modelHelpers.assertVariableIntegrity(augmentedBatchData, variableName="augmented signal data", assertGradient=False)
+                        self.modelHelpers.assertVariableIntegrity(signalBatchData, variableName="initial signal data", assertGradient=False)
                         self.modelHelpers.assertVariableIntegrity(encodedData, variableName="encoded data", assertGradient=False)
 
                         # Calculate the error in signal compression (signal encoding loss).
                         signalReconstructedLoss, encodedSignalMeanLoss, encodedSignalMinMaxLoss, positionalEncodingTrainingLoss, decodedPositionalEncodingLoss, signalEncodingTrainingLayerLoss \
-                            = self.organizeLossInfo.calculateSignalEncodingLoss(augmentedBatchData, encodedData, reconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLayerLoss, batchTrainingMask, reconstructionIndex)
+                            = self.organizeLossInfo.calculateSignalEncodingLoss(signalBatchData, encodedData, reconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLayerLoss, batchTrainingMask, reconstructionIndex)
                         if signalReconstructedLoss.item() == 0: self.accelerator.print("Not useful\n\n\n\n\n\n"); continue
 
                         # Initialize basic core loss value.
@@ -140,50 +129,21 @@ class emotionPipeline(emotionPipelineHelpers):
                         # Update the user.
                         self.accelerator.print("Final-Recon-Mean-MinMax-PE-PEDec-Layer", finalLoss.item(), signalReconstructedLoss.item(), encodedSignalMeanLoss.item(), encodedSignalMinMaxLoss.item(), positionalEncodingTrainingLoss.item(), decodedPositionalEncodingLoss.item(), signalEncodingTrainingLayerLoss.item(), "\n")
 
-                    # Train the autoencoder
-                    elif submodel == modelConstants.autoencoderModel:
-                        # Augment the time series length to train an arbitrary sequence length.
-                        initialSignalData, augmentedBatchData = self.dataAugmentation.changeSignalLength(modelConstants.timeWindows[0], (signalBatchData, augmentedBatchData))
-                        print("Input size:", augmentedBatchData.size())
-
-                        # Perform the forward pass through the model.
-                        encodedData, reconstructedData, signalEncodingLayerLoss, compressedData, reconstructedEncodedData, denoisedDoubleReconstructedData, autoencoderLayerLoss = \
-                            model.compressData(augmentedBatchData, initialSignalData, reconstructSignals=True, calculateLoss=True, compileVariables=False, compileLosses=False, fullReconstruction=True, trainingFlag=True)
-                        # denoisedDoubleReconstructedData dimension: batchSize, numSignals, finalDistributionLength
-                        # reconstructedEncodedData dimension: batchSize, numEncodedSignals, finalDistributionLength
-                        # compressedData dimension: batchSize, numEncodedSignals, compressedLength
-                        # autoencoderLayerLoss dimension: batchSize
-
-                        # Assert that nothing is wrong with the predictions.
-                        self.modelHelpers.assertVariableIntegrity(denoisedDoubleReconstructedData, variableName="denoised double reconstructed data", assertGradient=False)
-                        self.modelHelpers.assertVariableIntegrity(reconstructedEncodedData, variableName="reconstructed encoded data", assertGradient=False)
-                        self.modelHelpers.assertVariableIntegrity(autoencoderLayerLoss, variableName="autoencoder layer loss", assertGradient=False)
-                        self.modelHelpers.assertVariableIntegrity(compressedData, variableName="compressed data", assertGradient=False)
-
-                        # Calculate the error in signal reconstruction (autoencoder loss).
-                        encodedReconstructedLoss, compressedMeanLoss, compressedMinMaxLoss, autoencoderTrainingLayerLoss = \
-                            self.organizeLossInfo.calculateAutoencoderLoss(encodedData, compressedData, reconstructedEncodedData, autoencoderLayerLoss, batchTrainingMask, reconstructionIndex)
-                        # Calculate the error in signal reconstruction (encoding loss).
-                        signalReconstructedLoss = self.organizeLossInfo.signalEncodingLoss(initialSignalData, denoisedDoubleReconstructedData).mean(dim=2).mean(dim=1).mean()
-
-                        # Initialize basic core loss value.
-                        compressionFactorSE = augmentedBatchData.size(1) / self.model.numEncodedSignals
-                        compressionFactor = augmentedBatchData.size(2) / self.model.compressedLength
-                        finalLoss = encodedReconstructedLoss
-
-                        # Compile the loss into one value
-                        if 0.1 < compressedMinMaxLoss:
-                            finalLoss = finalLoss + 0.1 * compressedMinMaxLoss
-                        if 0.01 < autoencoderTrainingLayerLoss:
-                            finalLoss = finalLoss + 0.5 * autoencoderTrainingLayerLoss
-                        if 0.1 < compressedMeanLoss:
-                            finalLoss = finalLoss + 0.1 * compressedMeanLoss
-                        finalLoss = compressionFactor * (finalLoss + compressionFactorSE * signalReconstructedLoss)
-
-                        # Update the user.
-                        self.accelerator.print(finalLoss.item(), encodedReconstructedLoss.item(), compressedMeanLoss.item(), compressedMinMaxLoss.item(), autoencoderTrainingLayerLoss.item(), signalReconstructedLoss.item(), "\n")
-
                     elif submodel == modelConstants.emotionPredictionModel:
+                        augmentedBatchData = signalBatchData.clone()
+
+                        if not constrainedTraining:
+                            # For each batch set.
+                            if self.accelerator.sync_gradients:
+                                # Randomly choose to add noise to the model.
+                                self.addingNoiseFlag = submodel == modelConstants.emotionPredictionModel and random.random() < 0.5
+
+                            if self.addingNoiseFlag:
+                                # Augment the data to add some noise to the model.
+                                addingNoiseSTD, addingNoiseRange = self.modelParameters.getAugmentationDeviation(submodel)
+                                augmentedBatchData = self.dataAugmentation.addNoise(augmentedBatchData, trainingFlag=True, noiseSTD=addingNoiseSTD)
+                                # augmentedBatchData dimension: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
+
                         # Perform the forward pass through the model.
                         _, _, _, compressedData, _, _, _, mappedSignalData, reconstructedCompressedData, featureData, activityDistribution, eachBasicEmotionDistribution, finalEmotionDistributions \
                             = model.emotionPrediction(augmentedBatchData, signalBatchData, metaBatchInfo, remapSignals=True, compileVariables=False, trainingFlag=True)
@@ -220,7 +180,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     t1 = time.time()
                     # Calculate the gradients.
                     self.accelerator.backward(finalLoss)  # Calculate the gradients.
-                    self.backpropogateModel()  # Backpropagate the gradient.
+                    self.backpropogateModel()  # Backpropagation.
                     t2 = time.time(); self.accelerator.print(f"Backprop {self.datasetName} {numPointsAnalyzed}:", t2 - t1)
             # Finalize all the parameters.
             self.scheduler.step()  # Update the learning rate.

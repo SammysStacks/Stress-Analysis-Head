@@ -25,6 +25,7 @@ pyserial
 pysr
 pytz
 pytorch-wavelets
+PyWavelets
 Requests
 scikit-learn
 scipy

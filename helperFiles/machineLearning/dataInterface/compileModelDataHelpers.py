@@ -100,7 +100,7 @@ class compileModelDataHelpers:
 
         return uniqueActivityNames, validActivityLabels.to(torch.float32)
 
-    def organizeLabels(self, allFeatureLabels, metaTraining, metaDatasetName, numSignals):
+    def organizeLabels(self, allFeatureLabels, metaTraining):
         # allFeatureLabels: A torch array or list of size (batchSize, numLabels)
         # metaTraining: Boolean indicating if the data is for training
         # metaDatasetName: String representing the name of the dataset
@@ -140,10 +140,6 @@ class compileModelDataHelpers:
             # Save the edits made to the featureLabels
             allFeatureLabels[:, labelTypeInd] = featureLabels
 
-        # Report the information from this dataset.
-        numGoodEmotions = torch.sum(~torch.all(torch.isnan(allFeatureLabels), dim=0)).item()
-        print(f"\t{metaDatasetName.capitalize()}: Found {numGoodEmotions - 1} (out of {numLabels - 1}) well-labeled emotions across {batchSize} experiments with {numSignals} signals.", flush=True)
-
         return allFeatureLabels, allSingleClassIndices
 
     @staticmethod
@@ -176,8 +172,8 @@ class compileModelDataHelpers:
             # Assert the correct hardcoded dimensions.
             assert emotionDataInterface.getSignalIdentifierIndex(identifierName=modelConstants.numSignalPointsSI) == 0, "Asserting I am self-consistent. Hardcoded assertion"
             assert emotionDataInterface.getSignalIdentifierIndex(identifierName=modelConstants.signalIndexSI) == 1, "Asserting I am self-consistent. Hardcoded assertion"
-            assert emotionDataInterface.getMetadataIndex(metadataName=modelConstants.datasetIndexSI) == 0, "Asserting I am self-consistent. Hardcoded assertion"
-            assert emotionDataInterface.getMetadataIndex(metadataName=modelConstants.subjectIndexSI) == 1, "Asserting I am self-consistent. Hardcoded assertion"
+            assert emotionDataInterface.getMetadataIndex(metadataName=modelConstants.datasetIndexMD) == 0, "Asserting I am self-consistent. Hardcoded assertion"
+            assert emotionDataInterface.getMetadataIndex(metadataName=modelConstants.subjectIndexMD) == 1, "Asserting I am self-consistent. Hardcoded assertion"
             assert numSignalIdentifiers == 2, "Asserting I am self-consistent. Hardcoded assertion"
             assert numMetadata == 2, "Asserting I am self-consistent. Hardcoded assertion"
 

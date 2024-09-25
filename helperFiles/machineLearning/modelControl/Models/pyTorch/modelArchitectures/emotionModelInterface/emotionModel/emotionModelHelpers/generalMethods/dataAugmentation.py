@@ -66,16 +66,17 @@ class dataAugmentation:
 
     def getNewStartTimeIndices(self, signalData, minTimeWindow, maxTimeWindow):
         # signalData dim: [batchSize, numSignals, maxSequenceLength, numChannels]
-        # metaInfo dim: [batchSize, numMetadata]
-        batchSize, numSignals, maxSequenceLength, numChannels = signalData.size()
-
-        # Find the number of signal points and time window.
         timeChannels = emotionDataInterface.getChannelData(signalData, modelConstants.timeChannel)  # Dim: (batchSize, numSignals, maxSequenceLength)
+        batchSize, numSignals, maxSequenceLength = timeChannels.shape
 
         # Find the time window for the signal.
-        newTimeWindow = self.getRandomTimeInterval(minTimeWindow, maxTimeWindow)
-        numWindowPoints = (timeChannels <= newTimeWindow).sum(dim=-1)
-        startTimeIndices = maxSequenceLength - numWindowPoints
+        newTimeWindow = self.getRandomTimeInterval(minTimeWindow, maxTimeWindow) / modelConstants.maxTimeWindow
+        targetTimes = -newTimeWindow*torch.ones((batchSize, numSignals), device=timeChannels.device)
+
+        # Find the start time indices for the signals.
+        startTimeIndices = torch.searchsorted(-timeChannels, targetTimes.unsqueeze(-1), side="left").squeeze(-1)  # Shape: (batchSize, numSignals)
+        startTimeIndices = torch.clamp(startTimeIndices, min=0, max=maxSequenceLength-1)
+        # startTimeIndices dim: [batchSize, numSignals]
 
         return startTimeIndices
 

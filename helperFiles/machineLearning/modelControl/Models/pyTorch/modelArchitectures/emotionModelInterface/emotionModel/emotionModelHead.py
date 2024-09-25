@@ -19,7 +19,7 @@ from ..._globalPytorchModel import globalModel
 
 
 class emotionModelHead(globalModel):
-    def __init__(self, submodel, accelerator, finalDistributionLength, signalMinMaxScale, maxNumSignals, metadata, userInputParams,
+    def __init__(self, submodel, accelerator, finalDistributionLength, signalMinMaxScale, metadata, userInputParams,
                  timeWindows, emotionNames, activityNames, featureNames, numSubjects, datasetName, useFinalParams, debuggingResults=False):
         super(emotionModelHead, self).__init__()
         # General model parameters.
@@ -31,7 +31,6 @@ class emotionModelHead(globalModel):
         self.numActivities = len(activityNames)  # The number of activities to predict.
         self.numEmotions = len(emotionNames)  # The number of emotions to predict.
         self.numSignals = len(featureNames)  # The number of signals going into the model.
-        self.maxNumSignals = maxNumSignals  # The maximum number of signals to consider.
         self.activityNames = activityNames  # The names of each activity we are predicting. Dim: numActivities
         self.featureNames = featureNames  # The names of each feature/signal in the model. Dim: numSignals
         self.emotionNames = emotionNames  # The names of each emotion we are predicting. Dim: numEmotions
@@ -42,14 +41,11 @@ class emotionModelHead(globalModel):
         self.datasetName = datasetName  # The name of the dataset the model is training on.
 
         # Signal encoder parameters.
-        self.signalEncoderWaveletType = userInputParams['signalEncoderWaveletType']         # The number of signals to group when you begin compression or finish expansion.
+        self.signalEncoderWaveletType = userInputParams['signalEncoderWaveletType']  # The type of wavelet to use for signal encoding.
         self.numSigLiftedChannels = userInputParams['numSigLiftedChannels']     # The number of channels to lift to during signal encoding.
-        self.numSigEncodingLayers = userInputParams['numSigEncodingLayers']     # The number of transformer layers during signal encoding.
-        self.numExpandedSignals = userInputParams['numExpandedSignals']         # The number of signals to group when you begin compression or finish expansion.
+        self.numSigEncodingLayers = userInputParams['numSigEncodingLayers']     # The number of layers during signal encoding.
+        self.encodedSamplingFreq = userInputParams['encodedSamplingFreq']     # The number of transformer layers during signal encoding.
 
-        # Autoencoder parameters.
-        self.compressionFactor = userInputParams['compressionFactor']       # The expansion factor of the autoencoder
-        self.expansionFactor = userInputParams['expansionFactor']           # The expansion factor of the autoencoder
         # Emotion parameters.
         self.numInterpreterHeads = userInputParams['numInterpreterHeads']   # The number of ways to interpret a set of physiological signals.
         self.numBasicEmotions = userInputParams['numBasicEmotions']         # The number of basic emotions (basis states of emotions).
@@ -92,14 +88,13 @@ class emotionModelHead(globalModel):
         self.signalEncoderModel = signalEncoderModel(
             numSigLiftedChannels=self.numSigLiftedChannels,
             numSigEncodingLayers=self.numSigEncodingLayers,
-            numExpandedSignals=self.numExpandedSignals,
+            encodedSamplingFreq=self.encodedSamplingFreq,
             waveletType=self.signalEncoderWaveletType,
             numEncodedSignals=self.numEncodedSignals,
             signalMinMaxScale=self.signalMinMaxScale,
             debuggingResults=self.debuggingResults,
             useFinalParams=self.useFinalParams,
             sequenceBounds=self.sequenceBounds,
-            maxNumSignals=self.maxNumSignals,
             accelerator=self.accelerator,
         )
 
@@ -150,12 +145,15 @@ class emotionModelHead(globalModel):
     # -------------------------- Model Components -------------------------- #
 
     def signalEncoding(self, signalData, startTimeIndices, signalIdentifiers, metadata, decodeSignals=True, calculateLoss=True, trainingFlag=False):
+        # decodeSignals: whether to decode the signals after encoding, which is used for the autoencoder loss.
+        # trainingFlag: whether the model is training or testing.
+
         # Add the data, labels, and training/testing indices to the device (GPU/CPU)
-        signalData, signalIdentifiers, metadata = signalData.to(self.device), signalIdentifiers.to(self.device), metadata.to(self.device)
+        signalData, startTimeIndices, signalIdentifiers, metadata = (tensor.to(self.device) for tensor in (signalData, startTimeIndices, signalIdentifiers, metadata))
 
         t1 = time.time()
-        # Forward pass through the signal encoder to reduce to a common signal number.
-        encodedData, reconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLayerLoss = self.signalEncoderModel(signalData, startTimeIndices, signalIdentifiers, metadata, decodeSignals, calculateLoss, trainingFlag)
+        # Forward pass through the signal encoder to find a common signal source.
+        encodedData, reconstructedData, signalEncodingLayerLoss = self.signalEncoderModel(signalData, startTimeIndices, signalIdentifiers, metadata, decodeSignals, calculateLoss, trainingFlag)
         # decodedPredictedIndexProbabilities dimension: batchSize, numSignals
         # encodedData dimension: batchSize, numEncodedSignals, finalDistributionLength
         # reconstructedData dimension: batchSize, numSignals, finalDistributionLength
@@ -163,7 +161,7 @@ class emotionModelHead(globalModel):
         # signalEncodingLayerLoss dimension: batchSize
         t2 = time.time(); print("\tSignal Encoder:", t2 - t1)
 
-        return encodedData, reconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLayerLoss
+        return encodedData, reconstructedData, signalEncodingLayerLoss
 
     def compressData(self, signalData, initialSignalData, reconstructSignals=True, calculateLoss=True, compileVariables=False, compileLosses=False, fullReconstruction=False, trainingFlag=False):
         # Add the data, labels, and training/testing indices to the device (GPU/CPU)
@@ -172,8 +170,8 @@ class emotionModelHead(globalModel):
 
         with torch.no_grad():
             # Compile the variables from signal encoding.
-            encodedData, reconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLayerLoss = self.signalEncoding(signalData, startTimeIndices, signalIdentifiers, metadata, decodeSignals=compileVariables, calculateLoss=calculateLoss and compileLosses, trainingFlag=False)
-            signalEncodingOutputs = encodedData, reconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLayerLoss
+            encodedData, reconstructedData, signalEncodingLayerLoss = self.signalEncoding(signalData, startTimeIndices, signalIdentifiers, metadata, decodeSignals=compileVariables, calculateLoss=calculateLoss and compileLosses, trainingFlag=False)
+            signalEncodingOutputs = encodedData, reconstructedData, signalEncodingLayerLoss
 
         t1 = time.time()
         # Forward pass through the autoencoder for data compression.

@@ -13,7 +13,7 @@ from ....._globalPytorchModel import globalModel
 
 
 class signalEncoderModel(globalModel):
-    def __init__(self, sequenceBounds, maxNumSignals, numEncodedSignals, numExpandedSignals, numSigEncodingLayers, numSigLiftedChannels, waveletType, signalMinMaxScale, accelerator, useFinalParams=False, debuggingResults=False):
+    def __init__(self, sequenceBounds, numEncodedSignals, encodedSamplingFreq, numSigEncodingLayers, numSigLiftedChannels, waveletType, signalMinMaxScale, accelerator, useFinalParams=False, debuggingResults=False):
         super(signalEncoderModel, self).__init__()
         # General model parameters.
         self.signalMinMaxScale = signalMinMaxScale  # The minimum and maximum signal values to consider for scaling. Type: tuple
@@ -24,10 +24,9 @@ class signalEncoderModel(globalModel):
         # Signal encoder parameters.
         self.numSigLiftedChannels = numSigLiftedChannels  # The number of channels to lift to during signal encoding.
         self.numSigEncodingLayers = numSigEncodingLayers  # The number of operator layers during signal encoding.
-        self.numExpandedSignals = numExpandedSignals  # The number of signals in the expanded form for encoding to numExpandedSignals - 1.
+        self.encodedSamplingFreq = encodedSamplingFreq    # The sampling frequency of the encoded signals.
         self.numEncodedSignals = numEncodedSignals  # The final number of signals to accept, encoding all signal information.
         self.sequenceBounds = sequenceBounds  # The minimum and maximum sequence lengths to consider.
-        self.maxNumSignals = maxNumSignals  # The maximum number of signals to consider.
         self.waveletType = waveletType  # The type to use during the signal encoder.
 
         # Method to converge to the final number of signals.
@@ -100,12 +99,12 @@ class signalEncoderModel(globalModel):
 
         # Prepare the data for compression/expansion
         batchSize, numSignals, maxSequenceLength, numChannels = signalData.size()
+        assert numChannels == len(modelConstants.signalChannelNames)
 
         # Create placeholders for the final variables.
-        decodedPredictedIndexProbabilities = torch.ones((batchSize, numSignals), device=signalData.device)
         denoisedReconstructedData = torch.zeros_like(signalData, device=signalData.device)
         signalEncodingLoss = torch.zeros((batchSize,), device=signalData.device)
-        # denoisedReconstructedData dimension: batchSize, numSignals, finalDistributionLength
+        # denoisedReconstructedData dimension: batchSize, numSignals, maxSequenceLength, numChannels
         # signalEncodingLoss dimension: batchSize
 
         # Initialize training parameters
