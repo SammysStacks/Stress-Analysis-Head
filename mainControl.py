@@ -28,11 +28,11 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------- #
 
     # specify if using the E4 watch for streaming
-    E4StreamingIndicator = True
+    E4StreamingIndicator = False
 
     # Protocol switches: only the first true variably executes.
     readDataFromExcel = False  # For SINGLE FILE analysis. Analyze Data from Excel File called 'currentFilename' on Sheet Number 'testSheetNum'
-    streamData = False  # Stream in Data from the Board and Analyze.
+    streamData = True  # Stream in Data from the Board and Analyze.
     trainModel = False  # Train Model with ALL Data in 'collectedDataFolder'.
 
     # Assert that only one of E4Streaming or streamData can be True, maybe be both, but right now use one
@@ -40,13 +40,13 @@ if __name__ == "__main__":
 
     # User options during the run: any number can be true.
     useModelPredictions = False or trainModel  # Apply the learning algorithm to decode the signals.
-    plotStreamedData = True  # Graph the data to show incoming signals.
+    plotStreamedData = False  # Graph the data to show incoming signals.
     useTherapyData = True  # Use the Therapy Data folder for any files.
 
     # Specify the user parameters.
-    userName = "Testing".replace(" ", "")
+    userName = "Wenjian".replace(" ", "")
     trialName = "HeatingPad"
-    date = "2024-09-23"
+    date = "2024-09-26"
 
     # Specify experimental parameters.
     boardSerialNum = '12ba4cb61c85ec11bc01fc2b19c2d21c'  # Board's Serial Number (port.serial_number). Only used if streaming data, else it gets reset to None.
