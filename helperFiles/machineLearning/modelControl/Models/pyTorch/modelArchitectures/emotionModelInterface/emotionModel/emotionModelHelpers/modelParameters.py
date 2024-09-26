@@ -162,7 +162,7 @@ class modelParameters:
 
         if submodel == modelConstants.autoencoderModel:
             # Model loading information.
-            loadSubmodelDate = f"2024-04-06 Final signalEncoder on cuda at numExpandedSignals 4 at numSigEncodingLayers 4"  # The date the model was trained.
+            loadSubmodelDate = f"2024-04-06 Final signalEncoder on cuda at encodedSamplingFreq 4 at numSigEncodingLayers 4"  # The date the model was trained.
             loadSubmodel = modelConstants.signalEncoderModel  # The model's component we are loading.
             loadSubmodelEpochs = -1  # The number of epochs the loading model was trained.
 
@@ -228,7 +228,7 @@ class modelParameters:
             'signalEncoderWaveletType': args.signalEncoderWaveletType,  # The wavelet type for the wavelet transform.
             'numSigLiftedChannels': args.numSigLiftedChannels,  # The number of channels to lift to during signa; encoding.
             'numSigEncodingLayers': args.numSigEncodingLayers,  # The number of operator layers during signal encoding.
-            'numExpandedSignals': args.numExpandedSignals,  # The number of signals to group when you begin compression or finish expansion.
+            'encodedSamplingFreq': args.encodedSamplingFreq,  # The sampling frequency of the encoded signal.
             # Assign autoencoder parameters
             'compressionFactor': args.compressionFactor,  # The compression factor of the autoencoder.
             'expansionFactor': args.expansionFactor,  # The expansion factor of the autoencoder.
@@ -241,8 +241,5 @@ class modelParameters:
         # Relay the inputs to the user.
         print("System Arguments:", userInputParams, flush=True)
         submodel = args.submodel
-
-        # Assert the integrity of the model parameters.
-        assert args.numExpandedSignals <= args.numSigLiftedChannels
 
         return userInputParams, submodel

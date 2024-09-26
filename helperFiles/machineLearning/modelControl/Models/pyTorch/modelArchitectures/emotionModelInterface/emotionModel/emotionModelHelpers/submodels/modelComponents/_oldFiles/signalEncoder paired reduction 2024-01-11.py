@@ -26,7 +26,7 @@ class signalEncoderBase(_convolutionalHelpers.convolutionalHelpers):
         # General shape parameters.
         self.signalDimension = signalDimension
         self.numCompressedSignals = 3
-        self.numExpandedSignals = 4
+        self.encodedSamplingFreq = 4
         
         # Specify channel encoding
         self.channelEncoding = torch.ones(2, self.signalDimension).to(self.device)

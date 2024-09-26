@@ -14,7 +14,7 @@ from .denoiser import denoiser
 
 
 class signalEncoderHelpers(nn.Module):
-    def __init__(self, sequenceBounds=(90, 240), numExpandedSignals=2, numSigEncodingLayers=5, numSigLiftedChannels=48, waveletType='bior3.7', signalMinMaxScale=1, debuggingResults=False):
+    def __init__(self, sequenceBounds=(90, 240), encodedSamplingFreq=2, numSigEncodingLayers=5, numSigLiftedChannels=48, waveletType='bior3.7', signalMinMaxScale=1, debuggingResults=False):
         super(signalEncoderHelpers, self).__init__()
         # General
         self.numSigEncodingLayers = numSigEncodingLayers          # The number of layers to encode the signals.
@@ -22,14 +22,14 @@ class signalEncoderHelpers(nn.Module):
 
         # Compression/Expansion parameters.
         self.sequenceBounds = sequenceBounds                # The minimum and maximum number of signals in any expansion/compression.
-        self.numExpandedSignals = numExpandedSignals        # The final number of signals in any expansion
-        self.numCompressedSignals = numExpandedSignals - 1  # The final number of signals in any compression.
-        self.expansionFactor = Fraction(self.numExpandedSignals, self.numCompressedSignals)  # The percent expansion.
+        self.encodedSamplingFreq = encodedSamplingFreq        # The final number of signals in any expansion
+        self.numCompressedSignals = encodedSamplingFreq - 1  # The final number of signals in any compression.
+        self.expansionFactor = Fraction(self.encodedSamplingFreq, self.numCompressedSignals)  # The percent expansion.
         # Assert the integrity of the input parameters.
-        assert self.numExpandedSignals - self.numCompressedSignals == 1, "You should only gain 1 channel when expanding or else you may overshoot."
+        assert self.encodedSamplingFreq - self.numCompressedSignals == 1, "You should only gain 1 channel when expanding or else you may overshoot."
 
         # Initialize signal encoder helper classes.
-        self.channelEncodingInterface = channelEncoding(waveletType=waveletType, numCompressedSignals=self.numCompressedSignals, numExpandedSignals=self.numExpandedSignals, expansionFactor=self.expansionFactor, numSigEncodingLayers=numSigEncodingLayers, sequenceBounds=self.sequenceBounds, numSigLiftedChannels=numSigLiftedChannels)
+        self.channelEncodingInterface = channelEncoding(waveletType=waveletType, numCompressedSignals=self.numCompressedSignals, encodedSamplingFreq=self.encodedSamplingFreq, expansionFactor=self.expansionFactor, numSigEncodingLayers=numSigEncodingLayers, sequenceBounds=self.sequenceBounds, numSigLiftedChannels=numSigLiftedChannels)
         self.positionalEncodingInterface = channelPositionalEncoding(waveletType=waveletType, sequenceBounds=self.sequenceBounds, signalMinMaxScale=signalMinMaxScale)
         self.denoiseSignals = denoiser(waveletType=waveletType, sequenceBounds=sequenceBounds)
         self.dataInterface = emotionDataInterface
@@ -86,7 +86,7 @@ class signalEncoderHelpers(nn.Module):
         elif numSignals < targetNumSignals < numSignals * self.expansionFactor:
             # Find the number of signals to expand.
             numSignalsGained = targetNumSignals - numSignals
-            numExpansions = numSignalsGained / (self.numExpandedSignals - self.numCompressedSignals)
+            numExpansions = numSignalsGained / (self.encodedSamplingFreq - self.numCompressedSignals)
             numActiveSignals = numExpansions * self.numCompressedSignals
             assert numActiveSignals <= numSignals, "This must be true if the logic is working."
 
@@ -94,14 +94,14 @@ class signalEncoderHelpers(nn.Module):
         elif targetNumSignals < numSignals < targetNumSignals * self.expansionFactor:
             # Find the number of signals to reduce.
             numSignalsLost = numSignals - targetNumSignals
-            numCompressions = numSignalsLost / (self.numExpandedSignals - self.numCompressedSignals)
-            numActiveSignals = numCompressions * self.numExpandedSignals
+            numCompressions = numSignalsLost / (self.encodedSamplingFreq - self.numCompressedSignals)
+            numActiveSignals = numCompressions * self.encodedSamplingFreq
             assert numActiveSignals <= numSignals, "This must be true if the logic is working."
 
         # If we are reducing the signals as much as I can.
         elif targetNumSignals * self.expansionFactor <= numSignals:
             # We can only pair up an even number.
-            numActiveSignals = numSignals - (numSignals % self.numExpandedSignals)
+            numActiveSignals = numSignals - (numSignals % self.encodedSamplingFreq)
 
         # Base case: numSignals == targetNumSignals
         else:
@@ -134,10 +134,10 @@ class signalEncoderHelpers(nn.Module):
         # frozenData dimension: batchSize, numFrozenSignals, signalDimension
 
         # Pair up the signals.
-        numSignalPairs = int(numActiveSignals / self.numExpandedSignals)
-        pairedData = activeData.view(batchSize, numSignalPairs, self.numExpandedSignals, signalDimension)
-        pairedData = pairedData.view(batchSize * numSignalPairs, self.numExpandedSignals, signalDimension)
-        # pairedData dimension: batchSize*numSignalPairs, numExpandedSignals, signalDimension
+        numSignalPairs = int(numActiveSignals / self.encodedSamplingFreq)
+        pairedData = activeData.view(batchSize, numSignalPairs, self.encodedSamplingFreq, signalDimension)
+        pairedData = pairedData.view(batchSize * numSignalPairs, self.encodedSamplingFreq, signalDimension)
+        # pairedData dimension: batchSize*numSignalPairs, encodedSamplingFreq, signalDimension
 
         return pairedData, frozenData, numActiveSignals
 

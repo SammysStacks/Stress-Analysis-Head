@@ -282,6 +282,7 @@ class compileModelData(compileModelDataHelpers):
 
             # Round the data to remove uncertainties.
             allSignalData = torch.round(allSignalData, decimals=4)
+            print(allSignalData.size())
 
             # ---------------------- Create the Model ---------------------- #
 
@@ -325,7 +326,7 @@ class compileModelData(compileModelDataHelpers):
 
     def onlyPreloadModelAttributes(self, modelName, datasetNames, loadSubmodel, loadSubmodelDate, loadSubmodelEpochs, allDummyModelPipelines=()):
         # Initialize relevant holders.
-        userInputParams = {'deviceListed': "cpu", 'submodel': 'emotionPrediction', 'numExpandedSignals': 2, 'numSigEncodingLayers': 4, 'numSigLiftedChannels': 4,
+        userInputParams = {'deviceListed': "cpu", 'submodel': 'emotionPrediction', 'encodedSamplingFreq': 2, 'numSigEncodingLayers': 4, 'numSigLiftedChannels': 4,
                            'compressionFactor': 1.5, 'expansionFactor': 1.5, 'numInterpreterHeads': 4, 'numBasicEmotions': 8, 'finalDistributionLength': 240}
 
         # Overwrite the location of the saved models.

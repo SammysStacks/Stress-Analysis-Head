@@ -18,15 +18,15 @@ import _convolutionalHelpers
 # -------------------------- Shared Architecture --------------------------- #
 
 class signalEncoderBase(_convolutionalHelpers.convolutionalHelpers):
-    def __init__(self, signalDimension, numExpandedSignals, numCompressedSignals):
+    def __init__(self, signalDimension, encodedSamplingFreq, numCompressedSignals):
         super(signalEncoderBase, self).__init__()
         self.signalDimension = signalDimension
-        self.numExpandedSignals = numExpandedSignals
+        self.encodedSamplingFreq = encodedSamplingFreq
         self.numCompressedSignals = numCompressedSignals
         
         # Create model for learning local information.
         # self.expandSignals = self.signalExpansionModule(inChannel = numCompressedSignals)
-        # self.compressSignals = self.signalCompressionModule(inChannel = numExpandedSignals)
+        # self.compressSignals = self.signalCompressionModule(inChannel = encodedSamplingFreq)
         
         # Delta learning modules to predict the residuals.
         self.simpleExpansion = self.changeChannels(numChannels = [64, 512], kernel_sizes = [3], dilations = [1], groups = [64])
@@ -129,14 +129,14 @@ class signalEncoderBase(_convolutionalHelpers.convolutionalHelpers):
 # -------------------------- Encoder Architecture -------------------------- #
 
 class signalEncoding(signalEncoderBase):
-    def __init__(self, signalDimension = 64, numExpandedSignals = 512, numCompressedSignals = 64):
-        super(signalEncoding, self).__init__(signalDimension, numExpandedSignals, numCompressedSignals)        
+    def __init__(self, signalDimension = 64, encodedSamplingFreq = 512, numCompressedSignals = 64):
+        super(signalEncoding, self).__init__(signalDimension, encodedSamplingFreq, numCompressedSignals)        
                         
     def forward(self, signalData):
         """ The shape of signalChannel: (batchSize, numSignals, finalDistributionLength) """
         # Specify the current input shape of the data.
-        batchSize, numExpandedSignals, signalDimension = signalData.size()
-        assert self.numExpandedSignals == numExpandedSignals
+        batchSize, encodedSamplingFreq, signalDimension = signalData.size()
+        assert self.encodedSamplingFreq == encodedSamplingFreq
         assert self.signalDimension == signalDimension
                 
         # ------------------------ CNN Architecture ------------------------ # 
@@ -151,9 +151,9 @@ class signalEncoding(signalEncoderBase):
         return encodedSignals
         
     def printParams(self):
-        # signalEncoding(signalDimension = 64, numExpandedSignals = 512, numCompressedSignals = 64).to('cpu').printParams()
+        # signalEncoding(signalDimension = 64, encodedSamplingFreq = 512, numCompressedSignals = 64).to('cpu').printParams()
         t1 = time.time()
-        summary(self, (self.numExpandedSignals, self.signalDimension))
+        summary(self, (self.encodedSamplingFreq, self.signalDimension))
         t2 = time.time(); print(t2-t1)
         
         # Count the trainable parameters.
@@ -161,8 +161,8 @@ class signalEncoding(signalEncoderBase):
         print(f'The model has {numParams} trainable parameters.')
         
 class signalDecoding(signalEncoderBase):
-    def __init__(self, signalDimension = 64, numExpandedSignals = 512, numCompressedSignals = 64):
-        super(signalDecoding, self).__init__(signalDimension, numExpandedSignals, numCompressedSignals)        
+    def __init__(self, signalDimension = 64, encodedSamplingFreq = 512, numCompressedSignals = 64):
+        super(signalDecoding, self).__init__(signalDimension, encodedSamplingFreq, numCompressedSignals)        
                         
     def forward(self, signalData):
         """ The shape of signalChannel: (batchSize, numSignals, finalDistributionLength) """
@@ -183,7 +183,7 @@ class signalDecoding(signalEncoderBase):
         return encodedSignals
         
     def printParams(self):
-        # signalDecoding(signalDimension = 64, numExpandedSignals = 512, numCompressedSignals = 64).to('cpu').printParams()
+        # signalDecoding(signalDimension = 64, encodedSamplingFreq = 512, numCompressedSignals = 64).to('cpu').printParams()
         t1 = time.time()
         summary(self, (self.numCompressedSignals, self.signalDimension))
         t2 = time.time(); print(t2-t1)

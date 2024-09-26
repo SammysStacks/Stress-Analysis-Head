@@ -48,7 +48,7 @@ class emotionPipelineHelpers:
 
         # Initialize the emotion model.
         if modelName == "emotionModel":
-            self.model = emotionModelHead(submodel, accelerator, self.finalDistributionLength, signalMinMaxScale, maxNumSignals, self.metadata, userInputParams,
+            self.model = emotionModelHead(submodel, accelerator, self.finalDistributionLength, signalMinMaxScale, self.metadata, userInputParams,
                                           timeWindows, emotionNames, activityNames, featureNames, numSubjects, datasetName, useFinalParams, debuggingResults)
         # Assert that the model has been initialized.
         assert hasattr(self, 'model'), f"Unknown Model Type Requested: {modelName}"

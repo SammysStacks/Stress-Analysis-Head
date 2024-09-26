@@ -10,8 +10,8 @@ from .signalEncoderHelpers.signalEncoderHelpers import signalEncoderHelpers
 
 
 class signalEncoderBase(signalEncoderHelpers):
-    def __init__(self, sequenceBounds=(90, 300), numExpandedSignals=2, numSigEncodingLayers=5, numSigLiftedChannels=48, waveletType='bior3.7', signalMinMaxScale=1, debuggingResults=False):
-        super(signalEncoderBase, self).__init__(sequenceBounds=sequenceBounds, numExpandedSignals=numExpandedSignals, numSigEncodingLayers=numSigEncodingLayers,
+    def __init__(self, sequenceBounds=(90, 300), encodedSamplingFreq=2, numSigEncodingLayers=5, numSigLiftedChannels=48, waveletType='bior3.7', signalMinMaxScale=1, debuggingResults=False):
+        super(signalEncoderBase, self).__init__(sequenceBounds=sequenceBounds, encodedSamplingFreq=encodedSamplingFreq, numSigEncodingLayers=numSigEncodingLayers,
                                                 numSigLiftedChannels=numSigLiftedChannels, waveletType=waveletType, signalMinMaxScale=signalMinMaxScale, debuggingResults=debuggingResults)
 
     # ---------------------------- Loss Methods ---------------------------- #
@@ -74,7 +74,7 @@ class signalEncoderBase(signalEncoderHelpers):
     def compressionModel(self, originalData, targetNumSignals):
         # Pair up the signals with their neighbors.
         pairedData, frozenData, numActiveSignals = self.pairSignals(originalData, targetNumSignals)
-        # pairedData dimension: batchSize*numActiveSignals/numExpandedSignals, numExpandedSignals, signalDimension
+        # pairedData dimension: batchSize*numActiveSignals/encodedSamplingFreq, encodedSamplingFreq, signalDimension
         # frozenData dimension: batchSize, numFrozenSignals, signalDimension
 
         # Reduce the number of signals.
@@ -91,8 +91,8 @@ class signalEncoderBase(signalEncoderHelpers):
 # -------------------------- Encoder Architecture -------------------------- #
 
 class generalSignalEncoding(signalEncoderBase):
-    def __init__(self, sequenceBounds=(90, 300), numExpandedSignals=2, numSigEncodingLayers=5, numSigLiftedChannels=48, waveletType="bior3.7", signalMinMaxScale=1, debuggingResults=False):
-        super(generalSignalEncoding, self).__init__(sequenceBounds=sequenceBounds, numExpandedSignals=numExpandedSignals, numSigEncodingLayers=numSigEncodingLayers,
+    def __init__(self, sequenceBounds=(90, 300), encodedSamplingFreq=2, numSigEncodingLayers=5, numSigLiftedChannels=48, waveletType="bior3.7", signalMinMaxScale=1, debuggingResults=False):
+        super(generalSignalEncoding, self).__init__(sequenceBounds=sequenceBounds, encodedSamplingFreq=encodedSamplingFreq, numSigEncodingLayers=numSigEncodingLayers,
                                                     numSigLiftedChannels=numSigLiftedChannels, waveletType=waveletType, signalMinMaxScale=signalMinMaxScale, debuggingResults=debuggingResults)
 
     def forward(self, signalData, targetNumSignals=32, signalEncodingLayerLoss=None, calculateLoss=True, forward=True):
@@ -145,7 +145,7 @@ class generalSignalEncoding(signalEncoderBase):
         return signalData, numSignalPath, signalEncodingLayerLoss
 
     def printParams(self, numSignals=50, sequenceBounds=(90, 300)):
-        # generalSignalEncoding(numExpandedSignals=3, sequenceBounds=(90, 300)).to('cpu').printParams(numSignals=100, sequenceBounds=(90, 300))
+        # generalSignalEncoding(encodedSamplingFreq=3, sequenceBounds=(90, 300)).to('cpu').printParams(numSignals=100, sequenceBounds=(90, 300))
         t1 = time.time()
         summary(self, (numSignals, sequenceBounds[1]))
         t2 = time.time()

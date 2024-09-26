@@ -24,8 +24,8 @@ import _convolutionalHelpers
 # -------------------------- Shared Architecture --------------------------- #
 
 class signalEncoderBase(_signalEncoderModules.signalEncoderModules):
-    def __init__(self, signalDimension = 64, numExpandedSignals = 2):
-        super(signalEncoderBase, self).__init__(signalDimension, numExpandedSignals)        
+    def __init__(self, signalDimension = 64, encodedSamplingFreq = 2):
+        super(signalEncoderBase, self).__init__(signalDimension, encodedSamplingFreq)        
 
         # Map the initial signals into a common subspace.
         self.initialTransformation = self.minorSubspaceTransformationInitial(inChannel = 1, numMidChannels = 8)
@@ -34,15 +34,15 @@ class signalEncoderBase(_signalEncoderModules.signalEncoderModules):
         # self.finalMidTransformation = self.minorSubspaceTransformationFinal(inChannel = 1, numMidChannels = 16)
         
         # Learned expansion/compression via CNN.
-        self.compressChannelsCNN = self.signalEncodingModule_compression(inChannel = self.numExpandedSignals, outChannel = self.numCompressedSignals, channelIncrease = 16)
-        self.expandChannelsCNN = self.signalEncodingModule_expansion(inChannel = self.numCompressedSignals, outChannel = self.numExpandedSignals, channelIncrease = 16)  
+        self.compressChannelsCNN = self.signalEncodingModule_compression(inChannel = self.encodedSamplingFreq, outChannel = self.numCompressedSignals, channelIncrease = 16)
+        self.expandChannelsCNN = self.signalEncodingModule_expansion(inChannel = self.numCompressedSignals, outChannel = self.encodedSamplingFreq, channelIncrease = 16)  
 
         # Initialize the pooling layers to upsample/downsample
         # self.downsampleChannels = nn.Upsample(size=self.numCompressedSignals, mode='linear', align_corners=True)
-        # self.upsampleChannels = nn.Upsample(size=self.numExpandedSignals, mode='linear', align_corners=True)
+        # self.upsampleChannels = nn.Upsample(size=self.encodedSamplingFreq, mode='linear', align_corners=True)
         # Initialize method for learned upsampling/downsampling.
-        # self.learnedUpsampling = self.semiLearnedChangeChannels(inChannel = self.numCompressedSignals, outChannel = self.numExpandedSignals)
-        # self.learnedDownsampling = self.semiLearnedChangeChannels(inChannel = self.numExpandedSignals, outChannel = self.numCompressedSignals)
+        # self.learnedUpsampling = self.semiLearnedChangeChannels(inChannel = self.numCompressedSignals, outChannel = self.encodedSamplingFreq)
+        # self.learnedDownsampling = self.semiLearnedChangeChannels(inChannel = self.encodedSamplingFreq, outChannel = self.numCompressedSignals)
 
     def expansionAlgorithm(self, compressedData):   
         # Learned downsampling via CNN network.
@@ -365,8 +365,8 @@ class signalEncoderBase(_signalEncoderModules.signalEncoderModules):
 # -------------------------- Encoder Architecture -------------------------- #
 
 class signalEncoding(signalEncoderBase):
-    def __init__(self, signalDimension = 64, numExpandedSignals = 2):
-        super(signalEncoding, self).__init__(signalDimension, numExpandedSignals) 
+    def __init__(self, signalDimension = 64, encodedSamplingFreq = 2):
+        super(signalEncoding, self).__init__(signalDimension, encodedSamplingFreq) 
         
     def signalEncodingInterface(self, signalData, transformation):
         # Extract the incoming data's dimension.
@@ -428,7 +428,7 @@ class signalEncoding(signalEncoderBase):
         return signalData, numSignalPath, signalEncodingLayerLoss
         
     def printParams(self, numSignals = 50):
-        # signalEncoding(signalDimension = 64, numExpandedSignals = 3).to('cpu').printParams(numSignals = 4)
+        # signalEncoding(signalDimension = 64, encodedSamplingFreq = 3).to('cpu').printParams(numSignals = 4)
         t1 = time.time()
         summary(self, (numSignals, self.signalDimension))
         t2 = time.time(); print(t2-t1)

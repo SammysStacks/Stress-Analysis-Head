@@ -25,10 +25,10 @@ import _modelHelpers
 # --------------------------- Model Architecture --------------------------- #
 
 class signalEncoderModel(_globalPytorchModel.globalModel):
-    def __init__(self, compressedLength, numEncodedSignals, numExpandedSignals):
+    def __init__(self, compressedLength, numEncodedSignals, encodedSamplingFreq):
         super(signalEncoderModel, self).__init__()
         # General model parameters.
-        self.numExpandedSignals = numExpandedSignals
+        self.encodedSamplingFreq = encodedSamplingFreq
         self.numEncodedSignals = numEncodedSignals  # The final number of signals to accept, encoding all signal information.
         self.compressedLength = compressedLength   # The initial length of each incoming signal.
 
@@ -36,7 +36,7 @@ class signalEncoderModel(_globalPytorchModel.globalModel):
         
         # Method to remove unnecessary timepoints.
         self.encodeSignals = signalEncoder.signalEncoding(
-                    numExpandedSignals = self.numExpandedSignals,
+                    encodedSamplingFreq = self.encodedSamplingFreq,
                     signalDimension = self.compressedLength, 
         )
         

@@ -13,9 +13,9 @@ class signalEncoderModules(convolutionalHelpers):
     def __init__(self):
         super(signalEncoderModules, self).__init__()
 
-    def linearModel(self, numInputFeatures=1, numOutputFeatures=1, activationMethod='none', layerType='fc'):
+    def linearModel(self, numInputFeatures=1, numOutputFeatures=1, activationMethod='none', layerType='fc', addBias=False):
         return nn.Sequential(
-            self.weightInitialization.initialize_weights(nn.Linear(numInputFeatures, numOutputFeatures), activationMethod='none', layerType=layerType),
+            self.weightInitialization.initialize_weights(nn.Linear(numInputFeatures, numOutputFeatures, bias=addBias), activationMethod='none', layerType=layerType),
             self.getActivationMethod(activationMethod),
         )
 
@@ -129,6 +129,18 @@ class signalEncoderModules(convolutionalHelpers):
             self.linearModel(numInputFeatures=int(numFeatures/2), numOutputFeatures=int(numFeatures/4), activationMethod='boundedExp_0_2', layerType='fc'),
             self.linearModel(numInputFeatures=int(numFeatures/4), numOutputFeatures=int(numFeatures/8), activationMethod='boundedExp_0_2', layerType='fc'),
             self.linearModel(numInputFeatures=int(numFeatures/8), numOutputFeatures=1, activationMethod='boundedExp_0_2', layerType='fc'),
+        )
+
+    # --------------------- Resampling Architectures --------------------- #
+
+    def polynomialCoeffs(self, outChannel=2):
+        # Linear architecture: represents the weights of the polynomial coefficients.
+        return self.linearModel(numInputFeatures=1, numOutputFeatures=outChannel, activationMethod='none', layerType='fc', addBias=False)[0].weight
+
+    def resamplingOperator(self, inChannel=1, outChannel=2):
+        return nn.Sequential(
+            # Convolution architecture: lifting operator. Keep kernel_sizes as 1 for an interpretable encoding space and faster (?) convergence.
+            self.linearModel(numInputFeatures=inChannel, numOutputFeatures=outChannel, activationMethod='none', layerType='fc', addBias=False),
         )
 
     # ------------------- Signal Encoding Architectures ------------------- #

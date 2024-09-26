@@ -79,38 +79,38 @@ class signalEncoderPlots(trainingPlots):
         os.makedirs(saveAutoencoderLossPlots, exist_ok=True)
 
     def signalEncoderLossComparison(self, numExpandedSignalBounds=(2, 10), numEncodingLayerBounds=(0, 12), numLiftedChannels=[],
-                                    finalTrainingDataString="2024-04-08 Final signalEncoder on HPC-GPU at numExpandedSignals XX at numEncodingLayers YY", plotTitle="Signal Encoder Loss Plots"):
+                                    finalTrainingDataString="2024-04-08 Final signalEncoder on HPC-GPU at encodedSamplingFreq XX at numEncodingLayers YY", plotTitle="Signal Encoder Loss Plots"):
         saveEncoderLossPlots = self.savingFolder + "signalEncoderLossPlots/"
         os.makedirs(saveEncoderLossPlots, exist_ok=True)
         print(f"\nPlotting the {saveEncoderLossPlots}")
         allDummyModelPipelines = []
 
         # Define the bounds for the number of expanded signals and encoding layers.
-        numExpandedSignalsTested = numExpandedSignalBounds[1] - numExpandedSignalBounds[0] + 1  # Boundary inclusive
+        encodedSamplingFreqTested = numExpandedSignalBounds[1] - numExpandedSignalBounds[0] + 1  # Boundary inclusive
         numEncodingLayersTested = numEncodingLayerBounds[1] - numEncodingLayerBounds[0] + 1  # Boundary inclusive
         numLiftedChannelsTestbed = numLiftedChannels
 
         trainingLossHolders = np.zeros(
-            (len(modelConstants.timeWindows), len(self.datasetNames), len(numLiftedChannelsTestbed), numExpandedSignalsTested, numEncodingLayersTested))
+            (len(modelConstants.timeWindows), len(self.datasetNames), len(numLiftedChannelsTestbed), encodedSamplingFreqTested, numEncodingLayersTested))
         testingLossHolders = np.zeros(
-            (len(modelConstants.timeWindows), len(self.datasetNames), len(numLiftedChannelsTestbed), numExpandedSignalsTested, numEncodingLayersTested))
+            (len(modelConstants.timeWindows), len(self.datasetNames), len(numLiftedChannelsTestbed), encodedSamplingFreqTested, numEncodingLayersTested))
         optimalLossHolders = np.zeros(
-            (len(modelConstants.timeWindows), len(self.datasetNames), len(numLiftedChannelsTestbed), numExpandedSignalsTested, numEncodingLayersTested))
+            (len(modelConstants.timeWindows), len(self.datasetNames), len(numLiftedChannelsTestbed), encodedSamplingFreqTested, numEncodingLayersTested))
 
-        # Dimension: (numTimeWindows, numDatasets, numExpandedSignalsTested, numEncodingLayersTested)
+        # Dimension: (numTimeWindows, numDatasets, encodedSamplingFreqTested, numEncodingLayersTested)
 
         # For each parameter value.
         for numLiftedChannelInd in range(len(numLiftedChannelsTestbed)):
             numLiftedChannels = numLiftedChannelsTestbed[numLiftedChannelInd]
-            for numExpandedSignalInd in range(numExpandedSignalsTested):
-                numExpandedSignals = numExpandedSignalBounds[0] + numExpandedSignalInd
+            for numExpandedSignalInd in range(encodedSamplingFreqTested):
+                encodedSamplingFreq = numExpandedSignalBounds[0] + numExpandedSignalInd
 
                 # For each parameter value.
                 for numEncodingLayerInd in range(numEncodingLayersTested):
                     numEncodingLayers = numEncodingLayerBounds[0] + numEncodingLayerInd
 
                     # Load in the previous model attributes.
-                    loadSubmodelDate = finalTrainingDataString.replace("XX", str(numExpandedSignals)).replace("YY",
+                    loadSubmodelDate = finalTrainingDataString.replace("XX", str(encodedSamplingFreq)).replace("YY",
                                                                                                               str(numEncodingLayers)).replace(
                         "ZZ", str(numLiftedChannels))
                     allDummyModelPipelines = self.modelCompiler.onlyPreloadModelAttributes(self.modelName,
@@ -119,7 +119,7 @@ class signalEncoderPlots(trainingPlots):
                                                                                            loadSubmodelDate=loadSubmodelDate,
                                                                                            loadSubmodelEpochs=-1,
                                                                                            allDummyModelPipelines=allDummyModelPipelines)
-                    print(numLiftedChannels, numExpandedSignals, numEncodingLayers)
+                    print(numLiftedChannels, encodedSamplingFreq, numEncodingLayers)
 
                     # For each model, get the losses.
                     lossCurves = np.empty((len(modelConstants.timeWindows), len(self.datasetNames)), dtype=object)
@@ -152,13 +152,13 @@ class signalEncoderPlots(trainingPlots):
 
                     axs[0].set_title("Training Loss")
                     axs[1].set_title("Testing Loss")
-                    fig.suptitle(f"Loss Curves for numLiftedChannels {numLiftedChannels} numExpandedSignals {numExpandedSignals} numEncodingLayers {numEncodingLayers}")
+                    fig.suptitle(f"Loss Curves for numLiftedChannels {numLiftedChannels} encodedSamplingFreq {encodedSamplingFreq} numEncodingLayers {numEncodingLayers}")
                     fig.legend()
 
                     if self.savingFolder:
                         # Save with a high DPI for better resolution
                         print('saving to', saveEncoderLossPlots)
-                        plt.savefig(f"{saveEncoderLossPlots}Loss Curve Comparison numLiftedChannels {numLiftedChannels} numExpandedSignals {numExpandedSignals} numEncodingLayers {numEncodingLayers}.pdf", format="pdf")
+                        plt.savefig(f"{saveEncoderLossPlots}Loss Curve Comparison numLiftedChannels {numLiftedChannels} encodedSamplingFreq {encodedSamplingFreq} numEncodingLayers {numEncodingLayers}.pdf", format="pdf")
                     # plt.show()
 
         # plot losses by dataset using a bar chart with mean and error bars
@@ -232,14 +232,14 @@ class signalEncoderPlots(trainingPlots):
         plt.show()
 
     def signalEncoderParamHeatmap(self, numExpandedSignalBounds=(2, 10), numEncodingLayerBounds=(0, 12), numLiftedChannelBounds=(16, 64, 16),
-                                  finalTrainingDataString="2024-04-21 numLiftedChannels ZZ at numExpandedSignals XX at numEncodingLayers YY"):
+                                  finalTrainingDataString="2024-04-21 numLiftedChannels ZZ at encodedSamplingFreq XX at numEncodingLayers YY"):
         print("\nPlotting the signal encoder heatmaps")
         os.makedirs(self.heatmapFolder, exist_ok=True)
 
         # Get the losses for the signal encoder
         lossStrings = ["trainingLosses_timeReconstructionSVDAnalysis", "trainingLosses_timeReconstructionAnalysis", "testingLosses_timeReconstructionAnalysis"]
         lossHolders = self.getSignalEncoderLosses(finalTrainingDataString, numLiftedChannelBounds=numLiftedChannelBounds, numExpandedSignalBounds=numExpandedSignalBounds, numEncodingLayerBounds=numEncodingLayerBounds, lossStrings=lossStrings)
-        # Dimension: (len(lossStrings), numTimeWindows, numDatasets, numLiftedChannelsTested, numExpandedSignalsTested, numEncodingLayersTested)
+        # Dimension: (len(lossStrings), numTimeWindows, numDatasets, numLiftedChannelsTested, encodedSamplingFreqTested, numEncodingLayersTested)
         optimalLossHolders, trainingLossHolders, testingLossHolders = lossHolders
 
         # Get a combination of each loss type
@@ -258,7 +258,7 @@ class signalEncoderPlots(trainingPlots):
                     data = trainingLossHolders[time_index, dataset_index, :, :, :]
 
                     # Extract the size of the data.
-                    numLiftedChannelsTested, numExpandedSignalsTested, numEncodingLayersTested = data.size()
+                    numLiftedChannelsTested, encodedSamplingFreqTested, numEncodingLayersTested = data.size()
 
                     # For each combination of losses, plot the heatmap
                     for numLiftedChannelsInd in range(numLiftedChannelsTested):
@@ -285,14 +285,14 @@ class signalEncoderPlots(trainingPlots):
     def getSignalEncoderLosses(self, finalTrainingDataString, numLiftedChannelBounds=(16, 64, 16), numExpandedSignalBounds=(2, 10), numEncodingLayerBounds=(0, 12), lossStrings=[]):
         # Define the bounds for the number of expanded signals and encoding layers.
         numLiftedChannelsTested = (numLiftedChannelBounds[1] - numLiftedChannelBounds[0]) // numLiftedChannelBounds[2] + 1  # Boundary inclusive
-        numExpandedSignalsTested = numExpandedSignalBounds[1] - numExpandedSignalBounds[0] + 1  # Boundary inclusive
+        encodedSamplingFreqTested = numExpandedSignalBounds[1] - numExpandedSignalBounds[0] + 1  # Boundary inclusive
         numEncodingLayersTested = numEncodingLayerBounds[1] - numEncodingLayerBounds[0] + 1  # Boundary inclusive
 
         lossHolders = []
         for _ in lossStrings:
             # Initialize the holders.
-            lossHolders.append(np.zeros((len(modelConstants.timeWindows), len(self.datasetNames), numLiftedChannelsTested, numExpandedSignalsTested, numEncodingLayersTested)))
-            # Dimension: (len(lossStrings), numTimeWindows, numDatasets, numLiftedChannelsTested, numExpandedSignalsTested, numEncodingLayersTested)
+            lossHolders.append(np.zeros((len(modelConstants.timeWindows), len(self.datasetNames), numLiftedChannelsTested, encodedSamplingFreqTested, numEncodingLayersTested)))
+            # Dimension: (len(lossStrings), numTimeWindows, numDatasets, numLiftedChannelsTested, encodedSamplingFreqTested, numEncodingLayersTested)
 
         allDummyModelPipelines = []
         # For each lifted channel value.
@@ -300,15 +300,15 @@ class signalEncoderPlots(trainingPlots):
             numLiftedChannels = numLiftedChannelBounds[0] + numLiftedChannelInd * numLiftedChannelBounds[2]
 
             # For each expanded signal value.
-            for numExpandedSignalInd in range(numExpandedSignalsTested):
-                numExpandedSignals = numExpandedSignalBounds[0] + numExpandedSignalInd
+            for numExpandedSignalInd in range(encodedSamplingFreqTested):
+                encodedSamplingFreq = numExpandedSignalBounds[0] + numExpandedSignalInd
 
                 # For each encoding layer value.
                 for numEncodingLayerInd in range(numEncodingLayersTested):
                     numEncodingLayers = numEncodingLayerBounds[0] + numEncodingLayerInd
 
                     # Load in the previous model attributes.
-                    loadSubmodelDate = finalTrainingDataString.replace("XX", str(numLiftedChannels)).replace("YY", str(numExpandedSignals)).replace("ZZ", str(numEncodingLayers))
+                    loadSubmodelDate = finalTrainingDataString.replace("XX", str(numLiftedChannels)).replace("YY", str(encodedSamplingFreq)).replace("ZZ", str(numEncodingLayers))
                     allDummyModelPipelines = self.modelCompiler.onlyPreloadModelAttributes(self.modelName, self.datasetNames, loadSubmodel=modelConstants.signalEncoderModel, loadSubmodelDate=loadSubmodelDate, loadSubmodelEpochs=-1,
                                                                                            allDummyModelPipelines=allDummyModelPipelines)
 

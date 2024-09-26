@@ -19,22 +19,22 @@ import _convolutionalHelpers
 # -------------------------- Shared Architecture --------------------------- #
 
 class signalEncoderBase(_convolutionalHelpers.convolutionalHelpers):
-    def __init__(self, signalDimension = 64, numExpandedSignals = 4):
+    def __init__(self, signalDimension = 64, encodedSamplingFreq = 4):
         super(signalEncoderBase, self).__init__()        
         # General shape parameters.
         self.signalDimension = signalDimension  # The incoming dimension of each signal.
         
         # Compression/Expansion parameters.
-        self.numExpandedSignals = numExpandedSignals        # The final number of signals in any expansion
-        self.numCompressedSignals = numExpandedSignals - 1  # The final number of signals in any compression.
-        self.expansionFactor = self.numExpandedSignals/self.numCompressedSignals  # The percent expansion.
+        self.encodedSamplingFreq = encodedSamplingFreq        # The final number of signals in any expansion
+        self.numCompressedSignals = encodedSamplingFreq - 1  # The final number of signals in any compression.
+        self.expansionFactor = self.encodedSamplingFreq/self.numCompressedSignals  # The percent expansion.
         
         # Assert the integrity of the input parameters.
-        assert self.numExpandedSignals - self.numCompressedSignals == 1, "You should only gain 1 channel when expanding or else you may overshoot."
+        assert self.encodedSamplingFreq - self.numCompressedSignals == 1, "You should only gain 1 channel when expanding or else you may overshoot."
         
         # Create model for learning local information.
-        self.expandChannels = self.signalEncodingModule(inChannel = self.numCompressedSignals, outChannel = self.numExpandedSignals, channelIncrease = self.numCompressedSignals*4)
-        self.compressChannels = self.signalEncodingModule(inChannel = self.numExpandedSignals, outChannel = self.numCompressedSignals, channelIncrease = self.numExpandedSignals*4)
+        self.expandChannels = self.signalEncodingModule(inChannel = self.numCompressedSignals, outChannel = self.encodedSamplingFreq, channelIncrease = self.numCompressedSignals*4)
+        self.compressChannels = self.signalEncodingModule(inChannel = self.encodedSamplingFreq, outChannel = self.numCompressedSignals, channelIncrease = self.encodedSamplingFreq*4)
         
         # Delta learning modules to predict the residuals.
         self.deltaCompression_multiChannelInfo = nn.ModuleList()  # Use ModuleList to store child modules.
@@ -43,17 +43,17 @@ class signalEncoderBase(_convolutionalHelpers.convolutionalHelpers):
         self.deltaExpansion_channelInfo = nn.ModuleList()    # Use ModuleList to store child modules.
         
         # For each delta channel module to add.
-        for deltaExpansionModelInd in range(self.numExpandedSignals):
+        for deltaExpansionModelInd in range(self.encodedSamplingFreq):
             self.deltaCompression_channelInfo.append(self.signalEncodingModule(inChannel = 1, outChannel = self.numCompressedSignals, channelIncrease = self.numCompressedSignals))
             # self.deltaExpansion_multiChannelInfo.append(self.signalEncodingModule(inChannel = self.numCompressedSignals, outChannel = 1, channelIncrease = self.numCompressedSignals*2))
             
         # For each delta channel module to add.
         for deltaExpansionModelInd in range(self.numCompressedSignals):
-            # self.deltaCompression_multiChannelInfo.append(self.signalEncodingModule(inChannel = self.numExpandedSignals, outChannel = 1, channelIncrease = self.numExpandedSignals*2))
-            self.deltaExpansion_channelInfo.append(self.signalEncodingModule(inChannel = 1, outChannel = self.numExpandedSignals, channelIncrease = self.numExpandedSignals))
+            # self.deltaCompression_multiChannelInfo.append(self.signalEncodingModule(inChannel = self.encodedSamplingFreq, outChannel = 1, channelIncrease = self.encodedSamplingFreq*2))
+            self.deltaExpansion_channelInfo.append(self.signalEncodingModule(inChannel = 1, outChannel = self.encodedSamplingFreq, channelIncrease = self.encodedSamplingFreq))
             
         # Initialize the pooling layers to upsample/downsample
-        self.interpolateChannels = nn.Upsample(size=self.numExpandedSignals, mode='linear', align_corners=True)
+        self.interpolateChannels = nn.Upsample(size=self.encodedSamplingFreq, mode='linear', align_corners=True)
 
     def signalCompression(self, expandedData):
         # Compile the information learned from each channel seperately. 
@@ -249,7 +249,7 @@ class signalEncoderBase(_convolutionalHelpers.convolutionalHelpers):
         elif numSignals < targetNumSignals < numSignals*self.expansionFactor:
             # Find the number of signals to expand.
             numSignalsGained = targetNumSignals - numSignals
-            numExpansions = numSignalsGained/(self.numExpandedSignals - self.numCompressedSignals)
+            numExpansions = numSignalsGained/(self.encodedSamplingFreq - self.numCompressedSignals)
             numActiveSignals = numExpansions*self.numCompressedSignals
             assert numActiveSignals <= numSignals, "This must be true if the logic is working."
         
@@ -257,14 +257,14 @@ class signalEncoderBase(_convolutionalHelpers.convolutionalHelpers):
         elif targetNumSignals < numSignals < targetNumSignals*self.expansionFactor:
             # Find the number of signals to reduce.
             numSignalsLossed = numSignals - targetNumSignals
-            numCompressions = numSignalsLossed/(self.numExpandedSignals - self.numCompressedSignals)
-            numActiveSignals = numCompressions*self.numExpandedSignals  
+            numCompressions = numSignalsLossed/(self.encodedSamplingFreq - self.numCompressedSignals)
+            numActiveSignals = numCompressions*self.encodedSamplingFreq  
             assert numActiveSignals <= numSignals, "This must be true if the logic is working."
                     
         # If we are reducing the signals as much as I can..
         elif targetNumSignals*self.expansionFactor <= numSignals:
             # We can only pair up an even number.
-            numActiveSignals = numSignals - (numSignals%self.numExpandedSignals)
+            numActiveSignals = numSignals - (numSignals%self.encodedSamplingFreq)
             
         # Base case: numSignals == targetNumSignals
         else: numActiveSignals = 0
@@ -290,10 +290,10 @@ class signalEncoderBase(_convolutionalHelpers.convolutionalHelpers):
         # frozenData dimension: batchSize, numFrozenSignals, signalDimension
 
         # Pair up the signals.
-        numSignalPairs = int(activeData.size(1)/self.numExpandedSignals)
-        pairedData = activeData.view(batchSize, numSignalPairs, self.numExpandedSignals, signalDimension)
-        pairedData = pairedData.view(batchSize*numSignalPairs, self.numExpandedSignals, signalDimension)
-        # pairedData dimension: batchSize*numSignalPairs, numExpandedSignals, signalDimension
+        numSignalPairs = int(activeData.size(1)/self.encodedSamplingFreq)
+        pairedData = activeData.view(batchSize, numSignalPairs, self.encodedSamplingFreq, signalDimension)
+        pairedData = pairedData.view(batchSize*numSignalPairs, self.encodedSamplingFreq, signalDimension)
+        # pairedData dimension: batchSize*numSignalPairs, encodedSamplingFreq, signalDimension
                 
         return pairedData, frozenData
     
@@ -316,8 +316,8 @@ class signalEncoderBase(_convolutionalHelpers.convolutionalHelpers):
 # -------------------------- Encoder Architecture -------------------------- #
 
 class signalEncoding(signalEncoderBase):
-    def __init__(self, signalDimension = 64, numExpandedSignals = 4):
-        super(signalEncoding, self).__init__(signalDimension, numExpandedSignals)        
+    def __init__(self, signalDimension = 64, encodedSamplingFreq = 4):
+        super(signalEncoding, self).__init__(signalDimension, encodedSamplingFreq)        
                         
     def forward(self, signalData, targetNumSignals = 64, signalEncodingLayerLoss = 0, numIterations = 1e-15, calculateLoss = True):
         """ The shape of signalChannel: (batchSize, numSignals, compressedLength) """

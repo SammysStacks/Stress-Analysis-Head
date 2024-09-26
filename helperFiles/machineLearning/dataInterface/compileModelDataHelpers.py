@@ -57,7 +57,7 @@ class compileModelDataHelpers:
         self.minNumClasses, self.maxClassPercentage = self.modelParameters.getExclusionCriteria(submodel)
 
         # Embedded information for each model.
-        self.signalEncoderModelInfo = f"signalEncoder on {userInputParams['deviceListed']} with {userInputParams['signalEncoderWaveletType'].replace('.', '')} at {userInputParams['optimizerType']} at numSigLiftedChannels {userInputParams['numSigLiftedChannels']} at numExpandedSignals {userInputParams['numExpandedSignals']} at numSigEncodingLayers {userInputParams['numSigEncodingLayers']}"
+        self.signalEncoderModelInfo = f"signalEncoder on {userInputParams['deviceListed']} with {userInputParams['signalEncoderWaveletType'].replace('.', '')} at {userInputParams['optimizerType']} at numSigLiftedChannels {userInputParams['numSigLiftedChannels']} at encodedSamplingFreq {userInputParams['encodedSamplingFreq']} at numSigEncodingLayers {userInputParams['numSigEncodingLayers']}"
         self.autoencoderModelInfo = f"autoencoder on {userInputParams['deviceListed']} with {userInputParams['optimizerType']} at compressionFactor {str(userInputParams['compressionFactor']).replace('.', '')} expansionFactor {str(userInputParams['expansionFactor']).replace('.', '')}"
         self.emotionPredictionModelInfo = f"emotionPrediction on {userInputParams['deviceListed']} with {userInputParams['optimizerType']} with seqLength {userInputParams['finalDistributionLength']}"
 
@@ -198,7 +198,7 @@ class compileModelDataHelpers:
 
         # Initialize the padded array and end signal indices list
         allSignalData = torch.zeros(size=(numExperiments, numSignals, maxSequenceLength, len(modelConstants.signalChannelNames)), dtype=torch.float32)  # +1 for the time data
-        allNumSignalPoints = torch.zeros(size=(numExperiments, numSignals), dtype=torch.int)
+        allNumSignalPoints = torch.empty(size=(numExperiments, numSignals), dtype=torch.int)
 
         # Get the indices for each of the signal information.
         dataChannelInd = emotionDataInterface.getChannelInd(channelName=modelConstants.signalChannel)
@@ -225,7 +225,7 @@ class compileModelDataHelpers:
                 allNumSignalPoints[experimentalInd, currentSignalInd:finalSignalInd] = batchSpecificFeatureLength
 
                 # Make sure the padded data does not change the signal range.
-                allSignalData[experimentalInd, currentSignalInd:finalSignalInd, batchSpecificFeatureLength:, dataChannelInd] = biomarkerData[:, -1].unsqueeze(-1)
+                allSignalData[experimentalInd, currentSignalInd:finalSignalInd, batchSpecificFeatureLength:, dataChannelInd] = torch.nan
 
                 # Update the current signal index
                 currentSignalInd = finalSignalInd
@@ -331,6 +331,7 @@ class compileModelDataHelpers:
 
     def normalizeSignals(self, signalBatchData):
         # signalBatchData dimension: numExperiments, numSignals, maxSequenceLength, [timeChannel, signalChannel]
+        # allNumSignalPoints dimension: numExperiments, numSignals
         signalChannelInd = emotionDataInterface.getChannelInd(channelName=modelConstants.signalChannel)
         timeChannelInd = emotionDataInterface.getChannelInd(channelName=modelConstants.timeChannel)
 
@@ -338,6 +339,9 @@ class compileModelDataHelpers:
             # Standardize the signals (min-max scaling).
             signalBatchData[:, signalInd, :, signalChannelInd] = self.generalMethods.minMaxScale_noInverse(signalBatchData[:, signalInd, :, signalChannelInd], scale=modelConstants.minMaxScale)
             signalBatchData[:, signalInd, :, timeChannelInd] = signalBatchData[:, signalInd, :, timeChannelInd] / modelConstants.maxTimeWindow
+
+        # Reset the signal data to zero at the ends.
+        signalBatchData[torch.isnan(signalBatchData)] = 0
 
         return signalBatchData
     

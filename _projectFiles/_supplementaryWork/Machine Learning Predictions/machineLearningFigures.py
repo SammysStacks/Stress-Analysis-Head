@@ -34,7 +34,7 @@ if __name__ == "__main__":
     signalEncoderPlots = signalEncoderPlots(modelName, datasetNames, sharedModelWeights, savingBaseFolder=saveFolder, accelerator=accelerate.Accelerator(cpu=True))
 
     # Define extra parameters for the plotting protocols.
-    finalSignalEncoderTrainingDataString = "2024-04-24 final signalEncoder on HPC-GPU at numLiftedChannels XX at numExpandedSignals YY at numEncodingLayers ZZ"
+    finalSignalEncoderTrainingDataString = "2024-04-24 final signalEncoder on HPC-GPU at numLiftedChannels XX at encodedSamplingFreq YY at numEncodingLayers ZZ"
 
     # Heatmap num Expanded Signals by numEncoding Layers
     signalEncoderPlots.signalEncoderParamHeatmap(numExpandedSignalBounds, numEncodingLayerBounds, numLiftedChannelBounds, finalSignalEncoderTrainingDataString)

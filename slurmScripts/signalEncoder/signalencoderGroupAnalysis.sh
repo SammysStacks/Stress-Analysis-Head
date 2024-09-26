@@ -5,7 +5,7 @@ start=$(date +%s)
 srun accelerate launch ./../../metaTrainingControl.py \
     --numSigLiftedChannels "$1" \
     --numSigEncodingLayers "$2" \
-    --numExpandedSignals "$3" \
+    --encodedSamplingFreq "$3" \
     --deviceListed "HPC-$4" \
     --submodel modelConstants.signalEncoderModel \
     --signalEncoderWaveletType "$5" \

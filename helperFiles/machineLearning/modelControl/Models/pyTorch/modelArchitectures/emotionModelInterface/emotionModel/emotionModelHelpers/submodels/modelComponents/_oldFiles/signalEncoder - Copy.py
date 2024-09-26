@@ -21,8 +21,8 @@ import _signalEncoderModules
 # -------------------------- Shared Architecture --------------------------- #
 
 class signalEncoderBase(_signalEncoderModules.signalEncoderModules):
-    def __init__(self, signalDimension = 64, numExpandedSignals = 2, accelerator = None):
-        super(signalEncoderBase, self).__init__(signalDimension, numExpandedSignals)  
+    def __init__(self, signalDimension = 64, encodedSamplingFreq = 2, accelerator = None):
+        super(signalEncoderBase, self).__init__(signalDimension, encodedSamplingFreq)  
         # General parameters.
         self.encodedStamp = nn.ParameterList() # A list of learnable parameters for learnable signal positions.
         self.accelerator = accelerator      # Hugging face model optimizations.
@@ -43,16 +43,16 @@ class signalEncoderBase(_signalEncoderModules.signalEncoderModules):
             
         # Learned compression via CNN.
         self.compressChannelsCNN_preprocessSignals = self.signalEncodingModule(inChannel = 1, channelIncrease = 8)
-        self.compressChannelsCNN_preprocessChannels = self.channelEncodingModule(inChannel = self.numExpandedSignals, channelIncrease = 8)
-        self.compressChannelsCNN = self.channelCombination(inChannel = self.numExpandedSignals, outChannel = self.numCompressedSignals, channelIncrease = 8)
+        self.compressChannelsCNN_preprocessChannels = self.channelEncodingModule(inChannel = self.encodedSamplingFreq, channelIncrease = 8)
+        self.compressChannelsCNN = self.channelCombination(inChannel = self.encodedSamplingFreq, outChannel = self.numCompressedSignals, channelIncrease = 8)
         self.compressChannelsCNN_postprocessChannels = self.channelEncodingModule(inChannel = self.numCompressedSignals, channelIncrease = 8)
         self.compressChannelsCNN_postprocessSignals = self.signalEncodingModule(inChannel = 1, channelIncrease = 8)
 
         # Learned expansion via CNN.
         self.expandChannelsCNN_preprocessSignals = self.signalEncodingModule(inChannel = 1, channelIncrease = 8)
         self.expandChannelsCNN_preprocessChannels = self.channelEncodingModule(inChannel = self.numCompressedSignals, channelIncrease = 8)
-        self.expandChannelsCNN = self.channelCombination(inChannel = self.numCompressedSignals, outChannel = self.numExpandedSignals, channelIncrease = 8)
-        self.expandChannelsCNN_postprocessChannels = self.channelEncodingModule(inChannel = self.numExpandedSignals, channelIncrease = 8)
+        self.expandChannelsCNN = self.channelCombination(inChannel = self.numCompressedSignals, outChannel = self.encodedSamplingFreq, channelIncrease = 8)
+        self.expandChannelsCNN_postprocessChannels = self.channelEncodingModule(inChannel = self.encodedSamplingFreq, channelIncrease = 8)
         self.expandChannelsCNN_postprocessSignals = self.signalEncodingModule(inChannel = 1, channelIncrease = 8)
 
         # Linear parameters to account for dilation.
@@ -236,7 +236,7 @@ class signalEncoderBase(_signalEncoderModules.signalEncoderModules):
         
         # Keep track of the compressions/expansions.
         if updatedActiveCompressionMap == None:
-            updatedActiveCompressionMap = self.updateCompressionMap(numActiveCompressionsMap, self.numExpandedSignals)
+            updatedActiveCompressionMap = self.updateCompressionMap(numActiveCompressionsMap, self.encodedSamplingFreq)
         
         # Process the reduced data.
         expandedData = self.loweringOperator(processedData, updatedActiveCompressionMap)
@@ -438,7 +438,7 @@ class signalEncoderBase(_signalEncoderModules.signalEncoderModules):
         
         # Keep track of the compressions/expansions.
         numActiveCompressionsMap, numFrozenCompressionsMap = self.segmentCompressionMap(numCompressionsMap, numActiveSignals, self.numCompressedSignals)
-        updatedActiveCompressionMap, _ = self.segmentCompressionMap(nextCompressionMap, int(numActiveSignals*self.expansionFactor), self.numExpandedSignals)
+        updatedActiveCompressionMap, _ = self.segmentCompressionMap(nextCompressionMap, int(numActiveSignals*self.expansionFactor), self.encodedSamplingFreq)
         # numActiveCompressionsMap dimension: numActiveSignals/numCompressedSignals, numCompressedSignals
         # numFrozenCompressionsMap dimension: numFrozenSignals
                   
@@ -462,13 +462,13 @@ class signalEncoderBase(_signalEncoderModules.signalEncoderModules):
     def compressionModel(self, originalData, targetNumSignals, numCompressionsMap, nextCompressionMap):
         # Pair up the signals with their neighbors.
         pairedData, frozenData, numActiveSignals = self.pairSignals(originalData, targetNumSignals)
-        # pairedData dimension: batchSize*numActiveSignals/numExpandedSignals, numExpandedSignals, signalDimension
+        # pairedData dimension: batchSize*numActiveSignals/encodedSamplingFreq, encodedSamplingFreq, signalDimension
         # frozenData dimension: batchSize, numFrozenSignals, signalDimension
         
         # Keep track of the compressions/expansions.
-        numActiveCompressionsMap, numFrozenCompressionsMap = self.segmentCompressionMap(numCompressionsMap, numActiveSignals, self.numExpandedSignals)
+        numActiveCompressionsMap, numFrozenCompressionsMap = self.segmentCompressionMap(numCompressionsMap, numActiveSignals, self.encodedSamplingFreq)
         updatedActiveCompressionMap, _ = self.segmentCompressionMap(nextCompressionMap, int(numActiveSignals/self.expansionFactor), self.numCompressedSignals)
-        # numActiveCompressionsMap dimension: numActiveSignals/numExpandedSignals, numExpandedSignals
+        # numActiveCompressionsMap dimension: numActiveSignals/encodedSamplingFreq, encodedSamplingFreq
         # numFrozenCompressionsMap dimension: numFrozenSignals
         
         # Reduce the number of signals.
@@ -492,8 +492,8 @@ class signalEncoderBase(_signalEncoderModules.signalEncoderModules):
 # -------------------------- Encoder Architecture -------------------------- #
 
 class signalEncoding(signalEncoderBase):
-    def __init__(self, signalDimension = 64, numExpandedSignals = 2, accelerator = None):
-        super(signalEncoding, self).__init__(signalDimension, numExpandedSignals, accelerator) 
+    def __init__(self, signalDimension = 64, encodedSamplingFreq = 2, accelerator = None):
+        super(signalEncoding, self).__init__(signalDimension, encodedSamplingFreq, accelerator) 
                         
     def forward(self, signalData, targetNumSignals = 32, numCompressionsMap = None, nextCompressionMap = None, signalEncodingLayerLoss = None, calculateLoss = True):
         """ The shape of signalChannel: (batchSize, numSignals, compressedLength) """
@@ -549,7 +549,7 @@ class signalEncoding(signalEncoderBase):
         return signalData, numSignalPath, numCompressionsPath, signalEncodingLayerLoss
         
     def printParams(self, numSignals = 50):
-        # signalEncoding(signalDimension = 64, numExpandedSignals = 3).to('cpu').printParams(numSignals = 4)
+        # signalEncoding(signalDimension = 64, encodedSamplingFreq = 3).to('cpu').printParams(numSignals = 4)
         t1 = time.time()
         summary(self, (numSignals, self.signalDimension))
         t2 = time.time(); print(t2-t1)

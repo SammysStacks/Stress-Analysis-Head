@@ -33,7 +33,7 @@ class signalEncoderModel(globalModel):
         self.encodeSignals = generalSignalEncoding(
             numSigEncodingLayers=self.numSigEncodingLayers,
             numSigLiftedChannels=self.numSigLiftedChannels,
-            numExpandedSignals=self.numExpandedSignals,
+            encodedSamplingFreq=self.encodedSamplingFreq,
             signalMinMaxScale=self.signalMinMaxScale,
             debuggingResults=self.debuggingResults,
             sequenceBounds=self.sequenceBounds,

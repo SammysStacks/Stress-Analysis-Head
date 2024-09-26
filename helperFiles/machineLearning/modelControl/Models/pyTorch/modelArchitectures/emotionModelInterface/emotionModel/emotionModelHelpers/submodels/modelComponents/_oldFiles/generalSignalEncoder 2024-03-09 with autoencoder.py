@@ -17,8 +17,8 @@ from ._signalEncoderModules._signalEncoderModules import signalEncoderModules
 # -------------------------- Shared Architecture --------------------------- #
 
 class signalEncoderBase(signalEncoderModules):
-    def __init__(self, maxSequenceLength=64, numExpandedSignals=2, accelerator=None):
-        super(signalEncoderBase, self).__init__(numExpandedSignals)
+    def __init__(self, maxSequenceLength=64, encodedSamplingFreq=2, accelerator=None):
+        super(signalEncoderBase, self).__init__(encodedSamplingFreq)
         # General parameters.
         self.maxSequenceLength = maxSequenceLength  # The maximum number of points in any signal.
         self.accelerator = accelerator  # Hugging face model optimizations.
@@ -41,42 +41,42 @@ class signalEncoderBase(signalEncoderModules):
 
         # Specify the ladder operators to integrate the learned information from the encoding location.
         self.raisingModuleExpansionCombine = self.combineLadderModule(inChannel=2*self.numCompressedSignals, outChannel=self.numCompressedSignals)
-        self.loweringModuleExpansionCombine = self.combineLadderModule(inChannel=2*self.numExpandedSignals, outChannel=self.numExpandedSignals)
+        self.loweringModuleExpansionCombine = self.combineLadderModule(inChannel=2*self.encodedSamplingFreq, outChannel=self.encodedSamplingFreq)
         # Specify the ladder operators to integrate the learned information from the encoding location.
         self.raisingModuleExpansion = self.learnLadderModule(inChannel=self.numCompressedSignals)
-        self.loweringModuleExpansion = self.learnLadderModule(inChannel=self.numExpandedSignals)
+        self.loweringModuleExpansion = self.learnLadderModule(inChannel=self.encodedSamplingFreq)
         # Specify the ladder operators to account for dilation in expansion.
         self.loweringParamsExpansion = torch.nn.Parameter(torch.randn(8))
         self.raisingParamsExpansion = torch.nn.Parameter(torch.randn(8))
 
         # Specify the ladder operators to integrate the learned information from the encoding location.
         self.loweringModuleCompressionCombine = self.combineLadderModule(inChannel=2*self.numCompressedSignals, outChannel=self.numCompressedSignals)
-        self.raisingModuleCompressionCombine = self.combineLadderModule(inChannel=2*self.numExpandedSignals, outChannel=self.numExpandedSignals)
+        self.raisingModuleCompressionCombine = self.combineLadderModule(inChannel=2*self.encodedSamplingFreq, outChannel=self.encodedSamplingFreq)
         # Specify the ladder operators to integrate the learned information from the encoding location.
         self.loweringModuleCompression = self.learnLadderModule(inChannel=self.numCompressedSignals)
-        self.raisingModuleCompression = self.learnLadderModule(inChannel=self.numExpandedSignals)
+        self.raisingModuleCompression = self.learnLadderModule(inChannel=self.encodedSamplingFreq)
         # Specify the ladder operators to account for dilation in compression.
         self.loweringParamsCompression = torch.nn.Parameter(torch.randn(8))
         self.raisingParamsCompression = torch.nn.Parameter(torch.randn(8))
 
         # Learned compression via CNN.
-        self.compressChannelsCNN_preprocessChannels = self.learnChannelModule(inChannel=self.numExpandedSignals)
-        self.compressChannelsCNN_preprocessCombine = self.combineChannelModule(inChannel=2*self.numExpandedSignals, outChannel=self.numExpandedSignals)
-        self.compressChannelsCNN = self.encodeChannels(inChannel=self.numExpandedSignals, outChannel=self.numCompressedSignals)
+        self.compressChannelsCNN_preprocessChannels = self.learnChannelModule(inChannel=self.encodedSamplingFreq)
+        self.compressChannelsCNN_preprocessCombine = self.combineChannelModule(inChannel=2*self.encodedSamplingFreq, outChannel=self.encodedSamplingFreq)
+        self.compressChannelsCNN = self.encodeChannels(inChannel=self.encodedSamplingFreq, outChannel=self.numCompressedSignals)
         self.compressChannelsCNN_postprocessCombine = self.combineChannelModule(inChannel=2*self.numCompressedSignals, outChannel=self.numCompressedSignals)
         self.compressChannelsCNN_postprocessChannels = self.learnChannelModule(inChannel=self.numCompressedSignals)
 
         # Learned expansion via CNN.
         self.expandChannelsCNN_preprocessChannels = self.learnChannelModule(inChannel=self.numCompressedSignals)
         self.expandChannelsCNN_preprocessCombine = self.combineChannelModule(inChannel=2*self.numCompressedSignals, outChannel=self.numCompressedSignals)
-        self.expandChannelsCNN = self.encodeChannels(inChannel=self.numCompressedSignals, outChannel=self.numExpandedSignals)
-        self.expandChannelsCNN_postprocessCombine = self.combineChannelModule(inChannel=2*self.numExpandedSignals, outChannel=self.numExpandedSignals)
-        self.expandChannelsCNN_postprocessChannels = self.learnChannelModule(inChannel=self.numExpandedSignals)
+        self.expandChannelsCNN = self.encodeChannels(inChannel=self.numCompressedSignals, outChannel=self.encodedSamplingFreq)
+        self.expandChannelsCNN_postprocessCombine = self.combineChannelModule(inChannel=2*self.encodedSamplingFreq, outChannel=self.encodedSamplingFreq)
+        self.expandChannelsCNN_postprocessChannels = self.learnChannelModule(inChannel=self.encodedSamplingFreq)
 
-        self.reduceSignalDimension = self.learnSignalChannelReductionPre(inChannel=self.numExpandedSignals, outChannel=self.numExpandedSignals)
-        self.reconstructSignalDimension1 = self.learnSignalChannelReduction(inChannel=self.numExpandedSignals, outChannel=self.numExpandedSignals)
-        self.reconstructSignalDimension2 = self.learnDimensionExpansion(inChannel=self.numExpandedSignals)
-        self.reduceSignals1 = self.learnSignalChannelReduction(inChannel=self.numExpandedSignals, outChannel=self.numCompressedSignals)
+        self.reduceSignalDimension = self.learnSignalChannelReductionPre(inChannel=self.encodedSamplingFreq, outChannel=self.encodedSamplingFreq)
+        self.reconstructSignalDimension1 = self.learnSignalChannelReduction(inChannel=self.encodedSamplingFreq, outChannel=self.encodedSamplingFreq)
+        self.reconstructSignalDimension2 = self.learnDimensionExpansion(inChannel=self.encodedSamplingFreq)
+        self.reduceSignals1 = self.learnSignalChannelReduction(inChannel=self.encodedSamplingFreq, outChannel=self.numCompressedSignals)
         self.reduceSignals2 = self.learnSignalReduction(inChannel=self.numCompressedSignals)
 
         # Map the initial signals into a common subspace.
@@ -501,7 +501,7 @@ class signalEncoderBase(signalEncoderModules):
     def compressionModel(self, originalData, targetNumSignals, stateMap, stateMapInd, totalNodesInMap, initialNumSignals, finalNumSignals, trainingFlag = False):
         # Pair up the signals with their neighbors.
         pairedData, frozenData, numActiveSignals = self.pairSignals(originalData, targetNumSignals)
-        # pairedData dimension: batchSize*numActiveSignals/numExpandedSignals, numExpandedSignals, signalDimension
+        # pairedData dimension: batchSize*numActiveSignals/encodedSamplingFreq, encodedSamplingFreq, signalDimension
         # frozenData dimension: batchSize, numFrozenSignals, signalDimension
         
         # Reduce the number of signals.
@@ -530,8 +530,8 @@ class signalEncoderBase(signalEncoderModules):
 # -------------------------- Encoder Architecture -------------------------- #
 
 class generalSignalEncoding(signalEncoderBase):
-    def __init__(self, maxSequenceLength=64, numExpandedSignals=2, accelerator=None):
-        super(generalSignalEncoding, self).__init__(maxSequenceLength, numExpandedSignals, accelerator)
+    def __init__(self, maxSequenceLength=64, encodedSamplingFreq=2, accelerator=None):
+        super(generalSignalEncoding, self).__init__(maxSequenceLength, encodedSamplingFreq, accelerator)
 
     def forward(self, signalData, targetNumSignals=32, stateMap = None, totalNodesInMap = None, initialNumSignals = None, finalNumSignals = None, signalEncodingLayerLoss=None, calculateLoss=True):
         """ The shape of signalChannel: (batchSize, numSignals, compressedLength) """
@@ -589,7 +589,7 @@ class generalSignalEncoding(signalEncoderBase):
         return signalData, numSignalPath, signalEncodingLayerLoss
 
     def printParams(self, numSignals=50, maxSequenceLength=300):
-        # generalSignalEncoding(numExpandedSignals = 3, maxSequenceLength = 300).to('cpu').printParams(numSignals = 100, maxSequenceLength = 300)
+        # generalSignalEncoding(encodedSamplingFreq = 3, maxSequenceLength = 300).to('cpu').printParams(numSignals = 100, maxSequenceLength = 300)
         t1 = time.time()
         summary(self, (numSignals, maxSequenceLength))
         t2 = time.time()

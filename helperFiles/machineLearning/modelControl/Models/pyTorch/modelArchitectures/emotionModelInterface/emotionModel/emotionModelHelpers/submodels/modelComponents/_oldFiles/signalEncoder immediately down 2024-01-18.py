@@ -22,40 +22,40 @@ import _convolutionalHelpers
 # -------------------------- Shared Architecture --------------------------- #
 
 class signalEncoderBase(_convolutionalHelpers.convolutionalHelpers):
-    def __init__(self, signalDimension = 64, numEncodedSignals = 32, numExpandedSignals = 2, plotSignalEncoding = False):
+    def __init__(self, signalDimension = 64, numEncodedSignals = 32, encodedSamplingFreq = 2, plotSignalEncoding = False):
         super(signalEncoderBase, self).__init__()        
         # General shape parameters.
         self.numEncodedSignals = numEncodedSignals  # The final number of signals to accept, encoding all signal information.
         self.signalDimension = signalDimension  # The incoming dimension of each signal.
         
         # Compression/Expansion parameters.
-        self.numExpandedSignals = numExpandedSignals        # The final number of signals in any expansion
-        self.numCompressedSignals = numExpandedSignals - 1  # The final number of signals in any compression.
-        self.expansionFactor = self.numExpandedSignals/self.numCompressedSignals  # The percent expansion.
+        self.encodedSamplingFreq = encodedSamplingFreq        # The final number of signals in any expansion
+        self.numCompressedSignals = encodedSamplingFreq - 1  # The final number of signals in any compression.
+        self.expansionFactor = self.encodedSamplingFreq/self.numCompressedSignals  # The percent expansion.
         # Assert the integrity of the input parameters.
-        assert self.numExpandedSignals - self.numCompressedSignals == 1, "You should only gain 1 channel when expanding or else you may overshoot."
+        assert self.encodedSamplingFreq - self.numCompressedSignals == 1, "You should only gain 1 channel when expanding or else you may overshoot."
                 
         # Map the signals into a common subspace.
         self.initialTransformation = self.minorSubspaceTransformation(inChannel = 1, channelIncrease = 32, numGroups = 1)
         self.finalTransformation = self.minorSubspaceTransformation(inChannel = 1, channelIncrease = 32, numGroups = 1)
         
-        # self.expandChannels_principleComp = self.signalEncodingModule(inChannel = self.numCompressedSignals, outChannel = self.numExpandedSignals, channelIncrease = 16)      
+        # self.expandChannels_principleComp = self.signalEncodingModule(inChannel = self.numCompressedSignals, outChannel = self.encodedSamplingFreq, channelIncrease = 16)      
         # self.expandChannels_projectedSigs = self.subspaceTransformation(inChannel = self.numCompressedSignals, channelIncrease = 16, numGroups = 1)
         
         self.expandChannels_principleComp = self.signalEncodinANN(inputDimension = self.signalDimension, outputDimension = self.signalDimension)      
-        self.expandChannels_projectedSigs = self.signalEncodingModule(inChannel = self.numCompressedSignals, outChannel = self.numExpandedSignals, channelIncrease = 32)  
+        self.expandChannels_projectedSigs = self.signalEncodingModule(inChannel = self.numCompressedSignals, outChannel = self.encodedSamplingFreq, channelIncrease = 32)  
         
         # Create model for learning local information.
 
         self.finalizeCompressionInfo = self.minorSubspaceTransformation(inChannel = self.numEncodedSignals, channelIncrease = 1, numGroups = 1)
-        self.finalizeExpansionInfo = self.minorSubspaceTransformation(inChannel = self.numExpandedSignals, channelIncrease = 32, numGroups = 1)
+        self.finalizeExpansionInfo = self.minorSubspaceTransformation(inChannel = self.encodedSamplingFreq, channelIncrease = 32, numGroups = 1)
         
         # Create model for learning complex from the channels.
         self.embedPrincipleComponents = self.signalEncodinANN(inputDimension = self.numEncodedSignals, outputDimension = self.numEncodedSignals*self.signalDimension)
 
         # Initialize the pooling layers to upsample/downsample
         self.downsampleChannels = nn.Upsample(size=self.numEncodedSignals, mode='linear', align_corners=True)
-        self.upsampleChannels = nn.Upsample(size=self.numExpandedSignals, mode='linear', align_corners=True)
+        self.upsampleChannels = nn.Upsample(size=self.encodedSamplingFreq, mode='linear', align_corners=True)
         
         if plotSignalEncoding:
             plt.plot(self.channelEncoding.detach().cpu().T[:, 0:25:2])
@@ -322,7 +322,7 @@ class signalEncoderBase(_convolutionalHelpers.convolutionalHelpers):
         elif numSignals < targetNumSignals < numSignals*self.expansionFactor:
             # Find the number of signals to expand.
             numSignalsGained = targetNumSignals - numSignals
-            numExpansions = numSignalsGained/(self.numExpandedSignals - self.numCompressedSignals)
+            numExpansions = numSignalsGained/(self.encodedSamplingFreq - self.numCompressedSignals)
             numActiveSignals = numExpansions*self.numCompressedSignals
             assert numActiveSignals <= numSignals, "This must be true if the logic is working."
         
@@ -330,14 +330,14 @@ class signalEncoderBase(_convolutionalHelpers.convolutionalHelpers):
         elif targetNumSignals < numSignals < targetNumSignals*self.expansionFactor:
             # Find the number of signals to reduce.
             numSignalsLossed = numSignals - targetNumSignals
-            numCompressions = numSignalsLossed/(self.numExpandedSignals - self.numCompressedSignals)
-            numActiveSignals = numCompressions*self.numExpandedSignals  
+            numCompressions = numSignalsLossed/(self.encodedSamplingFreq - self.numCompressedSignals)
+            numActiveSignals = numCompressions*self.encodedSamplingFreq  
             assert numActiveSignals <= numSignals, "This must be true if the logic is working."
                     
         # If we are reducing the signals as much as I can..
         elif targetNumSignals*self.expansionFactor <= numSignals:
             # We can only pair up an even number.
-            numActiveSignals = numSignals - (numSignals%self.numExpandedSignals)
+            numActiveSignals = numSignals - (numSignals%self.encodedSamplingFreq)
             
         # Base case: numSignals == targetNumSignals
         else: numActiveSignals = 0
@@ -360,10 +360,10 @@ class signalEncoderBase(_convolutionalHelpers.convolutionalHelpers):
         # frozenData dimension: batchSize, numFrozenSignals, signalDimension
 
         # Pair up the signals.
-        numSignalPairs = int(activeData.size(1)/self.numExpandedSignals)
-        pairedData = activeData.view(batchSize, numSignalPairs, self.numExpandedSignals, signalDimension)
-        pairedData = pairedData.view(batchSize*numSignalPairs, self.numExpandedSignals, signalDimension)
-        # pairedData dimension: batchSize*numSignalPairs, numExpandedSignals, signalDimension
+        numSignalPairs = int(activeData.size(1)/self.encodedSamplingFreq)
+        pairedData = activeData.view(batchSize, numSignalPairs, self.encodedSamplingFreq, signalDimension)
+        pairedData = pairedData.view(batchSize*numSignalPairs, self.encodedSamplingFreq, signalDimension)
+        # pairedData dimension: batchSize*numSignalPairs, encodedSamplingFreq, signalDimension
                 
         return pairedData, frozenData
     
@@ -418,8 +418,8 @@ class signalEncoderBase(_convolutionalHelpers.convolutionalHelpers):
 # -------------------------- Encoder Architecture -------------------------- #
 
 class signalEncoding(signalEncoderBase):
-    def __init__(self, signalDimension = 64, numEncodedSignals = 32, numExpandedSignals = 3):
-        super(signalEncoding, self).__init__(signalDimension, numEncodedSignals, numExpandedSignals) 
+    def __init__(self, signalDimension = 64, numEncodedSignals = 32, encodedSamplingFreq = 3):
+        super(signalEncoding, self).__init__(signalDimension, numEncodedSignals, encodedSamplingFreq) 
         
     def signalEncodingInterface(self, signalData, transformation):
         # Extract the incoming data's dimension.
@@ -476,7 +476,7 @@ class signalEncoding(signalEncoderBase):
         return signalData, signalEncodingLayerLoss
         
     def printParams(self, numSignals = 50):
-        # signalEncoding(signalDimension = 64, numEncodedSignals = 32, numExpandedSignals = 2).to('cpu').printParams(numSignals = 4)
+        # signalEncoding(signalDimension = 64, numEncodedSignals = 32, encodedSamplingFreq = 2).to('cpu').printParams(numSignals = 4)
         t1 = time.time()
         summary(self, (numSignals, self.signalDimension))
         t2 = time.time(); print(t2-t1)

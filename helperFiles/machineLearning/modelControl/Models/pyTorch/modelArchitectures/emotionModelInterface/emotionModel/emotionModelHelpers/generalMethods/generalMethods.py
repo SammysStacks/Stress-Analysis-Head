@@ -7,9 +7,17 @@ class generalMethods:
 
     @staticmethod
     def minMaxScale_noInverse(inputData, scale=1, buffer=None, min_val=None, max_val=None):
-        # Find the minimum and maximum along the last dimension
-        if min_val is None: min_val = inputData.min(dim=-1, keepdim=True).values
-        if max_val is None: max_val = inputData.max(dim=-1, keepdim=True).values
+        # Find the NaN values.
+        nanMask = torch.isnan(inputData)
+        clonedData = inputData.clone()
+
+        # Use nanmin and nanmax to ignore NaNs in inputData
+        if min_val is None:
+            clonedData = clonedData.masked_fill(nanMask, float('inf'))
+            min_val = torch.min(clonedData, dim=-1, keepdim=True).values
+        if max_val is None:
+            clonedData = clonedData.masked_fill(nanMask, -float('inf'))
+            max_val = torch.max(clonedData, dim=-1, keepdim=True).values
 
         if buffer is not None:
             # Check if it is within the buffer range of the scale
