@@ -149,7 +149,7 @@ user_feature_excel_data_folder = os.path.join(feature_analysis_excel_folder, f'{
 
 os.makedirs(user_feature_excel_data_folder, exist_ok=True)
 
-# Saving feature excel file
+# Saving feature excel filea
 excel_save_path = os.path.join(user_feature_excel_data_folder, f'{biomarker}_{experiment}_normalized_windowed_features.xlsx')
 with pd.ExcelWriter(excel_save_path) as writer:
     features_combined_10s.to_excel(writer, sheet_name='10s_Window', index=False)
