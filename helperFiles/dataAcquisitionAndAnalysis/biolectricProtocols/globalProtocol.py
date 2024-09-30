@@ -25,6 +25,7 @@ class globalProtocol(abc.ABC):
         # General mutable parameters: unifying GENERIC protocols.
         self.featureTimeWindow_highFreq = 12  # The duration of time that each feature considers.
         self.featureTimeWindow_lowFreq = 15  # The duration of time that each feature considers.
+        self.featureTimeWindow_acceleration = [5, 10, 30]  # The duration of time that each feature considers.
         self.dataPointBuffer = 5000  # A Prepended Buffer in the Filtered Data that Represents BAD Filtering; Units: Points
         self.secondsPerFeature = 1  # The duration of time that passes between each feature.
 
