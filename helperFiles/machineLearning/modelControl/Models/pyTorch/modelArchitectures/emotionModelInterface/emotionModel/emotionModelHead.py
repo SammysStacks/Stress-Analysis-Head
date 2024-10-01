@@ -9,8 +9,10 @@ from .emotionModelHelpers.emotionDataInterface import emotionDataInterface
 from .emotionModelHelpers.generalMethods.dataAugmentation import dataAugmentation
 from .emotionModelHelpers.modelConstants import modelConstants
 from .emotionModelHelpers.submodels.sharedEmotionModel import sharedEmotionModel
+from .emotionModelHelpers.submodels.sharedSignalEncoderModel import sharedSignalEncoderModel
 # Import submodels
 from .emotionModelHelpers.submodels.specificEmotionModel import specificEmotionModel
+from .emotionModelHelpers.submodels.specificSignalEncoderModel import specificSignalEncoderModel
 from .emotionModelHelpers.submodels.trainingInformation import trainingInformation
 from ..._globalPytorchModel import globalModel
 
@@ -59,11 +61,10 @@ class emotionModelHead(globalModel):
         self.trainingInformation = trainingInformation()
 
         # Initialize all the models.
+        self.specificSignalEncoderModel = None
+        self.sharedSignalEncoderModel = None
         self.specificEmotionModel = None
-        self.signalEncoderModel = None
-        self.signalMappingModel = None
         self.sharedEmotionModel = None
-        self.autoencoderModel = None
 
         # Populate the current models.
         self.initializeSubmodels(submodel)
@@ -82,7 +83,7 @@ class emotionModelHead(globalModel):
         # ------------------------ Data Compression ------------------------ # 
 
         # The signal encoder model to find a common feature vector across all signals.
-        self.signalEncoderModel = specificSignalEncoderModel(
+        self.specificSignalEncoderModel = specificSignalEncoderModel(
             numSigLiftedChannels=self.numSigLiftedChannels,
             numSigEncodingLayers=self.numSigEncodingLayers,
             encodedSamplingFreq=self.encodedSamplingFreq,
@@ -96,12 +97,16 @@ class emotionModelHead(globalModel):
         )
 
         # The autoencoder model reduces the incoming signal's dimension.
-        self.autoencoderModel = sharedSignalEncoderModel(
-            compressionFactor=self.compressionFactor,
-            compressedLength=self.compressedLength,
+        self.sharedSignalEncoderModel = sharedSignalEncoderModel(
+            numSigLiftedChannels=self.numSigLiftedChannels,
+            numSigEncodingLayers=self.numSigEncodingLayers,
+            encodedSamplingFreq=self.encodedSamplingFreq,
+            waveletType=self.signalEncoderWaveletType,
+            numEncodedSignals=self.numEncodedSignals,
+            signalMinMaxScale=self.signalMinMaxScale,
             debuggingResults=self.debuggingResults,
-            expansionFactor=self.expansionFactor,
             useFinalParams=self.useFinalParams,
+            sequenceBounds=self.sequenceBounds,
             accelerator=self.accelerator,
         )
 
@@ -138,6 +143,19 @@ class emotionModelHead(globalModel):
         with self.accelerator.autocast():
             # Add the data, labels, and training/testing indices to the device (GPU/CPU)
             signalData, startTimeIndices, signalIdentifiers, metadata = (tensor.to(self.device) for tensor in (signalData, startTimeIndices, signalIdentifiers, metadata))
+
+            finalTimes = np.arange()
+
+            # Reshape the signal data to be in the expected format.
+            batchSize, numSignals, maxSequenceLength, numChannels = signalData.size()
+            signalData = signalData.view(batchSize*numSignals, maxSequenceLength, numChannels)
+            # signalData dimension: batchSize*numSignals, maxSequenceLength, numChannels
+
+            # Perform a basic interpolation to get an initial guess of the signal.
+
+            a = torch.nn.functional.interpolate(input=signalData, size=(batchSize, numSignals, 600), scale_factor=None, mode='linear', align_corners=True, recompute_scale_factor=None, antialias=True)
+            print(a.size())
+            exit()
 
             t1 = time.time()
             # Forward pass through the signal encoder to find a common signal source.

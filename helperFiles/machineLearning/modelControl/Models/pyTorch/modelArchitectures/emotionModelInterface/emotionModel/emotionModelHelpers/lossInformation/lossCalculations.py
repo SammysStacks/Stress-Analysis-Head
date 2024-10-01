@@ -28,7 +28,7 @@ class lossCalculations:
         self.model = model
 
         # Positional encoder information.
-        self.maxNumEncodedSignals = model.signalEncoderModel.encodeSignals.positionalEncodingInterface.maxNumEncodedSignals  # The number of classes in the positional encoder.
+        self.maxNumEncodedSignals = model.sharedSignalEncoderModel.encodeSignals.positionalEncodingInterface.maxNumEncodedSignals  # The number of classes in the positional encoder.
         self.posEncWeightScale = 1  # The scale for the positional encoding loss.
 
         # Initialize helper classes.

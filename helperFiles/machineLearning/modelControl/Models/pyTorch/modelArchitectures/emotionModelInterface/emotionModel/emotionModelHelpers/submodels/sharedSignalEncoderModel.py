@@ -102,6 +102,9 @@ class sharedSignalEncoderModel(globalModel):
         batchSize, numSignals, maxSequenceLength, numChannels = signalData.size()
         assert numChannels == len(modelConstants.signalChannelNames)
 
+        # Perform a basic interpolation to get an initial guess of the signal.
+        torch.nn.functional.interpolate(input=signalData, size=(batchSize, numSignals, maxSequenceLength), scale_factor=None, mode='nearest', align_corners=True, recompute_scale_factor=None, antialias=True)
+
         # Create placeholders for the final variables.
         denoisedReconstructedData = torch.zeros_like(signalData, device=signalData.device)
         signalEncodingLoss = torch.zeros((batchSize,), device=signalData.device)

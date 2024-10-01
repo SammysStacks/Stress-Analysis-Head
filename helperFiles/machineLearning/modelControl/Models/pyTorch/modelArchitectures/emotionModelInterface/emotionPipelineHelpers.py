@@ -81,10 +81,10 @@ class emotionPipelineHelpers:
 
     def compileOptimizer(self, submodel):
         # Get the models, while considering whether they are distributed or not.
-        trainingInformation, signalEncoderModel, autoencoderModel, signalMappingModel, sharedEmotionModel, specificEmotionModel = self.getDistributedModels(model=None, submodel=None)
+        trainingInformation, sharedSignalEncoderModel, specificSignalEncoderModel, sharedEmotionModel, specificEmotionModel = self.getDistributedModels(model=None, submodel=None)
 
         # Initialize the optimizer and scheduler.
-        self.optimizer, self.scheduler = self.optimizerMethods.addOptimizer(submodel, signalEncoderModel, autoencoderModel, signalMappingModel, sharedEmotionModel, specificEmotionModel)
+        self.optimizer, self.scheduler = self.optimizerMethods.addOptimizer(submodel, sharedSignalEncoderModel, specificSignalEncoderModel, sharedEmotionModel, specificEmotionModel)
 
     def acceleratorInterface(self, dataLoader=None):
         if dataLoader is None:
@@ -128,15 +128,13 @@ class emotionPipelineHelpers:
         self.setupTrainingFlags(self.model, trainingFlag=False)
 
         # Get the models, while considering whether they are distributed or not.
-        trainingInformation, signalEncoderModel, autoencoderModel, signalMappingModel, sharedEmotionModel, specificEmotionModel = self.getDistributedModels()
+        trainingInformation, sharedSignalEncoderModel, specificSignalEncoderModel, sharedEmotionModel, specificEmotionModel = self.getDistributedModels()
 
         # Label the model we are training.
         if submodel == modelConstants.signalEncoderModel:
-            self.setupTrainingFlags(signalEncoderModel, trainingFlag=True)
-        elif submodel == modelConstants.autoencoderModel:
-            self.setupTrainingFlags(autoencoderModel, trainingFlag=True)
+            self.setupTrainingFlags(sharedSignalEncoderModel, trainingFlag=True)
+            self.setupTrainingFlags(specificSignalEncoderModel, trainingFlag=True)
         elif submodel == modelConstants.emotionPredictionModel:
-            self.setupTrainingFlags(signalMappingModel, trainingFlag=True)
             self.setupTrainingFlags(specificEmotionModel, trainingFlag=True)
             self.setupTrainingFlags(sharedEmotionModel, trainingFlag=True)
         else:
@@ -176,22 +174,19 @@ class emotionPipelineHelpers:
         if model is None:
             model = self.getDistributedModel()
         # Get the specific models.
+        specificSignalEncoderModel = model.specificSignalEncoderModel
+        sharedSignalEncoderModel = model.sharedSignalEncoderModel
         specificEmotionModel = model.specificEmotionModel
         trainingInformation = model.trainingInformation
-        signalEncoderModel = model.signalEncoderModel
-        signalMappingModel = model.signalMappingModel
         sharedEmotionModel = model.sharedEmotionModel
-        autoencoderModel = model.autoencoderModel
 
         if submodel == modelConstants.trainingInformation:
             return trainingInformation
         elif submodel == modelConstants.signalEncoderModel:
-            return signalEncoderModel
-        elif submodel == modelConstants.autoencoderModel:
-            return autoencoderModel
+            return sharedSignalEncoderModel, specificSignalEncoderModel
         elif submodel == modelConstants.emotionPredictionModel:
-            return signalMappingModel, sharedEmotionModel, specificEmotionModel
+            return sharedEmotionModel, specificEmotionModel
         elif submodel is None:
-            return trainingInformation, signalEncoderModel, autoencoderModel, signalMappingModel, sharedEmotionModel, specificEmotionModel
+            return trainingInformation, sharedSignalEncoderModel, specificSignalEncoderModel, sharedEmotionModel, specificEmotionModel
         else:
             assert False, "No model initialized"

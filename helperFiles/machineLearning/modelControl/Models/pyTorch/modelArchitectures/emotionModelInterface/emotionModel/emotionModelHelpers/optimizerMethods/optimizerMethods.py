@@ -15,19 +15,14 @@ class optimizerMethods:
         self.useFinalParams = useFinalParams
 
     @staticmethod
-    def getModelParams(submodel, signalEncoderModel, autoencoderModel, signalMappingModel, sharedEmotionModel, specificEmotionModel):
+    def getModelParams(submodel, sharedSignalEncoderModel, specificSignalEncoderModel, sharedEmotionModel, specificEmotionModel):
         modelParams = [
             # Specify the model parameters for the signal encoding.
-            {'params': signalEncoderModel.parameters(), 'weight_decay': 0, 'lr': 5E-5}]  # Empirically: 1E-10 < weight_decay < 1E-6; 5E-5 < lr < 5E-4
-        if submodel in [modelConstants.autoencoderModel, modelConstants.emotionPredictionModel]:
-            modelParams.append(
-                # Specify the model parameters for the autoencoder.
-                {'params': autoencoderModel.parameters(), 'weight_decay': 1E-6, 'lr': 1E-4})
+            {'params': sharedSignalEncoderModel.parameters(), 'weight_decay': 0, 'lr': 5E-5},  # Empirically: 1E-10 < weight_decay < 1E-6; 5E-5 < lr < 5E-4
+            {'params': specificSignalEncoderModel.parameters(), 'weight_decay': 0, 'lr': 5E-5}]  # Empirically: 1E-10 < weight_decay < 1E-6; 5E-5 < lr < 5E-4
+
         if submodel == modelConstants.emotionPredictionModel:
             modelParams.extend([
-                # Specify the model parameters for the signal mapping.
-                {'params': signalMappingModel.parameters(), 'weight_decay': 1E-6, 'lr': 1E-4},
-
                 # Specify the model parameters for the feature extraction.
                 {'params': sharedEmotionModel.extractCommonFeatures.parameters(), 'weight_decay': 1E-10, 'lr': 1E-4},
 
@@ -42,9 +37,9 @@ class optimizerMethods:
 
         return modelParams
 
-    def addOptimizer(self, submodel, signalEncoderModel, autoencoderModel, signalMappingModel, sharedEmotionModel, specificEmotionModel):
+    def addOptimizer(self, submodel, sharedSignalEncoderModel, specificSignalEncoderModel, sharedEmotionModel, specificEmotionModel):
         # Get the model parameters.
-        modelParams = self.getModelParams(submodel, signalEncoderModel, autoencoderModel, signalMappingModel, sharedEmotionModel, specificEmotionModel)
+        modelParams = self.getModelParams(submodel, sharedSignalEncoderModel, specificSignalEncoderModel, sharedEmotionModel, specificEmotionModel)
 
         # Set the optimizer.
         optimizer = self.setOptimizer(modelParams, lr=5E-5, weight_decay=0, submodel=submodel, optimizerType=self.userInputParams["optimizerType"])

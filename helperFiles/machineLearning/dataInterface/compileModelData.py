@@ -282,7 +282,6 @@ class compileModelData(compileModelDataHelpers):
 
             # Round the data to remove uncertainties.
             allSignalData = torch.round(allSignalData, decimals=4)
-            print(allSignalData.size())
 
             # ---------------------- Create the Model ---------------------- #
 
