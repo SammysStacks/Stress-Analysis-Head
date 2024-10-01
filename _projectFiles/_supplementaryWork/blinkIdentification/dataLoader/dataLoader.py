@@ -53,8 +53,8 @@ def get_dataTensors(df_train, df_test, dataset):
         if len(feature_columns) != num_features:
             raise ValueError(f"Number of features ({len(feature_columns)}) does not match the required width ({img_width}) for the image.")
 
-        train_images = np.array([row for _, row in df_train[feature_columns].iterrows()])
-        test_images = np.array([row for _, row in df_test[feature_columns].iterrows()])
+        train_images = np.asarray([row for _, row in df_train[feature_columns].iterrows()])
+        test_images = np.asarray([row for _, row in df_test[feature_columns].iterrows()])
 
         # Convert numpy images to torch tensors
         trainX_tensor = torch.tensor(train_images, dtype=torch.float32).unsqueeze(1)  # Add channel dimension

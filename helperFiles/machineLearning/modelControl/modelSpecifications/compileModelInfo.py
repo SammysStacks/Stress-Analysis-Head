@@ -12,8 +12,8 @@ class compileModelInfo:
         self.trainingDataFolder = self.getTrainingDataFolder(useTherapyData=False)
 
         # Specify the hardcoded strings.
-        self.activityNames = np.array(["Baseline", "Music", "CPT", "Exercise", "VR", "Recovery"])
-        self.therapyNames = np.array(["HeatingPad", "BinauralBeats", "Images", "Voice"])
+        self.activityNames = np.asarray(["Baseline", "Music", "CPT", "Exercise", "VR", "Recovery"])
+        self.therapyNames = np.asarray(["HeatingPad", "BinauralBeats", "Images", "Voice"])
         self.predictionOrder = ["Positive Affect", "Negative Affect", "State Anxiety"]
         self.streamingOrder = ["eog", "eeg", "eda", "temp"]
         # Specifically for the E4

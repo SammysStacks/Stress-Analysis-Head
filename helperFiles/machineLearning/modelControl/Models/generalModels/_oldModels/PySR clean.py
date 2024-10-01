@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 
 
 batchSize = 64
-X = np.array([list(range(0, 120, 1))*batchSize]).reshape(batchSize, -1)
+X = np.asarray([list(range(0, 120, 1))*batchSize]).reshape(batchSize, -1)
 
 y = [10]*batchSize
 

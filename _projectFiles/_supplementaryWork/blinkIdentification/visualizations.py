@@ -29,7 +29,7 @@ class plotting:
     def classification_threshold(self):
         actual_labels, predicted_labels = self.trainingInstance.get_predictions()
         # Assuming outputs are from your model and testY_tensor is available
-        probabilities = np.array(predicted_labels)
+        probabilities = np.asarray(predicted_labels)
 
         thresholds = np.linspace(0, 1, num=25)
         curr_method_probs = probabilities[:, 0]

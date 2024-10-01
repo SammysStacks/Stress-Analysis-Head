@@ -171,7 +171,7 @@ class pulseAnalysis(_globalProtocol.globalProtocol):
         
         # If Questioning: Plot to See How the Pulses Seperated
         if self.plotSeperation:
-            systolicPeaks = np.array(systolicPeaks); firstDer = np.array(firstDer)
+            systolicPeaks = np.asarray(systolicPeaks); firstDer = np.asarray(firstDer)
             scaledData = signalData*max(np.abs(firstDer))/(max(signalData) - min(signalData))
             plt.figure()
             plt.plot(time, scaledData - np.mean(scaledData), label = "Centered + Scaled Signal Data", zorder = 3)
@@ -600,9 +600,9 @@ class pulseAnalysis(_globalProtocol.globalProtocol):
         pulseFeatures.extend(pulseFeatures[1:])
         
         # Save the Pulse Features
-        pulseFeatures = np.array(pulseFeatures)
+        pulseFeatures = np.asarray(pulseFeatures)
         self.featureListExact.append(pulseFeatures)
-        self.featureListAverage.append(stats.trim_mean(np.array(self.featureListExact)[:,1:][ np.array(self.featureListExact)[:,0] >= self.timePoint - self.numSecondsAverage ], 0.3))
+        self.featureListAverage.append(stats.trim_mean(np.asarray(self.featureListExact)[:,1:][ np.asarray(self.featureListExact)[:,0] >= self.timePoint - self.numSecondsAverage ], 0.3))
     
     def normalizePulseBaseline(self, pulseData, polynomialDegree):
         """

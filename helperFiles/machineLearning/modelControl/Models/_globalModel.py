@@ -107,7 +107,7 @@ class globalModel(abc.ABC):
         return Training_Data, Training_Labels, Testing_Data, Testing_Labels
     
     def getSpecificFeatures(self, allFeatureNames, getFeatureNames, featureData):
-        featureData = np.array(featureData)
+        featureData = np.asarray(featureData)
         
         newfeatureData = []
         for featureName in getFeatureNames:

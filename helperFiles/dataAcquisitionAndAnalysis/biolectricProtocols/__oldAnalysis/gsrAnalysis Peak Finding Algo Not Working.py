@@ -151,8 +151,8 @@ class gsrProtocol:
             filteredData = scipy.signal.savgol_filter(filteredData, max(3, int(self.samplingFreq*5)), 1, mode='nearest', deriv=0)
             
             # Format the data and timepoints
-            timePoints = np.array(self.data[0])[-len(filteredData):]
-            filteredData = np.array(filteredData)
+            timePoints = np.asarray(self.data[0])[-len(filteredData):]
+            filteredData = np.asarray(filteredData)
             assert len(filteredData) == len(timePoints), "Incorrect sampling of batch"
             # --------------------------------------------------------------- #
             
@@ -285,7 +285,7 @@ class gsrProtocol:
             # ------------------- Plot Biolectric Signals ------------------ #
             if self.plotStreamedData:
                 # Get X Data: Shared Axis for All Channels
-                timePoints = np.array(self.data[0][dataFinger:dataFinger + self.numPointsPerBatch])
+                timePoints = np.asarray(self.data[0][dataFinger:dataFinger + self.numPointsPerBatch])
     
                 # Get New Y Data
                 newYData = self.data[1][channelIndex][dataFinger:dataFinger + self.numPointsPerBatch]

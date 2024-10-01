@@ -84,7 +84,7 @@ class aStarTherapyProtocol(generalTherapyProtocol):
     def findOptimalDirection(self, probabilityMap, currentParam, currentCompiledLoss):
 
         # Calculate benefits/loss of exploring/moving.
-        potentialLossBenefit = np.array(self.allPredictionBins_resampled[0]) # doesn't matter which prediction bin, they are essentially the same.
+        potentialLossBenefit = np.asarray(self.allPredictionBins_resampled[0]) # doesn't matter which prediction bin, they are essentially the same.
         probabilityMap = probabilityMap / probabilityMap.sum(axis=1)[:, np.newaxis]  # Normalize the probability map.
 
         # Calculate the expected rewards.

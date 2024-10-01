@@ -79,18 +79,18 @@ class plotData:
             # -------------- Extract Data into this Namespace -------------- #
 
             # Extract the feature labels.
-            surveyAnswerTimes = np.array(readData.surveyAnswerTimes)  # A list of times associated with each feature label.
-            currentSurveyAnswersList = np.array(readData.surveyAnswersList)
+            surveyAnswerTimes = np.asarray(readData.surveyAnswerTimes)  # A list of times associated with each feature label.
+            currentSurveyAnswersList = np.asarray(readData.surveyAnswersList)
             # Extract the experiment information
-            experimentTimes = np.array(readData.experimentTimes)
-            experimentNames = np.array(readData.experimentNames)
+            experimentTimes = np.asarray(readData.experimentTimes)
+            experimentNames = np.asarray(readData.experimentNames)
 
             featureLabelTypes, finalLabels = self.modelInfoClass.extractFinalLabels(currentSurveyAnswersList, finalLabels)
 
             # Keep track of all the experiments.
             experimentalOrder.extend(experimentNames)
             surveyAnswersList.extend(currentSurveyAnswersList)
-        surveyAnswersList = np.array(surveyAnswersList)
+        surveyAnswersList = np.asarray(surveyAnswersList)
 
         # Get all the activity information from the experiment.
         activityNames, activityLabels = self.modelInfoClass.extractActivityInformation(experimentalOrder, distinguishBaselines=True)
@@ -335,15 +335,15 @@ class plotData:
             eogFeatureTimes, eegFeatureTimes, edaFeatureTimes, tempFeatureTimes = readData.rawFeatureTimesHolder
 
             # Extract the features
-            alignedFeatures = np.array(readData.alignedFeatures)
-            alignedFeatureTimes = np.array(readData.alignedFeatureTimes)
+            alignedFeatures = np.asarray(readData.alignedFeatures)
+            alignedFeatureTimes = np.asarray(readData.alignedFeatureTimes)
 
             # Extract the feature labels.
-            surveyAnswerTimes = np.array(readData.surveyAnswerTimes)  # A list of times associated with each feature label.
-            surveyAnswersList = np.array(readData.surveyAnswersList)
+            surveyAnswerTimes = np.asarray(readData.surveyAnswerTimes)  # A list of times associated with each feature label.
+            surveyAnswersList = np.asarray(readData.surveyAnswersList)
             # Extract the experiment information
-            experimentTimes = np.array(readData.experimentTimes)
-            experimentNames = np.array(readData.experimentNames)
+            experimentTimes = np.asarray(readData.experimentTimes)
+            experimentNames = np.asarray(readData.experimentNames)
 
             modelInfoClass = _compileModelInfo.compileModelInfo()
             featureLabelTypes, finalLabels = modelInfoClass.extractFinalLabels(surveyAnswersList, [])
@@ -695,13 +695,13 @@ class plotData:
 
     def getRawData(self, readData):
         # Extract the raw data
-        timePoints = np.array(readData.analysisList[0].timePoints)
-        eogReadings = np.array(readData.analysisProtocols['eog'].channelData[0])
-        eegReadings = np.array(readData.analysisProtocols['eeg'].channelData[0])
-        edaReadings = np.array(readData.analysisProtocols['eda'].channelData[0])
-        tempReadings = np.array(readData.analysisProtocols['temp'].channelData[0])
+        timePoints = np.asarray(readData.analysisList[0].timePoints)
+        eogReadings = np.asarray(readData.analysisProtocols['eog'].channelData[0])
+        eegReadings = np.asarray(readData.analysisProtocols['eeg'].channelData[0])
+        edaReadings = np.asarray(readData.analysisProtocols['eda'].channelData[0])
+        tempReadings = np.asarray(readData.analysisProtocols['temp'].channelData[0])
         # Organize the raw data.
-        rawData = np.array([eogReadings, eegReadings, edaReadings, tempReadings])
+        rawData = np.asarray([eogReadings, eegReadings, edaReadings, tempReadings])
 
         # Standardize data
         standardizeClass_Features = standardizeData(rawData, axisDimension=1, threshold=0)
@@ -737,8 +737,8 @@ class plotData:
         # For each signal with features.
         for rawFeatureInd in range(len(readData.rawFeatureTimesHolder)):
             # Get the raw feature data.
-            rawFeatureTimes = np.array(readData.rawFeatureTimesHolder[rawFeatureInd])
-            rawFeatures = np.array(readData.rawFeatureHolder[rawFeatureInd])
+            rawFeatureTimes = np.asarray(readData.rawFeatureTimesHolder[rawFeatureInd])
+            rawFeatures = np.asarray(readData.rawFeatureHolder[rawFeatureInd])
             featureInd = biomarkerFeatureNames[rawFeatureInd].index(plottingFeatureNames[rawFeatureInd])
             startTimeIndex = self.findTimeIndex(experimentTimes[0][0], rawFeatureTimes)
 
@@ -760,8 +760,8 @@ class plotData:
         # For each signal with features.
         for analysisInd in range(len(readData.featureAnalysisList)):
             # Get the compiled feature data.
-            compiledFeatures = np.array(readData.featureAnalysisList[analysisInd].compiledFeatures[0])
-            compiledFeatureTimes = np.array(readData.featureAnalysisList[analysisInd].rawFeatureTimes[0])
+            compiledFeatures = np.asarray(readData.featureAnalysisList[analysisInd].compiledFeatures[0])
+            compiledFeatureTimes = np.asarray(readData.featureAnalysisList[analysisInd].rawFeatureTimes[0])
             featureInd = biomarkerFeatureNames[analysisInd].index(plottingFeatureNames[analysisInd])
             startTimeIndex = self.findTimeIndex(experimentTimes[0][0], compiledFeatureTimes)
             # endTimeIndex = self.findTimeIndex(alignedFeatureTimes[-1], compiledFeatureTimes)
@@ -778,8 +778,8 @@ class plotData:
 
     def getAlignedFeatures(self, readData, experimentTimes):
         # Extract the features
-        alignedFeatures = np.array(readData.alignedFeatures)
-        alignedFeatureTimes = np.array(readData.alignedFeatureTimes)
+        alignedFeatures = np.asarray(readData.alignedFeatures)
+        alignedFeatureTimes = np.asarray(readData.alignedFeatureTimes)
 
         startTimeIndex = self.findTimeIndex(experimentTimes[0][0], alignedFeatureTimes)
         # Cull the endpoints as they are not well formed.
@@ -831,7 +831,7 @@ class plotData:
                 ax.axvline(experimentTimes[experimentInd][0], color='gray', linestyle='--', linewidth=0.2)
                 ax.axvline(surveyAnswerTimes[experimentInd], color='gray', linestyle='--', linewidth=0.2)
 
-                # ax.fill_betweenx(np.array(yLim), experimentTimes[experimentInd][0], surveyAnswerTimes[experimentInd], color="lightblue", alpha=0.03)
+                # ax.fill_betweenx(np.asarray(yLim), experimentTimes[experimentInd][0], surveyAnswerTimes[experimentInd], color="lightblue", alpha=0.03)
 
     def findTimeIndex(self, timePoint, timePoints):
         timePoints = np.asarray(timePoints)

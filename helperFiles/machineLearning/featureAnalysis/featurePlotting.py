@@ -45,11 +45,11 @@ class featurePlotting(globalPlottingProtocols):
             scaleTime = 60
 
         # Scale the time units.
-        surveyCollectionTimes = np.array(surveyCollectionTimes.copy()) / scaleTime
-        timePoints = np.array(timePoints.copy()) / scaleTime
-        averageIntervalList = np.array(averageIntervalList) / scaleTime
-        preAveragingSeconds = np.array(preAveragingSeconds) / scaleTime
-        experimentTimes = np.array(experimentTimes.copy()) / scaleTime
+        surveyCollectionTimes = np.asarray(surveyCollectionTimes.copy()) / scaleTime
+        timePoints = np.asarray(timePoints.copy()) / scaleTime
+        averageIntervalList = np.asarray(averageIntervalList) / scaleTime
+        preAveragingSeconds = np.asarray(preAveragingSeconds) / scaleTime
+        experimentTimes = np.asarray(experimentTimes.copy()) / scaleTime
 
         # Return the scaled times wit the new unit
         return timeUnit, timePoints, preAveragingSeconds, averageIntervalList, surveyCollectionTimes, experimentTimes
@@ -69,8 +69,8 @@ class featurePlotting(globalPlottingProtocols):
 
     def addSurveyInfo(self, ax, surveyCollectionTimes, experimentTimes, experimentNames, predictionType, legendAxes, legendLabels, yLim, recordedScores=None):
         # Ensure the correct data type of variables
-        experimentTimes = np.array(experimentTimes.copy())
-        surveyCollectionTimes = np.array(surveyCollectionTimes.copy())
+        experimentTimes = np.asarray(experimentTimes.copy())
+        surveyCollectionTimes = np.asarray(surveyCollectionTimes.copy())
 
         # Add the feature collection times to the graph.
         if len(surveyCollectionTimes) != 0:
@@ -113,7 +113,7 @@ class featurePlotting(globalPlottingProtocols):
 
         # Scale the time to fit nicely into a plot
         timeUnit, timePoints, _, _, surveyCollectionTimes, experimentTimes = \
-            self.calculateTimeUnit(compiledRawData[0], np.array([]), np.array([]), surveyCollectionTimes, experimentTimes)
+            self.calculateTimeUnit(compiledRawData[0], np.asarray([]), np.asarray([]), surveyCollectionTimes, experimentTimes)
 
         counter = collections.Counter()
         streamingChannelIndices = [counter.update({item: 1}) or counter[item] - 1 for item in streamingOrder]
@@ -122,7 +122,7 @@ class featurePlotting(globalPlottingProtocols):
         # For each biomarker being streamed
         for streamingInd in range(len(compiledRawData[1])):
             biomarkerName = streamingOrder[streamingInd].upper()
-            biomarkerData = np.array(compiledRawData[1][streamingInd].copy())
+            biomarkerData = np.asarray(compiledRawData[1][streamingInd].copy())
             channelIndex = streamingChannelIndices[streamingInd]
 
             # Filter the data
@@ -177,7 +177,7 @@ class featurePlotting(globalPlottingProtocols):
 
         # Scale the time to fit nicely into a plot
         timeUnit, timePoints, _, _, surveyCollectionTimes, experimentTimes = \
-            self.calculateTimeUnit(timePoints, np.array([]), np.array([]), surveyCollectionTimes, experimentTimes)
+            self.calculateTimeUnit(timePoints, np.asarray([]), np.asarray([]), surveyCollectionTimes, experimentTimes)
 
         # Make a figure
         fig = plt.figure()
@@ -203,7 +203,7 @@ class featurePlotting(globalPlottingProtocols):
         self.clearFigure(fig, legend)
 
     def singleFeatureAnalysis(self, readData, timePoints, featureList, featureNames, preAveragingSeconds=0, averageIntervalList=(0, 30),
-                              surveyCollectionTimes=np.array([]), experimentTimes=(), experimentNames=(), folderName="singleFeatureAnalysis/"):
+                              surveyCollectionTimes=np.asarray([]), experimentTimes=(), experimentNames=(), folderName="singleFeatureAnalysis/"):
         print("\tPlotting features in folder:", folderName)
         # Assert data integrity
         assert len(featureNames) == len(featureList[0]), f"Mismatch between feature names and features given: {len(featureNames)} != {len(featureList[0])}"
@@ -261,8 +261,8 @@ class featurePlotting(globalPlottingProtocols):
     def plotEmotionCorrelation(self, allFinalFeatures, currentSurveyAnswersList, surveyQuestions, featureNames, folderName, subjectOrder=()):
         print("\tPlotting emotion correlation in folder:", folderName)
         # Set up the variables
-        allFinalFeatures = np.array(allFinalFeatures.copy())
-        currentSurveyAnswersList = np.array(currentSurveyAnswersList.copy())
+        allFinalFeatures = np.asarray(allFinalFeatures.copy())
+        currentSurveyAnswersList = np.asarray(currentSurveyAnswersList.copy())
 
         # For each survey question (feature label)
         for surveyQuestionInd in range(len(surveyQuestions)):
@@ -316,8 +316,8 @@ class featurePlotting(globalPlottingProtocols):
     def plotPsychCorrelation(self, allFinalFeatures, currentSurveyAnswersList, featureNames, folderName, subjectOrder=()):
         print("\tPlotting psych correlation in folder:", folderName)
         # Set up the variables
-        allFinalFeatures = np.array(allFinalFeatures.copy())
-        currentSurveyAnswersList = np.array(currentSurveyAnswersList)
+        allFinalFeatures = np.asarray(allFinalFeatures.copy())
+        currentSurveyAnswersList = np.asarray(currentSurveyAnswersList)
 
         # Specify the order of the positive and negative survey questions.
         anxietyTypes, relevantSurveyAnswers = self.modelInfoClass.extractFinalLabels(currentSurveyAnswersList, [])
@@ -390,14 +390,14 @@ class featurePlotting(globalPlottingProtocols):
         os.makedirs(saveDataFolder, exist_ok=True)
 
         # Perform Deepcopy to Not Edit Features
-        signalData = deepcopy(np.array(featureList))
-        signalLabels = deepcopy(np.array(featureNames))
+        signalData = deepcopy(np.asarray(featureList))
+        signalLabels = deepcopy(np.asarray(featureNames))
 
         # Standardize the Feature
         for i in range(len(signalData[0])):
             signalData[:, i] = (signalData[:, i] - np.mean(signalData[:, i])) / np.std(signalData[:, i], ddof=1)
 
-        matrix = np.array(np.corrcoef(signalData.T))
+        matrix = np.asarray(np.corrcoef(signalData.T))
         ax = sns.heatmap(matrix, cmap='icefire', xticklabels=signalLabels, yticklabels=signalLabels)
         # Save and clear the figure
         sns.set(rc={'figure.figsize': (18, 18)})
@@ -440,8 +440,8 @@ class featurePlotting(globalPlottingProtocols):
         saveDataFolder = self.saveDataFolder + "chemicalFeatureComparison/"
         os.makedirs(saveDataFolder, exist_ok=True)
 
-        featureList1 = np.array(featureList1.copy())
-        featureList2 = np.array(featureList2.copy())
+        featureList1 = np.asarray(featureList1.copy())
+        featureList2 = np.asarray(featureList2.copy())
 
         labelList = ['Cold', 'Exercise', 'VR']
 
@@ -507,8 +507,8 @@ class featurePlotting(globalPlottingProtocols):
         saveDataFolder = self.saveDataFolder + folderName + labelType + "/"
         os.makedirs(saveDataFolder, exist_ok=True)
 
-        allFinalFeatures = np.array(allFinalFeatures.copy())
-        finalLabels = np.array(finalLabels.copy())
+        allFinalFeatures = np.asarray(allFinalFeatures.copy())
+        finalLabels = np.asarray(finalLabels.copy())
         for featureInd in range(len(featureNames)):
             fig = plt.figure()
 

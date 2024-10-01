@@ -15,8 +15,6 @@ class emotionPipeline(emotionPipelineHelpers):
         super().__init__(accelerator, modelID, datasetName, modelName, allEmotionClasses, maxNumSignals, numSubjects, userInputParams,
                          emotionNames, activityNames, featureNames, submodel, useFinalParams, debuggingResults)
         # General parameters.
-        self.maxBatchSignals = maxNumSignals
-        self.calculateFullLoss = False
         self.addingNoiseFlag = False
 
         # Finish setting up the model.
@@ -53,12 +51,12 @@ class emotionPipeline(emotionPipelineHelpers):
                 with self.accelerator.accumulate(model):  # Accumulate gradients.
                     # Extract the data, labels, and testing/training indices.
                     batchSignalInfo, batchSignalLabels, batchTrainingMask, batchTestingMask = self.extractBatchInformation(batchData)
-                    numPointsAnalyzed += batchSignalInfo.size(0)
+                    batchSize, numSignals, maxSequenceLength, numChannels = batchSignalInfo.size()
+                    numPointsAnalyzed += batchSize
 
-                    # Interface for non-emotion modeling, where only the signal data is used (no labels).
-                    if submodel in [modelConstants.signalEncoderModel]:
-                        batchTrainingMask, batchSignalLabels, batchSignalInfo = self.dataInterface.getReconstructionData(batchTrainingMask, batchSignalLabels, batchSignalInfo, reconstructionIndex)
-                        
+                    # Get the reconstruction column for auto encoding and activity prediction.
+                    batchTrainingMask_generalCol, batchSignalLabels_generalCol, batchSignalInfo_generalCol = self.dataInterface.getReconstructionData(batchTrainingMask, batchSignalLabels, batchSignalInfo, reconstructionIndex)
+
                     # If there is no training data.
                     if batchSignalInfo.size(0) == 0:
                         # We can skip this batch, and backpropagation if necessary.
@@ -71,27 +69,19 @@ class emotionPipeline(emotionPipelineHelpers):
                     # batchSignalIdentifiers dimension: batchSize, numSignals, numSignalIdentifiers
                     # metaBatchInfo dimension: batchSize, numMetadata
 
-                    # Randomly choose to add noise to the model.
-                    if self.accelerator.sync_gradients and not constrainedTraining:
-                        self.calculateFullLoss = random.random() < 0.5
+                    # Augment the signals to train an arbitrary sequence length and order.
+                    augmentedBatchData = self.dataAugmentation.changeNumSignals(signalBatchData, minNumSignals=max(8, model.numEncodedSignals), maxNumSignals=numSignals, alteredDim=1)
+                    batchStartTimeIndices = self.dataAugmentation.getNewStartTimeIndices(signalData=augmentedBatchData, minTimeWindow=modelConstants.timeWindows[0], maxTimeWindow=modelConstants.timeWindows[-1])
+                    # augmentedBatchData dimension: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
+                    # batchStartTimeIndices dimension: batchSize, numSignals
+                    print("Input size:", augmentedBatchData.size())
 
                     # ------------ Forward pass through the model  ------------- #
 
                     # Train the signal encoder
                     if submodel == modelConstants.signalEncoderModel:
-                        # Randomly choose to use an inflated number of signals.
-                        if self.accelerator.sync_gradients:
-                            self.maxBatchSignals = random.choices(population=[modelConstants.maxNumSignals, signalBatchData.shape[1]], weights=[0.6, 0.4], k=1)[0]
-
-                        # Augment the signals to train an arbitrary sequence length and order.
-                        augmentedBatchData = self.dataAugmentation.changeNumSignals(signalBatchData, minNumSignals=model.numEncodedSignals, maxNumSignals=self.maxBatchSignals, alteredDim=1)
-                        batchStartTimeIndices = self.dataAugmentation.getNewStartTimeIndices(signalData=augmentedBatchData, minTimeWindow=modelConstants.timeWindows[0], maxTimeWindow=modelConstants.timeWindows[-1])
-                        # augmentedBatchData dimension: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
-                        # batchStartTimeIndices dimension: batchSize, numSignals
-                        print("Input size:", augmentedBatchData.size())
-
                         # Perform the forward pass through the model.
-                        encodedData, reconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLayerLoss = model.signalEncoding(augmentedBatchData, batchStartTimeIndices, batchSignalIdentifiers, metaBatchInfo, decodeSignals=True, calculateLoss=self.calculateFullLoss, trainingFlag=True)
+                        encodedData, reconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLayerLoss = model.signalEncoding(augmentedBatchData, batchStartTimeIndices, batchSignalIdentifiers, metaBatchInfo, decodeSignals=True, trainingFlag=True)
                         # decodedPredictedIndexProbabilities dimension: batchSize, numSignals, maxNumEncodedSignals
                         # predictedIndexProbabilities dimension: batchSize, numSignals, maxNumEncodedSignals
                         # encodedData dimension: batchSize, numEncodedSignals, finalDistributionLength

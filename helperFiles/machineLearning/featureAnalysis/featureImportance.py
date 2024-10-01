@@ -160,8 +160,8 @@ class featureImportance:
 
         ax.set_yticks(range(len(indices)))
         if len(featureLabels) != 0:
-            _ = ax.set_yticklabels(np.array(featureLabels)[indices])
-        #      headers = np.array(featureLabels)[indices]
+            _ = ax.set_yticklabels(np.asarray(featureLabels)[indices])
+        #      headers = np.asarray(featureLabels)[indices]
         #      for i in headers:
         #          print('%s Weight: %.5g' % (str(i),v))
         plt.savefig(self.saveDataFolder + name + " " + modelType + ".png", dpi=150, bbox_inches='tight')

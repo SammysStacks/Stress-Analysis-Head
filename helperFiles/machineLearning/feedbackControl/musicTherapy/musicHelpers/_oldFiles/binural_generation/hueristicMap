@@ -57,7 +57,7 @@ def getNoteFrequencies():
         # White keys are in Uppercase and black keys (sharps) are in lowercase
         octave = ['C', 'c', 'D', 'd', 'E', 'F', 'f', 'G', 'g', 'A', 'a', 'B'] 
         base_freq = 440 #Frequency of Note A4
-        keys = np.array([x+str(y) for y in range(0,9) for x in octave])
+        keys = np.asarray([x+str(y) for y in range(0,9) for x in octave])
         # Trim to standard 88 keys
         start = np.where(keys == 'A0')[0][0]
         end = np.where(keys == 'C8')[0][0]

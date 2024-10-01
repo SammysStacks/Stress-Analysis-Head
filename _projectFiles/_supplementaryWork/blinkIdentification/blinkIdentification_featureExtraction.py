@@ -145,7 +145,7 @@ def train_eval_model(hidden_size, dropout, debug=False, min_test_accuracy=float(
     # AUC using outputs for each class
 
     # Assuming outputs are from your model and testY_tensor is available
-    probabilities = np.array(all_outputs)
+    probabilities = np.asarray(all_outputs)
 
     thresholds = np.linspace(0, 1, num=25)
     curr_method_probs = probabilities[:, 0]
@@ -207,10 +207,10 @@ def train_eval_model(hidden_size, dropout, debug=False, min_test_accuracy=float(
         print(f'Balanced Test Acc: {test_accuracy * 100:.2f}%, Test F1: {test_f1:.4f}')
 
         # Confusion Matrix calculation
-        TP = sum((np.array(all_val_labels) == 0) & (np.array(all_val_preds) == 0))
-        TN = sum((np.array(all_val_labels) == 1) & (np.array(all_val_preds) == 1))
-        FP = sum((np.array(all_val_labels) == 1) & (np.array(all_val_preds) == 0))
-        FN = sum((np.array(all_val_labels) == 0) & (np.array(all_val_preds) == 1))
+        TP = sum((np.asarray(all_val_labels) == 0) & (np.asarray(all_val_preds) == 0))
+        TN = sum((np.asarray(all_val_labels) == 1) & (np.asarray(all_val_preds) == 1))
+        FP = sum((np.asarray(all_val_labels) == 1) & (np.asarray(all_val_preds) == 0))
+        FN = sum((np.asarray(all_val_labels) == 0) & (np.asarray(all_val_preds) == 1))
 
         TPR = TP / (TP + FN) if (TP + FN) > 0 else 0  # True Positive Rate
         FPR = FP / (FP + TN) if (FP + TN) > 0 else 0  # False Positive Rate

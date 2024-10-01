@@ -39,7 +39,7 @@ class dataAugmentation:
 
     @staticmethod
     def shuffleDimension(signalData, shuffle_indices=None):
-        # Get the shape of the tensors
+        # signalData: [batchSize, numSignals, maxSequenceLength, numChannels]
         batchSize, numSignals, maxSequenceLength, numChannels = signalData.shape
 
         # Shuffle each tensor in the batch along the numSignals dimension
@@ -53,7 +53,7 @@ class dataAugmentation:
         batchSize, numSignals, sequenceLength, numChannels = signalDatas[0].shape
 
         # Find a random place to cut the data.
-        randomSignalEnd = torch.tensor(generalMethods.biased_high_sample(minimumSignalLength, sequenceLength, randomValue=random.uniform(0, 1)), dtype=torch.int32).item()
+        randomSignalEnd = self.getRandomIntervalPoint(minimumSignalLength, sequenceLength)
 
         # Slice all the data at the same index
         augmentedSignalDatas = (self.getRecentSignalPoints(signalData, randomSignalEnd) for signalData in signalDatas)
@@ -61,7 +61,7 @@ class dataAugmentation:
         return augmentedSignalDatas
 
     @staticmethod
-    def getRandomTimeInterval(minTimeWindow, maxTimeWindow):
+    def getRandomIntervalPoint(minTimeWindow, maxTimeWindow):
         return torch.tensor(generalMethods.biased_high_sample(minTimeWindow, maxTimeWindow, randomValue=random.uniform(a=0, b=1)), dtype=torch.int32).item()
 
     def getNewStartTimeIndices(self, signalData, minTimeWindow, maxTimeWindow):
@@ -70,37 +70,31 @@ class dataAugmentation:
         batchSize, numSignals, maxSequenceLength = timeChannels.shape
 
         # Find the time window for the signal.
-        newTimeWindow = self.getRandomTimeInterval(minTimeWindow, maxTimeWindow) / modelConstants.maxTimeWindow
-        targetTimes = -newTimeWindow*torch.ones((batchSize, numSignals), device=timeChannels.device)
+        newTimeWindow = self.getRandomIntervalPoint(minTimeWindow, maxTimeWindow) / modelConstants.maxTimeWindow
+        targetTimes = torch.full((batchSize, numSignals, 1), newTimeWindow, device=timeChannels.device)
 
         # Find the start time indices for the signals.
-        startTimeIndices = torch.searchsorted(-timeChannels, targetTimes.unsqueeze(-1), side="left").squeeze(-1)  # Shape: (batchSize, numSignals)
+        startTimeIndices = torch.searchsorted(-timeChannels, -targetTimes, side="left").squeeze(-1)  # Shape: (batchSize, numSignals)
         startTimeIndices = torch.clamp(startTimeIndices, min=0, max=maxSequenceLength-1)
         # startTimeIndices dim: [batchSize, numSignals]
 
         return startTimeIndices
 
     def changeNumSignals(self, signalData, minNumSignals=1, maxNumSignals=128, alteredDim=1):
-        # Assuming signalDatas is your tensor with dimensions [batchSize, numSignals, maxSequenceLength, numChannels]
+        # signalData: [batchSize, numSignals, maxSequenceLength, numChannels]
         numSignals = signalData.size(alteredDim)
 
         # Find a random place to cut the data.
         minNumSignals = max(minNumSignals + 1, int(numSignals / 3))
-        randomEnd = int(generalMethods.biased_high_sample(minNumSignals, maxNumSignals, randomValue=random.uniform(a=0, b=1)))
+        randomEnd = self.getRandomIntervalPoint(minNumSignals, maxNumSignals)
 
         # Expand the number of signals.
         repeat_times = (maxNumSignals + numSignals - 1) // numSignals  # Calculate the number of times we need to repeat the tensor
-
-        # Set up the signal augmentation.
-        shuffle_indices = None
-
-        # Expand the number of signals.
-        signalData = signalData.repeat_interleave(repeat_times, dim=alteredDim)[:, :maxNumSignals, :, :]
+        signalData = signalData.repeat_interleave(repeat_times, dim=alteredDim)
+        signalData = self.getInitialSignals(signalData, maxNumSignals)
 
         # Shuffle the signals to ensure that we are not always removing the same signals.
-        signalData, shuffle_indices = self.shuffleDimension(signalData, shuffle_indices)
-
-        # Slice all the data at the same index
+        signalData, shuffle_indices = self.shuffleDimension(signalData, shuffle_indices=None)
         signalData = self.getInitialSignals(signalData, randomEnd)
 
         return signalData
@@ -111,4 +105,5 @@ class dataAugmentation:
 
     @staticmethod
     def getInitialSignals(signalData, finalLength):
+        # signalData: [batchSize, numSignals, maxSequenceLength, numChannels]
         return signalData[:, 0:finalLength, :, :].contiguous()

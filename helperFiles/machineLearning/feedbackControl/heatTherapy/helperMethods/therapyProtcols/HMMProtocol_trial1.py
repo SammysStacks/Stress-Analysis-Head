@@ -8,17 +8,17 @@ class HMMTherapyProtocol_trial1(generalTherapyProtocol):
         self.model = hmm.GaussianHMM(n_components=self.numStates, covariance_type="diag", init_params="")
         self.model.startprob_ = start_probabilities
         self.model.transmat_ = transition_matrix
-        self.model.means_ = np.array(means).reshape(-1, 1)
-        self.model.covars_ = np.array(variances).reshape(-1, 1)
+        self.model.means_ = np.asarray(means).reshape(-1, 1)
+        self.model.covars_ = np.asarray(variances).reshape(-1, 1)
 
     def updateTherapyState(self):
         pass
 
     def update_and_predict(self, observations):
         # Update model with new observation
-        self.model.fit(np.array(observations).reshape(-1, 1))
+        self.model.fit(np.asarray(observations).reshape(-1, 1))
         # Predict the next state
-        next_state = self.model.predict(np.array(observations).reshape(-1, 1))[-1]
+        next_state = self.model.predict(np.asarray(observations).reshape(-1, 1))[-1]
         print('next state:', next_state)
         return next_state
 

@@ -167,7 +167,7 @@ class autoencoderVisualizations(globalPlottingProtocols):
 
         # For each epoch
         for layerInd in range(len(allAutoencoderWeightsCNN[0])):
-            autoencoderWeightsCNN = np.array([epoch[layerInd] for epoch in allAutoencoderWeightsCNN])
+            autoencoderWeightsCNN = np.asarray([epoch[layerInd] for epoch in allAutoencoderWeightsCNN])
             # Dim: numEpochs, numOutChannels, numInchannels/Groups, kernelSize
             autoencoderWeightsCNN = autoencoderWeightsCNN.reshape(numEpochs, -1)
 
@@ -176,7 +176,7 @@ class autoencoderVisualizations(globalPlottingProtocols):
                          title=f'Autoencoder CNN Weights at Layer {layerInd}', xlabel="Kernel Index", ylabel="Epoch")
 
         for layerInd in range(len(allAutoresponderWeightsFC[0])):
-            encoderWeightsFC = np.array([epoch[layerInd] for epoch in allAutoresponderWeightsFC])
+            encoderWeightsFC = np.asarray([epoch[layerInd] for epoch in allAutoresponderWeightsFC])
             encoderWeightsFC = encoderWeightsFC.reshape(len(encoderWeightsFC), -1)
 
             # Plot the heatmap

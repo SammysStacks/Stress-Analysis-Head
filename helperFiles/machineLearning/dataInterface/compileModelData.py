@@ -71,7 +71,7 @@ class compileModelData(compileModelDataHelpers):
 
         # Compile experimental information.
         userNames = np.unique([i.split(" ")[-2].lower() for i in subjectOrder])
-        subjectOrder = np.array([np.where(userName.split(" ")[-2].lower() == userNames)[0][0] for userName in subjectOrder])
+        subjectOrder = np.asarray([np.where(userName.split(" ")[-2].lower() == userNames)[0][0] for userName in subjectOrder])
         activityNames, activityLabels = self.compileModelInfo.extractActivityInformation(experimentalOrder, distinguishBaselines=False)
 
         # Compile the project data together

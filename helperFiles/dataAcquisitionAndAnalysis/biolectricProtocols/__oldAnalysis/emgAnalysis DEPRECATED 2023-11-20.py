@@ -87,8 +87,8 @@ class emgProtocol(_globalProtocol.globalProtocol):
             # ---------------------- Filter the Data ----------------------- #   
             # Find the starting/ending points of the data to analyze
             startFilterPointer = max(dataFinger - self.dataPointBuffer, 0)
-            dataBuffer = np.array(self.data[1][channelIndex][startFilterPointer:dataFinger + self.numPointsPerBatch])
-            timePoints = np.array(self.data[0][dataFinger:dataFinger + self.numPointsPerBatch])
+            dataBuffer = np.asarray(self.data[1][channelIndex][startFilterPointer:dataFinger + self.numPointsPerBatch])
+            timePoints = np.asarray(self.data[0][dataFinger:dataFinger + self.numPointsPerBatch])
             
             # Find New Points That Need Filtering
             totalPreviousPointsRMS = max(1 + math.floor((dataFinger + len(timePoints) - self.moveDataFinger - self.rmsWindow) / self.stepSize), 0) if dataFinger else 0
@@ -398,7 +398,7 @@ class emgProtocol(_globalProtocol.globalProtocol):
                 else:
                     leftBaselineIndex = max(0, xPointer - 100)
             # Analyze Only the Left Side (As I Want to Decipher Motor Intention as Fast as I Can; Plus the Signal is generally Symmetric)
-            dataWindow = np.array(yData[leftBaselineIndex:xPointer+1])
+            dataWindow = np.asarray(yData[leftBaselineIndex:xPointer+1])
             
             # Feature Extraction
             peakAverage = np.mean(dataWindow) - yData[leftBaselineIndex]
@@ -438,7 +438,7 @@ class emgProtocol(_globalProtocol.globalProtocol):
     
     def predictMovement(self, inputData, predictionModel, actionControl = None): 
         # Predict Data
-        predictedIndex = predictionModel.predictData(np.array([inputData]))[0]
+        predictedIndex = predictionModel.predictData(np.asarray([inputData]))[0]
         predictedLabel = self.gestureClasses[predictedIndex]
         print("\tThe Predicted Label is", predictedLabel)
         if actionControl:

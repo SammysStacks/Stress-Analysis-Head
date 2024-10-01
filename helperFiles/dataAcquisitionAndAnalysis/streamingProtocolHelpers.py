@@ -12,7 +12,7 @@ from .biolectricProtocols.generalAnalysis_lowFreq import generalProtocol_lowFreq
 from .biolectricProtocols.generalAnalysis_highFreq import generalProtocol_highFreq
 
 # Import Modules to Read in Data
-from .humanMachineInterface.arduinoInterface import arduinoRead  # Functions to Read in Data from Arduino
+from .humanMachineInterface.arduinoInterface import serialInterface  # Functions to Read in Data from Arduino
 from .humanMachineInterface.featureOrganization import featureOrganization
 
 # Import plotting protocols
@@ -41,7 +41,7 @@ class streamingProtocolHelpers(featureOrganization):
 
         # Store the arduinoRead Instance
         if mainSerialNum is not None:
-            self.arduinoRead = arduinoRead(mainSerialNum=mainSerialNum, therapySerialNum=therapySerialNum)
+            self.arduinoRead = serialInterface(mainSerialNum=mainSerialNum, therapySerialNum=therapySerialNum)
             self.mainArduino = self.arduinoRead.mainArduino
 
         # Specify the analysis order: a unique list of biomarkers in streamingOrder.
@@ -137,17 +137,17 @@ class streamingProtocolHelpers(featureOrganization):
             rawReadsList.append(self.arduinoRead.readline(ser=self.mainArduino))
 
         # Parse the Data
-        timePoints, Voltages = self.arduinoRead.parseCompressedRead(rawReadsList, self.numStreamedSignals, maxVolt, adcResolution)
-        self.organizeData(timePoints, Voltages)  # Organize the data for further processing
+        timepoints, datapoints = self.arduinoRead.parseCompressedRead(rawReadsList, self.numStreamedSignals, maxVolt, adcResolution)
+        self.organizeData(timepoints, datapoints)  # Organize the data for further processing
 
-    def organizeData(self, timePoints, Voltages):
-        if len(timePoints) == 0:
-            print("\tNO NEW TIMEPOINTS ADDED")
+    def organizeData(self, timepoints, datapoints):
+        if len(timepoints) == 0:
+            print("\tNO NEW timepoints ADDED")
 
-        if not isinstance(Voltages, list):
-            Voltages = list(Voltages)
-        if not isinstance(timePoints, list):
-            timePoints = list(timePoints)
+        if not isinstance(datapoints, list):
+            datapoints = list(datapoints)
+        if not isinstance(timepoints, list):
+            timepoints = list(timepoints)
 
         # Update the data (if present) for each sensor
         for analysisInd in range(len(self.analysisOrder)):
@@ -157,13 +157,13 @@ class streamingProtocolHelpers(featureOrganization):
             if analysis.numChannels == 0: continue
 
             # Update the timepoints.
-            analysis.timePoints.extend(timePoints)
+            analysis.timepoints.extend(timepoints)
 
             # For each channel, update the voltage data.
             for channelIndex in range(analysis.numChannels):
-                # Compile the voltages for each of the sensor's channels.
+                # Compile the datapoints for each of the sensor's channels.
                 streamingDataIndex = analysis.streamingChannelInds[channelIndex]
-                newVoltageData = Voltages[streamingDataIndex]
+                newData = datapoints[streamingDataIndex]
 
                 # Add the Data to the Correct Channel
-                analysis.channelData[channelIndex].extend(newVoltageData)
+                analysis.channelData[channelIndex].extend(newData)

@@ -71,9 +71,9 @@ class amigosInterface(globalMetaAnalysis):
         # Extract all the metadata information.
         subjectDemographicInfo = pd.read_excel(demographicFile)
         # Extract specific demographic information's
-        subjectIds = np.array(subjectDemographicInfo['UserID'].tolist())
-        subjectAges = np.array(subjectDemographicInfo['Age'].tolist())
-        subjectGenders = np.array(subjectDemographicInfo['Gender'].tolist())
+        subjectIds = np.asarray(subjectDemographicInfo['UserID'].tolist())
+        subjectAges = np.asarray(subjectDemographicInfo['Age'].tolist())
+        subjectGenders = np.asarray(subjectDemographicInfo['Gender'].tolist())
 
         # Read in the video information file with experiment order
         shortVideoInfo = pd.read_excel(videoInfoFile, sheet_name='Short_Videos_Order')
@@ -194,12 +194,12 @@ class amigosInterface(globalMetaAnalysis):
 
         print("\tFinished data extraction")
         # Convert to numpy arrays
-        subjectOrderAmigos = np.array(subjectOrderAmigos)
-        allContextualInfoAmigos = np.array(allContextualInfoAmigos)
-        allExperimentalTimesAmigos = np.array(allExperimentalTimesAmigos)
-        allExperimentalNamesAmigos = np.array(allExperimentalNamesAmigos)
-        allSurveyAnswerTimesAmigos = np.array(allSurveyAnswerTimesAmigos)
-        allSurveyAnswersListAmigos = np.array(allSurveyAnswersListAmigos)
+        subjectOrderAmigos = np.asarray(subjectOrderAmigos)
+        allContextualInfoAmigos = np.asarray(allContextualInfoAmigos)
+        allExperimentalTimesAmigos = np.asarray(allExperimentalTimesAmigos)
+        allExperimentalNamesAmigos = np.asarray(allExperimentalNamesAmigos)
+        allSurveyAnswerTimesAmigos = np.asarray(allSurveyAnswerTimesAmigos)
+        allSurveyAnswersListAmigos = np.asarray(allSurveyAnswersListAmigos)
 
         return allCompiledDatasAmigos, subjectOrderAmigos, allExperimentalTimesAmigos, allExperimentalNamesAmigos, allSurveyAnswerTimesAmigos, allSurveyAnswersListAmigos, allContextualInfoAmigos
 

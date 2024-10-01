@@ -310,7 +310,7 @@ class equationGenerator(_globalModel.globalModel):
             
             # Predit the user rating.
             predictedRatings.append(self.predictPoint(Ui, timePoint, userInd, itemInd))
-        predictedRatings = np.array(predictedRatings)
+        predictedRatings = np.asarray(predictedRatings)
         
         # Calculate the R2 correlation between the predicted and given ratings.
         R2 = self.calculateR2(userRatings, predictedRatings, calculateAdjustedR2=True, numFeatures=0)
@@ -382,7 +382,7 @@ class equationGenerator(_globalModel.globalModel):
             userInd = int(userInd); itemInd = int(itemInd)
             
             finalPredictions.append(self.predictPoint(Ui, timePoint, userInd, itemInd))
-        finalPredictions = np.array(finalPredictions)
+        finalPredictions = np.asarray(finalPredictions)
         
         return finalPredictions
 
@@ -489,8 +489,8 @@ if __name__ == "__main__":
     featureLabels_EGM = m*x + y*x
     
     # Compile feature data.
-    featureData_EGM = np.array([x, y, z, m, a, b, c]).T
-    featureNames_EGM = np.array(['x', 'y', 'z', 'm', 'a', 'b', 'c'])
+    featureData_EGM = np.asarray([x, y, z, m, a, b, c]).T
+    featureNames_EGM = np.asarray(['x', 'y', 'z', 'm', 'a', 'b', 'c'])
     maxEpochs = 5
 
 
@@ -518,7 +518,7 @@ if __name__ == "__main__":
     
     # modelClass.calculateR2(trueOutput, x, calculateAdjustedR2=True, numFeatures=0)
 
-    # X = np.array([x, y, a, b, ones*3.14, ones*9.81, np.sin(x), np.sin(y), np.sin(a), np.sin(b), np.cos(x), np.cos(y), np.cos(a), np.cos(b), np.exp(x), np.exp(y), np.exp(a), np.exp(b)]).T
+    # X = np.asarray([x, y, a, b, ones*3.14, ones*9.81, np.sin(x), np.sin(y), np.sin(a), np.sin(b), np.cos(x), np.cos(y), np.cos(a), np.cos(b), np.exp(x), np.exp(y), np.exp(a), np.exp(b)]).T
     # Y = trueOutput[:, None]
     
     # theta = np.linalg.inv((X.T @ X)) @ X.T @ Y

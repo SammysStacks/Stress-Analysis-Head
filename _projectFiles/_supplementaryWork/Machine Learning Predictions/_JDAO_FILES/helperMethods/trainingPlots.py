@@ -262,11 +262,11 @@ class trainingPlots(globalPlottingProtocols):
             accuracy_per_comp_factor.append(metaModel.trainingLosses_timeReconstructionAnalysis[timeWindowInd][-1])
             accuracy.append(accuracy_per_comp_factor)
         # plot heatmap from 2d list
-        plt.imshow(np.array(accuracy).T, cmap='Blues', interpolation='nearest')
+        plt.imshow(np.asarray(accuracy).T, cmap='Blues', interpolation='nearest')
         plt.xlabel('Time Window')
         plt.xticks(range(len(timeWindows)), timeWindows)
         plt.ylabel('Number of Encodings')
-        yticks = np.sort(np.unique(np.array(metaModel.numEncodingsPath_timeAnalysis).flatten()))
+        yticks = np.sort(np.unique(np.asarray(metaModel.numEncodingsPath_timeAnalysis).flatten()))
         print(accuracy)
         plt.yticks(range(len(yticks)), yticks)
         plt.colorbar(label='Reconstruction Loss')

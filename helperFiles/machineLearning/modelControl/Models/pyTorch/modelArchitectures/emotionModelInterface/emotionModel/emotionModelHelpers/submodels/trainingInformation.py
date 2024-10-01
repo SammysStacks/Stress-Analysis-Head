@@ -6,6 +6,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.modelArchitectures.
 
 
 class trainingInformation(nn.Module):
+
     def __init__(self):
         super().__init__()
         # General model parameters.
@@ -45,7 +46,7 @@ class trainingInformation(nn.Module):
         finalModelInd = self.getNumTrainedModels(self.submodel)
         filteredOptimizerState['param_groups'] = filteredOptimizerState['param_groups'][0:finalModelInd]
 
-        # Save the optimizer's state dictionary
+        # Save the state dictionary.
         self.optimizerState[self.submodel] = filteredOptimizerState
 
     def storeScheduler(self, scheduler, saveFullModel):

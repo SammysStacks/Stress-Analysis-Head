@@ -149,7 +149,7 @@ class wesadInterface(globalMetaAnalysis):
 
                 # Prepare the data to be read in
                 currentSurveyAnswersList = np.concatenate((panasAnswers, staiAnswers, dimAnswers), axis=1)
-                currentSurveyAnswerTimes = np.array(endTimes[0:5]) * 60
+                currentSurveyAnswerTimes = np.asarray(endTimes[0:5]) * 60
                 experimentTimes = [[startTimes[i] * 60, endTimes[i] * 60] for i in range(5)]
 
                 # Organize the data collected.
@@ -163,12 +163,12 @@ class wesadInterface(globalMetaAnalysis):
                 print("\tFinished data extraction")
 
         # Convert to numpy arrays
-        subjectOrder = np.array(subjectOrder)
-        allContextualInfo = np.array(allContextualInfo)
-        allExperimentalTimes = np.array(allExperimentalTimes)
-        allExperimentalNames = np.array(allExperimentalNames)
-        allSurveyAnswerTimes = np.array(allSurveyAnswerTimes)
-        allSurveyAnswersList = np.array(allSurveyAnswersList)
+        subjectOrder = np.asarray(subjectOrder)
+        allContextualInfo = np.asarray(allContextualInfo)
+        allExperimentalTimes = np.asarray(allExperimentalTimes)
+        allExperimentalNames = np.asarray(allExperimentalNames)
+        allSurveyAnswerTimes = np.asarray(allSurveyAnswerTimes)
+        allSurveyAnswersList = np.asarray(allSurveyAnswersList)
 
         return allSynchronizedData, subjectOrder, allExperimentalTimes, allExperimentalNames, allSurveyAnswerTimes, allSurveyAnswersList, allContextualInfo
 

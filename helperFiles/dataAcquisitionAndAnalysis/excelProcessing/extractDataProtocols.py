@@ -87,7 +87,7 @@ class extractData(handlingExcelFormat):
                 for cell in row[4:]:
                     if cell.value == None: break
                     headersFound.append(str(cell.value))
-                headersFound = np.array(headersFound, dtype=str)
+                headersFound = np.asarray(headersFound, dtype=str)
                 endDataCol = 4 + len(headersFound)
                 # Extract the survey questions if none given
                 if len(surveyQuestions) == 0:
@@ -168,7 +168,7 @@ class extractData(handlingExcelFormat):
             print("\tNo data found in this file")
         # Check that the subject background questions are all the same
         if len(finalSubjectInformationQuestions) != 0:
-            assert np.all(np.array(finalSubjectInformationQuestions) == subjectInformationQuestions), (
+            assert np.all(np.asarray(finalSubjectInformationQuestions) == subjectInformationQuestions), (
                 f"finalSubjectInformationQuestions: {finalSubjectInformationQuestions}; subjectInformationQuestions: {subjectInformationQuestions}")
 
         return compiledRawData, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions, subjectInformationAnswers, subjectInformationQuestions
@@ -243,11 +243,11 @@ class extractData(handlingExcelFormat):
             elif type(cellA.value) == str:
                 # If no feature names found, save them
                 if len(biomarkerFeatureNames[featureInd]) == 0:
-                    biomarkerFeatureNames[featureInd] = np.array([str(cell.value) for cell in row[1:]], dtype=str)
+                    biomarkerFeatureNames[featureInd] = np.asarray([str(cell.value) for cell in row[1:]], dtype=str)
                 else:
                     # Assert the same feature names present in all files.
-                    assert all(biomarkerFeatureNames[featureInd] == np.array([str(cell.value) for cell in row[1:]], dtype=str)), "We have two feature sheets with DIFFERENT features for " + featureType + "; " + str(
-                        len(np.array([str(cell.value) for cell in row[1:]]))) + " " + str(len(biomarkerFeatureNames[featureInd]))
+                    assert all(biomarkerFeatureNames[featureInd] == np.asarray([str(cell.value) for cell in row[1:]], dtype=str)), "We have two feature sheets with DIFFERENT features for " + featureType + "; " + str(
+                        len(np.asarray([str(cell.value) for cell in row[1:]]))) + " " + str(len(biomarkerFeatureNames[featureInd]))
 
         if dataStartRow != None:
             # Loop Through the Excel Worksheet to collect all the data
@@ -298,6 +298,6 @@ class extractData(handlingExcelFormat):
 
         # Check that the subject background questions are all the same
         if len(finalSubjectInformationQuestions) != 0:
-            assert np.all(np.array(finalSubjectInformationQuestions) == subjectInformationQuestions)
+            assert np.all(np.asarray(finalSubjectInformationQuestions) == subjectInformationQuestions)
 
         return featuresTimesHolder, featuresHolder, biomarkerFeatureNames, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions, subjectInformationAnswers, subjectInformationQuestions

@@ -165,10 +165,10 @@ if __name__ == "__main__":
 
         # Compile information into the model class
         performMachineLearning.modelControl.modelClasses[modelInd].setStandardizationInfo(featureNames, standardizeClass_Features, standardizeClass_Labels[modelInd])
-    standardizedLabels = np.array(standardizedLabels)
+    standardizedLabels = np.asarray(standardizedLabels)
 
     userNames = np.unique([i.split(" ")[-1].lower() for i in subjectOrder])
-    activityNames = np.array(["Baseline", "Music", "CPT", "Exercise", "VR"])
+    activityNames = np.asarray(["Baseline", "Music", "CPT", "Exercise", "VR"])
 
     import itertools
 
@@ -198,7 +198,7 @@ if __name__ == "__main__":
             userInd = int(np.where(userNames == userName)[0][0])
 
             newLabels[modelInd].append([timePoint, userInd, itemInd, userItemRating])
-    newLabels = np.array(newLabels)
+    newLabels = np.asarray(newLabels)
     activityLabels = newLabels[2, :, 2]
 
     # Remove recovery
@@ -220,7 +220,7 @@ if __name__ == "__main__":
     # For each group of features
     for currentFeatureNamesInd in range(len(featureNamesList)):
         featureType = featureNamesListOrder[currentFeatureNamesInd]
-        currentFeatureNames = np.array(featureNamesList[currentFeatureNamesInd])
+        currentFeatureNames = np.asarray(featureNamesList[currentFeatureNamesInd])
 
         # Define saving parameters
         saveFolder = trainingFolder + featureType + " Feature Combinations/"
@@ -246,7 +246,7 @@ if __name__ == "__main__":
             # sys.exit()
             # Only use features that have some correlation
             if combinationInd < len(thresholds):
-                currentFeatureNames = featureNames_Combinations[np.array(modelScores) >= thresholds[combinationInd]]
+                currentFeatureNames = featureNames_Combinations[np.asarray(modelScores) >= thresholds[combinationInd]]
                 currentFeatureNames = np.asarray([currentFeatureName.split(" ") for currentFeatureName in currentFeatureNames])
                 currentFeatureNames = np.unique(currentFeatureNames.flatten())
                 standardizedFeatures_Cull = performMachineLearning.modelControl.getSpecificFeatures(featureNames, currentFeatureNames, standardizedFeatures)

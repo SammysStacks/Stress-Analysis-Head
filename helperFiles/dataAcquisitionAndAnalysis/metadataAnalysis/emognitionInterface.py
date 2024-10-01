@@ -70,7 +70,7 @@ class emognitionInterface(globalMetaAnalysis):
         experimentSections = ['WASHOUT', 'STIMULUS', 'QUESTIONNAIRES']
         recordingDevices = ['EMPATICA', 'SAMSUNG_WATCH', 'MUSE']
         # Information about missing data
-        missingData = np.array([
+        missingData = np.asarray([
             ('29', 'MUSE'),
             ('30', 'SAMSUNG_WATCH'),
             ('32', 'MUSE'),
@@ -80,7 +80,7 @@ class emognitionInterface(globalMetaAnalysis):
         ])
 
         # Information about the recorded signals.
-        allExpectedSignalTypes = np.array(
+        allExpectedSignalTypes = np.asarray(
             ['BVP', 'TEMP', 'IBI', 'ACC', 'EDA',
              'acc', 'gyr', 'rot', 'heartRate', 'PPInterval', 'BVPRaw', 'BVPProcessed',
              # 'RAW_TP9', 'RAW_AF7', 'RAW_AF8', 'RAW_TP10',  # This one is not all of MUSE, but relevant ones.
@@ -177,13 +177,13 @@ class emognitionInterface(globalMetaAnalysis):
                             # MUSE has timepoints in the first column
                             if recordingDevice == "MUSE":
                                 # Extract and convert the time
-                                timepoints = np.array(allSignalInfos[0])
+                                timepoints = np.asarray(allSignalInfos[0])
                                 timepoints = np.vectorize(self.getSeconds)(timepoints)
                                 # TODO: There are negative time differences and duplicate times.
 
                             # For each type of signal.
                             for signalTypeInd in range(len(signalTypes)):
-                                signalInfo = np.array(allSignalInfos[signalTypeInd])
+                                signalInfo = np.asarray(allSignalInfos[signalTypeInd])
                                 signalType = signalTypes[signalTypeInd]
                                 # Check to see if we are compiling this signal.
                                 if signalType not in allFinalSignalTypes:
@@ -223,14 +223,14 @@ class emognitionInterface(globalMetaAnalysis):
                     currentSurveyAnswerTimes.append(surveyStartTime)
 
                 # Calculate the offset to zero the times.
-                allSectionStartTimes = np.array(allSectionStartTimes)
+                allSectionStartTimes = np.asarray(allSectionStartTimes)
                 offsetTime = min(allSectionStartTimes[:, 0])
                 # Remove the offset time from the data.
-                experimentTimes = np.array(experimentTimes) - offsetTime
-                currentSurveyAnswerTimes = np.array(currentSurveyAnswerTimes) - offsetTime
+                experimentTimes = np.asarray(experimentTimes) - offsetTime
+                currentSurveyAnswerTimes = np.asarray(currentSurveyAnswerTimes) - offsetTime
 
                 for signalInd in range(len(combinedSignalInfos)):
-                    signalInfo = np.array(combinedSignalInfos[signalInd]).astype(float)
+                    signalInfo = np.asarray(combinedSignalInfos[signalInd]).astype(float)
                     # Convert uS to S.
                     if combinedSignalTypes[signalInd] == "EDA":
                         signalInfo[:, 1] = signalInfo[:, 1] * 1E-6
@@ -268,12 +268,12 @@ class emognitionInterface(globalMetaAnalysis):
                 print("\tFinished data extraction")
 
         # Convert to numpy arrays
-        subjectOrder = np.array(subjectOrder)
-        allContextualInfo = np.array(allContextualInfo)
-        allExperimentalTimes = np.array(allExperimentalTimes)
-        allExperimentalNames = np.array(allExperimentalNames)
-        allSurveyAnswerTimes = np.array(allSurveyAnswerTimes)
-        allSurveyAnswersList = np.array(allSurveyAnswersList)
+        subjectOrder = np.asarray(subjectOrder)
+        allContextualInfo = np.asarray(allContextualInfo)
+        allExperimentalTimes = np.asarray(allExperimentalTimes)
+        allExperimentalNames = np.asarray(allExperimentalNames)
+        allSurveyAnswerTimes = np.asarray(allSurveyAnswerTimes)
+        allSurveyAnswersList = np.asarray(allSurveyAnswersList)
 
         return allCompiledDatas, subjectOrder, allExperimentalTimes, allExperimentalNames, allSurveyAnswerTimes, allSurveyAnswersList, allContextualInfo
 

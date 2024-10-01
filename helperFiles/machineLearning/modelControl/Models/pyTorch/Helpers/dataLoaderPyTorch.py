@@ -69,12 +69,12 @@ class CustomDataset(Dataset):
 
     def getAll(self):
         if self.testingMasks is None:
-            return self.features, self.labels
+            return self.features.clone(), self.labels.clone()
 
         return self.features.clone(), self.labels.clone(), self.trainingMasks.clone(), self.testingMasks.clone()
 
     def resetFeatures(self, features):
-        self.features = features
+        self.features = features.clone()
 
 
 class pytorchDataInterface:

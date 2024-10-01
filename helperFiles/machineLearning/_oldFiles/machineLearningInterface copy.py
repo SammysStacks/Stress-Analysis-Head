@@ -105,8 +105,8 @@ class machineLearningHead:
         return medianScore
             
     def findWorstSubject(self, modelInd, featureData, featureLabels, featureNames, subjectOrder, featureNamesCombination_String):
-        subjectOrder = np.array(subjectOrder)
-        featureLabels = np.array(featureLabels)
+        subjectOrder = np.asarray(subjectOrder)
+        featureLabels = np.asarray(featureLabels)
         
         # Get All Possible itertools.combinations
         subjectCombinationInds = itertools.combinations(range(0, len(featureLabels)),  len(featureLabels) - 3)
@@ -132,7 +132,7 @@ class machineLearningHead:
             modelPerformance = self.averageModelAccuracy(modelInd, culledSubjectData, culledSubjectLabels, featureNames, numEpochs = 50, stratifyBy = culledSubjectLabels, testSplitRatio = 0.3)
                         
             # Save which subjects were removed
-            discardedSubjectInds = np.array(list(allSubjectLabels.difference(set(subjectInds))))
+            discardedSubjectInds = np.asarray(list(allSubjectLabels.difference(set(subjectInds))))
             removedSubject = subjectOrder[discardedSubjectInds]
         
             insertionPoint = bisect.bisect(finalPerformances, -modelPerformance, key=lambda x: -x)
@@ -147,9 +147,9 @@ class machineLearningHead:
     def analyzeFeatureCombinations(self, modelInd, featureData, featureLabels, featureNames, numFeaturesCombine, subjectOrder, saveData = True, 
                                    saveExcelName = "Feature Combination Accuracy.xlsx", printUpdateAfterTrial = 750, scaleLabels = True):
         # Format the incoming data
-        featureNames = np.array(featureNames)
-        featureData = np.array(featureData.copy())
-        featureLabels = np.array(featureLabels.copy())
+        featureNames = np.asarray(featureNames)
+        featureData = np.asarray(featureData.copy())
+        featureLabels = np.asarray(featureLabels.copy())
         # Function variables
         numModelsTrack = 1000   # The number of models to track
         
@@ -232,7 +232,7 @@ class machineLearningHead:
             excelProcessing.processMLData().saveFeatureComparison(np.dstack((self.finalPerformances, self.finalPerformancesSTDs, 
                                         self.featureNamesCombinations))[0], [], ["Mean Score", "STD", "Feature Combination"], 
                                         self.saveDataFolder, saveExcelName, sheetName = str(numFeaturesCombine) + " Features in Combination", saveFirstSheet = True)
-        return np.array(self.finalPerformances), np.array(self.finalPerformancesSTDs), np.array(self.featureNamesCombinations)
+        return np.asarray(self.finalPerformances), np.asarray(self.finalPerformancesSTDs), np.asarray(self.featureNamesCombinations)
 
 # -------------------------------------------------------------------------- #
 

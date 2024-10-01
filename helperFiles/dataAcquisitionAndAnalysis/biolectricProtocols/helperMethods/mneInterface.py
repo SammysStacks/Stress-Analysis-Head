@@ -16,7 +16,7 @@ class mneInterface:
         self.wayTooSlowFeaturesMNE = ['app_entropy', 'energy_freq_bands', 'hurst_exp', 'samp_entropy', 'svd_entropy', 'svd_fisher_info']
 
         # MNE-features parameters.
-        self.frequencyBands = np.array([(0.5, 4), (4, 8), (8, 12), (12, 30), (30, 100), (8, 13), (13, 16), (16, 20), (20, 28), (13, 15)])
+        self.frequencyBands = np.asarray([(0.5, 4), (4, 8), (8, 12), (12, 30), (30, 100), (8, 13), (13, 16), (16, 20), (20, 28), (13, 15)])
         self.featuresMNE = ['decorr_time', 'energy_freq_bands', 'higuchi_fd', 'hjorth_complexity', 'hjorth_complexity_spect', 'hjorth_mobility', 'hjorth_mobility_spect',
                             'katz_fd', 'line_length', 'pow_freq_bands', 'ptp_amp', 'rms', 'spect_edge_freq', 'spect_entropy', 'spect_slope',
                             'teager_kaiser_energy', 'variance', 'wavelet_coef_energy', 'zero_crossings']

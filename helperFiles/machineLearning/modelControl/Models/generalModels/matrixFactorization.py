@@ -458,7 +458,7 @@ class matrixFactorization(globalModel):
         #     userInd = int(userInd); itemInd = int(itemInd)
             
         #     finalPredictions.append(self.predictPoint(Ui, timePoint, userInd, itemInd))
-        # finalPredictions1 = np.array(finalPredictions)
+        # finalPredictions1 = np.asarray(finalPredictions)
         
         if isinstance(userInds[0], (str)):
             userInds = np.where(np.isin(self.userNames, userInds))[0]
@@ -595,7 +595,7 @@ class matrixFactorization(globalModel):
             # Reset last label
             lastLabel = experimentLabel
         
-        return np.array(Training_Data), np.array(Testing_Data), np.array(Training_Labels), np.array(Testing_Labels), trainingOrder
+        return np.asarray(Training_Data), np.asarray(Testing_Data), np.asarray(Training_Labels), np.asarray(Testing_Labels), trainingOrder
     
     def _loadModel(self):
         with open(self.modelPath, 'rb') as handle:
@@ -628,8 +628,8 @@ if __name__ == "__main__":
     itemInd_MF = 0
     userItemRating = 30
     
-    Training_Data = np.array([Ui, Ui/1.5, Ui/2, Ui*2, Ui*2.5, Ui, Ui*2, Ui/2, Ui*3, Ui*4])
-    Training_Labels = np.array([[timePoint, userInd_MF+1, itemInd_MF, userItemRating], 
+    Training_Data = np.asarray([Ui, Ui/1.5, Ui/2, Ui*2, Ui*2.5, Ui, Ui*2, Ui/2, Ui*3, Ui*4])
+    Training_Labels = np.asarray([[timePoint, userInd_MF+1, itemInd_MF, userItemRating], 
                                 [timePoint+10, userInd_MF+1, itemInd_MF+1, userItemRating - 12.5],
                                 [timePoint+20, userInd_MF+1, itemInd_MF, userItemRating - 20],
                                 [timePoint+30, userInd_MF+1, itemInd_MF+1, userItemRating + 20],
@@ -640,13 +640,13 @@ if __name__ == "__main__":
                                 [timePoint+30, userInd_MF, itemInd_MF, userItemRating*1.4],
                                 [timePoint+40, userInd_MF, itemInd_MF, userItemRating*1.7]
                                 ], dtype=int)
-    Testing_Data = np.array([Ui, Ui*2, Ui, Ui*4])
-    Testing_Labels = np.array([[timePoint, userInd_MF+1, itemInd_MF, userItemRating], 
+    Testing_Data = np.asarray([Ui, Ui*2, Ui, Ui*4])
+    Testing_Labels = np.asarray([[timePoint, userInd_MF+1, itemInd_MF, userItemRating], 
                                 [timePoint+30, userInd_MF+1, itemInd_MF+1, userItemRating*2],
                                 [timePoint, userInd_MF, itemInd_MF+1, userItemRating],
                                 [timePoint+30, userInd_MF, itemInd_MF, userItemRating*3]
                                 ], dtype=int)
-    featureNames_CF = np.array([str(elem) for elem in range(len(Ui))])
+    featureNames_CF = np.asarray([str(elem) for elem in range(len(Ui))])
     trainingOrder_CF = np.arange(0, len(Testing_Data), 1)
 
     # Instantiate class.

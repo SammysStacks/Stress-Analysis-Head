@@ -9,6 +9,7 @@ from ....._globalPytorchModel import globalModel
 
 
 class specificEmotionModel(globalModel):
+
     def __init__(self, numCommonSignals, numActivityFeatures, activityNames, numBasicEmotions, numInterpreterHeads, numSubjects, emotionNames, featureNames):
         super(specificEmotionModel, self).__init__()
         # General model parameters.

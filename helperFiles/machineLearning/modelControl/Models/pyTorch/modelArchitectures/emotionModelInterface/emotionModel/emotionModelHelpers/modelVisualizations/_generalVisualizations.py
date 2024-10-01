@@ -77,7 +77,7 @@ class generalVisualizations(globalPlottingProtocols):
             allTestingLabels, allPredictedTestingLabels, labels=np.arange(numClasses), normalize='true')
 
         # Define a gridspec with width ratios for subplots
-        fig, axes = plt.subplots(1, 2, figsize=np.array([15, 5]), gridspec_kw={'width_ratios': [1, 1], 'height_ratios': [1]})
+        fig, axes = plt.subplots(1, 2, figsize=np.asarray([15, 5]), gridspec_kw={'width_ratios': [1, 1], 'height_ratios': [1]})
 
         # Plot the confusion matrices as heatmaps
         im0 = axes[0].imshow(training_confusion_matrix,

@@ -5,7 +5,7 @@ import torch
 # Standardize data class
 def minMaxScale_noInverse(X, scale=1):
     # Ensure the proper data type
-    if not isinstance(X, torch.Tensor): X = np.array(X)
+    if not isinstance(X, torch.Tensor): X = np.asarray(X)
 
     # Find the minimum and maximum along the last dimension
     min_val = X[X != 0].min(axis=-1, keepdims=True)

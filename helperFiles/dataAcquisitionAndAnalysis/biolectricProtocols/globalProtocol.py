@@ -62,7 +62,7 @@ class globalProtocol(abc.ABC):
         self.timePoints = []  # The Time Points of the Data
 
         # Reset Feature Extraction
-        self.lastAnalyzedDataInd = np.array([0 for _ in range(self.numChannels)])  # The index of the last point analyzed.
+        self.lastAnalyzedDataInd = np.asarray([0 for _ in range(self.numChannels)])  # The index of the last point analyzed.
         self.compiledFeatures = [[] for _ in range(self.numChannels)]  # FINAL compiled features at the current timepoint. Could be average of last x features.
         self.rawFeatureTimes = [[] for _ in range(self.numChannels)]  # The time of each feature.
         self.rawFeatures = [[] for _ in range(self.numChannels)]  # Raw features extraction at the current timepoint.

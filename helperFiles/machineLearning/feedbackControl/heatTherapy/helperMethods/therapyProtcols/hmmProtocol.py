@@ -54,7 +54,7 @@ class hmmTherapyProtocol(generalTherapyProtocol):
                 observation_sequences.append(observed_bin)
                 current_state = np.random.choice(self.numStates, p=self.transitionMatrix[current_state])
 
-            observation_sequences = np.array(observation_sequences).reshape(-1, 1)
+            observation_sequences = np.asarray(observation_sequences).reshape(-1, 1)
             return observation_sequences
         else:
             # TODO: think about how we are gonna use the actual data to train the HMM
@@ -67,14 +67,14 @@ class hmmTherapyProtocol(generalTherapyProtocol):
                 observation_sequences.append(observed_bin)
                 current_state = np.random.choice(self.numStates, p=self.transitionMatrix[current_state])
 
-            observation_sequences = np.array(observation_sequences).reshape(-1, 1)
+            observation_sequences = np.asarray(observation_sequences).reshape(-1, 1)
             return observation_sequences
     def trainHMM(self):
         if self.HMMmodels == 'categorical':
             model = hmm.CategoricalHMM(n_components=self.numStates, n_iter=1000, init_params="")
             model.startprob_ = self.startProb
             model.transmat_ = self.transitionMatrix
-            model.emissionprob_ = np.array(self.emissionMatrix)
+            model.emissionprob_ = np.asarray(self.emissionMatrix)
 
             print('self.emissionMatrix:', self.emissionMatrix.shape)
             print('length of observation sequence:', len(self.observationSequence_1D))

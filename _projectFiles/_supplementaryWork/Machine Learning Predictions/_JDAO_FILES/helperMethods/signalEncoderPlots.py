@@ -179,12 +179,12 @@ class signalEncoderPlots(trainingPlots):
         axs[0].set_ylabel(f"Train Loss")
         axs[1].set_ylabel(f"Test Loss")
 
-        print(np.array(trainingLoss_plotting).shape, np.array(testingLoss_plotting).shape)
+        print(np.asarray(trainingLoss_plotting).shape, np.asarray(testingLoss_plotting).shape)
 
-        axs[0].bar(self.datasetNames, np.mean(np.array(trainingLoss_plotting)[:, 0], axis=1),
-                   yerr=np.mean(np.array(trainingLoss_plotting)[:, 1], axis=1))
-        axs[1].bar(self.datasetNames, np.mean(np.array(testingLoss_plotting)[:, 0], axis=1),
-                   yerr=np.mean(np.array(testingLoss_plotting)[:, 1], axis=1))
+        axs[0].bar(self.datasetNames, np.mean(np.asarray(trainingLoss_plotting)[:, 0], axis=1),
+                   yerr=np.mean(np.asarray(trainingLoss_plotting)[:, 1], axis=1))
+        axs[1].bar(self.datasetNames, np.mean(np.asarray(testingLoss_plotting)[:, 0], axis=1),
+                   yerr=np.mean(np.asarray(testingLoss_plotting)[:, 1], axis=1))
 
         if self.savingFolder:
             # Save with a high DPI for better resolution
@@ -206,8 +206,8 @@ class signalEncoderPlots(trainingPlots):
         plt.title('Train Loss', fontsize=18)
         for timeWindowInd in range(len(modelConstants.timeWindows)):
             plt.bar(x + width / len(self.datasetNames) * timeWindowInd,
-                    np.array(trainingLoss_plotting)[:, 0, timeWindowInd], width / len(self.datasetNames),
-                    yerr=np.array(trainingLoss_plotting)[:, 1, timeWindowInd],
+                    np.asarray(trainingLoss_plotting)[:, 0, timeWindowInd], width / len(self.datasetNames),
+                    yerr=np.asarray(trainingLoss_plotting)[:, 1, timeWindowInd],
                     label=f'{modelConstants.timeWindows[timeWindowInd]}s Time Window',
                     color=self.timeWindowColors[timeWindowInd])
         plt.xticks([i + width / 2 for i in range(len(self.datasetNames))], self.datasetNames, fontsize=15)
@@ -216,8 +216,8 @@ class signalEncoderPlots(trainingPlots):
         plt.title('Test Loss', fontsize=18)
         for timeWindowInd in range(len(modelConstants.timeWindows)):
             plt.bar(x + width / len(self.datasetNames) * timeWindowInd,
-                    np.array(trainingLoss_plotting)[:, 0, timeWindowInd], width / len(self.datasetNames),
-                    yerr=np.array(trainingLoss_plotting)[:, 1, timeWindowInd],
+                    np.asarray(trainingLoss_plotting)[:, 0, timeWindowInd], width / len(self.datasetNames),
+                    yerr=np.asarray(trainingLoss_plotting)[:, 1, timeWindowInd],
                     color=self.timeWindowColors[timeWindowInd])
         plt.xticks([i + width / 2 for i in range(len(self.datasetNames))], self.datasetNames, fontsize=15)
 

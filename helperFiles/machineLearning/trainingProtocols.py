@@ -250,7 +250,7 @@ class trainingProtocols(extractData):
         # For each biomarker during that trial
         for biomarkerInd in range(len(rawFeatureHolder)):
             rawFeatureTimes = rawFeatureTimesHolder[biomarkerInd]
-            rawFeatures = np.array(rawFeatureHolder[biomarkerInd])
+            rawFeatures = np.asarray(rawFeatureHolder[biomarkerInd])
             # rawFeatures dim: numTimePoints, numBiomarkerFeatures
             # rawFeatureTimes dim: numTimePoints
 

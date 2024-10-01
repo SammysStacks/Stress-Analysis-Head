@@ -122,7 +122,7 @@ class caseInterface(globalMetaAnalysis):
                         print('skipping', trialStart, trialEnd, videoBufferTimestamps[trialVideos[-1]])
 
                 if showPlots:
-                    experimentTimesPlotting = np.array(experimentTimes)
+                    experimentTimesPlotting = np.asarray(experimentTimes)
                     plt.vlines(trialKeep, experimentTimesPlotting[:, 0], experimentTimesPlotting[:, 1], label="Trials")
                     labelFlag = True
                     for timeWindow in videoBufferTimestamps.values():
@@ -199,8 +199,8 @@ class caseInterface(globalMetaAnalysis):
                 # Organize the data collected ---------------------------------
 
                 # Convert times to seconds: 
-                experimentTimes = np.array(experimentTimes)
-                currentSurveyAnswerTimes = np.array(currentSurveyAnswerTimes)
+                experimentTimes = np.asarray(experimentTimes)
+                currentSurveyAnswerTimes = np.asarray(currentSurveyAnswerTimes)
 
                 givenSubjectOrder.append(subjectName)
                 givenExperimentalTimes.append(experimentTimes)
@@ -214,11 +214,11 @@ class caseInterface(globalMetaAnalysis):
                 if self.debug:
                     print(self.extractExperimentLabels(givenExperimentalNames[0]))
 
-                    print(np.array(givenSubjectOrder).shape)
-                    print(np.array(givenExperimentalTimes).shape)
-                    print(np.array(givenExperimentalNames).shape)
-                    print(np.array(givenSurveyAnswerTimes).shape)
-                    print(np.array(givenSurveyAnswersList).shape)
+                    print(np.asarray(givenSubjectOrder).shape)
+                    print(np.asarray(givenExperimentalTimes).shape)
+                    print(np.asarray(givenExperimentalNames).shape)
+                    print(np.asarray(givenSurveyAnswerTimes).shape)
+                    print(np.asarray(givenSurveyAnswersList).shape)
 
         return givenSynchronizedData, givenSubjectOrder, givenExperimentalTimes, givenExperimentalNames, givenSurveyAnswerTimes, givenSurveyAnswersList, givenContextualInfo
 

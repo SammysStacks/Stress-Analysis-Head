@@ -87,7 +87,7 @@ def sliding_window_features(signal, window_size, overlap=0.25, fs=32):
         window_signal = signal[start:start + window_samples]
         feature_list.append(extract_features(window_signal))
 
-    return np.array(feature_list)
+    return np.asarray(feature_list)
 
 
 

@@ -16,7 +16,7 @@ class plottingProtocols:
         self.fig, axes = plt.subplots(numChannels, ncols=3, sharey=False, sharex=False, gridspec_kw={'hspace': 0},
                                       figsize=(figWidth, figHeight))
         if numChannels == 1:
-            axes = np.array([axes])
+            axes = np.asarray([axes])
 
         self.axes = {}
         # Distribute the axes to their respective sensor

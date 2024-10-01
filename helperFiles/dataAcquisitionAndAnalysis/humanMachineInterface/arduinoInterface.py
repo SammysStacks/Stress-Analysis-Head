@@ -5,7 +5,7 @@ import pyfirmata2
 import serial.tools.list_ports
 
 
-class arduinoRead:
+class serialInterface:
     
     def __init__(self, mainSerialNum=None, therapySerialNum=None):
         # Save Arduino Serial Numbers
@@ -32,7 +32,7 @@ class arduinoRead:
         if arduinoSerialNum:
             try:
                 # Try to Connect to the Arduino
-                arduinoPort = self.findArduino(serialNum=arduinoSerialNum)
+                arduinoPort = self.findPort(serialNum=arduinoSerialNum)
                 arduinoControl = serial.Serial(arduinoPort, baudrate=115200, timeout=1)
                 arduinoControl.close()
                 arduinoControl.open()
@@ -64,7 +64,7 @@ class arduinoRead:
         A0.read()
 
     @staticmethod
-    def findArduino(serialNum):
+    def findPort(serialNum):
         """Get the name of the port that is connected to the Arduino."""
         port = None  # Initialize Blank Port
         # Get all Ports Connected to the Computer

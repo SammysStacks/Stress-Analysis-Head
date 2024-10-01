@@ -369,7 +369,7 @@ if __name__ == "__main__":
     n_data = 10000
     
     # Get Hand and EMG Arudinos
-    readArduino = readArduinoClass.arduinoRead(emgSerialNum, handSerialNum)
+    readArduino = readArduinoClass.serialInterface(emgSerialNum, handSerialNum)
 
     # Initiate the Robot
     robotControl = robotControl(handArduino = readArduino.handArduino, guiApp = None)

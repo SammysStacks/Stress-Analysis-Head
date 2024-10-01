@@ -149,7 +149,7 @@ class universalMethods:
     @staticmethod
     def findPointCrossing(array, threshold=0):
         # Shift the threshold to zero
-        array = np.array(array) - threshold
+        array = np.asarray(array) - threshold
 
         # Return the value right BEFORE the zero crossing.
         return np.where(np.diff(np.sign(array) >= 0))[0]

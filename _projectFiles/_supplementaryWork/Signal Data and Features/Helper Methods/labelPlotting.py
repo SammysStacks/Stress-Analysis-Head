@@ -93,18 +93,18 @@ class plotData:
             # -------------- Extract Data into this Namespace -------------- #
 
             # Extract the feature labels.
-            surveyAnswerTimes = np.array(readData.surveyAnswerTimes) # A list of times associated with each feature label.
-            currentSurveyAnswersList = np.array(readData.surveyAnswersList) 
+            surveyAnswerTimes = np.asarray(readData.surveyAnswerTimes) # A list of times associated with each feature label.
+            currentSurveyAnswersList = np.asarray(readData.surveyAnswersList) 
             # Extract the experiment information
-            experimentTimes = np.array(readData.experimentTimes)
-            experimentNames = np.array(readData.experimentNames)
+            experimentTimes = np.asarray(readData.experimentTimes)
+            experimentNames = np.asarray(readData.experimentNames)
             
             featureLabelTypes, finalLabels = self.modelInfoClass.extractFinalLabels(currentSurveyAnswersList, finalLabels)
             
             # Keep track of all the experiments.
             experimentalOrder.extend(experimentNames)
             surveyAnswersList.extend(currentSurveyAnswersList)   
-        surveyAnswersList = np.array(surveyAnswersList)
+        surveyAnswersList = np.asarray(surveyAnswersList)
         
         
         # PlotAPI diagrams
@@ -163,7 +163,7 @@ class plotData:
             # For each type of activity performed.
             for activityInd in range(len(activityGroups)):
                 activityName = activityGroups[activityInd]
-                compiledActivityLabels = np.array(allCompiledActivityLabels[activityInd])
+                compiledActivityLabels = np.asarray(allCompiledActivityLabels[activityInd])
                 # Initialize the parameters for creatings the Sankey diagram.
                 numActivityExperiments, numTrials = compiledActivityLabels.shape
                 sankeyLinks = []
@@ -592,7 +592,7 @@ class plotData:
             # For each type of activity performed.
             for activityInd in range(len(activityGroups)):
                 activityName = activityGroups[activityInd]
-                compiledActivityLabels = np.array(allCompiledActivityLabels[activityInd])
+                compiledActivityLabels = np.asarray(allCompiledActivityLabels[activityInd])
                 # Initialize the parameters for creatings the Sankey diagram.
                 numActivityExperiments, numTrials = compiledActivityLabels.shape
                 sankeyLinks = []

@@ -8,10 +8,7 @@ import torch
 from .emotionModelHelpers.emotionDataInterface import emotionDataInterface
 from .emotionModelHelpers.generalMethods.dataAugmentation import dataAugmentation
 from .emotionModelHelpers.modelConstants import modelConstants
-from .emotionModelHelpers.submodels.autoencoderModel import autoencoderModel  # An autoencoder pipeline for compressing individual signals.
 from .emotionModelHelpers.submodels.sharedEmotionModel import sharedEmotionModel
-from .emotionModelHelpers.submodels.signalEncoderModel import signalEncoderModel  # A signal encoder pipeline to make a universal feature vector.
-from .emotionModelHelpers.submodels.signalMappingModel import signalMappingModel
 # Import submodels
 from .emotionModelHelpers.submodels.specificEmotionModel import specificEmotionModel
 from .emotionModelHelpers.submodels.trainingInformation import trainingInformation
@@ -85,7 +82,7 @@ class emotionModelHead(globalModel):
         # ------------------------ Data Compression ------------------------ # 
 
         # The signal encoder model to find a common feature vector across all signals.
-        self.signalEncoderModel = signalEncoderModel(
+        self.signalEncoderModel = specificSignalEncoderModel(
             numSigLiftedChannels=self.numSigLiftedChannels,
             numSigEncodingLayers=self.numSigEncodingLayers,
             encodedSamplingFreq=self.encodedSamplingFreq,
@@ -98,10 +95,8 @@ class emotionModelHead(globalModel):
             accelerator=self.accelerator,
         )
 
-        if submodel == modelConstants.signalEncoderModel: return None
-
         # The autoencoder model reduces the incoming signal's dimension.
-        self.autoencoderModel = autoencoderModel(
+        self.autoencoderModel = sharedSignalEncoderModel(
             compressionFactor=self.compressionFactor,
             compressedLength=self.compressedLength,
             debuggingResults=self.debuggingResults,
@@ -110,16 +105,9 @@ class emotionModelHead(globalModel):
             accelerator=self.accelerator,
         )
 
-        if submodel == modelConstants.autoencoderModel: return None
+        if submodel == modelConstants.signalEncoderModel: return None
 
         # -------------------- Final Emotion Prediction -------------------- #
-
-        # The manifold projection model maps each signal to a common dimension.
-        self.signalMappingModel = signalMappingModel(
-            numEncodedSignals=self.numEncodedSignals,
-            compressedLength=self.compressedLength,
-            featureNames=self.featureNames,
-        )
 
         self.specificEmotionModel = specificEmotionModel(
             numInterpreterHeads=self.numInterpreterHeads,
@@ -144,52 +132,24 @@ class emotionModelHead(globalModel):
     # ---------------------------------------------------------------------- #  
     # -------------------------- Model Components -------------------------- #
 
-    def signalEncoding(self, signalData, startTimeIndices, signalIdentifiers, metadata, decodeSignals=True, calculateLoss=True, trainingFlag=False):
+    def signalEncoding(self, signalData, startTimeIndices, signalIdentifiers, metadata, decodeSignals=True, trainingFlag=False):
         # decodeSignals: whether to decode the signals after encoding, which is used for the autoencoder loss.
         # trainingFlag: whether the model is training or testing.
+        with self.accelerator.autocast():
+            # Add the data, labels, and training/testing indices to the device (GPU/CPU)
+            signalData, startTimeIndices, signalIdentifiers, metadata = (tensor.to(self.device) for tensor in (signalData, startTimeIndices, signalIdentifiers, metadata))
 
-        # Add the data, labels, and training/testing indices to the device (GPU/CPU)
-        signalData, startTimeIndices, signalIdentifiers, metadata = (tensor.to(self.device) for tensor in (signalData, startTimeIndices, signalIdentifiers, metadata))
-
-        t1 = time.time()
-        # Forward pass through the signal encoder to find a common signal source.
-        encodedData, reconstructedData, signalEncodingLayerLoss = self.signalEncoderModel(signalData, startTimeIndices, signalIdentifiers, metadata, decodeSignals, calculateLoss, trainingFlag)
-        # decodedPredictedIndexProbabilities dimension: batchSize, numSignals
-        # encodedData dimension: batchSize, numEncodedSignals, finalDistributionLength
-        # reconstructedData dimension: batchSize, numSignals, finalDistributionLength
-        # predictedIndexProbabilities dimension: batchSize, numSignals
-        # signalEncodingLayerLoss dimension: batchSize
-        t2 = time.time(); print("\tSignal Encoder:", t2 - t1)
+            t1 = time.time()
+            # Forward pass through the signal encoder to find a common signal source.
+            encodedData, reconstructedData, signalEncodingLayerLoss = self.signalEncoderModel(signalData, startTimeIndices, signalIdentifiers, metadata, decodeSignals, trainingFlag)
+            # decodedPredictedIndexProbabilities dimension: batchSize, numSignals
+            # encodedData dimension: batchSize, numEncodedSignals, finalDistributionLength
+            # reconstructedData dimension: batchSize, numSignals, finalDistributionLength
+            # predictedIndexProbabilities dimension: batchSize, numSignals
+            # signalEncodingLayerLoss dimension: batchSize
+            t2 = time.time(); print("\tSignal Encoder:", t2 - t1)
 
         return encodedData, reconstructedData, signalEncodingLayerLoss
-
-    def compressData(self, signalData, initialSignalData, reconstructSignals=True, calculateLoss=True, compileVariables=False, compileLosses=False, fullReconstruction=False, trainingFlag=False):
-        # Add the data, labels, and training/testing indices to the device (GPU/CPU)
-        signalData, initialSignalData = signalData.to(self.device), initialSignalData.to(self.device)
-        denoisedDoubleReconstructedData = 0
-
-        with torch.no_grad():
-            # Compile the variables from signal encoding.
-            encodedData, reconstructedData, signalEncodingLayerLoss = self.signalEncoding(signalData, startTimeIndices, signalIdentifiers, metadata, decodeSignals=compileVariables, calculateLoss=calculateLoss and compileLosses, trainingFlag=False)
-            signalEncodingOutputs = encodedData, reconstructedData, signalEncodingLayerLoss
-
-        t1 = time.time()
-        # Forward pass through the autoencoder for data compression.
-        compressedData, reconstructedEncodedData, autoencoderLayerLoss = self.autoencoderModel(encodedData, reconstructSignals, calculateLoss, trainingFlag)
-        # compressedData dimension: batchSize, numSignals, compressedLength
-        # reconstructedEncodedData dimension: batchSize, numSignals, finalDistributionLength
-        # signalChannel dimension: batchSize, numSignals, finalDistributionLength
-        # autoencoderLayerLoss dimension: batchSize
-        t2 = time.time(); print("\tAutoencoder:", t2 - t1)
-
-        if fullReconstruction:
-            # Denoise the final signals.
-            numSignalForwardPath = self.signalEncoderModel.encodeSignals.simulateSignalPath(initialSignalData.size(1), encodedData.size(1))[0]
-            doubleReconstructedData = self.signalEncoderModel.reconstructEncodedData(reconstructedEncodedData, numSignalForwardPath, signalEncodingLayerLoss=None, calculateLoss=False)[2]
-            denoisedDoubleReconstructedData = self.autoencoderModel.generalAutoencoder.applyDenoiserLast(doubleReconstructedData)
-            # denoisedDoubleReconstructedData dimension: batchSize, numSignals, finalDistributionLength
-
-        return signalEncodingOutputs, compressedData, reconstructedEncodedData, denoisedDoubleReconstructedData, autoencoderLayerLoss
 
     # ----------------------- Emotion Classification ----------------------- #  
 
@@ -236,10 +196,9 @@ class emotionModelHead(globalModel):
         emotionModelOutputs = (torch.tensor(data=0, device=self.device) for _ in range(6))
 
         if submodel == modelConstants.signalEncoderModel:
-            with self.accelerator.autocast():
-                # Only look at the signal encoder.
-                encodedData, reconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLayerLoss = self.signalEncoding(signalData, startTimeIndices, signalIdentifiers, metadata, decodeSignals=reconstructSignals, calculateLoss=compileVariables, trainingFlag=trainingFlag)
-                signalEncodingOutputs = encodedData.to('cpu'), reconstructedData.to('cpu'), predictedIndexProbabilities.to('cpu'), decodedPredictedIndexProbabilities.to('cpu'), signalEncodingLayerLoss.to('cpu')
+            # Only look at the signal encoder.
+            encodedData, reconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLayerLoss = self.signalEncoding(signalData, startTimeIndices, signalIdentifiers, metadata, decodeSignals=reconstructSignals, calculateLoss=compileVariables, trainingFlag=trainingFlag)
+            signalEncodingOutputs = encodedData.to('cpu'), reconstructedData.to('cpu'), predictedIndexProbabilities.to('cpu'), decodedPredictedIndexProbabilities.to('cpu'), signalEncodingLayerLoss.to('cpu')
 
         elif submodel == modelConstants.autoencoderModel:
             # Only look at the autoencoder.

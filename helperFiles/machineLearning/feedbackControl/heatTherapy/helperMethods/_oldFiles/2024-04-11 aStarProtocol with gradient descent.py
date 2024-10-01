@@ -82,7 +82,7 @@ class aStarProtocol(generalProtocol):
 
     @staticmethod
     def personalizedMapWeightingFunc(timeDelays, decay_constant):
-        return np.exp(-decay_constant * np.array(timeDelays))
+        return np.exp(-decay_constant * np.asarray(timeDelays))
 
     def getUpdatedPersonalizedMap(self):
         # Assert the integrity of the state tracking.

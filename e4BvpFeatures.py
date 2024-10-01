@@ -71,7 +71,7 @@ def sliding_window_features(signal, time, window_size, overlap=0.25, fs=64):
         features = extract_features(window_signal, window_time, systolic_peaks, diastolic_peaks)
         feature_list.append(features)
 
-    return np.array(feature_list)
+    return np.asarray(feature_list)
 
 
 

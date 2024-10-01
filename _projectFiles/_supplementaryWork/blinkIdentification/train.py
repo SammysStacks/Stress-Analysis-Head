@@ -103,10 +103,10 @@ class trainModel:
 
     def confusion_matrix(self, actual_labels, predicted_labels):
         # Confusion Matrix calculation
-        TP = sum((np.array(actual_labels) == 0) & (np.array(predicted_labels) == 0))
-        TN = sum((np.array(actual_labels) == 1) & (np.array(predicted_labels) == 1))
-        FP = sum((np.array(actual_labels) == 1) & (np.array(predicted_labels) == 0))
-        FN = sum((np.array(actual_labels) == 0) & (np.array(predicted_labels) == 1))
+        TP = sum((np.asarray(actual_labels) == 0) & (np.asarray(predicted_labels) == 0))
+        TN = sum((np.asarray(actual_labels) == 1) & (np.asarray(predicted_labels) == 1))
+        FP = sum((np.asarray(actual_labels) == 1) & (np.asarray(predicted_labels) == 0))
+        FN = sum((np.asarray(actual_labels) == 0) & (np.asarray(predicted_labels) == 1))
 
         TPR = TP / (TP + FN) if (TP + FN) > 0 else 0  # True Positive Rate
         FPR = FP / (FP + TN) if (FP + TN) > 0 else 0  # False Positive Rate

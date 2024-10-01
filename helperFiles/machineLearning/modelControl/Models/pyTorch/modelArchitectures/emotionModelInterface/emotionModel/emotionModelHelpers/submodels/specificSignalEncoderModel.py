@@ -12,9 +12,10 @@ from ..modelConstants import modelConstants
 from ....._globalPytorchModel import globalModel
 
 
-class signalEncoderModel(globalModel):
+class specificSignalEncoderModel(globalModel):
+
     def __init__(self, sequenceBounds, numEncodedSignals, encodedSamplingFreq, numSigEncodingLayers, numSigLiftedChannels, waveletType, signalMinMaxScale, accelerator, useFinalParams=False, debuggingResults=False):
-        super(signalEncoderModel, self).__init__()
+        super(specificSignalEncoderModel, self).__init__()
         # General model parameters.
         self.signalMinMaxScale = signalMinMaxScale  # The minimum and maximum signal values to consider for scaling. Type: tuple
         self.debuggingResults = debuggingResults  # Whether to print debugging results. Type: bool

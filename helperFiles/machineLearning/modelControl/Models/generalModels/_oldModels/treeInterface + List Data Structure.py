@@ -454,8 +454,8 @@ if __name__ == "__main__":
     c = np.random.uniform(2, 10, numPoints)
     
     # Compile feature data.
-    featureData = np.array([x, y, z, a, b, c]).T
-    featureNames_Tree = np.array(['x', 'y', 'z', 'a', 'b', 'c'])
+    featureData = np.asarray([x, y, z, a, b, c]).T
+    featureNames_Tree = np.asarray(['x', 'y', 'z', 'a', 'b', 'c'])
 
     # Instantiate classes.
     modelClass = equationGenerator.equationGenerator(modelPath, modelType, allFeatureNames, overwriteModel)

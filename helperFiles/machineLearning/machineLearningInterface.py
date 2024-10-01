@@ -70,8 +70,8 @@ class machineLearningInterface:
         return medianScore
 
     def findWorstSubject(self, modelInd, featureData, featureLabels, featureNames, subjectOrder, currentFeatureNames_STR):
-        subjectOrder = np.array(subjectOrder)
-        featureLabels = np.array(featureLabels)
+        subjectOrder = np.asarray(subjectOrder)
+        featureLabels = np.asarray(featureLabels)
 
         # Get All Possible itertools.combinations
         if False:
@@ -104,7 +104,7 @@ class machineLearningInterface:
             modelPerformance = self.averageModelAccuracy(modelInd, culledSubjectData, culledSubjectLabels, featureNames, numEpochs=1, stratifyBy=None, testSplitRatio=0.3)
 
             # Save which subjects were removed.
-            discardedSubjectInds = np.array(list(allSubjectLabels.difference(set(subjectInds))))
+            discardedSubjectInds = np.asarray(list(allSubjectLabels.difference(set(subjectInds))))
             removedSubject = np.unique(subjectOrder[discardedSubjectInds])
 
             insertionPoint = bisect.bisect(finalPerformances, -modelPerformance, key=lambda x: -x)
@@ -222,4 +222,4 @@ class machineLearningInterface:
             # Save to excel. Formatted in order of the best performance by the mean score.
             self.saveDataInterface.saveFeatureComparison(data, [], headers, self.saveDataFolder, saveExcelName, sheetName=str(numFeatures_perCombination) + " Features in Combination", saveFirstSheet=True)
 
-        return np.array(finalPerformances), np.array(finalPerformancesSTDs), np.array(featureNamesCombinations)
+        return np.asarray(finalPerformances), np.asarray(finalPerformancesSTDs), np.asarray(featureNamesCombinations)

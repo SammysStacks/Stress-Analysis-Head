@@ -233,35 +233,35 @@ if __name__ == "__main__":
         #
         #     # Compile information into the model class
         #     performMachineLearning.modelControl.modelClasses[modelInd].setStandardizationInfo(featureNames, standardizeClass_Features, standardizeClass_Labels[modelInd])
-        # standardizedLabels = np.array(standardizedLabels)
+        # standardizedLabels = np.asarray(standardizedLabels)
 
     # ------------------ Extract Data into this Namespace ------------------ #
 
     if streamData or readDataFromExcel:
         # Extract the data
-        tempReadings = np.array(readData.analysisProtocols['temp'].channelData if readData.analysisProtocols['temp'] is not None else [])
-        eogReadings = np.array(readData.analysisProtocols['eog'].channelData if readData.analysisProtocols['eog'] is not None else [])
-        eegReadings = np.array(readData.analysisProtocols['eeg'].channelData if readData.analysisProtocols['eeg'] is not None else [])
-        edaReadings = np.array(readData.analysisProtocols['eda'].channelData if readData.analysisProtocols['eda'] is not None else [])
-        timePoints = np.array(readData.analysisList[0].timePoints)  # Assuming each analysis has the same time points.
+        tempReadings = np.asarray(readData.analysisProtocols['temp'].channelData if readData.analysisProtocols['temp'] is not None else [])
+        eogReadings = np.asarray(readData.analysisProtocols['eog'].channelData if readData.analysisProtocols['eog'] is not None else [])
+        eegReadings = np.asarray(readData.analysisProtocols['eeg'].channelData if readData.analysisProtocols['eeg'] is not None else [])
+        edaReadings = np.asarray(readData.analysisProtocols['eda'].channelData if readData.analysisProtocols['eda'] is not None else [])
+        timePoints = np.asarray(readData.analysisList[0].timePoints)  # Assuming each analysis has the same time points.
 
         # Extract the features
-        alignedFeatureLabels = np.array(readData.alignedFeatureLabels)
-        alignedFeatureTimes = np.array(readData.alignedFeatureTimes)
-        alignedFeatures = np.array(readData.alignedFeatures)
+        alignedFeatureLabels = np.asarray(readData.alignedFeatureLabels)
+        alignedFeatureTimes = np.asarray(readData.alignedFeatureTimes)
+        alignedFeatures = np.asarray(readData.alignedFeatures)
 
         # Extract the feature labels.
-        surveyAnswersList = np.array(readData.surveyAnswersList)  # A list of feature labels at each instance.
-        surveyAnswerTimes = np.array(readData.surveyAnswerTimes)  # A list of times associated with each feature label.
-        surveyQuestions = np.array(readData.surveyQuestions)  # A list of the survey questions asked the user.
+        surveyAnswersList = np.asarray(readData.surveyAnswersList)  # A list of feature labels at each instance.
+        surveyAnswerTimes = np.asarray(readData.surveyAnswerTimes)  # A list of times associated with each feature label.
+        surveyQuestions = np.asarray(readData.surveyQuestions)  # A list of the survey questions asked the user.
 
         # Extract the experiment information
-        experimentTimes = np.array(readData.experimentTimes)
-        experimentNames = np.array(readData.experimentNames)
+        experimentTimes = np.asarray(readData.experimentTimes)
+        experimentNames = np.asarray(readData.experimentNames)
 
         # Extract subject information
-        subjectInformationQuestions = np.array(readData.subjectInformationQuestions)
-        subjectInformationAnswers = np.array(readData.subjectInformationAnswers)
+        subjectInformationQuestions = np.asarray(readData.subjectInformationQuestions)
+        subjectInformationAnswers = np.asarray(readData.subjectInformationAnswers)
 
         # -------------------------- Save Input data --------------------------- #
 
@@ -277,7 +277,7 @@ if __name__ == "__main__":
                 streamingData = []
                 for analysis in readData.analysisList:
                     for analysisChannelInd in range(len(analysis.channelData)):
-                        streamingData.append(np.array(analysis.channelData[analysisChannelInd]))
+                        streamingData.append(np.asarray(analysis.channelData[analysisChannelInd]))
                 # Initialize Class to Save the Data and Save
                 saveInputs.saveData(timePoints, streamingData, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions,
                                     subjectInformationAnswers, subjectInformationQuestions, streamingOrder, currentFilename)

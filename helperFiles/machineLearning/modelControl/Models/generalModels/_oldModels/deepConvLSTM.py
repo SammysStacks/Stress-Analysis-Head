@@ -27,7 +27,7 @@ class timeSeries_CNN:
             feature = self.ResNet152.predict(x).flatten()
             features.append(feature)
         # features = np.concatenate(features, axis=0)
-        return np.array(features)
+        return np.asarray(features)
     
     
     def get_image_features(self, images):

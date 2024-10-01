@@ -64,13 +64,13 @@ def random_bounded_function(x, n_terms=5):
 
 
 # Create a range of x values
-x = np.linspace(0, 4*np.pi, 500)
+x = np.linspace(0, 10*np.pi, 1000)
 
 # Generate a random bounded function
 y = random_bounded_function(x, n_terms=10)
 zy = y + x * 1j
 
-zeta_valuesY = np.array([zeta(s) for s in zy])
+zeta_valuesY = np.asarray([zeta(s) for s in zy])
 
 c = 50
 realY = []

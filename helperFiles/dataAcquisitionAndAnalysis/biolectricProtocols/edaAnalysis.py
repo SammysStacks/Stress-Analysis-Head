@@ -62,8 +62,8 @@ class edaProtocol(globalProtocol):
             # ---------------------- Filter the Data ----------------------- #    
             # Find the starting/ending points of the data to analyze
             startFilterPointer = max(dataFinger - self.dataPointBuffer, 0)
-            dataBuffer = np.array(self.channelData[channelIndex][startFilterPointer:dataFinger + self.numPointsPerBatch])
-            timePoints = np.array(self.timePoints[startFilterPointer:dataFinger + self.numPointsPerBatch])
+            dataBuffer = np.asarray(self.channelData[channelIndex][startFilterPointer:dataFinger + self.numPointsPerBatch])
+            timePoints = np.asarray(self.timePoints[startFilterPointer:dataFinger + self.numPointsPerBatch])
 
             # Extract sampling frequency from the first batch of data
             if not self.samplingFreq:
@@ -131,7 +131,7 @@ class edaProtocol(globalProtocol):
 
                 # Plot a single feature.
                 if len(self.compiledFeatures[channelIndex]) != 0:
-                    self.plottingMethods.featureDataPlots[channelIndex].set_data(self.rawFeatureTimes[channelIndex], np.array(self.compiledFeatures[channelIndex])[:, 19])
+                    self.plottingMethods.featureDataPlots[channelIndex].set_data(self.rawFeatureTimes[channelIndex], np.asarray(self.compiledFeatures[channelIndex])[:, 19])
                     self.plottingMethods.featureDataPlotAxes[channelIndex].legend(["Hjorth Activity"], loc="upper left")
 
             # -------------------------------------------------------------- #   

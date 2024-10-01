@@ -138,6 +138,6 @@ class trainingProtocols(extractData):
                 
 
         # Return Training Data and Labels
-        return subjectOrder, np.array(Training_Data), np.array(Training_Labels)
+        return subjectOrder, np.asarray(Training_Data), np.asarray(Training_Labels)
     
     

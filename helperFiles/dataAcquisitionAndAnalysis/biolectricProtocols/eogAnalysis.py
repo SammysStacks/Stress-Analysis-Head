@@ -104,8 +104,8 @@ class eogProtocol(globalProtocol):
             # ---------------------- Filter the Data ----------------------- #    
             # Find the starting/ending points of the data to analyze.
             startFilterPointer = max(dataFinger - self.dataPointBuffer, 0)
-            dataBuffer = np.array(self.channelData[channelIndex][startFilterPointer:dataFinger + self.numPointsPerBatch])
-            timePoints = np.array(self.timePoints[startFilterPointer:dataFinger + self.numPointsPerBatch])
+            dataBuffer = np.asarray(self.channelData[channelIndex][startFilterPointer:dataFinger + self.numPointsPerBatch])
+            timePoints = np.asarray(self.timePoints[startFilterPointer:dataFinger + self.numPointsPerBatch])
 
             # Assert that the data is within the expected voltage range.
             assert np.max(dataBuffer) <= self.voltageRange[1] + 0.1 and self.voltageRange[0] - 0.1 <= np.min(dataBuffer), f"Data is not within the expected voltage range: {np.max(dataBuffer)} {np.min(dataBuffer)}"
@@ -193,7 +193,7 @@ class eogProtocol(globalProtocol):
 
                 # Plot a single feature.
                 if len(self.compiledFeatures[channelIndex]) != 0:
-                    self.plottingMethods.featureDataPlots[channelIndex].set_data(self.rawFeatureTimes[channelIndex], np.array(self.compiledFeatures[channelIndex])[:, 24])
+                    self.plottingMethods.featureDataPlots[channelIndex].set_data(self.rawFeatureTimes[channelIndex], np.asarray(self.compiledFeatures[channelIndex])[:, 24])
                     self.plottingMethods.featureDataPlotAxes[channelIndex].legend(["Blink Duration"], loc="upper left")
 
         # -------------------- Update Virtual Reality  ---------------------- #
@@ -313,8 +313,8 @@ class eogProtocol(globalProtocol):
 
             if debugBlinkDetection:
                 peakTentX, peakTentY = newFeatures[0], newFeatures[1]
-                xData = np.array(xData)
-                yData = np.array(yData)
+                xData = np.asarray(xData)
+                yData = np.asarray(yData)
                 # Plot the Peak
                 plt.plot(xData, yData)
                 plt.plot(xData[peakInd], yData[peakInd], 'ko')
@@ -639,8 +639,8 @@ class eogProtocol(globalProtocol):
 
     @staticmethod
     def plotData(xData, yData, peakInd, velInds=(), accelInds=(), sepInds=(), title="", peakSize=5, lineWidth=2, lineColor="black", ax=None, axisLimits=()):
-        xData = np.array(xData)
-        yData = np.array(yData)
+        xData = np.asarray(xData)
+        yData = np.asarray(yData)
         # Create Figure
         showFig = False
         if ax is None:

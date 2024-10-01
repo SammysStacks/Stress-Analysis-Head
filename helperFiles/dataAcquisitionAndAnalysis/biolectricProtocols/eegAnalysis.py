@@ -53,8 +53,8 @@ class eegProtocol(globalProtocol):
 
             # Find the starting/ending points of the data to analyze
             startFilterPointer = max(dataFinger - self.dataPointBuffer, 0)
-            dataBuffer = np.array(self.channelData[channelIndex][startFilterPointer:dataFinger + self.numPointsPerBatch])
-            timePoints = np.array(self.timePoints[startFilterPointer:dataFinger + self.numPointsPerBatch])
+            dataBuffer = np.asarray(self.channelData[channelIndex][startFilterPointer:dataFinger + self.numPointsPerBatch])
+            timePoints = np.asarray(self.timePoints[startFilterPointer:dataFinger + self.numPointsPerBatch])
 
             # Get the Sampling Frequency from the First Batch (If Not Given)
             if not self.samplingFreq:
@@ -112,7 +112,7 @@ class eegProtocol(globalProtocol):
 
                 # Plot a single feature.
                 if len(self.compiledFeatures[channelIndex]) != 0:
-                    self.plottingMethods.featureDataPlots[channelIndex].set_data(self.rawFeatureTimes[channelIndex], np.array(self.compiledFeatures[channelIndex])[:, 0])
+                    self.plottingMethods.featureDataPlots[channelIndex].set_data(self.rawFeatureTimes[channelIndex], np.asarray(self.compiledFeatures[channelIndex])[:, 0])
                     self.plottingMethods.featureDataPlotAxes[channelIndex].legend(["Hjorth Activity"], loc="upper left")
 
             # -------------------------------------------------------------- #   

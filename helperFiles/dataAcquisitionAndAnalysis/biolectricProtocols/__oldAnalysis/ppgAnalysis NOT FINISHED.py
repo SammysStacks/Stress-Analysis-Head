@@ -175,7 +175,7 @@ class ppgProtocol:
             startBPFindex = max(dataFinger - self.bandPassBuffer, 0)
             yDataBuffer = self.data[1][channelIndex][startBPFindex:dataFinger + self.numTimePoints].copy()
             # Invert the Y-Data for Reflection Spectroscopy
-            filteredData = max(yDataBuffer) - np.array(yDataBuffer)
+            filteredData = max(yDataBuffer) - np.asarray(yDataBuffer)
             
             # Get the Sampling Frequency from the First Batch (If Not Given)
             if not self.samplingFreq:
@@ -194,8 +194,8 @@ class ppgProtocol:
             # Account for the Pointer Moving
             self.lastAnalyzedPulseInd[channelIndex] = max(self.lastAnalyzedPulseInd[channelIndex], startBPFindex)
             # Cut the Data to Only Analyze New Pulses
-            filteredData = np.array(filteredData[self.lastAnalyzedPulseInd[channelIndex]-startBPFindex:])
-            timePoints = np.array(self.data[0][self.lastAnalyzedPulseInd[channelIndex]:dataFinger + self.numTimePoints])
+            filteredData = np.asarray(filteredData[self.lastAnalyzedPulseInd[channelIndex]-startBPFindex:])
+            timePoints = np.asarray(self.data[0][self.lastAnalyzedPulseInd[channelIndex]:dataFinger + self.numTimePoints])
             
             # Add a Buffer of Zeros to the Filtered Data
             self.filteredData[channelIndex].extend([0]*(len(self.data[0]) - len(self.filteredData[channelIndex])))
@@ -207,7 +207,7 @@ class ppgProtocol:
             # Take First Derivative of Smoothened Data
             systolicPeaks = self.seperatePulses(timePoints, firstDeriv, channelIndex)
             
-            # plt.plot(timePoints, max(yDataBuffer) - np.array(yDataBuffer)[-len(filteredData):], 'k', linewidth=2)
+            # plt.plot(timePoints, max(yDataBuffer) - np.asarray(yDataBuffer)[-len(filteredData):], 'k', linewidth=2)
             # plt.plot(timePoints, filteredData, 'tab:red', linewidth=1)
             # plt.plot(timePoints[systolicPeaks], filteredData[systolicPeaks], 'o')
             # plt.show()
@@ -285,8 +285,8 @@ class ppgProtocol:
             if plotStreamedData and not calibrateModel:
                 # Compile the Data to Show on the Plot
                 timePoints = self.data[0][dataFinger:dataFinger + self.numTimePoints]
-                newYData = np.array(self.data[1][channelIndex][dataFinger:dataFinger + self.numTimePoints])
-                newFilteredData = np.array(self.filteredData[channelIndex][-len(timePoints):])
+                newYData = np.asarray(self.data[1][channelIndex][dataFinger:dataFinger + self.numTimePoints])
+                newFilteredData = np.asarray(self.filteredData[channelIndex][-len(timePoints):])
 
                 # Plot Raw Bioelectric Data (Slide Window as Points Stream in)
                 self.bioelectricDataPlots[channelIndex].set_data(timePoints, (newYData - min(newYData))/((max(newYData) - min(newYData))))

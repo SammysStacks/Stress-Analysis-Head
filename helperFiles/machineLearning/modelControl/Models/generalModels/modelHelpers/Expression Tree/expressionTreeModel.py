@@ -629,8 +629,8 @@ if __name__ == "__main__":
     c = np.random.uniform(6, 9, numPoints)
     
     # Compile feature data.
-    featureData = np.array([x, y, z, a, b, c]).T
-    featureNames_Tree = np.array(['x', 'y', 'z', 'a', 'b', 'c'])
+    featureData = np.asarray([x, y, z, a, b, c]).T
+    featureNames_Tree = np.asarray(['x', 'y', 'z', 'a', 'b', 'c'])
     featureDict = dict(zip(featureNames_Tree, featureData))
 
     # Instantiate classes.
