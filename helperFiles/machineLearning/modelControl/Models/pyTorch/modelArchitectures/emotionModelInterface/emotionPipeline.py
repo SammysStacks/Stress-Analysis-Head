@@ -56,14 +56,14 @@ class emotionPipeline(emotionPipelineHelpers):
                     numPointsAnalyzed += batchSignalInfo.size(0)
 
                     # Interface for non-emotion modeling, where only the signal data is used (no labels).
-                    if submodel in [modelConstants.signalEncoderModel, modelConstants.autoencoderModel]:
+                    if submodel in [modelConstants.signalEncoderModel]:
                         batchTrainingMask, batchSignalLabels, batchSignalInfo = self.dataInterface.getReconstructionData(batchTrainingMask, batchSignalLabels, batchSignalInfo, reconstructionIndex)
                         
-                        # If there is no training data.
-                        if batchSignalInfo.size(0) == 0:
-                            # We can skip this batch, and backpropagation if necessary.
-                            if self.accelerator.sync_gradients: self.backpropogateModel()
-                            continue
+                    # If there is no training data.
+                    if batchSignalInfo.size(0) == 0:
+                        # We can skip this batch, and backpropagation if necessary.
+                        if self.accelerator.sync_gradients: self.backpropogateModel()
+                        continue
 
                     # Separate the data into signal and metadata information.
                     signalBatchData, batchSignalIdentifiers, metaBatchInfo = self.dataInterface.separateData(batchSignalInfo)
