@@ -1,10 +1,9 @@
-import antropy
-import numpy as np
-import scipy
 import sklearn
+import numpy as np
+from scipy.signal import welch, find_peaks
+from scipy.stats import skew, kurtosis
 
-from .globalProtocol import globalProtocol
-
+from helperFiles.dataAcquisitionAndAnalysis.biolectricProtocols.globalProtocol import globalProtocol
 
 class bvpProtocol(globalProtocol):
 
@@ -88,28 +87,6 @@ class bvpProtocol(globalProtocol):
                 # Compile the new raw features into a smoothened (averaged) feature.
                 self.readData.compileContinuousFeatures(newFeatureTimes, newRawFeatures, self.rawFeatureTimes[channelIndex], self.rawFeatures[channelIndex], self.compiledFeatures[channelIndex], self.featureAverageWindow)
 
-            # ------------------- Plot Bioelectric Signals ------------------ #
-
-            if self.plotStreamedData:
-                # Format the raw data:.
-                timePoints = timePoints[dataFinger - startFilterPointer:]  # Shared axis for all signals
-                rawData = dataBuffer[dataFinger - startFilterPointer:]
-                # Format the filtered data
-                filterOffset = (goodIndicesMask[0:dataFinger - startFilterPointer]).sum(axis=0, dtype=int)
-
-                # Plot Raw Bioelectric Data (Slide Window as Points Stream in)
-                self.plottingMethods.bioelectricDataPlots[channelIndex].set_data(timePoints, rawData)
-                self.plottingMethods.bioelectricPlotAxes[channelIndex].set_xlim(timePoints[0], timePoints[-1])
-
-                # Plot the Filtered + Digitized Data
-                self.plottingMethods.filteredBioelectricDataPlots[channelIndex].set_data(filteredTime[filterOffset:], filteredData[filterOffset:])
-                self.plottingMethods.filteredBioelectricPlotAxes[channelIndex].set_xlim(timePoints[0], timePoints[-1])
-
-                # Plot a single feature.
-                if len(self.compiledFeatures[channelIndex]) != 0:
-                    self.plottingMethods.featureDataPlots[channelIndex].set_data(self.rawFeatureTimes[channelIndex], np.asarray(self.compiledFeatures[channelIndex])[:, 0])
-                    self.plottingMethods.featureDataPlotAxes[channelIndex].legend(["Hjorth Activity"], loc="upper left")
-
             # -------------------------------------------------------------- #
 
     def filterData(self, timePoints, data, removePoints=False):
@@ -148,67 +125,81 @@ class bvpProtocol(globalProtocol):
     # --------------------- Feature Extraction Methods --------------------- #
 
     def extractFeatures(self, timePoints, data):
-
         # ----------------------- Data Preprocessing ----------------------- #
-
         # Normalize the data
         standardized_data = self.universalMethods.standardizeData(data)
-        if all(standardized_data == 0):
-            return [0 for _ in range(26)]
 
-        # Calculate the power spectral density (PSD) of the signal. USE NORMALIZED DATA
-        powerSpectrumDensityFreqs, powerSpectrumDensity, powerSpectrumDensityNormalized = self.universalMethods.calculatePSD(standardized_data, self.samplingFreq)
-        # powerSpectrumDensityNormalized is amplitude-invariant to the original data UNLIKE powerSpectrumDensity.
-        # Note: we are removing the DC component from the power spectrum density.
+        # ----------------------- Feature Extraction ----------------------- #
+        # Extract the features from the data
+        featureList = []
+        # Compute the first and second derivatives
+        first_derivative = np.gradient(standardized_data)
+        second_derivative = np.gradient(first_derivative)
 
-        # ------------------- Feature Extraction: Hjorth ------------------- #
+        systolic_peaks, _ = find_peaks(standardized_data, distance=64)  # return the indices of the peaks
+        end_of_cycle, _ = find_peaks(-standardized_data, distance=64)  # return the indices of the local minima
 
-        # Calculate the hjorth parameters
-        hjorthActivity, hjorthMobility, hjorthComplexity, firstDerivVariance, secondDerivVariance \
-            = self.universalMethods.hjorthParameters(timePoints, data, firstDeriv=None, secondDeriv=None, standardized_data=standardized_data)
+        # Identify dicrotic notches and diastolic peaks within each pulse
+        dicrotic_notches = []
+        diastolic_peaks = []
+        pulse_widths = []
+        pulse_amplitudes = []
 
-        # Calculate the hjorth parameters
-        hjorthActivityPSD, hjorthMobilityPSD, hjorthComplexityPSD, firstDerivVariancePSD, secondDerivVariancePSD \
-            = self.universalMethods.hjorthParameters(powerSpectrumDensityFreqs, powerSpectrumDensityNormalized, firstDeriv=None, secondDeriv=None, standardized_data=powerSpectrumDensityNormalized)
+        for i in range(len(systolic_peaks) - 1):
+            # Segment between two systolic peaks
+            start_idx = systolic_peaks[i]
+            next_idx = systolic_peaks[i + 1]
+            segment = standardized_data[start_idx:next_idx]
+            segment_time = timePoints[start_idx:next_idx]
+            segment_first_derivative = first_derivative[start_idx:next_idx]
+            segment_second_derivative = second_derivative[start_idx:next_idx]
 
-        # ------------------- Feature Extraction: Entropy ------------------ #
+            # Identify the dicrotic notch using the second derivative zero-crossing
+            zero_crossings = np.where(np.diff(np.sign(segment_second_derivative)))[0]
+            if zero_crossings.size > 0:
+                # Assume the first zero-crossing after the systolic peak is the notch
+                notch_idx = zero_crossings[0] + start_idx
+                dicrotic_notches.append(notch_idx)
+            else:
+                dicrotic_notches.append(None)
 
-        # Entropy calculation
-        spectral_entropy = self.universalMethods.spectral_entropy(powerSpectrumDensityNormalized, normalizePSD=False)  # Spectral entropy: amplitude-independent if using normalized PSD
-        perm_entropy = antropy.perm_entropy(standardized_data, order=3, delay=1, normalize=True)  # Permutation entropy: same if standardized or not
-        svd_entropy = antropy.svd_entropy(standardized_data, order=3, delay=1, normalize=True)  # Singular value decomposition entropy: same if standardized or not
-        # sample_entropy = antropy.sample_entropy(data, order=2, metric="chebyshev")       # Sample entropy
-        # app_entropy = antropy.app_entropy(data, order=2, metric="chebyshev")             # Approximate sample entropy
+            # Identify diastolic peak as a local maximum after the dicrotic notch
+            if dicrotic_notches[-1] is not None:
+                diastolic_segment = standardized_data[dicrotic_notches[-1]:next_idx]
+                diastolic_peaks_in_segment, _ = find_peaks(diastolic_segment)
+                if diastolic_peaks_in_segment.size > 0:
+                    diastolic_peak_idx = diastolic_peaks_in_segment[0] + dicrotic_notches[-1]
+                    diastolic_peaks.append(diastolic_peak_idx)
+                else:
+                    diastolic_peaks.append(None)
+            else:
+                diastolic_peaks.append(None)
 
-        # ------------------- Feature Extraction: Fractals ------------------ #
+            # Calculate pulse width and amplitudes
+            width = timePoints[end_of_cycle[i + 1]] - timePoints[end_of_cycle[i]]
+            pulse_widths.append(width)
+            if diastolic_peaks[i] is not None:
+                # Pulse magnitude is the difference between systolic and diastolic peak values
+                magnitude = standardized_data[systolic_peaks[i]] - standardized_data[end_of_cycle[i]]
+                pulse_amplitudes.append(magnitude)
+            else:
+                pulse_amplitudes.append(None)
 
-        # Fractal analysis
-        petrosian_fd = antropy.petrosian_fd(standardized_data, axis=-1)  # Amplitude-invariant. Averages 25 μs.
-        higuchi_fd = antropy.higuchi_fd(standardized_data, kmax=6)  # Amplitude-invariant. Same if standardized or not
-        DFA = antropy.detrended_fluctuation(standardized_data)  # Amplitude-invariant. Same if standardized or not
-        katz_fd = antropy.katz_fd(standardized_data, axis=-1)  # Amplitude-invariant. Same if standardized or not
+        #  Heart Rate (HR)
+        if len(systolic_peaks) > 1:
+            hr_intervals = np.diff(timePoints[systolic_peaks])
+            hr = 60 / np.mean(hr_intervals)
+            rmssd = np.sqrt(np.mean(np.diff(hr_intervals) ** 2))
+        else:
+            hr = None
+            rmssd = None
 
-        # -------------------- Feature Extraction: Other ------------------- #
+        # Skewness and Kurtosis of the data
+        data_skewness = skew(standardized_data)
+        data_kurtosis = kurtosis(standardized_data)
 
-        # Calculate the band wave powers
-        deltaPower, thetaPower, alphaPower, betaPower, gammaPower = self.universalMethods.bandPower(powerSpectrumDensity, powerSpectrumDensityFreqs, bands=[(0.5, 4), (4, 8), (8, 12), (12, 30), (30, 100)], relative=True)
-        muPower, beta1Power, beta2Power, beta3Power, smrPower = self.universalMethods.bandPower(powerSpectrumDensity, powerSpectrumDensityFreqs, bands=[(8, 13), (13, 16), (16, 20), (20, 28), (13, 15)], relative=True)
-        # Calculate band wave power ratios
-        engagementLevelEst = betaPower / (alphaPower + thetaPower)
+        featureList.extend([systolic_peaks, diastolic_peaks, dicrotic_notches, pulse_widths, pulse_amplitudes])
+        featureList.extend([hr, data_skewness, data_kurtosis, rmssd])
 
-        # ------------------------------------------------------------------ #
-
-        finalFeatures = []
-        # Feature Extraction: Hjorth
-        finalFeatures.extend([hjorthActivity, hjorthMobility, hjorthComplexity, firstDerivVariance])
-        finalFeatures.extend([hjorthActivityPSD, hjorthMobilityPSD, hjorthComplexityPSD])
-        # Feature Extraction: Entropy
-        finalFeatures.extend([spectral_entropy, perm_entropy, svd_entropy])
-        # Feature Extraction: Fractal
-        finalFeatures.extend([petrosian_fd, higuchi_fd, DFA, katz_fd])
-        # Feature Extraction: Other
-        finalFeatures.extend([deltaPower, thetaPower, alphaPower, betaPower, gammaPower])
-        finalFeatures.extend([muPower, beta1Power, beta2Power, beta3Power, smrPower])
-        finalFeatures.extend([engagementLevelEst])
-
-        return finalFeatures
+        return featureList
+\
