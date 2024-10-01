@@ -32,8 +32,8 @@ if __name__ == "__main__":
 
     # Protocol switches: only the first true variably executes.
     readDataFromExcel = False  # For SINGLE FILE analysis. Analyze Data from Excel File called 'currentFilename' on Sheet Number 'testSheetNum'
-    streamData = True  # Stream in Data from the Board and Analyze.
-    trainModel = False  # Train Model with ALL Data in 'collectedDataFolder'.
+    streamData = False  # Stream in Data from the Board and Analyze.
+    trainModel = True  # Train Model with ALL Data in 'collectedDataFolder'.
 
     # Assert that only one of E4Streaming or streamData can be True, maybe be both, but right now use one
     assert not (E4StreamingIndicator and streamData), "E4Streaming and streamData cannot both be True. Only one can be active at a time."

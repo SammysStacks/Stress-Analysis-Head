@@ -1,7 +1,7 @@
 
 from helperFiles.dataAcquisitionAndAnalysis.excelProcessing import E4ExcelProcessing
 from helperFiles.dataAcquisitionAndAnalysis.biolectricProtocols import accelerationAnalysis
-from helperFiles.dataAcquisitionAndAnalysis.biolectricProtocols import bvpAnalysis
+from helperFiles.dataAcquisitionAndAnalysis.biolectricProtocols import bvpAnalysis_old
 import os
 import pandas as pd
 import numpy
