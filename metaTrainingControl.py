@@ -2,7 +2,7 @@
 
 import os
 
-from helperFiles.machineLearning.modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
 # Set specific environmental parameters.
 os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
@@ -17,10 +17,10 @@ import torch
 import time
 
 # Import files for machine learning
-from helperFiles.machineLearning.modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
-from helperFiles.machineLearning.modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.trainingProtocolHelpers import trainingProtocolHelpers
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.trainingProtocolHelpers import trainingProtocolHelpers
 from helperFiles.machineLearning.modelControl.modelSpecifications.compileModelInfo import compileModelInfo
-from helperFiles.machineLearning.modelControl.Models.pyTorch.Helpers.modelMigration import modelMigration
+from helperFiles.machineLearning.modelControl.Models.pyTorch.modelMigration import modelMigration
 from helperFiles.machineLearning.featureAnalysis.featureImportance import featureImportance  # Import feature analysis files.
 from helperFiles.machineLearning.dataInterface.compileModelData import compileModelData  # Methods to organize model data.
 
@@ -87,7 +87,7 @@ if __name__ == "__main__":
     # Specify training parameters
     numEpoch_toPlot, numEpoch_toSaveFull = modelParameters.getEpochInfo(submodel, useFinalParams)  # The number of epochs to plot and save the model.
     datasetNames, metaDatasetNames, allDatasetNames = modelParameters.compileModelNames()  # Compile the model names.
-    numConstrainedEpochs, numEpochs = modelParameters.getNumEpochs(submodel)  # The number of epochs to train the model.
+    numEpochs = modelParameters.getNumEpochs(submodel)  # The number of epochs to train the model.
     trainingDate = modelCompiler.embedInformation(submodel, trainingDate)  # Embed training information into the name.
     submodelsSaving = modelParameters.getSubmodelsSaving(submodel)  # The submodels to save.
 
@@ -113,11 +113,10 @@ if __name__ == "__main__":
         startEpochTime = time.time()
 
         # Get the saving information.
-        saveFullModel, plotSteps = modelParameters.getSavingInformation(epoch, numConstrainedEpochs, numEpoch_toSaveFull, numEpoch_toPlot)
-        constrainedTraining = epoch <= numConstrainedEpochs
+        saveFullModel, plotSteps = modelParameters.getSavingInformation(epoch, numEpoch_toSaveFull, numEpoch_toPlot)
 
         # Train the model for a single epoch.
-        unifiedLayerData = trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, unifiedLayerData, constrainedTraining=constrainedTraining)
+        unifiedLayerData = trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, unifiedLayerData)
 
         # Store the initial loss information and plot.
         if storeLoss: trainingProtocols.calculateLossInformation(unifiedLayerData, allMetaLossDataHolders, allMetaModels, allModels, submodel, metaDatasetNames, fastPass, storeLoss, stepScheduler=False)

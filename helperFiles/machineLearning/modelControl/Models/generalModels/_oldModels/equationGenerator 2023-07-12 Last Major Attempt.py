@@ -28,7 +28,7 @@ import expressionTreeModel
 # -------------------------------------------------------------------------- #
 # -------------------------- Recommendation Model -------------------------- #
 
-class equationGenerator(_globalModel.globalModel):        
+class equationGenerator(nn.Module):        
     
     def __init__(self, modelPath, modelType, allFeatureNames, overwriteModel): 
         # Specify state boundaries.

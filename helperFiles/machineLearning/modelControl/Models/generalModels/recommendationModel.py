@@ -18,7 +18,7 @@ import _imageSimilarities
 # -------------------------------------------------------------------------- #
 # -------------------------- Recommendation Model -------------------------- #
 
-class recommendationModel(_globalModel.globalModel):
+class recommendationModel(nn.Module):
     
     def __init__(self, modelPath, modelType, allFeatureNames, overwriteModel, numUsers = 20, numBioFeatures = 84, numItems = 4):
         """

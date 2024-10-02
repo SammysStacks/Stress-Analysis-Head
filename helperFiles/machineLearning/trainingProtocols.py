@@ -10,11 +10,9 @@ from natsort import natsorted
 from openpyxl import load_workbook
 
 from .featureAnalysis.featurePlotting import featurePlotting
-from .modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
-# Import Files for Machine Learning
-from .modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
+from .modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
+from .modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
 from .modelControl.modelSpecifications.compileModelInfo import compileModelInfo
-# Import excel data interface
 from ..dataAcquisitionAndAnalysis.excelProcessing.extractDataProtocols import extractData
 from ..dataAcquisitionAndAnalysis.excelProcessing.saveDataProtocols import saveExcelData
 

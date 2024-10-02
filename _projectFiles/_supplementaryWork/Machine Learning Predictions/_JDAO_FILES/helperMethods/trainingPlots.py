@@ -7,9 +7,9 @@ import numpy as np
 
 from helperFiles.machineLearning.dataInterface.compileModelData import compileModelData
 # Import files for machine learning
-from helperFiles.machineLearning.modelControl.Models.pyTorch.Helpers.modelMigration import modelMigration
+from helperFiles.machineLearning.modelControl.Models.pyTorch.modelMigration import modelMigration
 from helperFiles.globalPlottingProtocols import globalPlottingProtocols
-from helperFiles.machineLearning.modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
 
 class trainingPlots(globalPlottingProtocols):

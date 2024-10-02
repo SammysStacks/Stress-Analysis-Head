@@ -6,7 +6,7 @@ from matplotlib.colors import LogNorm
 import numpy as np
 import os
 
-from helperFiles.machineLearning.modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 # Import files for machine learning
 from .trainingPlots import trainingPlots
 from scipy.ndimage import uniform_filter1d

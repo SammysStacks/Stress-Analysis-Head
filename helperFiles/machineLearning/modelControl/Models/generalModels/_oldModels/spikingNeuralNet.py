@@ -68,7 +68,7 @@ train_loader = DataLoader(mnist_train, batch_size=batch_size, shuffle=True)
 # -------------------------------------------------------------------------- #
 # ------------------------ Simple Regression Modules ----------------------- #
 
-class generalModel(_globalModel.globalModel):
+class generalModel(nn.Module):
     
     def __init__(self, modelPath, modelType, allFeatureNames, overwriteModel):
         # Initialize common model class

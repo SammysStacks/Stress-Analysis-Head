@@ -12,11 +12,11 @@ from helperFiles.dataAcquisitionAndAnalysis.metadataAnalysis.emognitionInterface
 from helperFiles.dataAcquisitionAndAnalysis.metadataAnalysis.wesadInterface import wesadInterface
 from .compileModelDataHelpers import compileModelDataHelpers
 from ..featureAnalysis.compiledFeatureNames.compileFeatureNames import compileFeatureNames  # Functions to extract feature names
-from ..modelControl.Models.pyTorch.Helpers.dataLoaderPyTorch import pytorchDataInterface
-from ..modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
-from ..modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
+from helperFiles.machineLearning.modelControl.Models.pyTorch.dataLoaderPyTorch import pytorchDataInterface
 # Import files for training and testing the model
-from ..modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionPipeline import emotionPipeline
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionPipeline import emotionPipeline
+from ..modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
+from ..modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from ..modelControl.modelSpecifications.compileModelInfo import compileModelInfo  # Functions with model information
 # Import interfaces for the model's data
 from ...dataAcquisitionAndAnalysis.metadataAnalysis.globalMetaAnalysis import globalMetaAnalysis

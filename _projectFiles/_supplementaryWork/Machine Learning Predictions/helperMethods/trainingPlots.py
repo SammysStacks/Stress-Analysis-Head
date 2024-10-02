@@ -1,5 +1,4 @@
 # General
-import os
 
 # Plotting
 import matplotlib.pyplot as plt
@@ -9,9 +8,9 @@ from scipy.ndimage import uniform_filter1d
 
 from helperFiles.machineLearning.dataInterface.compileModelData import compileModelData
 # Import files for machine learning
-from helperFiles.machineLearning.modelControl.Models.pyTorch.Helpers.modelMigration import modelMigration
+from helperFiles.machineLearning.modelControl.Models.pyTorch.modelMigration import modelMigration
 from helperFiles.globalPlottingProtocols import globalPlottingProtocols
-from helperFiles.machineLearning.modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
 
 class trainingPlots(globalPlottingProtocols):
@@ -92,10 +91,6 @@ class trainingPlots(globalPlottingProtocols):
             finalLosses[i] = np.min(smoothedLosses)
 
         return finalLosses
-
-    import matplotlib.pyplot as plt
-    import numpy as np
-    from matplotlib.colors import LogNorm, Normalize
 
     def plot_heatmap(self, data, column_labels, row_labels, columnLabel, rowLabel, title=None, color_map='viridis', cbar_label="Value", useLogNorm=False, saveFigurePath=None, cmapBounds=[None, None]):
         """

@@ -131,7 +131,7 @@ class Helpers:
 # --------------------------------------------------------------------------- #
 # --------------------------------------------------------------------------- #
     
-class neuralNetwork(globalModel):
+class neuralNetwork(nn.Module):
     """
     Define a Neural Network Class
     """

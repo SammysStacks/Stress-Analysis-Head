@@ -18,7 +18,7 @@ from ..tensorFlow.neuralNetwork import neuralNetwork
 # -------------------------------------------------------------------------- #
 # -------------------------- Recommendation Model -------------------------- #
 
-class matrixFactorization(globalModel):
+class matrixFactorization(nn.Module):
     
     def __init__(self, modelPath, modelType, allFeatureNames, overwriteModel, numUsers = 20, numBioFeatures = 84, numItems = 4):
         """

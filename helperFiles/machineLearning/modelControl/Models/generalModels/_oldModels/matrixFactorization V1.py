@@ -18,7 +18,7 @@ import _imageSimilarities
 # -------------------------------------------------------------------------- #
 # -------------------------- Recommendation Model -------------------------- #
 
-class matrixFactorization(_globalModel.globalModel):
+class matrixFactorization(nn.Module):
     
     def __init__(self, modelPath, modelType, allFeatureNames, overwriteModel, numUsers = 20, numBioFeatures = 84, numItems = 4):
         """

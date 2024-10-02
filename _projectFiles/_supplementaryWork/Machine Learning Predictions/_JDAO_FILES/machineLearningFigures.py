@@ -3,7 +3,7 @@ import os
 import sys
 import accelerate
 
-from helperFiles.machineLearning.modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
 # Set specific environmental parameters.
 os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'

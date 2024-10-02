@@ -7,7 +7,7 @@ from ...machineLearning.featureAnalysis.compiledFeatureNames.compileFeatureNames
 
 # Import files for machine learning
 from ...machineLearning.featureAnalysis.featurePlotting import featurePlotting
-from ...machineLearning.modelControl.Models.pyTorch.modelArchitectures.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
+from ...machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from ...machineLearning.trainingProtocols import trainingProtocols
 
 # Import files for data analysis

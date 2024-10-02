@@ -16,7 +16,7 @@ from .._globalModel import globalModel
 # -------------------------------------------------------------------------- #
 # ------------------------ Simple Regression Modules ----------------------- #
 
-class generalModel(globalModel):
+class generalModel(nn.Module):
     
     def __init__(self, modelPath, modelType, allFeatureNames, overwriteModel):
         # Initialize common model class
