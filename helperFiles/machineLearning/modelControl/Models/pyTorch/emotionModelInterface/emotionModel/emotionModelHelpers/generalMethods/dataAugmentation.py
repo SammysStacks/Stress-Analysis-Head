@@ -103,7 +103,7 @@ class dataAugmentation:
 
         # Find a random percentage to drop the data.
         finalDropoutPercent = generalMethods.biasedSample(range_start=0, range_end=dropoutPercent, biasType="low")
-        dropoutMask = torch.rand((batchSize, numSignals, sequenceLength), device=augmentedBatchData.device) < finalDropoutPercent
+        dropoutMask = finalDropoutPercent < torch.rand((batchSize, numSignals, sequenceLength), device=augmentedBatchData.device)
 
         # Slice all the data at the same index
         augmentedBatchData = augmentedBatchData * dropoutMask.unsqueeze(-1)

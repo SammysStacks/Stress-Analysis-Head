@@ -94,7 +94,7 @@ class generalMethods:
     @staticmethod
     def biasedSample(range_start, range_end, biasType):
         # Generate a random value.
-        rangePercent = random.uniform(0, 1)
+        rangePercent = random.uniform(a=0, b=1)
 
         # Apply the bias to the random value.
         if biasType == "high": rangePercent = 1 - rangePercent**4

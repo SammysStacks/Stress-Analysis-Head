@@ -35,23 +35,23 @@ class attentionMethods(signalEncoderModules):
         # signalData dimension: [batchSize, numSignals, maxSequenceLength, numChannels]
         datapoints = emotionDataInterface.getChannelData(signalData, channelName=modelConstants.signalChannel).unsqueeze(-1)
         timepoints = emotionDataInterface.getChannelData(signalData, channelName=modelConstants.timeChannel).unsqueeze(-1)
-        validDataMask = (datapoints.squeeze(-1) == 0) & (timepoints.squeeze(-1) == 0)
+        validDataMask = torch.as_tensor(((datapoints == 0) & (timepoints == 0)))
         # datapoints and timepoints dimension: [batchSize, numSignals, maxSequenceLength, inputQueryKeyDim = 1]
 
         # Calculate the query, key, and value.
-        query = self.queryWeights(timepoints)  # Dimension: [batchSize, numSignals, maxSequenceLength, latentQueryKeyDim]
-        value = self.valueWeights(datapoints)  # Dimension: [batchSize, numSignals, maxSequenceLength, latentValueDim]
-        key = self.keyWeights(timepoints)  # Dimension: [batchSize, numSignals, maxSequenceLength, latentQueryKeyDim]
+        query = self.queryWeights(timepoints) + timepoints  # Dimension: [batchSize, numSignals, maxSequenceLength, latentQueryKeyDim]
+        value = self.valueWeights(datapoints) + datapoints  # Dimension: [batchSize, numSignals, maxSequenceLength, latentValueDim]
+        key = self.keyWeights(timepoints) + timepoints  # Dimension: [batchSize, numSignals, maxSequenceLength, latentQueryKeyDim]
 
         # Calculate the weight of each token.
         similarityScores = torch.matmul(query, key.transpose(-2, -1)) / (self.latentQueryKeyDim ** 0.5)
         # similarityScores dimension: [batchSize, numSignals, maxSequenceLength, maxSequenceLength]
 
         # Calculate the attention weights.
-        similarityScores[validDataMask] = 0  # Mask out the padding tokens
-        attentionWeights = torch.softmax(similarityScores, dim=-1)  # Dimension: [batchSize, numSignals, maxSequenceLength, maxSequenceLength]
+        attentionWeights = self.sparseSoftmax(similarityScores, validDataMask, dim=2-1)
         # attentionWeights meaning: given a token in maxSequenceLength, how similar is it to all other tokens.
-        
+        # attentionWeights: [batchSize, numSignals, maxSequenceLength, maxSequenceLength]
+
         # Add in each datapoints context.
         selfAttentionValues = torch.matmul(attentionWeights, value) + value
         # selfAttentionValues dimension: [batchSize, numSignals, maxSequenceLength, latentValueDim=finalOutputDim]
@@ -59,11 +59,21 @@ class attentionMethods(signalEncoderModules):
 
         # See how the token is related to the other tokens.
         timeInfluence = self.queryTimeInfluence(timepoints) + timepoints  # Dimension: [batchSize, numSignals, maxSequenceLength, latentValueDim=finalOutputDim]
-        timeInfluence[validDataMask] = 0  # Mask out the padding tokens: [batchSize, numSignals, maxSequenceLength, latentValueDim=finalOutputDim]
-        timeInfluence = torch.softmax(timeInfluence, dim=2)  # Dimension: [batchSize, numSignals, maxSequenceLength, latentValueDim=finalOutputDim]
+        self.sparseSoftmax(timeInfluence, validDataMask, dim=2)
 
         # Combine the attention values.
         finalSignalData = (selfAttentionValues * timeInfluence).sum(dim=2)
-        # finalSignalData dimension: [batchSize, numSignals, latentValueDim=finalOutputDim]
+        # finalSignalData: [batchSize, numSignals, latentValueDim=finalOutputDim]
 
         return finalSignalData
+
+    @staticmethod
+    def sparseSoftmax(data, mask, dim):
+        # Perform softmax with absent data as exp(-inf) = 0.
+        data.masked_fill_(mask=mask, value=float('-inf'))
+        data = torch.softmax(data, dim=dim)
+
+        # Mask out the padding tokens.
+        data.masked_fill_(mask=mask, value=0)
+
+        return data

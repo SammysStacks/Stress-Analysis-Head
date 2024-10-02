@@ -124,9 +124,6 @@ class emotionModelHead(nn.Module):
 
             # ------------------- Learned Signal Compression ------------------- #
 
-            print(signalData.size())
-            print(signalData[0][0])
-
             # Interpolate the data to a fixed input size.
             interpolatedSignals = self.sharedSignalEncoderModel.learnedInterpolation(signalData=signalData)
             # interpolatedData: batchSize, numSignals, finalSignalDim
