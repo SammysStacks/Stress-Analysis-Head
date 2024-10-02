@@ -113,10 +113,10 @@ if __name__ == "__main__":
     if streamData and not E4StreamingIndicator:
         if not recordQuestionnaire:
             # Stream in the data from the circuit board
-            readData.streamArduinoData(adcResolution, stopTimeStreaming, currentFilename)
+            readData.streamWearableData(adcResolution, stopTimeStreaming, currentFilename)
         else:
             # Stream in the data from the circuit board
-            streamingThread = threading.Thread(target=readData.streamArduinoData, args=(adcResolution, stopTimeStreaming, currentFilename), daemon=True)
+            streamingThread = threading.Thread(target=readData.streamWearableData, args=(adcResolution, stopTimeStreaming, currentFilename), daemon=True)
             streamingThread.start()
             # Open the questionnaire GUI.
             folderPath = "./helperFiles/surveyInformation/"

@@ -115,7 +115,7 @@ class trainingInformation(nn.Module):
             return 2
         elif submodel == "decipherSignalMeaningModel":
             return 4
-        elif submodel == modelConstants.emotionPredictionModel:
+        elif submodel == modelConstants.emotionModel:
             return 10
         else:
             assert False, "No model initialized"

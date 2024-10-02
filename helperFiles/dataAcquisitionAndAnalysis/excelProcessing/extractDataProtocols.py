@@ -176,7 +176,7 @@ class extractData(handlingExcelFormat):
     def getData(self, inputFile, numberOfChannels=1, testSheetNum=0):
         """
         Extracts Pulse Data from Excel Document (.xlsx). Data can be in any
-        worksheet which the user can specify using 'testSheetNum' (0-indexed).
+        worksheet that the user can specify using 'testSheetNum' (0-indexed).
         In the Worksheet:
             Time Data must be in Column 'A' (x-Axis)
             Biolectric Data must be in Column 'B-x' (y-Axis)
@@ -188,7 +188,7 @@ class extractData(handlingExcelFormat):
             testSheetNum: An Integer Representing the Excel Worksheet (0-indexed) to Begin on.
         --------------------------------------------------------------------------
         """
-        # Check if File Exists
+        # Check if the file exists
         if not os.path.exists(inputFile):
             print("The following Input File Does Not Exist:", inputFile)
             sys.exit()
@@ -211,7 +211,7 @@ class extractData(handlingExcelFormat):
             xlWorkbook = load_workbook(inputFile, data_only=True, read_only=True)
             worksheets = xlWorkbook.worksheets[testSheetNum:]
         else:
-            print("The Following File is Neither CSV, TXT, Nor XLSX:", inputFile)
+            raise f"The Following File is Neither CSV, TXT, Nor XLSX: {inputFile}"
         print("Extracting Data from the Excel File:", inputFile)
 
         # Extract the data
@@ -222,12 +222,13 @@ class extractData(handlingExcelFormat):
         print("\tFinished Collecting Biolectric Data");
         return compiledRawData, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions, subjectInformationAnswers, subjectInformationQuestions
 
-    def extractFeatures(self, excelSheet, biomarkerFeatureOrder, features, featuresTimesHolder, biomarkerFeatureNames):
+    @staticmethod
+    def extractFeatures(excelSheet, biomarkerFeatureOrder, features, featuresTimesHolder, biomarkerFeatureNames):
         # Assert the integrity of feature extraction
         featureType = excelSheet.title.split(" ")[0].lower()
         assert featureType in biomarkerFeatureOrder, "Please update the biomarkers that we are extracting features from: " + str(featureType)
         # Find the type of features we are extracting    
-        channelIndex = int(re.search(r'CH(\d+)', excelSheet.title).group(1)) if " CH" in excelSheet.title else 0
+        channelIndex = int(re.search(pattern=r'CH(\d+)', string=excelSheet.title).group(1)) if " CH" in excelSheet.title else 0
         featureInd = int(np.where(np.asarray(biomarkerFeatureOrder) == featureType)[0][channelIndex])
         if " CH" not in excelSheet.title:
             assert featureInd == biomarkerFeatureOrder.index(featureType), f"Backward compatability broken? -> {excelSheet.title}"
@@ -249,11 +250,11 @@ class extractData(handlingExcelFormat):
                     assert all(biomarkerFeatureNames[featureInd] == np.asarray([str(cell.value) for cell in row[1:]], dtype=str)), "We have two feature sheets with DIFFERENT features for " + featureType + "; " + str(
                         len(np.asarray([str(cell.value) for cell in row[1:]]))) + " " + str(len(biomarkerFeatureNames[featureInd]))
 
-        if dataStartRow != None:
+        if dataStartRow is not None:
             # Loop Through the Excel Worksheet to collect all the data
             for dataRow in excelSheet.iter_rows(min_col=1, min_row=dataStartRow - 1, max_col=endDataCol, max_row=excelSheet.max_row):
                 # Stop Collecting Data When there is No More
-                if dataRow[0].value == None:
+                if dataRow[0].value is None:
                     break
 
                 # Get Data
@@ -293,8 +294,7 @@ class extractData(handlingExcelFormat):
             # Extract the features
             elif self.rawFeatures_AppendedSheetName in excelSheet.title:
                 featuresTimesHolder, featuresHolder, biomarkerFeatureNames = self.extractFeatures(excelSheet, biomarkerFeatureOrder, featuresHolder, featuresTimesHolder, biomarkerFeatureNames)
-            else:
-                sys.exit("Unsure what is in this file's excel sheet':", excelSheet.title)
+            else: raise f"Unsure what is in this file's excel sheet': {excelSheet.title}"
 
         # Check that the subject background questions are all the same
         if len(finalSubjectInformationQuestions) != 0:

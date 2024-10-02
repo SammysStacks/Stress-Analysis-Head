@@ -68,9 +68,9 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # allEncodedData dimension: batchSize, numCondensedSignals, compressedLength
 
         # Find the number of relevant signals to the first encoding.
-        numSignalForwardPath = model.signalEncoderModel.encodeSignals.simulateSignalPath(allSignalData.size(1), allEncodedData.size(1))[0]
-        roughEstNumSignals = (model.signalEncoderModel.encodeSignals.expansionFactor ** (len(numSignalForwardPath)-1)) / model.signalEncoderModel.encodeSignals.numCompressedSignals
-        print(numSignalForwardPath, roughEstNumSignals, len(numSignalForwardPath), model.signalEncoderModel.encodeSignals.numCompressedSignals)
+        numSignalForwardPath = model.specificSignalEncoderModel.encodeSignals.simulateSignalPath(allSignalData.size(1), allEncodedData.size(1))[0]
+        roughEstNumSignals = (model.specificSignalEncoderModel.encodeSignals.expansionFactor ** (len(numSignalForwardPath) - 1)) / model.specificSignalEncoderModel.encodeSignals.numCompressedSignals
+        print(numSignalForwardPath, roughEstNumSignals, len(numSignalForwardPath), model.specificSignalEncoderModel.encodeSignals.numCompressedSignals)
         roughEstNumSignals = math.ceil(roughEstNumSignals)
 
         for batchInd in range(batchSize):
@@ -78,7 +78,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             for signalInd in range(roughEstNumSignals):
                 plt.plot(allSignalData[batchInd, signalInd], 'k', linewidth=2, alpha=1/(signalInd+1))
 
-            for signalInd in range(model.signalEncoderModel.encodeSignals.numCompressedSignals):
+            for signalInd in range(model.specificSignalEncoderModel.encodeSignals.numCompressedSignals):
                 plt.plot(allEncodedData[batchInd, signalInd], 'tab:red', linewidth=2, alpha=1/(signalInd+1))
 
             plt.xlabel("Signal Dimension (Points)")

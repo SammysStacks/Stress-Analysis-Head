@@ -5,6 +5,7 @@ class modelConstants:
 
     # Specify the dataset names
     emognitionDatasetName = "emognition"
+    empaticaDatasetName = "empatica"
     empatchDatasetName = "empatch"
     amigosDatasetName = "amigos"
     dapperDatasetName = "dapper"
@@ -14,13 +15,13 @@ class modelConstants:
     # -------------------------- Model Constants ------------------------- #
 
     # Specify the submodels.
-    emotionPredictionModel = "emotionPredictionModel"
+    specificSignalEncoderModel = "specificSignalEncoderModel"
+    sharedSignalEncoderModel = "sharedSignalEncoderModel"
     specificEmotionModel = "specificEmotionModel"
+    sharedEmotionModel = "sharedEmotionModel"
     trainingInformation = "trainingInformation"
     signalEncoderModel = "signalEncoderModel"
-    sharedEmotionModel = "sharedEmotionModel"
-    signalMappingModel = "signalMappingModel"
-    autoencoderModel = "autoencoderModel"
+    emotionModel = "emotionModel"
 
     # Specify the subject identifiers.
     numSignalPointsSI = "numSignalPoints"
@@ -38,7 +39,7 @@ class modelConstants:
 
     # Specify the data interface parameters.
     timeWindows = [90, 120, 150, 180, 210, 240, 300]
-    finalDistributionLength = 300
+    finalDistributionLength = 300  # The final length of the signal distribution.
     timeWindowBuffer = 60*3  # The buffer time window for the data interface
     minNumExperiments = 59  # The minimum number of experiments that can be used in the model
     maxNumSignals = 128  # The maximum number of signals that can be used in the model (2**n)
@@ -51,6 +52,6 @@ class modelConstants:
     signalChannelNames = [timeChannel, signalChannel]
 
     # Specify the saving parameters.
-    sharedModelWeights = ["signalEncoderModel", "autoencoderModel", "sharedEmotionModel"]
+    sharedModelWeights = ["sharedSignalEncoderModel", "sharedEmotionModel"]
 
     # -------------------------------------------------------------------- #

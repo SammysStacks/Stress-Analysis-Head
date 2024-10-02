@@ -15,14 +15,9 @@ from .emotionModelHelpers.submodels.trainingInformation import trainingInformati
 
 
 class emotionModelHead(nn.Module):
-    def __init__(self, submodel, accelerator, finalDistributionLength, signalMinMaxScale, metadata, userInputParams,
-                 timeWindows, emotionNames, activityNames, featureNames, numSubjects, datasetName, useFinalParams, debuggingResults=False):
+    def __init__(self, submodel, metadata, userInputParams, emotionNames, activityNames, featureNames, numSubjects, datasetName, debuggingResults=False):
         super(emotionModelHead, self).__init__()
         # General model parameters.
-        self.sequenceBounds = (timeWindows[0], timeWindows[-1])  # The minimum and maximum sequence length for the model.
-        self.finalDistributionLength = finalDistributionLength  # The final length of the signal distribution.
-        self.metadata = metadata  # The subject identifiers for the model (e.g., subjectIndex, datasetIndex, etc.)
-        self.signalMinMaxScale = signalMinMaxScale  # The minimum and maximum values for the signals.
         self.debuggingResults = debuggingResults  # Whether to print debugging results. Type: bool
         self.numActivities = len(activityNames)  # The number of activities to predict.
         self.numEmotions = len(emotionNames)  # The number of emotions to predict.
@@ -30,11 +25,9 @@ class emotionModelHead(nn.Module):
         self.activityNames = activityNames  # The names of each activity we are predicting. Dim: numActivities
         self.featureNames = featureNames  # The names of each feature/signal in the model. Dim: numSignals
         self.emotionNames = emotionNames  # The names of each emotion we are predicting. Dim: numEmotions
-        self.device = accelerator.device  # The device the model is running on.
-        self.useFinalParams = useFinalParams  # Whether to use the HPC parameters.
         self.numSubjects = numSubjects  # The maximum number of subjects the model is training on.
-        self.accelerator = accelerator  # Hugging face model optimizations.
         self.datasetName = datasetName  # The name of the dataset the model is training on.
+        self.metadata = metadata  # The subject identifiers for the model (e.g., subjectIndex, datasetIndex, etc.)
 
         # Signal encoder parameters.
         self.signalEncoderWaveletType = userInputParams['signalEncoderWaveletType']  # The type of wavelet to use for signal encoding.
@@ -74,11 +67,9 @@ class emotionModelHead(nn.Module):
             encodedSamplingFreq=self.encodedSamplingFreq,
             waveletType=self.signalEncoderWaveletType,
             numEncodedSignals=self.numEncodedSignals,
-            signalMinMaxScale=self.signalMinMaxScale,
             latentQueryKeyDim=self.latentQueryKeyDim,
             debuggingResults=self.debuggingResults,
             finalSignalDim=self.finalSignalDim,
-            sequenceBounds=self.sequenceBounds,
             accelerator=self.accelerator,
         )
 
@@ -87,25 +78,26 @@ class emotionModelHead(nn.Module):
 
         # -------------------- Final Emotion Prediction -------------------- #
 
-        # self.specificEmotionModel = specificEmotionModel(
-        #     numInterpreterHeads=self.numInterpreterHeads,
-        #     numActivityFeatures=self.numCommonSignals,
-        #     numCommonSignals=self.numCommonSignals,
-        #     numBasicEmotions=self.numBasicEmotions,
-        #     activityNames=self.activityNames,
-        #     emotionNames=self.emotionNames,
-        #     featureNames=self.featureNames,
-        #     numSubjects=self.numSubjects,
-        # )
-        #
-        # self.sharedEmotionModel = sharedEmotionModel(
-        #     numActivityFeatures=self.numCommonSignals,
-        #     numInterpreterHeads=self.numInterpreterHeads,
-        #     numCommonSignals=self.numCommonSignals,
-        #     numBasicEmotions=self.numBasicEmotions,
-        #     numEncodedSignals=self.numEncodedSignals,
-        #     compressedLength=self.compressedLength,
-        # )
+        if submodel == modelConstants.emotionModel:
+            self.specificEmotionModel = specificEmotionModel(
+                numInterpreterHeads=self.numInterpreterHeads,
+                numActivityFeatures=self.numCommonSignals,
+                numCommonSignals=self.numCommonSignals,
+                numBasicEmotions=self.numBasicEmotions,
+                activityNames=self.activityNames,
+                emotionNames=self.emotionNames,
+                featureNames=self.featureNames,
+                numSubjects=self.numSubjects,
+            )
+
+            self.sharedEmotionModel = sharedEmotionModel(
+                numActivityFeatures=self.numCommonSignals,
+                numInterpreterHeads=self.numInterpreterHeads,
+                numCommonSignals=self.numCommonSignals,
+                numBasicEmotions=self.numBasicEmotions,
+                numEncodedSignals=self.numEncodedSignals,
+                compressedLength=self.compressedLength,
+            )
 
     # ------------------------- Full Forward Calls ------------------------- #  
 
@@ -133,7 +125,7 @@ class emotionModelHead(nn.Module):
 
             # ---------------------- Emotion Model ---------------------- #
 
-            if submodel == modelConstants.emotionPredictionModel:
+            if submodel == modelConstants.emotionModel:
                 activityProfile, basicEmotionProfile, emotionProfile = self.emotionPrediction(signalData, metadata)
 
             return interpolatedSignals, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile

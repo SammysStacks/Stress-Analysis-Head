@@ -48,7 +48,7 @@ class modelMigration:
         layerInfo = {}
         # For each parameter in the model
         for layerName, layerParams in modelClass.model.named_parameters():
-            currentSubmodel = self.getsubModel(layerName)
+            currentSubmodel = self.getSubmodel(layerName)
 
             # If the layer should be saved.
             if currentSubmodel in sharedModelWeights:
@@ -58,13 +58,15 @@ class modelMigration:
         return layerInfo
 
     def unifyModelWeights(self, allModels, sharedModelWeights, layerInfo):
+        if layerInfo is None: return None
+
         # For each model provided.
         for modelInd in range(len(allModels)):
             pytorchModel = allModels[modelInd].model
 
             # For each parameter in the model
             for layerName, layerParams in pytorchModel.named_parameters():
-                currentSubmodel = self.getsubModel(layerName)
+                currentSubmodel = self.getSubmodel(layerName)
 
                 # If the layer should be saved.
                 if currentSubmodel in sharedModelWeights:
@@ -78,20 +80,17 @@ class modelMigration:
 
             # For each parameter in the model
             for layerName, layerParams in pytorchModel.named_parameters():
-                currentSubmodel = self.getsubModel(layerName)
+                currentSubmodel = self.getSubmodel(layerName)
 
                 # If the layer should be saved.
                 if currentSubmodel in sharedModelWeights:
                     layerParams.requires_grad = requires_grad
 
     @staticmethod
-    def getsubModel(layerName):
+    def getSubmodel(layerName):
         modelBlocks = [modelName for modelName in layerName.split(".") if "Model" in modelName]
-
-        if len(modelBlocks) == 0:
-            return layerName
-        else:
-            return modelBlocks[0]
+        if len(modelBlocks) == 0: return layerName
+        else: return modelBlocks[0]
 
     # ---------------------------------------------------------------------- #
     # ----------------------- Reset Model Parameters ----------------------- #
@@ -125,7 +124,7 @@ class modelMigration:
         # Iterate over all the parameters in the model's state_dict
         for name, param in unwrapped_model.state_dict().items():
             if name.startswith("module."): name = name[len("module."):]
-            currentSubmodel = self.getsubModel(name)
+            currentSubmodel = self.getSubmodel(name)
 
             # Check if these weights are a part of a model we are saving.
             if not any(currentSubmodel.startswith(submodel) for submodel in submodelsSaving):
@@ -151,7 +150,7 @@ class modelMigration:
         # Iterate over all submodules using named_children() to include their names
         for name, submodule in unwrapped_model.named_children():
             if name.startswith("module."): name = name[len("module."):]
-            currentSubmodel = self.getsubModel(name)
+            currentSubmodel = self.getSubmodel(name)
 
             # Check if these weights are a part of a model we are saving.
             if not any(currentSubmodel.startswith(submodel) for submodel in submodelsSaving):

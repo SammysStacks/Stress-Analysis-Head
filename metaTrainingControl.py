@@ -19,9 +19,7 @@ import time
 # Import files for machine learning
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.trainingProtocolHelpers import trainingProtocolHelpers
-from helperFiles.machineLearning.modelControl.modelSpecifications.compileModelInfo import compileModelInfo
 from helperFiles.machineLearning.modelControl.Models.pyTorch.modelMigration import modelMigration
-from helperFiles.machineLearning.featureAnalysis.featureImportance import featureImportance  # Import feature analysis files.
 from helperFiles.machineLearning.dataInterface.compileModelData import compileModelData  # Methods to organize model data.
 
 # Configure cuDNN and PyTorch's global settings.
@@ -40,14 +38,14 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2024-08-01 wavelet analysis"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2024-10-02 wavelet analysis"  # The current date we are training the model. Unique identifier of this training set.
     modelName = "emotionModel"  # The emotion model's unique identifier. Options: emotionModel
     testSplitRatio = 0.2  # The percentage of testing points.
 
     # Training flags.
     useFinalParams = True  # If you want to use HPC parameters (and on the HPC).
     storeLoss = False  # If you want to record any loss values.
-    fastPass = True  # If you want to only plot/train 240 points. No effect on training.
+    fastPass = False  # If you want to only plot/train 240 points. No effect on training.
 
     # ----------------------- Parse Model Parameters ----------------------- #
 
@@ -58,54 +56,44 @@ if __name__ == "__main__":
     parser.add_argument('--submodel', type=str, default=modelConstants.signalEncoderModel, help='The component of the model we are training. Options: signalEncoder, autoencoder, emotionPrediction')
     parser.add_argument('--optimizerType', type=str, default='AdamW', help='The optimizerType used during training convergence: Options: RMSprop, Adam, AdamW, SGD, etc.')
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are running the platform on')
+
     # Add arguments for the signal encoder prediction
     parser.add_argument('--signalEncoderWaveletType', type=str, default='bior3.7', help='The wavelet type for the wavelet transform: bior3.7, db3, dmey, etc')
     parser.add_argument('--numSigLiftedChannels', type=int, default=16, help='The number of channels to lift to during signal encoding. Range: (8, 16, 32, 48)')
     parser.add_argument('--numSigEncodingLayers', type=int, default=2, help='The number of operator layers during signal encoding. Range: (0, 6, 1)')
     parser.add_argument('--encodedSamplingFreq', type=int, default=64, help='The sampling frequency of the encoded signal. Range: (1, 2, 4, 8, 16, 32, 64, 128)')
-    # Add arguments for the autoencoder
-    parser.add_argument('--compressionFactor', type=float, default=1.5, help='The compression factor of the autoencoder')
-    parser.add_argument('--expansionFactor', type=float, default=1.5, help='The expansion factor of the autoencoder')
+
     # Add arguments for the emotion prediction
     parser.add_argument('--numInterpreterHeads', type=int, default=4, help='The number of ways to interpret a set of physiological signals.')
     parser.add_argument('--numBasicEmotions', type=int, default=8, help='The number of basic emotions (basis states of emotions).')
     parser.add_argument('--finalDistributionLength', type=int, default=240, help='The maximum number of time series points to consider')
 
-    # Parse the arguments
-    userInputParams, submodel = modelParameters.compileParameters(args=parser.parse_args())
+    # Parse the arguments.
+    userInputParams = vars(parser.parse_args())
+    submodel = userInputParams['submodel']
+    print("Arguments:", userInputParams)
 
     # --------------------------- Setup Training --------------------------- #
 
     # Initialize the model information classes.
+    trainingProtocols = trainingProtocolHelpers(submodel=submodel, accelerator=accelerator, sharedModelWeights=modelConstants.sharedModelWeights)  # Initialize the training protocols.
     modelCompiler = compileModelData(submodel, userInputParams, useTherapyData=False, accelerator=accelerator)
-    modelParameters = modelParameters(userInputParams, accelerator)
-    modelInfoClass = compileModelInfo()
-
-    # Organize all the model parameters.
-    storeLoss, fastPass = modelParameters.alterProtocolParams(storeLoss, fastPass, useFinalParams)  # Set the HPC parameters.
+    modelParameters = modelParameters(userInputParams, accelerator)  # Initialize the model parameters class.
+    modelMigration = modelMigration(accelerator)  # Initialize the model migration class.
 
     # Specify training parameters
-    numEpoch_toPlot, numEpoch_toSaveFull = modelParameters.getEpochInfo(submodel, useFinalParams)  # The number of epochs to plot and save the model.
+    numEpochs, numEpoch_toPlot, numEpoch_toSaveFull = modelParameters.getEpochInfo(useFinalParams)  # The number of epochs to plot and save the model.
     datasetNames, metaDatasetNames, allDatasetNames = modelParameters.compileModelNames()  # Compile the model names.
-    numEpochs = modelParameters.getNumEpochs(submodel)  # The number of epochs to train the model.
     trainingDate = modelCompiler.embedInformation(submodel, trainingDate)  # Embed training information into the name.
-    submodelsSaving = modelParameters.getSubmodelsSaving(submodel)  # The submodels to save.
-
-    # Initialize helper classes
-    trainingProtocols = trainingProtocolHelpers(accelerator=accelerator, sharedModelWeights=modelConstants.sharedModelWeights, submodelsSaving=submodelsSaving)  # Initialize the training protocols.
-    modelMigration = modelMigration(accelerator)  # Initialize the model migration class.
-    featureAnalysis = featureImportance("")  # Initialize the feature analysis class.
-
-    # -------------------------- Model Compilation ------------------------- #
 
     # Compile the final modules.
-    allModels, allDataLoaders, allLossDataHolders, allMetaModels, allMetadataLoaders, allMetaLossDataHolders, _ = modelCompiler.compileModelsFull(metaDatasetNames, modelName, submodel, testSplitRatio, datasetNames, useFinalParams)
-    unifiedLayerData = modelMigration.copyModelWeights(allMetaModels[0], sharedModelWeights=modelConstants.sharedModelWeights)  # Unify all the fixed weights in the models
-
-    # -------------------------- Meta-model Training ------------------------- #
+    allModels, allDataLoaders, allLossDataHolders, allMetaModels, allMetadataLoaders, allMetaLossDataHolders, _ \
+        = modelCompiler.compileModelsFull(metaDatasetNames, modelName, submodel, testSplitRatio, datasetNames, useFinalParams)
 
     # Store the initial loss information.
-    trainingProtocols.calculateLossInformation(unifiedLayerData, allMetaLossDataHolders, allMetaModels, allModels, submodel, metaDatasetNames, fastPass, storeLoss, stepScheduler=True)
+    trainingProtocols.calculateLossInformation(allMetaLossDataHolders, allMetaModels, allModels, submodel, metaDatasetNames, fastPass)
+
+    # -------------------------- Meta-model Training ------------------------- #
 
     # For each training epoch
     for epoch in range(1, numEpochs + 1):
@@ -116,15 +104,15 @@ if __name__ == "__main__":
         saveFullModel, plotSteps = modelParameters.getSavingInformation(epoch, numEpoch_toSaveFull, numEpoch_toPlot)
 
         # Train the model for a single epoch.
-        unifiedLayerData = trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, unifiedLayerData)
+        trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels)
 
         # Store the initial loss information and plot.
-        if storeLoss: trainingProtocols.calculateLossInformation(unifiedLayerData, allMetaLossDataHolders, allMetaModels, allModels, submodel, metaDatasetNames, fastPass, storeLoss, stepScheduler=False)
-        if plotSteps: trainingProtocols.plotModelState(epoch, unifiedLayerData, allMetaLossDataHolders, allMetaModels, allModels, submodel, metaDatasetNames, trainingDate, fastPass=fastPass)
+        if storeLoss: trainingProtocols.calculateLossInformation(allMetaLossDataHolders, allMetaModels, allModels, submodel, metaDatasetNames, fastPass)
+        if plotSteps: trainingProtocols.plotModelState(epoch, allMetaLossDataHolders, allMetaModels, allModels, submodel, metaDatasetNames, trainingDate, fastPass=fastPass)
 
         # Save the model sometimes (only on the main device).
         if saveFullModel and accelerator.is_local_main_process:
-            trainingProtocols.saveModelState(epoch, unifiedLayerData, allMetaModels, allModels, submodel, modelName, allDatasetNames, trainingDate)
+            trainingProtocols.saveModelState(epoch, allMetaModels, allModels, submodel, modelName, allDatasetNames, trainingDate)
 
         # Finalize the epoch parameters.
         accelerator.wait_for_everyone()  # Wait before continuing.

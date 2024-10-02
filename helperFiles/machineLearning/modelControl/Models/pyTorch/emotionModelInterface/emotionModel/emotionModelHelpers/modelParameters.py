@@ -1,5 +1,3 @@
-import random
-
 # Import helper files.
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.generalMethods.generalMethods import generalMethods
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
@@ -31,9 +29,7 @@ class modelParameters:
 
         if submodel == modelConstants.signalEncoderModel:
             totalMinBatchSize = 16
-        elif submodel == modelConstants.autoencoderModel:
-            totalMinBatchSize = 16
-        elif submodel == modelConstants.emotionPredictionModel:
+        elif submodel == modelConstants.emotionModel:
             totalMinBatchSize = 16
         else:
             raise Exception()
@@ -63,9 +59,7 @@ class modelParameters:
 
         if submodel == modelConstants.signalEncoderModel:
             if self.userInputParams['numSigEncodingLayers'] <= 2 and self.userInputParams['numSigLiftedChannels'] <= 16: minimumBatchSize = 64
-        elif submodel == modelConstants.autoencoderModel:
-            minimumBatchSize = 32 if self.hpcTrialRun else 32
-        elif submodel == modelConstants.emotionPredictionModel:
+        elif submodel == modelConstants.emotionModel:
             minimumBatchSize = 32 if self.hpcTrialRun else 32
         else:
             raise Exception()
@@ -77,43 +71,8 @@ class modelParameters:
         return maxBatchSize
 
     @staticmethod
-    def getNumEpochs(submodel):
-        if submodel == modelConstants.signalEncoderModel:
-            return 1000  # numEpoch
-        elif submodel == modelConstants.autoencoderModel:
-            return 1000  # numEpoch
-        elif submodel == modelConstants.emotionPredictionModel:
-            return 1000  # numEpoch
-        else:
-            raise Exception()
-
-    @staticmethod
-    def getEpochInfo(submodel, useFinalParams):
-        if submodel == modelConstants.signalEncoderModel:
-            return 10, 10 if useFinalParams else -1  # numEpoch_toPlot, numEpoch_toSaveFull
-        elif submodel == modelConstants.autoencoderModel:
-            return 10, 10 if useFinalParams else -1  # numEpoch_toPlot, numEpoch_toSaveFull
-        elif submodel == modelConstants.emotionPredictionModel:
-            return 10, 10 if useFinalParams else -1  # numEpoch_toPlot, numEpoch_toSaveFull
-        else:
-            raise Exception()
-
-    def alterProtocolParams(self, storeLoss, fastPass, useFinalParams):
-        # Self-check the hpc parameters.
-        if self.hpcTrialRun and useFinalParams:
-            self.accelerator.gradient_accumulation_steps = 16
-            storeLoss = True  # Turn on loss storage for HPC.
-            fastPass = False  # Turn off fast pass for HPC.
-
-        # Set CPU settings.
-        if not self.gpuFlag:
-            self.accelerator.gradient_accumulation_steps = 16
-
-        # Relay the inputs to the user.
-        numGradientSteps = self.accelerator.gradient_accumulation_steps
-        print(f"Final parameters: storeLoss={storeLoss}, fastPass={fastPass}, device={self.accelerator.device}, numGradientSteps={numGradientSteps}", flush=True)
-
-        return storeLoss, fastPass
+    def getEpochInfo(useFinalParams):
+        return (10, 10, 10) if useFinalParams else (-1, -1, -1)  # numEpochs, numEpoch_toPlot, numEpoch_toSaveFull
 
     # -------------------------- Compilation Parameters ------------------------- #
 
@@ -121,9 +80,7 @@ class modelParameters:
     def getSequenceLengthRange(submodel, sequenceLength):
         if submodel == modelConstants.signalEncoderModel:
             return modelConstants.timeWindows[0], modelConstants.timeWindows[-1]
-        elif submodel == modelConstants.autoencoderModel:
-            return modelConstants.timeWindows[0], modelConstants.timeWindows[-1]
-        elif submodel == modelConstants.emotionPredictionModel:
+        elif submodel == modelConstants.emotionModel:
             assert modelConstants.timeWindows[0] <= sequenceLength <= modelConstants.timeWindows[-1], "The sequence length must be within the trained time windows."
             return sequenceLength, sequenceLength
         else:
@@ -133,9 +90,7 @@ class modelParameters:
     def getExclusionCriteria(submodel):
         if submodel == modelConstants.signalEncoderModel:
             return -1, 2  # Emotion classes dont matter.
-        elif submodel == modelConstants.autoencoderModel:
-            return -1, 2  # Emotion classes dont matter.
-        elif submodel == modelConstants.emotionPredictionModel:
+        elif submodel == modelConstants.emotionModel:
             return 2, 0.8
         else:
             raise Exception()
@@ -149,21 +104,13 @@ class modelParameters:
             return specificInfo
 
         # No model information to load.
-        loadSubmodelEpochs = None
-        loadSubmodelDate = None
-        loadSubmodel = None
+        loadSubmodelDate, loadSubmodelEpochs, loadSubmodel = None, None, None
 
-        if submodel == modelConstants.autoencoderModel:
-            # Model loading information.
-            loadSubmodelDate = f"2024-04-06 Final signalEncoder on cuda at encodedSamplingFreq 4 at numSigEncodingLayers 4"  # The date the model was trained.
-            loadSubmodel = modelConstants.signalEncoderModel  # The model's component we are loading.
-            loadSubmodelEpochs = -1  # The number of epochs the loading model was trained.
-
-        elif submodel == modelConstants.emotionPredictionModel:
+        if submodel == modelConstants.emotionModel:
             # Model loading information.
             loadSubmodelDate = f"2024-01-10 Final signalEncoder"  # The date the model was trained.
-            loadSubmodel = modelConstants.autoencoderModel  # The model's component we are loading.
-            loadSubmodelEpochs = -1  # The number of epochs the loading model was trained.
+            loadSubmodel = modelConstants.signalEncoderModel  # The submodel to load.
+            loadSubmodelEpochs = -1  # The # of epochs to load from the trained model.
 
         return loadSubmodelDate, loadSubmodelEpochs, loadSubmodel
 
@@ -178,13 +125,10 @@ class modelParameters:
     def getSubmodelsSaving(submodel):
         # Get the submodels to save
         if submodel == modelConstants.signalEncoderModel:
-            submodelsSaving = [modelConstants.trainingInformation, modelConstants.signalEncoderModel]
-        elif submodel == modelConstants.autoencoderModel:
-            submodelsSaving = [modelConstants.trainingInformation, modelConstants.signalEncoderModel, modelConstants.autoencoderModel]
-        elif submodel == modelConstants.emotionPredictionModel:
-            submodelsSaving = [modelConstants.trainingInformation, modelConstants.signalEncoderModel, modelConstants.autoencoderModel, modelConstants.signalMappingModel, modelConstants.specificEmotionModel, modelConstants.sharedEmotionModel]
-        else:
-            assert False, "No model initialized"
+            submodelsSaving = [modelConstants.trainingInformation, modelConstants.specificSignalEncoderModel, modelConstants.sharedSignalEncoderModel]
+        elif submodel == modelConstants.emotionModel:
+            submodelsSaving = [modelConstants.trainingInformation, modelConstants.specificSignalEncoderModel, modelConstants.sharedSignalEncoderModel, modelConstants.specificEmotionModel, modelConstants.sharedEmotionModel]
+        else: assert False, "No model initialized"
 
         return submodelsSaving
 
@@ -201,31 +145,3 @@ class modelParameters:
         assert len(datasetNames) == 1
 
         return datasetNames, metaDatasetNames, allDatasetNames
-
-    @staticmethod
-    def compileParameters(args):
-        # Organize the input information into a dictionary.
-        userInputParams = {
-            # Assign general model parameters
-            'optimizerType': args.optimizerType,  # The optimizerType used during training convergence.
-            'deviceListed': args.deviceListed,  # The device we are running the platform on.
-            'submodel': args.submodel,  # The component of the model we are training.
-            # Assign signal encoder parameters
-            'signalEncoderWaveletType': args.signalEncoderWaveletType,  # The wavelet type for the wavelet transform.
-            'numSigLiftedChannels': args.numSigLiftedChannels,  # The number of channels to lift to during signa; encoding.
-            'numSigEncodingLayers': args.numSigEncodingLayers,  # The number of operator layers during signal encoding.
-            'encodedSamplingFreq': args.encodedSamplingFreq,  # The sampling frequency of the encoded signal.
-            # Assign autoencoder parameters
-            'compressionFactor': args.compressionFactor,  # The compression factor of the autoencoder.
-            'expansionFactor': args.expansionFactor,  # The expansion factor of the autoencoder.
-            # Assign emotion prediction parameters
-            'numInterpreterHeads': args.numInterpreterHeads,  # The number of ways to interpret a set of physiological signals.
-            'numBasicEmotions': args.numBasicEmotions,  # The number of basic emotions (basis states of emotions).
-            'finalDistributionLength': args.finalDistributionLength,  # The maximum number of time series points to consider.
-        }
-
-        # Relay the inputs to the user.
-        print("System Arguments:", userInputParams, flush=True)
-        submodel = args.submodel
-
-        return userInputParams, submodel

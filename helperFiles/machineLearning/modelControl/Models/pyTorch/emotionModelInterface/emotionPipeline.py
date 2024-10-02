@@ -57,11 +57,8 @@ class emotionPipeline(emotionPipelineHelpers):
                     # Get the reconstruction column for auto encoding and activity prediction.
                     batchTrainingMask_generalCol, batchSignalLabels_generalCol, batchSignalInfo_generalCol = self.dataInterface.getReconstructionData(batchTrainingMask, batchSignalLabels, batchSignalInfo, reconstructionIndex)
 
-                    # If there is no training data.
-                    if batchSignalInfo.size(0) == 0:
-                        # We can skip this batch, and backpropagation if necessary.
-                        if self.accelerator.sync_gradients: self.backpropogateModel()
-                        continue
+                    # We can skip this batch, and backpropagation if necessary.
+                    if batchSignalInfo.size(0) == 0: self.backpropogateModel(); continue
 
                     # For every new batch.
                     if self.accelerator.sync_gradients:
@@ -75,7 +72,7 @@ class emotionPipeline(emotionPipelineHelpers):
 
                     if self.augmentData:
                         # Augment the signals to train an arbitrary sequence length and order.
-                        augmentedBatchData = self.dataAugmentation.changeNumSignals(signalBatchData, minNumSignals=max(8, model.numEncodedSignals), maxNumSignals=numSignals, alteredDim=1)
+                        augmentedBatchData = self.dataAugmentation.changeNumSignals(signalBatchData, minNumSignals=max(int(numSignals/2), model.numEncodedSignals), maxNumSignals=numSignals, alteredDim=1)
                         augmentedBatchData = self.dataAugmentation.signalDropout(augmentedBatchData, dropoutPercent=0.1)
                         # augmentedBatchData: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
                     else: augmentedBatchData = signalBatchData
@@ -130,8 +127,6 @@ class emotionPipeline(emotionPipelineHelpers):
                     self.accelerator.backward(finalLoss)  # Calculate the gradients.
                     self.backpropogateModel()  # Backpropagation.
                     t2 = time.time(); self.accelerator.print(f"Backprop {self.datasetName} {numPointsAnalyzed}:", t2 - t1)
-            # Finalize all the parameters.
-            self.scheduler.step()  # Update the learning rate.
 
         # Prepare the model/data for evaluation.
         self.setupTrainingFlags(self.model, trainingFlag=False)  # Set all models into evaluation mode.
@@ -142,10 +137,11 @@ class emotionPipeline(emotionPipelineHelpers):
         if self.accelerator.sync_gradients:
             self.accelerator.clip_grad_norm_(self.model.parameters(), 20)  # Apply gradient clipping: Small: <1; Medium: 5-10; Large: >20
 
-        # Backpropagation the gradient.
-        self.optimizer.step()  # Adjust the weights.
-        self.optimizer.zero_grad()  # Zero your gradients to restart the gradient tracking.
-        self.accelerator.print("LR:", self.scheduler.get_last_lr())
+            # Backpropagation the gradient.
+            self.optimizer.step()  # Adjust the weights.
+            self.scheduler.step()  # Update the learning rate.
+            self.optimizer.zero_grad()  # Zero your gradients to restart the gradient tracking.
+            self.accelerator.print("LR:", self.scheduler.get_last_lr())
         
     def extractBatchInformation(self, batchData):
         # Extract the data, labels, and testing/training indices.

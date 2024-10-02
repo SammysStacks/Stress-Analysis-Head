@@ -73,13 +73,10 @@ class saveExcelData(handlingExcelFormat):
         # Assert that the data is in the correct configuration
         assert len(experimentTimes) == len(experimentNames)
         assert len(surveyAnswerTimes) == len(surveyAnswersList)
-        # Set pointer
-        experimentInfoPointer = 0;
-        featureInfoPointer = 0
+        experimentInfoPointer, featureInfoPointer = 0, 0
 
         # Get the Header for the experiment and survey
-        header = ["Start Experiment (Seconds)", "End Experiment (Seconds)", "Experiment Label"]
-        header.append("Feature Collection (Seconds)")
+        header = ["Start Experiment (Seconds)", "End Experiment (Seconds)", "Experiment Label", "Feature Collection (Seconds)"]
         header.extend(surveyQuestions)
 
         # Loop through/save all the data in batches of maxAddToExcelSheet.
@@ -119,17 +116,17 @@ class saveExcelData(handlingExcelFormat):
 
     def saveData(self, timePoints, signalData, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList,
                  surveyQuestions, subjectInformationAnswers, subjectInformationQuestions, dataHeaders, saveExcelPath, overwriteSave=False):
-        print("\n\tSaving raw signals")
-        # ------------------------------------------------------------------ #
+
         # -------------------- Setup the excel document -------------------- #
-        # Create the path to save the excel file.
+        # Create the path to save the Excel file.
         os.makedirs(os.path.dirname(saveExcelPath), exist_ok=True)  # Create Output File Directory to Save Data: If None Exists
+        print("\n\tSaving raw signals")
 
         # Get the excel document.
         WB, worksheet = self.getExcelDocument(saveExcelPath, overwriteSave)
 
-        # ------------------------------------------------------------------ #
         # -------------- Add experimental/subject information -------------- #
+
         # Add subject information
         self.addSubjectInfo(WB, worksheet, subjectInformationAnswers, subjectInformationQuestions)
         worksheet = WB.create_sheet(self.emptySheetName)  # Add
@@ -137,8 +134,8 @@ class saveExcelData(handlingExcelFormat):
         self.addExperimentInfo(WB, worksheet, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions)
         worksheet = WB.create_sheet(self.emptySheetName)  # Add Sheet
 
-        # ------------------------------------------------------------------ #
-        # ---------------------- Add data to document ---------------------- #     
+        # ---------------------- Add data to document ---------------------- #
+
         # Get the Header for the Data
         header = ["Time (Seconds)"]
         header.extend([dataHeader.upper() + " Raw Data" for dataHeader in dataHeaders])
@@ -150,7 +147,7 @@ class saveExcelData(handlingExcelFormat):
             worksheet.title = self.rawSignals_Sheetname
             worksheet.append(header)  # Add the header labels to this specific file.
 
-            # Loop through all data to be saved within this sheet in the excel file.
+            # Loop through all data to be saved within this sheet in the Excel file.
             for dataInd in range(firstIndexInFile, min(firstIndexInFile + self.maxAddToExcelSheet, len(timePoints))):
                 # Organize all the data
                 row = [timePoints[dataInd]]
@@ -160,7 +157,7 @@ class saveExcelData(handlingExcelFormat):
                 worksheet.append(row)
 
             # Finalize document
-            worksheet = self.addExcelAesthetics(worksheet)  # Add Excel Aesthetics
+            self.addExcelAesthetics(worksheet)  # Add Excel Aesthetics
             worksheet = WB.create_sheet(self.emptySheetName)  # Add Sheet
 
             # If I need to use another sheet

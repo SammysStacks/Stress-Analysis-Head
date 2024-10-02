@@ -33,7 +33,7 @@ class organizeTrainingLosses(lossCalculations):
         # Stop gradient tracking.
         with torch.no_grad():
 
-            if submodel == modelConstants.emotionPredictionModel:
+            if submodel == modelConstants.emotionModel:
                 # Segment the data into its time window.
                 segmentedSignalData = self.dataAugmentation.getRecentSignalPoints(allSignalData, self.generalTimeWindow)
 
@@ -103,18 +103,18 @@ class organizeTrainingLosses(lossCalculations):
                         self.calculateSignalEncodingLoss(segmentedSignalData, segmentedEncodedData, segmentedReconstructedData, segmentedPredictedIndexProbabilities, segmentedDecodedPredictedIndexProbabilities, segmentedSignalEncodingLayerLoss, allTrainingMasks, reconstructionIndex)
 
                     # Store the signal encoder loss information.
-                    self.storeLossInformation(decodedPositionalEncodingTrainingLoss, decodedPositionalEncodingTestingLoss, model.signalEncoderModel.trainingLosses_timeDecodedPosEncAnalysis[timeWindowInd], model.signalEncoderModel.testingLosses_timeDecodedPosEncAnalysis[timeWindowInd])
-                    self.storeLossInformation(signalReconstructedTrainingLoss, signalReconstructedTestingLoss, model.signalEncoderModel.trainingLosses_timeReconstructionAnalysis[timeWindowInd], model.signalEncoderModel.testingLosses_timeReconstructionAnalysis[timeWindowInd])
-                    self.storeLossInformation(encodedMinMaxTrainingLoss, encodedMinMaxTestingLoss, model.signalEncoderModel.trainingLosses_timeMinMaxAnalysis[timeWindowInd], model.signalEncoderModel.testingLosses_timeMinMaxAnalysis[timeWindowInd])
-                    self.storeLossInformation(positionalEncodingTrainingLoss, positionalEncodingTestingLoss, model.signalEncoderModel.trainingLosses_timePosEncAnalysis[timeWindowInd], model.signalEncoderModel.testingLosses_timePosEncAnalysis[timeWindowInd])
-                    self.storeLossInformation(encodedMeanTrainingLoss, encodedMeanTestingLoss, model.signalEncoderModel.trainingLosses_timeMeanAnalysis[timeWindowInd], model.signalEncoderModel.testingLosses_timeMeanAnalysis[timeWindowInd])
+                    self.storeLossInformation(decodedPositionalEncodingTrainingLoss, decodedPositionalEncodingTestingLoss, model.specificSignalEncoderModel.trainingLosses_timeDecodedPosEncAnalysis[timeWindowInd], model.specificSignalEncoderModel.testingLosses_timeDecodedPosEncAnalysis[timeWindowInd])
+                    self.storeLossInformation(signalReconstructedTrainingLoss, signalReconstructedTestingLoss, model.specificSignalEncoderModel.trainingLosses_timeReconstructionAnalysis[timeWindowInd], model.specificSignalEncoderModel.testingLosses_timeReconstructionAnalysis[timeWindowInd])
+                    self.storeLossInformation(encodedMinMaxTrainingLoss, encodedMinMaxTestingLoss, model.specificSignalEncoderModel.trainingLosses_timeMinMaxAnalysis[timeWindowInd], model.specificSignalEncoderModel.testingLosses_timeMinMaxAnalysis[timeWindowInd])
+                    self.storeLossInformation(positionalEncodingTrainingLoss, positionalEncodingTestingLoss, model.specificSignalEncoderModel.trainingLosses_timePosEncAnalysis[timeWindowInd], model.specificSignalEncoderModel.testingLosses_timePosEncAnalysis[timeWindowInd])
+                    self.storeLossInformation(encodedMeanTrainingLoss, encodedMeanTestingLoss, model.specificSignalEncoderModel.trainingLosses_timeMeanAnalysis[timeWindowInd], model.specificSignalEncoderModel.testingLosses_timeMeanAnalysis[timeWindowInd])
                     # Calculate and Store the optimal loss only once.
-                    if len(model.signalEncoderModel.trainingLosses_timeReconstructionOptimalAnalysis[timeWindowInd]) == 0:
-                        optimalTrainingLoss = self.getOptimalLoss(model.signalEncoderModel.calculateOptimalLoss, segmentedSignalData, allTrainingMasks, reconstructionIndex)
-                        optimalTestingLoss = self.getOptimalLoss(model.signalEncoderModel.calculateOptimalLoss, segmentedSignalData, allTestingMasks, reconstructionIndex)
+                    if len(model.specificSignalEncoderModel.trainingLosses_timeReconstructionOptimalAnalysis[timeWindowInd]) == 0:
+                        optimalTrainingLoss = self.getOptimalLoss(model.specificSignalEncoderModel.calculateOptimalLoss, segmentedSignalData, allTrainingMasks, reconstructionIndex)
+                        optimalTestingLoss = self.getOptimalLoss(model.specificSignalEncoderModel.calculateOptimalLoss, segmentedSignalData, allTestingMasks, reconstructionIndex)
 
                         # Store the signal encoder loss information.
-                        self.storeLossInformation(optimalTrainingLoss, optimalTestingLoss, model.signalEncoderModel.trainingLosses_timeReconstructionOptimalAnalysis[timeWindowInd], model.signalEncoderModel.testingLosses_timeReconstructionOptimalAnalysis[timeWindowInd])
+                        self.storeLossInformation(optimalTrainingLoss, optimalTestingLoss, model.specificSignalEncoderModel.trainingLosses_timeReconstructionOptimalAnalysis[timeWindowInd], model.specificSignalEncoderModel.testingLosses_timeReconstructionOptimalAnalysis[timeWindowInd])
                     # Inform the user about the final loss.
                     print(f"\tSignal encoder {timeWindow} second losses:", signalReconstructedTrainingLoss.item(), signalReconstructedTestingLoss.item())
 

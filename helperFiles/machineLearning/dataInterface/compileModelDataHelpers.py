@@ -57,23 +57,16 @@ class compileModelDataHelpers:
 
         # Embedded information for each model.
         self.signalEncoderModelInfo = f"signalEncoder on {userInputParams['deviceListed']} with {userInputParams['signalEncoderWaveletType'].replace('.', '')} at {userInputParams['optimizerType']} at numSigLiftedChannels {userInputParams['numSigLiftedChannels']} at encodedSamplingFreq {userInputParams['encodedSamplingFreq']} at numSigEncodingLayers {userInputParams['numSigEncodingLayers']}"
-        self.autoencoderModelInfo = f"autoencoder on {userInputParams['deviceListed']} with {userInputParams['optimizerType']} at compressionFactor {str(userInputParams['compressionFactor']).replace('.', '')} expansionFactor {str(userInputParams['expansionFactor']).replace('.', '')}"
         self.emotionPredictionModelInfo = f"emotionPrediction on {userInputParams['deviceListed']} with {userInputParams['optimizerType']} with seqLength {userInputParams['finalDistributionLength']}"
 
     # ---------------------- Model Specific Parameters --------------------- #
 
     def embedInformation(self, submodel, trainingDate):
         if submodel == modelConstants.signalEncoderModel:
-            trainingDate = f"{trainingDate} {self.signalEncoderModelInfo}"
-        elif submodel == modelConstants.autoencoderModel:
-            trainingDate = f"{trainingDate} {self.autoencoderModelInfo}"
-        elif submodel == modelConstants.emotionPredictionModel:
-            trainingDate = f"{trainingDate} {self.emotionPredictionModelInfo}"
-        else:
-            raise Exception()
-        print("trainingDate:", trainingDate, flush=True)
-
-        return trainingDate
+            return f"{trainingDate} {self.signalEncoderModelInfo}"
+        elif submodel == modelConstants.emotionModel:
+            return f"{trainingDate} {self.emotionPredictionModelInfo}"
+        else: raise Exception()
 
     # ---------------------- Saving/Loading Model Data --------------------- #
 

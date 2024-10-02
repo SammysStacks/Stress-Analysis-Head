@@ -49,7 +49,7 @@ class streamingProtocols(streamingProtocolHelpers):
 
         return stopTimeStreaming
 
-    def streamArduinoData(self, adcResolution, stopTimeStreaming, filePath):
+    def streamWearableData(self, adcResolution, stopTimeStreaming, filePath):
         """Stop Streaming When we Obtain `stopTimeStreaming` from Arduino"""
         print("Streaming in Data from the Arduino")
         # Reset Global Variable in Case it Was Previously Populated
@@ -119,7 +119,7 @@ class streamingProtocols(streamingProtocolHelpers):
         # Loop Through and Read the Excel Data in Pseudo-Real-Time
         while excelDataFinger != len(timePoints):
             # Organize the Input Data
-            self.organizeData(timePoints=timePoints[excelDataFinger:excelDataFinger + self.moveDataFinger], Voltages=Voltages[:, excelDataFinger:excelDataFinger + self.moveDataFinger])
+            self.organizeData(timepoints=timePoints[excelDataFinger:excelDataFinger + self.moveDataFinger], datapoints=Voltages[:, excelDataFinger:excelDataFinger + self.moveDataFinger])
             excelDataFinger = min(len(timePoints), excelDataFinger + self.moveDataFinger)
 
             # When enough data has been collected, analyze the new data in batches.
