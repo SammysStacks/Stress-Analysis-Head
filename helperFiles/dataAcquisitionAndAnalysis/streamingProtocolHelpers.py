@@ -7,6 +7,8 @@ from .biolectricProtocols.eegAnalysis import eegProtocol
 from .biolectricProtocols.ecgAnalysis import ecgProtocol
 from .biolectricProtocols.edaAnalysis import edaProtocol
 from .biolectricProtocols.emgAnalysis import emgProtocol
+from .biolectricProtocols.bvpAnalysis import bvpProtocol
+from .biolectricProtocols.accelerationAnalysis import accelerationProtocol
 from .biolectricProtocols.temperatureAnalysis import tempProtocol
 from .biolectricProtocols.generalAnalysis_lowFreq import generalProtocol_lowFreq
 from .biolectricProtocols.generalAnalysis_highFreq import generalProtocol_highFreq
@@ -75,6 +77,8 @@ class streamingProtocolHelpers(featureOrganization):
             'ecg': ecgProtocol(self.numPointsPerBatch, self.moveDataFinger, self.channelDist['ecg'], self.plottingClass, self) if 'ecg' in self.analysisOrder else None,
             'eda': edaProtocol(self.numPointsPerBatch, self.moveDataFinger, self.channelDist['eda'], self.plottingClass, self) if 'eda' in self.analysisOrder else None,
             'emg': emgProtocol(self.numPointsPerBatch, self.moveDataFinger, self.channelDist['emg'], self.plottingClass, self) if 'emg' in self.analysisOrder else None,
+            'bvp': bvpProtocol(self.numPointsPerBatch, self.moveDataFinger, self.channelDist['bvp'], self.plottingClass, self) if 'bvp' in self.analysisOrder else None,
+            'acc': accelerationProtocol(self.numPointsPerBatch, self.moveDataFinger, self.channelDist['acc'], self.plottingClass, self) if 'acc' in self.analysisOrder else None,
         }
 
         self.analysisList = []

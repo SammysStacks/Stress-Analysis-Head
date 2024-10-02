@@ -5,7 +5,7 @@ from helperFiles.machineLearning.machineLearningInterface import machineLearning
 
 class adjustInputParameters:
 
-    def __init__(self, plotStreamedData=True, streamData=False, readDataFromExcel=False, trainModel=False, useModelPredictions=False, useTherapyData=False):
+    def __init__(self, plotStreamedData=True, streamData=False, e4StreamingIndicator=False, readDataFromExcel=False, trainModel=False, useModelPredictions=False, useTherapyData=False):
         # Set the parameters for the program.
         self.useModelPredictions = useModelPredictions or trainModel  # Use the Machine Learning Model for Predictions
         self.readDataFromExcel = readDataFromExcel  # Read Data from an Excel File
@@ -13,13 +13,19 @@ class adjustInputParameters:
         self.plotStreamedData = plotStreamedData  # Plot the Streamed Data in Real-Time
         self.useTherapyData = useTherapyData  # Use the Therapy Data for the Machine Learning Model
         self.streamData = streamData  # Stream Data from the Arduino
+        self.e4StreamingIndicator = e4StreamingIndicator  # Stream Data from the Empatica E4 Wristband
 
     def getGeneralParameters(self):
-        # Specify biomarker information.
-        streamingOrder = self.compileModelInfo.streamingOrder  # A List Representing the Order of the Sensors being Streamed in: ["eog", "eeg", "eda", "temp"]
-        extractFeaturesFrom = streamingOrder if self.useModelPredictions else []  # A list with all the biomarkers from streamingOrder for feature extraction
-        allAverageIntervals = self.compileModelInfo.featureAverageWindows  # EOG: 120-180; EEG: 60-90; EDA: ?; Temp: 30 - 60  Old: [120, 75, 90, 45]
-
+        if self.e4StreamingIndicator:
+            # Specify biomarker information.
+            streamingOrder = self.compileModelInfo.streamingOrder_e4  # A List Representing the Order of the Sensors being Streamed in: ["acc", "bvp", "eda", "temp"]
+            extractFeaturesFrom = streamingOrder if self.useModelPredictions else []  # A list with all the biomarkers from streamingOrder for feature extraction
+            allAverageIntervals = self.compileModelInfo.featureAverageWindows_e4  # acc: 30, bvp: 60, eda: 30, temp: 30
+        else:
+            # Specify biomarker information.
+            streamingOrder = self.compileModelInfo.streamingOrder  # A List Representing the Order of the Sensors being Streamed in: ["eog", "eeg", "eda", "temp"]
+            extractFeaturesFrom = streamingOrder if self.useModelPredictions else []  # A list with all the biomarkers from streamingOrder for feature extraction
+            allAverageIntervals = self.compileModelInfo.featureAverageWindows  # EOG: 120-180; EEG: 60-90; EDA: ?; Temp: 30 - 60  Old: [120, 75, 90, 45]
         # Compile feature names
         featureNames, biomarkerFeatureNames, biomarkerFeatureOrder = compileFeatureNames().extractFeatureNames(extractFeaturesFrom)
 
@@ -30,11 +36,6 @@ class adjustInputParameters:
 
         return streamingOrder, biomarkerFeatureOrder, featureAverageWindows, featureNames, biomarkerFeatureNames, extractFeaturesFrom
 
-    def getGeneralParameters_e4(self):
-        # Specify biomarker information.
-        streamingOrder = self.compileModelInfo.streamingOrder_e4
-
-        return streamingOrder
 
     def getSavingInformation(self, date, trialName, userName):
         # Specify the path to the collected data.
@@ -58,6 +59,17 @@ class adjustInputParameters:
         saveRawSignals = True  # Saves the Data in 'readData.data' in an Excel Named 'saveExcelName'
 
         return boardSerialNum, voltageRange, adcResolution, saveRawSignals, recordQuestionnaire
+
+    def getStreamingParamsE4(self, portSerialNum):
+        buffer_size = 4096
+
+        if not self.e4StreamingIndicator:
+            return None, buffer_size, None, None
+
+        # Streaming flags
+        recordQuestionnaire = not self.plotStreamedData
+        saveRawSignals = True
+        return portSerialNum, buffer_size, saveRawSignals, recordQuestionnaire
 
     @staticmethod
     def getPlottingParams(analyzeBatches=False):

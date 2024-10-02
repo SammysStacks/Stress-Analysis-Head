@@ -10,7 +10,7 @@ class compileFeatureNames:
 
     def __init__(self):
         # Store Extracted Features
-        self.possibleFeatureNames = np.char.lower(["eog", "eeg", "ecg", "eda", "emg", "temp", "lowFreq", "highFreq"])
+        self.possibleFeatureNames = np.char.lower(["eog", "eeg", "ecg", "eda", "emg", "temp", "lowFreq", "highFreq", "acc", "bvp"])
         self.featureNamesFolder = os.path.dirname(__file__) + "/allFeatures/"
         self.extractDataInterface = extractData()
 

@@ -21,6 +21,7 @@ class compileModelInfo:
 
         # Hardcoded feature information.
         self.featureAverageWindows = [60, 30, 30, 30]  # EOG: 120-180; EEG: 60-90; EDA: ?; Temp: 30 - 60  Old: [120, 75, 90, 45]
+        self.featureAverageWindows_e4 = [30, 60, 30, 30]  # Acc, Bvp, EDA, Temp
         self.newSamplingFreq = 1  # The new sampling frequency for the data.
 
         # Specify what each model is predicting
