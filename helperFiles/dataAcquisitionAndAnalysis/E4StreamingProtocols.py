@@ -228,13 +228,13 @@ class E4Streaming(E4StreamingHelpers):
 
                     # Normalize timestamps
                     if stream_type == "E4_Acc":
-                        normalized_timestamp = timestamp - self.start_time_acc
+                        normalized_timestamp = timestamp #- self.start_time_acc
                     elif stream_type == "E4_Bvp":
-                        normalized_timestamp = timestamp - self.start_time_bvp
+                        normalized_timestamp = timestamp #- self.start_time_bvp
                     elif stream_type == "E4_Gsr":
-                        normalized_timestamp = timestamp - self.start_time_gsr
+                        normalized_timestamp = timestamp #- self.start_time_gsr
                     elif stream_type == "E4_Temperature":
-                        normalized_timestamp = timestamp - self.start_time_tmp
+                        normalized_timestamp = timestamp #- self.start_time_tmp
                     else:
                         continue
 
