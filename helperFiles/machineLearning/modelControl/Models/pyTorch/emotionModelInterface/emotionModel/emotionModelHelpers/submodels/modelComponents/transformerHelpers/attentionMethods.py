@@ -48,12 +48,12 @@ class attentionMethods(signalEncoderModules):
         # similarityScores dimension: [batchSize, numSignals, maxSequenceLength, maxSequenceLength]
 
         # Calculate the attention weights.
-        attentionWeights = self.sparseSoftmax(similarityScores, validDataMask, dim=2-1)
+        attentionWeights = self.sparseSoftmax(similarityScores, validDataMask, dim=-1)
         # attentionWeights meaning: given a token in maxSequenceLength, how similar is it to all other tokens.
         # attentionWeights: [batchSize, numSignals, maxSequenceLength, maxSequenceLength]
 
         # Add in each datapoints context.
-        selfAttentionValues = torch.matmul(attentionWeights, value) + value
+        selfAttentionValues = torch.matmul(attentionWeights, value) + datapoints
         # selfAttentionValues dimension: [batchSize, numSignals, maxSequenceLength, latentValueDim=finalOutputDim]
         # selfAttentionValues meaning: given a token in maxSequenceLength, what is its value for the final output.
 
@@ -70,10 +70,10 @@ class attentionMethods(signalEncoderModules):
     @staticmethod
     def sparseSoftmax(data, mask, dim):
         # Perform softmax with absent data as exp(-inf) = 0.
-        data.masked_fill_(mask=mask, value=float('-inf'))
+        data = data.masked_fill(mask=mask, value=float('-inf'))
         data = torch.softmax(data, dim=dim)
 
         # Mask out the padding tokens.
-        data.masked_fill_(mask=mask, value=0)
+        data = data.masked_fill(mask=mask, value=0)
 
         return data
