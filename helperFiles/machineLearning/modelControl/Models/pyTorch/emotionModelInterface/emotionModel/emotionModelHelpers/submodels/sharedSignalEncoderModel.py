@@ -1,14 +1,11 @@
 # General
-import random
 
 import matplotlib.pyplot as plt
 import torch
 from torch import nn
 
 from helperFiles.globalPlottingProtocols import globalPlottingProtocols
-from .helperModules.trainingSignalEncoder import trainingSignalEncoder
 # Import files for machine learning
-from .modelComponents.generalSignalEncoder import generalSignalEncoding  # Framework for encoding/decoding of all signals.
 from .modelComponents.transformerHelpers.attentionMethods import attentionMethods
 from ..generalMethods.generalMethods import generalMethods
 from ..modelConstants import modelConstants
@@ -16,19 +13,16 @@ from ..modelConstants import modelConstants
 
 class sharedSignalEncoderModel(nn.Module):
 
-    def __init__(self, latentQueryKeyDim, finalSignalDim, sequenceBounds, numEncodedSignals, encodedSamplingFreq, numSigEncodingLayers, numSigLiftedChannels, waveletType, signalMinMaxScale, accelerator, debuggingResults=False):
+    def __init__(self, latentQueryKeyDim, finalSignalDim, numEncodedSignals, encodedSamplingFreq, numSigEncodingLayers, numSigLiftedChannels, waveletType, debuggingResults=False):
         super(sharedSignalEncoderModel, self).__init__()
         # General model parameters.
-        self.signalMinMaxScale = signalMinMaxScale  # The minimum and maximum signal values to consider for scaling. Type: tuple
         self.debuggingResults = debuggingResults  # Whether to print debugging results. Type: bool
-        self.accelerator = accelerator  # Hugging face interface for model and data optimizations.
 
         # Signal encoder parameters.
         self.numSigLiftedChannels = numSigLiftedChannels  # The number of channels to lift to during signal encoding.
         self.numSigEncodingLayers = numSigEncodingLayers  # The number of operator layers during signal encoding.
         self.encodedSamplingFreq = encodedSamplingFreq    # The sampling frequency of the encoded signals.
         self.numEncodedSignals = numEncodedSignals  # The final number of signals to accept, encoding all signal information.
-        self.sequenceBounds = sequenceBounds  # The minimum and maximum sequence lengths to consider.
         self.waveletType = waveletType  # The type to use during the signal encoder.
 
         # Initialize the signal encoder modules.
@@ -45,10 +39,6 @@ class sharedSignalEncoderModel(nn.Module):
         # Signal encoder reconstructed loss holders.
         self.trainingLosses_timeReconstructionAnalysis = [[] for _ in modelConstants.timeWindows]  # List of list of data reconstruction training losses. Dim: numTimeWindows, numEpochs
         self.testingLosses_timeReconstructionAnalysis = [[] for _ in modelConstants.timeWindows]  # List of list of data reconstruction testing losses. Dim: numTimeWindows, numEpochs
-
-    def setDebuggingResults(self, debuggingResults):
-        self.encodeSignals.debuggingResults = debuggingResults
-        self.debuggingResults = debuggingResults
 
     def learnedInterpolation(self, signalData):
         return self.attentionMechanism(signalData)

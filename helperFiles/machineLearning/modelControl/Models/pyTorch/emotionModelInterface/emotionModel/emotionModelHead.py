@@ -70,7 +70,6 @@ class emotionModelHead(nn.Module):
             latentQueryKeyDim=self.latentQueryKeyDim,
             debuggingResults=self.debuggingResults,
             finalSignalDim=self.finalSignalDim,
-            accelerator=self.accelerator,
         )
 
         self.specificEmotionModel = None

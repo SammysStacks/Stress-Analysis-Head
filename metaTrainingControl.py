@@ -91,7 +91,7 @@ if __name__ == "__main__":
         = modelCompiler.compileModelsFull(metaDatasetNames, modelName, submodel, testSplitRatio, datasetNames, useFinalParams)
 
     # Store the initial loss information.
-    trainingProtocols.calculateLossInformation(allMetaLossDataHolders, allMetaModels, allModels, submodel, metaDatasetNames, fastPass)
+    if storeLoss: trainingProtocols.calculateLossInformation(allMetaLossDataHolders, allMetaModels, allModels, submodel, metaDatasetNames, fastPass)
 
     # -------------------------- Meta-model Training ------------------------- #
 

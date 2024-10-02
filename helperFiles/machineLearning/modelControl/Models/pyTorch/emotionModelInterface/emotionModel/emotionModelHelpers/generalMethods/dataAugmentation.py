@@ -47,18 +47,6 @@ class dataAugmentation:
 
         return augmentedSignalData, shuffle_indices
 
-    def changeSignalLength(self, minimumSignalLength, signalDatas):
-        # Assuming signalDatas is your tensor with dimensions [batchSize, numSignals, maxSequenceLength, numChannels]
-        batchSize, numSignals, sequenceLength, numChannels = signalDatas[0].shape
-
-        # Find a random place to cut the data.
-        randomSignalEnd = int(generalMethods.biasedSample(minimumSignalLength, sequenceLength, biasType="high"))
-
-        # Slice all the data at the same index
-        augmentedSignalDatas = (self.getRecentSignalPoints(signalData, randomSignalEnd) for signalData in signalDatas)
-
-        return augmentedSignalDatas
-
     @staticmethod
     def getNewStartTimeIndices(signalData, minTimeWindow, maxTimeWindow):
         # signalData dim: [batchSize, numSignals, maxSequenceLength, numChannels]

@@ -5,6 +5,7 @@ import torch
 
 # Helper classes
 from .lossCalculations import lossCalculations
+from ..generalMethods.dataAugmentation import dataAugmentation
 from ..modelConstants import modelConstants
 
 
@@ -35,7 +36,7 @@ class organizeTrainingLosses(lossCalculations):
 
             if submodel == modelConstants.emotionModel:
                 # Segment the data into its time window.
-                segmentedSignalData = self.dataAugmentation.getRecentSignalPoints(allSignalData, self.generalTimeWindow)
+                segmentedSignalData = dataAugmentation.getRecentSignalPoints(allSignalData, self.generalTimeWindow)
 
                 t1 = time.time()
                 # Pass all the data through the model and store the emotions, activity, and intermediate variables.
@@ -83,7 +84,7 @@ class organizeTrainingLosses(lossCalculations):
                 if fastPass and timeWindow != self.generalTimeWindow: continue
 
                 # Segment the data into its time window.
-                segmentedSignalData = self.dataAugmentation.getRecentSignalPoints(allSignalData, timeWindow)
+                segmentedSignalData = dataAugmentation.getRecentSignalPoints(allSignalData, timeWindow)
 
                 t1 = time.time()
                 # Pass all the data through the model and store the emotions, activity, and intermediate variables.
@@ -117,21 +118,6 @@ class organizeTrainingLosses(lossCalculations):
                         self.storeLossInformation(optimalTrainingLoss, optimalTestingLoss, model.specificSignalEncoderModel.trainingLosses_timeReconstructionOptimalAnalysis[timeWindowInd], model.specificSignalEncoderModel.testingLosses_timeReconstructionOptimalAnalysis[timeWindowInd])
                     # Inform the user about the final loss.
                     print(f"\tSignal encoder {timeWindow} second losses:", signalReconstructedTrainingLoss.item(), signalReconstructedTestingLoss.item())
-
-                elif submodel == modelConstants.autoencoderModel:
-                    # Calculate the error in signal reconstruction (autoencoder loss).
-                    reconstructedEncodedTestingLoss, compressedMeanTestingLoss, compressedMinMaxTestingLoss, autoencoderTestingLayerLoss = \
-                        self.calculateAutoencoderLoss(segmentedEncodedData, segmentedCompressedData, segmentedReconstructedEncodedData, segmentedAutoencoderLayerLoss, allTestingMasks, reconstructionIndex)
-                    reconstructedEncodedTrainingLoss, compressedMeanTrainingLoss, compressedMinMaxTrainingLoss, autoencoderTrainingLayerLoss = \
-                        self.calculateAutoencoderLoss(segmentedEncodedData, segmentedCompressedData, segmentedReconstructedEncodedData, segmentedAutoencoderLayerLoss, allTrainingMasks, reconstructionIndex)
-
-                    # Store the latent reconstruction loss.
-                    self.storeLossInformation(reconstructedEncodedTrainingLoss, reconstructedEncodedTestingLoss, model.autoencoderModel.trainingLosses_timeReconstructionAnalysis[timeWindowInd], model.autoencoderModel.testingLosses_timeReconstructionAnalysis[timeWindowInd])
-                    self.storeLossInformation(compressedMinMaxTrainingLoss, compressedMinMaxTestingLoss, model.autoencoderModel.trainingLosses_timeMinMaxAnalysis[timeWindowInd], model.autoencoderModel.testingLosses_timeMinMaxAnalysis[timeWindowInd])
-                    self.storeLossInformation(compressedMeanTrainingLoss, compressedMeanTestingLoss, model.autoencoderModel.trainingLosses_timeMeanAnalysis[timeWindowInd], model.autoencoderModel.testingLosses_timeMeanAnalysis[timeWindowInd])
-
-                    # Inform the user about the final loss.
-                    print(f"\tAutoencoder {timeWindow} second losses:", reconstructedEncodedTrainingLoss.item(), reconstructedEncodedTestingLoss.item())
 
     # --------------------------- Helper Methods --------------------------- #
 

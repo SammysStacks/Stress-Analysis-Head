@@ -52,7 +52,6 @@ class globalProtocol(abc.ABC):
         if self.plotStreamedData and self.numChannels != 0:
             # Initialize the methods for plotting this analysis,
             self.plottingMethods = plottingMethods(analysisType, self.numChannels, plottingClass)
-            # Initialize the plots for the analysis.
             self.plottingMethods.initPlotPeaks()
 
     def resetGlobalVariables(self):

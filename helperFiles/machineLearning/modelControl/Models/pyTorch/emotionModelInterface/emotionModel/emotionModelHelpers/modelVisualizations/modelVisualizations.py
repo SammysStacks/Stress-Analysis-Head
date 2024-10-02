@@ -6,6 +6,7 @@ import os
 
 # Import files for machine learning
 from ..emotionDataInterface import emotionDataInterface
+from ..generalMethods.dataAugmentation import dataAugmentation
 from ..modelConstants import modelConstants
 
 # Visualization protocols
@@ -155,7 +156,7 @@ class modelVisualizations(globalPlottingProtocols):
         _, numSignals, _ = allSignalData.shape
 
         # Augment the time axis.
-        segmentedSignalData = self.dataAugmentation.getRecentSignalPoints(allSignalData, timeWindow)
+        segmentedSignalData = dataAugmentation.getRecentSignalPoints(allSignalData, timeWindow)
 
         # ---------------------- Get the Data to Plot ---------------------- # 
 

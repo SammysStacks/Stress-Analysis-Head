@@ -137,18 +137,14 @@ class emotionPipelineHelpers:
     @staticmethod
     def setupTrainingFlags(model, trainingFlag):
         # Set the model to training mode.
-        if trainingFlag:
-            model.train()
-            # Or evaluation mode.
-        else:
-            model.eval()
+        if trainingFlag: model.train()
+        # Or evaluation mode.
+        else: model.eval()
 
         # Recursively set the mode for all submodules
         for submodule in model.modules():  # This ensures all submodules are included
-            if trainingFlag:
-                submodule.train()
-            else:
-                submodule.eval()
+            if trainingFlag: submodule.train()
+            else: submodule.eval()
 
         # For each model parameter.
         for param in model.parameters():

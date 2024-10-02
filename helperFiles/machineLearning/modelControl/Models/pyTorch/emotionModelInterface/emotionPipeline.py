@@ -2,7 +2,6 @@
 import random
 import time
 
-from .emotionModel.emotionModelHelpers.modelConstants import modelConstants
 # Import files for machine learning
 from .emotionPipelineHelpers import emotionPipelineHelpers
 
