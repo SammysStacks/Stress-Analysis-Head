@@ -82,7 +82,8 @@ class bvpProtocol(globalProtocol):
                         newFeatureTimes.append(featureTime)  # Dimension: [numTimePoints]
 
                     # Keep track of which data has been analyzed
-                    self.lastAnalyzedDataInd[channelIndex] = lastPulseIndex
+                    # I defined the number of peaks as the number of pulses
+                    self.lastAnalyzedDataInd[channelIndex] += len(find_peaks(intervalData))
 
                 # Compile the new raw features into a smoothened (averaged) feature.
                 self.readData.compileContinuousFeatures(newFeatureTimes, newRawFeatures, self.rawFeatureTimes[channelIndex], self.rawFeatures[channelIndex], self.compiledFeatures[channelIndex], self.featureAverageWindow)
@@ -136,8 +137,8 @@ class bvpProtocol(globalProtocol):
         first_derivative = np.gradient(standardized_data)
         second_derivative = np.gradient(first_derivative)
 
-        systolic_peaks, _ = find_peaks(standardized_data, distance=64)  # return the indices of the peaks
-        end_of_cycle, _ = find_peaks(-standardized_data, distance=64)  # return the indices of the local minima
+        systolic_peaks, _ = find_peaks(standardized_data, distance=timePoints*self.samplingFreq)  # return the indices of the peaks
+        end_of_cycle, _ = find_peaks(-standardized_data, distance=timePoints*self.samplingFreq)  # return the indices of the local minima
 
         # Identify dicrotic notches and diastolic peaks within each pulse
         dicrotic_notches = []
@@ -145,10 +146,12 @@ class bvpProtocol(globalProtocol):
         pulse_widths = []
         pulse_amplitudes = []
 
+        """Although timePoints and data specify a window, in case there are multiple peaks detected within the timePoints*SamplingFrequency window,"""
         for i in range(len(systolic_peaks) - 1):
             # Segment between two systolic peaks
             start_idx = systolic_peaks[i]
             next_idx = systolic_peaks[i + 1]
+            # might not needed later, just in case, both method should calculate the same dicrotic notch and diastolic peak
             segment = standardized_data[start_idx:next_idx]
             segment_time = timePoints[start_idx:next_idx]
             segment_first_derivative = first_derivative[start_idx:next_idx]
@@ -156,6 +159,7 @@ class bvpProtocol(globalProtocol):
 
             # Identify the dicrotic notch using the second derivative zero-crossing
             zero_crossings = np.where(np.diff(np.sign(segment_second_derivative)))[0]
+
             if zero_crossings.size > 0:
                 # Assume the first zero-crossing after the systolic peak is the notch
                 notch_idx = zero_crossings[0] + start_idx
@@ -178,12 +182,8 @@ class bvpProtocol(globalProtocol):
             # Calculate pulse width and amplitudes
             width = timePoints[end_of_cycle[i + 1]] - timePoints[end_of_cycle[i]]
             pulse_widths.append(width)
-            if diastolic_peaks[i] is not None:
-                # Pulse magnitude is the difference between systolic and diastolic peak values
-                magnitude = standardized_data[systolic_peaks[i]] - standardized_data[end_of_cycle[i]]
-                pulse_amplitudes.append(magnitude)
-            else:
-                pulse_amplitudes.append(None)
+            magnitude = standardized_data[systolic_peaks[i]] - standardized_data[end_of_cycle[i]]
+            pulse_amplitudes.append(magnitude)
 
         #  Heart Rate (HR)
         if len(systolic_peaks) > 1:
@@ -202,4 +202,4 @@ class bvpProtocol(globalProtocol):
         featureList.extend([hr, data_skewness, data_kurtosis, rmssd])
 
         return featureList
-\
+

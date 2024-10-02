@@ -10,6 +10,7 @@ class accelerationProtocol(globalProtocol):
     def __init__(self, numPointsPerBatch=3000, moveDataFinger=10, channelIndices=(), plottingClass=None, readData=None):
         """Note: for acceleration data analysis, the 3 axis channel data will be streamed in as a single channel by calculating the magnitudes"""
         # Feature collection parameters
+        """sliding windows definition"""
         self.startFeatureTimePointer = None  # The start pointer of the feature window interval.
         self.featureTimeWindow = None  # The duration of time that each feature considers
         self.minPointsPerBatch = None  # The minimum number of points that must be present in a batch to extract features.
@@ -81,13 +82,12 @@ class accelerationProtocol(globalProtocol):
                         newFeatureTimes.append(featureTime)  # Dimension: [numTimePoints]
 
                     # Keep track of which data has been analyzed
-                    self.lastAnalyzedDataInd[channelIndex] = lastPulseIndex
+                    self.lastAnalyzedDataInd[channelIndex] += int(self.samplingFreq * self.secondsPerFeature)
 
                 # Compile the new raw features into a smoothened (averaged) feature.
                 self.readData.compileContinuousFeatures(newFeatureTimes, newRawFeatures, self.rawFeatureTimes[channelIndex], self.rawFeatures[channelIndex], self.compiledFeatures[channelIndex], self.featureAverageWindow)
 
             # -------------------------------------------------------------- #
-
 
     def filterData(self, timePoints, data, removePoints=False):
         # Filter the Data: Low pass Filter and Savgol Filter
@@ -96,14 +96,12 @@ class accelerationProtocol(globalProtocol):
 
         return filteredTime, filteredData, np.ones(len(filteredTime))
 
-
     def findStartFeatureWindow(self, timePointer, currentTime, timeWindow):
         # Loop through until you find the first time in the window
         while self.timePoints[timePointer] < currentTime - timeWindow:
             timePointer += 1
 
         return timePointer
-
 
     def compileBatchData(self, filteredTime, filteredData, goodIndicesMask, startFilterPointer, startFeatureTimePointer, channelIndex):
         assert len(goodIndicesMask) >= len(filteredData) == len(filteredTime), print(len(goodIndicesMask), len(filteredData), len(filteredTime))
@@ -116,7 +114,6 @@ class accelerationProtocol(globalProtocol):
         intervalData = filteredData[startReferenceFinger:endReferenceFinger]
 
         return intervalTimes, intervalData
-
 
     @staticmethod
     def independentComponentAnalysis(data):
