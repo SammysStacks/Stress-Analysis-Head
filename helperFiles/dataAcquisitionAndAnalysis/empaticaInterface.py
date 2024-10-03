@@ -23,37 +23,37 @@ class empaticaInterface:
         # Connect to the device.
         serverSocket.send(("device_connect " + self.device_id + "\r\n").encode())
         response = serverSocket.recv(self.buffer_size)
-        print("\t", "Connecting to device", response.decode("utf-8").replace("\n", ""))
+        print("\tConnecting to device", response.decode("utf-8").replace("\n", ""))
 
         serverSocket.send("pause ON\r\n".encode())
         response = serverSocket.recv(self.buffer_size)
-        print("\t", response.decode("utf-8").replace("\n", ""))
+        print(f"\t{response.decode("utf-8").replace("\n", "")}")
         time.sleep(1)  # Stabilize connection
 
         if "acc" in self.streamingOrder:
             serverSocket.send("device_subscribe acc ON\r\n".encode())
             response = serverSocket.recv(self.buffer_size)
-            print("\t", response.decode("utf-8").replace("\n", ""))
+            print(f"\t{response.decode("utf-8").replace("\n", "")}")
 
         if "bvp" in self.streamingOrder:
             serverSocket.send("device_subscribe bvp ON\r\n".encode())
             response = serverSocket.recv(self.buffer_size)
-            print("\t", response.decode("utf-8").replace("\n", ""))
+            print(f"\t{response.decode("utf-8").replace("\n", "")}")
 
         if "eda" in self.streamingOrder:
             serverSocket.send("device_subscribe gsr ON\r\n".encode())
             response = serverSocket.recv(self.buffer_size)
-            print("\t", response.decode("utf-8").replace("\n", ""))
+            print(f"\t{response.decode("utf-8").replace("\n", "")}")
 
         if "temp" in self.streamingOrder:
             serverSocket.send("device_subscribe tmp ON\r\n".encode())
             response = serverSocket.recv(self.buffer_size)
-            print("\t", response.decode("utf-8").replace("\n", ""))
+            print(f"\t{response.decode("utf-8").replace("\n", "")}")
 
         print("\t", "Resuming data receiving")
         serverSocket.send("pause OFF\r\n".encode())
         response = serverSocket.recv(self.buffer_size)
-        print("\t", response.decode("utf-8").replace("\n", ""))
+        print(f"\t{response.decode("utf-8").replace("\n", "")}")
 
     def process_message(self, receivedMessage):
         # Check if the connection is still valid.
