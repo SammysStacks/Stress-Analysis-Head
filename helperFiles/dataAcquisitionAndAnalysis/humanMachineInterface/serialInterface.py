@@ -13,7 +13,7 @@ class serialInterface:
         self.therapySerialNum = therapySerialNum
 
         # Connect to the Arduino's
-        self.mainArduino = self.initiateArduino(self.mainSerialNum)
+        self.mainDevice = self.initiateArduino(self.mainSerialNum)
         self.therapyArduino = self.initiateArduino(self.therapySerialNum)
 
         # Initialize Arduino Buffer
