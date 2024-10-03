@@ -50,10 +50,9 @@ class empaticaInterface:
             response = serverSocket.recv(self.buffer_size)
             print(f"\t{response.decode("utf-8").replace("\n", "")}")
 
-        print("\t", "Resuming data receiving")
         serverSocket.send("pause OFF\r\n".encode())
         response = serverSocket.recv(self.buffer_size)
-        print(f"\t{response.decode("utf-8").replace("\n", "")}")
+        print(f"\t{response.decode("utf-8").replace("\n", "")}\n")
 
     def process_message(self, receivedMessage):
         # Check if the connection is still valid.
