@@ -2,6 +2,7 @@
 import socket
 import time
 import matplotlib
+
 if matplotlib.get_backend() != 'TkAgg':
     matplotlib.use('TkAgg')
 import pandas as pd
@@ -9,10 +10,10 @@ from collections import deque
 import os
 
 import matplotlib.pyplot as plt
-from .E4StreamingHelpers import E4StreamingHelpers
+from .empaticaInterface import empaticaInterface
 
 
-class E4Streaming(E4StreamingHelpers):
+class E4Streaming(empaticaInterface):
     def __init__(self, server_address='127.0.0.1', server_port=28000, device_id='B516C6',
                  buffer_size=4096, output_file="E4_data.xlsx", plotStreamedData=True):
         super().__init__(server_address=server_address, server_port=server_port, device_id=device_id, buffer_size=buffer_size, output_file=output_file, plotStreamedData=plotStreamedData)
@@ -56,7 +57,6 @@ class E4Streaming(E4StreamingHelpers):
             # Setup axis labels and titles
             self.setup_plots()
 
-
     def setup_plots(self):
         # Only set up plots if plotting is enabled
         if self.plotStreamedData:
@@ -74,60 +74,7 @@ class E4Streaming(E4StreamingHelpers):
             self.axs[3].set_ylabel("Temp (°C)")
             self.axs[3].set_xlabel("Time (s)")
 
-    def connect(self):
-        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.s.settimeout(3)
 
-        print("Connecting to server")
-        self.s.connect((self.server_address, self.server_port))
-        print("Connected to server\n")
-
-        print("Devices available:")
-        self.s.send("device_list\r\n".encode())
-        response = self.s.recv(self.buffer_size)
-        print(response.decode("utf-8"))
-
-        print("Connecting to device")
-        self.s.send(("device_connect " + self.device_id + "\r\n").encode())
-        response = self.s.recv(self.buffer_size)
-        print(response.decode("utf-8"))
-
-        print("Pausing data receiving")
-        self.s.send("pause ON\r\n".encode())
-        response = self.s.recv(self.buffer_size)
-        print(response.decode("utf-8"))
-
-        time.sleep(1)  # Stabilize connection
-
-    def subscribe_to_data(self, acc=True, bvp=True, gsr=True, tmp=True):
-        if acc:
-            print("Subscribing to ACC")
-            self.s.send(("device_subscribe acc ON\r\n").encode())
-            response = self.s.recv(self.buffer_size)
-            print(response.decode("utf-8"))
-
-        if bvp:
-            print("Subscribing to BVP")
-            self.s.send(("device_subscribe bvp ON\r\n").encode())
-            response = self.s.recv(self.buffer_size)
-            print(response.decode("utf-8"))
-
-        if gsr:
-            print("Subscribing to GSR")
-            self.s.send(("device_subscribe gsr ON\r\n").encode())
-            response = self.s.recv(self.buffer_size)
-            print(response.decode("utf-8"))
-
-        if tmp:
-            print("Subscribing to Temp")
-            self.s.send(("device_subscribe tmp ON\r\n").encode())
-            response = self.s.recv(self.buffer_size)
-            print(response.decode("utf-8"))
-
-        print("Resuming data receiving")
-        self.s.send("pause OFF\r\n".encode())
-        response = self.s.recv(self.buffer_size)
-        print(response.decode("utf-8"))
 
     def update_plots(self):
         # Only update plots if plotting is enabled
@@ -201,73 +148,7 @@ class E4Streaming(E4StreamingHelpers):
                     print(response)
                     break
 
-                samples = response.split("\n")
-                for i in range(len(samples) - 1):
-                    sample_data = samples[i].split()
-                    if len(sample_data) < 3:
-                        continue
 
-                    stream_type = sample_data[0]
-
-                    # Add check to skip non-numeric values in timestamp
-                    try:
-                        timestamp = float(sample_data[1].replace(',', '.'))
-                    except ValueError:
-                        print(f"Skipping invalid timestamp: {sample_data[1]}")
-                        continue  # Skip this sample if timestamp is invalid
-
-                    # Initialize start time on first sample
-                    if stream_type == "E4_Acc" and self.start_time_acc is None:
-                        self.start_time_acc = timestamp
-                    elif stream_type == "E4_Bvp" and self.start_time_bvp is None:
-                        self.start_time_bvp = timestamp
-                    elif stream_type == "E4_Gsr" and self.start_time_gsr is None:
-                        self.start_time_gsr = timestamp
-                    elif stream_type == "E4_Temperature" and self.start_time_tmp is None:
-                        self.start_time_tmp = timestamp
-
-                    # Normalize timestamps
-                    if stream_type == "E4_Acc":
-                        normalized_timestamp = timestamp #- self.start_time_acc
-                    elif stream_type == "E4_Bvp":
-                        normalized_timestamp = timestamp #- self.start_time_bvp
-                    elif stream_type == "E4_Gsr":
-                        normalized_timestamp = timestamp #- self.start_time_gsr
-                    elif stream_type == "E4_Temperature":
-                        normalized_timestamp = timestamp #- self.start_time_tmp
-                    else:
-                        continue
-
-                    if stream_type == "E4_Acc":
-                        if len(sample_data) >= 5:
-                            data = [int(sample_data[2].replace(',', '.')),
-                                    int(sample_data[3].replace(',', '.')),
-                                    int(sample_data[4].replace(',', '.'))]
-                            self.acc_data.append(data)
-                            self.time_stamps_acc.append(normalized_timestamp)
-                            data_row = {'Timestamp': normalized_timestamp, 'ACC_X': data[0], 'ACC_Y': data[1], 'ACC_Z': data[2]}
-                            self.update_data_frames(data_row, "E4_Acc")
-
-                    elif stream_type == "E4_Bvp":
-                        data = float(sample_data[2].replace(',', '.'))
-                        self.bvp_data.append(data)
-                        self.time_stamps_bvp.append(normalized_timestamp)
-                        data_row = {'Timestamp': normalized_timestamp, 'BVP': data}
-                        self.update_data_frames(data_row, "E4_Bvp")
-
-                    elif stream_type == "E4_Gsr":
-                        data = float(sample_data[2].replace(',', '.'))
-                        self.gsr_data.append(data)
-                        self.time_stamps_gsr.append(normalized_timestamp)
-                        data_row = {'Timestamp': normalized_timestamp, 'GSR': data}
-                        self.update_data_frames(data_row, "E4_Gsr")
-
-                    elif stream_type == "E4_Temperature":
-                        data = float(sample_data[2].replace(',', '.'))
-                        self.tmp_data.append(data)
-                        self.time_stamps_tmp.append(normalized_timestamp)
-                        data_row = {'Timestamp': normalized_timestamp, 'Temp': data}
-                        self.update_data_frames(data_row, "E4_Temperature")
 
                 # Plot only if enabled
                 if self.plotStreamedData:

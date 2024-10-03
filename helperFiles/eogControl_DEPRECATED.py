@@ -160,8 +160,8 @@ if __name__ == "__main__":
         eogProtocol = eogAnalysis.eogProtocol(numTimePoints, moveDataFinger, numChannels, plotStreamedData)
         # Stream in Data from Arduino
         if streamArduinoData:
-            arduinoRead = streamData.serialInterface(eogSerialNum = eogSerialNum, ppgSerialNum = None, emgSerialNum = None, eegSerialNum = None, handSerialNum = None)
-            readData = streamData.eogArduinoRead(arduinoRead, numTimePoints, moveDataFinger, numChannels, plotStreamedData, guiApp = None)
+            deviceReader = streamData.serialInterface(eogSerialNum = eogSerialNum, ppgSerialNum = None, emgSerialNum = None, eegSerialNum = None, handSerialNum = None)
+            readData = streamData.eogdeviceReader(deviceReader, numTimePoints, moveDataFinger, numChannels, plotStreamedData, guiApp = None)
             readData.streamEOGData(stopTimeStreaming, predictionModel = predictionModel, actionControl = gazeControl, calibrateModel = calibrateModel)
         # Take Data from Excel Sheet
         elif readDataFromExcel:
@@ -236,7 +236,7 @@ if __name__ == "__main__":
 # ---------------------------- Reading EOG Data ---------------------------- #
 
 # Deprecated Class: Keeping in case user wants to calibrate EOG sensor in the future
-class eogArduinoRead(eogProtocol):
+class eogdeviceReader(eogProtocol):
 
     def __init__(self, mainSerialNum, numPointsPerBatch, moveDataFinger, numChannels, plotStreamedData):
         # Get Variables from Peak Analysis File
@@ -277,11 +277,11 @@ class eogArduinoRead(eogProtocol):
             self.analyzeData(dataFinger, self.plotStreamedData, modelClasses = modelClasses, actionControl = actionControl, calibrateModel = calibrateModel)
 
         finally:
-            self.mainArduino.close()
+            self.mainDevice.close()
 
         print("Finished Streaming in Data; Closing Arduino\n")
         # Close the Arduinos at the End
-        self.mainArduino.close()
+        self.mainDevice.close()
     
     def performCalibration(self, numTrashReads, calibrateModel = True):
         self.channelCalibrationPointer += 1
@@ -301,7 +301,7 @@ class eogArduinoRead(eogProtocol):
         if self.calibrateChannelNum == self.numChannels:
             # Reset Arduino and Stop Calibration
             self.initPlotPeaks()
-            self.mainArduino = self.arduinoRead.resetArduino(self.mainArduino, numTrashReads)
+            self.mainDevice = self.deviceReader.resetArduino(self.mainDevice, numTrashReads)
             calibrateModel = False
         else:
             self.askForCalibration(numTrashReads)
@@ -314,7 +314,7 @@ class eogArduinoRead(eogProtocol):
         # Inform User of Next Angle; Then Flush Saved Outputs
         input("Orient Eye at " + str(self.calibrationAngles[self.calibrateChannelNum][self.channelCalibrationPointer]) + " Degrees For Channel " + str(self.calibrateChannelNum))
         # Reset Arduino
-        self.mainArduino = self.arduinoRead.resetArduino(self.mainArduino, numTrashReads)
+        self.mainDevice = self.deviceReader.resetArduino(self.mainDevice, numTrashReads)
         print("Orient Now")
         
 

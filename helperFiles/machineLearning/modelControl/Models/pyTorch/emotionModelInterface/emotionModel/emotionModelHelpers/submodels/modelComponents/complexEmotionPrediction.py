@@ -51,7 +51,7 @@ class complexEmotionPrediction(nn.Module):
                 
         # Setup variables for predicting the final emotions.
         allBasicEmotionWeights = F.normalize(self.allBasicEmotionWeights.exp(), dim=2, p=1) # Dim: self.numEmotions, 1, self.numBasicEmotions, 1
-        finalEmotionDistributions = torch.zeros((self.numEmotions, batchSize, emotionLength), device=basicEmotionDistributions.device) # Initialize a holder for all the final emotion predictions
+        finalEmotionDistributions = torch.zeros((self.numEmotions, batchSize, emotionLength), device=basicEmotionDistributions.mainDevice) # Initialize a holder for all the final emotion predictions
         
         # For each emotion in the prediction model.
         for emotionInd in range(self.numEmotions):

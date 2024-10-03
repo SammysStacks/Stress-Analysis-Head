@@ -26,7 +26,7 @@ excel_data = pd.read_excel(excel_file, sheet_name=None)
 # Extract the data separately for plotting purposes
 acc_data = excel_data['ACC']
 bvp_data = excel_data['BVP']
-gsr_data = excel_data['GSR']
+gsr_data = excel_data['EDA']
 temp_data = excel_data['Temp']
 
 plt.rcParams.update({
@@ -73,7 +73,7 @@ bvp_plot_filename = os.path.join(experiment_folder, f'{date}_{user}_{experiment}
 plt.savefig(bvp_plot_filename, dpi=300)
 plt.show()
 
-# Plot GSR data
+# Plot EDA data
 plt.figure()
 plt.plot(gsr_data['Timestamp'], gsr_data['GSR'], color='#FFA07A', linestyle='-', alpha=0.85)  # Light salmon
 plt.title('Galvanic Skin Response (GSR)')

@@ -35,7 +35,7 @@ class modelMigration:
     @staticmethod
     def getModelDevice(accelerator=None):
         if accelerator:
-            return accelerator.device
+            return accelerator.mainDevice
 
         else:
             # Find the pytorch device

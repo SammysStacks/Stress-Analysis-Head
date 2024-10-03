@@ -1,4 +1,6 @@
 import collections
+import threading
+
 import numpy as np
 
 # Import Bioelectric Analysis Files
@@ -14,11 +16,13 @@ from .biolectricProtocols.generalAnalysis_lowFreq import generalProtocol_lowFreq
 from .biolectricProtocols.generalAnalysis_highFreq import generalProtocol_highFreq
 
 # Import Modules to Read in Data
-from .humanMachineInterface.arduinoInterface import serialInterface  # Functions to Read in Data from Arduino
+from .humanMachineInterface.serialInterface import serialInterface  # Functions to Read in Data from Arduino
 from .humanMachineInterface.featureOrganization import featureOrganization
 
 # Import plotting protocols
 from .dataVisualization.biolectricPlottingProtocols import plottingProtocols
+from .humanMachineInterface.serverInterface import serverInterface
+
 
 # Parameters for the streamingProtocolHelpers class:
 #     Biomarker information:
@@ -32,7 +36,7 @@ from .dataVisualization.biolectricPlottingProtocols import plottingProtocols
 
 class streamingProtocolHelpers(featureOrganization):
 
-    def __init__(self, mainSerialNum, therapySerialNum, modelClasses, actionControl, numPointsPerBatch, moveDataFinger, streamingOrder, extractFeaturesFrom, featureAverageWindows, voltageRange, plotStreamedData):
+    def __init__(self, deviceType, mainSerialNum, therapySerialNum, modelClasses, actionControl, numPointsPerBatch, moveDataFinger, streamingOrder, extractFeaturesFrom, featureAverageWindows, voltageRange, plotStreamedData):
         # General streaming parameters.
         self.streamingOrder = np.char.lower(streamingOrder)  # The names of each recorded signal in order. Ex: ['eog', 'eog', 'eeg', 'eda']
         self.numStreamedSignals = len(streamingOrder)  # The total number of signals being recorded.
@@ -40,11 +44,7 @@ class streamingProtocolHelpers(featureOrganization):
         self.plotStreamedData = plotStreamedData  # Boolean: whether to graph the incoming signals + analysis.
         self.moveDataFinger = moveDataFinger  # The minimum number of NEW points to analyze in each batch.
         self.voltageRange = voltageRange  # The voltage range of the incoming signals.
-
-        # Store the arduinoRead Instance
-        if mainSerialNum is not None:
-            self.arduinoRead = serialInterface(mainSerialNum=mainSerialNum, therapySerialNum=therapySerialNum)
-            self.mainArduino = self.arduinoRead.mainArduino
+        self.deviceType = deviceType  # The type of device being used.
 
         # Specify the analysis order: a unique list of biomarkers in streamingOrder.
         self.analysisOrder = list(collections.OrderedDict.fromkeys(self.streamingOrder))  # The set of unique biomarkers, maintaining the order they will be analyzed. Ex: ['eog', 'eeg', 'eda']
@@ -85,6 +85,17 @@ class streamingProtocolHelpers(featureOrganization):
         # Generate a list of all analyses, keeping the streaming order.
         for biomarkerType in self.analysisOrder:
             self.analysisList.append(self.analysisProtocols[biomarkerType])
+
+        # Store the deviceReader Instance
+        if self.deviceType == 'serial':
+            self.deviceReader = serialInterface(mainSerialNum=mainSerialNum, therapySerialNum=therapySerialNum)
+            self.mainDevice = self.deviceReader.mainDevice
+        elif self.deviceType == 'empatica':
+            self.deviceReader = serverInterface(streamingOrder, self.analysisProtocols, deviceType=deviceType, device_id=mainSerialNum)
+            self.serverThread = threading.Thread(target=self.deviceReader.startServer, daemon=True)
+            self.mainDevice = self.deviceReader.mainDevice
+            self.serverThread.start()
+        else: raise ValueError(f"Device Type {deviceType} is not recognized.")
 
         # Holder parameters.
         self.subjectInformationQuestions = None  # A list of subject background questions
@@ -135,13 +146,15 @@ class streamingProtocolHelpers(featureOrganization):
         return streamingDataFinger + self.moveDataFinger
 
     def recordData(self, maxVolt=3.3, adcResolution=4096):
+        assert self.deviceType == "serial", f"Recording data is only supported for serial devices, not {self.deviceType}."
+
         # Read in at least one point
         rawReadsList = []
-        while int(self.mainArduino.in_waiting) > 0 or len(rawReadsList) == 0:
-            rawReadsList.append(self.arduinoRead.readline(ser=self.mainArduino))
+        while int(self.mainDevice.in_waiting) > 0 or len(rawReadsList) == 0:
+            rawReadsList.append(self.deviceReader.readline(ser=self.mainDevice))
 
         # Parse the Data
-        timepoints, datapoints = self.arduinoRead.parseCompressedRead(rawReadsList, self.numStreamedSignals, maxVolt, adcResolution)
+        timepoints, datapoints = self.deviceReader.parseCompressedRead(rawReadsList, self.numStreamedSignals, maxVolt, adcResolution)
         self.organizeData(timepoints, datapoints)  # Organize the data for further processing
 
     def organizeData(self, timepoints, datapoints):

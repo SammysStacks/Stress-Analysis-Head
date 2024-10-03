@@ -60,7 +60,7 @@ class basicEmotionPredictions(nn.Module):
         inputData: (batchSize, numFeatures) 
         """
         # Create a holder for the signals.
-        allBasicEmotionDistributions = torch.zeros(inputData.shape[0], self.numInterpreterHeads, self.numBasicEmotions, self.emotionLength, device=inputData.device)
+        allBasicEmotionDistributions = torch.zeros(inputData.shape[0], self.numInterpreterHeads, self.numBasicEmotions, self.emotionLength, device=inputData.mainDevice)
         
         # Send the signals through the main model.
         emotionFeatures = self.extractEmotionFeatures(inputData)

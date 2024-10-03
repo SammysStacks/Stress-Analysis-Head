@@ -58,7 +58,7 @@ class fourierNeuralOperatorLayer(fourierNeuralOperatorWeights):
         # fourierData dimension: batchSize, numInputChannels, nFreqModes
 
         # Inject information about the sequence length.
-        sequenceInformation = torch.ones((batchSize, self.numInputChannels, 1), dtype=torch.cfloat, device=inputData.device) * sequenceLength / self.maxSequenceLength
+        sequenceInformation = torch.ones((batchSize, self.numInputChannels, 1), dtype=torch.cfloat, device=inputData.mainDevice) * sequenceLength / self.maxSequenceLength
         fourierData = torch.cat(tensors=(fourierData, sequenceInformation), dim=-1)
         # fourierData dimension: batchSize, numInputChannels, nFreqModes + 1
 

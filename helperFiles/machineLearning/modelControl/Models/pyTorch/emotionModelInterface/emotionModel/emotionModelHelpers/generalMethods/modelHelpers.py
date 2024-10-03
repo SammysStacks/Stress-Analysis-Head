@@ -119,7 +119,7 @@ class modelHelpers:
         assert num_iterations > 0, "Power iteration should be a positive integer"
         sigma = None
 
-        v = torch.randn(W.size(1)).to(W.device)
+        v = torch.randn(W.size(1)).to(W.mainDevice)
         v = v / torch.norm(v, p=2) + eps
         for i in range(num_iterations):
             u = torch.mv(W, v)

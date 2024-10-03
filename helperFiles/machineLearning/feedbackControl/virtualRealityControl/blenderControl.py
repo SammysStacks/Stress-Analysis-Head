@@ -3,7 +3,7 @@ import bmesh
 
 # Set up VR settings
 bpy.context.scene.render.engine = 'CYCLES'
-bpy.context.scene.cycles.device = 'GPU'
+bpy.context.scene.cycles.mainDevice = 'GPU'
 bpy.ops.preferences.addon_enable(module='cycles')
 bpy.context.preferences.addons['cycles'].preferences.compute_device_type = 'CUDA'
 #bpy.context.preferences.addons['cycles'].preferences.devices[0].use = True

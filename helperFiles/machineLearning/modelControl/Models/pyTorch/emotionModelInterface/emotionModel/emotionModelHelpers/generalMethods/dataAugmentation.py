@@ -13,7 +13,7 @@ class dataAugmentation:
     @staticmethod
     def addNoise(data, trainingFlag, noiseSTD=0.01):
         # If we are training, add noise to the final state to ensure continuity of the latent space.
-        return data + torch.randn_like(data, device=data.device) * noiseSTD if trainingFlag or noiseSTD == 0 else data
+        return data + torch.randn_like(data, device=data.mainDevice) * noiseSTD if trainingFlag or noiseSTD == 0 else data
 
     @staticmethod
     def getTimeIntervalInd(timeData, timePoint, mustIncludeTimePoint=False):
@@ -55,7 +55,7 @@ class dataAugmentation:
 
         # Find the time window for the signal.
         newTimeWindow = generalMethods.biasedSample(minTimeWindow, maxTimeWindow, biasType="high") / modelConstants.maxTimeWindow
-        targetTimes = torch.full((batchSize, numSignals, 1), newTimeWindow, device=timeChannels.device)
+        targetTimes = torch.full((batchSize, numSignals, 1), newTimeWindow, device=timeChannels.mainDevice)
 
         # Find the start time indices for the signals.
         startTimeIndices = torch.searchsorted(-timeChannels, -targetTimes, side="left").squeeze(-1)  # Shape: (batchSize, numSignals)
@@ -91,7 +91,7 @@ class dataAugmentation:
 
         # Find a random percentage to drop the data.
         finalDropoutPercent = generalMethods.biasedSample(range_start=0, range_end=dropoutPercent, biasType="low")
-        dropoutMask = finalDropoutPercent < torch.rand((batchSize, numSignals, sequenceLength), device=augmentedBatchData.device)
+        dropoutMask = finalDropoutPercent < torch.rand((batchSize, numSignals, sequenceLength), device=augmentedBatchData.mainDevice)
 
         # Slice all the data at the same index
         augmentedBatchData = augmentedBatchData * dropoutMask.unsqueeze(-1)

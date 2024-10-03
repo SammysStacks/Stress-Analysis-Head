@@ -55,7 +55,7 @@ class generalMethods:
         # Ensure covariance matrix is symmetric to avoid numerical issues
         covariance_matrix = (covariance_matrix + covariance_matrix.transpose(1, 2)) / 2
         # Add a small value to the diagonal for numerical stability (regularization)
-        regularization_term = 1e-5 * torch.eye(num_signals, device=signals.device)
+        regularization_term = 1e-5 * torch.eye(num_signals, device=signals.mainDevice)
         covariance_matrix += regularization_term
 
         # Perform eigen decomposition

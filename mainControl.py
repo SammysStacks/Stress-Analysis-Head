@@ -29,16 +29,11 @@ if __name__ == "__main__":
 
     # specify if using the E4 watch for streaming
     E4StreamingIndicator = False
-    # specify if using E4 watch saved data for analysis
-    E4Checker = True
 
     # Protocol switches: only the first true variably executes.
     readDataFromExcel = True  # For SINGLE FILE analysis. Analyze Data from Excel File called 'currentFilename' on Sheet Number 'testSheetNum'
     streamData = False  # Stream in Data from the Board and Analyze.
     trainModel = False  # Train Model with ALL Data in 'collectedDataFolder'.
-
-    # Assert that only one of E4Streaming or streamData can be True, maybe be both, but right now use one
-    assert not (E4StreamingIndicator and streamData), "E4Streaming and streamData cannot both be True. Only one can be active at a time."
 
     # User options during the run: any number can be true.
     useModelPredictions = False or trainModel  # Apply the learning algorithm to decode the signals.
@@ -51,8 +46,10 @@ if __name__ == "__main__":
     date = "2024-09-24"
 
     # Specify experimental parameters.
-    boardSerialNum = '12ba4cb61c85ec11bc01fc2b19c2d21c'  # Board's Serial Number (port.serial_number). Only used if streaming data, else it gets reset to None.
     stopTimeStreaming = 60 * 300  # If Float/Int: The Number of Seconds to Stream Data; If String, it is the TimeStamp to Stop (Military Time) as "Hours:Minutes:Seconds:MicroSeconds"
+    deviceAddress = 'B516C6'  # Board's Serial Number (port.serial_number). Only used if streaming data, else it gets reset to None.
+    deviceType = 'empatica'  # The type of device being used for streaming.
+
     reanalyzeData = False  # Reanalyze training files: don't use saved features
     reverseOrder = False  # Reverse the order of the data for training.
 
@@ -72,45 +69,17 @@ if __name__ == "__main__":
     # Compile all the protocol information.
     streamingOrder, biomarkerFeatureOrder, featureAverageWindows, featureNames, biomarkerFeatureNames, extractFeaturesFrom = inputParameterClass.getGeneralParameters()
     performMachineLearning, modelClasses, actionControl, plotTrainingData, saveModel = inputParameterClass.getMachineLearningParams(featureNames, collectedDataFolder)
-    boardSerialNum, voltageRange, adcResolution, saveRawSignals, recordQuestionnaire = inputParameterClass.getStreamingParams(boardSerialNum)
+    deviceAddress, voltageRange, adcResolution, saveRawSignals, recordQuestionnaire = inputParameterClass.getStreamingParams(deviceAddress)
     soundInfoFile, dataFolder, playGenres = inputParameterClass.getModelParameters()
     saveRawFeatures, testSheetNum = inputParameterClass.getExcelParams()
 
     # Initialize instance to analyze the data
-    readData = streamingProtocols.streamingProtocols(boardSerialNum, modelClasses, actionControl, numPointsPerBatch, moveDataFinger, streamingOrder,
-                                                     extractFeaturesFrom, featureAverageWindows, voltageRange, plotStreamedData)
-
-    # ----------------------------- Initialize E4 Wristband to stream the data ----------------------------- #
-    if E4StreamingIndicator and not streamData:
-        server_address = '127.0.0.1'
-        server_port = 28000
-        device_id = 'B516C6'
-        buffer_size = 4096
-        output_file = "E4_data.xlsx"
-        e4_streamer = E4StreamingProtocols.E4Streaming(server_address, server_port, device_id, buffer_size, output_file, plotStreamedData)
-        recordQuestionnaire_e4 = not plotStreamedData  # Only use one GUI: questionnaire or streaming
-        if not recordQuestionnaire_e4:
-            e4_streamer.connect()
-            e4_streamer.subscribe_to_data()
-            e4_streamer.stream()
-        else:
-            e4_streaming_thread = threading.Thread(target=e4_streamer.stream, daemon=True)
-            e4_streamer.connect()
-            e4_streamer.subscribe_to_data()
-            e4_streaming_thread.start()
-
-            # Create thread for the questionnaire GUI
-            folderPath = "./helperFiles/surveyInformation/"
-            stressQuestionnaire = stressQuestionnaireGUI(e4_streamer, folderPath)
-            stressQuestionnaire_thread = threading.Thread(target=stressQuestionnaire.finishedRun, daemon=True)
-            stressQuestionnaire_thread.start()
-
-            # Wait for both threads to complete
-            e4_streaming_thread.join()
-            stressQuestionnaire_thread.join()
+    readData = streamingProtocols.streamingProtocols(deviceType, deviceAddress, modelClasses, actionControl, numPointsPerBatch, moveDataFinger,
+                                                     streamingOrder, extractFeaturesFrom, featureAverageWindows, voltageRange, plotStreamedData)
 
     # ----------------------------- Stream the Data from circuit board ----------------------------- #
-    if streamData and not E4StreamingIndicator:
+
+    if streamData:
         if not recordQuestionnaire:
             # Stream in the data from the circuit board
             readData.streamWearableData(adcResolution, stopTimeStreaming, currentFilename)
@@ -118,9 +87,11 @@ if __name__ == "__main__":
             # Stream in the data from the circuit board
             streamingThread = threading.Thread(target=readData.streamWearableData, args=(adcResolution, stopTimeStreaming, currentFilename), daemon=True)
             streamingThread.start()
+
             # Open the questionnaire GUI.
             folderPath = "./helperFiles/surveyInformation/"
             stressQuestionnaire = stressQuestionnaireGUI(readData, folderPath)
+
             # When the streaming stops, close the GUI/Thread.
             stressQuestionnaire.finishedRun()
             streamingThread.join()

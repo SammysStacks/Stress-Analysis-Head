@@ -110,8 +110,8 @@ class emotionModelHead(nn.Module):
             assert numChannels == len(modelConstants.signalChannelNames)
 
             # Initialize default output tensors.
-            basicEmotionProfile = torch.zeros((batchSize, numSignals, maxSequenceLength, numChannels), device=signalData.device)
-            emotionProfile = torch.zeros((batchSize, numSignals, maxSequenceLength, numChannels), device=signalData.device)
+            basicEmotionProfile = torch.zeros((batchSize, numSignals, maxSequenceLength, numChannels), device=signalData.mainDevice)
+            emotionProfile = torch.zeros((batchSize, numSignals, maxSequenceLength, numChannels), device=signalData.mainDevice)
 
             # ------------------- Learned Signal Compression ------------------- #
 

@@ -149,7 +149,7 @@ class generalAutoencoder(generalAutoencoderBase):
         numSignalPath = [inputSequenceLength]  # Keep track of the signal's length at each iteration.
 
         # Initialize a holder for the loss values.
-        if autoencoderLayerLoss is None: autoencoderLayerLoss = torch.zeros((batchSize * numSignals), device=inputData.device)
+        if autoencoderLayerLoss is None: autoencoderLayerLoss = torch.zeros((batchSize * numSignals), device=inputData.mainDevice)
         else: autoencoderLayerLoss = autoencoderLayerLoss.view(batchSize * numSignals)
 
         # ------------- Signal Compression/Expansion Algorithm ------------- #   

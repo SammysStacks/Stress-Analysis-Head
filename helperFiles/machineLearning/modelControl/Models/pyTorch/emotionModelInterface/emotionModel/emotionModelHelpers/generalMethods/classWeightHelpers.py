@@ -13,7 +13,7 @@ class classWeightHelpers:
 
     @staticmethod
     def gausEncoding(classLabels, num_classes, array_length, gaus_stds=0.3, relative_amplitudes=1):
-        finalLabels = torch.zeros((len(classLabels), array_length), device=classLabels.device)
+        finalLabels = torch.zeros((len(classLabels), array_length), device=classLabels.mainDevice)
 
         # For each label requested.
         for finalLabelInd in range(len(classLabels)):
@@ -26,7 +26,7 @@ class classWeightHelpers:
                 mean_gaus_indices=classInd,
                 relative_amplitudes=relative_amplitudes,
                 gaus_stds=gaus_stds,
-                device=classLabels.device,
+                device=classLabels.mainDevice,
             )
         return finalLabels
 

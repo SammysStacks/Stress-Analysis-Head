@@ -41,8 +41,8 @@ class signalMappingHead(signalInfoMappingModules):
         positionEncodedData = inputData.clone()
 
         # Extract the size of the input parameter.
-        bitInds = torch.arange(self.numEncodingStamps).to(positionEncodedData.device)
-        signalInds = torch.arange(numSignals).to(positionEncodedData.device)
+        bitInds = torch.arange(self.numEncodingStamps).to(positionEncodedData.mainDevice)
+        signalInds = torch.arange(numSignals).to(positionEncodedData.mainDevice)
 
         # Generate the binary encoding of signalInds in a batched manner
         binary_encoding = signalInds[:, None].bitwise_and(2 ** bitInds).bool()

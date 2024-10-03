@@ -50,8 +50,8 @@ class convolutionalLinearLayer(nn.Module):
         batchSize, numSegments, compressedDim = segmentedData.size()
 
         # Initialize the tensor to store holders.
-        reconstructedData = torch.zeros(batchSize, initialDimension, device=segmentedData.device)
-        contributions = torch.zeros_like(reconstructedData, device=segmentedData.device)
+        reconstructedData = torch.zeros(batchSize, initialDimension, device=segmentedData.mainDevice)
+        contributions = torch.zeros_like(reconstructedData, device=segmentedData.mainDevice)
                     
         # Loop over each segment 
         for i, startInd in enumerate(sliceIndices):

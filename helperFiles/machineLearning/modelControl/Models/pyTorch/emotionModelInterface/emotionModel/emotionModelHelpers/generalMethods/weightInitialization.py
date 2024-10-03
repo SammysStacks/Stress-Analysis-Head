@@ -234,7 +234,7 @@ class weightInitialization:
         # Get the parameters of the conv layer
         num_output_channels, num_input_channels, kernel_size = conv_layer.weight.size()
         weight = conv_layer.weight
-        device = weight.device
+        device = weight.mainDevice
         dtype = weight.dtype
 
         # Determine the gain based on the activation function

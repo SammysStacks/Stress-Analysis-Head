@@ -72,7 +72,7 @@ class lossCalculations:
         batchSize, numSignals = predictedPositionIndices.size()
 
         # Reshape the data for the positional encoding loss.
-        targetPositionIndices = torch.arange(numSignals, device=predictedPositionIndices.device, dtype=torch.float32).repeat(batchSize, 1)
+        targetPositionIndices = torch.arange(numSignals, device=predictedPositionIndices.mainDevice, dtype=torch.float32).repeat(batchSize, 1)
         targetPositionIndices = self.generalMethods.minMaxScale_noInverse(targetPositionIndices, scale=0.5*self.posEncWeightScale, buffer=0) + 0.5*self.posEncWeightScale
         # targetPositionIndices dim: batchSize, numSignals
 
@@ -233,7 +233,7 @@ class lossCalculations:
 
         # Calculate an array of possible emotion ratings.
         numEmotionClasses = self.allEmotionClasses[emotionInd]
-        possibleEmotionRatings = torch.arange(0, numEmotionClasses, numEmotionClasses / self.emotionLength, device=allLabels.device) - 0.5
+        possibleEmotionRatings = torch.arange(0, numEmotionClasses, numEmotionClasses / self.emotionLength, device=allLabels.mainDevice) - 0.5
         # Calculate the weighted prediction losses
         mseLossDistributions = (emotionLabels[:, None] - possibleEmotionRatings) ** 2
         emotionDistributionLosses = (mseLossDistributions * predictedTrainingEmotions).sum(dim=1)
@@ -258,7 +258,7 @@ class lossCalculations:
         allBasicEmotionDistributionsAbs_T = allBasicEmotionDistributionsAbs.permute(0, 1, 3, 2)  # batchSize, self.numInterpreterHeads, emotionLength, numBasicEmotions
         probabilityOverlap_basicEmotions = allBasicEmotionDistributionsAbs.sqrt() @ allBasicEmotionDistributionsAbs_T.sqrt()
         # Zero out self-overlap as each signal SHOULD be overlapping with itself.
-        probabilityOverlap_basicEmotions -= torch.eye(numBasicEmotion, numBasicEmotion, device=allBasicEmotionDistributions.device).view(1, 1, numBasicEmotion, numBasicEmotion)
+        probabilityOverlap_basicEmotions -= torch.eye(numBasicEmotion, numBasicEmotion, device=allBasicEmotionDistributions.mainDevice).view(1, 1, numBasicEmotion, numBasicEmotion)
         # For each interpretation of emotions, the basis states should be orthonormal.
         basicEmotion_orthoganalityLoss = probabilityOverlap_basicEmotions.mean()
 
@@ -267,7 +267,7 @@ class lossCalculations:
         allInterpretationEmotions_T = allBasicEmotionDistributionsAbs.permute(0, 2, 3, 1)  # batchSize, numBasicEmotions, emotionLength, numInterpreterHeads
         probabilityOverlap_interpretations = allInterpretationEmotions.sqrt() @ allInterpretationEmotions_T.sqrt()
         # Zero out self-overlap as each signal SHOULD be overlapping with itself.
-        probabilityOverlap_interpretations -= torch.eye(numInterpreterHeads, numInterpreterHeads, device=allBasicEmotionDistributions.device).view(1, 1, numInterpreterHeads, numInterpreterHeads)
+        probabilityOverlap_interpretations -= torch.eye(numInterpreterHeads, numInterpreterHeads, device=allBasicEmotionDistributions.mainDevice).view(1, 1, numInterpreterHeads, numInterpreterHeads)
         # Between all interpretations, each basis state should be different.
         emotionInterpretation_orthoganalityLoss = probabilityOverlap_basicEmotions.mean()
 
@@ -317,7 +317,7 @@ class lossCalculations:
     def gradient_penalty(inputs, outputs, dims):
         # Calculate the gradient wrt the inputs.
         gradients = torch.autograd.grad(
-            grad_outputs=torch.ones_like(outputs, device=outputs.device),
+            grad_outputs=torch.ones_like(outputs, device=outputs.mainDevice),
             allow_unused=False,
             create_graph=False,
             retain_graph=True,

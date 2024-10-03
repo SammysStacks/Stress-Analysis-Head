@@ -37,7 +37,7 @@ class convolutionalHelpers(abnormalConvolutions):
     @staticmethod
     def encodingInterface_forEach(signalData, transformation, useCheckpoint=False):
         # Initialize the processed data.
-        processedData = torch.zeros_like(signalData, device=signalData.device)
+        processedData = torch.zeros_like(signalData, device=signalData.mainDevice)
 
         # For each input channel.
         for signalInd in range(signalData.size(1)):

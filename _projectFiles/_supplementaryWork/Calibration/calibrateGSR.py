@@ -179,7 +179,7 @@ ax.plot([3.2]*len(R), R, "tab:red", linewidth=2, label="Max ADC Voltage");
 # ax.fill_between(R[5:9], V[5:9], color='tab:red', alpha = 0.15, label="Hand Resistance");
 plt.plot(vNew, fit, 'g--', label="Fit")
 
-plt.title("New GSR Board Readings")
+plt.title("New EDA Board Readings")
 plt.xlabel("Resistance (kOhms)")
 plt.ylabel("Analog Voltage")
 plt.legend()

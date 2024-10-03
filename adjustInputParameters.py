@@ -44,7 +44,7 @@ class adjustInputParameters:
 
         return collectedDataFolder, currentFilename
 
-    def getStreamingParams(self, boardSerialNum):
+    def getStreamingParams(self, deviceAddress):
         # Arduino Streaming Parameters.
         voltageRange = (0, 3.3)
         adcResolution = 4096
@@ -58,7 +58,7 @@ class adjustInputParameters:
         recordQuestionnaire = not self.plotStreamedData  # Only use one GUI: questionnaire or streaming
         saveRawSignals = True  # Saves the Data in 'readData.data' in an Excel Named 'saveExcelName'
 
-        return boardSerialNum, voltageRange, adcResolution, saveRawSignals, recordQuestionnaire
+        return deviceAddress, voltageRange, adcResolution, saveRawSignals, recordQuestionnaire
 
     def getStreamingParamsE4(self, portSerialNum):
         buffer_size = 4096

@@ -52,7 +52,7 @@ if __name__ == "__main__":
     date = "2024-09-24"
 
     # Specify experimental parameters.
-    boardSerialNum = '12ba4cb61c85ec11bc01fc2b19c2d21c'  # Board's Serial Number (port.serial_number). Only used if streaming data, else it gets reset to None.
+    deviceAddress = '12ba4cb61c85ec11bc01fc2b19c2d21c'  # Board's Serial Number (port.serial_number). Only used if streaming data, else it gets reset to None.
     stopTimeStreaming = 60 * 300  # If Float/Int: The Number of Seconds to Stream Data; If String, it is the TimeStamp to Stop (Military Time) as "Hours:Minutes:Seconds:MicroSeconds"
     reanalyzeData = False  # Reanalyze training files: don't use saved features
     reverseOrder = False  # Reverse the order of the data for training.
@@ -77,13 +77,12 @@ if __name__ == "__main__":
         portSerialNum, buffer_size, saveRawSignals, recordQuestionnaire = inputParameterClass.getStreamingParamsE4(server_port)
         readData = E4StreamingProtocols.E4Streaming(server_address, server_port, device_id, buffer_size, currentFilename, plotStreamedData)
     else:
-        boardSerialNum, voltageRange, adcResolution, saveRawSignals, recordQuestionnaire = inputParameterClass.getStreamingParams(boardSerialNum)
+        deviceAddress, voltageRange, adcResolution, saveRawSignals, recordQuestionnaire = inputParameterClass.getStreamingParams(deviceAddress)
         # Initialize instance to analyze the data
-        readData = streamingProtocols.streamingProtocols(boardSerialNum, modelClasses, actionControl, numPointsPerBatch, moveDataFinger, streamingOrder,
+        readData = streamingProtocols.streamingProtocols(deviceAddress, modelClasses, actionControl, numPointsPerBatch, moveDataFinger, streamingOrder,
                                                          extractFeaturesFrom, featureAverageWindows, voltageRange, plotStreamedData)
     soundInfoFile, dataFolder, playGenres = inputParameterClass.getModelParameters()
     saveRawFeatures, testSheetNum = inputParameterClass.getExcelParams()
-
 
     # ----------------------------- Initialize E4 Wristband to stream the data ----------------------------- #
     if e4StreamingIndicator and not streamData:

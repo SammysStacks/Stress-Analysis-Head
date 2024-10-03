@@ -10,10 +10,10 @@ from .streamingProtocolHelpers import streamingProtocolHelpers
 
 class streamingProtocols(streamingProtocolHelpers):
 
-    def __init__(self, mainSerialNum, modelClasses, actionControl, numPointsPerBatch, moveDataFinger, streamingOrder, extractFeaturesFrom, featureAverageWindows, voltageRange, plotStreamedData):
+    def __init__(self, deviceType, mainSerialNum, modelClasses, actionControl, numPointsPerBatch, moveDataFinger, streamingOrder, extractFeaturesFrom, featureAverageWindows, voltageRange, plotStreamedData):
         # Create Pointer to Common Functions
-        super().__init__(mainSerialNum=mainSerialNum, therapySerialNum=None, modelClasses=modelClasses, actionControl=actionControl, numPointsPerBatch=numPointsPerBatch, moveDataFinger=moveDataFinger, streamingOrder=streamingOrder,
-                         extractFeaturesFrom=extractFeaturesFrom, featureAverageWindows=featureAverageWindows, voltageRange=voltageRange, plotStreamedData=plotStreamedData)
+        super().__init__(deviceType=deviceType, mainSerialNum=mainSerialNum, therapySerialNum=None, modelClasses=modelClasses, actionControl=actionControl, numPointsPerBatch=numPointsPerBatch, moveDataFinger=moveDataFinger,
+                         streamingOrder=streamingOrder, extractFeaturesFrom=extractFeaturesFrom, featureAverageWindows=featureAverageWindows, voltageRange=voltageRange, plotStreamedData=plotStreamedData)
         # Holder parameters.
         self.experimentInfoPointerStart = None
         self.experimentInfoPointerEnd = None
@@ -28,12 +28,12 @@ class streamingProtocols(streamingProtocolHelpers):
         self.featureInfoPointer = None
         self.stopTimeStreaming = None
 
-    def setupArduinoStream(self, stopTimeStreaming, usingTimestamps=False):
-        # self.arduinoRead.resetArduino(self.mainArduino, 10)
+    def setupDeviceStream(self, stopTimeStreaming, usingTimestamps=False):
+        # self.deviceReader.resetArduino(self.mainDevice, 10)
         # Read and throw out the first few reads
         rawReadsList = []
-        while int(self.mainArduino.in_waiting) > 0 or len(rawReadsList) < 2000:
-            rawReadsList.append(self.arduinoRead.readline(ser=self.mainArduino))
+        while int(self.mainDevice.in_waiting) > 0 or len(rawReadsList) < 2000:
+            rawReadsList.append(self.deviceReader.readline(ser=self.mainDevice))
 
         if usingTimestamps:
             # Calculate the Stop Time
@@ -59,7 +59,7 @@ class streamingProtocols(streamingProtocolHelpers):
         self.setUserName(filePath)
 
         # Prepare the arduino to stream in data
-        self.stopTimeStreaming = self.setupArduinoStream(stopTimeStreaming)
+        self.stopTimeStreaming = self.setupDeviceStream(stopTimeStreaming)
         timePoints = self.analysisList[0].timePoints
         streamingDataFinger = 0
 
@@ -68,7 +68,7 @@ class streamingProtocols(streamingProtocolHelpers):
             # Loop Through and Read the Arduino Data in Real-Time
             while len(timePoints) == 0 or (timePoints[-1] - timePoints[0]) < self.stopTimeStreaming:
                 # Collect and compile the most recently available data points.
-                self.recordData(self.voltageRange[1], adcResolution)
+                if self.deviceType == "serial": self.recordData(self.voltageRange[1], adcResolution)
 
                 # When enough data has been collected, analyze the new data in batches.
                 while len(timePoints) - streamingDataFinger >= self.numPointsPerBatch:
@@ -78,7 +78,7 @@ class streamingProtocols(streamingProtocolHelpers):
             self.analyzeBatchData(streamingDataFinger)
 
         except Exception as error:
-            self.mainArduino.close()
+            self.mainDevice.close()
             print(error)
 
         finally:
@@ -88,7 +88,7 @@ class streamingProtocols(streamingProtocolHelpers):
 
             # Close the Arduino's at the End
             print("\nFinished Streaming in Data; Closing Arduino\n")
-            self.mainArduino.close()
+            self.mainDevice.close()
 
     def streamExcelData(self, compiledRawData, experimentTimes, experimentNames, surveyAnswerTimes,
                         surveyAnswersList, surveyQuestions, subjectInformationAnswers, subjectInformationQuestions, filePath):

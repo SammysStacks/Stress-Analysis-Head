@@ -12,7 +12,7 @@ class modelParameters:
 
         # Run-specific parameters.
         self.hpcTrialRun = userInputParams['deviceListed'].startswith("HPC") if userInputParams else False  # The HPC trial run flag.
-        self.gpuFlag = accelerator.device.type == 'cuda' if accelerator else False  # The GPU flag.
+        self.gpuFlag = accelerator.mainDevice.type == 'cuda' if accelerator else False  # The GPU flag.
 
         # Helper classes.
         self.generalMethods = generalMethods()

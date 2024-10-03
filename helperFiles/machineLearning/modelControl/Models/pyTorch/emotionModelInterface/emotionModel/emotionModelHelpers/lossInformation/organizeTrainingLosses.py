@@ -159,7 +159,7 @@ class organizeTrainingLosses(lossCalculations):
     @staticmethod
     def assignClassWeights(class_labels, num_classes):
         # Initialize the class counts to zero
-        class_counts = torch.zeros(num_classes, device=class_labels.device)
+        class_counts = torch.zeros(num_classes, device=class_labels.mainDevice)
 
         # Accumulate counts for each class
         for label in class_labels:
@@ -181,7 +181,7 @@ class organizeTrainingLosses(lossCalculations):
         # Handle classes with zero counts to avoid division by zero
         nonzero_counts_mask = class_counts > 0
         # Calculate weights for each class
-        class_weights = torch.zeros_like(class_counts, device=class_labels.device)
+        class_weights = torch.zeros_like(class_counts, device=class_labels.mainDevice)
         class_weights[nonzero_counts_mask] = 1.0 / class_counts[nonzero_counts_mask]
 
         # Normalize weights to sum to 1

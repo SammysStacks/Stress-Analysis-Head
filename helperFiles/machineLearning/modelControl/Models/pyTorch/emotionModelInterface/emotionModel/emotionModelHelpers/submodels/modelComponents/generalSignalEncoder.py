@@ -98,7 +98,7 @@ class generalSignalEncoding(signalEncoderBase):
     def forward(self, signalData, targetNumSignals=32, signalEncodingLayerLoss=None, calculateLoss=True, forward=True):
         """ The shape of signalChannel: (batchSize, numSignals, compressedLength) """
         # Initialize first time parameters for signal encoding.
-        if signalEncodingLayerLoss is None: signalEncodingLayerLoss = torch.zeros((signalData.size(0),), device=signalData.device)
+        if signalEncodingLayerLoss is None: signalEncodingLayerLoss = torch.zeros((signalData.size(0),), device=signalData.mainDevice)
 
         # Set up the variables for signal encoding.
         batchSize, numSignals, signalDimension = signalData.size()

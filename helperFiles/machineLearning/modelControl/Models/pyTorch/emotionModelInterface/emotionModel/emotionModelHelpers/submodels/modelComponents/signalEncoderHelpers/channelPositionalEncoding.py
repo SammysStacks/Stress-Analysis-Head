@@ -83,12 +83,12 @@ class channelPositionalEncoding(signalEncoderModules):
         batchSize, numSignals, signalDimension = inputData.size()
 
         # Set up the variables for signal encoding.
-        numStampsUsed = torch.zeros(numSignals, device=inputData.device)
-        finalStamp = torch.zeros((batchSize, numSignals, self.lowFrequencyShape), device=inputData.device)
+        numStampsUsed = torch.zeros(numSignals, device=inputData.mainDevice)
+        finalStamp = torch.zeros((batchSize, numSignals, self.lowFrequencyShape), device=inputData.mainDevice)
 
         # Extract the size of the input parameter.
-        bitInds = torch.arange(self.numEncodingStamps).to(inputData.device)
-        signalInds = torch.arange(numSignals).to(inputData.device)
+        bitInds = torch.arange(self.numEncodingStamps).to(inputData.mainDevice)
+        signalInds = torch.arange(numSignals).to(inputData.mainDevice)
 
         # Generate the binary encoding of signalInds in a batched manner
         binary_encoding = signalInds[:, None].bitwise_and(2 ** bitInds).bool()
