@@ -5,18 +5,18 @@ from helperFiles.machineLearning.machineLearningInterface import machineLearning
 
 class adjustInputParameters:
 
-    def __init__(self, plotStreamedData=True, streamData=False, e4StreamingIndicator=False, readDataFromExcel=False, trainModel=False, useModelPredictions=False, useTherapyData=False):
+    def __init__(self, deviceType, plotStreamedData=True, streamData=False, readDataFromExcel=False, trainModel=False, useModelPredictions=False, useTherapyData=False):
         # Set the parameters for the program.
         self.useModelPredictions = useModelPredictions or trainModel  # Use the Machine Learning Model for Predictions
         self.readDataFromExcel = readDataFromExcel  # Read Data from an Excel File
         self.compileModelInfo = compileModelInfo()  # Initialize the Model Information
         self.plotStreamedData = plotStreamedData  # Plot the Streamed Data in Real-Time
         self.useTherapyData = useTherapyData  # Use the Therapy Data for the Machine Learning Model
-        self.streamData = streamData  # Stream Data from the Arduino
-        self.e4StreamingIndicator = e4StreamingIndicator  # Stream Data from the Empatica E4 Wristband
+        self.streamData = streamData  # Stream data directly from a device.
+        self.deviceType = deviceType  # The type of device being used.
 
     def getGeneralParameters(self):
-        if self.e4StreamingIndicator:
+        if self.deviceType == "empatica":
             # Specify biomarker information.
             streamingOrder = self.compileModelInfo.streamingOrder_e4  # A List Representing the Order of the Sensors being Streamed in: ["acc", "bvp", "eda", "temp"]
             extractFeaturesFrom = streamingOrder if self.useModelPredictions else []  # A list with all the biomarkers from streamingOrder for feature extraction
@@ -35,7 +35,6 @@ class adjustInputParameters:
             featureAverageWindows.append(allAverageIntervals[streamingOrder.index(biomarker)])
 
         return streamingOrder, biomarkerFeatureOrder, featureAverageWindows, featureNames, biomarkerFeatureNames, extractFeaturesFrom
-
 
     def getSavingInformation(self, date, trialName, userName):
         # Specify the path to the collected data.
@@ -58,17 +57,6 @@ class adjustInputParameters:
         saveRawSignals = True  # Saves the Data in 'readData.data' in an Excel Named 'saveExcelName'
 
         return deviceAddress, voltageRange, adcResolution, saveRawSignals, recordQuestionnaire
-
-    def getStreamingParamsE4(self, portSerialNum):
-        buffer_size = 4096
-
-        if not self.e4StreamingIndicator:
-            return None, buffer_size, None, None
-
-        # Streaming flags
-        recordQuestionnaire = not self.plotStreamedData
-        saveRawSignals = True
-        return portSerialNum, buffer_size, saveRawSignals, recordQuestionnaire
 
     @staticmethod
     def getPlottingParams(analyzeBatches=False):

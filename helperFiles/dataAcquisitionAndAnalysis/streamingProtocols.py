@@ -35,6 +35,8 @@ class streamingProtocols(streamingProtocolHelpers):
             rawReadsList = []
             while int(self.mainDevice.in_waiting) > 0 or len(rawReadsList) < 2000:
                 rawReadsList.append(self.deviceReader.readline(ser=self.mainDevice))
+        elif self.deviceType == "empatica":
+            self.deviceReader.mainDevice.closeServer = False
 
         if usingTimestamps:
             # Calculate the Stop Time
@@ -156,8 +158,7 @@ class streamingProtocols(streamingProtocolHelpers):
     def getCurrentTime(self):
         # Return the last streaming timePoint
         while len(self.analysisList[0].timePoints) == 0:
-            print("\tWaiting for arduino to initialize!")
-            time.sleep(1)
+            print("\tWaiting for arduino to initialize!"); time.sleep(1)
         return self.analysisList[0].timePoints[-1]
 
     @staticmethod

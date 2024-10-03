@@ -45,8 +45,8 @@ if __name__ == "__main__":
     date = "2024-09-24"
 
     # Specify experimental parameters.
+    deviceAddress = '12ba4cb61c85ec11bc01fc2b19c2d21c'  # Board's Serial Number (port.serial_number). Only used if streaming data, else it gets reset to None.
     stopTimeStreaming = 60 * 300  # If Float/Int: The Number of Seconds to Stream Data; If String, it is the TimeStamp to Stop (Military Time) as "Hours:Minutes:Seconds:MicroSeconds"
-    deviceAddress = 'B516C6'  # Board's Serial Number (port.serial_number). Only used if streaming data, else it gets reset to None.
     deviceType = 'empatica'  # The type of device being used for streaming.
 
     reanalyzeData = False  # Reanalyze training files: don't use saved features
@@ -58,8 +58,9 @@ if __name__ == "__main__":
     assert sum((readDataFromExcel, streamData, E4StreamingIndicator, trainModel)) == 1, "Only one protocol can be be executed."
 
     # Define helper classes.
-    inputParameterClass = adjustInputParameters(plotStreamedData, streamData, readDataFromExcel, trainModel, useModelPredictions, useTherapyData)
     saveInputs = saveDataProtocols.saveExcelData()
+    inputParameterClass = adjustInputParameters(deviceType=deviceType, plotStreamedData=plotStreamedData, streamData=streamData, readDataFromExcel=readDataFromExcel,
+                                                trainModel=trainModel, useModelPredictions=useModelPredictions, useTherapyData=useTherapyData)
 
     # Get the reading/saving information.
     numPointsPerBatch, moveDataFinger = inputParameterClass.getPlottingParams(analyzeBatches=plotStreamedData)
@@ -77,6 +78,8 @@ if __name__ == "__main__":
                                                      streamingOrder, extractFeaturesFrom, featureAverageWindows, voltageRange, plotStreamedData)
 
     # ----------------------------- Stream the Data from circuit board ----------------------------- #
+
+    recordQuestionnaire = False
 
     if streamData:
         if not recordQuestionnaire:

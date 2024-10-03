@@ -45,6 +45,7 @@ class streamingProtocolHelpers(featureOrganization):
         self.moveDataFinger = moveDataFinger  # The minimum number of NEW points to analyze in each batch.
         self.voltageRange = voltageRange  # The voltage range of the incoming signals.
         self.deviceType = deviceType  # The type of device being used.
+        self.mainDevice = None  # The main device being used.
 
         # Specify the analysis order: a unique list of biomarkers in streamingOrder.
         self.analysisOrder = list(collections.OrderedDict.fromkeys(self.streamingOrder))  # The set of unique biomarkers, maintaining the order they will be analyzed. Ex: ['eog', 'eeg', 'eda']
@@ -91,7 +92,7 @@ class streamingProtocolHelpers(featureOrganization):
             self.deviceReader = serialInterface(mainSerialNum=mainSerialNum, therapySerialNum=therapySerialNum)
             self.mainDevice = self.deviceReader.mainDevice
         elif self.deviceType == 'empatica':
-            self.deviceReader = serverInterface(streamingOrder, self.analysisProtocols, deviceType=deviceType, device_id=mainSerialNum)
+            self.deviceReader = serverInterface(streamingOrder, self.analysisProtocols, deviceType=deviceType)
             self.serverThread = threading.Thread(target=self.deviceReader.startServer, daemon=True)
             self.mainDevice = self.deviceReader.mainDevice
             self.serverThread.start()

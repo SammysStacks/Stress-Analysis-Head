@@ -13,7 +13,7 @@ from ..modelConstants import modelConstants
 
 class sharedSignalEncoderModel(nn.Module):
 
-    def __init__(self, latentQueryKeyDim, finalSignalDim, numEncodedSignals, encodedSamplingFreq, numSigEncodingLayers, numSigLiftedChannels, waveletType, debuggingResults=False):
+    def __init__(self, numAttentionLayers, latentQueryKeyDim, finalSignalDim, numEncodedSignals, encodedSamplingFreq, numSigEncodingLayers, numSigLiftedChannels, waveletType, debuggingResults=False):
         super(sharedSignalEncoderModel, self).__init__()
         # General model parameters.
         self.debuggingResults = debuggingResults  # Whether to print debugging results. Type: bool
@@ -25,8 +25,10 @@ class sharedSignalEncoderModel(nn.Module):
         self.numEncodedSignals = numEncodedSignals  # The final number of signals to accept, encoding all signal information.
         self.waveletType = waveletType  # The type to use during the signal encoder.
 
-        # Initialize the signal encoder modules.
-        self.attentionMechanism = attentionMethods(inputQueryKeyDim=1, latentQueryKeyDim=latentQueryKeyDim, inputValueDim=1, latentValueDim=finalSignalDim, numHeads=1, addBias=False)
+        self.attentionMechanisms = nn.ModuleList()
+        for layer in range(numAttentionLayers):
+            # Initialize the signal encoder modules.
+            self.attentionMechanisms.append(attentionMethods(inputQueryKeyDim=1, latentQueryKeyDim=latentQueryKeyDim, inputValueDim=1, latentValueDim=finalSignalDim, numHeads=1, addBias=False))
 
         # Initialize loss holders.
         self.trainingLosses_timeReconstructionAnalysis = None
@@ -41,7 +43,11 @@ class sharedSignalEncoderModel(nn.Module):
         self.testingLosses_timeReconstructionAnalysis = [[] for _ in modelConstants.timeWindows]  # List of list of data reconstruction testing losses. Dim: numTimeWindows, numEpochs
 
     def learnedInterpolation(self, signalData):
-        return self.attentionMechanism(signalData)
+        # For each layer, apply the attention mechanism.
+        for layerInd in range(len(self.attentionMechanisms)):
+            signalData = self.attentionMechanisms[layerInd](signalData)
+
+        return signalData
 
     def reconstructEncodedData(self, encodedData, numSignalForwardPath, signalEncodingLayerLoss=None, calculateLoss=False):
         # reconstructedInitEncodingData dimension: batchSize, numSignals, finalDistributionLength

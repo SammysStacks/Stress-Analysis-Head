@@ -1,58 +1,50 @@
 import time
 
 
-# Import Bioelectric Analysis Files
-
-
 class empaticaInterface:
 
-    def __init__(self, device_id='B516C6', streamingOrder=(), analysisProtocols=()):
+    def __init__(self, streamingOrder=(), analysisProtocols=()):
         # General parameters.
         self.analysisProtocols = analysisProtocols
         self.streamingOrder = streamingOrder
-        self.device_id = device_id
         self.firstTimePoint = None
-        self.endServer = False
+        self.closeServer = True
+        self.device_id = None
 
         # Hard-coded universal empatica parameters.
+        self.possibleSensors = {'acc': 'acc', 'bat': 'bat', 'bvp': 'bvp', 'eda': 'gsr', 'ibi': 'idi', 'tag': 'tag', 'temp': 'tmp'}
         self.server_address = '127.0.0.1'
-        self.communication_port = 28000  
-        self.buffer_size = 4096
+        self.communication_port = 28000
+        self.buffer_size = 1024
 
     def deviceSpecificConnection(self, serverSocket):
-        # Connect to the device.
-        serverSocket.send(("device_connect " + self.device_id + "\r\n").encode())
-        response = serverSocket.recv(self.buffer_size)
-        print("\n\tConnecting to device", response.decode("utf-8").replace("\n", ""))
+        # Get the device.
+        deviceList = self.sendMessage(serverSocket, message=f"device_list\r\n")
+        device_id = deviceList.split('Empatica')[0]
+        self.device_id = device_id.split(" | ")[-1]
 
-        serverSocket.send("pause ON\r\n".encode())
-        response = serverSocket.recv(self.buffer_size)
-        print(f"\t{response.decode("utf-8").replace("\n", "")}")
+        # Connect to the device.
+        self.sendMessage(serverSocket, message=f"device_connect {self.device_id}\r\n")
+        self.sendMessage(serverSocket, message=f"pause ON\r\n")
         time.sleep(1)  # Stabilize connection
 
-        if "acc" in self.streamingOrder:
-            serverSocket.send("device_subscribe acc ON\r\n".encode())
-            response = serverSocket.recv(self.buffer_size)
-            print(f"\t{response.decode("utf-8").replace("\n", "")}")
+        # Subscribe to the sensors.
+        for sensor in self.streamingOrder:
+            if sensor in self.possibleSensors.keys():
+                self.sendMessage(serverSocket, message=f"device_subscribe {self.possibleSensors[sensor]} OFF\r\n")
+                self.sendMessage(serverSocket, message=f"device_subscribe {self.possibleSensors[sensor]} ON\r\n")
 
-        if "bvp" in self.streamingOrder:
-            serverSocket.send("device_subscribe bvp ON\r\n".encode())
-            response = serverSocket.recv(self.buffer_size)
-            print(f"\t{response.decode("utf-8").replace("\n", "")}")
+    def startStreamingData(self, serverSocket):
+        self.sendMessage(serverSocket, message=f"pause OFF\r\n")
+        time.sleep(1)  # Stabilize connection
 
-        if "eda" in self.streamingOrder:
-            serverSocket.send("device_subscribe gsr ON\r\n".encode())
-            response = serverSocket.recv(self.buffer_size)
-            print(f"\t{response.decode("utf-8").replace("\n", "")}")
-
-        if "temp" in self.streamingOrder:
-            serverSocket.send("device_subscribe tmp ON\r\n".encode())
-            response = serverSocket.recv(self.buffer_size)
-            print(f"\t{response.decode("utf-8").replace("\n", "")}")
-
-        serverSocket.send("pause OFF\r\n".encode())
+    def sendMessage(self, serverSocket, message):
+        serverSocket.sendall(message.encode())
         response = serverSocket.recv(self.buffer_size)
-        print(f"\t{response.decode("utf-8").replace("\n", "")}")
+        response = response.decode("utf-8").replace("\n", "")
+        print(f"\t{response}")
+
+        return response
 
     def process_message(self, receivedMessage):
         # Check if the connection is still valid.
@@ -67,19 +59,26 @@ class empaticaInterface:
             data = sample_data[2:]
 
             # Skip non-numeric values.
-            try: timestamp = float(sample_data[1])
-            except ValueError: print("\t", f"Invalid time: {sample_data[1]}"); continue
+            try:
+                timestamp = float(sample_data[1])
+            except ValueError:
+                print("\t", f"Invalid time: {sample_data[1]}"); continue
 
             # Initialize start time on first sample
             if self.firstTimePoint is None: self.firstTimePoint = timestamp
             normalized_timestamp = timestamp - self.firstTimePoint
 
             match stream_type:
-                case "E4_Acc": analysis = self.analysisProtocols['acc']
-                case "E4_Bvp": analysis = self.analysisProtocols['bvp']
-                case "E4_Gsr":  analysis = self.analysisProtocols['eda']
-                case "E4_Temperature": analysis = self.analysisProtocols['temp']
-                case _: raise ValueError(f"Unknown stream type: {stream_type}")
+                case "E4_Acc":
+                    analysis = self.analysisProtocols['acc']
+                case "E4_Bvp":
+                    analysis = self.analysisProtocols['bvp']
+                case "E4_Gsr":
+                    analysis = self.analysisProtocols['eda']
+                case "E4_Temperature":
+                    analysis = self.analysisProtocols['temp']
+                case _:
+                    raise ValueError(f"Unknown stream type: {stream_type}")
 
             # Organize the data.
             self.organizeData(analysis=analysis, timepoint=normalized_timestamp, datapoint=data)
@@ -100,5 +99,4 @@ class empaticaInterface:
             analysis.channelData[channelIndex].append(newData)
 
     def close(self):
-        self.endServer = True
-        
+        self.closeServer = True

@@ -65,6 +65,7 @@ class emotionModelHead(nn.Module):
             numSigLiftedChannels=self.numSigLiftedChannels,
             numSigEncodingLayers=self.numSigEncodingLayers,
             encodedSamplingFreq=self.encodedSamplingFreq,
+            numAttentionLayers=self.numAttentionLayers,
             waveletType=self.signalEncoderWaveletType,
             numEncodedSignals=self.numEncodedSignals,
             latentQueryKeyDim=self.latentQueryKeyDim,

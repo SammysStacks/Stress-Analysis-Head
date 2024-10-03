@@ -300,6 +300,8 @@ class stressQuestionnaireGUI(QtWidgets.QMainWindow):
         if self.readData is not None:
             self.readData.stopTimeStreaming = 0
             self._pauseDataStreaming()
+        if hasattr(self.readData.mainDevice, "close"):
+            self.readData.mainDevice.close()
 
     # ---------------------------------------------------------------------- #
     # ------------------------ Creating GUI Buttons ------------------------ #

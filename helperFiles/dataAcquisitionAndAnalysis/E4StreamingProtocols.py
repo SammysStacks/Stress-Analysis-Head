@@ -110,8 +110,6 @@ class E4Streaming(empaticaInterface):
         except Exception as e:
             print(f"Error during plotting: {e}")
 
-    import os
-
     def save_to_excel(self):
         # Get the directory where this script is located
         script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -147,8 +145,6 @@ class E4Streaming(empaticaInterface):
                 if "connection lost to device" in response:
                     print(response)
                     break
-
-
 
                 # Plot only if enabled
                 if self.plotStreamedData:
