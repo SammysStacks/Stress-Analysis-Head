@@ -79,7 +79,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     # ------------ Forward pass through the model  ------------- #
 
                     # Perform the forward pass through the model.
-                    interpolatedSignals, physiologicalProfile, activityProfile, emotionProfile = model.forward(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, trainingFlag=True)
+                    interpolatedSignals, physiologicalProfile, activityProfile, emotionProfile = model.forward(self.accelerator, submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, trainingFlag=True)
                     # decodedPredictedIndexProbabilities dimension: batchSize, numSignals, maxNumEncodedSignals
                     # predictedIndexProbabilities dimension: batchSize, numSignals, maxNumEncodedSignals
                     # encodedData dimension: batchSize, numEncodedSignals, finalDistributionLength
@@ -146,7 +146,7 @@ class emotionPipeline(emotionPipelineHelpers):
         # Extract the data, labels, and testing/training indices.
         batchSignalInfo, batchSignalLabels, batchTrainingMask, batchTestingMask = batchData
         # Add the data, labels, and training/testing indices to the device (GPU/CPU)
-        batchTrainingMask, batchTestingMask = batchTrainingMask.to(self.accelerator.mainDevice), batchTestingMask.to(self.accelerator.mainDevice)
-        batchSignalInfo, batchSignalLabels = batchSignalInfo.to(self.accelerator.mainDevice), batchSignalLabels.to(self.accelerator.mainDevice)
+        batchTrainingMask, batchTestingMask = batchTrainingMask.to(self.accelerator.device), batchTestingMask.to(self.accelerator.device)
+        batchSignalInfo, batchSignalLabels = batchSignalInfo.to(self.accelerator.device), batchSignalLabels.to(self.accelerator.device)
         
         return batchSignalInfo, batchSignalLabels, batchTrainingMask, batchTestingMask

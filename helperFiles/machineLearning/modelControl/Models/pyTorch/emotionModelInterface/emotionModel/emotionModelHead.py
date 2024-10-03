@@ -100,18 +100,18 @@ class emotionModelHead(nn.Module):
 
     # ------------------------- Full Forward Calls ------------------------- #  
 
-    def forward(self, submodel, signalData, signalIdentifiers, metadata, trainingFlag=False):
+    def forward(self, accelerator, submodel, signalData, signalIdentifiers, metadata, trainingFlag=False):
         # decodeSignals: whether to decode the signals after encoding, which is used for the autoencoder loss.
         # trainingFlag: whether the model is training or testing.
-        with self.accelerator.autocast():
+        with accelerator.autocast():
             # Preprocess the data to ensure integrity.
-            signalData, signalIdentifiers, metadata = (tensor.to(self.device) for tensor in (signalData, signalIdentifiers, metadata))
+            signalData, signalIdentifiers, metadata = (tensor.to(accelerator.device) for tensor in (signalData, signalIdentifiers, metadata))
             batchSize, numSignals, maxSequenceLength, numChannels = signalData.size()
             assert numChannels == len(modelConstants.signalChannelNames)
 
             # Initialize default output tensors.
-            basicEmotionProfile = torch.zeros((batchSize, numSignals, maxSequenceLength, numChannels), device=signalData.mainDevice)
-            emotionProfile = torch.zeros((batchSize, numSignals, maxSequenceLength, numChannels), device=signalData.mainDevice)
+            basicEmotionProfile = torch.zeros((batchSize, numSignals, maxSequenceLength, numChannels), device=accelerator.device)
+            emotionProfile = torch.zeros((batchSize, numSignals, maxSequenceLength, numChannels), device=accelerator.device)
 
             # ------------------- Learned Signal Compression ------------------- #
 

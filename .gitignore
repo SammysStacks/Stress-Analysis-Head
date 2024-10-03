@@ -7,16 +7,18 @@
 .idea/
 venv/
 **/*.pyc
-**/*~
-**/*$
 **/*.wav
 **/*.png
 **/*.jpg
 **/*.mp3
+**/*~$
+**/*$
+**/*~
 
 helperFiles/**/.*
 _projectFiles/**/.*
 _experimentalData/**/.*
+_experimentalData/**/.~
 .__projectFiles
 ._helperFiles
 

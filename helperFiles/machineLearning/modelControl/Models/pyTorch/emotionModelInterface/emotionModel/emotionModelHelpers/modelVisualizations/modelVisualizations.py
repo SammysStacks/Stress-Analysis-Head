@@ -207,8 +207,8 @@ class modelVisualizations(globalPlottingProtocols):
             if submodel == modelConstants.signalEncoderModel:
                 with torch.no_grad():
                     # Calculate the positional encoding.
-                    positionEncodedTrainingData = model.specificSignalEncoderModel.encodeSignals.positionalEncodingInterface.addPositionalEncoding(trainingSignalData.to(self.accelerator.mainDevice))
-                    positionEncodedTTestingData = model.specificSignalEncoderModel.encodeSignals.positionalEncodingInterface.addPositionalEncoding(testingSignalData.to(self.accelerator.mainDevice))
+                    positionEncodedTrainingData = model.specificSignalEncoderModel.encodeSignals.positionalEncodingInterface.addPositionalEncoding(trainingSignalData.to(self.accelerator.device))
+                    positionEncodedTTestingData = model.specificSignalEncoderModel.encodeSignals.positionalEncodingInterface.addPositionalEncoding(testingSignalData.to(self.accelerator.device))
 
                 # Plot the encoding dimension.
                 self.signalEncoderViz.plotOneSignalEncoding(testingEncodedData.detach().cpu(), epoch=currentEpoch, plotTitle="signalEncoding/Test Signal Encoding", numSignalPlots=2, plotIndOffset=1)
@@ -239,8 +239,8 @@ class modelVisualizations(globalPlottingProtocols):
                 with torch.no_grad():
                     # Reconstruct the initial data.
                     numSignalForwardPath = model.specificSignalEncoderModel.encodeSignals.simulateSignalPath(numSignals, targetNumSignals=model.numEncodedSignals)[0]
-                    _, _, propagatedReconstructedTestingData, _ = model.specificSignalEncoderModel.reconstructEncodedData(testingReconstructedEncodedData.to(self.accelerator.mainDevice), numSignalForwardPath, signalEncodingLayerLoss=None, calculateLoss=False)
-                    _, _, propagatedReconstructedTrainingData, _ = model.specificSignalEncoderModel.reconstructEncodedData(trainingReconstructedEncodedData.to(self.accelerator.mainDevice), numSignalForwardPath, signalEncodingLayerLoss=None, calculateLoss=False)
+                    _, _, propagatedReconstructedTestingData, _ = model.specificSignalEncoderModel.reconstructEncodedData(testingReconstructedEncodedData.to(self.accelerator.device), numSignalForwardPath, signalEncodingLayerLoss=None, calculateLoss=False)
+                    _, _, propagatedReconstructedTrainingData, _ = model.specificSignalEncoderModel.reconstructEncodedData(trainingReconstructedEncodedData.to(self.accelerator.device), numSignalForwardPath, signalEncodingLayerLoss=None, calculateLoss=False)
 
                 # Check the autoencoder propagated error.
                 self.autoencoderViz.plotEncoder(testingSignalData.detach().cpu(), propagatedReconstructedTestingData.detach().cpu(), epoch=currentEpoch,
@@ -261,7 +261,7 @@ class modelVisualizations(globalPlottingProtocols):
 
                     # Put the distorted signals through the autoencoder. 
                     with torch.no_grad():
-                        compressedDistortedSignals, reconstructedDistortedEncodedSignals, _ = model.autoencoderModel(distortedSignals.to(self.accelerator.mainDevice), reconstructSignals=True, calculateLoss=False, trainingFlag=False)
+                        compressedDistortedSignals, reconstructedDistortedEncodedSignals, _ = model.autoencoderModel(distortedSignals.to(self.accelerator.device), reconstructSignals=True, calculateLoss=False, trainingFlag=False)
 
                     # Plot the distorted signals
                     self.autoencoderViz.plotAllSignalComparisons(distortedSignals[0].detach().cpu(), reconstructedDistortedEncodedSignals[0].detach().cpu(), trueSignal[0][0].detach().cpu(), epoch=currentEpoch, signalInd=distortedSignalInd, plotTitle="signalReconstruction/Distorted Autoencoding Training Data")

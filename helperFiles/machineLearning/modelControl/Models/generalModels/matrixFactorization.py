@@ -9,10 +9,12 @@ import numpy as np
 import tensorflow as tf
 import sys
 
+from torch import nn
+
+from helperFiles.machineLearning.feedbackControl.virtualRealityControl.imageSimilarities import imageSimilarities
 # Import files
 from .._globalModel import globalModel
 sys.path.append(os.path.dirname(__file__) + "/../../../feedbackControl/virtualRealityControl/")
-import imageSimilarities
 from ..tensorFlow.neuralNetwork import neuralNetwork
 
 # -------------------------------------------------------------------------- #
@@ -20,7 +22,7 @@ from ..tensorFlow.neuralNetwork import neuralNetwork
 
 class matrixFactorization(nn.Module):
     
-    def __init__(self, modelPath, modelType, allFeatureNames, overwriteModel, numUsers = 20, numBioFeatures = 84, numItems = 4):
+    def __init__(self, modelPath, modelType, allFeatureNames, overwriteModel, numUsers=20, numBioFeatures=84, numItems=4, *args, **kwargs):
         """
         Translation to mathmatical notation:
         ----------------------------------------------------------------------
@@ -28,7 +30,8 @@ class matrixFactorization(nn.Module):
             N = self.numItems : The number of possible recomendations.
             K = self.numLatentFactors : The arbitrary dimension Users/Recommendation matrices are assumed to have.
         ----------------------------------------------------------------------
-        """        
+        """
+        super().__init__()
         # Matrix factorization parameters.
         self.numUsers = numUsers
         self.numItems = numItems
@@ -40,9 +43,6 @@ class matrixFactorization(nn.Module):
         # Parameters that should be optimized during training.
         self.setOptimizedParameters(learningRate = 0.002, regularization = 0.01, numLatentFactors = 10, lossThreshold = 0.001)
 
-        # Initialize common model class.
-        super().__init__(modelPath, modelType, allFeatureNames, overwriteModel)
-        
     # ---------------------------------------------------------------------- #
     # -------------------------- Initialize Model -------------------------- #
         
