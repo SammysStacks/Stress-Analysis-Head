@@ -23,7 +23,7 @@ class empaticaInterface:
         # Connect to the device.
         serverSocket.send(("device_connect " + self.device_id + "\r\n").encode())
         response = serverSocket.recv(self.buffer_size)
-        print("\tConnecting to device", response.decode("utf-8").replace("\n", ""))
+        print("\n\tConnecting to device", response.decode("utf-8").replace("\n", ""))
 
         serverSocket.send("pause ON\r\n".encode())
         response = serverSocket.recv(self.buffer_size)
@@ -52,7 +52,7 @@ class empaticaInterface:
 
         serverSocket.send("pause OFF\r\n".encode())
         response = serverSocket.recv(self.buffer_size)
-        print(f"\t{response.decode("utf-8").replace("\n", "")}\n")
+        print(f"\t{response.decode("utf-8").replace("\n", "")}")
 
     def process_message(self, receivedMessage):
         # Check if the connection is still valid.

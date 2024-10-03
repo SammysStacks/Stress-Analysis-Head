@@ -65,7 +65,6 @@ class streamingProtocols(streamingProtocolHelpers):
         streamingDataFinger = 0
 
         try:
-            print("\tBeginning to loop through streamed data")
             # Loop Through and Read the Arduino Data in Real-Time
             while len(timePoints) == 0 or (timePoints[-1] - timePoints[0]) < self.stopTimeStreaming:
                 # Collect and compile the most recently available data points.
