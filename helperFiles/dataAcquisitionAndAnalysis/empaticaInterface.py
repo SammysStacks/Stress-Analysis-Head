@@ -15,7 +15,7 @@ class empaticaInterface:
         self.possibleSensors = {'acc': 'acc', 'bat': 'bat', 'bvp': 'bvp', 'eda': 'gsr', 'ibi': 'idi', 'tag': 'tag', 'temp': 'tmp'}
         self.server_address = '127.0.0.1'
         self.communication_port = 28000
-        self.buffer_size = 1024
+        self.buffer_size = 4096
 
     def deviceSpecificConnection(self, serverSocket):
         # Get the device.
@@ -31,7 +31,6 @@ class empaticaInterface:
         # Subscribe to the sensors.
         for sensor in self.streamingOrder:
             if sensor in self.possibleSensors.keys():
-                self.sendMessage(serverSocket, message=f"device_subscribe {self.possibleSensors[sensor]} OFF\r\n")
                 self.sendMessage(serverSocket, message=f"device_subscribe {self.possibleSensors[sensor]} ON\r\n")
 
     def startStreamingData(self, serverSocket):
@@ -39,7 +38,10 @@ class empaticaInterface:
         time.sleep(1)  # Stabilize connection
 
     def sendMessage(self, serverSocket, message):
+        # Send the message.
         serverSocket.sendall(message.encode())
+
+        # Receive the response.
         response = serverSocket.recv(self.buffer_size)
         response = response.decode("utf-8").replace("\n", "")
         print(f"\t{response}")

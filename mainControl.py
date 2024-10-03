@@ -26,9 +26,6 @@ if __name__ == "__main__":
     #    User Parameters to Edit (More Complex Edits are Inside the Files)   #
     # ---------------------------------------------------------------------- #
 
-    # specify if using the E4 watch for streaming
-    E4StreamingIndicator = False
-
     # Protocol switches: only the first true variably executes.
     readDataFromExcel = False  # For SINGLE FILE analysis. Analyze Data from Excel File called 'currentFilename' on Sheet Number 'testSheetNum'
     trainModel = False  # Train Model with ALL Data in 'collectedDataFolder'.
@@ -38,6 +35,10 @@ if __name__ == "__main__":
     useModelPredictions = False or trainModel  # Apply the learning algorithm to decode the signals.
     plotStreamedData = False  # Graph the data to show incoming signals.
     useTherapyData = True  # Use the Therapy Data folder for any files.
+
+    # General program flags.
+    reanalyzeData = False  # Reanalyze training files: don't use saved features
+    reverseOrder = False  # Reverse the order of the data for training.
 
     # Specify the user parameters.
     userName = "Ruixiao".replace(" ", "")
@@ -49,13 +50,10 @@ if __name__ == "__main__":
     stopTimeStreaming = 60 * 300  # If Float/Int: The Number of Seconds to Stream Data; If String, it is the TimeStamp to Stop (Military Time) as "Hours:Minutes:Seconds:MicroSeconds"
     deviceType = 'empatica'  # The type of device being used for streaming.
 
-    reanalyzeData = False  # Reanalyze training files: don't use saved features
-    reverseOrder = False  # Reverse the order of the data for training.
-
     # ---------------------------------------------------------------------- #
 
     # Assert the proper use of the program
-    assert sum((readDataFromExcel, streamData, E4StreamingIndicator, trainModel)) == 1, "Only one protocol can be be executed."
+    assert sum((readDataFromExcel, streamData, trainModel)) == 1, "Only one protocol can be be executed."
 
     # Define helper classes.
     saveInputs = saveDataProtocols.saveExcelData()
@@ -131,7 +129,6 @@ if __name__ == "__main__":
         print(f"Compiled features length: {len(allCompiledFeatureIntervals[0][0])}")
         print(f"Expected feature names length: {len(featureNames)}")
 
-        #assert len(allCompiledFeatureIntervals[0][0]) == len(featureNames), "Incorrect number of compiled features extracted"
         for analysisInd in range(len(allRawFeatureHolders[0])):
             assert len(allRawFeatureHolders[0][analysisInd][0]) == len(biomarkerFeatureNames[analysisInd]), "Incorrect number of raw features extracted"
         print("\nFinished Feature Extraction")

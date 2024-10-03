@@ -2,6 +2,8 @@ import socket
 import threading
 import time
 
+from pexpect import TIMEOUT
+
 from helperFiles.dataAcquisitionAndAnalysis.empaticaInterface import empaticaInterface
 
 
@@ -33,20 +35,22 @@ class serverInterface:
             self.mainDevice.deviceSpecificConnection(serverSocket)
             while self.mainDevice.closeServer: time.sleep(1)
             self.mainDevice.startStreamingData(serverSocket)
+            serverSocket.settimeout(3)
 
             while True:
                 try:
                     print(3)
                     # Receive the message
-                    responseMessage = serverSocket.recv(self.mainDevice.buffer_size).decode("utf-8")
+                    responseMessage = serverSocket.recvfrom(4096)
+                    print(2, responseMessage)
+
                     if not responseMessage: continue  # Keep the connection alive if no message is received
-                    print(responseMessage)
 
                     # Process the message (modify as needed for your use case)
                     connectionLost = self.mainDevice.process_message(responseMessage)
                     if connectionLost or self.mainDevice.closeServer: break
-                except ConnectionResetError:
-                    break
+                except TIMEOUT as e:
+                    print("Timeout occurred:", e)
 
                 # Should never occur.
                 except Exception as e:
@@ -56,6 +60,7 @@ class serverInterface:
 if __name__ == "__main__":
     # Specify the device and the streaming order.
     streamingOrderTEMP = ["acc", "bvp", "eda", "temp"]
+    streamingOrderTEMP = ["temp"]
     serverClass = serverInterface(streamingOrderTEMP, analysisProtocols=(), deviceType='empatica')
     serverClass.mainDevice.closeServer = False
     serverClass.startServer()
