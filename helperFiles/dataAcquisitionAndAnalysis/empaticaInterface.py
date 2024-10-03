@@ -12,7 +12,6 @@ class empaticaInterface:
         self.streamingOrder = streamingOrder
         self.device_id = device_id
         self.firstTimePoint = None
-        self.serverSocket = None
         self.endServer = False
 
         # Hard-coded universal empatica parameters.
@@ -20,42 +19,41 @@ class empaticaInterface:
         self.communication_port = 28000  
         self.buffer_size = 4096
 
-    def deviceSpecificConnection(self):
+    def deviceSpecificConnection(self, serverSocket):
         # Connect to the device.
-        self.serverSocket.send(("device_connect " + self.device_id + "\r\n").encode())
-        response = self.serverSocket.recv(self.buffer_size)
-        print("Connecting to device", response.decode("utf-8"))
+        serverSocket.send(("device_connect " + self.device_id + "\r\n").encode())
+        response = serverSocket.recv(self.buffer_size)
+        print("\t", "Connecting to device", response.decode("utf-8").replace("\n", ""))
 
-        print("Pausing data receiving")
-        self.serverSocket.send("pause ON\r\n".encode())
-        response = self.serverSocket.recv(self.buffer_size)
-        print(response.decode("utf-8"))
+        serverSocket.send("pause ON\r\n".encode())
+        response = serverSocket.recv(self.buffer_size)
+        print("\t", response.decode("utf-8").replace("\n", ""))
         time.sleep(1)  # Stabilize connection
 
         if "acc" in self.streamingOrder:
-            self.serverSocket.send("device_subscribe acc ON\r\n".encode())
-            response = self.serverSocket.recv(self.buffer_size)
-            print(response.decode("utf-8"))
+            serverSocket.send("device_subscribe acc ON\r\n".encode())
+            response = serverSocket.recv(self.buffer_size)
+            print("\t", response.decode("utf-8").replace("\n", ""))
 
         if "bvp" in self.streamingOrder:
-            self.serverSocket.send("device_subscribe bvp ON\r\n".encode())
-            response = self.serverSocket.recv(self.buffer_size)
-            print(response.decode("utf-8"))
+            serverSocket.send("device_subscribe bvp ON\r\n".encode())
+            response = serverSocket.recv(self.buffer_size)
+            print("\t", response.decode("utf-8").replace("\n", ""))
 
         if "eda" in self.streamingOrder:
-            self.serverSocket.send("device_subscribe gsr ON\r\n".encode())
-            response = self.serverSocket.recv(self.buffer_size)
-            print(response.decode("utf-8"))
+            serverSocket.send("device_subscribe gsr ON\r\n".encode())
+            response = serverSocket.recv(self.buffer_size)
+            print("\t", response.decode("utf-8").replace("\n", ""))
 
         if "temp" in self.streamingOrder:
-            self.serverSocket.send("device_subscribe tmp ON\r\n".encode())
-            response = self.serverSocket.recv(self.buffer_size)
-            print(response.decode("utf-8"))
+            serverSocket.send("device_subscribe tmp ON\r\n".encode())
+            response = serverSocket.recv(self.buffer_size)
+            print("\t", response.decode("utf-8").replace("\n", ""))
 
-        print("Resuming data receiving")
-        self.serverSocket.send("pause OFF\r\n".encode())
-        response = self.serverSocket.recv(self.buffer_size)
-        print(response.decode("utf-8"))
+        print("\t", "Resuming data receiving")
+        serverSocket.send("pause OFF\r\n".encode())
+        response = serverSocket.recv(self.buffer_size)
+        print("\t", response.decode("utf-8").replace("\n", ""))
 
     def process_message(self, receivedMessage):
         # Check if the connection is still valid.
@@ -71,7 +69,7 @@ class empaticaInterface:
 
             # Skip non-numeric values.
             try: timestamp = float(sample_data[1])
-            except ValueError: print(f"Invalid time: {sample_data[1]}"); continue
+            except ValueError: print("\t", f"Invalid time: {sample_data[1]}"); continue
 
             # Initialize start time on first sample
             if self.firstTimePoint is None: self.firstTimePoint = timestamp
@@ -102,9 +100,6 @@ class empaticaInterface:
             # Add the Data to the Correct Channel
             analysis.channelData[channelIndex].append(newData)
 
-
     def close(self):
-        self.serverSocket.send("pause ON\r\n".encode())
-        response = self.serverSocket.recv(self.buffer_size)
-        print(response.decode("utf-8"))
-        self.serverSocket.close()
+        self.endServer = True
+        

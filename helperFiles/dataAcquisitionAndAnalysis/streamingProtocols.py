@@ -31,9 +31,10 @@ class streamingProtocols(streamingProtocolHelpers):
     def setupDeviceStream(self, stopTimeStreaming, usingTimestamps=False):
         # self.deviceReader.resetArduino(self.mainDevice, 10)
         # Read and throw out the first few reads
-        rawReadsList = []
-        while int(self.mainDevice.in_waiting) > 0 or len(rawReadsList) < 2000:
-            rawReadsList.append(self.deviceReader.readline(ser=self.mainDevice))
+        if self.deviceType == "serial":
+            rawReadsList = []
+            while int(self.mainDevice.in_waiting) > 0 or len(rawReadsList) < 2000:
+                rawReadsList.append(self.deviceReader.readline(ser=self.mainDevice))
 
         if usingTimestamps:
             # Calculate the Stop Time
@@ -51,7 +52,7 @@ class streamingProtocols(streamingProtocolHelpers):
 
     def streamWearableData(self, adcResolution, stopTimeStreaming, filePath):
         """Stop Streaming When we Obtain `stopTimeStreaming` from Arduino"""
-        print("Streaming in Data from the Arduino")
+        print("Beginning to stream in data!")
         # Reset Global Variable in Case it Was Previously Populated
         self.resetGlobalVariables()
 
@@ -59,7 +60,7 @@ class streamingProtocols(streamingProtocolHelpers):
         self.setUserName(filePath)
 
         # Prepare the arduino to stream in data
-        self.stopTimeStreaming = self.setupDeviceStream(stopTimeStreaming)
+        self.stopTimeStreaming = self.setupDeviceStream(stopTimeStreaming, usingTimestamps=False)
         timePoints = self.analysisList[0].timePoints
         streamingDataFinger = 0
 

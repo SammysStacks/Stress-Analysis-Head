@@ -15,7 +15,6 @@ from helperFiles.dataAcquisitionAndAnalysis.excelProcessing import extractDataPr
 from helperFiles.machineLearning.modelControl.modelSpecifications.compileModelInfo import compileModelInfo  # Import files for machine learning
 from helperFiles.surveyInformation.questionaireGUI import stressQuestionnaireGUI  # Import file for GUI control
 from helperFiles.dataAcquisitionAndAnalysis import streamingProtocols  # Import interfaces for reading/writing data
-from helperFiles.dataAcquisitionAndAnalysis import E4StreamingProtocols  # Import interfaces for reading/writing data from E4 wristband
 from helperFiles.machineLearning import trainingProtocols  # Import interfaces for reading/writing data
 from adjustInputParameters import adjustInputParameters  # Import the class to adjust the input parameters
 

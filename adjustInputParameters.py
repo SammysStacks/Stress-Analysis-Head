@@ -52,7 +52,6 @@ class adjustInputParameters:
         # Assert that you are using this protocol.
         if not self.streamData:
             return None, voltageRange, adcResolution, None, None
-        print("\tSetting streaming parameters.")
 
         # Streaming flags.
         recordQuestionnaire = not self.plotStreamedData  # Only use one GUI: questionnaire or streaming
@@ -88,7 +87,6 @@ class adjustInputParameters:
         # Assert that you are using this protocol.
         if not self.readDataFromExcel:
             return False, None
-        print("\tSetting reading parameters.")
 
         # Specify the Excel Parameters.
         saveRawFeatures = False  # Save the Raw Features to an Excel File
@@ -100,8 +98,6 @@ class adjustInputParameters:
         # Train or test the machine learning modules
         if not self.useModelPredictions:
             return None, [], None, None, None
-
-        print("\tSetting model parameters.")
 
         # Specify the Machine Learning Parameters
         plotTrainingData = True  # Plot all training information
@@ -125,7 +121,6 @@ class adjustInputParameters:
         # Train or test the machine learning modules
         if not self.useModelPredictions:
             return None, None, None
-        print("\tSetting model parameters.")
 
         # Specify the MTG-Jamendo dataset path
         soundInfoFile = 'raw_30s_cleantags_50artists.tsv'

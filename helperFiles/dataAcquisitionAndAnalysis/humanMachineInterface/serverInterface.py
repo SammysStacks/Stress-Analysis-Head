@@ -25,8 +25,7 @@ class serverInterface:
 
             # Listen for incoming connections with a backlog of 100
             print(f"\nServer listening on port {self.mainDevice.communication_port}...")
-            self.mainDevice.deviceSpecificConnection()
-            serverSocket.listen(100)
+            self.mainDevice.deviceSpecificConnection(serverSocket)
 
             while True:
                 try:
