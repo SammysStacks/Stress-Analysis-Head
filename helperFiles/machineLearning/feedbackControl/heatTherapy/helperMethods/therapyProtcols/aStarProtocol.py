@@ -45,7 +45,7 @@ class aStarTherapyProtocol(generalTherapyProtocol):
         personalizedMap = self.getUpdatedPersonalizedMap()  # Convert the discrete map to a probability distribution.
 
         # Get the current time point.
-        timePoint = self.timePoints[-1]
+        timePoint = self.timepoints[-1]
 
         # Combine the heuristic and personalized maps and update the weighting.
         probabilityMap = self.percentHeuristic * self.heuristicMap + (1 - self.percentHeuristic) * personalizedMap
@@ -135,20 +135,20 @@ class aStarTherapyProtocol(generalTherapyProtocol):
     def getUpdatedPersonalizedMap(self):
         # Assert the integrity of the state tracking.
         # print(f"Length of parameterPath: {len(self.paramStatePath)}")
-        # print(f'Length of TimePoints: {len(self.timePoints)}')
+        # print(f'Length of TimePoints: {len(self.timepoints)}')
         # print('self.ParamStatePath: ', self.paramStatePath)
         # print(f'Content of ParameterPath: {self.paramStatePath}')
-        # print(f'Content of TimePoints: {self.timePoints}')
+        # print(f'Content of TimePoints: {self.timepoints}')
         # print(f"Length of discretePersonalizedMap: {len(self.discretePersonalizedMap)}")
         # print(f"Content of discretePersonalizedMap: {self.discretePersonalizedMap}")
-        # print(f"Type of three parameters for comparison: {type(self.paramStatePath)}, {type(self.timePoints)}, {type(self.discretePersonalizedMap)}")
-        assert len(self.paramStatePath) == len(self.timePoints) == len(self.discretePersonalizedMap), \
-            f"The time delays and discrete maps are not the same length. {len(self.paramStatePath)} {len(self.timePoints)} {len(self.discretePersonalizedMap)}"
+        # print(f"Type of three parameters for comparison: {type(self.paramStatePath)}, {type(self.timepoints)}, {type(self.discretePersonalizedMap)}")
+        assert len(self.paramStatePath) == len(self.timepoints) == len(self.discretePersonalizedMap), \
+            f"The time delays and discrete maps are not the same length. {len(self.paramStatePath)} {len(self.timepoints)} {len(self.discretePersonalizedMap)}"
 
         # Unpack the temperature-timepoints relation.
         associatedParamInd = []
         associatedParams = np.asarray(self.paramStatePath).flatten()
-        associatedTimePoints = np.asarray(self.timePoints)
+        associatedTimePoints = np.asarray(self.timepoints)
         for i in range(len(associatedTimePoints)):
             associatedParamInd.append(self.dataInterface.getBinIndex(self.allParameterBins_resampled, associatedParams[i]))
 
@@ -186,7 +186,7 @@ class aStarTherapyProtocol(generalTherapyProtocol):
 
         # Store the initial personalized map estimate.
         # self.discretePersonalizedMap.append(uniformMap)
-        # self.timePoints.append((0, ))
+        # self.timepoints.append((0, ))
 
     # ------------------------ Heuristic Interface ------------------------ #
 

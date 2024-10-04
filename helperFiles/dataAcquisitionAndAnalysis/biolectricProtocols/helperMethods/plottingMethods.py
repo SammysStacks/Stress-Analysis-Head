@@ -1,8 +1,7 @@
 
-# -------------------------------------------------------------------------- #
 # --------------------------- Global Model Class --------------------------- #
 
-class plottingMethods():
+class plottingMethods:
     
     def __init__(self, analysisType, numChannels, plottingClass):
         # General input parameters
@@ -29,6 +28,10 @@ class plottingMethods():
         elif self.analysisType =="general_lf":
             self.initPlotPeaks_General_LF(axes)
         elif self.analysisType =="general_hf":
+            self.initPlotPeaks_General_HF(axes)
+        elif self.analysisType =="bvp":
+            self.initPlotPeaks_General_LF(axes)
+        elif self.analysisType =="acc":
             self.initPlotPeaks_General_HF(axes)
         else:
             assert False, f"No Plotting Availible for {self.analysisType}"

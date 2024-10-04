@@ -73,7 +73,7 @@ class generalTherapyProtocol(abc.ABC):
         # Reset the therapy parameters.
         self.userMentalStatePath = None
         self.paramStatePath = None
-        self.timePoints = None
+        self.timepoints = None
         self.userMentalStateCompiledLoss = None
         self.userName = None
         self.unNormalizedParameter = None
@@ -86,7 +86,7 @@ class generalTherapyProtocol(abc.ABC):
         self.userMentalStatePath = []  # The path of the user's mental state: PA, NA, SA
         self.finishedTherapy = False  # Whether the therapy has finished.
         self.paramStatePath = []  # The path of the therapy parameters: numParameters
-        self.timePoints = [] # The time points for the therapy.
+        self.timepoints = [] # The time points for the therapy.
         self.userMentalStateCompiledLoss = []  # The compiled loss for the user's mental state.
         self.userName = []  # The user's name.
         self.unNormalizedParameter = []
@@ -139,11 +139,11 @@ class generalTherapyProtocol(abc.ABC):
         # timePints: a tensor
         # parameter: tensor of size 1, 1, 1, 1
         # emotionStates: tensor of size 1, 3, 1, 1
-        timePoints, parameters, emotionStates = self.getInitialSate()  # dim: numPoints, timePoint: t; emotionStates: (PA, NA, SA); prediction: predict the next state; Note these are actual state values
+        timepoints, parameters, emotionStates = self.getInitialSate()  # dim: numPoints, timePoint: t; emotionStates: (PA, NA, SA); prediction: predict the next state; Note these are actual state values
         # Track the user state and time delay.
-        startTimePoint = timePoints
+        startTimePoint = timepoints
 
-        self.timePoints.append(startTimePoint) # timePoints: list of tensor: [tensor(0)]
+        self.timepoints.append(startTimePoint) # timepoints: list of tensor: [tensor(0)]
         self.paramStatePath.append(parameters) # self.paramStatePath: list of tensor: [torch.Size([1, 1, 1, 1])
         self.userMentalStatePath.append(emotionStates) # emotionstates: list of tensor: torch.Size([1, 3, 1, 1])
         # Calculate the initial user loss.
@@ -177,7 +177,7 @@ class generalTherapyProtocol(abc.ABC):
     def getNextState(self, newParamValues, therapyMethod):
         if self.simulateTherapy:
             # Simulate a new time.
-            lastTimePoint = self.timePoints[-1] if len(self.timePoints) != 0 else 0
+            lastTimePoint = self.timepoints[-1] if len(self.timepoints) != 0 else 0
             # convert tensor to int
             lastTimePoint = int(lastTimePoint)
             newTimePoint = self.simulationProtocols.getSimulatedTimes(self.simulationProtocols.initialPoints, lastTimePoint)
@@ -197,7 +197,7 @@ class generalTherapyProtocol(abc.ABC):
             print('param_state_unbound', param_state_unbound)
             # User state update
 
-            self.timePoints.append(newTimePoint)
+            self.timepoints.append(newTimePoint)
             self.paramStatePath.append(newParamValues)
             self.userMentalStatePath.append(combinedMentalState)
             self.userMentalStateCompiledLoss.append(newUserLoss)
@@ -205,7 +205,7 @@ class generalTherapyProtocol(abc.ABC):
         else:
             # TODO !!! eventually, this will be the real-time user state update during experiment
             # Simulate a new time.
-            lastTimePoint = self.timePoints[-1] if len(self.timePoints) != 0 else 0
+            lastTimePoint = self.timepoints[-1] if len(self.timepoints) != 0 else 0
             # convert tensor to int
             lastTimePoint = int(lastTimePoint)
             newTimePoint = self.simulationProtocols.getSimulatedTimes(self.simulationProtocols.initialPoints, lastTimePoint)
@@ -225,7 +225,7 @@ class generalTherapyProtocol(abc.ABC):
             print('param_state_unbound', param_state_unbound)
             # User state update
 
-            self.timePoints.append(newTimePoint)
+            self.timepoints.append(newTimePoint)
             self.paramStatePath.append(newParamValues)
             self.userMentalStatePath.append(combinedMentalState)
             self.userMentalStateCompiledLoss.append(newUserLoss)

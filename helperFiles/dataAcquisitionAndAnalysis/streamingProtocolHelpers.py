@@ -68,6 +68,7 @@ class streamingProtocolHelpers(featureOrganization):
         assert np.sum(self.numChannelDist) == self.numStreamedSignals, f"The number of channels per biomarker ({self.numChannelDist}) does not align with the streaming order ({self.streamingOrder})"
 
         # Initialize global plotting class.
+        print(self.plotStreamedData)
         self.plottingClass = plottingProtocols(self.numStreamedSignals, self.channelDist, self.analysisOrder) if self.plotStreamedData else None
         self.analysisProtocols = {
             'highfreq': generalProtocol_highFreq(self.numPointsPerBatch, self.moveDataFinger, self.channelDist['highfreq'], self.plottingClass, self) if 'highfreq' in self.analysisOrder else None,
@@ -149,8 +150,8 @@ class streamingProtocolHelpers(featureOrganization):
     def recordData(self, maxVolt=3.3, adcResolution=4096):
         assert self.deviceType == "serial", f"Recording data is only supported for serial devices, not {self.deviceType}."
 
-        # Read in at least one point
         rawReadsList = []
+        # Read in at least one point
         while int(self.mainDevice.in_waiting) > 0 or len(rawReadsList) == 0:
             rawReadsList.append(self.deviceReader.readline(ser=self.mainDevice))
 
@@ -159,13 +160,10 @@ class streamingProtocolHelpers(featureOrganization):
         self.organizeData(timepoints, datapoints)  # Organize the data for further processing
 
     def organizeData(self, timepoints, datapoints):
-        if len(timepoints) == 0:
-            print("\tNO NEW timepoints ADDED")
+        if len(timepoints) == 0: print("\tNO NEW timepoints ADDED")
 
-        if not isinstance(datapoints, list):
-            datapoints = list(datapoints)
-        if not isinstance(timepoints, list):
-            timepoints = list(timepoints)
+        if not isinstance(datapoints, list): datapoints = list(datapoints)
+        if not isinstance(timepoints, list): timepoints = list(timepoints)
 
         # Update the data (if present) for each sensor
         for analysisInd in range(len(self.analysisOrder)):

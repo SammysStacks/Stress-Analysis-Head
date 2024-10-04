@@ -54,14 +54,14 @@ class eegProtocol(globalProtocol):
             # Find the starting/ending points of the data to analyze
             startFilterPointer = max(dataFinger - self.dataPointBuffer, 0)
             dataBuffer = np.asarray(self.channelData[channelIndex][startFilterPointer:dataFinger + self.numPointsPerBatch])
-            timePoints = np.asarray(self.timePoints[startFilterPointer:dataFinger + self.numPointsPerBatch])
+            timepoints = np.asarray(self.timepoints[startFilterPointer:dataFinger + self.numPointsPerBatch])
 
             # Get the Sampling Frequency from the First Batch (If Not Given)
             if not self.samplingFreq:
                 self.setSamplingFrequency(startFilterPointer)
 
             # Filter the data and remove bad indices
-            filteredTime, filteredData, goodIndicesMask = self.filterData(timePoints, dataBuffer, removePoints=True)
+            filteredTime, filteredData, goodIndicesMask = self.filterData(timepoints, dataBuffer, removePoints=True)
 
             # ---------------------- Feature Extraction --------------------- #
 
@@ -70,8 +70,8 @@ class eegProtocol(globalProtocol):
                 newFeatureTimes, newRawFeatures = [], []
 
                 # Extract features across the dataset
-                while self.lastAnalyzedDataInd[channelIndex] < len(self.timePoints):
-                    featureTime = self.timePoints[self.lastAnalyzedDataInd[channelIndex]]
+                while self.lastAnalyzedDataInd[channelIndex] < len(self.timepoints):
+                    featureTime = self.timepoints[self.lastAnalyzedDataInd[channelIndex]]
 
                     # Find the start window pointer.
                     self.startFeatureTimePointer[channelIndex] = self.findStartFeatureWindow(self.startFeatureTimePointer[channelIndex], featureTime, self.featureTimeWindow)
@@ -97,18 +97,18 @@ class eegProtocol(globalProtocol):
 
             if self.plotStreamedData:
                 # Format the raw data:.
-                timePoints = timePoints[dataFinger - startFilterPointer:]  # Shared axis for all signals
+                timepoints = timepoints[dataFinger - startFilterPointer:]  # Shared axis for all signals
                 rawData = dataBuffer[dataFinger - startFilterPointer:]
                 # Format the filtered data
                 filterOffset = (goodIndicesMask[0:dataFinger - startFilterPointer]).sum(axis=0, dtype=int)
 
                 # Plot Raw Bioelectric Data (Slide Window as Points Stream in)
-                self.plottingMethods.bioelectricDataPlots[channelIndex].set_data(timePoints, rawData)
-                self.plottingMethods.bioelectricPlotAxes[channelIndex].set_xlim(timePoints[0], timePoints[-1])
+                self.plottingMethods.bioelectricDataPlots[channelIndex].set_data(timepoints, rawData)
+                self.plottingMethods.bioelectricPlotAxes[channelIndex].set_xlim(timepoints[0], timepoints[-1])
 
                 # Plot the Filtered + Digitized Data
                 self.plottingMethods.filteredBioelectricDataPlots[channelIndex].set_data(filteredTime[filterOffset:], filteredData[filterOffset:])
-                self.plottingMethods.filteredBioelectricPlotAxes[channelIndex].set_xlim(timePoints[0], timePoints[-1])
+                self.plottingMethods.filteredBioelectricPlotAxes[channelIndex].set_xlim(timepoints[0], timepoints[-1])
 
                 # Plot a single feature.
                 if len(self.compiledFeatures[channelIndex]) != 0:
@@ -117,7 +117,7 @@ class eegProtocol(globalProtocol):
 
             # -------------------------------------------------------------- #   
 
-    def filterData(self, timePoints, data, removePoints=False):
+    def filterData(self, timepoints, data, removePoints=False):
         # Find the bad points associated with motion artifacts
         if removePoints and self.cutOffFreq[0] is not None:
             motionIndices = np.logical_or(data < 0.1, data > 3.15)
@@ -130,14 +130,14 @@ class eegProtocol(globalProtocol):
         filteredData = self.filteringMethods.bandPassFilter.butterFilter(data, self.cutOffFreq[1], self.samplingFreq, order=3, filterType='low', fastFilt=True)
         filteredData = self.filteringMethods.bandPassFilter.high_pass_filter(filteredData, self.samplingFreq, self.cutOffFreq[0], self.stopband_edge, self.passband_ripple, self.stopband_attenuation, fastFilt=True)
         # Remove the bad points from the filtered data
-        filteredTime = timePoints[goodIndicesMask]
+        filteredTime = timepoints[goodIndicesMask]
         filteredData = filteredData[goodIndicesMask]
 
         return filteredTime, filteredData, goodIndicesMask
 
     def findStartFeatureWindow(self, timePointer, currentTime, timeWindow):
         # Loop through until you find the first time in the window 
-        while self.timePoints[timePointer] < currentTime - timeWindow:
+        while self.timepoints[timePointer] < currentTime - timeWindow:
             timePointer += 1
 
         return timePointer
@@ -163,7 +163,7 @@ class eegProtocol(globalProtocol):
 
     # --------------------- Feature Extraction Methods --------------------- #
 
-    def extractFeatures(self, timePoints, data):
+    def extractFeatures(self, timepoints, data):
 
         # ----------------------- Data Preprocessing ----------------------- #
 
@@ -181,7 +181,7 @@ class eegProtocol(globalProtocol):
 
         # Calculate the hjorth parameters
         hjorthActivity, hjorthMobility, hjorthComplexity, firstDerivVariance, secondDerivVariance \
-            = self.universalMethods.hjorthParameters(timePoints, data, firstDeriv=None, secondDeriv=None, standardized_data=standardized_data)
+            = self.universalMethods.hjorthParameters(timepoints, data, firstDeriv=None, secondDeriv=None, standardized_data=standardized_data)
 
         # Calculate the hjorth parameters
         hjorthActivityPSD, hjorthMobilityPSD, hjorthComplexityPSD, firstDerivVariancePSD, secondDerivVariancePSD \

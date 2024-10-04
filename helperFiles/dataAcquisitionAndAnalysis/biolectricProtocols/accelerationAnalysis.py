@@ -48,14 +48,14 @@ class accelerationProtocol(globalProtocol):
             # Find the starting/ending points of the data to analyze
             startFilterPointer = max(dataFinger - self.dataPointBuffer, 0)
             dataBuffer = np.asarray(self.channelData[channelIndex][startFilterPointer:dataFinger + self.numPointsPerBatch])
-            timePoints = np.asarray(self.timePoints[startFilterPointer:dataFinger + self.numPointsPerBatch])
+            timepoints = np.asarray(self.timepoints[startFilterPointer:dataFinger + self.numPointsPerBatch])
 
             # Get the Sampling Frequency from the First Batch (If Not Given)
             if not self.samplingFreq:
                 self.setSamplingFrequency(startFilterPointer)
 
             # Filter the data and remove bad indices
-            filteredTime, filteredData, goodIndicesMask = self.filterData(timePoints, dataBuffer, removePoints=False)
+            filteredTime, filteredData, goodIndicesMask = self.filterData(timepoints, dataBuffer, removePoints=False)
 
             # ---------------------- Feature Extraction --------------------- #
 
@@ -64,8 +64,8 @@ class accelerationProtocol(globalProtocol):
                 newFeatureTimes, newRawFeatures = [], []
 
                 # Extract features across the dataset
-                while self.lastAnalyzedDataInd[channelIndex] < len(self.timePoints):
-                    featureTime = self.timePoints[self.lastAnalyzedDataInd[channelIndex]]
+                while self.lastAnalyzedDataInd[channelIndex] < len(self.timepoints):
+                    featureTime = self.timepoints[self.lastAnalyzedDataInd[channelIndex]]
 
                     # Find the start window pointer.
                     self.startFeatureTimePointer[channelIndex] = self.findStartFeatureWindow(self.startFeatureTimePointer[channelIndex], featureTime, self.featureTimeWindow)
@@ -89,16 +89,16 @@ class accelerationProtocol(globalProtocol):
 
             # -------------------------------------------------------------- #
 
-    def filterData(self, timePoints, data, removePoints=False):
+    def filterData(self, timepoints, data, removePoints=False):
         # Filter the Data: Low pass Filter and Savgol Filter
         filteredData = self.filteringMethods.bandPassFilter.butterFilter(data, self.cutOffFreq, self.samplingFreq, order=3, filterType='low', fastFilt=True)
-        filteredTime = timePoints.copy()
+        filteredTime = timepoints.copy()
 
         return filteredTime, filteredData, np.ones(len(filteredTime))
 
     def findStartFeatureWindow(self, timePointer, currentTime, timeWindow):
         # Loop through until you find the first time in the window
-        while self.timePoints[timePointer] < currentTime - timeWindow:
+        while self.timepoints[timePointer] < currentTime - timeWindow:
             timePointer += 1
 
         return timePointer
@@ -142,7 +142,7 @@ class accelerationProtocol(globalProtocol):
         flux = np.sqrt(np.mean(np.diff(Pxx) ** 2))
         return flux
 
-    def extractFeatures(self, timePoints, data):
+    def extractFeatures(self, timepoints, data):
         # ----------------------- Data Preprocessing ----------------------- #
         # Normalize the data
         standardized_data = self.universalMethods.standardizeData(data)

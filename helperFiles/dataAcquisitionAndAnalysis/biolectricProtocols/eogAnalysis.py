@@ -105,7 +105,7 @@ class eogProtocol(globalProtocol):
             # Find the starting/ending points of the data to analyze.
             startFilterPointer = max(dataFinger - self.dataPointBuffer, 0)
             dataBuffer = np.asarray(self.channelData[channelIndex][startFilterPointer:dataFinger + self.numPointsPerBatch])
-            timePoints = np.asarray(self.timePoints[startFilterPointer:dataFinger + self.numPointsPerBatch])
+            timepoints = np.asarray(self.timepoints[startFilterPointer:dataFinger + self.numPointsPerBatch])
 
             # Assert that the data is within the expected voltage range.
             assert np.max(dataBuffer) <= self.voltageRange[1] + 0.1 and self.voltageRange[0] - 0.1 <= np.min(dataBuffer), f"Data is not within the expected voltage range: {np.max(dataBuffer)} {np.min(dataBuffer)}"
@@ -115,7 +115,7 @@ class eogProtocol(globalProtocol):
                 self.setSamplingFrequency(startFilterPointer)
 
             # Filter the data and remove bad indices.
-            filteredTime, filteredData, goodIndicesMask = self.filterData(timePoints, dataBuffer, removePoints=True)
+            filteredTime, filteredData, goodIndicesMask = self.filterData(timepoints, dataBuffer, removePoints=True)
             # --------------------------------------------------------------- #
 
             # ------------------- Extract Blink Features  ------------------- #
@@ -166,23 +166,23 @@ class eogProtocol(globalProtocol):
             # ------------------- Plot Biolectric Signals ------------------- #
             if self.plotStreamedData and not calibrateModel:
                 # Format the raw data:.
-                timePoints = timePoints[dataFinger - startFilterPointer:]  # Shared axis for all signals
+                timepoints = timepoints[dataFinger - startFilterPointer:]  # Shared axis for all signals
                 rawData = dataBuffer[dataFinger - startFilterPointer:]
                 # Format the filtered data
                 filterOffset = (goodIndicesMask[0:dataFinger - startFilterPointer]).sum(axis=0, dtype=int)
 
                 # Plot Raw Bioelectric Data (Slide Window as Points Stream in)
-                self.plottingMethods.bioelectricDataPlots[channelIndex].set_data(timePoints, rawData)
-                self.plottingMethods.bioelectricPlotAxes[channelIndex].set_xlim(timePoints[0], timePoints[-1])
+                self.plottingMethods.bioelectricDataPlots[channelIndex].set_data(timepoints, rawData)
+                self.plottingMethods.bioelectricPlotAxes[channelIndex].set_xlim(timepoints[0], timepoints[-1])
 
                 # Keep Track of Recently Digitized Data
                 # for voltageInd in range(len(channelVoltages)):
                 #     self.trailingAverageData[channelIndex].extend([channelVoltages[voltageInd]]*self.predictEyeAngleGap)
                 # self.trailingAverageData[channelIndex] = self.trailingAverageData[channelIndex][len(channelVoltages)*self.predictEyeAngleGap:]
-                # self.plottingMethods.trailingAveragePlots[channelIndex].set_data(filteredTime, self.trailingAverageData[channelIndex][-len(timePoints):])
+                # self.plottingMethods.trailingAveragePlots[channelIndex].set_data(filteredTime, self.trailingAverageData[channelIndex][-len(timepoints):])
                 # Plot the Filtered + Digitized Data
                 self.plottingMethods.filteredBioelectricDataPlots[channelIndex].set_data(filteredTime[filterOffset:], filteredData[filterOffset:])
-                self.plottingMethods.filteredBioelectricPlotAxes[channelIndex].set_xlim(timePoints[0], timePoints[-1])
+                self.plottingMethods.filteredBioelectricPlotAxes[channelIndex].set_xlim(timepoints[0], timepoints[-1])
                 # Plot the Eye's Angle if Electrodes are Calibrated
                 # if self.predictEyeAngle[channelIndex]:
                 #     self.plottingMethods.filteredBioelectricPlotAxes[channelIndex].legend(["Eye's Angle: " + "%.3g"%eyeAngle, "Current State: " + self.currentState], loc="upper left")
@@ -204,7 +204,7 @@ class eogProtocol(globalProtocol):
 
         # ------------------------------------------------------------------- #
 
-    def filterData(self, timePoints, data, removePoints=False):
+    def filterData(self, timepoints, data, removePoints=False):
         if removePoints:
             # Find the bad points associated with motion artifacts
             motionIndices = np.logical_or(data < 0.1, data > 3.18)
@@ -217,7 +217,7 @@ class eogProtocol(globalProtocol):
         filteredData = self.filteringMethods.bandPassFilter.butterFilter(data, self.cutOffFreq[1], self.samplingFreq, order=5, filterType='low')
         filteredData = scipy.signal.savgol_filter(filteredData, max(3, int(self.samplingFreq * 0.05)), 2, mode='nearest', deriv=0)
         # Remove the bad points from the filtered data
-        filteredTime = timePoints[goodIndicesMask]
+        filteredTime = timepoints[goodIndicesMask]
         filteredData = filteredData[goodIndicesMask]
 
         return filteredTime, filteredData, goodIndicesMask
@@ -239,7 +239,7 @@ class eogProtocol(globalProtocol):
             peakTimePoint = xData[peakInd]
 
             # Do not reanalyze a peak (waste of time).
-            if peakTimePoint <= self.timePoints[self.lastAnalyzedDataInd[channelIndex]]: continue
+            if peakTimePoint <= self.timepoints[self.lastAnalyzedDataInd[channelIndex]]: continue
 
             # ------------------ Find the Peak's Baselines ------------------ #
             # Calculate the baseline of the peak.
@@ -336,7 +336,7 @@ class eogProtocol(globalProtocol):
 
     def findStartFeatureWindow(self, timePointer, currentTime, timeWindow):
         # Loop through until you find the first time in the window.
-        while self.timePoints[timePointer] < currentTime - timeWindow:
+        while self.timepoints[timePointer] < currentTime - timeWindow:
             timePointer += 1
 
         return timePointer

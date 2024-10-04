@@ -54,50 +54,42 @@ class empaticaInterface:
 
         # Separate out each sensor reading.
         for sensorReading in receivedMessage.split("\n"):
-            sensorReading = sensorReading.replace(',', '.')
-            sample_data = sensorReading.split()
-            if len(sample_data) < 3: continue
-            stream_type = sample_data[0]
-            data = sample_data[2:]
+            sensorData = sensorReading.split(" ")
+            if 'pause' in sensorData: continue
+            if len(sensorData) < 3: continue
 
-            # Skip non-numeric values.
-            try:
-                timestamp = float(sample_data[1])
-            except ValueError:
-                print("\t", f"Invalid time: {sample_data[1]}"); continue
+            # Separate out the data.
+            rawTimeSeconds = float(sensorData[1])
+            sensorType = sensorData[0]
+            dataChannels = sensorData[2:]
 
             # Initialize start time on first sample
-            if self.firstTimePoint is None: self.firstTimePoint = timestamp
-            normalized_timestamp = timestamp - self.firstTimePoint
+            if self.firstTimePoint is None: self.firstTimePoint = rawTimeSeconds
+            normalized_timestamp = rawTimeSeconds - self.firstTimePoint
 
-            match stream_type:
-                case "E4_Acc":
-                    analysis = self.analysisProtocols['acc']
-                case "E4_Bvp":
-                    analysis = self.analysisProtocols['bvp']
-                case "E4_Gsr":
-                    analysis = self.analysisProtocols['eda']
-                case "E4_Temperature":
-                    analysis = self.analysisProtocols['temp']
-                case _:
-                    raise ValueError(f"Unknown stream type: {stream_type}")
+            match sensorType:
+                case "E4_Acc": analysis = self.analysisProtocols['acc']
+                case "E4_Bvp": analysis = self.analysisProtocols['bvp']
+                case "E4_Gsr": analysis = self.analysisProtocols['eda']
+                case "E4_Temperature": analysis = self.analysisProtocols['temp']
+                case _: raise ValueError(f"Unknown stream type: {sensorType}")
 
             # Organize the data.
-            self.organizeData(analysis=analysis, timepoint=normalized_timestamp, datapoint=data)
+            self.organizeData(analysis=analysis, timepoint=normalized_timestamp, datapoint=dataChannels)
         return False
 
     @staticmethod
     def organizeData(analysis, timepoint, datapoint):
         # Update the timepoints.
-        analysis.timepoints.append(timepoint)
+        analysis.timepoints.append(float(timepoint))
 
         # For each channel, update the voltage data.
         for channelIndex in range(analysis.numChannels):
-            # Compile the datapoints for each of the sensor's channels.
-            streamingDataIndex = analysis.streamingChannelInds[channelIndex]
-            newData = datapoint[streamingDataIndex]
+            # Extract the data and correct any units.
+            newData = float(datapoint[channelIndex])
+            if analysis.analysisType == 'eda': newData = newData * 1E-6
 
-            # Add the Data to the Correct Channel
+            # Add the data to the correct channel
             analysis.channelData[channelIndex].append(newData)
 
     def close(self):

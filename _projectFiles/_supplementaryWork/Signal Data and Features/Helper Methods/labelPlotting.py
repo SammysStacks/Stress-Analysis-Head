@@ -567,9 +567,9 @@ class plotData:
             
         return yData, activityGroups
                 
-    def findTimeIndex(self, timePoint, timePoints):
-        timePoints = np.asarray(timePoints)
-        return (abs(timePoints - timePoint)).argmin()
+    def findTimeIndex(self, timePoint, timepoints):
+        timepoints = np.asarray(timepoints)
+        return (abs(timepoints - timePoint)).argmin()
         
         
         

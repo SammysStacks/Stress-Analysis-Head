@@ -58,7 +58,7 @@ class bvpProtocol(globalProtocol):
         """ Create contract for child class method """
         raise NotImplementedError("Must override in child")
 
-    def filterData(self, timePoints, data):
+    def filterData(self, timepoints, data):
         """ Create contract for child class method """
         raise NotImplementedError("Must override in child")
 

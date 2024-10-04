@@ -195,7 +195,7 @@ class ppgProtocol:
             self.lastAnalyzedPulseInd[channelIndex] = max(self.lastAnalyzedPulseInd[channelIndex], startBPFindex)
             # Cut the Data to Only Analyze New Pulses
             filteredData = np.asarray(filteredData[self.lastAnalyzedPulseInd[channelIndex]-startBPFindex:])
-            timePoints = np.asarray(self.data[0][self.lastAnalyzedPulseInd[channelIndex]:dataFinger + self.numTimePoints])
+            timepoints = np.asarray(self.data[0][self.lastAnalyzedPulseInd[channelIndex]:dataFinger + self.numTimePoints])
             
             # Add a Buffer of Zeros to the Filtered Data
             self.filteredData[channelIndex].extend([0]*(len(self.data[0]) - len(self.filteredData[channelIndex])))
@@ -205,11 +205,11 @@ class ppgProtocol:
             # Calculate Derivatives
             firstDeriv = savgol_filter(filteredData, 7, 2, mode='nearest', deriv=1)
             # Take First Derivative of Smoothened Data
-            systolicPeaks = self.seperatePulses(timePoints, firstDeriv, channelIndex)
+            systolicPeaks = self.seperatePulses(timepoints, firstDeriv, channelIndex)
             
-            # plt.plot(timePoints, max(yDataBuffer) - np.asarray(yDataBuffer)[-len(filteredData):], 'k', linewidth=2)
-            # plt.plot(timePoints, filteredData, 'tab:red', linewidth=1)
-            # plt.plot(timePoints[systolicPeaks], filteredData[systolicPeaks], 'o')
+            # plt.plot(timepoints, max(yDataBuffer) - np.asarray(yDataBuffer)[-len(filteredData):], 'k', linewidth=2)
+            # plt.plot(timepoints, filteredData, 'tab:red', linewidth=1)
+            # plt.plot(timepoints[systolicPeaks], filteredData[systolicPeaks], 'o')
             # plt.show()
             # -------------------------------------------------------------- #
 
@@ -229,20 +229,20 @@ class ppgProtocol:
                     # ------------------- Cull Bad Pulses ------------------ #
                     # Check if the Peak was Double Counted
                     if pulseEndInd == pulseStartInd:
-                        # print("Found the Same Peak", pulseEndInd, pulseStartInd, self.maxPointsPerPulse, timePoints[pulseStartInd])
+                        # print("Found the Same Peak", pulseEndInd, pulseStartInd, self.maxPointsPerPulse, timepoints[pulseStartInd])
                         pulseStartInd = pulseEndInd; continue                    # Check if the Pulse is Too Big: Likely Double Pulse
                     elif pulseEndInd - pulseStartInd > self.maxPointsPerPulse:
-                        # print("Pulse Too Big", pulseEndInd, pulseStartInd, self.maxPointsPerPulse, timePoints[pulseStartInd])
+                        # print("Pulse Too Big", pulseEndInd, pulseStartInd, self.maxPointsPerPulse, timepoints[pulseStartInd])
                         pulseStartInd = pulseEndInd; continue
                     # Check if the Pulse is Too Small; Likely Not an R-Peak
                     elif pulseEndInd - pulseStartInd < self.minPointsPerPulse:
-                        # print("Pulse Too Small", pulseEndInd, pulseStartInd, self.minPointsPerPulse, timePoints[pulseStartInd])
+                        # print("Pulse Too Small", pulseEndInd, pulseStartInd, self.minPointsPerPulse, timepoints[pulseStartInd])
                         pulseStartInd = pulseEndInd; continue
                     # ------------------------------------------------------ #
                                         
                     # ----------------- Pulse Preprocessing ---------------- #
                     # Extract Indivisual Pulse Data
-                    pulseTime = timePoints[pulseStartInd:pulseEndInd+1]
+                    pulseTime = timepoints[pulseStartInd:pulseEndInd+1]
                     pulseData = filteredData[pulseStartInd:pulseEndInd+1]
                     # Filter the Pulse
                     # pulseData = self.filteringMethods.bandPassFilter.butterFilter(pulseData, self.cutOffFreq, self.samplingFreq, order = 3, filterType = 'low')
@@ -274,7 +274,7 @@ class ppgProtocol:
                     # ------------------------------------------------------ #
                     # Reset the Pulse Data Finger
                     pulseStartInd = pulseEndInd
-            elif 5 < timePoints[-1] - self.data[0][self.lastAnalyzedPulseInd[channelIndex]]:
+            elif 5 < timepoints[-1] - self.data[0][self.lastAnalyzedPulseInd[channelIndex]]:
                 self.peakStandard[channelIndex] = self.peakStandard[channelIndex]/1.5
 
             # -------------------------------------------------------------- #
@@ -284,17 +284,17 @@ class ppgProtocol:
             # ------------------- Plot Biolectric Signals ------------------ #
             if plotStreamedData and not calibrateModel:
                 # Compile the Data to Show on the Plot
-                timePoints = self.data[0][dataFinger:dataFinger + self.numTimePoints]
+                timepoints = self.data[0][dataFinger:dataFinger + self.numTimePoints]
                 newYData = np.asarray(self.data[1][channelIndex][dataFinger:dataFinger + self.numTimePoints])
-                newFilteredData = np.asarray(self.filteredData[channelIndex][-len(timePoints):])
+                newFilteredData = np.asarray(self.filteredData[channelIndex][-len(timepoints):])
 
                 # Plot Raw Bioelectric Data (Slide Window as Points Stream in)
-                self.bioelectricDataPlots[channelIndex].set_data(timePoints, (newYData - min(newYData))/((max(newYData) - min(newYData))))
-                self.bioelectricPlotAxes[channelIndex].set_xlim(timePoints[0], timePoints[-1])
+                self.bioelectricDataPlots[channelIndex].set_data(timepoints, (newYData - min(newYData))/((max(newYData) - min(newYData))))
+                self.bioelectricPlotAxes[channelIndex].set_xlim(timepoints[0], timepoints[-1])
                             
                 # Plot the Good Filtered Pulses
-                self.filteredBioelectricDataPlots[channelIndex].set_data(timePoints, newFilteredData/max(newFilteredData))
-                self.filteredBioelectricPlotAxes[channelIndex].set_xlim(timePoints[0], timePoints[-1]) 
+                self.filteredBioelectricDataPlots[channelIndex].set_data(timepoints, newFilteredData/max(newFilteredData))
+                self.filteredBioelectricPlotAxes[channelIndex].set_xlim(timepoints[0], timepoints[-1]) 
             # -------------------------------------------------------------- #   
 
         # -------------------------- Update Plots -------------------------- #

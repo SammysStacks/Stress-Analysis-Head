@@ -8,7 +8,7 @@ class universalMethods:
     # --------------------- Feature Extraction Methods --------------------- #
 
     @staticmethod
-    def hjorthParameters(timePoints, data, firstDeriv=None, secondDeriv=None, standardized_data=None):
+    def hjorthParameters(timepoints, data, firstDeriv=None, secondDeriv=None, standardized_data=None):
         # Assert the correct data format.
         data = np.asarray(data)
         if standardized_data is not None:
@@ -18,10 +18,10 @@ class universalMethods:
 
         # If no derivatives given, calculate the derivatives
         if firstDeriv is None:
-            if np.min(np.diff(timePoints)) < 1e-10: print(f"ALERT: Values too small for gradient: {np.min(np.diff(timePoints))}")
-            firstDeriv = np.gradient(standardized_data, timePoints)
+            if np.min(np.diff(timepoints)) < 1e-10: print(f"ALERT: Values too small for gradient: {np.min(np.diff(timepoints))}")
+            firstDeriv = np.gradient(standardized_data, timepoints)
         if secondDeriv is None:
-            secondDeriv = np.gradient(firstDeriv, timePoints)
+            secondDeriv = np.gradient(firstDeriv, timepoints)
 
         # Calculate the hjorthActivity
         activity = np.var(data)  # Cant use standardized data because its variance is already normalized.

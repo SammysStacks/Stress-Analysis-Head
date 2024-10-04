@@ -114,7 +114,7 @@ class saveExcelData(handlingExcelFormat):
         # Remove empty page
         WB.remove(worksheet)
 
-    def saveData(self, timePoints, signalData, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList,
+    def saveData(self, deviceType, timepoints, signalData, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList,
                  surveyQuestions, subjectInformationAnswers, subjectInformationQuestions, dataHeaders, saveExcelPath, overwriteSave=False):
 
         # -------------------- Setup the excel document -------------------- #
@@ -141,16 +141,16 @@ class saveExcelData(handlingExcelFormat):
         header.extend([dataHeader.upper() + " Raw Data" for dataHeader in dataHeaders])
 
         # Loop through/save all the data in batches of maxAddToExcelSheet.
-        for firstIndexInFile in range(0, len(timePoints), self.maxAddToExcelSheet):
+        for firstIndexInFile in range(0, len(timepoints), self.maxAddToExcelSheet):
             startTimer = time.time()
             # Add the information to the page
             worksheet.title = self.rawSignals_Sheetname
             worksheet.append(header)  # Add the header labels to this specific file.
 
             # Loop through all data to be saved within this sheet in the Excel file.
-            for dataInd in range(firstIndexInFile, min(firstIndexInFile + self.maxAddToExcelSheet, len(timePoints))):
+            for dataInd in range(firstIndexInFile, min(firstIndexInFile + self.maxAddToExcelSheet, len(timepoints))):
                 # Organize all the data
-                row = [timePoints[dataInd]]
+                row = [timepoints[dataInd]]
                 row.extend([dataCol[dataInd] for dataCol in signalData])
 
                 # Add the row to the worksheet
@@ -161,10 +161,10 @@ class saveExcelData(handlingExcelFormat):
             worksheet = WB.create_sheet(self.emptySheetName)  # Add Sheet
 
             # If I need to use another sheet
-            if firstIndexInFile + self.maxAddToExcelSheet < len(timePoints):
+            if firstIndexInFile + self.maxAddToExcelSheet < len(timepoints):
                 # Keep track of how long it is taking.
                 endTimer = time.time()
-                numberOfSheetsLeft = 1 + (len(timePoints) - firstIndexInFile - self.maxAddToExcelSheet) // self.maxAddToExcelSheet
+                numberOfSheetsLeft = 1 + (len(timepoints) - firstIndexInFile - self.maxAddToExcelSheet) // self.maxAddToExcelSheet
                 timeRemaining = (endTimer - startTimer) * numberOfSheetsLeft
                 print("\tEstimated Time Remaining " + str(timeRemaining) + " seconds; Excel Sheets Left to Add: " + str(numberOfSheetsLeft))
         # Remove empty page

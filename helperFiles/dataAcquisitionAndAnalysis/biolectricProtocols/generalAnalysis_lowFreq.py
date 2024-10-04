@@ -49,14 +49,14 @@ class generalProtocol_lowFreq(globalProtocol):
             # Find the starting/ending points of the data to analyze
             startFilterPointer = max(dataFinger - self.dataPointBuffer, 0)
             dataBuffer = np.asarray(self.channelData[channelIndex][startFilterPointer:dataFinger + self.numPointsPerBatch])
-            timePoints = np.asarray(self.timePoints[startFilterPointer:dataFinger + self.numPointsPerBatch])
+            timepoints = np.asarray(self.timepoints[startFilterPointer:dataFinger + self.numPointsPerBatch])
 
             # Get the Sampling Frequency from the First Batch (If Not Given)
             if not self.samplingFreq:
                 self.setSamplingFrequency(startFilterPointer)
                 
             # Filter the data and remove bad indices
-            filteredTime, filteredData, goodIndicesMask = self.filterData(timePoints, dataBuffer)
+            filteredTime, filteredData, goodIndicesMask = self.filterData(timepoints, dataBuffer)
             # --------------------------------------------------------------- #
             
             # ---------------------- Feature Extraction --------------------- #
@@ -65,8 +65,8 @@ class generalProtocol_lowFreq(globalProtocol):
                 newFeatureTimes, newRawFeatures = [], []
 
                 # Extract features across the dataset
-                while self.lastAnalyzedDataInd[channelIndex] < len(self.timePoints):
-                    featureTime = self.timePoints[self.lastAnalyzedDataInd[channelIndex]]
+                while self.lastAnalyzedDataInd[channelIndex] < len(self.timepoints):
+                    featureTime = self.timepoints[self.lastAnalyzedDataInd[channelIndex]]
                                         
                     # Find the start window pointer
                     self.startFeatureTimePointer[channelIndex] = self.findStartFeatureWindow(self.startFeatureTimePointer[channelIndex], featureTime, self.featureTimeWindow)
@@ -93,18 +93,18 @@ class generalProtocol_lowFreq(globalProtocol):
             # ------------------- Plot Biolectric Signals ------------------- #
             if self.plotStreamedData:
                 # Format the raw data:.
-                timePoints = timePoints[dataFinger - startFilterPointer:] # Shared axis for all signals
+                timepoints = timepoints[dataFinger - startFilterPointer:] # Shared axis for all signals
                 rawData = dataBuffer[dataFinger - startFilterPointer:]
                 # Format the filtered data
                 filterOffset = (goodIndicesMask[0:dataFinger - startFilterPointer]).sum(axis = 0, dtype=int)
 
                 # Plot Raw Bioelectric Data (Slide Window as Points Stream in)
-                self.plottingMethods.bioelectricDataPlots[channelIndex].set_data(timePoints, rawData)
-                self.plottingMethods.bioelectricPlotAxes[channelIndex].set_xlim(timePoints[0], timePoints[-1])
+                self.plottingMethods.bioelectricDataPlots[channelIndex].set_data(timepoints, rawData)
+                self.plottingMethods.bioelectricPlotAxes[channelIndex].set_xlim(timepoints[0], timepoints[-1])
                                             
                 # Plot the Filtered + Digitized Data
                 self.plottingMethods.filteredBioelectricDataPlots[channelIndex].set_data(filteredTime[filterOffset:], filteredData[filterOffset:])
-                self.plottingMethods.filteredBioelectricPlotAxes[channelIndex].set_xlim(timePoints[0], timePoints[-1]) 
+                self.plottingMethods.filteredBioelectricPlotAxes[channelIndex].set_xlim(timepoints[0], timepoints[-1]) 
                 
                 # Plot a single feature.
                 if len(self.compiledFeatures[channelIndex]) != 0:
@@ -113,16 +113,16 @@ class generalProtocol_lowFreq(globalProtocol):
 
             # -------------------------------------------------------------- #   
             
-    def filterData(self, timePoints, data):
+    def filterData(self, timepoints, data):
         # Filter the Data: Low pass Filter and Savgol Filter
         filteredData = self.filteringMethods.bandPassFilter.butterFilter(data, self.cutOffFreq[1], self.samplingFreq, order = 3, filterType = 'low', fastFilt = True)
-        filteredTime = timePoints.copy()
+        filteredTime = timepoints.copy()
         # print(len(filteredTime), len(filteredData))
         return filteredTime, filteredData, np.ones(len(filteredTime))
 
     def findStartFeatureWindow(self, timePointer, currentTime, timeWindow):
         # Loop through until you find the first time in the window 
-        while self.timePoints[timePointer] < currentTime - timeWindow:
+        while self.timepoints[timePointer] < currentTime - timeWindow:
             timePointer += 1
             
         return timePointer
@@ -141,7 +141,7 @@ class generalProtocol_lowFreq(globalProtocol):
     
     # --------------------- Feature Extraction Methods --------------------- #
     
-    def extractFeatures(self, timePoints, data):
+    def extractFeatures(self, timepoints, data):
 
         # ----------------------- Data Preprocessing ----------------------- #
         
@@ -151,17 +151,17 @@ class generalProtocol_lowFreq(globalProtocol):
             return [0 for _ in range(8)]
         
         # Get the baseline data
-        baselineX = timePoints - timePoints[0]
+        baselineX = timepoints - timepoints[0]
 
         # Calculate the derivatives
-        firstDerivative = np.gradient(standardized_data, timePoints)
+        firstDerivative = np.gradient(standardized_data, timepoints)
 
         # ------------------------------------------------------------------ #  
         # ----------------------- Features from Data ----------------------- #
         
         # General Shape Parameters
-        signalPower = scipy.integrate.simpson(data ** 2, timePoints) / (baselineX[-1] - baselineX[0])
-        signalArea = scipy.integrate.simpson(data, timePoints) / (baselineX[-1] - baselineX[0])
+        signalPower = scipy.integrate.simpson(data ** 2, timepoints) / (baselineX[-1] - baselineX[0])
+        signalArea = scipy.integrate.simpson(data, timepoints) / (baselineX[-1] - baselineX[0])
         signalRange = max(data) - min(data)
         standardDeviation = np.std(data, ddof=1)
         mean = np.mean(data)
@@ -171,7 +171,7 @@ class generalProtocol_lowFreq(globalProtocol):
         # First derivative features
         firstDerivativeMean = np.mean(firstDerivative)
         firstDerivativeStdDev = np.std(firstDerivative, ddof=1)
-        firstDerivativePower = scipy.integrate.simpson(firstDerivative ** 2, timePoints) / (baselineX[-1] - baselineX[0])
+        firstDerivativePower = scipy.integrate.simpson(firstDerivative ** 2, timepoints) / (baselineX[-1] - baselineX[0])
 
         # ----------------------- Organize Features ------------------------ #
         

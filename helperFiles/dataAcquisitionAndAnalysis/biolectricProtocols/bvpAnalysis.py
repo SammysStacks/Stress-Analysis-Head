@@ -48,14 +48,14 @@ class bvpProtocol(globalProtocol):
             # Find the starting/ending points of the data to analyze
             startFilterPointer = max(dataFinger - self.dataPointBuffer, 0)
             dataBuffer = np.asarray(self.channelData[channelIndex][startFilterPointer:dataFinger + self.numPointsPerBatch])
-            timePoints = np.asarray(self.timePoints[startFilterPointer:dataFinger + self.numPointsPerBatch])
+            timepoints = np.asarray(self.timepoints[startFilterPointer:dataFinger + self.numPointsPerBatch])
 
             # Get the Sampling Frequency from the First Batch (If Not Given)
             if not self.samplingFreq:
                 self.setSamplingFrequency(startFilterPointer)
 
             # Filter the data and remove bad indices
-            filteredTime, filteredData, goodIndicesMask = self.filterData(timePoints, dataBuffer, removePoints=False)
+            filteredTime, filteredData, goodIndicesMask = self.filterData(timepoints, dataBuffer, removePoints=False)
 
             # ---------------------- Feature Extraction --------------------- #
 
@@ -64,8 +64,8 @@ class bvpProtocol(globalProtocol):
                 newFeatureTimes, newRawFeatures = [], []
 
                 # Extract features across the dataset
-                while self.lastAnalyzedDataInd[channelIndex] < len(self.timePoints):
-                    featureTime = self.timePoints[self.lastAnalyzedDataInd[channelIndex]]
+                while self.lastAnalyzedDataInd[channelIndex] < len(self.timepoints):
+                    featureTime = self.timepoints[self.lastAnalyzedDataInd[channelIndex]]
 
                     # Find the start window pointer.
                     self.startFeatureTimePointer[channelIndex] = self.findStartFeatureWindow(self.startFeatureTimePointer[channelIndex], featureTime, self.featureTimeWindow)
@@ -90,16 +90,16 @@ class bvpProtocol(globalProtocol):
 
             # -------------------------------------------------------------- #
 
-    def filterData(self, timePoints, data, removePoints=False):
+    def filterData(self, timepoints, data, removePoints=False):
         # Filter the Data: Low pass Filter and Savgol Filter
         filteredData = self.filteringMethods.bandPassFilter.butterFilter(data, self.cutOffFreq, self.samplingFreq, order = 3, filterType = 'low', fastFilt = True)
-        filteredTime = timePoints.copy()
+        filteredTime = timepoints.copy()
 
         return filteredTime, filteredData, np.ones(len(filteredTime))
 
     def findStartFeatureWindow(self, timePointer, currentTime, timeWindow):
         # Loop through until you find the first time in the window
-        while self.timePoints[timePointer] < currentTime - timeWindow:
+        while self.timepoints[timePointer] < currentTime - timeWindow:
             timePointer += 1
 
         return timePointer
@@ -125,7 +125,7 @@ class bvpProtocol(globalProtocol):
 
     # --------------------- Feature Extraction Methods --------------------- #
 
-    def extractFeatures(self, timePoints, data):
+    def extractFeatures(self, timepoints, data):
         # ----------------------- Data Preprocessing ----------------------- #
         # Normalize the data
         standardized_data = self.universalMethods.standardizeData(data)
@@ -137,8 +137,8 @@ class bvpProtocol(globalProtocol):
         first_derivative = np.gradient(standardized_data)
         second_derivative = np.gradient(first_derivative)
 
-        systolic_peaks, _ = find_peaks(standardized_data, distance=timePoints*self.samplingFreq)  # return the indices of the peaks
-        end_of_cycle, _ = find_peaks(-standardized_data, distance=timePoints*self.samplingFreq)  # return the indices of the local minima
+        systolic_peaks, _ = find_peaks(standardized_data, distance=timepoints*self.samplingFreq)  # return the indices of the peaks
+        end_of_cycle, _ = find_peaks(-standardized_data, distance=timepoints*self.samplingFreq)  # return the indices of the local minima
 
         # Identify dicrotic notches and diastolic peaks within each pulse
         dicrotic_notches = []
@@ -146,14 +146,14 @@ class bvpProtocol(globalProtocol):
         pulse_widths = []
         pulse_amplitudes = []
 
-        """Although timePoints and data specify a window, in case there are multiple peaks detected within the timePoints*SamplingFrequency window,"""
+        """Although timepoints and data specify a window, in case there are multiple peaks detected within the timepoints*SamplingFrequency window,"""
         for i in range(len(systolic_peaks) - 1):
             # Segment between two systolic peaks
             start_idx = systolic_peaks[i]
             next_idx = systolic_peaks[i + 1]
             # might not needed later, just in case, both method should calculate the same dicrotic notch and diastolic peak
             segment = standardized_data[start_idx:next_idx]
-            segment_time = timePoints[start_idx:next_idx]
+            segment_time = timepoints[start_idx:next_idx]
             segment_first_derivative = first_derivative[start_idx:next_idx]
             segment_second_derivative = second_derivative[start_idx:next_idx]
 
@@ -180,14 +180,14 @@ class bvpProtocol(globalProtocol):
                 diastolic_peaks.append(None)
 
             # Calculate pulse width and amplitudes
-            width = timePoints[end_of_cycle[i + 1]] - timePoints[end_of_cycle[i]]
+            width = timepoints[end_of_cycle[i + 1]] - timepoints[end_of_cycle[i]]
             pulse_widths.append(width)
             magnitude = standardized_data[systolic_peaks[i]] - standardized_data[end_of_cycle[i]]
             pulse_amplitudes.append(magnitude)
 
         #  Heart Rate (HR)
         if len(systolic_peaks) > 1:
-            hr_intervals = np.diff(timePoints[systolic_peaks])
+            hr_intervals = np.diff(timepoints[systolic_peaks])
             hr = 60 / np.mean(hr_intervals)
             rmssd = np.sqrt(np.mean(np.diff(hr_intervals) ** 2))
         else:

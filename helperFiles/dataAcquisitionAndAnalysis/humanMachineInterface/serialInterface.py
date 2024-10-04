@@ -182,7 +182,7 @@ class serialInterface:
         # Initialize the Arduino Data
         Voltages = [[] for _ in range(numChannels)]
         assert numChannels == 4
-        timePoints = []
+        timepoints = []
 
         for byteArray in byteArrayList:
             rawReadCompressed = bytes(byteArray)[0:-2]
@@ -193,7 +193,7 @@ class serialInterface:
                     self.decompressByte(rawReadCompressed[0]) + "." + \
                     self.decompressByte(rawReadCompressed[1]) + self.decompressByte(rawReadCompressed[2]) + self.decompressByte(rawReadCompressed[3])
                 )
-                timePoints.append(self.currentTime)
+                timepoints.append(self.currentTime)
 
                 # Add the Voltage Data
                 Voltages[0].append(int(
@@ -219,4 +219,4 @@ class serialInterface:
                     a += self.decompressByte(byteVal)
                 print(a)
 
-        return timePoints, Voltages
+        return timepoints, Voltages

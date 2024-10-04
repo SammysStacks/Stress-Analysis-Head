@@ -33,7 +33,7 @@ if __name__ == "__main__":
 
     # User options during the run: any number can be true.
     useModelPredictions = False or trainModel  # Apply the learning algorithm to decode the signals.
-    plotStreamedData = False  # Graph the data to show incoming signals.
+    plotStreamedData = True  # Graph the data to show incoming signals.
     useTherapyData = True  # Use the Therapy Data folder for any files.
 
     # General program flags.
@@ -47,13 +47,14 @@ if __name__ == "__main__":
 
     # Specify experimental parameters.
     deviceAddress = '12ba4cb61c85ec11bc01fc2b19c2d21c'  # Board's Serial Number (port.serial_number). Only used if streaming data, else it gets reset to None.
-    stopTimeStreaming = 60 * 300  # If Float/Int: The Number of Seconds to Stream Data; If String, it is the TimeStamp to Stop (Military Time) as "Hours:Minutes:Seconds:MicroSeconds"
+    stopTimeStreaming = 60  # If Float/Int: The Number of Seconds to Stream Data; If String, it is the TimeStamp to Stop (Military Time) as "Hours:Minutes:Seconds:MicroSeconds"
     deviceType = 'empatica'  # The type of device being used for streaming.
 
     # ---------------------------------------------------------------------- #
 
     # Assert the proper use of the program
     assert sum((readDataFromExcel, streamData, trainModel)) == 1, "Only one protocol can be be executed."
+    assert deviceType in ['empatica', 'serial'], "The device type must be either 'empatica' or 'serial'."
 
     # Define helper classes.
     saveInputs = saveDataProtocols.saveExcelData()
@@ -76,8 +77,6 @@ if __name__ == "__main__":
                                                      streamingOrder, extractFeaturesFrom, featureAverageWindows, voltageRange, plotStreamedData)
 
     # ----------------------------- Stream the Data from circuit board ----------------------------- #
-
-    recordQuestionnaire = False
 
     if streamData:
         if not recordQuestionnaire:
@@ -214,7 +213,7 @@ if __name__ == "__main__":
         eogReadings = np.asarray(readData.analysisProtocols['eog'].channelData if readData.analysisProtocols['eog'] is not None else [])
         eegReadings = np.asarray(readData.analysisProtocols['eeg'].channelData if readData.analysisProtocols['eeg'] is not None else [])
         edaReadings = np.asarray(readData.analysisProtocols['eda'].channelData if readData.analysisProtocols['eda'] is not None else [])
-        timePoints = np.asarray(readData.analysisProtocols['eog'].timePoints)  # Assuming each analysis has the same time points.
+        timepoints = np.array(readData.analysisList[0].timepoints)  # Assuming each analysis has the same time points.
 
         # Extract the features
         alignedFeatureLabels = np.asarray(readData.alignedFeatureLabels)
@@ -243,14 +242,16 @@ if __name__ == "__main__":
             if verifiedSave.upper() != "Y":
                 verifiedSave = input(f"\tI recorded your answer as {verifiedSave}. You really do not want to save ... One more time (Y/N): ")
 
-            if verifiedSave.upper() == "Y":
+            if verifiedSave.upper().replace(" ", "") == "Y":
                 # Get the streaming data
-                streamingData = []
+                streamingTimes, streamingData = [], []
                 for analysis in readData.analysisList:
+                    streamingTimes.append(np.asarray(analysis.timepoints))
                     for analysisChannelInd in range(len(analysis.channelData)):
                         streamingData.append(np.asarray(analysis.channelData[analysisChannelInd]))
+
                 # Initialize Class to Save the Data and Save
-                saveInputs.saveData(timePoints, streamingData, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions,
+                saveInputs.saveData(deviceType, streamingTimes, streamingData, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions,
                                     subjectInformationAnswers, subjectInformationQuestions, streamingOrder, currentFilename)
             else:
                 print("User Chose Not to Save the Data")

@@ -38,7 +38,7 @@ class globalProtocol(abc.ABC):
         self.samplingFreq = None
         self.rawFeatures = None
         self.channelData = None
-        self.timePoints = None
+        self.timepoints = None
 
         # Prepare the Program to Begin Data Analysis
         self.resetGlobalVariables()  # Start with Fresh Inputs (Clear All Arrays/Values)
@@ -58,7 +58,7 @@ class globalProtocol(abc.ABC):
         # Reset the data parameters.
         self.channelData = [[] for _ in range(self.numChannels)]  # The Data Streamed in from the Arduino
         self.samplingFreq = None  # The Average Number of Points Steamed Into the Arduino Per Second; If NONE Given, Algorithm will Calculate Based on Initial Data
-        self.timePoints = []  # The Time Points of the Data
+        self.timepoints = []  # The Time Points of the Data
 
         # Reset Feature Extraction
         self.lastAnalyzedDataInd = np.asarray([0 for _ in range(self.numChannels)])  # The index of the last point analyzed.
@@ -81,7 +81,7 @@ class globalProtocol(abc.ABC):
 
     def setSamplingFrequency(self, startFilterPointer):
         # Calculate the Sampling Frequency
-        self.samplingFreq = len(self.timePoints[startFilterPointer:-1]) / (self.timePoints[-1] - self.timePoints[startFilterPointer])
+        self.samplingFreq = len(self.timepoints[startFilterPointer:-1]) / (self.timepoints[-1] - self.timepoints[startFilterPointer])
         print(f"\n\tSetting {self.analysisType} Sampling Frequency to {self.samplingFreq}")
         print("\tIf this protocol runs longer than", self.moveDataFinger / self.samplingFreq, ", the analysis will NOT be in real-time")
 
@@ -123,7 +123,7 @@ class globalProtocol(abc.ABC):
         raise NotImplementedError("Must override in child")
 
     @abc.abstractmethod
-    def filterData(self, timePoints, data):
+    def filterData(self, timepoints, data):
         """ Create contract for child class method """
         raise NotImplementedError("Must override in child")
 

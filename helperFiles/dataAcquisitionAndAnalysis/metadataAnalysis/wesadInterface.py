@@ -205,7 +205,7 @@ class wesadInterface(globalMetaAnalysis):
     def organizeSynchronizedData(self, synchronizedData, experimentTimes, showPlots=True):
         # Get the RespiBAN time points.
         respiBAN_numPoints = len(synchronizedData['signal']['chest']['EDA'])
-        respiBAN_timePoints = self.universalMethods.getEvenlySampledArray(self.respiBAN_samplingFreq, respiBAN_numPoints)
+        respiBAN_timepoints = self.universalMethods.getEvenlySampledArray(self.respiBAN_samplingFreq, respiBAN_numPoints)
 
         # Filter the data to keep only your signals.
         keys_to_keep = ['ECG', 'EDA', 'Temp', 'Resp']  # Options: ['ACC', 'ECG', 'EMG', 'EDA', 'Temp', 'Resp']
@@ -219,9 +219,9 @@ class wesadInterface(globalMetaAnalysis):
         empaticaBVP_numPoints = len(synchronizedData['signal']['wrist']['BVP'])
         empaticaEDA_Temp_numPoints = len(synchronizedData['signal']['wrist']['EDA'])
         # Get the Empatica time points.
-        empaticaACC_timePoints = self.universalMethods.getEvenlySampledArray(self.empaticaACC_samplingFreq, empaticaACC_numPoints)
-        empaticaBVP_timePoints = self.universalMethods.getEvenlySampledArray(self.empaticaBVP_samplingFreq, empaticaBVP_numPoints)
-        empaticaEDA_Temp_timePoints = self.universalMethods.getEvenlySampledArray(self.empaticaEDA_Temp_samplingFreq, empaticaEDA_Temp_numPoints)
+        empaticaACC_timepoints = self.universalMethods.getEvenlySampledArray(self.empaticaACC_samplingFreq, empaticaACC_numPoints)
+        empaticaBVP_timepoints = self.universalMethods.getEvenlySampledArray(self.empaticaBVP_samplingFreq, empaticaBVP_numPoints)
+        empaticaEDA_Temp_timepoints = self.universalMethods.getEvenlySampledArray(self.empaticaEDA_Temp_samplingFreq, empaticaEDA_Temp_numPoints)
         # Compile the time-series data into the format expected.
         compiledSignalsACC = np.asarray(list(synchronizedData['signal']['wrist'].values())[0]).squeeze().T
         compiledSignalsBVP = np.asarray(list(synchronizedData['signal']['wrist'].values())[1]).T
@@ -231,15 +231,15 @@ class wesadInterface(globalMetaAnalysis):
 
         # Get the offset time
         classLabels = synchronizedData['label']
-        offsetTime = self.calculateOffsetTime(respiBAN_timePoints, classLabels, experimentTimes)
+        offsetTime = self.calculateOffsetTime(respiBAN_timepoints, classLabels, experimentTimes)
         # Add the offset time
-        respiBAN_timePoints += offsetTime
-        empaticaACC_timePoints += offsetTime
-        empaticaBVP_timePoints += offsetTime
-        empaticaEDA_Temp_timePoints += offsetTime
+        respiBAN_timepoints += offsetTime
+        empaticaACC_timepoints += offsetTime
+        empaticaBVP_timepoints += offsetTime
+        empaticaEDA_Temp_timepoints += offsetTime
 
         if showPlots:
-            plt.plot(respiBAN_timePoints, synchronizedData['label'], label="Experiment Labels")
+            plt.plot(respiBAN_timepoints, synchronizedData['label'], label="Experiment Labels")
             plt.vlines(experimentTimes[:, 0], 0, 7, 'tab:red', label="Start Experiment")
             plt.vlines(experimentTimes[:, 1], 0, 7, 'black', label="End Experiment")
             plt.title("WESAD Experiment")
@@ -248,7 +248,7 @@ class wesadInterface(globalMetaAnalysis):
             plt.legend()
             plt.show()
 
-        return respiBAN_timePoints, empaticaACC_timePoints, empaticaBVP_timePoints, empaticaEDA_Temp_timePoints, \
+        return respiBAN_timepoints, empaticaACC_timepoints, empaticaBVP_timepoints, empaticaEDA_Temp_timepoints, \
             compiledSignalsRespiban, compiledSignalsACC, compiledSignalsBVP, compiledSignalsEDA_Temp
 
     def compileAllData(self, allSynchronizedData, allExperimentalTimes, showPlots=True):
@@ -261,14 +261,14 @@ class wesadInterface(globalMetaAnalysis):
             compiledData_eachFreq = []
 
             # Compile the data: specific to the device worn.
-            respiBAN_timePoints, empaticaACC_timePoints, empaticaBVP_timePoints, empaticaEDA_Temp_timePoints, \
+            respiBAN_timepoints, empaticaACC_timepoints, empaticaBVP_timepoints, empaticaEDA_Temp_timepoints, \
                 compiledSignalsRespiban, compiledSignalsACC, compiledSignalsBVP, compiledSignalsEDA_Temp \
                 = self.organizeSynchronizedData(synchronizedData, experimentTimes, showPlots=showPlots)
 
             # Organize the compiled data
-            compiledData_eachFreq.append([respiBAN_timePoints, compiledSignalsRespiban])
-            compiledData_eachFreq.append([empaticaBVP_timePoints, compiledSignalsBVP])
-            compiledData_eachFreq.append([empaticaEDA_Temp_timePoints, compiledSignalsEDA_Temp])
+            compiledData_eachFreq.append([respiBAN_timepoints, compiledSignalsRespiban])
+            compiledData_eachFreq.append([empaticaBVP_timepoints, compiledSignalsBVP])
+            compiledData_eachFreq.append([empaticaEDA_Temp_timepoints, compiledSignalsEDA_Temp])
             # Save the compiled data
             allCompiledDatas.append(compiledData_eachFreq)
 

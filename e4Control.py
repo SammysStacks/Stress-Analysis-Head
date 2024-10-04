@@ -242,9 +242,9 @@ if __name__ == "__main__":
         eogReadings = np.asarray(readData.analysisProtocols['eog'].channelData if readData.analysisProtocols['eog'] is not None else [])
         eegReadings = np.asarray(readData.analysisProtocols['eeg'].channelData if readData.analysisProtocols['eeg'] is not None else [])
         edaReadings = np.asarray(readData.analysisProtocols['eda'].channelData if readData.analysisProtocols['eda'] is not None else [])
-        timePoints = np.asarray(readData.analysisProtocols['eog'].timePoints)  # Assuming each analysis has the same time points.
-        timePoints_acc = np.asarray(readData.analysisProtocols['acc'].timePoints)
-        timePoints_bvp = np.asarray(readData.analysisProtocols['bvp'].timePoints)
+        timepoints = np.asarray(readData.analysisProtocols['eog'].timepoints)  # Assuming each analysis has the same time points.
+        timepoints_acc = np.asarray(readData.analysisProtocols['acc'].timepoints)
+        timepoints_bvp = np.asarray(readData.analysisProtocols['bvp'].timepoints)
 
         # Extract the features
         alignedFeatureLabels = np.asarray(readData.alignedFeatureLabels)
@@ -280,7 +280,7 @@ if __name__ == "__main__":
                     for analysisChannelInd in range(len(analysis.channelData)):
                         streamingData.append(np.asarray(analysis.channelData[analysisChannelInd]))
                 # Initialize Class to Save the Data and Save
-                saveInputs.saveData(timePoints, streamingData, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions,
+                saveInputs.saveData(timepoints, streamingData, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions,
                                     subjectInformationAnswers, subjectInformationQuestions, streamingOrder, currentFilename)
             else:
                 print("User Chose Not to Save the Data")

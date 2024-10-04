@@ -695,7 +695,7 @@ class plotData:
 
     def getRawData(self, readData):
         # Extract the raw data
-        timePoints = np.asarray(readData.analysisList[0].timePoints)
+        timepoints = np.asarray(readData.analysisList[0].timepoints)
         eogReadings = np.asarray(readData.analysisProtocols['eog'].channelData[0])
         eegReadings = np.asarray(readData.analysisProtocols['eeg'].channelData[0])
         edaReadings = np.asarray(readData.analysisProtocols['eda'].channelData[0])
@@ -707,9 +707,9 @@ class plotData:
         standardizeClass_Features = standardizeData(rawData, axisDimension=1, threshold=0)
         standardizedRawData = standardizeClass_Features.standardize(rawData)
 
-        return timePoints, standardizedRawData, rawData
+        return timepoints, standardizedRawData, rawData
 
-    def getFilteredData(self, readData, timePoints, standardizedRawData, rawData):
+    def getFilteredData(self, readData, timepoints, standardizedRawData, rawData):
         # Initialize holders for the filtered information.
         allFilteredData = [];
         allFilteredTimes = []
@@ -720,8 +720,8 @@ class plotData:
             rawData_toFilter = rawData[analysisInd]
 
             # Extract the filtered information.
-            _, _, goodIndicesMask = readData.analysisList[analysisInd].filterData(timePoints, rawData_toFilter, removePoints=True)
-            filteredTimes, filteredData, _ = readData.analysisList[analysisInd].filterData(timePoints, standardizedData_toFilter, removePoints=False)
+            _, _, goodIndicesMask = readData.analysisList[analysisInd].filterData(timepoints, rawData_toFilter, removePoints=True)
+            filteredTimes, filteredData, _ = readData.analysisList[analysisInd].filterData(timepoints, standardizedData_toFilter, removePoints=False)
 
             # Store the filtered information.
             allFilteredTimes.append(filteredTimes[goodIndicesMask])
@@ -833,6 +833,6 @@ class plotData:
 
                 # ax.fill_betweenx(np.asarray(yLim), experimentTimes[experimentInd][0], surveyAnswerTimes[experimentInd], color="lightblue", alpha=0.03)
 
-    def findTimeIndex(self, timePoint, timePoints):
-        timePoints = np.asarray(timePoints)
-        return (abs(timePoints - timePoint)).argmin()
+    def findTimeIndex(self, timePoint, timepoints):
+        timepoints = np.asarray(timepoints)
+        return (abs(timepoints - timePoint)).argmin()

@@ -39,11 +39,8 @@ class serverInterface:
 
             while True:
                 try:
-                    print(3)
                     # Receive the message
-                    responseMessage = serverSocket.recvfrom(4096)
-                    print(2, responseMessage)
-
+                    responseMessage = serverSocket.recv(self.mainDevice.buffer_size).decode("utf-8")
                     if not responseMessage: continue  # Keep the connection alive if no message is received
 
                     # Process the message (modify as needed for your use case)
@@ -60,7 +57,6 @@ class serverInterface:
 if __name__ == "__main__":
     # Specify the device and the streaming order.
     streamingOrderTEMP = ["acc", "bvp", "eda", "temp"]
-    streamingOrderTEMP = ["temp"]
     serverClass = serverInterface(streamingOrderTEMP, analysisProtocols=(), deviceType='empatica')
     serverClass.mainDevice.closeServer = False
     serverClass.startServer()

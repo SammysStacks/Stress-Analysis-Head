@@ -198,13 +198,13 @@ class dapperInterface(globalMetaAnalysis):
                     fileData_1hz, timeOffset = self.cleanFileData(fileData_1hz, 1, 'time')
                     fileData_1hz['GSR'] = fileData_1hz['GSR'] * (10 ** -6)
                     # print(fileData_1hz['GSR'].agg(['min', 'max']))
-                    # timePoints_1hz = list(fileData_1hz['recompiledTime'])
+                    # timepoints_1hz = list(fileData_1hz['recompiledTime'])
 
                     # hrSignalData = fileData_1hz['heart_rate'].values
-                    # experimentSignalData.append([timePoints_1hz, [hrSignalData]])
+                    # experimentSignalData.append([timepoints_1hz, [hrSignalData]])
 
                     # GSRSignalData = fileData_1hz['GSR'].values
-                    # experimentSignalData.append([timePoints_1hz, [GSRSignalData]])
+                    # experimentSignalData.append([timepoints_1hz, [GSRSignalData]])
 
                     # GSR data default = 6.10388818e-09. If this value occurs during trial, do not consider trial
                     # HR data default = 40. If this value occurs during trial, do not consider trial
@@ -217,10 +217,10 @@ class dapperInterface(globalMetaAnalysis):
                         experimentData = fileData_1hz[(fileData_1hz['recompiledTime'] > currExperimentTimes[i][0] - timeOffset) &
                                                       (fileData_1hz['recompiledTime'] < currExperimentTimes[i][1] - timeOffset)]
 
-                        timePoints_1hz = list(experimentData['recompiledTime'])
+                        timepoints_1hz = list(experimentData['recompiledTime'])
                         GSRSignalData = experimentData['GSR'].values
                         hrSignalData = experimentData['heart_rate'].values
-                        experimentSignalData.append([[timePoints_1hz, [GSRSignalData]], [timePoints_1hz, [hrSignalData]]])
+                        experimentSignalData.append([[timepoints_1hz, [GSRSignalData]], [timepoints_1hz, [hrSignalData]]])
 
                         trialData = fileData_1hz[(fileData_1hz['recompiledTime'] > trialWindow[0] - timeOffset) &
                                                  (fileData_1hz['recompiledTime'] < trialWindow[1] - timeOffset)]

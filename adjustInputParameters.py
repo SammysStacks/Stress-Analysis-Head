@@ -58,11 +58,15 @@ class adjustInputParameters:
 
         return deviceAddress, voltageRange, adcResolution, saveRawSignals, recordQuestionnaire
 
-    @staticmethod
-    def getPlottingParams(analyzeBatches=False):
+    def getPlottingParams(self, analyzeBatches=False):
         # Analyze the data in batches.
-        numPointsPerBatch = 4000  # The Number of Data Points to Display to the User at a Time.
-        moveDataFinger = 400  # The Minimum Number of NEW Data Points to Plot/Analyze in Each Batch;
+        if self.deviceType == "serial":
+            numPointsPerBatch = 4000  # The Number of Data Points to Display to the User at a Time.
+            moveDataFinger = 400  # The Minimum Number of NEW Data Points to Plot/Analyze in Each Batch;
+        elif self.deviceType == "empatica":
+            numPointsPerBatch = 50  # The Number of Data Points to Display to the User at a Time.
+            moveDataFinger = 5  # The Minimum Number of NEW Data Points to Plot/Analyze in Each Batch;
+        else: raise ValueError(f"Unknown device type: {self.deviceType}")
 
         if not analyzeBatches:
             # If displaying all data, read in all the Excel data (max per sheet) at once

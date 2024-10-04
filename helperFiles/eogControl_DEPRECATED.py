@@ -155,7 +155,7 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------- #
     
     def executeProtocol():
-        global readData, eogProtocol, performMachineLearning, signalData, signalLabels, timePoints, modelPath, blinkFeatures, analyzeFeatures
+        global readData, eogProtocol, performMachineLearning, signalData, signalLabels, timepoints, modelPath, blinkFeatures, analyzeFeatures
         
         eogProtocol = eogAnalysis.eogProtocol(numTimePoints, moveDataFinger, numChannels, plotStreamedData)
         # Stream in Data from Arduino
@@ -178,13 +178,13 @@ if __name__ == "__main__":
             
             analyzeFeatures = True
             if analyzeFeatures:
-                timePoints = signalData[:,0]
+                timepoints = signalData[:,0]
                 signalData = signalData[:,1:]
                 blinkFeatures = np.asarray(blinkFeatures[1:])
 
                 analyzeFeatures = featureAnalysis.featureAnalysis(blinkFeatures, [], saveDataFolder)
                 #analyzeFeatures.correlationMatrix(signalChannel, folderName = "correlationMatrix/")
-                analyzeFeatures.singleFeatureAnalysis(timePoints[signalLabels == 3], signalData[signalLabels == 3], averageIntervalList = [60, 2*60, 3*60], folderName = "singleFeatureAnalysis - Full/")
+                analyzeFeatures.singleFeatureAnalysis(timepoints[signalLabels == 3], signalData[signalLabels == 3], averageIntervalList = [60, 2*60, 3*60], folderName = "singleFeatureAnalysis - Full/")
                 analyzeFeatures.featureDistribution(signalData, signalLabels, labelDict, folderName = "Feature Distribution/")
             
             
@@ -326,7 +326,7 @@ class eogdeviceReader(eogProtocol):
 https://www.frontiersin.org/articles/10.3389/fnins.2017.00012/full
 https://www.sciencedirect.com/science/article/pii/S221509861931403X#f0015
 
-x = readData.analysisProtocol.data['timePoints']
+x = readData.analysisProtocol.data['timepoints']
 y = readData.analysisProtocol.data['Channel1']
 
 # Basic Modules

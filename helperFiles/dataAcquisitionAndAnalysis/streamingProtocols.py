@@ -63,17 +63,17 @@ class streamingProtocols(streamingProtocolHelpers):
 
         # Prepare the arduino to stream in data
         self.stopTimeStreaming = self.setupDeviceStream(stopTimeStreaming, usingTimestamps=False)
-        timePoints = self.analysisList[0].timePoints
+        timepoints = self.analysisList[0].timepoints
         streamingDataFinger = 0
 
         try:
             # Loop Through and Read the Arduino Data in Real-Time
-            while len(timePoints) == 0 or (timePoints[-1] - timePoints[0]) < self.stopTimeStreaming:
+            while len(timepoints) == 0 or (timepoints[-1] - timepoints[0]) < self.stopTimeStreaming:
                 # Collect and compile the most recently available data points.
                 if self.deviceType == "serial": self.recordData(self.voltageRange[1], adcResolution)
 
                 # When enough data has been collected, analyze the new data in batches.
-                while len(timePoints) - streamingDataFinger >= self.numPointsPerBatch:
+                while len(timepoints) - streamingDataFinger >= self.numPointsPerBatch:
                     streamingDataFinger = self.analyzeBatchData(streamingDataFinger)
 
             # At the end, analyze all remaining data
@@ -86,7 +86,7 @@ class streamingProtocols(streamingProtocolHelpers):
         finally:
             # Set the final experimental time to the end of the experiment
             if len(self.experimentTimes) != 0 and self.experimentTimes[-1][1] is None:
-                self.experimentTimes[-1][1] = timePoints[-1]
+                self.experimentTimes[-1][1] = timepoints[-1]
 
             # Close the Arduino's at the End
             print("\nFinished Streaming in Data; Closing Arduino\n")
@@ -110,25 +110,24 @@ class streamingProtocols(streamingProtocolHelpers):
         self.setUserName(filePath)
 
         # Extract the Time and Voltage Data
-        timePoints, Voltages = compiledRawData
+        timepoints, Voltages = compiledRawData
         Voltages = np.asarray(Voltages)
 
         # Compile streaming parameters.
-        numPointsPerBatch = min(self.numPointsPerBatch, len(timePoints))
+        numPointsPerBatch = min(self.numPointsPerBatch, len(timepoints))
         streamingDataFinger = 0
         excelDataFinger = 0
 
         # Loop Through and Read the Excel Data in Pseudo-Real-Time
-        while excelDataFinger != len(timePoints):
-            # Organize the Input Data
-            self.organizeData(timepoints=timePoints[excelDataFinger:excelDataFinger + self.moveDataFinger], datapoints=Voltages[:, excelDataFinger:excelDataFinger + self.moveDataFinger])
-            excelDataFinger = min(len(timePoints), excelDataFinger + self.moveDataFinger)
+        while excelDataFinger != len(timepoints):
+            self.organizeData(timepoints=timepoints[excelDataFinger:excelDataFinger + self.moveDataFinger], datapoints=Voltages[:, excelDataFinger:excelDataFinger + self.moveDataFinger])
+            excelDataFinger = min(len(timepoints), excelDataFinger + self.moveDataFinger)
 
             # When enough data has been collected, analyze the new data in batches.
             while numPointsPerBatch <= excelDataFinger - streamingDataFinger:
                 streamingDataFinger = self.analyzeBatchData(streamingDataFinger)
             # Organize experimental information.
-            self.organizeExperimentalInformation(timePoints, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, excelDataFinger)
+            self.organizeExperimentalInformation(timepoints, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, excelDataFinger)
 
         # Assert that experimental information was read in correctly.
         assert np.array_equal(experimentTimes, self.experimentTimes), f"{experimentTimes} \n {self.experimentTimes}"
@@ -140,26 +139,26 @@ class streamingProtocols(streamingProtocolHelpers):
         # Finished Analyzing the Data
         print("\n\tFinished Analyzing Excel Data")
 
-    def organizeExperimentalInformation(self, timePoints, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, excelDataFinger):
+    def organizeExperimentalInformation(self, timepoints, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, excelDataFinger):
         # Add the experiment information when the timepoint is reached.
-        while self.experimentInfoPointerStart != len(experimentTimes) and experimentTimes[self.experimentInfoPointerStart][0] <= timePoints[min(len(timePoints) - 1, excelDataFinger - 1)]:
+        while self.experimentInfoPointerStart != len(experimentTimes) and experimentTimes[self.experimentInfoPointerStart][0] <= timepoints[min(len(timepoints) - 1, excelDataFinger - 1)]:
             self.experimentTimes.append([experimentTimes[self.experimentInfoPointerStart][0], None])
             self.experimentNames.append(experimentNames[self.experimentInfoPointerStart])
             self.experimentInfoPointerStart += 1
-        while self.experimentInfoPointerEnd != len(experimentTimes) and experimentTimes[self.experimentInfoPointerEnd][1] <= timePoints[min(len(timePoints) - 1, excelDataFinger - 1)]:
+        while self.experimentInfoPointerEnd != len(experimentTimes) and experimentTimes[self.experimentInfoPointerEnd][1] <= timepoints[min(len(timepoints) - 1, excelDataFinger - 1)]:
             self.experimentTimes[self.experimentInfoPointerEnd][1] = experimentTimes[self.experimentInfoPointerEnd][1]
             self.experimentInfoPointerEnd += 1
         # Add the feature information when the timepoint is reached.
-        while self.featureInfoPointer != len(surveyAnswerTimes) and surveyAnswerTimes[self.featureInfoPointer] <= timePoints[min(len(timePoints) - 1, excelDataFinger - 1)]:
+        while self.featureInfoPointer != len(surveyAnswerTimes) and surveyAnswerTimes[self.featureInfoPointer] <= timepoints[min(len(timepoints) - 1, excelDataFinger - 1)]:
             self.surveyAnswerTimes.append(surveyAnswerTimes[self.featureInfoPointer])
             self.surveyAnswersList.append(surveyAnswersList[self.featureInfoPointer])
             self.featureInfoPointer += 1
 
     def getCurrentTime(self):
         # Return the last streaming timePoint
-        while len(self.analysisList[0].timePoints) == 0:
+        while len(self.analysisList[0].timepoints) == 0:
             print("\tWaiting for arduino to initialize!"); time.sleep(1)
-        return self.analysisList[0].timePoints[-1]
+        return self.analysisList[0].timepoints[-1]
 
     @staticmethod
     def convertToTime(timeStamp):

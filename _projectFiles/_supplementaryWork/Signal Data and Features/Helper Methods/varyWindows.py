@@ -140,6 +140,6 @@ class varyWindows:
                 fig.savefig(finalSavingWindowsDirectory + f"{saveName}_{featureName} Sliding Windows Heatmap.png", dpi=500, bbox_inches='tight')
                 self.clearFigure(fig, None)
 
-    def findTimeIndex(self, timePoint, timePoints):
-        timePoints = np.asarray(timePoints)
-        return (abs(timePoints - timePoint)).argmin()
+    def findTimeIndex(self, timePoint, timepoints):
+        timepoints = np.asarray(timepoints)
+        return (abs(timepoints - timePoint)).argmin()

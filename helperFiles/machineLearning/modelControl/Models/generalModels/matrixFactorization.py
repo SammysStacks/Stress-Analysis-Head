@@ -443,11 +443,11 @@ class matrixFactorization(nn.Module):
 
         return self.mu + self.userBias[userInds] +  matrixFactorizationTerm
     
-    def predict(self, U, timePoints, userInds, itemInds):
+    def predict(self, U, timepoints, userInds, itemInds):
         # finalPredictions = []
         # for pointInd in range(len(U)):
         #     Ui = U[pointInd]
-        #     timePoint = timePoints[pointInd]
+        #     timePoint = timepoints[pointInd]
         #     userInd = userInds[pointInd] if type(userInds) not in [float, int, str] else userInds
         #     itemInd = itemInds[pointInd] if type(itemInds) not in [float, int, str] else itemInds
             

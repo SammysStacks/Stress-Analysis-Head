@@ -52,22 +52,20 @@ class extractData(handlingExcelFormat):
 
     @staticmethod
     def extractRawSignalData(excelSheet, startDataCol=1, endDataCol=2, data=None):
+        dataStartRow = 0
         # If Header Exists, Skip Until You Find the Data
         for row in excelSheet.rows:
-            cellA = row[0]
-            if type(cellA.value) in [int, float]:
-                dataStartRow = cellA.row + 1
+            if type(row[0].value) in [int, float]:
+                dataStartRow = row[0].row + 1
                 break
 
-        if data is None:
-            data = [[], [[] for channel in range(endDataCol - startDataCol)]]
+        if data is None: data = [[], [[] for _ in range(endDataCol - startDataCol)]]
         # Loop Through the Excel Worksheet to collect all the data
         for dataRow in excelSheet.iter_rows(min_col=startDataCol, min_row=dataStartRow - 1, max_col=endDataCol, max_row=excelSheet.max_row):
             # Stop Collecting Data When there is No More
-            if dataRow[0].value is None:
-                break
+            if dataRow[0].value is None: break
 
-            # Get Data
+            # Compile the data.
             data[0].append(float(dataRow[0].value))
             for dataInd in range(1, len(dataRow)):
                 data[1][dataInd - 1].append(float(dataRow[dataInd].value or 0))
@@ -75,7 +73,7 @@ class extractData(handlingExcelFormat):
         return data
 
     @staticmethod
-    def extractExperimentalInfo(excelSheet, experimentTimes=[], experimentNames=[], surveyAnswerTimes=[], surveyAnswersList=[], surveyQuestions=[]):
+    def extractExperimentalInfo(excelSheet, experimentTimes=(), experimentNames=(), surveyAnswerTimes=(), surveyAnswersList=(), surveyQuestions=()):
         # If Header Exists, Skip Until You Find the Data
         for row in excelSheet.rows:
             cellA = row[0]
@@ -119,7 +117,7 @@ class extractData(handlingExcelFormat):
 
         return experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions
 
-    def extractSubjectInfo(self, excelSheet, subjectInformationAnswers=[], subjectInformationQuestions=[]):
+    def extractSubjectInfo(self, excelSheet, subjectInformationAnswers=(), subjectInformationQuestions=()):
         # If Header Exists, Skip Until You Find the Data
         for row in excelSheet.rows:
             cellA = row[0]

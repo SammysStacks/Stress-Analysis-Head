@@ -66,9 +66,9 @@ class emgProtocol(globalProtocol):
         # Calculate Number of Streamed Points Per RMS Point
         self.secondsPerPointRMS = self.stepSize/self.samplingFreq   # Seconds per Delta RMS Point
 
-    def filterData(self, timePoints, data):
+    def filterData(self, timepoints, data):
         filteredData = self.highPassFilter(data)
-        filteredTime = timePoints.copy()
+        filteredTime = timepoints.copy()
         
         return filteredTime, filteredData, np.ones(len(filteredTime))
     
@@ -82,19 +82,19 @@ class emgProtocol(globalProtocol):
             # Find the starting/ending points of the data to analyze
             startFilterPointer = max(dataFinger - self.dataPointBuffer, 0)
             dataBuffer = np.asarray(self.channelData[channelIndex][startFilterPointer:dataFinger + self.numPointsPerBatch])
-            timePoints = np.asarray(self.timePoints[dataFinger:dataFinger + self.numPointsPerBatch])
+            timepoints = np.asarray(self.timepoints[dataFinger:dataFinger + self.numPointsPerBatch])
             
             # Find New Points That Need Filtering
-            totalPreviousPointsRMS = max(1 + math.floor((dataFinger + len(timePoints) - self.moveDataFinger - self.rmsWindow) / self.stepSize), 0) if dataFinger else 0
+            totalPreviousPointsRMS = max(1 + math.floor((dataFinger + len(timepoints) - self.moveDataFinger - self.rmsWindow) / self.stepSize), 0) if dataFinger else 0
             dataPointerRMS = self.stepSize*totalPreviousPointsRMS
-            numNewDataForRMS = dataFinger + len(timePoints) - dataPointerRMS
+            numNewDataForRMS = dataFinger + len(timepoints) - dataPointerRMS
             
             # Get the Sampling Frequency from the First Batch (If Not Given)
             if not self.samplingFreq:
                 self.setSamplingFrequency(startFilterPointer)
                 
             # Filter the data.
-            _, filteredData, _ = self.filterData(timePoints, dataBuffer)
+            _, filteredData, _ = self.filterData(timepoints, dataBuffer)
             # Remove the filter buffer. Only consider new data.
             filteredData = filteredData[-(numNewDataForRMS):]
             # -------------------------------------------------------------- #
@@ -113,10 +113,10 @@ class emgProtocol(globalProtocol):
             
             # ------------------- Plot Biolectric Signal -------------------- #
             if self.plotStreamedData:
-                dataBuffer = dataBuffer[-len(timePoints):]
+                dataBuffer = dataBuffer[-len(timepoints):]
                 # Plot Raw Bioelectric Data (Slide Window as Points Stream in)
-                self.plottingMethods.bioelectricDataPlots[channelIndex].set_data(timePoints, dataBuffer)
-                self.plottingMethods.bioelectricPlotAxes[channelIndex].set_xlim(timePoints[0], timePoints[-1])
+                self.plottingMethods.bioelectricDataPlots[channelIndex].set_data(timepoints, dataBuffer)
+                self.plottingMethods.bioelectricPlotAxes[channelIndex].set_xlim(timepoints[0], timepoints[-1])
                 
                 # Plot the Filtered (RMS) Data
                 self.plottingMethods.filteredBioelectricDataPlots[channelIndex].set_data(self.xDataRMS[-self.numPointsRMS:], dataRMS[-self.numPointsRMS:])
@@ -345,7 +345,7 @@ class emgProtocol(globalProtocol):
             RMSData.append(np.linalg.norm(inputWindow, ord=2)/normalization)
             # Add to xData
             if channelIndex == 0:
-                self.xDataRMS.append(self.timePoints[dataPointerRMS + i * stepSize + rmsWindow - 1])
+                self.xDataRMS.append(self.timepoints[dataPointerRMS + i * stepSize + rmsWindow - 1])
                  
         return RMSData    
 

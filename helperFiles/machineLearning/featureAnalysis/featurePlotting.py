@@ -29,30 +29,30 @@ class featurePlotting(globalPlottingProtocols):
         self.colorList = ['k', 'tab:red', 'tab:blue', 'brown', 'purple', 'tab:green', 'k', 'tab:red']
 
     @staticmethod
-    def calculateTimeUnit(timePoints, preAveragingSeconds, averageIntervalList, surveyCollectionTimes, experimentTimes):
+    def calculateTimeUnit(timepoints, preAveragingSeconds, averageIntervalList, surveyCollectionTimes, experimentTimes):
         # Assume all time is in seconds
         timeUnit = "Second"
         scaleTime = 1
         # If the analysis is longer than 5 hours, use hours
-        if 60 * 60 * 5 < timePoints[-1] - timePoints[0]:
+        if 60 * 60 * 5 < timepoints[-1] - timepoints[0]:
             print("\t\tUsing Hours")
             timeUnit = "Hour"
             scaleTime = 60 * 60
         # Else if the analysis is longer than an hour, use minutes
-        elif 60 * 60 < timePoints[-1] - timePoints[0]:
+        elif 60 * 60 < timepoints[-1] - timepoints[0]:
             print("\t\tUsing Minutes")
             timeUnit = "Minute"
             scaleTime = 60
 
         # Scale the time units.
         surveyCollectionTimes = np.asarray(surveyCollectionTimes.copy()) / scaleTime
-        timePoints = np.asarray(timePoints.copy()) / scaleTime
+        timepoints = np.asarray(timepoints.copy()) / scaleTime
         averageIntervalList = np.asarray(averageIntervalList) / scaleTime
         preAveragingSeconds = np.asarray(preAveragingSeconds) / scaleTime
         experimentTimes = np.asarray(experimentTimes.copy()) / scaleTime
 
         # Return the scaled times wit the new unit
-        return timeUnit, timePoints, preAveragingSeconds, averageIntervalList, surveyCollectionTimes, experimentTimes
+        return timeUnit, timepoints, preAveragingSeconds, averageIntervalList, surveyCollectionTimes, experimentTimes
 
     @staticmethod
     def getAxisLimits(dataOnPlots=(), yLim=(None, None)):
@@ -112,7 +112,7 @@ class featurePlotting(globalPlottingProtocols):
         os.makedirs(saveDataFolder, exist_ok=True)
 
         # Scale the time to fit nicely into a plot
-        timeUnit, timePoints, _, _, surveyCollectionTimes, experimentTimes = \
+        timeUnit, timepoints, _, _, surveyCollectionTimes, experimentTimes = \
             self.calculateTimeUnit(compiledRawData[0], np.asarray([]), np.asarray([]), surveyCollectionTimes, experimentTimes)
 
         counter = collections.Counter()
@@ -127,7 +127,7 @@ class featurePlotting(globalPlottingProtocols):
 
             # Filter the data
             analysisInd = readData.analysisOrder.index(biomarkerName.lower())
-            filteredTimes, filteredData, _ = readData.analysisList[analysisInd].filterData(timePoints, biomarkerData)
+            filteredTimes, filteredData, _ = readData.analysisList[analysisInd].filterData(timepoints, biomarkerData)
             biomarkerName += f" Channel {channelIndex}"
 
             # For raw and filtered data plots
@@ -143,7 +143,7 @@ class featurePlotting(globalPlottingProtocols):
                 if plotInd == 0:
                     yLim = self.getAxisLimits([biomarkerData], yLim)
                     legendLabels.append(biomarkerName + " Raw Signal")
-                    legendAxes.append(ax.plot(timePoints, biomarkerData, 'ok', markersize=4)[0])
+                    legendAxes.append(ax.plot(timepoints, biomarkerData, 'ok', markersize=4)[0])
                 # Plot the filtered signals
                 legendLabels.append(biomarkerName + " Filtered Signal")
                 legendAxes.append(ax.plot(filteredTimes, filteredData, 'o', c='tab:brown', markersize=2)[0])
@@ -161,14 +161,14 @@ class featurePlotting(globalPlottingProtocols):
                 fig.savefig(saveDataFolder + plotTitles[plotInd] + "_" + biomarkerName + ".png", dpi=300, bbox_extra_artists=(legend,), bbox_inches='tight')
                 self.clearFigure(fig, legend)
 
-    def plotPredictedScores(self, timePoints, predictedLabels, recordedScores, surveyCollectionTimes, experimentTimes, experimentNames, predictionType="Stress", folderName="realTimePredictions/"):
+    def plotPredictedScores(self, timepoints, predictedLabels, recordedScores, surveyCollectionTimes, experimentTimes, experimentNames, predictionType="Stress", folderName="realTimePredictions/"):
         if len(predictedLabels) == 0:
             print("\tNo prediction for " + predictionType)
             return None
 
         print("\tPlotting predictions in folder:", folderName)
         # Assert data integrity
-        assert len(timePoints) == len(predictedLabels), "Predictions dont match the timepoints"
+        assert len(timepoints) == len(predictedLabels), "Predictions dont match the timepoints"
         assert len(recordedScores) == len(experimentTimes)
 
         # Create/verify a directory to save the figures
@@ -176,8 +176,8 @@ class featurePlotting(globalPlottingProtocols):
         os.makedirs(saveDataFolder, exist_ok=True)
 
         # Scale the time to fit nicely into a plot
-        timeUnit, timePoints, _, _, surveyCollectionTimes, experimentTimes = \
-            self.calculateTimeUnit(timePoints, np.asarray([]), np.asarray([]), surveyCollectionTimes, experimentTimes)
+        timeUnit, timepoints, _, _, surveyCollectionTimes, experimentTimes = \
+            self.calculateTimeUnit(timepoints, np.asarray([]), np.asarray([]), surveyCollectionTimes, experimentTimes)
 
         # Make a figure
         fig = plt.figure()
@@ -187,7 +187,7 @@ class featurePlotting(globalPlottingProtocols):
         yLim = self.getAxisLimits([predictedLabels, recordedScores], yLim=[None, None])
 
         legendLabels.append("Predicted " + predictionType)
-        legendAxes.append(ax.plot(timePoints, predictedLabels, 'k', linewidth=2)[0])
+        legendAxes.append(ax.plot(timepoints, predictedLabels, 'k', linewidth=2)[0])
         # Add the feature collection times to the graph.
         ax, legendAxes, legendLabels = self.addSurveyInfo(ax, surveyCollectionTimes, experimentTimes, experimentNames, predictionType, legendAxes, legendLabels, yLim, recordedScores)
 
@@ -202,12 +202,12 @@ class featurePlotting(globalPlottingProtocols):
         fig.savefig(saveDataFolder + predictionType + ".png", dpi=300, bbox_extra_artists=(legend,), bbox_inches='tight')
         self.clearFigure(fig, legend)
 
-    def singleFeatureAnalysis(self, readData, timePoints, featureList, featureNames, preAveragingSeconds=0, averageIntervalList=(0, 30),
+    def singleFeatureAnalysis(self, readData, timepoints, featureList, featureNames, preAveragingSeconds=0, averageIntervalList=(0, 30),
                               surveyCollectionTimes=np.asarray([]), experimentTimes=(), experimentNames=(), folderName="singleFeatureAnalysis/"):
         print("\tPlotting features in folder:", folderName)
         # Assert data integrity
         assert len(featureNames) == len(featureList[0]), f"Mismatch between feature names and features given: {len(featureNames)} != {len(featureList[0])}"
-        assert len(featureList[:, 0]) == len(timePoints), f"Mismatch between features and times: {len(featureList[:, 0])} != {len(timePoints)}"
+        assert len(featureList[:, 0]) == len(timepoints), f"Mismatch between features and times: {len(featureList[:, 0])} != {len(timepoints)}"
 
         # Do not waste time if the analysis was performed already.
         saveDataFolder = self.saveDataFolder + folderName
@@ -217,8 +217,8 @@ class featurePlotting(globalPlottingProtocols):
         os.makedirs(saveDataFolder, exist_ok=True)
 
         # Scale the time to fit nicely into a plot
-        timeUnit, timePoints, preAveragingSeconds, averageIntervalList, surveyCollectionTimes, experimentTimes = \
-            self.calculateTimeUnit(timePoints, preAveragingSeconds, averageIntervalList, surveyCollectionTimes, experimentTimes)
+        timeUnit, timepoints, preAveragingSeconds, averageIntervalList, surveyCollectionTimes, experimentTimes = \
+            self.calculateTimeUnit(timepoints, preAveragingSeconds, averageIntervalList, surveyCollectionTimes, experimentTimes)
 
         # Loop Through Each Feature
         for featureInd in range(len(featureNames)):
@@ -234,14 +234,14 @@ class featurePlotting(globalPlottingProtocols):
             for colorInd, windowSize in enumerate(averageIntervalList):
 
                 # Average the Feature Together at Each Point
-                features = readData.averageFeatures_static(timePoints, allFeatures, windowSize, startTimeInd = 0)
+                features = readData.averageFeatures_static(timepoints, allFeatures, windowSize, startTimeInd = 0)
 
                 # Plot the features and track the legend
-                legendAxes.append(ax.plot(timePoints, features, 'o', c=self.colorList[colorInd], markersize=4)[0])
+                legendAxes.append(ax.plot(timepoints, features, 'o', c=self.colorList[colorInd], markersize=4)[0])
                 legendLabels.append(str(windowSize + preAveragingSeconds) + " " + timeUnit + " Feature Average")
 
                 # Keep track of all feature's bounds
-                startFeatureIndex = (abs(timePoints - preAveragingSeconds - windowSize)).argmin()
+                startFeatureIndex = (abs(timepoints - preAveragingSeconds - windowSize)).argmin()
                 yLim = self.getAxisLimits([features[startFeatureIndex:]], yLim)
 
             # Add experimental/survey information to the plot

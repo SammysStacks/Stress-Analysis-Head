@@ -175,18 +175,18 @@ class caseInterface(globalMetaAnalysis):
 
                 # Get Signal Data ---------------------------------------------
 
-                timePoints = list(df_subjectSynchronizedData['daqtime'].dropna())
+                timepoints = list(df_subjectSynchronizedData['daqtime'].dropna())
                 experimentSignalData = []
                 dataPerFreq = []
                 for i, signalName in enumerate(self.case_streamingOrder):
                     signalData = list(df_subjectSynchronizedData[signalName].dropna() * self.case_streamingConversions[i])
-                    assert len(timePoints) == len(signalData), f'Expected {len(timePoints)} number of datapoints. Got {len(signalData)}'
+                    assert len(timepoints) == len(signalData), f'Expected {len(timepoints)} number of datapoints. Got {len(signalData)}'
                     dataPerFreq.append(signalData)
 
                 if showPlots:
                     for i, signalData in enumerate(dataPerFreq):
                         dataPlotting = signalData[20000:25000]
-                        timePlotting = timePoints[20000:25000]
+                        timePlotting = timepoints[20000:25000]
                         plt.plot(timePlotting, [(e - min(dataPlotting)) / (max(dataPlotting) - min(dataPlotting)) for e in dataPlotting],
                                  marker='.', linestyle='--', label=f'{self.case_streamingOrder[i]} [{min(dataPlotting)}, {max(dataPlotting)}]')
                     plt.xlabel('Time, seconds')
@@ -194,7 +194,7 @@ class caseInterface(globalMetaAnalysis):
                     plt.legend()
                     plt.title('All Signals')
                     plt.show()
-                experimentSignalData.append([timePoints, dataPerFreq])
+                experimentSignalData.append([timepoints, dataPerFreq])
 
                 # Organize the data collected ---------------------------------
 

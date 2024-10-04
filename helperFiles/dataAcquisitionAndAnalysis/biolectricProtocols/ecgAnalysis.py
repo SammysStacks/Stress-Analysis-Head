@@ -65,14 +65,14 @@ class ecgProtocol(globalProtocol):
             # Find the starting/ending points of the data to analyze
             startFilterPointer = max(dataFinger - self.dataPointBuffer, 0)
             dataBuffer = np.asarray(self.channelData[channelIndex][startFilterPointer:dataFinger + self.numPointsPerBatch])
-            timePoints = np.asarray(self.timePoints[startFilterPointer:dataFinger + self.numPointsPerBatch])
+            timepoints = np.asarray(self.timepoints[startFilterPointer:dataFinger + self.numPointsPerBatch])
 
             # Get the Sampling Frequency from the First Batch (If Not Given)
             if not self.samplingFreq:
                 self.setSamplingFrequency(startFilterPointer)
 
             # Filter the data and remove bad indices
-            filteredTime, filteredData, goodIndicesMask = self.filterData(timePoints, dataBuffer, removePoints=True)
+            filteredTime, filteredData, goodIndicesMask = self.filterData(timepoints, dataBuffer, removePoints=True)
             # -------------------------------------------------------------- #
 
             # The first seconds of data are used to compute R peak derivative threshold.
@@ -88,9 +88,9 @@ class ecgProtocol(globalProtocol):
                 newFeatureTimes, newRawFeatures = [], []
 
                 # Extract features across the dataset
-                while self.lastAnalyzedDataInd[channelIndex] < len(self.timePoints):
+                while self.lastAnalyzedDataInd[channelIndex] < len(self.timepoints):
                     # while self.lastAnalyzedDataInd[channelIndex] < 200*self.samplingFreq:
-                    featureTime = self.timePoints[self.lastAnalyzedDataInd[channelIndex]]
+                    featureTime = self.timepoints[self.lastAnalyzedDataInd[channelIndex]]
 
                     # Find the start window pointer.
                     self.startFeatureTimePointer[channelIndex] = self.findStartFeatureWindow(self.startFeatureTimePointer[channelIndex], featureTime, self.featureTimeWindow)
@@ -130,18 +130,18 @@ class ecgProtocol(globalProtocol):
             # ------------------- Plot Biolectric Signals ------------------ #
             if self.plotStreamedData:
                 # Format the raw data:
-                timePoints = timePoints[dataFinger - startFilterPointer:]  # Shared axis for all signals
+                timepoints = timepoints[dataFinger - startFilterPointer:]  # Shared axis for all signals
                 rawData = dataBuffer[dataFinger - startFilterPointer:]
                 # Format the filtered data
                 filterOffset = (goodIndicesMask[0:dataFinger - startFilterPointer]).sum(axis=0, dtype=int)
 
                 # Plot Raw Bioelectric Data (Slide Window as Points Stream in)
-                self.plottingMethods.bioelectricDataPlots[channelIndex].set_data(timePoints, rawData)
-                self.plottingMethods.bioelectricPlotAxes[channelIndex].set_xlim(timePoints[0], timePoints[-1])
+                self.plottingMethods.bioelectricDataPlots[channelIndex].set_data(timepoints, rawData)
+                self.plottingMethods.bioelectricPlotAxes[channelIndex].set_xlim(timepoints[0], timepoints[-1])
 
                 # Plot the Filtered + Digitized Data
                 self.plottingMethods.filteredBioelectricDataPlots[channelIndex].set_data(filteredTime[filterOffset:], filteredData[filterOffset:])
-                self.plottingMethods.filteredBioelectricPlotAxes[channelIndex].set_xlim(timePoints[0], timePoints[-1])
+                self.plottingMethods.filteredBioelectricPlotAxes[channelIndex].set_xlim(timepoints[0], timepoints[-1])
 
                 # Plot a single feature.
                 if len(self.compiledFeatures[channelIndex]) != 0:
@@ -150,7 +150,7 @@ class ecgProtocol(globalProtocol):
 
             # -------------------------------------------------------------- #   
 
-    def filterData(self, timePoints, data, removePoints=False):
+    def filterData(self, timepoints, data, removePoints=False):
         # Find the bad points associated with motion artifacts
         if removePoints and self.cutOffFreq[0] is not None:
             motionIndices = np.logical_or(data < 0.1, data > 3.15)
@@ -162,14 +162,14 @@ class ecgProtocol(globalProtocol):
         # Filtering the whole dataset
         filteredData = self.filteringMethods.bandPassFilter.butterFilter(data, self.cutOffFreq[1], self.samplingFreq, order=3, filterType='low', fastFilt=True)
         # Remove the bad points from the filtered data
-        filteredTime = timePoints[goodIndicesMask]
+        filteredTime = timepoints[goodIndicesMask]
         filteredData = filteredData[goodIndicesMask]
 
         return filteredTime, filteredData, goodIndicesMask
 
     def findStartFeatureWindow(self, timePointer, currentTime, timeWindow):
         # Loop through until you find the first time in the window 
-        while self.timePoints[timePointer] < currentTime - timeWindow:
+        while self.timepoints[timePointer] < currentTime - timeWindow:
             timePointer += 1
 
         return timePointer
@@ -189,7 +189,7 @@ class ecgProtocol(globalProtocol):
     # ---------------------------------------------------------------------- #
     # --------------------- Feature Extraction Methods --------------------- #
 
-    def getRThreshold(self, timePoints, data):
+    def getRThreshold(self, timepoints, data):
         firstDer = savgol_filter(data, 9, 2, mode='nearest', delta=1 / self.samplingFreq, deriv=1)
         secondDer = savgol_filter(data, 9, 2, mode='nearest', delta=1 / self.samplingFreq, deriv=2)
 
@@ -204,7 +204,7 @@ class ecgProtocol(globalProtocol):
         maxDer = [firstDer[close_to_max_derivative_indices[0]]]
         for i in range(len(close_to_max_derivative_indices) - 1):
             # 1. Make sure the indices are at least half a second apart
-            if timePoints[close_to_max_derivative_indices[i + 1]] - timePoints[maxDerIndices[-1]] > 0.5:
+            if timepoints[close_to_max_derivative_indices[i + 1]] - timepoints[maxDerIndices[-1]] > 0.5:
                 maxDerIndices.append(close_to_max_derivative_indices[i + 1])
                 maxDer.append(firstDer[close_to_max_derivative_indices[i + 1]])
 
@@ -217,7 +217,7 @@ class ecgProtocol(globalProtocol):
             color = 'tab:green'
             ax1.set_xlabel('time (s)')
             ax1.set_ylabel('ECG', color=color)
-            ax1.plot(timePoints, data, color=color)
+            ax1.plot(timepoints, data, color=color)
             ax1.tick_params(axis='y', labelcolor=color)
             ax1.set_ylim(bottom=np.min(data), top=np.max(data))
 
@@ -225,28 +225,28 @@ class ecgProtocol(globalProtocol):
 
             color = 'tab:blue'
             ax2.set_ylabel('ECG First Derivative', color=color)  # we already handled the x-label with ax1
-            ax2.plot(timePoints, firstDer, color=color)
+            ax2.plot(timepoints, firstDer, color=color)
             ax2.tick_params(axis='y', labelcolor=color)
             ax2.set_ylim(bottom=np.min(firstDer), top=np.max(firstDer))
 
             fig.tight_layout()  # otherwise the right y-label is slightly clipped
 
-            ax1.vlines([timePoints[i] for i in close_to_max_derivative_indices], np.min(data), np.max(data), color='black', label=f'high derivative detected, n={len(close_to_max_derivative_indices)}')
-            ax1.vlines([timePoints[i] for i in peakIndices], np.min(data), np.max(data), color='red', linestyles='--', label=f'peaks detected, n={len(maxDerIndices)}')
+            ax1.vlines([timepoints[i] for i in close_to_max_derivative_indices], np.min(data), np.max(data), color='black', label=f'high derivative detected, n={len(close_to_max_derivative_indices)}')
+            ax1.vlines([timepoints[i] for i in peakIndices], np.min(data), np.max(data), color='red', linestyles='--', label=f'peaks detected, n={len(maxDerIndices)}')
 
             ax1.set_title(f'Baseline R Peaks, N={len(peakIndices)}, R Threshold = {np.max(firstDer[above_mean_indices]) * 0.66}')
             plt.show()
 
         # RPeakThreshold is set to 0.66 of mean of all R peaks found in the time window
-        return timePoints[peakIndices[-1]], np.mean(maxDer) * 0.66
+        return timepoints[peakIndices[-1]], np.mean(maxDer) * 0.66
 
     def updateRThreshold(self, peak, peakDer):
         self.RPeakThreshold = self.RPeakThreshold + 0.1 * (peakDer - self.RPeakThreshold)
 
-    def PQRSTDetection(self, timePoints, data, firstDer, secondDer):
+    def PQRSTDetection(self, timepoints, data, firstDer, secondDer):
 
         # We are searching through 0.25 seconds before R peak to 0.5 seconds after R peak
-        R = timePoints[int(self.samplingFreq * 0.25)]
+        R = timepoints[int(self.samplingFreq * 0.25)]
 
         # Finding Q, S, and QRS Wave
         # 1. binary search on second derivative to estimate Q and S
@@ -263,18 +263,18 @@ class ecgProtocol(globalProtocol):
 
         QRS1EstimatedIndex = self.universalMethods.findNearbyMaximum(firstDer, SIndex + 1, binarySearchWindow=10, maxPointsSearch=int(self.samplingFreq * 0.05))
         QRS1Index = self.universalMethods.findNearbyMaximum(secondDer, QRS1EstimatedIndex, binarySearchWindow=10, maxPointsSearch=int(self.samplingFreq * 0.025))
-        QRSWave = [timePoints[QRS0Index], timePoints[QRS1Index]]
+        QRSWave = [timepoints[QRS0Index], timepoints[QRS1Index]]
 
         # 4. if R peak does not deviate from baseline significantly, do not consider
         # height of R peak must be at least 2x difference between baseline before/after R peak
         if 0.5 * (data[int(self.samplingFreq * 0.25)] - data[QRS0Index]) < abs(data[QRS1Index] - data[QRS0Index]):
             return None
 
-        return timePoints[QIndex], R, timePoints[SIndex], QRSWave
+        return timepoints[QIndex], R, timepoints[SIndex], QRSWave
 
     '''
-    def PQRSTDetection_DEBUG(self, timePoints, data, firstDer, secondDer):
-        R = timePoints[int(self.samplingFreq *0.25)]
+    def PQRSTDetection_DEBUG(self, timepoints, data, firstDer, secondDer):
+        R = timepoints[int(self.samplingFreq *0.25)]
         
         # binary search on first deriv?
         QIndex = self.universalMethods.findNearbyMaximum(secondDer, int(self.samplingFreq *0.25), binarySearchWindow = -10, maxPointsSearch = int(self.samplingFreq * 0.1))
@@ -283,24 +283,24 @@ class ecgProtocol(globalProtocol):
         QRS0Index = self.universalMethods.findNearbyMinimum(secondDer, QIndex - 1, binarySearchWindow = -10, maxPointsSearch = int(self.samplingFreq * 0.05))
         QRS1Index = self.universalMethods.findNearbyMinimum(secondDer, SIndex + 1, binarySearchWindow = 10, maxPointsSearch = int(self.samplingFreq * 0.05))
         # QRS1Index = np.where(firstDer[SIndex + 1:] < self.RPeakThreshold)[0][0] + SIndex + 1
-        QRSWave = [timePoints[QRS0Index], timePoints[QRS1Index]]
+        QRSWave = [timepoints[QRS0Index], timepoints[QRS1Index]]
         # smoothedData = scipy.signal.savgol_filter(data, window_length=25, polyorder=3)
         PIndex = np.argmax(data[max(QRS0Index - int(self.samplingFreq * 0.25), 0):QRS0Index]) + max(QRS0Index - self.samplingFreq * 0.25, 0)
         P0Index = self.universalMethods.findNearbyMaximum(secondDer, np.argmax(firstDer[:PIndex]), binarySearchWindow = -10, maxPointsSearch = int(self.samplingFreq * 0.1))
         
-        return timePoints[PIndex], timePoints[QIndex], R, timePoints[SIndex], QRSWave, timePoints[P0Index]
+        return timepoints[PIndex], timepoints[QIndex], R, timepoints[SIndex], QRSWave, timepoints[P0Index]
     '''
 
     @staticmethod
-    def extractPeakFeatures(timePoints, data, Q, R, S, QRSWave):
+    def extractPeakFeatures(timepoints, data, Q, R, S, QRSWave):
         # TODO: T not done, P needs improvement
 
         # Find the indices of the Q, R, and S points, and the start and end of the QRS wave
-        QIndex = np.where(timePoints == Q)[0][0]
-        RIndex = np.where(timePoints == R)[0][0]
-        SIndex = np.where(timePoints == S)[0][0]
-        QRS0Index = np.where(timePoints == QRSWave[0])[0][0]
-        QRS1Index = np.where(timePoints == QRSWave[1])[0][0]
+        QIndex = np.where(timepoints == Q)[0][0]
+        RIndex = np.where(timepoints == R)[0][0]
+        SIndex = np.where(timepoints == S)[0][0]
+        QRS0Index = np.where(timepoints == QRSWave[0])[0][0]
+        QRS1Index = np.where(timepoints == QRSWave[1])[0][0]
 
         # Calculate durations related to the QRS complex
         QRSWaveLength = QRSWave[1] - QRSWave[0]  # Duration of the QRS wave
@@ -346,7 +346,7 @@ class ecgProtocol(globalProtocol):
 
         return finalFeatures
 
-    def extractFeatures(self, timePoints, data, lastPeak):
+    def extractFeatures(self, timepoints, data, lastPeak):
 
         # ----------------------- Data Preprocessing ----------------------- #
 
@@ -359,8 +359,8 @@ class ecgProtocol(globalProtocol):
         close_to_max_derivative_indices = np.where(firstDer > self.RPeakThreshold)[0]
         firstIndex = None
         for i in range(len(close_to_max_derivative_indices)):
-            if timePoints[close_to_max_derivative_indices[i]] >= lastPeak + 0.5 \
-                    and len(timePoints) > close_to_max_derivative_indices[i] + int(self.samplingFreq * 0.5) and int(self.samplingFreq * 0.25) < close_to_max_derivative_indices[i]:
+            if timepoints[close_to_max_derivative_indices[i]] >= lastPeak + 0.5 \
+                    and len(timepoints) > close_to_max_derivative_indices[i] + int(self.samplingFreq * 0.5) and int(self.samplingFreq * 0.25) < close_to_max_derivative_indices[i]:
                 firstIndex = i
                 maxDerIndices = [close_to_max_derivative_indices[i]]
                 break
@@ -375,9 +375,9 @@ class ecgProtocol(globalProtocol):
                 color = 'tab:green'
                 ax1.set_xlabel('time (s)')
                 ax1.set_ylabel('ECG', color=color)
-                ax1.plot(timePoints, data, color=color)
+                ax1.plot(timepoints, data, color=color)
                 for e in close_to_max_derivative_indices:
-                    ax1.axvline(timePoints[e], color='black')
+                    ax1.axvline(timepoints[e], color='black')
                 ax1.axvspan(lastPeak, lastPeak + 0.5, color='red')
                 ax1.tick_params(axis='y', labelcolor=color)
                 ax1.set_ylim(bottom=np.min(data), top=np.max(data))
@@ -386,7 +386,7 @@ class ecgProtocol(globalProtocol):
 
                 color = 'tab:blue'
                 ax2.set_ylabel('ECG First Derivative', color=color)  # we already handled the x-label with ax1
-                ax2.plot(timePoints, firstDer, color=color)
+                ax2.plot(timepoints, firstDer, color=color)
                 ax2.axhline(self.RPeakThreshold, color='black')
                 ax2.tick_params(axis='y', labelcolor=color)
                 ax2.set_ylim(bottom=np.min(firstDer), top=np.max(firstDer))
@@ -398,8 +398,8 @@ class ecgProtocol(globalProtocol):
             return lastPeak + 0.5, [], []
 
         for i in range(len(close_to_max_derivative_indices) - 1):
-            if timePoints[close_to_max_derivative_indices[i + 1]] - timePoints[maxDerIndices[-1]] > 0.5 \
-                    and len(timePoints) > close_to_max_derivative_indices[i + 1] + int(self.samplingFreq * 0.5) and int(self.samplingFreq * 0.25) < close_to_max_derivative_indices[i + 1]:
+            if timepoints[close_to_max_derivative_indices[i + 1]] - timepoints[maxDerIndices[-1]] > 0.5 \
+                    and len(timepoints) > close_to_max_derivative_indices[i + 1] + int(self.samplingFreq * 0.5) and int(self.samplingFreq * 0.25) < close_to_max_derivative_indices[i + 1]:
                 if min(firstDer[close_to_max_derivative_indices[i + 1]:close_to_max_derivative_indices[i + 1] + int(self.samplingFreq * 0.5)]) < -0.75 * self.RPeakThreshold:
                     maxDerIndices.append(close_to_max_derivative_indices[i + 1])
 
@@ -410,38 +410,38 @@ class ecgProtocol(globalProtocol):
         featureTimes = []
 
         for peak in peakIndices:  # look around R to find P, Q, S, T
-            PQRST = self.PQRSTDetection(timePoints[peak - int(self.samplingFreq * 0.25): peak + int(self.samplingFreq * 0.5)], data[peak - int(self.samplingFreq * 0.25): peak + int(self.samplingFreq * 0.5)], \
+            PQRST = self.PQRSTDetection(timepoints[peak - int(self.samplingFreq * 0.25): peak + int(self.samplingFreq * 0.5)], data[peak - int(self.samplingFreq * 0.25): peak + int(self.samplingFreq * 0.5)], \
                                         firstDer[peak - int(self.samplingFreq * 0.25): peak + int(self.samplingFreq * 0.5)], secondDer[peak - int(self.samplingFreq * 0.25): peak + int(self.samplingFreq * 0.5)])
             if PQRST != None:
                 Q, R, S, QRSWave = PQRST
-                features = self.extractPeakFeatures(timePoints, data, Q, R, S, QRSWave)
+                features = self.extractPeakFeatures(timepoints, data, Q, R, S, QRSWave)
                 if features != None:
                     finalFeatures.append(features)
-                    featureTimes.append(timePoints[peak])
+                    featureTimes.append(timepoints[peak])
                 else:
                     if self.debug:
-                        plt.plot(timePoints[peak - int(self.samplingFreq * 0.25): peak + int(self.samplingFreq * 0.5)], data[peak - int(self.samplingFreq * 0.25): peak + int(self.samplingFreq * 0.5)])
-                        plt.axvline(timePoints[peak], color='black')
+                        plt.plot(timepoints[peak - int(self.samplingFreq * 0.25): peak + int(self.samplingFreq * 0.5)], data[peak - int(self.samplingFreq * 0.25): peak + int(self.samplingFreq * 0.5)])
+                        plt.axvline(timepoints[peak], color='black')
                         plt.axvline(Q, color='red', label='Q')
                         plt.axvline(R, color='black', label='R')
                         plt.axvline(S, color='green', label='S')
                         plt.axvspan(QRSWave[0], QRSWave[1], color='grey', label='QRS')
                         plt.title('No Features Recorded')
                         plt.show()
-                        self.updateRThreshold(timePoints[peak], firstDer[peak])
+                        self.updateRThreshold(timepoints[peak], firstDer[peak])
 
             elif self.debug:
-                plt.plot(timePoints[peak - int(self.samplingFreq * 0.25): peak + int(self.samplingFreq * 0.5)], data[peak - int(self.samplingFreq * 0.25): peak + int(self.samplingFreq * 0.5)])
-                plt.axvline(timePoints[peak], color='black')
+                plt.plot(timepoints[peak - int(self.samplingFreq * 0.25): peak + int(self.samplingFreq * 0.5)], data[peak - int(self.samplingFreq * 0.25): peak + int(self.samplingFreq * 0.5)])
+                plt.axvline(timepoints[peak], color='black')
                 plt.title('Invalid Peak?')
                 plt.show()
-                self.updateRThreshold(timePoints[peak], firstDer[peak])
+                self.updateRThreshold(timepoints[peak], firstDer[peak])
 
             if self.debug:
                 # PLOTTING DATA 0.25 SEC AROUND AN R PEAK
                 if PQRST is not None and features is not None:
-                    peak = np.where(timePoints == featureTimes[-1])[0][0]
-                    plt.plot(timePoints[peak - int(self.samplingFreq * 0.25): peak + int(self.samplingFreq * 0.5)], data[peak - int(self.samplingFreq * 0.25): peak + int(self.samplingFreq * 0.5)], label='ECG Signal')
+                    peak = np.where(timepoints == featureTimes[-1])[0][0]
+                    plt.plot(timepoints[peak - int(self.samplingFreq * 0.25): peak + int(self.samplingFreq * 0.5)], data[peak - int(self.samplingFreq * 0.25): peak + int(self.samplingFreq * 0.5)], label='ECG Signal')
                     plt.axvline(Q, color='red', label='Q')
                     plt.axvline(R, color='black', label='R')
                     plt.axvline(S, color='green', label='S')
@@ -449,4 +449,4 @@ class ecgProtocol(globalProtocol):
                     plt.legend()
                     plt.show()
         assert len(featureTimes) == len(finalFeatures)
-        return timePoints[peakIndices[-1]], featureTimes, finalFeatures
+        return timepoints[peakIndices[-1]], featureTimes, finalFeatures
