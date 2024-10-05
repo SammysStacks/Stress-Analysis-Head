@@ -25,10 +25,8 @@ class sharedSignalEncoderModel(nn.Module):
         self.numEncodedSignals = numEncodedSignals  # The final number of signals to accept, encoding all signal information.
         self.waveletType = waveletType  # The type to use during the signal encoder.
 
-        self.attentionMechanisms = nn.ModuleList()
-        for layer in range(numAttentionLayers):
-            # Initialize the signal encoder modules.
-            self.attentionMechanisms.append(attentionMethods(inputQueryKeyDim=1, latentQueryKeyDim=latentQueryKeyDim, inputValueDim=1, latentValueDim=finalSignalDim, numHeads=1, addBias=False))
+        # Initialize the signal encoder modules.
+        self.attentionMechanism.append(attentionMethods(inputQueryKeyDim=1, latentQueryKeyDim=latentQueryKeyDim, inputValueDim=1, latentValueDim=finalSignalDim, numHeads=1, addBias=False))
 
         # Initialize loss holders.
         self.trainingLosses_timeReconstructionAnalysis = None
@@ -44,14 +42,12 @@ class sharedSignalEncoderModel(nn.Module):
 
     def learnedInterpolation(self, signalData):
         # For each layer, apply the attention mechanism.
-        for layerInd in range(len(self.attentionMechanisms)):
-            signalData = self.attentionMechanisms[layerInd](signalData)
+        signalData = self.attentionMechanism(signalData)
 
         return signalData
 
-    def reconstructEncodedData(self, encodedData, numSignalForwardPath, signalEncodingLayerLoss=None, calculateLoss=False):
-        # reconstructedInitEncodingData dimension: batchSize, numSignals, finalDistributionLength
-        denoisedReconstructedData = self.encodeSignals.denoiseSignals.applyDenoiser()
+    def sharedLearning(self, signalData):
+        pass
 
     def calculateOptimalLoss(self, initialSignalData, printLoss=True):
         with torch.no_grad():

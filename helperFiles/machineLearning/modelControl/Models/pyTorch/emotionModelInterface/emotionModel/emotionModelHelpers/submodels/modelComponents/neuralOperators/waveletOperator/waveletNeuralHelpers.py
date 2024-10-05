@@ -1,10 +1,9 @@
 # General
-from pytorch_wavelets import DWT1DForward, DWT1DInverse
-import torch
 import pywt
+import torch
+from pytorch_wavelets import DWT1DForward, DWT1DInverse
 
-# Import machine learning files
-from ..signalEncoderModules import signalEncoderModules
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.signalEncoderComponents.signalEncoderModules import signalEncoderModules
 
 
 # Notes:
@@ -35,67 +34,46 @@ from ..signalEncoderModules import signalEncoderModules
 
 class waveletNeuralHelpers(signalEncoderModules):
 
-    def __init__(self, numInputSignals, numOutputSignals, sequenceBounds, numDecompositions=2, waveletType='db3', mode='zero', addBiasTerm=False, smoothingKernelSize=0, activationMethod="none",
-                 encodeLowFrequencyProtocol=0, encodeHighFrequencyProtocol=0, useConvolutionFlag=False, independentChannels=False, skipConnectionProtocol='CNN'):
+    def __init__(self, sequenceLength, numInputSignals, numOutputSignals, numDecompositions, waveletType, mode, addBiasTerm, activationMethod,
+                 skipConnectionProtocol, encodeLowFrequencyProtocol=0, encodeHighFrequencyProtocol=0, learningProtocol=0, independentChannels=False):
         super(waveletNeuralHelpers, self).__init__()
         # Fourier neural operator parameters.
         self.encodeHighFrequencyProtocol = encodeHighFrequencyProtocol  # The high-frequency encoding protocol to use.
         self.encodeLowFrequencyProtocol = encodeLowFrequencyProtocol  # The low-frequency encoding protocol to use.
         self.skipConnectionProtocol = skipConnectionProtocol  # The skip connection protocol to use.
         self.independentChannels = independentChannels  # Whether to treat each channel independently.
-        self.smoothingKernelSize = smoothingKernelSize  # The size of the smoothing kernel.
-        self.useConvolutionFlag = useConvolutionFlag  # Whether to use a convolutional neural network for the decomposition.
         self.numDecompositions = numDecompositions  # Maximum number of decompositions to apply.
         self.numOutputSignals = numOutputSignals  # Number of output signals.
+        self.learningProtocol = learningProtocol
         self.activationMethod = activationMethod  # The activation method to use.
         self.numInputSignals = numInputSignals  # Number of input signals.
-        self.sequenceBounds = sequenceBounds  # The minimum and maximum sequence length.
+        self.sequenceLength = sequenceLength
         self.addBiasTerm = addBiasTerm  # Whether to add bias terms to the output.
         self.waveletType = waveletType  # The wavelet to use for the decomposition. Options: 'haar', 'db', 'sym', 'coif', 'bior', 'rbio', 'dmey', 'gaus', 'mexh', 'morl', 'cgau', 'shan', 'fbsp', 'cmor'
         self.mode = mode  # The padding mode to use for the decomposition. Options: 'zero', 'symmetric', 'reflect' or 'periodization'.
+
         # Assert that the parameters are valid.
         self.assertValidParams()
 
         # Decide on the frequency encoding protocol.
-        self.encodeHighFrequencies = encodeHighFrequencyProtocol in ['highFreq', 'allFreqs', 'zero']  # Whether to encode the high frequencies.
-        self.encodeLowFrequency = encodeLowFrequencyProtocol in ['lowFreq', 'allFreqs', 'zero']  # Whether to encode the low-frequency signal.
-        self.encodeLowFrequencyFull = encodeHighFrequencyProtocol == 'allFreqs'  # Whether to encode the high frequencies into the low-frequency signal.
-        self.encodeHighFrequencyFull = encodeLowFrequencyProtocol == 'allFreqs'  # Whether to encode the low-frequency signal into the high-frequency signal.
-        # Initialize flags to remove the high and low frequencies.
-        self.removeHighFrequencies = encodeHighFrequencyProtocol == 'zero'  # Whether to remove the high frequencies.
-        self.removeLowFrequency = encodeLowFrequencyProtocol == 'zero'  # Whether to remove the low-frequency signal.
+        self.encodeHighFrequencies = encodeHighFrequencyProtocol in ['highFreq']  # Whether to encode the high frequencies.
+        self.encodeLowFrequency = encodeLowFrequencyProtocol in ['lowFreq']  # Whether to encode the low-frequency signal.
 
         # Initialize the wavelet decomposition and reconstruction layers.
         self.dwt = DWT1DForward(J=self.numDecompositions, wave=self.waveletType, mode=self.mode)
         self.idwt = DWT1DInverse(wave=self.waveletType, mode=self.mode)
 
-        # Get the expected output shapes (hard to calculate by hand).
-        lowFrequency, highFrequencies = self.dwt(torch.randn(1, 1, sequenceBounds[1]))
-        self.highFrequenciesShapes = [highFrequency.size(-1) for highFrequency in highFrequencies]  # Optimally: maxSequenceLength / decompositionLayer**2
-        self.lowFrequencyShape = lowFrequency.size(-1)  # Optimally: maxSequenceLength / numDecompositions**2
-        # Get the expected output shapes (hard to calculate by hand).
-        lowFrequency, highFrequencies = self.dwt(torch.randn(1, 1, sequenceBounds[0]))
-        self.minHighFrequenciesShapes = [highFrequency.size(-1) for highFrequency in highFrequencies]  # Optimally: maxSequenceLength / decompositionLayer**2
-        self.minLowFrequencyShape = lowFrequency.size(-1)  # Optimally: maxSequenceLength / numDecompositions**2
+        # Check the final output sizes.
+        self.lowFrequencyShape, self.highFrequenciesShapes = self.getWaveletDimensions(sequenceLength)
 
     def assertValidParams(self):
         # Assert that the frequency protocol is valid.
-        assert self.encodeHighFrequencyProtocol in ['highFreq', 'allFreqs', 'zero', 'none'], "The high-frequency encoding protocol must be 'highFreq', 'allFreqs', 'none'."
-        assert self.encodeLowFrequencyProtocol in ['lowFreq', 'allFreqs', 'zero', 'none'], "The low-frequency encoding protocol must be 'lowFreq', 'allFreqs', 'none'."
-
-        if self.useConvolutionFlag:
-            # Assert the validity of the CNN model.
-            assert self.encodeHighFrequencyProtocol != 'allFreqs', "Encoding all frequencies with a CNN model is not supported."
-            assert self.encodeLowFrequencyProtocol != 'allFreqs', "Encoding all frequencies with a CNN model is not supported."
-
-        # Verify that the number of decomposition layers is appropriate.
-        maximumNumDecompositions = self.max_decompositions(signal_length=self.sequenceBounds[0], wavelet_name=self.waveletType)
-        assert self.numDecompositions <= maximumNumDecompositions, f'The number of decompositions must be less than or equal to {maximumNumDecompositions}.'
-        assert self.numDecompositions != 0, 'The number of decompositions cannot be 0.'
+        assert self.encodeHighFrequencyProtocol in ['highFreq', 'none'], "The high-frequency encoding protocol must be 'highFreq', 'none'."
+        assert self.encodeLowFrequencyProtocol in ['lowFreq', 'none'], "The low-frequency encoding protocol must be 'lowFreq', 'none'."
 
         if self.independentChannels:
             # Assert the validity of the parameters under independent channels.
-            assert self.skipConnectionProtocol in ["none", "identity", "independentCNN"], "You cannot have a skip connection dependant on channel info if channels are independent!"
+            assert self.skipConnectionProtocol in ["identity", "independentCNN"], "You cannot have a skip connection dependant on channel info if channels are independent!"
             assert self.numOutputSignals == 1, "The number of output channel is irrelevant. Please use 1."
             assert self.numInputSignals == 1, "The number of input channel is irrelevant. Please use 1."
 
@@ -106,6 +84,10 @@ class waveletNeuralHelpers(signalEncoderModules):
         max_level = torch.floor(torch.log2(torch.tensor(signal_length / (filter_length - 1), dtype=torch.float32))).int()
         return max_level.item()
 
-    @staticmethod
-    def zero(x):
-        return torch.zeros_like(x)
+    def getWaveletDimensions(self, sequenceLength):
+        # Get the expected output shapes (hard to calculate by hand).
+        lowFrequency, highFrequencies = self.dwt(torch.randn(1, 1, sequenceLength))
+        highFrequenciesShapes = [highFrequency.size(-1) for highFrequency in highFrequencies]  # Optimally: maxSequenceLength / decompositionLayer**2
+        lowFrequencyShape = lowFrequency.size(-1)  # Optimally: maxSequenceLength / numDecompositions**2
+
+        return lowFrequencyShape, highFrequenciesShapes

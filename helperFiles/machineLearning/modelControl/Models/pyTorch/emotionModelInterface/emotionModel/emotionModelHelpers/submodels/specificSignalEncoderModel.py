@@ -20,3 +20,9 @@ class specificSignalEncoderModel(nn.Module):
 
     def projectionOperator(self, signalData):
         return self.liftingOperator(signalData)
+
+    def initialLearning(self, signalData):
+        pass
+
+    def finalLearning(self, signalData):
+        pass

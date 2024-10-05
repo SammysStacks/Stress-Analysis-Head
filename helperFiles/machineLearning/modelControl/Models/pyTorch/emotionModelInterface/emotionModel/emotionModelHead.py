@@ -117,15 +117,20 @@ class emotionModelHead(nn.Module):
             # ------------------- Learned Signal Compression ------------------- #
 
             # Interpolate the data to a fixed input size.
-            interpolatedSignals = self.sharedSignalEncoderModel.learnedInterpolation(signalData=signalData)
+            interpolatedSignalData = self.sharedSignalEncoderModel.learnedInterpolation(signalData=signalData)
             # interpolatedData: batchSize, numSignals, finalSignalDim
 
-            print(interpolatedSignals.size())
-            print(interpolatedSignals[0][0])
+            # Reversible signal-specific layers.
+            signalSpecificData = interpolatedSignalData.clone()
+
+            # Reversible meta-learning layers.
+            interpolatedSignals = self.sharedSignalEncoderModel.sharedLearning(signalData=signalSpecificData)
+
+            # Reversible signal-specific layers.
 
             # ---------------------- Emotion Model ---------------------- #
 
             if submodel == modelConstants.emotionModel:
                 activityProfile, basicEmotionProfile, emotionProfile = self.emotionPrediction(signalData, metadata)
 
-            return interpolatedSignals, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile
+            return interpolatedSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile
