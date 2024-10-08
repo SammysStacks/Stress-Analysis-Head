@@ -41,10 +41,11 @@ class sharedSignalEncoderModel(nn.Module):
         self.testingLosses_timeReconstructionAnalysis = [[] for _ in modelConstants.timeWindows]  # List of list of data reconstruction testing losses. Dim: numTimeWindows, numEpochs
 
     def learnedInterpolation(self, signalData):
-        # For each layer, apply the attention mechanism.
-        signalData = self.attentionMechanism(signalData)
+        """ signalData: batchSize, numSignals, signalSpecificLength* """
+        interpolatedSignalData = self.attentionMechanism(signalData)
+        # interpolatedSignalData: batchSize, numSignals, finalSignalDim
 
-        return signalData
+        return interpolatedSignalData
 
     def sharedLearning(self, signalData):
         pass

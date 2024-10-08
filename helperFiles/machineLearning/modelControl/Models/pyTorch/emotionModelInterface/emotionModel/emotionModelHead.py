@@ -6,6 +6,7 @@ from torch import nn
 
 # Import helper modules
 from .emotionModelHelpers.modelConstants import modelConstants
+from .emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
 from .emotionModelHelpers.submodels.sharedEmotionModel import sharedEmotionModel
 from .emotionModelHelpers.submodels.sharedSignalEncoderModel import sharedSignalEncoderModel
 # Import submodels
@@ -34,8 +35,11 @@ class emotionModelHead(nn.Module):
         self.numSigLiftedChannels = userInputParams['numSigLiftedChannels']     # The number of channels to lift to during signal encoding.
         self.numSigEncodingLayers = userInputParams['numSigEncodingLayers']     # The number of layers during signal encoding.
         self.encodedSamplingFreq = userInputParams['encodedSamplingFreq']     # The number of transformer layers during signal encoding.
+
         self.latentQueryKeyDim = 4
         self.finalSignalDim = 1024
+        self.numInitialLayers = 1
+        self.numFinalLayers = 1
 
         # Emotion parameters.
         self.numInterpreterHeads = userInputParams['numInterpreterHeads']   # The number of ways to interpret a set of physiological signals.
@@ -50,13 +54,15 @@ class emotionModelHead(nn.Module):
         self.numActivitySignals = 8  # The number of common activity features to extract.
 
         # Setup holder for the model's training information
+        self.reversibleInterface = reversibleInterface()
         self.trainingInformation = trainingInformation()
 
         # ------------------------ Data Compression ------------------------ # 
 
         # The signal encoder model to find a common feature vector across all signals.
         self.specificSignalEncoderModel = specificSignalEncoderModel(
-            latentQueryKeyDim=self.latentQueryKeyDim,
+            numInitialLayers=self.numInitialLayers,
+            numFinalLayers=self.numFinalLayers,
             finalSignalDim=self.finalSignalDim,
         )
 
@@ -114,21 +120,23 @@ class emotionModelHead(nn.Module):
             basicEmotionProfile = torch.zeros((batchSize, numSignals, maxSequenceLength, numChannels), device=accelerator.device)
             emotionProfile = torch.zeros((batchSize, numSignals, maxSequenceLength, numChannels), device=accelerator.device)
 
-            # ------------------- Learned Signal Compression ------------------- #
+            # ------------------- Learned Signal Mapping ------------------- #
 
             # Interpolate the data to a fixed input size.
             interpolatedSignalData = self.sharedSignalEncoderModel.learnedInterpolation(signalData=signalData)
             # interpolatedData: batchSize, numSignals, finalSignalDim
 
-            # Reversible signal-specific layers.
-            signalSpecificData = interpolatedSignalData.clone()
+            # Calculate the estimated physiological profile given each signal.
+            metaLearningData = self.specificSignalEncoderModel.initialLearning(signalData=interpolatedSignalData)  # Reversible signal-specific layers.
+            metaLearningData = self.sharedSignalEncoderModel.sharedLearning(signalData=metaLearningData)  # Reversible meta-learning layers.
+            metaLearningData = self.specificSignalEncoderModel.finalLearning(signalData=metaLearningData)  # Reversible signal-specific layers.
+            # metaLearningData: batchSize, numSignals, finalSignalDim
 
-            # Reversible meta-learning layers.
-            interpolatedSignals = self.sharedSignalEncoderModel.sharedLearning(signalData=signalSpecificData)
+            # Finalize the physiological profile.
+            physiologicalProfile = metaLearningData.mean(dim=1)
+            # interpolatedData: batchSize, finalSignalDim
 
-            # Reversible signal-specific layers.
-
-            # ---------------------- Emotion Model ---------------------- #
+            # ------------------- Learned Emotion Mapping ------------------- #
 
             if submodel == modelConstants.emotionModel:
                 activityProfile, basicEmotionProfile, emotionProfile = self.emotionPrediction(signalData, metadata)

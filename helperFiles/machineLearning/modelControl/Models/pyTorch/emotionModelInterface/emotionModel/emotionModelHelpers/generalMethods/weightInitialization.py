@@ -19,23 +19,23 @@ class weightInitialization:
         normalizationGain = 1.0
 
         # Assert the validity of the input parameters.
-        assert linearity in ['conv1D', 'fc', 'pointwise'], "I have not considered this layer's initialization strategy yet."
+        assert linearity in ['conv1D', 'fc', 'pointwise', 'reverseConv1D', 'depthwise'], f"I have not considered this {linearity} yet."
 
         gainInformation = None
         if len(layerInformation) == 2:
             gainInformation = layerInformation[1]
 
         linearityGain = 1.0
-        if linearity in ['conv1D', 'pointwise']:
+        if linearity in ['conv1D', 'pointwise', 'reverseConv1D']:
             # Calculate the gain for the layer's linearity component.
             outChannels, inChannels, kernelSize = modelParam.weight.size()
             linearityGain = math.sqrt(min(outChannels, inChannels) / max(outChannels, inChannels) / kernelSize)
-            if gainInformation == "WNO": linearityGain = linearityGain * math.sqrt(1 / kernelSize)
+            if gainInformation == "NeuralOp": linearityGain = linearityGain * math.sqrt(1 / kernelSize)
         elif linearity == 'fc':
             outFeatures, inFeatures = modelParam.weight.size()
             linearityGain = math.sqrt(min(outFeatures, inFeatures) / max(outFeatures, inFeatures))
 
-        if linearity == 'conv1D':
+        if linearity in ['conv1D', 'depthwise', 'reverseConv1D']:
             self.xavier_uniform_weights(modelParam, nonlinearity='conv1d', normalizationGain=normalizationGain*linearityGain)
         elif linearity == 'pointwise':
             self.xavier_uniform_weights(modelParam, nonlinearity='conv1d', normalizationGain=normalizationGain*linearityGain)
