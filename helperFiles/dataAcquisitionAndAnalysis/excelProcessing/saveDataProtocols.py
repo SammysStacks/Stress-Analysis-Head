@@ -136,44 +136,58 @@ class saveExcelData(handlingExcelFormat):
 
         # ---------------------- Add data to document ---------------------- #
 
-        # Get the Header for the Data
-        header = ["Time (Seconds)"]
-        header.extend([dataHeader.upper() + " Raw Data" for dataHeader in dataHeaders])
+        # Create a combined header with time and corresponding signal data columns for each channel
+        header = []
+        for i, dataHeader in enumerate(dataHeaders):
+            header.append(f"Time_{dataHeader.upper()} (Seconds)")
+            header.append(f"{dataHeader.upper()} Raw Data")
+
+        # Write the header to the worksheet
+        worksheet.title = self.rawSignals_Sheetname
+        worksheet.append(header)
 
         if deviceType == 'empatica':
             for firstIndexInFile in range(0, len(timepoints), self.maxAddToExcelSheet):
                 startTimer = time.time()
-                # Add the information to the page
-                worksheet.title = self.rawSignals_Sheetname
-                worksheet.append(header)
-                # loop through the channel specific time points and channel specific data
-                print('timePoints:', timepoints)
-                print('signalData:', signalData)
-                for channelInd in range(len(timepoints)):
-                    for dataRow in range(len(timepoints[channelInd])):
-                        channelRowOne = [timepoints[channelInd][dataRow]]
-                        channelRowOne.extend([dataCol for dataCol in signalData[channelInd]])
-                        worksheet.append(channelRowOne)
 
-                # Finalize document
-                # Finalize document
+                # Now append data: align time points with corresponding signal data in the same row
+                max_rows = max(len(tp) for tp in timepoints)  # Determine the maximum number of rows to iterate over
+
+                # Iterate through each row (time point)
+                for row in range(max_rows):
+                    row_data = []  # To hold the row data to append
+
+                    # For each channel (time and data)
+                    for channelInd in range(len(timepoints)):
+                        if row < len(timepoints[channelInd]):  # Check if the current row exists in the channel data
+                            row_data.append(timepoints[channelInd][row])  # Append the time point
+                            row_data.append(signalData[channelInd][row])  # Append the corresponding signal data
+                        else:
+                            # If no data for this row (shorter array), append empty cells
+                            row_data.append(None)
+                            row_data.append(None)
+
+                    # Append the collected row data to the worksheet
+                    worksheet.append(row_data)
+
+                # Finalize document aesthetics
                 self.addExcelAesthetics(worksheet)  # Add Excel Aesthetics
                 worksheet = WB.create_sheet(self.emptySheetName)  # Add Sheet
-                # If I need to use another sheet
-                maxNumberRows = max(len(timepoints[channelInd]) for channelInd in range(len(timepoints)))
+
+                # Track and estimate time if writing in batches
+                maxNumberRows = max(len(tp) for tp in timepoints)
                 if firstIndexInFile + self.maxAddToExcelSheet < maxNumberRows:
-                    # Keep track of how long it is taking.
                     endTimer = time.time()
                     numberOfSheetsLeft = 1 + (maxNumberRows - firstIndexInFile - self.maxAddToExcelSheet) // self.maxAddToExcelSheet
                     timeRemaining = (endTimer - startTimer) * numberOfSheetsLeft
                     print("\tEstimated Time Remaining " + str(timeRemaining) + " seconds; Excel Sheets Left to Add: " + str(numberOfSheetsLeft))
+
             # Remove empty page
             if worksheet.title == self.emptySheetName:
                 WB.remove(worksheet)
 
             # ------------------------------------------------------------------ #
             # ------------------------ Save the document ----------------------- #
-            # Save as New Excel File
             WB.save(saveExcelPath)
             WB.close()
         else:
