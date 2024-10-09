@@ -13,11 +13,22 @@ class bvpProtocol(globalProtocol):
 
     def __init__(self, numPointsPerBatch=3000, moveDataFinger=10, channelIndices=(), plottingClass=None, readData=None):
         # Feature collection parameters
+        self.diastolicPressure0 = None
+        self.systolicPressure0 = None
+        self.featureListAverage = None
+        self.featureListExact = None
         self.maxPointsPerPulse = None
         self.minPointsPerPulse = None
         self.peakStandard = 0  # The Max First Deriviative of the Previous Pulse's Systolic Peak
         self.peakStandardInd = 0  # The Index of the Max Derivative in the Previous Pulse's Systolic Peak
+
+        # Pointer initialization
+        self.timeOffset = None
         self.startFeatureTimePointer = None  # The start pointer of the feature window interval.
+        self.prevEndInd = None
+        self.endIndexPointer = None
+
+        # general parameters
         self.featureTimeWindow = None  # The duration of time that each feature considers
         self.minPointsPerBatch = None  # The minimum number of points that must be present in a batch to extract features.
 
@@ -111,10 +122,11 @@ class bvpProtocol(globalProtocol):
         self.systolicPressure0 = systolicPressure0
         self.diastolicPressure0 = diastolicPressure0
 
-    def seperatePulses(self, time, firstDer):
+    def separatePulses(self, time, firstDer):
         self.peakStandardInd = 0
 
-        # Take First Derivative of the Smoothened Data
+        # Take First Derivative of the Smooth
+        # ened Data
         separatedPeaks = []
         for pointInd in range(len(firstDer)): # keep track of the current point index
             # Retrieve the derivative at pointInd
@@ -187,12 +199,12 @@ class bvpProtocol(globalProtocol):
                     second_derivative = np.gradient(first_derivative, intervalTimes)
                     third_derivative = np.gradient(second_derivative, intervalTimes)
 
-                    separatedPeaks = self.seperatePulses(intervalTimes, first_derivative)
+                    separatedPeaks = self.separatePulses(intervalTimes, first_derivative)
 
                     # If no peaks are found, adjust the peakStandard and attempt to detect again.
                     while len(separatedPeaks) == 0:
                         self.peakStandard /= 2
-                        separatedPeaks = self.seperatePulses(intervalTimes, first_derivative)
+                        separatedPeaks = self.separatePulses(intervalTimes, first_derivative)
 
                     # Start pulse separation and update index for each pulse processed.
                     pulseStartInd = self.universalMethods.findNearbyMinimum(
