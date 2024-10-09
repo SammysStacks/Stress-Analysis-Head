@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
     # Specify the user parameters.
     userName = "Ruixiao".replace(" ", "")
-    trialName = "BaselineE4"
+    trialName = "BaselineE4-2"
     date = "2024-09-24"
 
     # Specify experimental parameters.
@@ -237,6 +237,21 @@ if __name__ == "__main__":
 
         # Save the Data in Excel
         if saveRawSignals:
+            # print('analysis.timePoints', readData.analysisList)
+            # print('analysis.timePoints', readData.analysisList[0].timepoints)
+            # print('analysis.channelData', readData.analysisList[0].channelData)
+            # print('-----------------------------------------------------------------')
+            # print('analysis.timePoints', readData.analysisList[1].timepoints)
+            # print('analysis.channelData', readData.analysisList[1].channelData)
+            # print('-----------------------------------------------------------------')
+            # print('analysis.timePoints', readData.analysisList[2].timepoints)
+            # print('analysis.channelData', readData.analysisList[2].channelData)
+            # print('-----------------------------------------------------------------')
+            # print('analysis.timePoints', readData.analysisList[3].timepoints)
+            # print('analysis.channelData', readData.analysisList[3].channelData)
+            # exit()
+
+
             # Double Check to See if a User Wants to Save the Data
             verifiedSave = input("Are you Sure you Want to Save the Data (Y/N): ")
             if verifiedSave.upper() != "Y":

@@ -76,6 +76,7 @@ class empaticaInterface:
 
             # Organize the data.
             self.organizeData(analysis=analysis, timepoint=normalized_timestamp, datapoint=dataChannels)
+
         return False
 
     @staticmethod
@@ -91,6 +92,8 @@ class empaticaInterface:
 
             # Add the data to the correct channel
             analysis.channelData[channelIndex].append(newData)
-
+        # print('analysis', analysis)
+        # print('analysis.timepoints', analysis.timepoints)
+        # print('analysis.channelData', analysis.channelData)
     def close(self):
         self.closeServer = True

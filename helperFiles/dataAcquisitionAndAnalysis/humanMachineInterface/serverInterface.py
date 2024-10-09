@@ -2,7 +2,6 @@ import socket
 import threading
 import time
 
-from pexpect import TIMEOUT
 
 from helperFiles.dataAcquisitionAndAnalysis.empaticaInterface import empaticaInterface
 

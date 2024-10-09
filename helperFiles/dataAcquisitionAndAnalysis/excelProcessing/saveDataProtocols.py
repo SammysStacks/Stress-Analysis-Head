@@ -140,42 +140,79 @@ class saveExcelData(handlingExcelFormat):
         header = ["Time (Seconds)"]
         header.extend([dataHeader.upper() + " Raw Data" for dataHeader in dataHeaders])
 
-        # Loop through/save all the data in batches of maxAddToExcelSheet.
-        for firstIndexInFile in range(0, len(timepoints), self.maxAddToExcelSheet):
-            startTimer = time.time()
-            # Add the information to the page
-            worksheet.title = self.rawSignals_Sheetname
-            worksheet.append(header)  # Add the header labels to this specific file.
+        if deviceType == 'empatica':
+            for firstIndexInFile in range(0, len(timepoints), self.maxAddToExcelSheet):
+                startTimer = time.time()
+                # Add the information to the page
+                worksheet.title = self.rawSignals_Sheetname
+                worksheet.append(header)
+                # loop through the channel specific time points and channel specific data
+                print('timePoints:', timepoints)
+                print('signalData:', signalData)
+                for channelInd in range(len(timepoints)):
+                    for dataRow in range(len(timepoints[channelInd])):
+                        channelRowOne = [timepoints[channelInd][dataRow]]
+                        channelRowOne.extend([dataCol for dataCol in signalData[channelInd]])
+                        worksheet.append(channelRowOne)
 
-            # Loop through all data to be saved within this sheet in the Excel file.
-            for dataInd in range(firstIndexInFile, min(firstIndexInFile + self.maxAddToExcelSheet, len(timepoints))):
-                # Organize all the data
-                row = [timepoints[dataInd]]
-                row.extend([dataCol[dataInd] for dataCol in signalData])
+                # Finalize document
+                # Finalize document
+                self.addExcelAesthetics(worksheet)  # Add Excel Aesthetics
+                worksheet = WB.create_sheet(self.emptySheetName)  # Add Sheet
+                # If I need to use another sheet
+                maxNumberRows = max(len(timepoints[channelInd]) for channelInd in range(len(timepoints)))
+                if firstIndexInFile + self.maxAddToExcelSheet < maxNumberRows:
+                    # Keep track of how long it is taking.
+                    endTimer = time.time()
+                    numberOfSheetsLeft = 1 + (maxNumberRows - firstIndexInFile - self.maxAddToExcelSheet) // self.maxAddToExcelSheet
+                    timeRemaining = (endTimer - startTimer) * numberOfSheetsLeft
+                    print("\tEstimated Time Remaining " + str(timeRemaining) + " seconds; Excel Sheets Left to Add: " + str(numberOfSheetsLeft))
+            # Remove empty page
+            if worksheet.title == self.emptySheetName:
+                WB.remove(worksheet)
 
-                # Add the row to the worksheet
-                worksheet.append(row)
+            # ------------------------------------------------------------------ #
+            # ------------------------ Save the document ----------------------- #
+            # Save as New Excel File
+            WB.save(saveExcelPath)
+            WB.close()
+        else:
+            # Loop through/save all the data in batches of maxAddToExcelSheet.
+            for firstIndexInFile in range(0, len(timepoints), self.maxAddToExcelSheet):
+                startTimer = time.time()
+                # Add the information to the page
+                worksheet.title = self.rawSignals_Sheetname
+                worksheet.append(header)  # Add the header labels to this specific file.
 
-            # Finalize document
-            self.addExcelAesthetics(worksheet)  # Add Excel Aesthetics
-            worksheet = WB.create_sheet(self.emptySheetName)  # Add Sheet
+                # Loop through all data to be saved within this sheet in the Excel file.
+                for dataInd in range(firstIndexInFile, min(firstIndexInFile + self.maxAddToExcelSheet, len(timepoints))):
+                    # Organize all the data
+                    row = [timepoints[dataInd]]
+                    row.extend([dataCol[dataInd] for dataCol in signalData])
 
-            # If I need to use another sheet
-            if firstIndexInFile + self.maxAddToExcelSheet < len(timepoints):
-                # Keep track of how long it is taking.
-                endTimer = time.time()
-                numberOfSheetsLeft = 1 + (len(timepoints) - firstIndexInFile - self.maxAddToExcelSheet) // self.maxAddToExcelSheet
-                timeRemaining = (endTimer - startTimer) * numberOfSheetsLeft
-                print("\tEstimated Time Remaining " + str(timeRemaining) + " seconds; Excel Sheets Left to Add: " + str(numberOfSheetsLeft))
-        # Remove empty page
-        if worksheet.title == self.emptySheetName:
-            WB.remove(worksheet)
+                    # Add the row to the worksheet
+                    worksheet.append(row)
 
-        # ------------------------------------------------------------------ #
-        # ------------------------ Save the document ----------------------- #  
-        # Save as New Excel File
-        WB.save(saveExcelPath)
-        WB.close()
+                # Finalize document
+                self.addExcelAesthetics(worksheet)  # Add Excel Aesthetics
+                worksheet = WB.create_sheet(self.emptySheetName)  # Add Sheet
+
+                # If I need to use another sheet
+                if firstIndexInFile + self.maxAddToExcelSheet < len(timepoints):
+                    # Keep track of how long it is taking.
+                    endTimer = time.time()
+                    numberOfSheetsLeft = 1 + (len(timepoints) - firstIndexInFile - self.maxAddToExcelSheet) // self.maxAddToExcelSheet
+                    timeRemaining = (endTimer - startTimer) * numberOfSheetsLeft
+                    print("\tEstimated Time Remaining " + str(timeRemaining) + " seconds; Excel Sheets Left to Add: " + str(numberOfSheetsLeft))
+            # Remove empty page
+            if worksheet.title == self.emptySheetName:
+                WB.remove(worksheet)
+
+            # ------------------------------------------------------------------ #
+            # ------------------------ Save the document ----------------------- #
+            # Save as New Excel File
+            WB.save(saveExcelPath)
+            WB.close()
 
     def saveRawFeatures(self, rawFeatureTimesHolder, rawFeatureHolder, biomarkerFeatureNames, biomarkerFeatureOrder, experimentTimes, experimentNames,
                         surveyAnswerTimes, surveyAnswersList, surveyQuestions, subjectInformationAnswers, subjectInformationQuestions, excelFilename, overwriteSave=True):
