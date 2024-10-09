@@ -237,18 +237,18 @@ if __name__ == "__main__":
 
         # Save the Data in Excel
         if saveRawSignals:
-            # print('analysis.timePoints', readData.analysisList)
-            # print('analysis.timePoints', readData.analysisList[0].timepoints)
-            # print('analysis.channelData', readData.analysisList[0].channelData)
-            # print('-----------------------------------------------------------------')
-            # print('analysis.timePoints', readData.analysisList[1].timepoints)
-            # print('analysis.channelData', readData.analysisList[1].channelData)
-            # print('-----------------------------------------------------------------')
-            # print('analysis.timePoints', readData.analysisList[2].timepoints)
-            # print('analysis.channelData', readData.analysisList[2].channelData)
-            # print('-----------------------------------------------------------------')
-            # print('analysis.timePoints', readData.analysisList[3].timepoints)
-            # print('analysis.channelData', readData.analysisList[3].channelData)
+            print('analysis.timePoints', readData.analysisList)
+            print('analysis.timePoints', readData.analysisList[0].timepoints)
+            print('analysis.channelData', readData.analysisList[0].channelData)
+            print('-----------------------------------------------------------------')
+            print('analysis.timePoints', readData.analysisList[1].timepoints)
+            print('analysis.channelData', readData.analysisList[1].channelData)
+            print('-----------------------------------------------------------------')
+            print('analysis.timePoints', readData.analysisList[2].timepoints)
+            print('analysis.channelData', readData.analysisList[2].channelData)
+            print('-----------------------------------------------------------------')
+            print('analysis.timePoints', readData.analysisList[3].timepoints)
+            print('analysis.channelData', readData.analysisList[3].channelData)
             # exit()
 
 
