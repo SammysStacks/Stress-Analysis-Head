@@ -39,8 +39,12 @@ class bvpProtocol(globalProtocol):
 
     def resetAnalysisVariables(self):
 
+        # document the lastDataIndex over the batch
         self.timeOffset = 0
-        self.absTime = 0
+
+        # document the absolute timer
+        self.prevEndInd = 0
+        self.endIndexPointer = 0
 
         # General parameters
         self.startFeatureTimePointer = [0 for _ in range(self.numChannels)]  # The start pointer of the feature window interval.
@@ -139,6 +143,10 @@ class bvpProtocol(globalProtocol):
                     self.peakStandard = max(self.peakStandard, firstDerVal)
         return separatedPeaks
 
+    @staticmethod
+    def retrieveTimePoints(timepoints, startPointer, endPointer):
+        return timepoints[startPointer:endPointer]
+
     def analyzeData(self, dataFinger):
         for channelIndex in range(self.numChannels):
             startFilterPointer = max(dataFinger - self.dataPointBuffer, 0)
@@ -159,11 +167,12 @@ class bvpProtocol(globalProtocol):
                 newFeatureTimes, newRawFeatures = [], []
 
                 # Loop through the data, processing it in chunks, while making sure we analyze the whole batch.
+                iteration = 0
                 while self.lastAnalyzedDataInd[channelIndex] < len(timepoints):
                     featureTime = self.timepoints[self.lastAnalyzedDataInd[channelIndex]]
                     self.startFeatureTimePointer[channelIndex] = self.findStartFeatureWindow(
                         self.startFeatureTimePointer[channelIndex], featureTime, self.featureTimeWindow)
-
+                    print('_____________________________defining intervalTimes____________________________________________')
                     intervalTimes, intervalData = self.compileBatchData(
                         filteredTime, standardizeData, goodIndicesMask, startFilterPointer,
                         self.startFeatureTimePointer[channelIndex], channelIndex)
@@ -194,7 +203,8 @@ class bvpProtocol(globalProtocol):
                         pulseEndInd = self.universalMethods.findNearbyMinimum(
                             intervalData, separatedPeaks[pulseNum], binarySearchWindow=-1, maxPointsSearch=self.maxPointsPerPulse
                         )
-
+                        print('pulseStartInd', pulseStartInd)
+                        print('pulseEndInd', pulseEndInd)
                         # Validate pulse size and skip the pulse if it's too big or too small.
                         if pulseEndInd - pulseStartInd > self.maxPointsPerPulse:
                             print('Pulse too big; skipping.')
@@ -210,6 +220,17 @@ class bvpProtocol(globalProtocol):
                         intervalPulseTime = intervalTimes[pulseStartInd:pulseEndInd]
                         intervalPulseData = intervalData[pulseStartInd:pulseEndInd]
 
+                        if iteration == 0:
+                            absoluteTime = self.timepoints[pulseStartInd:pulseEndInd]
+                        else:
+                            shiftedStartInd = pulseStartInd + self.prevEndInd
+                            shiftedEndInd = pulseEndInd + self.prevEndInd
+                            absoluteTime = self.timepoints[shiftedStartInd:shiftedEndInd]
+
+                        # print('intervalTimes', intervalTimes)
+                        # print('intervalPulseTime', intervalPulseTime)
+
+
                         if len(intervalPulseTime) >= self.minPointsPerPulse:
                             toBeNormalizedPulse = intervalPulseData.copy()
                             normalizedPulseData = self.normalizePulseBaseline(toBeNormalizedPulse, 1)
@@ -220,13 +241,17 @@ class bvpProtocol(globalProtocol):
 
                             # Plot each pulse's features if plotting is enabled.
                             if self.plottingIndicator:
-                                self.plotBvpFeatures(intervalPulseTime, intervalPulseData, finalFeatures)
+                                self.plotBvpFeatures(absoluteTime, intervalPulseData, finalFeatures)
 
                             # Update the last analyzed index for this pulse.
-                            self.timeOffset = pulseEndInd
+                            self.timeOffset = pulseEndInd - pulseStartInd
+                            self.endIndexPointer = pulseEndInd
+
 
                     self.lastAnalyzedDataInd[channelIndex] += self.timeOffset
                     print('self.lastAnalyzedDataInd', self.lastAnalyzedDataInd)
+                    iteration += 1
+                    self.prevEndInd += self.endIndexPointer
 
                 if self.readData is None:
                     print('readData is None, doing initial Testings')
