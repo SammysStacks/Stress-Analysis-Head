@@ -8,9 +8,9 @@ from .waveletNeuralHelpers import waveletNeuralHelpers
 class waveletNeuralOperatorWeights(waveletNeuralHelpers):
 
     def __init__(self, sequenceLength, numInputSignals, numOutputSignals, numDecompositions, waveletType, mode, addBiasTerm, activationMethod,
-                 skipConnectionProtocol, encodeLowFrequencyProtocol=0, encodeHighFrequencyProtocol=0, learningProtocol=0, independentChannels=False):
+                 skipConnectionProtocol, encodeLowFrequencyProtocol=0, encodeHighFrequencyProtocol=0, independentChannels=False):
         super(waveletNeuralOperatorWeights, self).__init__(sequenceLength, numInputSignals, numOutputSignals, numDecompositions, waveletType, mode, addBiasTerm, activationMethod,
-                                                           skipConnectionProtocol, encodeLowFrequencyProtocol, encodeHighFrequencyProtocol, learningProtocol, independentChannels)
+                                                           skipConnectionProtocol, encodeLowFrequencyProtocol, encodeHighFrequencyProtocol, independentChannels)
         # Initialize wavelet neural operator parameters.
         if self.addBiasTerm: self.operatorBiases = self.neuralBiasParameters(numChannels=numOutputSignals)  # Bias terms for the neural operator.
         self.highFrequenciesWeights = self.getHighFrequencyWeights()  # Learnable parameters for the high-frequency signal.

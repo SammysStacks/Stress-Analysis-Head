@@ -8,9 +8,9 @@ from .waveletNeuralOperatorWeights import waveletNeuralOperatorWeights
 class waveletNeuralOperatorLayer(waveletNeuralOperatorWeights):
 
     def __init__(self, sequenceLength, numInputSignals, numOutputSignals, numDecompositions, waveletType, mode, addBiasTerm, activationMethod,
-                 skipConnectionProtocol, encodeLowFrequencyProtocol=0, encodeHighFrequencyProtocol=0, learningProtocol=0, independentChannels=False):
+                 skipConnectionProtocol, encodeLowFrequencyProtocol=0, encodeHighFrequencyProtocol=0, independentChannels=False):
         super(waveletNeuralOperatorLayer, self).__init__(sequenceLength, numInputSignals, numOutputSignals, numDecompositions, waveletType, mode, addBiasTerm, activationMethod,
-                                                         skipConnectionProtocol, encodeLowFrequencyProtocol, encodeHighFrequencyProtocol, learningProtocol, independentChannels)
+                                                         skipConnectionProtocol, encodeLowFrequencyProtocol, encodeHighFrequencyProtocol, independentChannels)
 
     def forward(self, inputData, lowFrequencyTerms=None, highFrequencyTerms=None):
         # Apply the wavelet neural operator and the skip connection.

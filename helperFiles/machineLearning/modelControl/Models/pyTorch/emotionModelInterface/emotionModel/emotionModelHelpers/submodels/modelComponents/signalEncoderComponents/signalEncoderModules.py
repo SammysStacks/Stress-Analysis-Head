@@ -84,105 +84,33 @@ class signalEncoderModules(convolutionalHelpers):
 
         return nn.Sequential(
             # Convolution architecture: feature engineering
-            self.convolutionalFiltersBlocks(numBlocks=3, numChannels=[inChannel, inChannel], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationType='boundedExp_0_2', numLayers=None, addBias=False),
-            self.convolutionalFiltersBlocks(numBlocks=1, numChannels=[inChannel, outChannel], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationType='boundedExp_0_2', numLayers=None, addBias=False),
+            self.convolutionalFiltersBlocks(numBlocks=3, numChannels=[inChannel, inChannel], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='reverseConv1D', activationType='boundedExp_0_2', numLayers=None, addBias=False),
+            self.convolutionalFiltersBlocks(numBlocks=1, numChannels=[inChannel, outChannel], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='reverseConv1D', activationType='boundedExp_0_2', numLayers=None, addBias=False),
         )
 
     def independentSkipConnectionEncoding(self, inChannel=2, outChannel=1):
         assert inChannel == outChannel, "The number of input and output signals must be equal."
 
         return independentModelCNN(
-            module=self.convolutionalFiltersBlocks(numBlocks=4, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationType='boundedExp_0_2', numLayers=None, addBias=False),
+            module=self.convolutionalFiltersBlocks(numBlocks=4, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='reverseConv1D', activationType='boundedExp_0_2', numLayers=None, addBias=False),
             useCheckpoint=False,
         )
 
-    # ------------------- Positional Encoding Architectures ------------------- #
-
-    @staticmethod
-    def getActivationMethod_posEncoder():
-        return "none"
-
-    @staticmethod
-    def positionalEncodingStamp(stampLength=1, frequency=torch.tensor(0), signalMinMaxScale=1):
-        # Create an array of values from 0 to stampLength - 1
-        x = torch.arange(stampLength, dtype=torch.float32, device=frequency.device)
-        amplitude = signalMinMaxScale
-
-        # Generate the sine wave
-        sine_wave = amplitude * torch.sin(2 * math.pi * frequency * x / stampLength)
-
-        return sine_wave
-
-    def getFrequencyParams(self, numEncodingStamps=8):
-        # Initialize the weights with a normal distribution.
-        parameter = nn.Parameter(torch.randn(numEncodingStamps))
-        parameter = self.weightInitialization.heUniformInit(parameter, fan_in=numEncodingStamps)
-
-        return parameter
-
-    def predictedPosEncodingIndex(self, numFeatures=2):
-        assert 16 <= numFeatures, "The number of features must be greater than 16."
-
-        return nn.Sequential(
-            # Neural architecture: self attention.
-            self.linearModel(numInputFeatures=numFeatures, numOutputFeatures=int(numFeatures/2), activationMethod='boundedExp_0_2', layerType='fc'),
-            self.linearModel(numInputFeatures=int(numFeatures/2), numOutputFeatures=int(numFeatures/4), activationMethod='boundedExp_0_2', layerType='fc'),
-            self.linearModel(numInputFeatures=int(numFeatures/4), numOutputFeatures=int(numFeatures/8), activationMethod='boundedExp_0_2', layerType='fc'),
-            self.linearModel(numInputFeatures=int(numFeatures/8), numOutputFeatures=1, activationMethod='boundedExp_0_2', layerType='fc'),
-        )
-
-    # --------------------- Resampling Architectures --------------------- #
-
-    def polynomialCoeffs(self, outChannel=2):
-        # Linear architecture: represents the weights of the polynomial coefficients.
-        return self.linearModel(numInputFeatures=1, numOutputFeatures=outChannel, activationMethod='none', layerType='fc', addBias=False)[0].weight
-
-    def resamplingOperator(self, inChannel=1, outChannel=2):
-        return nn.Sequential(
-            # Convolution architecture: lifting operator. Keep kernel_sizes as 1 for an interpretable encoding space and faster (?) convergence.
-            self.linearModel(numInputFeatures=inChannel, numOutputFeatures=outChannel, activationMethod='none', layerType='fc', addBias=False),
-        )
-
     # ------------------- Signal Encoding Architectures ------------------- #
-
-    def liftingOperator(self, inChannel=1, outChannel=2):
-        return nn.Sequential(
-            # Convolution architecture: lifting operator. Keep kernel_sizes as 1 for an interpretable encoding space and faster (?) convergence.
-            self.convolutionalFiltersBlocks(numBlocks=1, numChannels=[inChannel, outChannel], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationType='none', numLayers=None, addBias=False),
-        )
-
+    
     @staticmethod
     def getActivationMethod_channelEncoder():
         return 'boundedExp_0_2'
 
-    def liftingOperatorLayer(self, inChannel=1, outChannel=2):
-        return nn.Sequential(
-            # Convolution architecture: lifting operator. Keep kernel_sizes as 1 for an interpretable encoding space and faster (?) convergence.
-            self.convolutionalFiltersBlocks(numBlocks=1, numChannels=[inChannel, outChannel], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationType='none', numLayers=None, addBias=False),
-        )
-
     def postProcessingLayer(self, inChannel=1):
         return nn.Sequential(
             # Convolution architecture: post-processing operator. Keep kernel_sizes as 1 for an interpretable encoding space and faster (?) convergence.
-            self.convolutionalFilters_resNetBlocks(numResNets=1, numBlocks=4, numChannels=[inChannel, inChannel], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationType='boundedExp_0_2', numLayers=None, addBias=False),
-        )
-
-    def projectionOperator(self, inChannel=2, outChannel=1):
-        return nn.Sequential(
-            # Convolution architecture: projection operator. Keep kernel_sizes as 1 for an interpretable encoding space and faster (?) convergence.
-            self.convolutionalFiltersBlocks(numBlocks=1, numChannels=[inChannel, outChannel], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationType='none', numLayers=None, addBias=False),
-        )
-
-    def heuristicEncoding(self, inChannel=1, outChannel=2):
-        return nn.Sequential(
-            # Convolution architecture: heuristic operator.
-            self.convolutionalFiltersBlocks(numBlocks=3, numChannels=[inChannel, inChannel], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationType='boundedExp_0_2', numLayers=None, addBias=False),
-            self.convolutionalFiltersBlocks(numBlocks=1, numChannels=[inChannel, outChannel], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationType='boundedExp_0_2', numLayers=None, addBias=False),
+            self.convolutionalFilters_resNetBlocks(numBlocks=4, numChannels=[inChannel, inChannel], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='reverseConv1D', activationType='boundedExp_0_2', numLayers=None, addBias=False),
         )
 
     def finalChannelModel(self, inChannel=2):
         return nn.Sequential(
-            self.convolutionalFilters_resNetBlocks(numResNets=2, numBlocks=4, numChannels=[inChannel, inChannel], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationType='boundedExp_0_2', numLayers=None, addBias=False),
+            self.convolutionalFilters_resNetBlocks(numBlocks=4, numChannels=[inChannel, inChannel], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='reverseConv1D', activationType='boundedExp_0_2', numLayers=None, addBias=False),
         )
 
     # ----------------------- Denoiser Architectures ----------------------- #
@@ -191,9 +119,9 @@ class signalEncoderModules(convolutionalHelpers):
         return independentModelCNN(
             ResNet(
                 module=nn.Sequential(
-                    self.convolutionalFiltersBlocks(numBlocks=1, numChannels=[1, 4], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationType='boundedExp_0_2', numLayers=None, addBias=False),
-                    self.convolutionalFiltersBlocks(numBlocks=4, numChannels=[4, 4], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationType='boundedExp_0_2', numLayers=None, addBias=False),
-                    self.convolutionalFiltersBlocks(numBlocks=1, numChannels=[4, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationType='boundedExp_0_2', numLayers=None, addBias=False),
+                    self.convolutionalFiltersBlocks(numBlocks=1, numChannels=[1, 4], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='reverseConv1D', activationType='boundedExp_0_2', numLayers=None, addBias=False),
+                    self.convolutionalFiltersBlocks(numBlocks=4, numChannels=[4, 4], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='reverseConv1D', activationType='boundedExp_0_2', numLayers=None, addBias=False),
+                    self.convolutionalFiltersBlocks(numBlocks=1, numChannels=[4, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='reverseConv1D', activationType='boundedExp_0_2', numLayers=None, addBias=False),
                 )
             ), useCheckpoint=False,
         )

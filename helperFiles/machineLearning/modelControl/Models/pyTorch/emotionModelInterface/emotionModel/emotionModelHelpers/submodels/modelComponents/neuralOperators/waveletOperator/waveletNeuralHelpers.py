@@ -35,7 +35,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 class waveletNeuralHelpers(signalEncoderModules):
 
     def __init__(self, sequenceLength, numInputSignals, numOutputSignals, numDecompositions, waveletType, mode, addBiasTerm, activationMethod,
-                 skipConnectionProtocol, encodeLowFrequencyProtocol=0, encodeHighFrequencyProtocol=0, learningProtocol=0, independentChannels=False):
+                 skipConnectionProtocol, encodeLowFrequencyProtocol=0, encodeHighFrequencyProtocol=0, independentChannels=False):
         super(waveletNeuralHelpers, self).__init__()
         # Fourier neural operator parameters.
         self.encodeHighFrequencyProtocol = encodeHighFrequencyProtocol  # The high-frequency encoding protocol to use.
@@ -44,10 +44,9 @@ class waveletNeuralHelpers(signalEncoderModules):
         self.independentChannels = independentChannels  # Whether to treat each channel independently.
         self.numDecompositions = numDecompositions  # Maximum number of decompositions to apply.
         self.numOutputSignals = numOutputSignals  # Number of output signals.
-        self.learningProtocol = learningProtocol
         self.activationMethod = activationMethod  # The activation method to use.
         self.numInputSignals = numInputSignals  # Number of input signals.
-        self.sequenceLength = sequenceLength
+        self.sequenceLength = sequenceLength  # The length of the input signals.
         self.addBiasTerm = addBiasTerm  # Whether to add bias terms to the output.
         self.waveletType = waveletType  # The wavelet to use for the decomposition. Options: 'haar', 'db', 'sym', 'coif', 'bior', 'rbio', 'dmey', 'gaus', 'mexh', 'morl', 'cgau', 'shan', 'fbsp', 'cmor'
         self.mode = mode  # The padding mode to use for the decomposition. Options: 'zero', 'symmetric', 'reflect' or 'periodization'.

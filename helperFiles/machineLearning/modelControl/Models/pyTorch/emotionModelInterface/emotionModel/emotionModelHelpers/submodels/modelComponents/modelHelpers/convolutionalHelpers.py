@@ -174,7 +174,7 @@ class convolutionalHelpers(abnormalConvolutions):
                                   padding=paddings[i], dilation=dilations[i], groups=groups[i], padding_mode='reflect', bias=addBias)
 
             elif convType.split("_")[0] == 'reverseConv1D':
-                layer = reversibleConvolution(numChannels=numChannels[i], kernelSize=kernel_sizes[i])
+                layer = reversibleConvolution(numChannels=numChannels[i], kernelSize=kernel_sizes[i], skipConnection=False)
                 assert groups[i] == numChannels[i], "The number of groups must equal the number of channels for reversibility (depthwise)."
 
             # If adding a transposed convolutional layer.

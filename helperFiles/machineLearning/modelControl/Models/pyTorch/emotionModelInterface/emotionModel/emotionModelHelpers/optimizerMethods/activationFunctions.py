@@ -33,8 +33,8 @@ class boundedExp(nn.Module):
 
     def forward(self, x):
         # Calculate the exponential activation function.
-        exponentialNumerator = torch.pow(x/self.nonLinearityRegion, 2*self.decayConstant)
         exponentialDenominator = 1 + torch.pow(x/self.nonLinearityRegion, 2*self.decayConstant + 2)
+        exponentialNumerator = torch.pow(x/self.nonLinearityRegion, 2*self.decayConstant)
         exponentialTerm = torch.exp(exponentialNumerator / exponentialDenominator)
 
         # Calculate the linear term.
