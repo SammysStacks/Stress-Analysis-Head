@@ -1,30 +1,61 @@
-import sklearn
 import numpy as np
-from scipy.signal import welch, find_peaks
+import math
+import matplotlib.pyplot as plt
+from scipy.signal import find_peaks, savgol_filter
 from scipy.stats import skew, kurtosis
+from torch.distributions.constraints import interval
 
 from helperFiles.dataAcquisitionAndAnalysis.biolectricProtocols.globalProtocol import globalProtocol
+# Baseline Subtraction
+from BaselineRemoval import BaselineRemoval
 
 class bvpProtocol(globalProtocol):
 
     def __init__(self, numPointsPerBatch=3000, moveDataFinger=10, channelIndices=(), plottingClass=None, readData=None):
         # Feature collection parameters
+        self.maxPointsPerPulse = None
+        self.minPointsPerPulse = None
+        self.peakStandard = 0  # The Max First Deriviative of the Previous Pulse's Systolic Peak
+        self.peakStandardInd = 0  # The Index of the Max Derivative in the Previous Pulse's Systolic Peak
         self.startFeatureTimePointer = None  # The start pointer of the feature window interval.
         self.featureTimeWindow = None  # The duration of time that each feature considers
         self.minPointsPerBatch = None  # The minimum number of points that must be present in a batch to extract features.
 
+        self.plottingIndicator = False  # Plot the Data
         # Filter parameters.
-        self.cutOffFreq = [0.05, 20]  # Band pass filter frequencies.
+        self.cutOffFreq = [0.05, 5]  # Band pass filter frequencies.
+
+        # Parameters that Define a Pulse
+        self.maxBPM = 180  # The Maximum Beats Per Minute for a Human; max = 480
+        self.minBPM = 40  # The Minimum Beats Per Minute for a Human; min = 27
+        # Pulse Separation Parameters
+        self.bufferTime = 60 / self.minBPM  # The Initial Wait Time Before we Start Labeling Peaks
+
+        self.previousSystolicAmp = None
 
         # Reset analysis variables
         super().__init__("bvp", numPointsPerBatch, moveDataFinger, channelIndices, plottingClass, readData)
         self.resetAnalysisVariables()
 
     def resetAnalysisVariables(self):
+
+        self.timeOffset = 0
+        self.absTime = 0
+
         # General parameters
         self.startFeatureTimePointer = [0 for _ in range(self.numChannels)]  # The start pointer of the feature window interval.
         self.featureTimeWindow = self.featureTimeWindow_highFreq  # The duration of time that each feature considers
         self.minPointsPerBatch = None  # The minimum number of points that must be present in a batch to extract features.
+
+        # Feature Lists
+        self.featureListExact = []  # List of Lists of Features; Each Index Represents a Pulse; Each Pulse's List Represents its Features
+        self.featureListAverage = []  # List of Lists of Features Averaged in Time by self.numSecondsAverage; Each Index Represents a Pulse; Each Pulse's List Represents its Features
+
+        # Peak Seperation Parameters
+        self.peakStandard = 0  # The Max First Deriviative of the Previous Pulse's Systolic Peak
+        self.peakStandardInd = 0  # The Index of the Max Derivative in the Previous Pulse's Systolic Peak
+
+
 
     def checkParams(self):
         pass
@@ -34,65 +65,13 @@ class bvpProtocol(globalProtocol):
         # Set Parameters
         self.lastAnalyzedDataInd[:] = int(self.samplingFreq * self.featureTimeWindow)
         self.minPointsPerBatch = int(self.samplingFreq * self.featureTimeWindow * 4 / 5)
-        self.dataPointBuffer = max(self.dataPointBuffer, int(self.samplingFreq * maxBufferSeconds))  # cutOffFreq = 0.1, use 70 seconds; cutOffFreq = 0.01, use 400 seconds; cutOffFreq = 0.05, use 100 seconds
-
-    # ------------------------- Data Analysis Begins ------------------------ #
-
-    def analyzeData(self, dataFinger):
-
-        # Add incoming Data to Each Respective Channel's Plot
-        for channelIndex in range(self.numChannels):
-
-            # ---------------------- Filter the Data ----------------------- #
-
-            # Find the starting/ending points of the data to analyze
-            startFilterPointer = max(dataFinger - self.dataPointBuffer, 0)
-            dataBuffer = np.asarray(self.channelData[channelIndex][startFilterPointer:dataFinger + self.numPointsPerBatch])
-            timepoints = np.asarray(self.timepoints[startFilterPointer:dataFinger + self.numPointsPerBatch])
-
-            # Get the Sampling Frequency from the First Batch (If Not Given)
-            if not self.samplingFreq:
-                self.setSamplingFrequency(startFilterPointer)
-
-            # Filter the data and remove bad indices
-            filteredTime, filteredData, goodIndicesMask = self.filterData(timepoints, dataBuffer, removePoints=False)
-
-            # ---------------------- Feature Extraction --------------------- #
-
-            if self.collectFeatures:
-                # Initialize the new raw features and times.
-                newFeatureTimes, newRawFeatures = [], []
-
-                # Extract features across the dataset
-                while self.lastAnalyzedDataInd[channelIndex] < len(self.timepoints):
-                    featureTime = self.timepoints[self.lastAnalyzedDataInd[channelIndex]]
-
-                    # Find the start window pointer.
-                    self.startFeatureTimePointer[channelIndex] = self.findStartFeatureWindow(self.startFeatureTimePointer[channelIndex], featureTime, self.featureTimeWindow)
-                    # Compile the good data in the feature interval.
-                    intervalTimes, intervalData = self.compileBatchData(filteredTime, filteredData, goodIndicesMask, startFilterPointer, self.startFeatureTimePointer[channelIndex], channelIndex)
-
-                    # Only extract features if enough information is provided.
-                    if self.minPointsPerBatch < len(intervalTimes):
-                        # Calculate and save the features in this window.
-                        finalFeatures = self.extractFeatures(intervalTimes, intervalData)
-
-                        # Keep track of the new features.
-                        newRawFeatures.append(finalFeatures)  # Dimension: [numTimePoints x numChannelFeatures]
-                        newFeatureTimes.append(featureTime)  # Dimension: [numTimePoints]
-
-                    # Keep track of which data has been analyzed
-                    # I defined the number of peaks as the number of pulses
-                    self.lastAnalyzedDataInd[channelIndex] += len(find_peaks(intervalData))
-
-                # Compile the new raw features into a smoothened (averaged) feature.
-                self.readData.compileContinuousFeatures(newFeatureTimes, newRawFeatures, self.rawFeatureTimes[channelIndex], self.rawFeatures[channelIndex], self.compiledFeatures[channelIndex], self.featureAverageWindow)
-
-            # -------------------------------------------------------------- #
+        self.dataPointBuffer = max(self.dataPointBuffer, int(self.samplingFreq * maxBufferSeconds))
 
     def filterData(self, timepoints, data, removePoints=False):
-        # Filter the Data: Low pass Filter and Savgol Filter
-        filteredData = self.filteringMethods.bandPassFilter.butterFilter(data, self.cutOffFreq, self.samplingFreq, order = 3, filterType = 'low', fastFilt = True)
+        # Filter the Data: Band-pass Filter
+        filteredData = self.filteringMethods.bandPassFilter.butterFilter(
+            data, self.cutOffFreq, self.samplingFreq, order=3, filterType='band', fastFilt=True
+        )
         filteredTime = timepoints.copy()
 
         return filteredTime, filteredData, np.ones(len(filteredTime))
@@ -105,8 +84,8 @@ class bvpProtocol(globalProtocol):
         return timePointer
 
     def compileBatchData(self, filteredTime, filteredData, goodIndicesMask, startFilterPointer, startFeatureTimePointer, channelIndex):
-        assert len(goodIndicesMask) >= len(filteredData) == len(filteredTime), print(len(goodIndicesMask), len(filteredData), len(filteredTime))
 
+        assert len(goodIndicesMask) >= len(filteredData) == len(filteredTime), print(len(goodIndicesMask), len(filteredData), len(filteredTime))
         # Accounts for the missing points (count the number of viable points within each pointer).
         startReferenceFinger = (goodIndicesMask[0:startFeatureTimePointer - startFilterPointer]).sum(axis=0, dtype=int)
         endReferenceFinger = startReferenceFinger + (goodIndicesMask[startFeatureTimePointer - startFilterPointer:self.lastAnalyzedDataInd[channelIndex] + 1 - startFilterPointer]).sum(axis=0, dtype=int)
@@ -118,88 +97,263 @@ class bvpProtocol(globalProtocol):
 
     @staticmethod
     def independentComponentAnalysis(data):
-        ica = sklearn.decomposition.FastICA(whiten='unit-variance')
+        from sklearn.decomposition import FastICA
+        ica = FastICA(whiten='unit-variance')
         data = ica.fit_transform(data.reshape(-1, 1)).transpose()[0]
 
         return data
 
-    # --------------------- Feature Extraction Methods --------------------- #
+    def setPressureCalibration(self, systolicPressure0, diastolicPressure0):
+        self.systolicPressure0 = systolicPressure0
+        self.diastolicPressure0 = diastolicPressure0
 
-    def extractFeatures(self, timepoints, data):
-        # ----------------------- Data Preprocessing ----------------------- #
-        # Normalize the data
-        standardized_data = self.universalMethods.standardizeData(data)
+    def seperatePulses(self, time, firstDer):
+        self.peakStandardInd = 0
 
-        # ----------------------- Feature Extraction ----------------------- #
-        # Extract the features from the data
-        featureList = []
-        # Compute the first and second derivatives
-        first_derivative = np.gradient(standardized_data)
-        second_derivative = np.gradient(first_derivative)
+        # Take First Derivative of the Smoothened Data
+        separatedPeaks = []
+        for pointInd in range(len(firstDer)): # keep track of the current point index
+            # Retrieve the derivative at pointInd
+            firstDerVal = firstDer[pointInd]
 
-        systolic_peaks, _ = find_peaks(standardized_data, distance=timepoints*self.samplingFreq)  # return the indices of the peaks
-        end_of_cycle, _ = find_peaks(-standardized_data, distance=timepoints*self.samplingFreq)  # return the indices of the local minima
+            # If the derivative is greater than the threshold, then we have a potential peak following
+            if firstDerVal > self.peakStandard*0.5:
+                # Use the First few peaks as a standard
+                if (self.timeOffset != 0 or 1.5 < time[pointInd]) and self.minPointsPerPulse < pointInd:
+                    # if the point is sufficiently far away from the last peak, then we can consider it a peak
+                    if self.peakStandardInd + self.minPointsPerPulse < pointInd: # checks whether current Index is far enough from the last separation peak index
+                        separatedPeaks.append(pointInd)
 
-        # Identify dicrotic notches and diastolic peaks within each pulse
-        dicrotic_notches = []
-        diastolic_peaks = []
-        pulse_widths = []
-        pulse_amplitudes = []
+                    # else: find the max of the peak
+                    elif firstDer[separatedPeaks[-1]] < firstDer[pointInd]:
+                        separatedPeaks[-1] = pointInd # peak refinement, make sure we identify the systolic peak is the actual peak
 
-        """Although timepoints and data specify a window, in case there are multiple peaks detected within the timepoints*SamplingFrequency window,"""
-        for i in range(len(systolic_peaks) - 1):
-            # Segment between two systolic peaks
-            start_idx = systolic_peaks[i]
-            next_idx = systolic_peaks[i + 1]
-            # might not needed later, just in case, both method should calculate the same dicrotic notch and diastolic peak
-            segment = standardized_data[start_idx:next_idx]
-            segment_time = timepoints[start_idx:next_idx]
-            segment_first_derivative = first_derivative[start_idx:next_idx]
-            segment_second_derivative = second_derivative[start_idx:next_idx]
+                    # else do not update the pointInd
+                    else:
+                        continue
 
-            # Identify the dicrotic notch using the second derivative zero-crossing
-            zero_crossings = np.where(np.diff(np.sign(segment_second_derivative)))[0]
+                    self.peakStandardInd = pointInd
+                    self.peakStandard = firstDerVal
 
-            if zero_crossings.size > 0:
-                # Assume the first zero-crossing after the systolic peak is the notch
-                notch_idx = zero_crossings[0] + start_idx
-                dicrotic_notches.append(notch_idx)
-            else:
-                dicrotic_notches.append(None)
-
-            # Identify diastolic peak as a local maximum after the dicrotic notch
-            if dicrotic_notches[-1] is not None:
-                diastolic_segment = standardized_data[dicrotic_notches[-1]:next_idx]
-                diastolic_peaks_in_segment, _ = find_peaks(diastolic_segment)
-                if diastolic_peaks_in_segment.size > 0:
-                    diastolic_peak_idx = diastolic_peaks_in_segment[0] + dicrotic_notches[-1]
-                    diastolic_peaks.append(diastolic_peak_idx)
                 else:
-                    diastolic_peaks.append(None)
-            else:
-                diastolic_peaks.append(None)
+                    self.peakStandard = max(self.peakStandard, firstDerVal)
+        return separatedPeaks
 
-            # Calculate pulse width and amplitudes
-            width = timepoints[end_of_cycle[i + 1]] - timepoints[end_of_cycle[i]]
-            pulse_widths.append(width)
-            magnitude = standardized_data[systolic_peaks[i]] - standardized_data[end_of_cycle[i]]
-            pulse_amplitudes.append(magnitude)
+    def analyzeData(self, dataFinger):
+        for channelIndex in range(self.numChannels):
+            startFilterPointer = max(dataFinger - self.dataPointBuffer, 0)
+            dataBuffer = np.asarray(self.channelData[channelIndex][startFilterPointer:dataFinger + self.numPointsPerBatch])
+            timepoints = np.asarray(self.timepoints[startFilterPointer:dataFinger + self.numPointsPerBatch])
 
-        #  Heart Rate (HR)
+            if not self.samplingFreq:
+                self.setSamplingFrequency(startFilterPointer)
+                self.setSamplingFrequencyParams()
+                self.minPointsPerPulse = math.floor(self.samplingFreq * 60 / self.maxBPM)
+                self.maxPointsPerPulse = math.ceil(self.samplingFreq * 60 / self.minBPM)
+
+            filteredTime, filteredData, goodIndicesMask = self.filterData(timepoints, dataBuffer, removePoints=False)
+            standardizeData = self.universalMethods.standardizeData(filteredData)
+            standardizeData = savgol_filter(standardizeData, 11, 3)
+
+            if self.collectFeatures:
+                newFeatureTimes, newRawFeatures = [], []
+
+                # Loop through the data, processing it in chunks, while making sure we analyze the whole batch.
+                while self.lastAnalyzedDataInd[channelIndex] < len(timepoints):
+                    featureTime = self.timepoints[self.lastAnalyzedDataInd[channelIndex]]
+                    self.startFeatureTimePointer[channelIndex] = self.findStartFeatureWindow(
+                        self.startFeatureTimePointer[channelIndex], featureTime, self.featureTimeWindow)
+
+                    intervalTimes, intervalData = self.compileBatchData(
+                        filteredTime, standardizeData, goodIndicesMask, startFilterPointer,
+                        self.startFeatureTimePointer[channelIndex], channelIndex)
+
+                    # If the interval data or times are empty, skip further analysis.
+                    if len(intervalData) == 0 or len(intervalTimes) == 0:
+                        print("Interval data or times is empty. Skipping analysis.")
+                        self.lastAnalyzedDataInd[channelIndex] += self.numPointsPerBatch
+                        continue
+
+                    first_derivative = np.gradient(intervalData, intervalTimes)
+                    second_derivative = np.gradient(first_derivative, intervalTimes)
+                    third_derivative = np.gradient(second_derivative, intervalTimes)
+
+                    separatedPeaks = self.seperatePulses(intervalTimes, first_derivative)
+
+                    # If no peaks are found, adjust the peakStandard and attempt to detect again.
+                    while len(separatedPeaks) == 0:
+                        self.peakStandard /= 2
+                        separatedPeaks = self.seperatePulses(intervalTimes, first_derivative)
+
+                    # Start pulse separation and update index for each pulse processed.
+                    pulseStartInd = self.universalMethods.findNearbyMinimum(
+                        intervalData, separatedPeaks[0], binarySearchWindow=-1, maxPointsSearch=self.maxPointsPerPulse
+                    )
+
+                    for pulseNum in range(1, len(separatedPeaks)):
+                        pulseEndInd = self.universalMethods.findNearbyMinimum(
+                            intervalData, separatedPeaks[pulseNum], binarySearchWindow=-1, maxPointsSearch=self.maxPointsPerPulse
+                        )
+
+                        # Validate pulse size and skip the pulse if it's too big or too small.
+                        if pulseEndInd - pulseStartInd > self.maxPointsPerPulse:
+                            print('Pulse too big; skipping.')
+                            # print out the time points skipped
+                            # print('Timepoints skipped:', intervalTimes[pulseStartInd:pulseEndInd])
+                            pulseStartInd = pulseEndInd
+                            continue
+                        elif pulseEndInd - pulseStartInd < self.minPointsPerPulse:
+                            print('Pulse too small; skipping.')
+                            pulseStartInd = pulseEndInd
+                            continue
+
+                        intervalPulseTime = intervalTimes[pulseStartInd:pulseEndInd]
+                        intervalPulseData = intervalData[pulseStartInd:pulseEndInd]
+
+                        if len(intervalPulseTime) >= self.minPointsPerPulse:
+                            toBeNormalizedPulse = intervalPulseData.copy()
+                            normalizedPulseData = self.normalizePulseBaseline(toBeNormalizedPulse, 1)
+                            finalFeatures = self.extractPulsePeaks(intervalPulseTime, normalizedPulseData, first_derivative, second_derivative, third_derivative)
+
+                            newRawFeatures.append(finalFeatures)
+                            newFeatureTimes.append(featureTime)
+
+                            # Plot each pulse's features if plotting is enabled.
+                            if self.plottingIndicator:
+                                self.plotBvpFeatures(intervalPulseTime, intervalPulseData, finalFeatures)
+
+                            # Update the last analyzed index for this pulse.
+                            self.timeOffset = pulseEndInd
+
+                    self.lastAnalyzedDataInd[channelIndex] += self.timeOffset
+                    print('self.lastAnalyzedDataInd', self.lastAnalyzedDataInd)
+
+                if self.readData is None:
+                    print('readData is None, doing initial Testings')
+                else:
+                    self.readData.compileContinuousFeatures(
+                        newFeatureTimes, newRawFeatures, self.rawFeatureTimes[channelIndex],
+                        self.rawFeatures[channelIndex], self.compiledFeatures[channelIndex],
+                        self.featureAverageWindow
+                    )
+
+    def extractFeatures(self, normalizedPulse, pulseTime, pulseVelocity, pulseAcceleration, allSystolicPeaks, allDicroticPeaks):
+
+        featureList = [
+            allSystolicPeaks, allDicroticPeaks
+        ]
+        return featureList
+
+
+    def extractPulsePeaks(self, pulseTime, normalizedPulse, pulseVelocity, pulseAcceleration, thirdDeriv):
+
+        # ----------------------- Detect Systolic Peak ---------------------- #
+        # Find Systolic Peak
+        systolicPeakInd = self.universalMethods.findNearbyMaximum(normalizedPulse, 0, binarySearchWindow=4, maxPointsSearch=len(pulseTime))
+        # Find UpStroke Peaks
+        systolicUpstrokeVelInd = self.universalMethods.findNearbyMaximum(pulseVelocity, 0, binarySearchWindow=1, maxPointsSearch=systolicPeakInd)
+        systolicUpstrokeAccelMaxInd = self.universalMethods.findNearbyMaximum(pulseAcceleration, systolicUpstrokeVelInd, binarySearchWindow=-1, maxPointsSearch=systolicPeakInd)
+        systolicUpstrokeAccelMinInd = self.universalMethods.findNearbyMinimum(pulseAcceleration, systolicUpstrokeVelInd, binarySearchWindow=1, maxPointsSearch=systolicPeakInd)
+        # ------------------------------------------------------------------- #
+
+        # ----------------------  Detect Dicrotic Peak ---------------------- #
+        dicroticNotchInd = self.universalMethods.findNearbyMinimum(normalizedPulse, systolicPeakInd, binarySearchWindow=1, maxPointsSearch=int(len(pulseTime) / 2))
+        dicroticPeakInd = self.universalMethods.findNearbyMaximum(normalizedPulse, dicroticNotchInd, binarySearchWindow=1, maxPointsSearch=int(len(pulseTime) / 2))
+
+        # Other Extremas Nearby
+        dicroticInflectionInd = self.universalMethods.findNearbyMaximum(pulseVelocity, dicroticNotchInd, binarySearchWindow=2, maxPointsSearch=int(len(pulseTime) / 2))
+        dicroticFallVelMinInd = self.universalMethods.findNearbyMinimum(pulseVelocity, dicroticInflectionInd, binarySearchWindow=2, maxPointsSearch=int(len(pulseTime) / 2))
+
+        # ----------------------- Feature Extraction ------------------------ #
+        allSystolicPeaks = [systolicUpstrokeAccelMaxInd, systolicUpstrokeVelInd, systolicUpstrokeAccelMinInd, systolicPeakInd]
+        allDicroticPeaks = [dicroticNotchInd, dicroticInflectionInd, dicroticPeakInd, dicroticFallVelMinInd]
+
+
+        # Extract the Pulse Features
+        featureList = self.extractFeatures(normalizedPulse, pulseTime, pulseVelocity, pulseAcceleration, allSystolicPeaks, allDicroticPeaks)
+
+
+        return featureList
+
+        # ------------------------------------------------------------------- #
+
+    def calculateHeartRate(self, timepoints, systolic_peaks):
         if len(systolic_peaks) > 1:
-            hr_intervals = np.diff(timepoints[systolic_peaks])
-            hr = 60 / np.mean(hr_intervals)
-            rmssd = np.sqrt(np.mean(np.diff(hr_intervals) ** 2))
+            systolic_peak_times = timepoints[systolic_peaks]
+            rr_intervals = np.diff(systolic_peak_times)
+            hr = 60 / np.mean(rr_intervals)
+            rmssd = np.sqrt(np.mean(np.square(np.diff(rr_intervals))))
         else:
             hr = None
             rmssd = None
+        return hr, rmssd
 
-        # Skewness and Kurtosis of the data
-        data_skewness = skew(standardized_data)
-        data_kurtosis = kurtosis(standardized_data)
+    def plotBvpFeatures(self, timepoints, bvp_data, features):
+        #print('timepoints', timepoints)
+        systolic_peaks = features[0]
+        dicrotic_info = features[1]
 
-        featureList.extend([systolic_peaks, diastolic_peaks, dicrotic_notches, pulse_widths, pulse_amplitudes])
-        featureList.extend([hr, data_skewness, data_kurtosis, rmssd])
+        systolic_peak = systolic_peaks[3]  # Systolic Peak
+        dicrotic_notch = dicrotic_info[0]  # Dicrotic Notch
+        dicrotic_peak = dicrotic_info[2]  # Dicrotic Peak
 
-        return featureList
+        # Start plotting
+        plt.figure(figsize=(10, 6))
+        plt.plot(timepoints, bvp_data, label="BVP Signal", color="blue")
+
+        # Plot and label the systolic peaks
+        # print(f"\n[DEBUG] Plotting systolic peak at index: {systolic_peak}")
+        plt.plot(timepoints[systolic_peak], bvp_data[systolic_peak], 'ro', label="Systolic Peak")
+        plt.text(timepoints[systolic_peak], bvp_data[systolic_peak], 'Systolic', color="red", fontsize=10, ha="center")
+
+        # Plot and label the dicrotic notches
+        # print(f"\n[DEBUG] Plotting dicrotic notch at index: {dicrotic_notch}")
+        plt.plot(timepoints[dicrotic_notch], bvp_data[dicrotic_notch], 'yo', label="Dicrotic Notch")
+        plt.text(timepoints[dicrotic_notch], bvp_data[dicrotic_notch], 'Notch', color="yellow", fontsize=10, ha="center")
+
+        # Plot and label the dicrotic peaks
+        # print(f"\n[DEBUG] Plotting dicrotic peak at index: {dicrotic_peak}")
+        plt.plot(timepoints[dicrotic_peak], bvp_data[dicrotic_peak], 'bo', label="Dicrotic Peak")
+        plt.text(timepoints[dicrotic_peak], bvp_data[dicrotic_peak], 'Dicrotic', color="blue", fontsize=10, ha="center")
+
+        # Final plot adjustments
+        plt.xlabel("Time (s)")
+        plt.ylabel("BVP Signal (a.u.)")
+        plt.title("BVP Signal with Detected Peaks")
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+
+
+
+    # ---------------------------- Data preprocessing ----------------------------
+    @staticmethod
+    def normalizeMinMax(data):
+        return data / np.max(np.abs(data))
+
+    def normalizePulseBaseline(self, pulseData, polynomialDegree):
+        """
+        ----------------------------------------------------------------------
+        Input Parameters:
+            pulseData:  yData-Axis Data for a Single Pulse (Start-End)
+            polynomialDegree: Polynomials Used in Baseline Subtraction
+        Output Parameters:
+            pulseData: yData-Axis Data for a Baseline-Normalized Pulse (Start, End = 0)
+        Use Case: Shift the Pulse to the xData-Axis (Removing non-Horizontal Base)
+        Assumption in Function: pulseData is Positive
+        ----------------------------------------------------------------------
+        Further API Information Can be Found in the Following Link:
+        https://pypi.org/project/BaselineRemoval/
+        ----------------------------------------------------------------------
+        """
+        # Perform Baseline Removal Twice to Ensure Baseline is Gone
+        for _ in range(2):
+            # Baseline Removal Procedure
+            baseObj = BaselineRemoval(pulseData)  # Create Baseline Object
+            pulseData = baseObj.ModPoly(polynomialDegree)  # Perform Modified multi-polynomial Fit Removal
+
+        # Return the Data With Removed Baseline
+        return pulseData
+
+
 

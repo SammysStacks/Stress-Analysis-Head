@@ -63,7 +63,7 @@ class pulseAnalysis(_globalProtocol.globalProtocol):
     def resetAnalysisVariables(self):
         # Feature Tracking Parameters
         self.timeOffset = 0             # Store the Time Offset Between Files
-        self.numSecondsAverage = 60     # The Number of Swconds to Consider When Taking the Averaging Data
+        self.numSecondsAverage = 60     # The Number of seconds to Consider When Taking the Averaging Data
         self.incomingPulseTimes = []    # An Ongoing List Representing the Times of Each Pulse's Peak
         self.heartRateListAverage = []  # An Ongoing List Representing the Heart Rate
         # Feature Lists
@@ -71,7 +71,7 @@ class pulseAnalysis(_globalProtocol.globalProtocol):
         self.featureListAverage = []    # List of Lists of Features Averaged in Time by self.numSecondsAverage; Each Index Represents a Pulse; Each Pulse's List Represents its Features
 
         # Peak Seperation Parameters
-        self.peakStandard = 0;          # The Max First Deriviative of the Previous Pulse's Systolic Peak
+        self.peakStandard = 0           # The Max First Deriviative of the Previous Pulse's Systolic Peak
         self.peakStandardInd = 0        # The Index of the Max Derivative in the Previous Pulse's Systolic Peak
         # Peak Filtering Parameters
         self.lowPassCutoff = 18         # Low Pass Filter Cutoff; Used on SEPERATED Pulses
@@ -102,22 +102,22 @@ class pulseAnalysis(_globalProtocol.globalProtocol):
     def seperatePulses(self, time, firstDer):
         self.peakStandardInd = 0
         # Take First Derivative of Smoothened Data
-        systolicPeaks = [];
+        seperatedPeaks = [];
         for pointInd in range(len(firstDer)):
             # Calcuate the Derivative at pointInd
             firstDerVal = firstDer[pointInd]
             
-            # If the Derivative Stands Out, Its the Systolic Peak
+            # If the Derivative Stands Out, Its the Systolic rising peaks, meaning systolic peak should be adjacent
             if firstDerVal > self.peakStandard*0.5:
                 
                 # Use the First Few Peaks as a Standard
                 if (self.timeOffset != 0 or 1.5 < time[pointInd]) and self.minPointsPerPulse < pointInd:
                     # If the Point is Sufficiently Far Away, its a New R-Peak
                     if self.peakStandardInd + self.minPointsPerPulse < pointInd:
-                        systolicPeaks.append(pointInd)
+                        seperatedPeaks.append(pointInd)
                     # Else, Find the Max of the Peak
-                    elif firstDer[systolicPeaks[-1]] < firstDer[pointInd]:
-                        systolicPeaks[-1] = pointInd
+                    elif firstDer[seperatedPeaks[-1]] < firstDer[pointInd]:
+                        seperatedPeaks[-1] = pointInd
                     # Else, Dont Update Pointer
                     else:
                         continue
@@ -126,7 +126,7 @@ class pulseAnalysis(_globalProtocol.globalProtocol):
                 else:
                     self.peakStandard = max(self.peakStandard, firstDerVal)
 
-        return systolicPeaks
+        return seperatedPeaks
     
     # ----------------------------------------------------------------------- #
     # ------------------------- Data Analysis Begins ------------------------ #

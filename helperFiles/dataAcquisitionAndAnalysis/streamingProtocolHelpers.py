@@ -9,7 +9,7 @@ from .biolectricProtocols.eegAnalysis import eegProtocol
 from .biolectricProtocols.ecgAnalysis import ecgProtocol
 from .biolectricProtocols.edaAnalysis import edaProtocol
 from .biolectricProtocols.emgAnalysis import emgProtocol
-from .biolectricProtocols.bvpAnalysis import bvpProtocol
+from helperFiles.dataAcquisitionAndAnalysis.biolectricProtocols.__oldAnalysis.bvpAnalysis_old2 import bvpProtocol
 from .biolectricProtocols.accelerationAnalysis import accelerationProtocol
 from .biolectricProtocols.temperatureAnalysis import tempProtocol
 from .biolectricProtocols.generalAnalysis_lowFreq import generalProtocol_lowFreq
