@@ -52,10 +52,9 @@ class waveletNeuralOperatorWeights(waveletNeuralHelpers):
 
     def getNeuralWeightParameters(self, inChannel, outChannel, initialFrequencyDim, finalFrequencyDim):
         if self.learningProtocol == 'FCC': return self.neuralWeightFCC(inChannel=inChannel, outChannel=outChannel, finalFrequencyDim=finalFrequencyDim)
-        elif self.learningProtocol == 'iCNN': return self.neuralWeightCNN(inChannel=inChannel, outChannel=inChannel, groups=inChannel)
-        elif self.learningProtocol == 'CNN': return self.neuralWeightCNN(inChannel=inChannel, outChannel=outChannel, groups=1)
+        elif self.learningProtocol == 'rCNN': return self.reversibleNeuralWeightCNN(inChannel=inChannel)
         elif self.learningProtocol == 'FC': return self.neuralWeightFC(numInputFeatures=initialFrequencyDim)
-        else: raise ValueError(f"The learning protocol ({self.learningProtocol}) must be in ['FC', 'FCC', 'iCNN', 'CNN'].")
+        else: raise ValueError(f"The learning protocol ({self.learningProtocol}) must be in ['FC', 'FCC', 'rCNN', 'CNN'].")
 
     @staticmethod
     def zeros(x): return 0

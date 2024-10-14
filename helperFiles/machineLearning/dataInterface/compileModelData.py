@@ -280,9 +280,6 @@ class compileModelData(compileModelDataHelpers):
             allSignalData = self.addContextualInfo(allSignalData, allNumSignalPoints, allSubjectInds, metadataInd)
             # allSignalData: A torch array of size (batchSize, numSignals, fullDataLength, [timeChannel, signalChannel])
 
-            # Round the data to remove uncertainties.
-            allSignalData = torch.round(allSignalData, decimals=4)
-
             # ---------------------- Create the Model ---------------------- #
 
             # Get the model parameters

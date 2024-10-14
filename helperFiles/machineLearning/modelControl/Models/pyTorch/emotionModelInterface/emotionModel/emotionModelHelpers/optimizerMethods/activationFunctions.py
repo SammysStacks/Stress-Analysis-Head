@@ -16,9 +16,9 @@ def getActivationMethod(activationMethod):
         topExponent = int(activationMethod.split('_')[1]) if '_' in activationMethod else 0
         activationFunction = boundedExp(decayConstant=topExponent, nonLinearityRegion=nonLinearityRegion)
     elif activationMethod.startswith('reversibleLinearSoftSign'):
+        inversionPoint = float(activationMethod.split('_')[1]) if '_' in activationMethod else 2
         infiniteBound = float(activationMethod.split('_')[2]) if '_' in activationMethod else 0.5
-        nonLinearityRegion = float(activationMethod.split('_')[1]) if '_' in activationMethod else 2
-        activationFunction = reversibleLinearSoftSign(inversionPoint=nonLinearityRegion, infiniteBound=infiniteBound)
+        activationFunction = reversibleLinearSoftSign(inversionPoint=inversionPoint, infiniteBound=infiniteBound)
     elif activationMethod == 'boundedS':
         activationFunction = boundedS()
     elif activationMethod == 'linearOscillation':

@@ -39,14 +39,19 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         # For each initial layer.
         for layerInd in range(self.numOperatorLayers):
             if reversibleInterface.forwardDirection:
-                # signalData = neuralLayers[layerInd](signalData)
-                # signalData = self.activationFunctions(signalData)
+                # Apply the neural operator layer with activation.
+                signalData = neuralLayers[layerInd](signalData)
+                signalData = self.activationFunction(signalData)
 
+                # Apply the post-processing layer.
                 signalData = processingLayers[layerInd](signalData)
             else:
+                # Apply the post-processing layer.
+                layerInd = self.numOperatorLayers - layerInd - 1
                 signalData = processingLayers[layerInd](signalData)
 
-                # signalData = self.activationFunctions(signalData)
-                # signalData = neuralLayers[layerInd](signalData)
+                # Apply the neural operator layer with activation.
+                signalData = self.activationFunction(signalData)
+                signalData = neuralLayers[layerInd](signalData)
 
         return signalData

@@ -24,7 +24,7 @@ from helperFiles.machineLearning.dataInterface.compileModelData import compileMo
 
 # Configure cuDNN and PyTorch's global settings.
 torch.backends.cudnn.deterministic = True  # If False: allow non-deterministic algorithms in cuDNN, which can enhance performance but reduce reproducibility.
-torch.set_default_dtype(torch.float32)  # Set the default data type to float32, which is typical for neural network computations.
+torch.set_default_dtype(torch.float64)  # Set the default data type to float32, which is typical for neural network computations.
 torch.backends.cudnn.benchmark = False  # If True: Enable cuDNN's auto-tuner to find the most efficient algorithm for the current configuration, potentially improving performance if fixed input size.
 
 if __name__ == "__main__":
@@ -34,7 +34,7 @@ if __name__ == "__main__":
         cpu=torch.backends.mps.is_available(),  # Whether to use the CPU. MPS is NOT fully compatible yet.
         step_scheduler_with_optimizer=False,  # Whether to wrap the optimizer in a scheduler.
         gradient_accumulation_steps=1,  # The number of gradient accumulation steps.
-        mixed_precision="fp16",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"
+        mixed_precision="no",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"
     )
 
     # General model parameters.
@@ -59,13 +59,13 @@ if __name__ == "__main__":
 
     # Add arguments for the neural operator.
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
-    parser.add_argument('--waveletType', type=str, default='bior3.7', help='The wavelet type for the wavelet transform: bior3.7, db3, dmey, etc')
+    parser.add_argument('--waveletType', type=str, default='db3', help='The wavelet type for the wavelet transform: bior3.7, db3, dmey, etc')
 
     # Add arguments for the signal encoder prediction
-    parser.add_argument('--numSpecificEncodingLayers', type=int, default=1, help='The number of layers in the specific signal encoding neural operator.')
-    parser.add_argument('--numMetaEncodingLayers', type=int, default=1, help='The number of layers in the shared signal encoding operator.')
+    parser.add_argument('--numSpecificEncodingLayers', type=int, default=10, help='The number of layers in the specific signal encoding neural operator.')
+    parser.add_argument('--numMetaEncodingLayers', type=int, default=10, help='The number of layers in the shared signal encoding operator.')
     parser.add_argument('--latentQueryKeyDim', type=int, default=4, help='The dimension of the latent query and key vectors.')
-    parser.add_argument('--encodedDimension', type=int, default=512, help='The dimension of the encoded signal.')
+    parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
 
     # Add arguments for the emotion prediction
     parser.add_argument('--numInterpreterHeads', type=int, default=4, help='The number of ways to interpret a set of physiological signals.')

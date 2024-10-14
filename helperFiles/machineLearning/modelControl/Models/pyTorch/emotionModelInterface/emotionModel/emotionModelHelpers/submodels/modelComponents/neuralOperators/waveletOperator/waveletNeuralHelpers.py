@@ -46,6 +46,7 @@ class waveletNeuralHelpers(emotionModelWeights):
         self.learningProtocol = learningProtocol  # The learning protocol to use.
         self.numOutputSignals = numOutputSignals  # Number of output signals.
         self.numInputSignals = numInputSignals  # Number of input signals.
+        self.sequenceLength = sequenceLength  # The length of the input signals.
         self.addBiasTerm = addBiasTerm  # Whether to add bias terms to the output.
         self.waveletType = waveletType  # The wavelet to use for the decomposition. Options: 'haar', 'db', 'sym', 'coif', 'bior', 'rbio', 'dmey', 'gaus', 'mexh', 'morl', 'cgau', 'shan', 'fbsp', 'cmor'
         self.mode = mode  # The padding mode to use for the decomposition. Options: 'zero', 'symmetric', 'reflect' or 'periodization'.
@@ -62,13 +63,13 @@ class waveletNeuralHelpers(emotionModelWeights):
         self.idwt = DWT1DInverse(wave=self.waveletType, mode=self.mode)
 
         # Check the final output sizes.
-        self.lowFrequencyShape, self.highFrequenciesShapes = self.getWaveletDimensions(sequenceLength)
+        self.lowFrequencyShape, self.highFrequenciesShapes = self.getWaveletDimensions(self.sequenceLength)
 
     def assertValidParams(self):
         # Assert that the frequency protocol is valid.
         assert self.encodeHighFrequencyProtocol in ['highFreq', 'none'], "The high-frequency encoding protocol must be 'highFreq', 'none'."
         assert self.encodeLowFrequencyProtocol in ['lowFreq', 'none'], "The low-frequency encoding protocol must be 'lowFreq', 'none'."
-        assert self.learningProtocol in ['FC', 'FCC', 'iCNN', 'CNN'], "Invalid learning protocol. Must be in ['FC', 'FCC', 'iCNN', 'CNN']."
+        assert self.learningProtocol in ['FC', 'FCC', 'rCNN', 'CNN'], "Invalid learning protocol. Must be in ['FC', 'FCC', 'rCNN', 'CNN']."
 
     @staticmethod
     def max_decompositions(signal_length, wavelet_name):

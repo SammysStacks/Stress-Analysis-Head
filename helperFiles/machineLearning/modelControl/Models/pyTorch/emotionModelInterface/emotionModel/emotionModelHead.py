@@ -41,7 +41,7 @@ class emotionModelHead(nn.Module):
         self.numMetaEncodingLayers = userInputParams['numMetaEncodingLayers']    # The number of layers in the shared signal encoding operator.
         self.latentQueryKeyDim = userInputParams['latentQueryKeyDim']     # The dimension of the latent query and key vectors.
         self.encodedDimension = userInputParams['encodedDimension']     # The dimension of the encoded signal.
-        self.activationMethod = 'reversibleLinearSoftSign_1_0.9'  # The activation method to use for the neural operator.
+        self.activationMethod = 'reversibleLinearSoftSign_2_0.9'  # The activation method to use for the neural operator.
 
         # Emotion parameters.
         self.numInterpreterHeads = userInputParams['numInterpreterHeads']   # The number of ways to interpret a set of physiological signals.
@@ -119,6 +119,7 @@ class emotionModelHead(nn.Module):
         batchSize, numSignals, maxSequenceLength, numChannels = signalData.size()
         assert numChannels == len(modelConstants.signalChannelNames)
         reversibleInterface.changeDirections(forwardDirection=True)
+        signalData = signalData.double()
 
         # Initialize default output tensors.
         basicEmotionProfile = torch.zeros((batchSize, numSignals, maxSequenceLength, numChannels), device=signalData.device)
@@ -128,16 +129,14 @@ class emotionModelHead(nn.Module):
 
         # Interpolate the data to a fixed input size.
         interpolatedSignalData = self.sharedSignalEncoderModel.learnedInterpolation(signalData=signalData)
+        interpolatedSignalData = interpolatedSignalData*100
         # interpolatedData: batchSize, numSignals, encodedDimension
         print(0, interpolatedSignalData[0][0][0:10])
 
         # Calculate the estimated physiological profile given each signal.
         metaLearningData = self.specificSignalEncoderModel.signalSpecificInterface(signalData=interpolatedSignalData, initialModel=True)  # Reversible signal-specific layers.
-        print(1, metaLearningData[0][0][0:10])
-        # metaLearningData = self.sharedSignalEncoderModel.sharedLearning(signalData=metaLearningData)  # Reversible meta-learning layers.
-        # print(2, metaLearningData[0][0][0:10])
-        # metaLearningData = self.specificSignalEncoderModel.signalSpecificInterface(signalData=metaLearningData, initialModel=False)  # Reversible signal-specific layers.
-        # print(3, metaLearningData[0][0][0:10])
+        metaLearningData = self.sharedSignalEncoderModel.sharedLearning(signalData=metaLearningData)  # Reversible meta-learning layers.
+        metaLearningData = self.specificSignalEncoderModel.signalSpecificInterface(signalData=metaLearningData, initialModel=False)  # Reversible signal-specific layers.
         # metaLearningData: batchSize, numSignals, encodedDimension
 
         # Finalize the physiological profile.
@@ -151,16 +150,14 @@ class emotionModelHead(nn.Module):
         reversibleInterface.changeDirections(forwardDirection=False)
 
         # Calculate the estimated physiological profile given each signal.
-        # metaLearningData = self.specificSignalEncoderModel.signalSpecificInterface(signalData=metaLearningData, initialModel=False)  # Reversible signal-specific layers.
-        # print(2, metaLearningData[0][0][0:10])
-        # metaLearningData = self.sharedSignalEncoderModel.sharedLearning(signalData=metaLearningData)  # Reversible meta-learning layers.
-        # print(1, metaLearningData[0][0][0:10])
+        metaLearningData = self.specificSignalEncoderModel.signalSpecificInterface(signalData=metaLearningData, initialModel=False)  # Reversible signal-specific layers.
+        metaLearningData = self.sharedSignalEncoderModel.sharedLearning(signalData=metaLearningData)  # Reversible meta-learning layers.
         reconstructedInterpolatedData = self.specificSignalEncoderModel.signalSpecificInterface(signalData=metaLearningData, initialModel=True)  # Reversible signal-specific layers.
         print(0, reconstructedInterpolatedData[0][0][0:10])
         # metaLearningData: batchSize, numSignals, encodedDimension
 
         # Optionally, plot the original and reconstructed signals for visual comparison
-        plt.plot(interpolatedSignalData[0][0].detach().cpu().numpy(), 'k', linewidth=2, label='Initial Signal')
+        plt.plot(interpolatedSignalData[0][0].detach().cpu().numpy(), 'k', linewidth=2, label='Interpolated Signal')
         plt.plot(reconstructedInterpolatedData[0][0].detach().cpu().numpy(), 'tab:red', linewidth=1.5, label='Reconstructed Signal')
         plt.plot(physiologicalProfile[0].detach().cpu().numpy(), 'tab:blue', linewidth=1, label='Physiological Profile', alpha=0.5)
         plt.legend()

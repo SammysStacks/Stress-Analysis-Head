@@ -29,6 +29,7 @@ class emotionModelWeights(convolutionalHelpers):
         return nn.Sequential(
             nn.Linear(numInputFeatures, numOutputFeatures, bias=addBias),
             nn.Linear(numOutputFeatures, numOutputFeatures, bias=addBias),
+            nn.Linear(numOutputFeatures, numOutputFeatures, bias=addBias),
         )
 
     # ------------------- Wavelet Neural Operator Architectures ------------------- #
@@ -36,7 +37,7 @@ class emotionModelWeights(convolutionalHelpers):
     @staticmethod
     def neuralWeightFC(numInputFeatures=1):
         return nn.Sequential(
-            reversibleLinearLayer(sequenceLength=numInputFeatures, numLayers=1, activationMethod='reversibleLinearSoftSign_1_0.9'),
+            reversibleLinearLayer(sequenceLength=numInputFeatures, numLayers=1, activationMethod='reversibleLinearSoftSign_2_0.9'),
         )
 
     def neuralWeightFCC(self, inChannel=1, outChannel=2, finalFrequencyDim=46):
@@ -46,10 +47,10 @@ class emotionModelWeights(convolutionalHelpers):
         assert False, "The neuralWeightFCC method is not yet implemented."
 
     @staticmethod
-    def neuralWeightCNN(inChannel=1, outChannel=1, groups=1):
+    def reversibleNeuralWeightCNN(inChannel=1):
         return nn.Sequential(
             # Convolution architecture: feature engineering
-            reversibleConvolution(numChannels=inChannel, kernelSize=3, activationMethod='reversibleLinearSoftSign_1_0.9', numLayers=4, skipConnection=True),
+            reversibleConvolution(numChannels=inChannel, kernelSize=3, activationMethod='reversibleLinearSoftSign_2_0.9', numLayers=4, skipConnection=True),
         )
 
     @staticmethod
@@ -64,5 +65,5 @@ class emotionModelWeights(convolutionalHelpers):
     def postProcessingLayer(inChannel=1, groups=1):
         return nn.Sequential(
             # Convolution architecture: post-processing operator. 
-            reversibleConvolution(numChannels=inChannel, kernelSize=3, activationMethod='reversibleLinearSoftSign_1_0.9', numLayers=4, skipConnection=True),
+            reversibleConvolution(numChannels=inChannel, kernelSize=5, activationMethod='reversibleLinearSoftSign_2_0.9', numLayers=4, skipConnection=True),
         )

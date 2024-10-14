@@ -57,15 +57,20 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
     def sharedLearning(self, signalData):
         for layerInd in range(self.numOperatorLayers):
             if reversibleInterface.forwardDirection:
-                # signalData = self.neuralLayers[layerInd](signalData)
-                # signalData = self.activationFunctions(signalData)
+                # Apply the neural operator layer with activation.
+                signalData = self.neuralLayers[layerInd](signalData)
+                signalData = self.activationFunction(signalData)
 
+                # Apply the post-processing layer.
                 signalData = self.processingLayers[layerInd](signalData)
             else:
+                # Apply the post-processing layer.
+                layerInd = self.numOperatorLayers - layerInd - 1
                 signalData = self.processingLayers[layerInd](signalData)
 
-                # signalData = self.activationFunctions(signalData)
-                # signalData = self.neuralLayers[layerInd](signalData)
+                # Apply the neural operator layer with activation.
+                signalData = self.activationFunction(signalData)
+                signalData = self.neuralLayers[layerInd](signalData)
 
         return signalData
 

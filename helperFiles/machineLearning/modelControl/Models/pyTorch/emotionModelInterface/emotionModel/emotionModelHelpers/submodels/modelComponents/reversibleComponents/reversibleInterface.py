@@ -34,4 +34,8 @@ class reversibleInterface(nn.Module):
         plt.legend()
         plt.show()
 
+        plt.plot((inputData - reconstructedData)[0][0].detach().numpy(), 'k', linewidth=2, label='Signal Error')
+        plt.legend()
+        plt.show()
+
         return forwardData, reconstructedData

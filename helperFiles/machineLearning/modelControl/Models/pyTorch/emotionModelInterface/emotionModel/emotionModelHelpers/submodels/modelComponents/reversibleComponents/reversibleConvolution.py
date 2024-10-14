@@ -53,7 +53,7 @@ class reversibleConvolution(reversibleInterface):
 
         # Skip connection.
         skipConnectionWeight = torch.zeros(kernelSize, device=inputData.device)
-        skipConnectionWeight[kernelSize//2] = 1/kernelSize if self.skipConnection else 0
+        skipConnectionWeight[kernelSize//2] = 1/self.numLayers if self.skipConnection else 0
         neuralWeights = neuralWeights + skipConnectionWeight
 
         # Invert the neural weights if needed.
@@ -90,9 +90,9 @@ class reversibleConvolution(reversibleInterface):
 if __name__ == "__main__":
     # General parameters.
     _batchSize, _numSignals, _sequenceLength = 4, 128, 512
-    _activationMethod = 'reversibleLinearSoftSign_1_0.9'
+    _activationMethod = 'reversibleLinearSoftSign_2_0.9'
     _numLayers = 25
-    _kernelSize = 3
+    _kernelSize = 5
 
     # Set up the parameters.
     neuralLayerClass = reversibleConvolution(numChannels=_numSignals, kernelSize=_kernelSize, activationMethod=_activationMethod, numLayers=_numLayers, skipConnection=True)

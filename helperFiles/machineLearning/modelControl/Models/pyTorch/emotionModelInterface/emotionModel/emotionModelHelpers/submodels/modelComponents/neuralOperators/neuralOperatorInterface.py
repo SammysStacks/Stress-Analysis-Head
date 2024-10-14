@@ -26,8 +26,8 @@ class neuralOperatorInterface(emotionModelWeights):
         waveletType = neuralOperatorParameters['waveletType']  # The type of wavelet to use for the wavelet transform.
 
         # Hardcoded parameters.
-        numDecompositions = min(5, waveletNeuralOperatorLayer.max_decompositions(signal_length=self.sequenceLength, wavelet_name=waveletType))  # Number of decompositions for the waveletType transform.
-        mode = 'zero'  # Mode for the waveletType transform.
+        numDecompositions = 1  # Number of decompositions for the waveletType transform.
+        mode = 'periodization'  # Mode for the waveletType transform.
 
         # Specify the default parameters.
         if encodeHighFrequencyProtocol is None: encodeHighFrequencyProtocol = 'residual'  # The protocol for encoding the high frequency signals.
