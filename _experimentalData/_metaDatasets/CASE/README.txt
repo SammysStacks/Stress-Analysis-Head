@@ -1,13 +1,15 @@
-## README -- CASE_dataset
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%			README -- CASE_dataset
+%
+% This short guide to this dataset, covers the following topics:
+% (1) General information about the dataset.
+% (2) Structure of the dataset.
+% (3) Usage.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-This short guide to this dataset, covers the following topics:
-
-1. General information about the dataset.
-2. Structure of the dataset.
-3. Usage.
-
-### 1. General Information:
-
+-------------------------------------------------------------------------------
+(1) General Information:
+-------------------------------------------------------------------------------
 The Continuously Annotated Signals of Emotion (CASE) dataset was developed to
 address the lack of continuously and simultaneously annotated physiological
 datasets for Affective Computing.
@@ -28,7 +30,6 @@ the data during pre-processing.
 More information on the dataset can be found in the accompanying data descriptor
 and our previous (as of June, 2019) research work:
 
-```
 	(a) Sharma, K., Wagner, M., Castellini, C., van den Broek, E. L., Stulp,
 	F. and Schwenker, F. (2019) A functional data analysis approach for
 	continuous 2-D emotion annotations. Web Intelligence, 17 (1), pp. 41-52.
@@ -50,52 +51,51 @@ and our previous (as of June, 2019) research work:
 	based user interface. In Proceedings of Measuring Behavior 2014:
 	9th International Conference on Methods and Techniques in Behavioral
 	Research, 268-271. 
-``` 
+ 
+-------------------------------------------------------------------------------
+(2) Structure of the Dataset:
+-------------------------------------------------------------------------------
 
-### 2. Structure of the Dataset:
-
-The root folder of the repository, where this README file is located, has the
+The root folder of the dataset, where this README file is located, has the
 following subfolders:
 
-1. /data
-2. /metadata
-3. /scripts
+(a) /data
+(b) /metadata
+(c) /scripts
  
 Each of these subfolders and any further subfolders within them also contain
 README files for more information. As such, only a short description of
 these subfolders is provided here:
 
-1. **/data**: contains several subfolders, that are often further subdivided into
+(a) /data - contains several subfolders, that are often further subdivided into
     physiological and annotations folder. These subfolders at the root of this
     folder are:
-	- ./raw - contains data as acquired from LabVIEW, without any video-IDs.
-	- ./initial - holds mat files generated from raw data.
-	- ./interpolated - interpolated data containing video-IDs.
-	- ./non-interpolated - non-interpolated data containing video-IDs.
+	* ./raw - contains data as acquired from LabVIEW, without any video-IDs.
+	* ./initial - holds mat files generated from raw data.
+	* ./interpolated - interpolated data containing video-IDs.
+	* ./non-interpolated - non-interpolated data containing video-IDs.
 
-2. **/metadata**: this folder contains other information about the experiments.
+(b) /metadata - this folder contains other information about the experiments.
     For example, information about the participants, the sequence in which they
     watched the videos, etc.
 
-3. **/scripts**: contains scripts that allow the user to undertake/verify the 
+(c) /scripts - contains scripts that allow the user to undertake/verify the 
     steps required for converting raw data to the processed data contained in
     the interpolated and non-interpolated folders.   
 
+-------------------------------------------------------------------------------
+(3) Usage:
+-------------------------------------------------------------------------------
+For researchers who wish to quickly undertake downstream analysis with the
+presented data, we suggest that they use interpolated data, as the size of data
+for individual videos across different participants is consistent in comparison
+to the non-interpolated data. 
 
-### 3. Usage:
+The non-interpolated data is also provided, in case the researchers want to use
+a different interpolation approach or prefer the non-interpolated data for other
+reasons. 
 
-**Note**:
-
-- This repository only contains *raw* data and the accompanying code
-that can be used to generate both the *interpolated* and *non-interpolated* data.
-
-- The *raw* data doesn't contain any video label (video-IDs) information, hence
-we do not recommend that users undertake downstream analysis with that data.
-They should instead generate *interpolated* data,  and use that to perform any
-downstream analysis.
-
-- The *non-interpolated* data is can also be generated, in case researchers want
-to use a different interpolation approach or prefer the non-interpolated data
-for other reasons. 
-
-
+Researchers are also welcome to start working with raw data, 
+but with one caveat, the presented approach for augmenting video-IDs to the 
+physiological and annotation data should not be tampered with as it can result
+in inconsistent results across different analyses.

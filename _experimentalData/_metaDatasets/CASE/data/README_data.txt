@@ -1,12 +1,14 @@
-## README -- CASE_dataset/data
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%			README -- CASE_dataset/data
+%
+% This short guide to the data, covers the following topics:
+% (1) Preamble.
+% (2) Structure of this subfolder.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-This short guide to the data, covers the following topics:
-
-1. Preamble.
-2. Structure of this subfolder.
-
-
-### 1. Preamble:
+-------------------------------------------------------------------------------
+(1) Preamble:
+-------------------------------------------------------------------------------
 The raw data acquired from each participant during the experiment is stored in
 two different tab delimited text files. Where, one contains the physiological,
 and the other, the annotation data. This was required because the the sampling
@@ -21,27 +23,29 @@ the data descriptor. The following section provides a brief overview of the
 structure of this sub-folder (and the subsequent sub-folders) and the data
 contained in them.   
 
-### 2. Structure of this subfolder:
+-------------------------------------------------------------------------------
+(2) Structure of this subfolder:
+-------------------------------------------------------------------------------
 This subfolder to the dataset contains the following two subfolders that
 respectively contain the physiological and annotation data for all 30
 participants:
 
-1. **CASE_dataset/data/raw**: contains the raw data as acquired from LabVIEW,
+(a) CASE_dataset/data/raw - contains the raw data as acquired from LabVIEW,
 	without any video-IDs. This folder is further sub-divided into:
 	1. /annotations
 	2. /physiological
 
-2. **CASE_dataset/data/initial**: contains mat files generated from raw data. A
+(b) CASE_dataset/data/initial - contains mat files generated from raw data. A
 	single mat file contains both annotation and physiological data.
 
-3. **CASE_dataset/data/interpolated**: contains data that has been pre-processed.
+(c) CASE_dataset/data/interpolated - contains data that has been pre-processed.
 	This entails, e.g., addition of video-IDs, conversion of voltages to
 	appropriate units. Also the data have been interpolated (see data
 	descriptor). This folder is further sub-divided into:
 	1. /annotations
 	2. /physiological
 
-4. **CASE_dataset/data/non-interpolated**: contains data that have been 
+(d) CASE_dataset/data/non-interpolated - contains data that have been 
 	pre-processed (as above), with the difference being that they are not
 	interpolated. This folder is further sub-divided into:
 	1. /annotations
