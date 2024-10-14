@@ -6,7 +6,7 @@ import numpy as np
 from scipy.signal import savgol_filter
 
 from helperFiles.dataAcquisitionAndAnalysis.biolectricProtocols.globalProtocol import globalProtocol
-
+from BaselineRemoval import BaselineRemoval
 
 class bvpProtocol(globalProtocol):
 
@@ -247,12 +247,13 @@ class bvpProtocol(globalProtocol):
                             normalizedPulseData = self.normalizePulseBaseline(toBeNormalizedPulse, 1)
                             finalFeatures = self.extractPulsePeaks(intervalPulseTime, normalizedPulseData, first_derivative, second_derivative, third_derivative)
 
-                            newRawFeatures.append(finalFeatures)
-                            newFeatureTimes.append(featureTime)
+                            if finalFeatures is not None:
+                                newRawFeatures.append(finalFeatures)
+                                newFeatureTimes.append(featureTime)
 
-                            # Plot each pulse's features if plotting is enabled.
-                            if self.plottingIndicator:
-                                self.plotBvpFeatures(absoluteTime, intervalPulseData, finalFeatures)
+                                # Plot each pulse's features if plotting is enabled.
+                                if self.plottingIndicator:
+                                    self.plotBvpFeatures(absoluteTime, intervalPulseData, finalFeatures)
 
                             # Update the last analyzed index for this pulse.
                             self.timeOffset = pulseEndInd - pulseStartInd
@@ -299,6 +300,19 @@ class bvpProtocol(globalProtocol):
         # Other Extremas Nearby
         dicroticInflectionInd = self.universalMethods.findNearbyMaximum(pulseVelocity, dicroticNotchInd, binarySearchWindow=2, maxPointsSearch=int(len(pulseTime) / 2))
         dicroticFallVelMinInd = self.universalMethods.findNearbyMinimum(pulseVelocity, dicroticInflectionInd, binarySearchWindow=2, maxPointsSearch=int(len(pulseTime) / 2))
+
+
+        # ----------------------- Sequence Validation ----------------------- #
+        # Check if the sequence is valid: systolic upstroke -> systolic peak -> dicrotic notch -> dicrotic peak
+        if not (systolicUpstrokeVelInd < systolicPeakInd < dicroticNotchInd < dicroticPeakInd):
+            print("Invalid peak sequence detected. Skipping pulse.")
+            return None  # Skip this pulse if the sequence is incorrect
+
+        # ----------------------- Value Validation -------------------------- #
+        # check if the systolic peak is higher than diastolic peak
+        if not (normalizedPulse[systolicPeakInd] > normalizedPulse[dicroticPeakInd]):
+            print("Invalid systolic and diastolic pulse value. Skipping pulse.")
+            return None
 
         # ----------------------- Feature Extraction ------------------------ #
         allSystolicPeaks = [systolicUpstrokeAccelMaxInd, systolicUpstrokeVelInd, systolicUpstrokeAccelMinInd, systolicPeakInd]

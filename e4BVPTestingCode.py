@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 import numpy as np
-from helperFiles.dataAcquisitionAndAnalysis.biolectricProtocols.__oldAnalysis.bvpAnalysis_old2 import bvpProtocol
+from helperFiles.dataAcquisitionAndAnalysis.biolectricProtocols.bvpAnalysis import bvpProtocol
 
 if __name__ == "__main__":
 
