@@ -210,10 +210,10 @@ class getExcelData(handlingExcelFormat):
             elif type(cellA.value) == str:
                 # If no feature names found, save them
                 if len(featureNames[featureInd]) == 0:
-                    featureNames[featureInd] = np.array([str(cell.value) for cell in row[1:]], dtype = str)
+                    featureNames[featureInd] = np.asarray([str(cell.value) for cell in row[1:]], dtype = str)
                 else:
                     # Assert the same feature names present in all files.
-                    assert all(featureNames[featureInd] == np.array([str(cell.value) for cell in row[1:]], dtype = str)), "We have two feature sheets with DIFFERENT features for " + featureType + "; " + str(len(np.array([str(cell.value) for cell in row[1:]]))) + " " + str(len(featureNames[featureInd]))
+                    assert all(featureNames[featureInd] == np.asarray([str(cell.value) for cell in row[1:]], dtype = str)), "We have two feature sheets with DIFFERENT features for " + featureType + "; " + str(len(np.asarray([str(cell.value) for cell in row[1:]]))) + " " + str(len(featureNames[featureInd]))
         
         if dataStartRow != None:
             # Loop Through the Excel Worksheet to collect all the data
@@ -262,7 +262,7 @@ class getExcelData(handlingExcelFormat):
     
         # Check that the subject background questions are all the same
         if len(finalSubjectInformationQuestions) != 0:
-            assert all(np.array(finalSubjectInformationQuestions) == subjectInformationQuestions)
+            assert all(np.asarray(finalSubjectInformationQuestions) == subjectInformationQuestions)
         
         return featuresTimesHolder, featuresHolder, featureNames, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions, subjectInformationAnswers, subjectInformationQuestions
     
@@ -379,8 +379,8 @@ class getExcelData(handlingExcelFormat):
 
 
                 # Save the features and labels
-                Training_Data.extend(rawFeatureHolder[0].copy())
-                Training_Labels.extend(len(rawFeatureHolder[0].copy())*[featureLabel])
+                Training_Data.extend(rawFeatureHolder.copy())
+                Training_Labels.extend(len(rawFeatureHolder.copy())*[featureLabel])
                 '''
                 import matplotlib.pyplot as plt
                 
@@ -394,7 +394,7 @@ class getExcelData(handlingExcelFormat):
                 
 
         # Return Training Data and Labels
-        return subjectOrder, np.array(Training_Data), np.array(Training_Labels)
+        return subjectOrder, np.asarray(Training_Data), np.asarray(Training_Labels)
     
     
 

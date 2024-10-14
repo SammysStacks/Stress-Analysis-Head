@@ -1,33 +1,17 @@
-
-# -------------------------------------------------------------------------- #
-# ---------------------------- Imported Modules ---------------------------- #
-
 # General Modules
 import os
 import sys
-import numpy as np
-# Module to Sort Files in Order
+
 import natsort
-# Data interface modules
+import numpy as np
 import openpyxl as xl
 
-# Import Files for Machine Learning
-sys.path.append(os.path.dirname(__file__) + "/../Helper Files/Machine Learning/Model Specifications/")
-import _compileModelInfo    # Functions with model information
+from ...helperFiles.dataAcquisitionAndAnalysis.excelProcessing.extractDataProtocols import extractData
+from ...helperFiles.dataAcquisitionAndAnalysis.excelProcessing.saveDataProtocols import saveExcelData
+from ...helperFiles.machineLearning.featureAnalysis.featurePlotting import featurePlotting  # Functions for feature analysis
+from ...helperFiles.machineLearning.modelControl.modelSpecifications.compileModelInfo import compileModelInfo
 
-# Import Files for Machine Learning
-sys.path.append(os.path.dirname(__file__) + "/../Helper Files/Machine Learning/Feature Analysis/")
-import _featurePlotting      # Functions for feature analysis
 
-# Import Files for Machine Learning
-sys.path.append(os.path.dirname(__file__) + "/../Helper Files/Data Aquisition and Analysis/Excel Processing/")
-# Import excel data interface
-from extractDataProtocols import extractData
-import saveDataProtocols
-
-# -------------------------------------------------------------------------- #
-# ---------------------- Extract Test Data from Excel ---------------------- #
-    
 class trainingProtocols(extractData):
     
     def __init__(self, biomarkerFeatureNames, biomarkerOrder, numberOfChannels, trainingDataExcelFolder, readData):
@@ -48,9 +32,9 @@ class trainingProtocols(extractData):
         self.featureNames = [item for sublist in self.biomarkerFeatureNames for item in sublist]
         
         # Initialize important classes
-        self.saveInputs = saveDataProtocols.saveExcelData()
-        self.modelInfoClass = _compileModelInfo.compileModelInfo("_.pkl", [0,1,2])
-        self.analyzeFeatures = _featurePlotting.featurePlotting(self.trainingDataExcelFolder + "dataAnalysis/", overwrite = False)
+        self.saveInputs = saveExcelData()
+        self.modelInfoClass = compileModelInfo()
+        self.analyzeFeatures = featurePlotting(self.trainingDataExcelFolder + "dataAnalysis/", overwrite = False)
     
     def extractData_Old(self, ExcelSheet, startDataCol = 1, endDataCol = 2, data = None):
         # If Header Exists, Skip Until You Find the Data
@@ -114,7 +98,8 @@ class trainingProtocols(extractData):
                         currentSurveyAnswerTimes, currentSurveyAnswersList, surveyQuestions, currentSubjectInformationAnswers, \
                             subjectInformationQuestions = self.getFeatures(biomarkerOrder, savedFeaturesFile, self.biomarkerFeatureNames, [], [])
                 else:
-                    # Read in the training file with the raw data,
+                    # Read in the training file with the raw data
+                    print(excelFile)
                     WB = xl.load_workbook(excelFile, data_only=True, read_only=True)
                     worksheets = WB.worksheets
                     
@@ -138,8 +123,8 @@ class trainingProtocols(extractData):
 
 
                 # Save the features and labels
-                Training_Data.extend(rawFeatureHolder[0].copy())
-                Training_Labels.extend(len(rawFeatureHolder[0].copy())*[featureLabel])
+                Training_Data.extend(rawFeatureHolder.copy())
+                Training_Labels.extend(len(rawFeatureHolder.copy())*[featureLabel])
                 '''
                 import matplotlib.pyplot as plt
                 
@@ -153,6 +138,6 @@ class trainingProtocols(extractData):
                 
 
         # Return Training Data and Labels
-        return subjectOrder, np.array(Training_Data), np.array(Training_Labels)
+        return subjectOrder, np.asarray(Training_Data), np.asarray(Training_Labels)
     
     
