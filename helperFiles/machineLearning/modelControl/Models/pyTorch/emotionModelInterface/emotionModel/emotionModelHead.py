@@ -41,7 +41,7 @@ class emotionModelHead(nn.Module):
         self.numMetaEncodingLayers = userInputParams['numMetaEncodingLayers']    # The number of layers in the shared signal encoding operator.
         self.latentQueryKeyDim = userInputParams['latentQueryKeyDim']     # The dimension of the latent query and key vectors.
         self.encodedDimension = userInputParams['encodedDimension']     # The dimension of the encoded signal.
-        self.activationMethod = 'reversiblePolynomial_2'  # The activation method to use for the neural operator.
+        self.activationMethod = 'reversibleLinearSoftSign_1_0.9'  # The activation method to use for the neural operator.
 
         # Emotion parameters.
         self.numInterpreterHeads = userInputParams['numInterpreterHeads']   # The number of ways to interpret a set of physiological signals.

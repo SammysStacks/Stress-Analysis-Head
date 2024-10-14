@@ -15,10 +15,10 @@ def getActivationMethod(activationMethod):
         nonLinearityRegion = int(activationMethod.split('_')[2]) if '_' in activationMethod else 2
         topExponent = int(activationMethod.split('_')[1]) if '_' in activationMethod else 0
         activationFunction = boundedExp(decayConstant=topExponent, nonLinearityRegion=nonLinearityRegion)
-    elif activationMethod.startswith("reversiblePolynomial"):
+    elif activationMethod.startswith('reversibleLinearSoftSign'):
         infiniteBound = float(activationMethod.split('_')[2]) if '_' in activationMethod else 0.5
         nonLinearityRegion = float(activationMethod.split('_')[1]) if '_' in activationMethod else 2
-        activationFunction = reversibleActivation(inversionPoint=nonLinearityRegion, infiniteBound=infiniteBound)
+        activationFunction = reversibleLinearSoftSign(inversionPoint=nonLinearityRegion, infiniteBound=infiniteBound)
     elif activationMethod == 'boundedS':
         activationFunction = boundedS()
     elif activationMethod == 'linearOscillation':
@@ -82,9 +82,9 @@ class reversiblePolynomial(reversibleInterface):
         return x
 
 
-class reversibleActivation(reversibleInterface):
+class reversibleLinearSoftSign(reversibleInterface):
     def __init__(self, inversionPoint=2, infiniteBound=0.75):
-        super(reversibleActivation, self).__init__()
+        super(reversibleLinearSoftSign, self).__init__()
         self.inversionPoint = inversionPoint  # Corresponds to `r` in the equation
         self.infiniteBound = infiniteBound  # Corresponds to `a` in the equation
 
@@ -287,5 +287,5 @@ if __name__ == "__main__":
     data = torch.randn(2, 10, 100)
 
     # Perform the forward and inverse pass.
-    activationClass = reversibleActivation(inversionPoint=2, infiniteBound=0.5)
+    activationClass = reversibleLinearSoftSign(inversionPoint=2, infiniteBound=0.5)
     _forwardData, _reconstructedData = activationClass.checkReconstruction(data, atol=1e-6)
