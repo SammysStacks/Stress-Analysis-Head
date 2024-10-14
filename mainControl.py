@@ -33,7 +33,7 @@ if __name__ == "__main__":
 
     # User options during the run: any number can be true.
     useModelPredictions = False or trainModel  # Apply the learning algorithm to decode the signals.
-    plotStreamedData = True  # Graph the data to show incoming signals.
+    plotStreamedData = False  # Graph the data to show incoming signals.
     useTherapyData = True  # Use the Therapy Data folder for any files.
 
     # General program flags.
@@ -42,8 +42,8 @@ if __name__ == "__main__":
 
     # Specify the user parameters.
     userName = "Ruixiao".replace(" ", "")
-    trialName = "BaselineE4-2"
-    date = "2024-09-24"
+    trialName = "E4_Extract_Saving_test"
+    date = "2024-10-24"
 
     # Specify experimental parameters.
     deviceAddress = '12ba4cb61c85ec11bc01fc2b19c2d21c'  # Board's Serial Number (port.serial_number). Only used if streaming data, else it gets reset to None.
