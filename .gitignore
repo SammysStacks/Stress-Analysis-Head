@@ -11,17 +11,11 @@ venv/
 **/*.png
 **/*.jpg
 **/*.mp3
-**/*~$
-**/*$
-**/*~
-**/*.
+**/$*
+**/~*
+**/.*
 
-helperFiles/**/.*
-_projectFiles/**/.*
-_experimentalData/**/.*
-_experimentalData/**/.~
-.__projectFiles
-._helperFiles
+!.git*
 
 _projectFiles/_supplementaryWork/Machine Learning Predictions/finalFigures/*
 
