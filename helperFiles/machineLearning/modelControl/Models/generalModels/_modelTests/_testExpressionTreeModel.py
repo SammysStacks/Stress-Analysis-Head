@@ -35,8 +35,8 @@ class testExpressionTreeModel:
         c = np.random.uniform(0, 1, numPoints)
         
         # Compile feature data.
-        self.featureData = np.array([x, y, z, a, b, c]).T
-        self.featureNames_Tree = np.array(['x', 'y', 'z', 'a', 'b', 'c'])
+        self.featureData = np.asarray([x, y, z, a, b, c]).T
+        self.featureNames_Tree = np.asarray(['x', 'y', 'z', 'a', 'b', 'c'])
         
         # Initialize classes.
         self.datasetGenerator = _generateDataset.datasetGenerator()

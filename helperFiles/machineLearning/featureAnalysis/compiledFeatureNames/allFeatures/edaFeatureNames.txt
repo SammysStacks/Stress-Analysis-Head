@@ -1,0 +1,12 @@
+finalFeatures = []
+# Add peak shape parameters
+finalFeatures.extend([mean, standardDeviation, signalRange])
+# Add derivative features
+finalFeatures.extend([firstDerivativeMean, firstDerivativeStdDev])
+# Feature Extraction: Fractal
+finalFeatures.extend([petrosian_fd, higuchi_fd, DFA, katz_fd])
+
+# Feature Extraction: Hjorth
+finalFeatures.extend([hjorthActivity, hjorthMobility, hjorthComplexity, firstDerivVariance])
+# Feature Extraction: Entropy
+finalFeatures.extend([spectral_entropy, perm_entropy])

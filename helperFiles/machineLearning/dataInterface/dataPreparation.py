@@ -1,16 +1,37 @@
-# -------------------------------------------------------------------------- #
-# ---------------------------- Imported Modules ---------------------------- #
-
-# General
 import numpy as np
+import torch
 
 
 # Standardize data class
+def minMaxScale_noInverse(X, scale=1):
+    # Ensure the proper data type
+    if not isinstance(X, torch.Tensor): X = np.asarray(X)
+
+    # Find the minimum and maximum along the last dimension
+    min_val = X[X != 0].min(axis=-1, keepdims=True)
+    max_val = X[X != 0].max(axis=-1, keepdims=True)
+
+    # Handle the torch.tensor case.
+    if hasattr(X, "values"):
+        min_val = min_val.values
+        max_val = max_val.values
+
+    # Handle the case when max_val == min_val (avoid division by zero)
+    range_val = max_val - min_val
+    range_val[range_val == 0] = 1  # Prevent division by zero
+
+    # Normalize the data.
+    normalized = (X - min_val) / range_val  # Normalize to [0, 1]
+    scaled = 2 * normalized - 1  # Then scale to [-1, 1]
+    scaled = scale * scaled  # Apply additional scaling if needed
+
+    return scaled
+
+
 class standardizeData:
     def __init__(self, X, axisDimension=0, threshold=10E-15):
         self.axisDimension = axisDimension
 
-        X = np.asarray(X)
         self.mu_ = np.mean(X, axis=axisDimension)
         self.sigma_ = np.std(X, ddof=1, axis=axisDimension)
 
@@ -23,7 +44,6 @@ class standardizeData:
             self.sigma_ = self.sigma_.reshape(-1, 1)
 
     def standardize(self, X):
-        X = np.asarray(X)
         return (X - self.mu_) / self.sigma_
 
     def unStandardize(self, Xhat):

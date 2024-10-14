@@ -24,6 +24,7 @@ class aStarProtocol(generalProtocol):
             self.simulationProtocols.simulatedMap = self.initializeHeuristicMap(self.simulationProtocols.numSimulationTrueSamples)  # Estimate on what temperatures you like. Based on population average.
 
     def updateTherapyState(self):
+
         # Unpack the current user state.
         currentUserState = self.userStatePath[-1]
         currentUserTemp, currentUserLoss = currentUserState
@@ -85,7 +86,7 @@ class aStarProtocol(generalProtocol):
         potentialBenefit = self.loss_bins - lossValue  # Assuming we want to minimize the loss
 
         # Compute the gradient using numpy.gradient()
-        gradients = np.gradient(currentMap * potentialBenefit)  # Dimension: 2, numTempBins, numLossBins
+        gradients = np.gradient(currentMap * potentialBenefit)  # Dimension: 2, allNumParameterBins, numPredictionBins
 
         # Assert that we calculated the correct gradient.
         assert len(gradients) == 2, "The gradient calculation is incorrect."
@@ -108,7 +109,7 @@ class aStarProtocol(generalProtocol):
 
     @staticmethod
     def personalizedMapWeightingFunc(timeDelays, decay_constant):
-        return np.exp(-decay_constant * np.array(timeDelays))
+        return np.exp(-decay_constant * np.asarray(timeDelays))
 
     def getUpdatedPersonalizedMap(self):
         # Assert the integrity of the state tracking.

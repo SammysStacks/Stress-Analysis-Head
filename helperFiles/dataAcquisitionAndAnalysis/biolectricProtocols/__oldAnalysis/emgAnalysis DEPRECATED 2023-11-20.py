@@ -16,7 +16,7 @@ import _globalProtocol
 
 class emgProtocol(_globalProtocol.globalProtocol):
     
-    def __init__(self, numPointsPerBatch = 3000, moveDataFinger = 10, numChannels = 2, plottingClass = None, readData = None):
+    def __init__(self, numPointsPerBatch = 3000, moveDataFinger = 10, channelIndices = (), plottingClass = None, readData = None):
         # Prediction Parameters
         self.gestureClasses = []
         
@@ -44,7 +44,7 @@ class emgProtocol(_globalProtocol.globalProtocol):
             }
         
         # Initialize common model class
-        super().__init__("emg", numPointsPerBatch, moveDataFinger, numChannels, plottingClass, readData)
+        super().__init__("emg", numPointsPerBatch, moveDataFinger, channelIndices, plottingClass, readData)
     
     # TODO: [0 for _ in range(self.numChannels)] FOR CERTAIN VARIABLES
     def resetAnalysisVariables(self):        
@@ -72,9 +72,9 @@ class emgProtocol(_globalProtocol.globalProtocol):
         # Calculate Number of Streamed Points Per RMS Point
         self.secondsPerPointRMS = self.stepSize/self.samplingFreq   # Seconds per Delta RMS Point
 
-    def filterData(self, timePoints, data):
+    def filterData(self, timepoints, data):
         filteredData = self.highPassFilter(data)
-        filteredTime = timePoints.copy()
+        filteredTime = timepoints.copy()
         
         return filteredTime, filteredData, np.ones(len(filteredTime))
     
@@ -87,20 +87,20 @@ class emgProtocol(_globalProtocol.globalProtocol):
             # ---------------------- Filter the Data ----------------------- #   
             # Find the starting/ending points of the data to analyze
             startFilterPointer = max(dataFinger - self.dataPointBuffer, 0)
-            dataBuffer = np.array(self.data[1][channelIndex][startFilterPointer:dataFinger + self.numPointsPerBatch])
-            timePoints = np.array(self.data[0][dataFinger:dataFinger + self.numPointsPerBatch])
+            dataBuffer = np.asarray(self.data[1][channelIndex][startFilterPointer:dataFinger + self.numPointsPerBatch])
+            timepoints = np.asarray(self.data[0][dataFinger:dataFinger + self.numPointsPerBatch])
             
             # Find New Points That Need Filtering
-            totalPreviousPointsRMS = max(1 + math.floor((dataFinger + len(timePoints) - self.moveDataFinger - self.rmsWindow) / self.stepSize), 0) if dataFinger else 0
+            totalPreviousPointsRMS = max(1 + math.floor((dataFinger + len(timepoints) - self.moveDataFinger - self.rmsWindow) / self.stepSize), 0) if dataFinger else 0
             dataPointerRMS = self.stepSize*totalPreviousPointsRMS
-            numNewDataForRMS = dataFinger + len(timePoints) - dataPointerRMS
+            numNewDataForRMS = dataFinger + len(timepoints) - dataPointerRMS
             
             # Get the Sampling Frequency from the First Batch (If Not Given)
             if not self.samplingFreq:
                 self.setSamplingFrequency(startFilterPointer)
                 
             # Filter the data.
-            _, filteredData, _ = self.filterData(timePoints, dataBuffer)
+            _, filteredData, _ = self.filterData(timepoints, dataBuffer)
             # Remove the filter buffer. Only consider new data.
             filteredData = filteredData[-(numNewDataForRMS):]
             # -------------------------------------------------------------- #
@@ -119,10 +119,10 @@ class emgProtocol(_globalProtocol.globalProtocol):
             
             # ------------------- Plot Biolectric Signal -------------------- #
             if self.plotStreamedData:
-                dataBuffer = dataBuffer[-len(timePoints):]
+                dataBuffer = dataBuffer[-len(timepoints):]
                 # Plot Raw Bioelectric Data (Slide Window as Points Stream in)
-                self.plottingMethods.bioelectricDataPlots[channelIndex].set_data(timePoints, dataBuffer)
-                self.plottingMethods.bioelectricPlotAxes[channelIndex].set_xlim(timePoints[0], timePoints[-1])
+                self.plottingMethods.bioelectricDataPlots[channelIndex].set_data(timepoints, dataBuffer)
+                self.plottingMethods.bioelectricPlotAxes[channelIndex].set_xlim(timepoints[0], timepoints[-1])
                 
                 # Plot the Filtered (RMS) Data
                 self.plottingMethods.filteredBioelectricDataPlots[channelIndex].set_data(self.xDataRMS[-self.numPointsRMS:], dataRMS[-self.numPointsRMS:])
@@ -398,7 +398,7 @@ class emgProtocol(_globalProtocol.globalProtocol):
                 else:
                     leftBaselineIndex = max(0, xPointer - 100)
             # Analyze Only the Left Side (As I Want to Decipher Motor Intention as Fast as I Can; Plus the Signal is generally Symmetric)
-            dataWindow = np.array(yData[leftBaselineIndex:xPointer+1])
+            dataWindow = np.asarray(yData[leftBaselineIndex:xPointer+1])
             
             # Feature Extraction
             peakAverage = np.mean(dataWindow) - yData[leftBaselineIndex]
@@ -419,7 +419,7 @@ class emgProtocol(_globalProtocol.globalProtocol):
                 print("\tSetting Group Width", self.groupWidthRMS)
             
             leftBaselines.append(xData[leftBaselineIndex])
-          #  print("INITIAL", xData[xPointer], leftBaselineIndex, xPointer, xData[leftBaselineIndex], self.data['timePoints'][-1])
+          #  print("INITIAL", xData[xPointer], leftBaselineIndex, xPointer, xData[leftBaselineIndex], self.data['timepoints'][-1])
                 
         # Return Features
         return peakFeatures, leftBaselines
@@ -438,7 +438,7 @@ class emgProtocol(_globalProtocol.globalProtocol):
     
     def predictMovement(self, inputData, predictionModel, actionControl = None): 
         # Predict Data
-        predictedIndex = predictionModel.predictData(np.array([inputData]))[0]
+        predictedIndex = predictionModel.predictData(np.asarray([inputData]))[0]
         predictedLabel = self.gestureClasses[predictedIndex]
         print("\tThe Predicted Label is", predictedLabel)
         if actionControl:

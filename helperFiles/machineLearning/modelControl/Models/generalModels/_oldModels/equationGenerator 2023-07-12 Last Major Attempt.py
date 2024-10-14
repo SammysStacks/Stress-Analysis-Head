@@ -28,7 +28,7 @@ import expressionTreeModel
 # -------------------------------------------------------------------------- #
 # -------------------------- Recommendation Model -------------------------- #
 
-class equationGenerator(_globalModel.globalModel):        
+class equationGenerator(nn.Module):        
     
     def __init__(self, modelPath, modelType, allFeatureNames, overwriteModel): 
         # Specify state boundaries.
@@ -753,13 +753,13 @@ if __name__ == "__main__":
     featureLabels_EGM = m + y + z**y
     
     # Compile feature data.
-    featureData_EGM = np.array([x, y, z, m, a, b, c]).T
-    featureNames_EGM = np.array(['x', 'y', 'z', 'm', 'a', 'b', 'c'])
+    featureData_EGM = np.asarray([x, y, z, m, a, b, c]).T
+    featureNames_EGM = np.asarray(['x', 'y', 'z', 'm', 'a', 'b', 'c'])
     maxEpochs = 5
     
     
-    # featureData_EGM = np.array([c]).T
-    # featureNames_EGM = np.array(['c'])
+    # featureData_EGM = np.asarray([c]).T
+    # featureNames_EGM = np.asarray(['c'])
     # featureLabels_EGM = x + c
 
 

@@ -1,17 +1,14 @@
-
-# -------------------------------------------------------------------------- #
-# ---------------------------- Imported Modules ---------------------------- #
-
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+
+import tensorflow
+import tensorflow.keras as keras
 from tensorflow.keras.applications import ResNet50
 from tensorflow.keras.applications.resnet50 import preprocess_input
 from PIL import Image
 from natsort import natsorted
 
-# -------------------------------------------------------------------------- #
-# ----------------------- Quantify Image Similarities ---------------------- #
 
 class imageSimilarities:
     
@@ -36,7 +33,7 @@ class imageSimilarities:
         for path in image_paths:
             img = Image.open(path)
             img = img.resize(self.imageSize)
-            x = np.array(img)  
+            x = np.asarray(img)  
             print(x[:,:,0])
 
             x = preprocess_input(x)

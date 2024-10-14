@@ -27,7 +27,7 @@ class timeSeries_CNN:
             feature = self.ResNet152.predict(x).flatten()
             features.append(feature)
         # features = np.concatenate(features, axis=0)
-        return np.array(features)
+        return np.asarray(features)
     
     
     def get_image_features(self, images):
@@ -49,7 +49,7 @@ class timeSeries_CNN:
         # Initialize the array details.
         finalArray = np.zeros(self.imageDimension)
         dataPoints = np.linspace(minVal, maxVal, self.imageDimension[0])
-        timePoints = np.linspace(minTime, maxTime, self.imageDimension[1])
+        timepoints = np.linspace(minTime, maxTime, self.imageDimension[1])
             
         # For every raw data point
         for pointInd in range(len(rawDataPoints)):
@@ -61,12 +61,12 @@ class timeSeries_CNN:
                 # Ignore the point
                 continue
             
-            xInd = np.searchsorted(timePoints, timePoint, side='left')
+            xInd = np.searchsorted(timepoints, timePoint, side='left')
             yInd = np.searchsorted(dataPoints, dataPoint, side='left')
                     
             finalArray[yInd][xInd] = 1
     
-        return timePoints, dataPoints, finalArray
+        return timepoints, dataPoints, finalArray
 
 if True:
     featureInd = 121

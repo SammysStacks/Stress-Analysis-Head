@@ -17,7 +17,7 @@ class extractData(handlingExcelFormat):
     @staticmethod
     def extractFeatureNames(featureLabelFile, prependedString, appendToName=''):
         """ Extract the Feature Names from a txt File """
-        # Check if File Exists
+        # Check if the File Exists
         if not os.path.exists(featureLabelFile):
             print("The following Input File Does Not Exist:", featureLabelFile)
             sys.exit()
@@ -52,30 +52,27 @@ class extractData(handlingExcelFormat):
 
     @staticmethod
     def extractRawSignalData(excelSheet, startDataCol=1, endDataCol=2, data=None):
+        dataStartRow = 0
         # If Header Exists, Skip Until You Find the Data
         for row in excelSheet.rows:
-            cellA = row[0]
-            if type(cellA.value) in [int, float]:
-                dataStartRow = cellA.row + 1
+            if type(row[0].value) in [int, float]:
+                dataStartRow = row[0].row + 1
                 break
 
-        if data is None:
-            data = [[], [[] for channel in range(endDataCol - startDataCol)]]
+        if data is None: data = [[], [[] for _ in range(endDataCol - startDataCol)]]
         # Loop Through the Excel Worksheet to collect all the data
         for dataRow in excelSheet.iter_rows(min_col=startDataCol, min_row=dataStartRow - 1, max_col=endDataCol, max_row=excelSheet.max_row):
             # Stop Collecting Data When there is No More
-            if dataRow[0].value is None:
-                break
+            if dataRow[0].value is None: break
 
-            # Get Data
+            # Compile the data.
             data[0].append(float(dataRow[0].value))
             for dataInd in range(1, len(dataRow)):
                 data[1][dataInd - 1].append(float(dataRow[dataInd].value or 0))
 
         return data
-
     @staticmethod
-    def extractExperimentalInfo(excelSheet, experimentTimes=[], experimentNames=[], surveyAnswerTimes=[], surveyAnswersList=[], surveyQuestions=[]):
+    def extractExperimentalInfo(excelSheet, experimentTimes=(), experimentNames=(), surveyAnswerTimes=(), surveyAnswersList=(), surveyQuestions=()):
         # If Header Exists, Skip Until You Find the Data
         for row in excelSheet.rows:
             cellA = row[0]
@@ -87,7 +84,7 @@ class extractData(handlingExcelFormat):
                 for cell in row[4:]:
                     if cell.value == None: break
                     headersFound.append(str(cell.value))
-                headersFound = np.array(headersFound, dtype=str)
+                headersFound = np.asarray(headersFound, dtype=str)
                 endDataCol = 4 + len(headersFound)
                 # Extract the survey questions if none given
                 if len(surveyQuestions) == 0:
@@ -119,7 +116,7 @@ class extractData(handlingExcelFormat):
 
         return experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions
 
-    def extractSubjectInfo(self, excelSheet, subjectInformationAnswers=[], subjectInformationQuestions=[]):
+    def extractSubjectInfo(self, excelSheet, subjectInformationAnswers=(), subjectInformationQuestions=()):
         # If Header Exists, Skip Until You Find the Data
         for row in excelSheet.rows:
             cellA = row[0]
@@ -130,7 +127,7 @@ class extractData(handlingExcelFormat):
         # Loop Through the Excel Worksheet to collect all the data
         for dataRow in excelSheet.iter_rows(min_col=1, min_row=dataStartRow, max_col=2, max_row=excelSheet.max_row):
             # Stop Collecting Data When there is No More
-            if dataRow[0].value == None:
+            if dataRow[0].value is None:
                 break
 
             # Get Data
@@ -139,16 +136,16 @@ class extractData(handlingExcelFormat):
 
         return subjectInformationAnswers, subjectInformationQuestions
 
-    def extractExperimentalData(self, worksheets, numberOfChannels, surveyQuestions=[], finalSubjectInformationQuestions=[]):
+    def extractExperimentalData(self, worksheets, numberOfChannels, surveyQuestions=(), finalSubjectInformationQuestions=()):
         # Initialize data holder
-        compiledRawData = [[], [[] for channel in range(numberOfChannels)]]
+        compiledRawData = [[], [[] for _ in range(numberOfChannels)]]
         # Initialize experimental information
-        experimentTimes = [];
+        experimentTimes = []
         experimentNames = []
-        surveyAnswerTimes = [];
-        surveyAnswersList = [];
-        # Initialize suject information
-        subjectInformationAnswers = [];
+        surveyAnswerTimes = []
+        surveyAnswersList = []
+        # Initialize subject information
+        subjectInformationAnswers = []
         subjectInformationQuestions = []
 
         # Loop through and compile all the data in the file
@@ -168,15 +165,15 @@ class extractData(handlingExcelFormat):
             print("\tNo data found in this file")
         # Check that the subject background questions are all the same
         if len(finalSubjectInformationQuestions) != 0:
-            assert all(np.array(finalSubjectInformationQuestions) == subjectInformationQuestions), "finalSubjectInformationQuestions: " + str(finalSubjectInformationQuestions) + "; subjectInformationQuestions: " + str(
-                subjectInformationQuestions)
+            assert np.all(np.asarray(finalSubjectInformationQuestions) == subjectInformationQuestions), (
+                f"finalSubjectInformationQuestions: {finalSubjectInformationQuestions}; subjectInformationQuestions: {subjectInformationQuestions}")
 
         return compiledRawData, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions, subjectInformationAnswers, subjectInformationQuestions
 
     def getData(self, inputFile, numberOfChannels=1, testSheetNum=0):
         """
         Extracts Pulse Data from Excel Document (.xlsx). Data can be in any
-        worksheet which the user can specify using 'testSheetNum' (0-indexed).
+        worksheet that the user can specify using 'testSheetNum' (0-indexed).
         In the Worksheet:
             Time Data must be in Column 'A' (x-Axis)
             Biolectric Data must be in Column 'B-x' (y-Axis)
@@ -188,7 +185,7 @@ class extractData(handlingExcelFormat):
             testSheetNum: An Integer Representing the Excel Worksheet (0-indexed) to Begin on.
         --------------------------------------------------------------------------
         """
-        # Check if File Exists
+        # Check if the file exists
         if not os.path.exists(inputFile):
             print("The following Input File Does Not Exist:", inputFile)
             sys.exit()
@@ -211,7 +208,7 @@ class extractData(handlingExcelFormat):
             xlWorkbook = load_workbook(inputFile, data_only=True, read_only=True)
             worksheets = xlWorkbook.worksheets[testSheetNum:]
         else:
-            print("The Following File is Neither CSV, TXT, Nor XLSX:", inputFile)
+            raise f"The Following File is Neither CSV, TXT, Nor XLSX: {inputFile}"
         print("Extracting Data from the Excel File:", inputFile)
 
         # Extract the data
@@ -222,15 +219,16 @@ class extractData(handlingExcelFormat):
         print("\tFinished Collecting Biolectric Data");
         return compiledRawData, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions, subjectInformationAnswers, subjectInformationQuestions
 
-    def extractFeatures(self, excelSheet, biomarkerOrder, features, featuresTimesHolder, biomarkerFeatureNames):
+    @staticmethod
+    def extractFeatures(excelSheet, biomarkerFeatureOrder, features, featuresTimesHolder, biomarkerFeatureNames):
         # Assert the integrity of feature extraction
         featureType = excelSheet.title.split(" ")[0].lower()
-        assert featureType in biomarkerOrder, "Please update the biomarkers that we are extracting features from: " + str(featureType)
+        assert featureType in biomarkerFeatureOrder, "Please update the biomarkers that we are extracting features from: " + str(featureType)
         # Find the type of features we are extracting    
-        channelIndex = int(re.search(r'CH(\d+)', excelSheet.title).group(1)) if " CH" in excelSheet.title else 0
-        featureInd = int(np.where(np.asarray(biomarkerOrder) == featureType)[0][channelIndex])
+        channelIndex = int(re.search(pattern=r'CH(\d+)', string=excelSheet.title).group(1)) if " CH" in excelSheet.title else 0
+        featureInd = int(np.where(np.asarray(biomarkerFeatureOrder) == featureType)[0][channelIndex])
         if " CH" not in excelSheet.title:
-            assert featureInd == biomarkerOrder.index(featureType), f"Backward compatability broken? -> {excelSheet.title}"
+            assert featureInd == biomarkerFeatureOrder.index(featureType), f"Backward compatability broken? -> {excelSheet.title}"
 
         dataStartRow = None
         # If Header Exists, Skip Until You Find the Data
@@ -243,17 +241,17 @@ class extractData(handlingExcelFormat):
             elif type(cellA.value) == str:
                 # If no feature names found, save them
                 if len(biomarkerFeatureNames[featureInd]) == 0:
-                    biomarkerFeatureNames[featureInd] = np.array([str(cell.value) for cell in row[1:]], dtype=str)
+                    biomarkerFeatureNames[featureInd] = np.asarray([str(cell.value) for cell in row[1:]], dtype=str)
                 else:
                     # Assert the same feature names present in all files.
-                    assert all(biomarkerFeatureNames[featureInd] == np.array([str(cell.value) for cell in row[1:]], dtype=str)), "We have two feature sheets with DIFFERENT features for " + featureType + "; " + str(
-                        len(np.array([str(cell.value) for cell in row[1:]]))) + " " + str(len(biomarkerFeatureNames[featureInd]))
+                    assert all(biomarkerFeatureNames[featureInd] == np.asarray([str(cell.value) for cell in row[1:]], dtype=str)), "We have two feature sheets with DIFFERENT features for " + featureType + "; " + str(
+                        len(np.asarray([str(cell.value) for cell in row[1:]]))) + " " + str(len(biomarkerFeatureNames[featureInd]))
 
-        if dataStartRow != None:
+        if dataStartRow is not None:
             # Loop Through the Excel Worksheet to collect all the data
             for dataRow in excelSheet.iter_rows(min_col=1, min_row=dataStartRow - 1, max_col=endDataCol, max_row=excelSheet.max_row):
                 # Stop Collecting Data When there is No More
-                if dataRow[0].value == None:
+                if dataRow[0].value is None:
                     break
 
                 # Get Data
@@ -262,7 +260,7 @@ class extractData(handlingExcelFormat):
 
         return featuresTimesHolder, features, biomarkerFeatureNames
 
-    def getFeatures(self, biomarkerOrder, inputFile=None, biomarkerFeatureNames=None, surveyQuestions=[], finalSubjectInformationQuestions=[]):
+    def getFeatures(self, biomarkerFeatureOrder, inputFile=None, biomarkerFeatureNames=None, surveyQuestions=(), finalSubjectInformationQuestions=()):
         # Load the Data from the Excel File
         xlWorkbook = load_workbook(inputFile, data_only=True, read_only=True)
         worksheets = xlWorkbook.worksheets
@@ -272,15 +270,15 @@ class extractData(handlingExcelFormat):
         experimentNames = []
         surveyAnswerTimes = [];
         surveyAnswersList = [];
-        # Initialize suject information
+        # Initialize subject information
         subjectInformationAnswers = [];
         subjectInformationQuestions = []
 
         # Initialize data structures for feature parameters.
-        featuresHolder = [[] for _ in range(len(biomarkerOrder))]
-        featuresTimesHolder = [[] for _ in range(len(biomarkerOrder))]
+        featuresHolder = [[] for _ in range(len(biomarkerFeatureOrder))]
+        featuresTimesHolder = [[] for _ in range(len(biomarkerFeatureOrder))]
         if biomarkerFeatureNames is None:
-            biomarkerFeatureNames = [[] for _ in range(len(biomarkerOrder))]
+            biomarkerFeatureNames = [[] for _ in range(len(biomarkerFeatureOrder))]
 
         # Loop through and compile all the data in the file
         for excelSheet in worksheets:
@@ -292,12 +290,11 @@ class extractData(handlingExcelFormat):
                 subjectInformationAnswers, subjectInformationQuestions = self.extractSubjectInfo(excelSheet, subjectInformationAnswers, subjectInformationQuestions)
             # Extract the features
             elif self.rawFeatures_AppendedSheetName in excelSheet.title:
-                featuresTimesHolder, featuresHolder, biomarkerFeatureNames = self.extractFeatures(excelSheet, biomarkerOrder, featuresHolder, featuresTimesHolder, biomarkerFeatureNames)
-            else:
-                sys.exit("Unsure what is in this file's excel sheet':", excelSheet.title)
+                featuresTimesHolder, featuresHolder, biomarkerFeatureNames = self.extractFeatures(excelSheet, biomarkerFeatureOrder, featuresHolder, featuresTimesHolder, biomarkerFeatureNames)
+            else: raise f"Unsure what is in this file's excel sheet': {excelSheet.title}"
 
         # Check that the subject background questions are all the same
         if len(finalSubjectInformationQuestions) != 0:
-            assert all(np.array(finalSubjectInformationQuestions) == subjectInformationQuestions)
+            assert np.all(np.asarray(finalSubjectInformationQuestions) == subjectInformationQuestions)
 
         return featuresTimesHolder, featuresHolder, biomarkerFeatureNames, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions, subjectInformationAnswers, subjectInformationQuestions

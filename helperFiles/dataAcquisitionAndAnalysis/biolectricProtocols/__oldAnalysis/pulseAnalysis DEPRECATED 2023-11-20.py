@@ -31,7 +31,7 @@ import pulsePlottingProtocols
 
 class pulseAnalysis(_globalProtocol.globalProtocol):
     
-    def __init__(self, numPointsPerBatch = 3000, moveDataFinger = 10, numChannels = 2, plottingClass = None, readData = None):
+    def __init__(self, numPointsPerBatch = 3000, moveDataFinger = 10, channelIndices = (), plottingClass = None, readData = None):
         """
         ----------------------------------------------------------------------
         Input Parameters:
@@ -52,7 +52,7 @@ class pulseAnalysis(_globalProtocol.globalProtocol):
         self.resetGlobalVariables()
         
         # Initialize common model class
-        super().__init__("pulse", numPointsPerBatch, moveDataFinger, numChannels, plottingClass, readData)
+        super().__init__("pulse", numPointsPerBatch, moveDataFinger, channelIndices, plottingClass, readData)
 
     def checkParams(self):
         pass
@@ -63,7 +63,7 @@ class pulseAnalysis(_globalProtocol.globalProtocol):
     def resetAnalysisVariables(self):
         # Feature Tracking Parameters
         self.timeOffset = 0             # Store the Time Offset Between Files
-        self.numSecondsAverage = 60     # The Number of Swconds to Consider When Taking the Averaging Data
+        self.numSecondsAverage = 60     # The Number of seconds to Consider When Taking the Averaging Data
         self.incomingPulseTimes = []    # An Ongoing List Representing the Times of Each Pulse's Peak
         self.heartRateListAverage = []  # An Ongoing List Representing the Heart Rate
         # Feature Lists
@@ -71,7 +71,7 @@ class pulseAnalysis(_globalProtocol.globalProtocol):
         self.featureListAverage = []    # List of Lists of Features Averaged in Time by self.numSecondsAverage; Each Index Represents a Pulse; Each Pulse's List Represents its Features
 
         # Peak Seperation Parameters
-        self.peakStandard = 0;          # The Max First Deriviative of the Previous Pulse's Systolic Peak
+        self.peakStandard = 0           # The Max First Deriviative of the Previous Pulse's Systolic Peak
         self.peakStandardInd = 0        # The Index of the Max Derivative in the Previous Pulse's Systolic Peak
         # Peak Filtering Parameters
         self.lowPassCutoff = 18         # Low Pass Filter Cutoff; Used on SEPERATED Pulses
@@ -102,22 +102,22 @@ class pulseAnalysis(_globalProtocol.globalProtocol):
     def seperatePulses(self, time, firstDer):
         self.peakStandardInd = 0
         # Take First Derivative of Smoothened Data
-        systolicPeaks = [];
+        seperatedPeaks = [];
         for pointInd in range(len(firstDer)):
             # Calcuate the Derivative at pointInd
             firstDerVal = firstDer[pointInd]
             
-            # If the Derivative Stands Out, Its the Systolic Peak
+            # If the Derivative Stands Out, Its the Systolic rising peaks, meaning systolic peak should be adjacent
             if firstDerVal > self.peakStandard*0.5:
                 
                 # Use the First Few Peaks as a Standard
                 if (self.timeOffset != 0 or 1.5 < time[pointInd]) and self.minPointsPerPulse < pointInd:
                     # If the Point is Sufficiently Far Away, its a New R-Peak
                     if self.peakStandardInd + self.minPointsPerPulse < pointInd:
-                        systolicPeaks.append(pointInd)
+                        seperatedPeaks.append(pointInd)
                     # Else, Find the Max of the Peak
-                    elif firstDer[systolicPeaks[-1]] < firstDer[pointInd]:
-                        systolicPeaks[-1] = pointInd
+                    elif firstDer[seperatedPeaks[-1]] < firstDer[pointInd]:
+                        seperatedPeaks[-1] = pointInd
                     # Else, Dont Update Pointer
                     else:
                         continue
@@ -126,7 +126,7 @@ class pulseAnalysis(_globalProtocol.globalProtocol):
                 else:
                     self.peakStandard = max(self.peakStandard, firstDerVal)
 
-        return systolicPeaks
+        return seperatedPeaks
     
     # ----------------------------------------------------------------------- #
     # ------------------------- Data Analysis Begins ------------------------ #
@@ -136,7 +136,7 @@ class pulseAnalysis(_globalProtocol.globalProtocol):
         ----------------------------------------------------------------------
         Input Parameters:
             time: xData-Axis Data for the Blood Pulse (Seconds)
-            signalData:  yData-Axis Data for Blood Pulse (Capacitance)
+            signalChannel:  yData-Axis Data for Blood Pulse (Capacitance)
             minBPM = Minimum Beats Per Minute Possible. 27 BPM is the lowest recorded; 30 is a good threshold
             maxBPM: Maximum Beats Per Minute Possible. 480 is the maximum recorded. 220 is a good threshold
         Use Case: Seperate the Pulses, Gaussian Decompositions, Feature Extraction
@@ -171,7 +171,7 @@ class pulseAnalysis(_globalProtocol.globalProtocol):
         
         # If Questioning: Plot to See How the Pulses Seperated
         if self.plotSeperation:
-            systolicPeaks = np.array(systolicPeaks); firstDer = np.array(firstDer)
+            systolicPeaks = np.asarray(systolicPeaks); firstDer = np.asarray(firstDer)
             scaledData = signalData*max(np.abs(firstDer))/(max(signalData) - min(signalData))
             plt.figure()
             plt.plot(time, scaledData - np.mean(scaledData), label = "Centered + Scaled Signal Data", zorder = 3)
@@ -600,9 +600,9 @@ class pulseAnalysis(_globalProtocol.globalProtocol):
         pulseFeatures.extend(pulseFeatures[1:])
         
         # Save the Pulse Features
-        pulseFeatures = np.array(pulseFeatures)
+        pulseFeatures = np.asarray(pulseFeatures)
         self.featureListExact.append(pulseFeatures)
-        self.featureListAverage.append(stats.trim_mean(np.array(self.featureListExact)[:,1:][ np.array(self.featureListExact)[:,0] >= self.timePoint - self.numSecondsAverage ], 0.3))
+        self.featureListAverage.append(stats.trim_mean(np.asarray(self.featureListExact)[:,1:][ np.asarray(self.featureListExact)[:,0] >= self.timePoint - self.numSecondsAverage ], 0.3))
     
     def normalizePulseBaseline(self, pulseData, polynomialDegree):
         """

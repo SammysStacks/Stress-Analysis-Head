@@ -155,13 +155,13 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------- #
     
     def executeProtocol():
-        global readData, eogProtocol, performMachineLearning, signalData, signalLabels, timePoints, modelPath, blinkFeatures, analyzeFeatures
+        global readData, eogProtocol, performMachineLearning, signalData, signalLabels, timepoints, modelPath, blinkFeatures, analyzeFeatures
         
         eogProtocol = eogAnalysis.eogProtocol(numTimePoints, moveDataFinger, numChannels, plotStreamedData)
         # Stream in Data from Arduino
         if streamArduinoData:
-            arduinoRead = streamData.arduinoRead(eogSerialNum = eogSerialNum, ppgSerialNum = None, emgSerialNum = None, eegSerialNum = None, handSerialNum = None)
-            readData = streamData.eogArduinoRead(arduinoRead, numTimePoints, moveDataFinger, numChannels, plotStreamedData, guiApp = None)
+            deviceReader = streamData.serialInterface(eogSerialNum = eogSerialNum, ppgSerialNum = None, emgSerialNum = None, eegSerialNum = None, handSerialNum = None)
+            readData = streamData.eogdeviceReader(deviceReader, numTimePoints, moveDataFinger, numChannels, plotStreamedData, guiApp = None)
             readData.streamEOGData(stopTimeStreaming, predictionModel = predictionModel, actionControl = gazeControl, calibrateModel = calibrateModel)
         # Take Data from Excel Sheet
         elif readDataFromExcel:
@@ -172,19 +172,19 @@ if __name__ == "__main__":
             # Extract the Data
             readData = excelData.readExcel(eogProtocol)
             signalData, signalLabels = readData.getTrainingData(trainDataExcelFolder, gestureClasses, blinkFeatures, labelMap)
-            signalData = np.array(signalData); signalLabels = np.array(signalLabels)
+            signalData = np.asarray(signalData); signalLabels = np.asarray(signalLabels)
             print("\nCollected Signal Data")
            # sys.exit()
             
             analyzeFeatures = True
             if analyzeFeatures:
-                timePoints = signalData[:,0]
+                timepoints = signalData[:,0]
                 signalData = signalData[:,1:]
-                blinkFeatures = np.array(blinkFeatures[1:])
+                blinkFeatures = np.asarray(blinkFeatures[1:])
 
                 analyzeFeatures = featureAnalysis.featureAnalysis(blinkFeatures, [], saveDataFolder)
-                #analyzeFeatures.correlationMatrix(signalData, folderName = "correlationMatrix/")
-                analyzeFeatures.singleFeatureAnalysis(timePoints[signalLabels == 3], signalData[signalLabels == 3], averageIntervalList = [60, 2*60, 3*60], folderName = "singleFeatureAnalysis - Full/")
+                #analyzeFeatures.correlationMatrix(signalChannel, folderName = "correlationMatrix/")
+                analyzeFeatures.singleFeatureAnalysis(timepoints[signalLabels == 3], signalData[signalLabels == 3], averageIntervalList = [60, 2*60, 3*60], folderName = "singleFeatureAnalysis - Full/")
                 analyzeFeatures.featureDistribution(signalData, signalLabels, labelDict, folderName = "Feature Distribution/")
             
             
@@ -236,7 +236,7 @@ if __name__ == "__main__":
 # ---------------------------- Reading EOG Data ---------------------------- #
 
 # Deprecated Class: Keeping in case user wants to calibrate EOG sensor in the future
-class eogArduinoRead(eogProtocol):
+class eogdeviceReader(eogProtocol):
 
     def __init__(self, mainSerialNum, numPointsPerBatch, moveDataFinger, numChannels, plotStreamedData):
         # Get Variables from Peak Analysis File
@@ -277,11 +277,11 @@ class eogArduinoRead(eogProtocol):
             self.analyzeData(dataFinger, self.plotStreamedData, modelClasses = modelClasses, actionControl = actionControl, calibrateModel = calibrateModel)
 
         finally:
-            self.mainArduino.close()
+            self.mainDevice.close()
 
         print("Finished Streaming in Data; Closing Arduino\n")
         # Close the Arduinos at the End
-        self.mainArduino.close()
+        self.mainDevice.close()
     
     def performCalibration(self, numTrashReads, calibrateModel = True):
         self.channelCalibrationPointer += 1
@@ -301,7 +301,7 @@ class eogArduinoRead(eogProtocol):
         if self.calibrateChannelNum == self.numChannels:
             # Reset Arduino and Stop Calibration
             self.initPlotPeaks()
-            self.mainArduino = self.arduinoRead.resetArduino(self.mainArduino, numTrashReads)
+            self.mainDevice = self.deviceReader.resetArduino(self.mainDevice, numTrashReads)
             calibrateModel = False
         else:
             self.askForCalibration(numTrashReads)
@@ -314,7 +314,7 @@ class eogArduinoRead(eogProtocol):
         # Inform User of Next Angle; Then Flush Saved Outputs
         input("Orient Eye at " + str(self.calibrationAngles[self.calibrateChannelNum][self.channelCalibrationPointer]) + " Degrees For Channel " + str(self.calibrateChannelNum))
         # Reset Arduino
-        self.mainArduino = self.arduinoRead.resetArduino(self.mainArduino, numTrashReads)
+        self.mainDevice = self.deviceReader.resetArduino(self.mainDevice, numTrashReads)
         print("Orient Now")
         
 
@@ -326,7 +326,7 @@ class eogArduinoRead(eogProtocol):
 https://www.frontiersin.org/articles/10.3389/fnins.2017.00012/full
 https://www.sciencedirect.com/science/article/pii/S221509861931403X#f0015
 
-x = readData.analysisProtocol.data['timePoints']
+x = readData.analysisProtocol.data['timepoints']
 y = readData.analysisProtocol.data['Channel1']
 
 # Basic Modules
@@ -361,8 +361,8 @@ def butterFilter(data, cutoffFreq, samplingFreq, order = 3, filterType = 'band')
 filteredData = butterFilter(y, 25, 1006, 3, 'low')
 
 startInd = 0; stopInd = len(x)
-xData = np.array(x[startInd:stopInd])
-yData = np.array(filteredData[startInd:stopInd])
+xData = np.asarray(x[startInd:stopInd])
+yData = np.asarray(filteredData[startInd:stopInd])
 
 plt.plot(xData, yData)
 plt.xlim(122.5,123)
@@ -386,31 +386,31 @@ personListCold = [jiahongFeaturesCold, benFeaturesCold, youFeaturesCold, changha
 
 
 
-jiahongFeaturesBlink = np.array(readData.analysisProtocol.blinkFeatures)
-benFeaturesBlink = np.array(readData.analysisProtocol.blinkFeatures)
-youFeaturesBlink = np.array(readData.analysisProtocol.blinkFeatures)
-changhaoFeaturesBlink = np.array(readData.analysisProtocol.blinkFeatures)
+jiahongFeaturesBlink = np.asarray(readData.analysisProtocol.blinkFeatures)
+benFeaturesBlink = np.asarray(readData.analysisProtocol.blinkFeatures)
+youFeaturesBlink = np.asarray(readData.analysisProtocol.blinkFeatures)
+changhaoFeaturesBlink = np.asarray(readData.analysisProtocol.blinkFeatures)
 #personListBlink = [jiahongFeaturesBlink, benFeaturesBlink, youFeaturesBlink, changhaoFeaturesBlink]
 personListBlink = [changhaoFeaturesBlink]
 
-jiahongFeaturesDoubleBlink = np.array(readData.analysisProtocol.blinkFeatures)
-benFeaturesDoubleBlink = np.array(readData.analysisProtocol.blinkFeatures)
-youFeaturesDoubleBlink = np.array(readData.analysisProtocol.blinkFeatures)
-changhaoFeaturesDoubleBlink = np.array(readData.analysisProtocol.blinkFeatures)
+jiahongFeaturesDoubleBlink = np.asarray(readData.analysisProtocol.blinkFeatures)
+benFeaturesDoubleBlink = np.asarray(readData.analysisProtocol.blinkFeatures)
+youFeaturesDoubleBlink = np.asarray(readData.analysisProtocol.blinkFeatures)
+changhaoFeaturesDoubleBlink = np.asarray(readData.analysisProtocol.blinkFeatures)
 #personListDoubleBlink = [jiahongFeaturesDoubleBlink, benFeaturesDoubleBlink, youFeaturesDoubleBlink, changhaoFeaturesDoubleBlink]
 personListDoubleBlink = [changhaoFeaturesDoubleBlink]
 
-jiahongFeaturesRelaxed = np.array(readData.analysisProtocol.blinkFeatures)
-benFeaturesRelaxed = np.array(readData.analysisProtocol.blinkFeatures)
-youFeaturesRelaxed = np.array(readData.analysisProtocol.blinkFeatures)
-changhaoFeaturesRelaxed = np.array(readData.analysisProtocol.blinkFeatures)
+jiahongFeaturesRelaxed = np.asarray(readData.analysisProtocol.blinkFeatures)
+benFeaturesRelaxed = np.asarray(readData.analysisProtocol.blinkFeatures)
+youFeaturesRelaxed = np.asarray(readData.analysisProtocol.blinkFeatures)
+changhaoFeaturesRelaxed = np.asarray(readData.analysisProtocol.blinkFeatures)
 #personListRelaxed = [jiahongFeaturesRelaxed, benFeaturesRelaxed, youFeaturesRelaxed, changhaoFeaturesRelaxed]
 personListRelaxed = [changhaoFeaturesRelaxed]
 
-jiahongFeaturesCold = np.array(readData.analysisProtocol.blinkFeatures)
-benFeaturesCold = np.array(readData.analysisProtocol.blinkFeatures)
-youFeaturesCold = np.array(readData.analysisProtocol.blinkFeatures)
-changhaoFeaturesCold = np.array(readData.analysisProtocol.blinkFeatures)
+jiahongFeaturesCold = np.asarray(readData.analysisProtocol.blinkFeatures)
+benFeaturesCold = np.asarray(readData.analysisProtocol.blinkFeatures)
+youFeaturesCold = np.asarray(readData.analysisProtocol.blinkFeatures)
+changhaoFeaturesCold = np.asarray(readData.analysisProtocol.blinkFeatures)
 #personListCold = [jiahongFeaturesCold, benFeaturesCold, youFeaturesCold, changhaoFeaturesCold]
 personListCold = [changhaoFeaturesCold]
 
@@ -479,38 +479,38 @@ for i in range(len(personListBlink[0][0])):
         
         
         
-signalData = []; signalLabels = []
+signalChannel = []; signalLabels = []
 for personNum in range(len(personListBlink)):
     personFeatures = personListBlink[personNum]
     for personFeature in personFeatures:
-        signalData.append(personFeature)
+        signalChannel.append(personFeature)
         signalLabels.append(0)
 
 for personNum in range(len(personListDoubleBlink)):
     personFeatures = personListDoubleBlink[personNum]
     for personFeature in personFeatures:
-        signalData.append(personFeature)
+        signalChannel.append(personFeature)
         signalLabels.append(0)
 
 for personNum in range(len(personListRelaxed)):
     personFeatures = personListRelaxed[personNum]
     for personFeature in personFeatures:
-        signalData.append(personFeature)
+        signalChannel.append(personFeature)
         signalLabels.append(0)
 
 for personNum in range(len(personListCold)):
     personFeatures = personListCold[personNum]
     for personFeature in personFeatures:
-        signalData.append(personFeature)
+        signalChannel.append(personFeature)
         signalLabels.append(1)
         
-signalData = np.array(signalData); signalLabels = np.array(signalLabels)
+signalChannel = np.asarray(signalChannel); signalLabels = np.asarray(signalLabels)
 
 model = neighbors.KNeighborsClassifier(n_neighbors = 2, weights = 'distance', algorithm = 'auto', 
                         leaf_size = 30, p = 1, metric = 'minkowski', metric_params = None, n_jobs = None)
-Training_Data, Testing_Data, Training_Labels, Testing_Labels = train_test_split(signalData, signalLabels, test_size=0.33, shuffle= True, stratify=signalLabels)
+Training_Data, Testing_Data, Training_Labels, Testing_Labels = train_test_split(signalChannel, signalLabels, test_size=0.33, shuffle= True, stratify=signalLabels)
 model.fit(Training_Data, Training_Labels)
-model.score(signalData, signalLabels)
+model.score(signalChannel, signalLabels)
 
 
 
@@ -526,8 +526,8 @@ for featureInd in range(len(blinkFeatures)):
     fig = plt.figure()
 
     features = []
-    allFeatures = signalData[:,featureInd]
-    time = signalData[:,0]
+    allFeatures = signalChannel[:,featureInd]
+    time = signalChannel[:,0]
     for pointInd in range(len(allFeatures)):
         feature = allFeatures[pointInd]
         label = signalLabels[pointInd]
@@ -552,12 +552,12 @@ for featureInd in range(len(blinkFeatures)):
     
 from scipy import stats
 featureDict = {}
-signalData = np.array(signalData); signalLabels = np.array(signalLabels)
+signalChannel = np.asarray(signalChannel); signalLabels = np.asarray(signalLabels)
 
-time = signalData[:,0][signalLabels == 2]
+time = signalChannel[:,0][signalLabels == 2]
 for featureInd in range(len(blinkFeatures)):
 
-    allFeatures = signalData[:,featureInd][signalLabels == 2]
+    allFeatures = signalChannel[:,featureInd][signalLabels == 2]
     for ind, averageTogether in enumerate([60*3]):
         features = []
         for pointInd in range(len(allFeatures)):
@@ -571,11 +571,11 @@ for featureInd in range(len(blinkFeatures)):
     
     
 import matplotlib.pyplot as plt
-time = signalData[:,0][signalLabels == 2]
+time = signalChannel[:,0][signalLabels == 2]
 for featureInd in range(len(blinkFeatures)):
     fig = plt.figure()
 
-    allFeatures = signalData[:,featureInd][signalLabels == 2]
+    allFeatures = signalChannel[:,featureInd][signalLabels == 2]
     colors = ['ko', 'ro', 'bo', 'go', 'mo']
     for ind, averageTogether in enumerate([60*3]):
         features = []
@@ -587,14 +587,14 @@ for featureInd in range(len(blinkFeatures)):
             featute = stats.trim_mean(featureInterval, 0.3)
             features.append(featute)
         
-        features = np.array(features)
-        #features -= np.array(featureDict[blinkFeatures[1]])
+        features = np.asarray(features)
+        #features -= np.asarray(featureDict[blinkFeatures[1]])
         plt.plot(time, features, colors[ind], markersize=5)
 
 
     plt.xlabel("Time (Seconds)")
     plt.ylabel(blinkFeatures[featureInd])
-    plt.vlines(np.array([1, 2, 3, 4, 5])*60*6, min(features)*0.8, max(features)*1.2, 'g', zorder=100)
+    plt.vlines(np.asarray([1, 2, 3, 4, 5])*60*6, min(features)*0.8, max(features)*1.2, 'g', zorder=100)
     #plt.ylim(min(feature1Min)*0.8, max(feature1Max)*1.2)
     plt.legend(['1 Min', '2 Min', '3 Min'])
     plt.title("Averaged Together: " + str(averageTogether/60) + " Min")
@@ -611,13 +611,13 @@ def sigmoid(x):
 featureDict = {}
 saveFolder = '../Time Graph Music/Average 1 2 3 Back/'
 os.makedirs(saveFolder, exist_ok=True)
-signalData = np.array(signalData); signalLabels = np.array(signalLabels)
+signalChannel = np.asarray(signalChannel); signalLabels = np.asarray(signalLabels)
 for featureInd in range(len(blinkFeatures)):
     fig = plt.figure()
 
 
-    allFeatures = signalData[:,featureInd][signalLabels == 2]
-    time = signalData[:,0][signalLabels == 2]
+    allFeatures = signalChannel[:,featureInd][signalLabels == 2]
+    time = signalChannel[:,0][signalLabels == 2]
     colors = ['ko', 'ro', 'bo', 'go', 'mo']
     for ind, averageTogether in enumerate([60*1, 60*2, 60*3]):
         features = []
@@ -631,7 +631,7 @@ for featureInd in range(len(blinkFeatures)):
             #weight = [10E-20]
             #for i in range(int(-len(featureInterval)/2), int(len(featureInterval)/2)):
             #    weight.append(sigmoid(i/20))
-            #weight = np.array(weight[-len(featureInterval):])
+            #weight = np.asarray(weight[-len(featureInterval):])
             #feature = np.average(featureInterval, axis=0, weights=weight)
 
             features.append(stats.trim_mean(featureInterval, 0.3))
@@ -651,7 +651,7 @@ for featureInd in range(len(blinkFeatures)):
 
     plt.xlabel("Time (Seconds)")
     plt.ylabel(blinkFeatures[featureInd])
-    plt.vlines(np.array([1, 2, 3, 4, 5])*60*6, min(feature1Min)*0.8, max(feature1Max)*1.2, 'g', zorder=100)
+    plt.vlines(np.asarray([1, 2, 3, 4, 5])*60*6, min(feature1Min)*0.8, max(feature1Max)*1.2, 'g', zorder=100)
     #plt.ylim(min(feature1Min)*0.8, max(feature1Max)*1.2)
     plt.legend(['1 Min', '2 Min', '3 Min'])
     plt.title("Averaged Together: " + str(averageTogether/60) + " Min")
@@ -663,16 +663,16 @@ for featureInd in range(len(blinkFeatures)):
 
 
 
-time = signalData[:,0][signalLabels == 2]
+time = signalChannel[:,0][signalLabels == 2]
 for compareFeatureInd in range(1,len(blinkFeatures)):
     saveFolder = '../Feature Comparison/' + blinkFeatures[compareFeatureInd] + "/"
     os.makedirs(saveFolder, exist_ok=True)
 
-    compareFeature = signalData[:,compareFeatureInd][signalLabels == 2]
+    compareFeature = signalChannel[:,compareFeatureInd][signalLabels == 2]
     for featureInd in range(1,len(blinkFeatures)):
         fig, ax = plt.subplots(figsize=(12, 6))
     
-        allFeatures = signalData[:,featureInd][signalLabels == 2]
+        allFeatures = signalChannel[:,featureInd][signalLabels == 2]
         colors = ['ko', 'ro', 'bo', 'go', 'mo']
         for ind, averageTogether in enumerate([60*10E-10]):
             features = []
@@ -684,14 +684,14 @@ for compareFeatureInd in range(1,len(blinkFeatures)):
                 featute = stats.trim_mean(featureInterval, 0.3)
                 features.append(featute)
     
-            features = np.array(features)
+            features = np.asarray(features)
             plt.scatter(time, features, c=compareFeature, ec='k')
             plt.plot(time, featureDict[blinkFeatures[featureInd]], 'r')
     
     
         plt.xlabel("Time (Seconds)")
         plt.ylabel(blinkFeatures[featureInd])
-        vLines = np.array([1, 2, 3, 4, 5])*60*6
+        vLines = np.asarray([1, 2, 3, 4, 5])*60*6
         for i,vLine in enumerate(vLines):
             ax.axvline(vLine, color = 'g')
         #plt.ylim(min(feature1Min)*0.8, max(feature1Max)*1.2)
@@ -705,13 +705,13 @@ import matplotlib.pyplot as plt
 saveFolder = '../Vol Vs Invol Blinks/'
 os.makedirs(saveFolder, exist_ok=True)
 colors = ['ko', 'ro', 'bo', 'go', 'mo']
-signalData = np.array(signalData); signalLabels = np.array(signalLabels)
+signalChannel = np.asarray(signalChannel); signalLabels = np.asarray(signalLabels)
 
 for featureInd in range(1,len(blinkFeatures)):
     fig = plt.subplots()
 
-    allFeatures0 = signalData[:,featureInd][signalLabels == 0]
-    allFeatures1 = signalData[:,featureInd][signalLabels == 1]
+    allFeatures0 = signalChannel[:,featureInd][signalLabels == 0]
+    allFeatures1 = signalChannel[:,featureInd][signalLabels == 1]
 
     plt.plot(allFeatures0, 'bo', markersize=5, zorder=100)
     plt.plot(allFeatures1, 'ro', markersize=5)
@@ -732,15 +732,15 @@ for featureInd in range(1,len(blinkFeatures)):
 
 from scipy import stats
 import matplotlib.pyplot as plt
-signalData = np.array(signalData); signalLabels = np.array(signalLabels)
-time = signalData[:,0][signalLabels == 2]
+signalChannel = np.asarray(signalChannel); signalLabels = np.asarray(signalLabels)
+time = signalChannel[:,0][signalLabels == 2]
 for featureInd in range(len(blinkFeatures)):
     fig = plt.figure()
 
-    allFeatures = signalData[:,featureInd][signalLabels == 2]
+    allFeatures = signalChannel[:,featureInd][signalLabels == 2]
     colors = ['k-o', 'r-o', 'bo', 'go', 'mo']
     for ind, averageTogether in enumerate([60*3]):
-        stopLines = np.array([0, 1, 2, 3, 4, 5, 6, 7])*60*6
+        stopLines = np.asarray([0, 1, 2, 3, 4, 5, 6, 7])*60*6
         stopLineIndex = 1
         a = [[]]
         for pointInd in range(len(allFeatures)):
@@ -772,12 +772,12 @@ for featureInd in range(len(blinkFeatures)):
 
 from scipy import stats
 import matplotlib.pyplot as plt
-signalData = np.array(signalData); signalLabels = np.array(signalLabels)
-time = signalData[:,0][signalLabels == 2]
+signalChannel = np.asarray(signalChannel); signalLabels = np.asarray(signalLabels)
+time = signalChannel[:,0][signalLabels == 2]
 for featureInd in range(len(blinkFeatures)):
     fig = plt.figure()
 
-    allFeatures = signalData[:,featureInd][signalLabels == 2]
+    allFeatures = signalChannel[:,featureInd][signalLabels == 2]
     colors = ['k-o', 'r-o', 'bo', 'go', 'mo']
     for ind, averageTogether in enumerate([60*3]):
         features = []
@@ -789,13 +789,13 @@ for featureInd in range(len(blinkFeatures)):
             feature = stats.trim_mean(featureInterval, 0.3)
             features.append(feature)
 
-        features = np.array(features)
+        features = np.asarray(features)
         plt.plot(time, features, colors[ind], markersize=5)
 
 
     plt.xlabel("Time (Seconds)")
     plt.ylabel(blinkFeatures[featureInd])
-    plt.vlines(np.array([1, 2, 3, 4, 5])*60*6, min(features)*0.9, max(features)*1.1, 'g', zorder=100)
+    plt.vlines(np.asarray([1, 2, 3, 4, 5])*60*6, min(features)*0.9, max(features)*1.1, 'g', zorder=100)
     #plt.ylim(min(feature1Min)*0.8, max(feature1Max)*1.2)
     plt.legend(['3 Min'])
     plt.title("Averaged Together: " + str(averageTogether/60) + " Min")
@@ -809,7 +809,7 @@ for featureInd in range(len(blinkFeatures)):
 
 positive1 = [12, 14, 13, 10, 10, 10]
 negative1 = [13, 10, 13, 10, 14, 10]
-timeIntervals = np.array([0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6])*60*5
+timeIntervals = np.asarray([0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6])*60*5
 
 fig = plt.figure()
 positive = []; negative = []
@@ -824,28 +824,28 @@ plt.plot(timeIntervals, negative, 'r-')
 plt.xlabel("Time (Seconds)")
 plt.ylabel('PANAS Score')
 plt.legend(['Positive', 'Negative'])
-plt.vlines(np.array([1, 2, 3, 4, 5])*60*5, min(min(positive1, negative1))*0.9, 1.1*max(max(positive1, negative1)), 'g', zorder=100)
+plt.vlines(np.asarray([1, 2, 3, 4, 5])*60*5, min(min(positive1, negative1))*0.9, 1.1*max(max(positive1, negative1)), 'g', zorder=100)
 plt.title("PANAS Score")
 fig.savefig('../Del Sarah/PANAS.png', dpi=300, bbox_inches='tight')
 plt.show()
 # -----------
 
-# --------- Scale by All Features
+# --------- Scale by allFeatures
 from scipy import stats
 import matplotlib.pyplot as plt
-signalData = np.array(signalData); signalLabels = np.array(signalLabels)
+signalChannel = np.asarray(signalChannel); signalLabels = np.asarray(signalLabels)
 
-signalDataJose = np.array(signalData); signalLabelsJose = np.array(signalLabels)
-signalDataJiahong = np.array(signalData); signalLabelsJiahong = np.array(signalLabels)
-signalDataSam = np.array(signalData); signalLabelsSam = np.array(signalLabels)
+signalDataJose = np.asarray(signalChannel); signalLabelsJose = np.asarray(signalLabels)
+signalDataJiahong = np.asarray(signalChannel); signalLabelsJiahong = np.asarray(signalLabels)
+signalDataSam = np.asarray(signalChannel); signalLabelsSam = np.asarray(signalLabels)
 
 signalDataJose[:,0] = signalDataJose[:,0] - signalDataJose[:,0][0]
 signalDataJiahong[:,0]  = signalDataJiahong[:,0] - signalDataJiahong[:,0][0]
 signalDataSam[:,0] = signalDataSam[:,0] - signalDataSam[:,0][0]
 
-time1 = np.array(signalDataJose[:,0] - signalDataJose[:,0][0])
-time2 = np.array(signalDataJiahong[:,0] - signalDataJiahong[:,0][0])
-time3 = np.array(signalDataSam[:,0] - signalDataSam[:,0][0])
+time1 = np.asarray(signalDataJose[:,0] - signalDataJose[:,0][0])
+time2 = np.asarray(signalDataJiahong[:,0] - signalDataJiahong[:,0][0])
+time3 = np.asarray(signalDataSam[:,0] - signalDataSam[:,0][0])
 time = [time1, time2, time3]
 
 featureDict = [{}, {}, {}]
@@ -878,10 +878,10 @@ for featureIndDict in range(1,len(blinkFeatures)):
                     features[i].append(feature)
 
             for i in range(len(time)):
-                #features[i] = np.array(features[i])
+                #features[i] = np.asarray(features[i])
                 #featureDict[i][blinkFeatures[featureInd]] = features[i]
 
-                features[i] = np.array(features[i])/featureDict[i][blinkFeatures[featureIndDict]]
+                features[i] = np.asarray(features[i])/featureDict[i][blinkFeatures[featureIndDict]]
 
                 plt.plot(time[i], features[i], colors[i], markersize=5)
 
@@ -904,19 +904,19 @@ for featureIndDict in range(1,len(blinkFeatures)):
 
 from scipy import stats
 import matplotlib.pyplot as plt
-signalData = np.array(signalData); signalLabels = np.array(signalLabels)
+signalChannel = np.asarray(signalChannel); signalLabels = np.asarray(signalLabels)
 
-signalDataJose = np.array(signalData); signalLabelsJose = np.array(signalLabels)
-signalDataJiahong = np.array(signalData); signalLabelsJiahong = np.array(signalLabels)
-signalDataSam = np.array(signalData); signalLabelsSam = np.array(signalLabels)
+signalDataJose = np.asarray(signalChannel); signalLabelsJose = np.asarray(signalLabels)
+signalDataJiahong = np.asarray(signalChannel); signalLabelsJiahong = np.asarray(signalLabels)
+signalDataSam = np.asarray(signalChannel); signalLabelsSam = np.asarray(signalLabels)
 
 signalDataJose[:,0] = signalDataJose[:,0] - signalDataJose[:,0][0]
 signalDataJiahong[:,0]  = signalDataJiahong[:,0] - signalDataJiahong[:,0][0]
 signalDataSam[:,0] = signalDataSam[:,0] - signalDataSam[:,0][0]
 
-time1 = np.array(signalDataJose[:,0] - signalDataJose[:,0][0])
-time2 = np.array(signalDataJiahong[:,0] - signalDataJiahong[:,0][0])
-time3 = np.array(signalDataSam[:,0] - signalDataSam[:,0][0])
+time1 = np.asarray(signalDataJose[:,0] - signalDataJose[:,0][0])
+time2 = np.asarray(signalDataJiahong[:,0] - signalDataJiahong[:,0][0])
+time3 = np.asarray(signalDataSam[:,0] - signalDataSam[:,0][0])
 time = [time1, time2, time3]
 
 
@@ -946,7 +946,7 @@ for featureIndDict in range(1,len(blinkFeatures)):
                     features[i].append(feature)
 
             for i in range(len(time)):
-                features[i] = np.array(features[i])
+                features[i] = np.asarray(features[i])
                 plt.plot(time[i], features[i], colors[i], markersize=5)
 
 
@@ -968,19 +968,19 @@ for featureIndDict in range(1,len(blinkFeatures)):
 
 from scipy import stats
 import matplotlib.pyplot as plt
-signalData = np.array(signalData); signalLabels = np.array(signalLabels)
+signalChannel = np.asarray(signalChannel); signalLabels = np.asarray(signalLabels)
 
-signalDataJose = np.array(signalData); signalLabelsJose = np.array(signalLabels)
-signalDataJiahong = np.array(signalData); signalLabelsJiahong = np.array(signalLabels)
-signalDataSam = np.array(signalData); signalLabelsSam = np.array(signalLabels)
+signalDataJose = np.asarray(signalChannel); signalLabelsJose = np.asarray(signalLabels)
+signalDataJiahong = np.asarray(signalChannel); signalLabelsJiahong = np.asarray(signalLabels)
+signalDataSam = np.asarray(signalChannel); signalLabelsSam = np.asarray(signalLabels)
 
 signalDataJose[:,0] = signalDataJose[:,0] - signalDataJose[:,0][0]
 signalDataJiahong[:,0]  = signalDataJiahong[:,0] - signalDataJiahong[:,0][0]
 signalDataSam[:,0] = signalDataSam[:,0] - signalDataSam[:,0][0]
 
-time1 = np.array(signalDataJose[:,0] - signalDataJose[:,0][0])
-time2 = np.array(signalDataJiahong[:,0] - signalDataJiahong[:,0][0])
-time3 = np.array(signalDataSam[:,0] - signalDataSam[:,0][0])
+time1 = np.asarray(signalDataJose[:,0] - signalDataJose[:,0][0])
+time2 = np.asarray(signalDataJiahong[:,0] - signalDataJiahong[:,0][0])
+time3 = np.asarray(signalDataSam[:,0] - signalDataSam[:,0][0])
 time = [time1, time2, time3]
 
 
@@ -1010,7 +1010,7 @@ for featureInd in range(len(blinkFeatures)):
                 features[i].append(feature)
 
         for i in range(len(time)):
-            features[i] = np.array(features[i])
+            features[i] = np.asarray(features[i])
             plt.plot(time[i], features[i], colors[i], markersize=5)
             
     avJO = np.round(np.mean(features[0][time[0] > 200]), 7)
@@ -1044,26 +1044,26 @@ plt.hist(c, bins=100, alpha=0.5, label="avJH/avSM")
 # --------- Correlation Matrix
 import seaborn as sns;
 from copy import copy, deepcopy
-signalData = np.array(signalData); signalLabels = np.array(signalLabels)
+signalChannel = np.asarray(signalChannel); signalLabels = np.asarray(signalLabels)
 
-signalDataSam = signalData; signalLabelsSam = signalLabels
-signalDataJosh = signalData; signalLabelsJosh = signalLabels
-signalDataSarah = signalData; signalLabelsSarah = signalLabels
+signalDataSam = signalChannel; signalLabelsSam = signalLabels
+signalDataJosh = signalChannel; signalLabelsJosh = signalLabels
+signalDataSarah = signalChannel; signalLabelsSarah = signalLabels
 
-signalData = deepcopy(signalDataSarah); signalLabels = deepcopy(signalLabelsSarah)
-signalData.extend(signalDataJosh); signalLabels.extend(signalLabelsJosh)
-signalData.extend(signalDataSam); signalLabels.extend(signalLabelsSam)
+signalChannel = deepcopy(signalDataSarah); signalLabels = deepcopy(signalLabelsSarah)
+signalChannel.extend(signalDataJosh); signalLabels.extend(signalLabelsJosh)
+signalChannel.extend(signalDataSam); signalLabels.extend(signalLabelsSam)
 
 
-signalData = deepcopy(signalData); signalLabels = deepcopy(signalLabels)
+signalChannel = deepcopy(signalChannel); signalLabels = deepcopy(signalLabels)
 # Standardize Feature
-signalDataStandard = deepcopy(signalData[signalData[:,0] > 60*6])
-blinkFeaturesX = np.array(blinkFeatures)
-blinkFeaturesY = np.array(blinkFeatures)
+signalDataStandard = deepcopy(signalChannel[signalChannel[:,0] > 60*6])
+blinkFeaturesX = np.asarray(blinkFeatures)
+blinkFeaturesY = np.asarray(blinkFeatures)
 # for i in range(len(signalDataStandard[0])):
 #      signalDataStandard[:,i] = (signalDataStandard[:,i] - np.mean(signalDataStandard[:,i]))/np.std(signalDataStandard[:,i],ddof=1)
 
-matrix = np.array(np.corrcoef(signalDataStandard.T)); 
+matrix = np.asarray(np.corrcoef(signalDataStandard.T)); 
 #sns.set_theme(); ax = sns.heatmap(matrix, cmap='icefire', xticklabels=blinkFeaturesX, yticklabels=blinkFeaturesY)
 
 # Cluster

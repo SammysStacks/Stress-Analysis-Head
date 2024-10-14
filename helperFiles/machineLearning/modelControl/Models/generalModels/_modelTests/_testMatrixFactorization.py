@@ -33,8 +33,8 @@ class testCollabFilt:
         self.itemNames = [str(i) for i in range(self.numItems)]
         
         # Compile model inputs
-        self.Training_Data = np.array([self.Ui, self.Ui/2, self.Ui, self.Ui*2, self.Ui, self.Ui*2, self.Ui/2, self.Ui*4])
-        self.Training_Labels = np.array([[self.timePoint, self.userInd+1, self.itemInd, self.userItemRating], 
+        self.Training_Data = np.asarray([self.Ui, self.Ui/2, self.Ui, self.Ui*2, self.Ui, self.Ui*2, self.Ui/2, self.Ui*4])
+        self.Training_Labels = np.asarray([[self.timePoint, self.userInd+1, self.itemInd, self.userItemRating], 
                                     [self.timePoint+10, self.userInd+1, self.itemInd+1, self.userItemRating/2],
                                     [self.timePoint+20, self.userInd+1, self.itemInd, self.userItemRating],
                                     [self.timePoint+30, self.userInd+1, self.itemInd+1, self.userItemRating*2],
@@ -43,9 +43,9 @@ class testCollabFilt:
                                     [self.timePoint+20, self.userInd, self.itemInd, self.userItemRating],
                                     [self.timePoint+30, self.userInd, self.itemInd, self.userItemRating*2]
                                     ], dtype=int)
-        self.Testing_Data =  np.array([self.Ui, self.Ui*2])
-        self.Testing_Labels = np.array([[self.timePoint, self.userInd, self.itemInd+1, self.userItemRating], [self.timePoint+10, self.userInd, self.itemInd, self.userItemRating*2]])
-        self.featureNames = np.array([str(elem) for elem in self.Ui])
+        self.Testing_Data =  np.asarray([self.Ui, self.Ui*2])
+        self.Testing_Labels = np.asarray([[self.timePoint, self.userInd, self.itemInd+1, self.userItemRating], [self.timePoint+10, self.userInd, self.itemInd, self.userItemRating*2]])
+        self.featureNames = np.asarray([str(elem) for elem in self.Ui])
             
     def resetModel(self):
         # Set random seed

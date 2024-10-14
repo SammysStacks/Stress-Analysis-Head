@@ -151,9 +151,9 @@ class gsrProtocol:
             filteredData = scipy.signal.savgol_filter(filteredData, max(3, int(self.samplingFreq*5)), 1, mode='nearest', deriv=0)
             
             # Format the data and timepoints
-            timePoints = np.array(self.data[0])[-len(filteredData):]
-            filteredData = np.array(filteredData)
-            assert len(filteredData) == len(timePoints), "Incorrect sampling of batch"
+            timepoints = np.asarray(self.data[0])[-len(filteredData):]
+            filteredData = np.asarray(filteredData)
+            assert len(filteredData) == len(timepoints), "Incorrect sampling of batch"
             # --------------------------------------------------------------- #
             
             # ---------------------- Feature Extraction --------------------- #
@@ -174,17 +174,17 @@ class gsrProtocol:
                 secondDeriv = scipy.signal.savgol_filter(firstDeriv, max(3, int(self.samplingFreq*60)), 1, mode='nearest', delta=1/self.samplingFreq, deriv=1)
 
                 # plt.show()
-                # plt.plot(timePoints, extremeFilteredNormalizedData/max(extremeFilteredNormalizedData), 'k', linewidth=2)
-                # plt.plot(timePoints, firstDeriv_Extra/max(firstDeriv_Extra), 'b', linewidth=2)
-                # plt.plot(timePoints, secondDeriv_Extra/max(secondDeriv_Extra), 'r', linewidth=2)
+                # plt.plot(timepoints, extremeFilteredNormalizedData/max(extremeFilteredNormalizedData), 'k', linewidth=2)
+                # plt.plot(timepoints, firstDeriv_Extra/max(firstDeriv_Extra), 'b', linewidth=2)
+                # plt.plot(timepoints, secondDeriv_Extra/max(secondDeriv_Extra), 'r', linewidth=2)
                 # plt.show()
                 
-                # plt.plot(timePoints, normalizedData, 'k', linewidth=2)
+                # plt.plot(timepoints, normalizedData, 'k', linewidth=2)
                 # plt.show()
                 
                 lastExtremaFound = 0  #  THIS SHOULD BE GLOBAL
                 baselinePointers, peakMaxPointers = self.findAllPeaks(extremeFilteredNormalizedData, lastExtremaFound, binarySearchWindow = int(self.samplingFreq*5), maxPointsSearch = len(extremeFilteredNormalizedData))
-                # print(timePoints[baselinePointers], timePoints[peakMaxPointers])
+                # print(timepoints[baselinePointers], timepoints[peakMaxPointers])
                 
                 if peakMaxPointers[0] < baselinePointers[0]:
                     lastbaselinePointer = self.findPrevBaselinePointer(extremeFilteredNormalizedData, peakMaxPointers[0], int(self.samplingFreq * -5))
@@ -197,17 +197,17 @@ class gsrProtocol:
                 #     lastbaselinePointer = self.findPrevBaselinePointer(extremeFilteredNormalizedData, optimizedpeakMaxPointers[0], int(self.samplingFreq * -5))
                 #     optimizedBaselinePointers.insert(0, lastbaselinePointer)
                                 
-                # plt.plot(timePoints, normalizedData, 'k', linewidth=2)
-                # plt.plot(timePoints, extremeFilteredNormalizedData, 'tab:brown', linewidth=2)
+                # plt.plot(timepoints, normalizedData, 'k', linewidth=2)
+                # plt.plot(timepoints, extremeFilteredNormalizedData, 'tab:brown', linewidth=2)
                 
-                # plt.plot(timePoints[peakMaxPointers], normalizedData[peakMaxPointers], 'or')
-                # plt.plot(timePoints[baselinePointers], normalizedData[baselinePointers], 'ob')
+                # plt.plot(timepoints[peakMaxPointers], normalizedData[peakMaxPointers], 'or')
+                # plt.plot(timepoints[baselinePointers], normalizedData[baselinePointers], 'ob')
                 
-                # plt.plot(timePoints[optimizedpeakMaxPointers], normalizedData[optimizedpeakMaxPointers], 'om')
-                # plt.plot(timePoints[optimizedBaselinePointers], normalizedData[optimizedBaselinePointers], 'og')
+                # plt.plot(timepoints[optimizedpeakMaxPointers], normalizedData[optimizedpeakMaxPointers], 'om')
+                # plt.plot(timepoints[optimizedBaselinePointers], normalizedData[optimizedBaselinePointers], 'og')
                 
-                # plt.plot(timePoints[peakMaxPointers], extremeFilteredNormalizedData[peakMaxPointers], 'or')
-                # plt.plot(timePoints[baselinePointers], extremeFilteredNormalizedData[baselinePointers], 'ob')
+                # plt.plot(timepoints[peakMaxPointers], extremeFilteredNormalizedData[peakMaxPointers], 'or')
+                # plt.plot(timepoints[baselinePointers], extremeFilteredNormalizedData[baselinePointers], 'ob')
                 # plt.show()
                 
                 self.lastAnalyzedDataInd = len(self.data[0])
@@ -227,14 +227,14 @@ class gsrProtocol:
                 peakPointer = 0
                 
                 self.peakAmp = 0
-                while self.lastAnalyzedDataInd < len(self.data[0]):
-                    featureTime = self.data[0][self.lastAnalyzedDataInd]
+                while self.lastAnalyzedDataInd < len(self.timepoints):
+                    featureTime = self.timepoints[self.lastAnalyzedDataInd]
                     self.findStartFeatureWindow(featureTime, peakPresent, subpeakPresent) # logic for startFeatureTimePointer and startPeakTimePointer
                     
-                    intervalTimesSCL = timePoints[self.startFeatureTimePointer - dataFinger:self.lastAnalyzedDataInd+1 - dataFinger]
+                    intervalTimesSCL = timepoints[self.startFeatureTimePointer - dataFinger:self.lastAnalyzedDataInd+1 - dataFinger]
                     intervalDataSCL = normalizedData[self.startFeatureTimePointer - dataFinger:self.lastAnalyzedDataInd+1 - dataFinger]
                     
-                    intervalTimesSCR = timePoints[self.startPeakTimePointer - dataFinger:self.lastAnalyzedDataInd+1 - dataFinger]
+                    intervalTimesSCR = timepoints[self.startPeakTimePointer - dataFinger:self.lastAnalyzedDataInd+1 - dataFinger]
                     intervalDataSCR = normalizedData[self.startPeakTimePointer  - dataFinger:self.lastAnalyzedDataInd+1 - dataFinger]
                     
                     # Get the derivatives in the feature window
@@ -248,7 +248,7 @@ class gsrProtocol:
                     gsrFeatures = self.extractFeaturesSCL(intervalTimesSCL, intervalDataSCL, intervalFirstDerivSCL, intervalSecondDerivSCL)
                     gsrFeatures.extend(self.extractPeakFeaturesSCR(intervalTimesSCR, intervalDataSCR, intervalFirstDerivSCR, intervalSecondDerivSCR))
                     
-                    #intervalTimesSCR_sub = timePoints[self.startSubpeakTimePointer - dataFinger:self.lastAnalyzedDataInd+1 - dataFinger]
+                    #intervalTimesSCR_sub = timepoints[self.startSubpeakTimePointer - dataFinger:self.lastAnalyzedDataInd+1 - dataFinger]
                     #intervalDataSCR_sub = normalizedData[self.startSubpeakTimePointer  - dataFinger:self.lastAnalyzedDataInd+1 - dataFinger]
                     
                     #intervalFirstDerivSCR_sub = firstDeriv[self.startSubpeakTimePointer - dataFinger:self.lastAnalyzedDataInd+1 - dataFinger]
@@ -273,10 +273,10 @@ class gsrProtocol:
                     
                     peakPresent, peakStage, subpeakPresent = self.checkPeakPresentLogic(intervalFirstDerivSCL, peakPresent, peakStage, intervalDataSCR)
                     
-                    self.plotPeaks(peakPresent, prevPeakPresent, subpeakPresent, prevSubpeakPresent, timePoints, normalizedData)
+                    self.plotPeaks(peakPresent, prevPeakPresent, subpeakPresent, prevSubpeakPresent, timepoints, normalizedData)
                     
                     # Keep track of the new features
-                    self.readData.averageFeatures([featureTime], [gsrFeatures], self.featureTimes, self.rawFeatures, self.compiledFeatures, self.featureAverageWindow)
+                    self.readData.compileContinuousFeatures([featureTime], [gsrFeatures], self.rawFeatureTimes, self.rawFeatures, self.compiledFeatures, self.featureAverageWindow)
                 
                     # Keep track of which data has been analyzed 
                     self.lastAnalyzedDataInd += int(self.samplingFreq*1)
@@ -285,31 +285,31 @@ class gsrProtocol:
             # ------------------- Plot Biolectric Signals ------------------ #
             if self.plotStreamedData:
                 # Get X Data: Shared Axis for All Channels
-                timePoints = np.array(self.data[0][dataFinger:dataFinger + self.numPointsPerBatch])
+                timepoints = np.asarray(self.data[0][dataFinger:dataFinger + self.numPointsPerBatch])
     
                 # Get New Y Data
                 newYData = self.data[1][channelIndex][dataFinger:dataFinger + self.numPointsPerBatch]
                 # Plot Raw Bioelectric Data (Slide Window as Points Stream in)
-                self.bioelectricDataPlots[channelIndex].set_data(timePoints, newYData)
-                self.bioelectricPlotAxes[channelIndex].set_xlim(timePoints[0], timePoints[-1])
+                self.bioelectricDataPlots[channelIndex].set_data(timepoints, newYData)
+                self.bioelectricPlotAxes[channelIndex].set_xlim(timepoints[0], timepoints[-1])
                             
                 # Plot the Filtered + Digitized Data
-                self.filteredBioelectricDataPlots[channelIndex].set_data(timePoints, filteredData[-len(timePoints):])
-                self.filteredBioelectricPlotAxes[channelIndex].set_xlim(timePoints[0], timePoints[-1]) 
+                self.filteredBioelectricDataPlots[channelIndex].set_data(timepoints, filteredData[-len(timepoints):])
+                self.filteredBioelectricPlotAxes[channelIndex].set_xlim(timepoints[0], timepoints[-1]) 
             # -------------------------------------------------------------- #   
     
-    def plotPeaks(self, peakPresent, prevPeakPresent, subpeakPresent, prevSubpeakPresent, timePoints, normalizedData):
+    def plotPeaks(self, peakPresent, prevPeakPresent, subpeakPresent, prevSubpeakPresent, timepoints, normalizedData):
         if peakPresent and not prevPeakPresent:
-            plt.plot(timePoints[self.startPeakTimePointer], normalizedData[self.startPeakTimePointer], 'ro')
+            plt.plot(timepoints[self.startPeakTimePointer], normalizedData[self.startPeakTimePointer], 'ro')
             
         elif prevPeakPresent and not peakPresent:
-            plt.plot(timePoints[self.startFeatureTimePointer], normalizedData[self.startFeatureTimePointer], 'mo')
+            plt.plot(timepoints[self.startFeatureTimePointer], normalizedData[self.startFeatureTimePointer], 'mo')
         
         elif subpeakPresent and not prevSubpeakPresent:
-            plt.plot(timePoints[self.startSubpeakTimePointer], normalizedData[self.startSubpeakTimePointer], 'bo')
+            plt.plot(timepoints[self.startSubpeakTimePointer], normalizedData[self.startSubpeakTimePointer], 'bo')
             
         elif prevSubpeakPresent and not subpeakPresent:
-            plt.plot(timePoints[self.startFeatureTimePointer], normalizedData[self.startFeatureTimePointer], 'co')
+            plt.plot(timepoints[self.startFeatureTimePointer], normalizedData[self.startFeatureTimePointer], 'co')
     
     def checkPeakPresentLogic(self, intervalFirstDerivSCL, peakPresent, peakStage, intervalDataSCR):
         avg_slope = scipy.stats.trim_mean(intervalFirstDerivSCL, 0.3)

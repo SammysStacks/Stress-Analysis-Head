@@ -72,10 +72,10 @@ class mathExpressions:
         self.numTransformers = len(self.transformers)
         
         # Convert operators to numpy arrays
-        self.operators = np.array(self.operators)
-        self.functions = np.array(self.functions)
-        self.transformers = np.array(self.transformers)
-        self.functions_onceApplied = np.array(self.functions_onceApplied)
+        self.operators = np.asarray(self.operators)
+        self.functions = np.asarray(self.functions)
+        self.transformers = np.asarray(self.transformers)
+        self.functions_onceApplied = np.asarray(self.functions_onceApplied)
 
     def _createScalars(self):        
         # General constants.

@@ -121,8 +121,8 @@ class machineLearningHead:
         return medianScore
             
     def findWorstSubject(self, modelInd, featureData, featureLabels, featureNames, subjectOrder, featureNamesCombination_String):
-        subjectOrder = np.array(subjectOrder)
-        featureLabels = np.array(featureLabels)
+        subjectOrder = np.asarray(subjectOrder)
+        featureLabels = np.asarray(featureLabels)
         
         # Get All Possible itertools.combinations
         if False:
@@ -155,7 +155,7 @@ class machineLearningHead:
             modelPerformance = self.averageModelAccuracy(modelInd, culledSubjectData, culledSubjectLabels, featureNames, numEpochs = 1, stratifyBy = None, testSplitRatio = 0.3)
 
             # Save which subjects were removed.
-            discardedSubjectInds = np.array(list(allSubjectLabels.difference(set(subjectInds))))
+            discardedSubjectInds = np.asarray(list(allSubjectLabels.difference(set(subjectInds))))
             removedSubject = np.unique(subjectOrder[discardedSubjectInds])
         
             insertionPoint = bisect.bisect(finalPerformances, -modelPerformance, key=lambda x: -x)
@@ -270,7 +270,7 @@ class machineLearningHead:
                     self.finalPerformancesSTDs.insert(insertionPoint, modelSTD)
                     
                     if len(categorical) != 0:
-                        self.finalPerformances_byLabel.insert(insertionPoint, [stats.trim_mean(np.array(modelPerformances_byLabel)[:, i], 0.3) for i in range(len(np.unique(featureLabels)))])
+                        self.finalPerformances_byLabel.insert(insertionPoint, [stats.trim_mean(np.asarray(modelPerformances_byLabel)[:, i], 0.3) for i in range(len(np.unique(featureLabels)))])
                     
     
                     # Only track the best models
@@ -302,7 +302,7 @@ class machineLearningHead:
                         headers.append(category)
                         
                     # Add the individual labels' performance scores to the excel
-                    finalPerformances_byLabel_Stack = np.dstack([np.array(self.finalPerformances_byLabel)[:, i] for i in range(len(np.unique(featureLabels)))])
+                    finalPerformances_byLabel_Stack = np.dstack([np.asarray(self.finalPerformances_byLabel)[:, i] for i in range(len(np.unique(featureLabels)))])
                     data = np.concatenate((data, finalPerformances_byLabel_Stack), axis=2)
                     
                 # Save to excel. Formatted in order of best performance by the mean score.
@@ -315,7 +315,7 @@ class machineLearningHead:
             # We make this the features we use to make the next set of combinations we search through
             
             # Find all combinations that scored higher than the threshold
-            goodCombinations = np.array(self.featureNamesCombinations)[np.array(self.finalPerformances) >= thresholdToKeep]
+            goodCombinations = np.asarray(self.featureNamesCombinations)[np.asarray(self.finalPerformances) >= thresholdToKeep]
             
             featureCombinationInds = []
             featureNamesTemp = set()
@@ -334,7 +334,7 @@ class machineLearningHead:
             # Three standard deviations below the mean of the best combination
             thresholdToKeep = self.finalPerformances[0] - (3 * self.finalPerformancesSTDs[0])
             
-        return np.array(self.finalPerformances), np.array(self.finalPerformancesSTDs), np.array(self.featureNamesCombinations)
+        return np.asarray(self.finalPerformances), np.asarray(self.finalPerformancesSTDs), np.asarray(self.featureNamesCombinations)
 
 
 # -------------------------------------------------------------------------- #

@@ -21,7 +21,7 @@ import _imageSimilarities
 # -------------------------------------------------------------------------- #
 # -------------------------- Recommendation Model -------------------------- #
 
-class recommendationModel(_globalModel.globalModel):
+class recommendationModel(nn.Module):
     
     def __init__(self, modelPath, modelType, allFeatureNames, overwriteModel, numUsers = 20, numBioFeatures = 84, numItems = 4):
         """
@@ -430,7 +430,7 @@ class recommendationModel(_globalModel.globalModel):
             
             # Predit the user rating.
             predictedRatings.append(self.predictPoint(Ui, timePoint, userInd, itemInd))
-        predictedRatings = np.array(predictedRatings)
+        predictedRatings = np.asarray(predictedRatings)
         
         # Calculate the R2 correlation between the predicted and given ratings.
         R2 = self.calculateR2(userRatings, predictedRatings, calculateAdjustedR2 = False)
@@ -477,11 +477,11 @@ class recommendationModel(_globalModel.globalModel):
         predictedRatings = self.alpha * ratingMF + (1 - self.alpha) * ratingCB
         return predictedRatings     
     
-    def predict(self, U, timePoints, userInds, itemInds):
+    def predict(self, U, timepoints, userInds, itemInds):
         finalPredictions = []
         for pointInd in range(len(U)):
             Ui = U[pointInd]
-            timePoint = timePoints[pointInd]
+            timePoint = timepoints[pointInd]
             userInd = userInds[pointInd] if type(userInds) not in [float, int, str] else userInds
             itemInd = itemInds[pointInd] if type(itemInds) not in [float, int, str] else itemInds
             
@@ -492,7 +492,7 @@ class recommendationModel(_globalModel.globalModel):
             userInd = int(userInd); itemInd = int(itemInd)
             
             finalPredictions.append(self.predictPoint(Ui, timePoint, userInd, itemInd))
-        finalPredictions = np.array(finalPredictions)
+        finalPredictions = np.asarray(finalPredictions)
         
         return finalPredictions
 
@@ -622,8 +622,8 @@ if __name__ == "__main__":
     itemInd = 5
     userItemRating = 30
     
-    Training_Data = np.array([Ui, Ui/2, Ui, Ui*2, Ui, Ui*2, Ui/2, Ui*4])
-    Training_Labels = np.array([[timePoint, userInd+1, itemInd, userItemRating], 
+    Training_Data = np.asarray([Ui, Ui/2, Ui, Ui*2, Ui, Ui*2, Ui/2, Ui*4])
+    Training_Labels = np.asarray([[timePoint, userInd+1, itemInd, userItemRating], 
                                 [timePoint+10, userInd+1, itemInd+1, userItemRating/2],
                                 [timePoint+20, userInd+1, itemInd, userItemRating],
                                 [timePoint+30, userInd+1, itemInd+1, userItemRating*2],
@@ -632,13 +632,13 @@ if __name__ == "__main__":
                                 [timePoint+20, userInd, itemInd, userItemRating],
                                 [timePoint+30, userInd, itemInd, userItemRating*3]
                                 ], dtype=int)
-    Testing_Data = np.array([Ui, Ui*2, Ui, Ui*4])
-    Testing_Labels = np.array([[timePoint, userInd+1, itemInd, userItemRating], 
+    Testing_Data = np.asarray([Ui, Ui*2, Ui, Ui*4])
+    Testing_Labels = np.asarray([[timePoint, userInd+1, itemInd, userItemRating], 
                                 [timePoint+30, userInd+1, itemInd+1, userItemRating*2],
                                 [timePoint, userInd, itemInd+1, userItemRating],
                                 [timePoint+30, userInd, itemInd, userItemRating*3]
                                 ], dtype=int)
-    featureNames = np.array([str(elem) for elem in Ui])
+    featureNames = np.asarray([str(elem) for elem in Ui])
     
     R2 = recommendationModel.trainModel(Training_Data, Training_Labels, Testing_Data, Testing_Labels, featureNames, userNames, itemNames)
     print("R2 =", R2)

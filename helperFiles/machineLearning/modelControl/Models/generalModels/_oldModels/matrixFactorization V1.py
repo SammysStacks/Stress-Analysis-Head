@@ -18,7 +18,7 @@ import _imageSimilarities
 # -------------------------------------------------------------------------- #
 # -------------------------- Recommendation Model -------------------------- #
 
-class matrixFactorization(_globalModel.globalModel):
+class matrixFactorization(nn.Module):
     
     def __init__(self, modelPath, modelType, allFeatureNames, overwriteModel, numUsers = 20, numBioFeatures = 84, numItems = 4):
         """
@@ -403,7 +403,7 @@ class matrixFactorization(_globalModel.globalModel):
             
             # Predit the user rating.
             predictedRatings.append(self.predictPoint(Ui, timePoint, userInd, itemInd))
-        predictedRatings = np.array(predictedRatings)
+        predictedRatings = np.asarray(predictedRatings)
         
         # Calculate the R2 correlation between the predicted and given ratings.
         R2 = self.calculateR2(userRatings, predictedRatings, calculateAdjustedR2 = False)
@@ -450,11 +450,11 @@ class matrixFactorization(_globalModel.globalModel):
         predictedRatings = self.alpha * ratingMF + (1 - self.alpha) * ratingCB
         return predictedRatings     
     
-    def predict(self, U, timePoints, userInds, itemInds):
+    def predict(self, U, timepoints, userInds, itemInds):
         finalPredictions = []
         for pointInd in range(len(U)):
             Ui = U[pointInd]
-            timePoint = timePoints[pointInd]
+            timePoint = timepoints[pointInd]
             userInd = userInds[pointInd] if type(userInds) not in [float, int, str] else userInds
             itemInd = itemInds[pointInd] if type(itemInds) not in [float, int, str] else itemInds
             
@@ -465,7 +465,7 @@ class matrixFactorization(_globalModel.globalModel):
             userInd = int(userInd); itemInd = int(itemInd)
             
             finalPredictions.append(self.predictPoint(Ui, timePoint, userInd, itemInd))
-        finalPredictions = np.array(finalPredictions)
+        finalPredictions = np.asarray(finalPredictions)
         
         return finalPredictions
 
@@ -594,7 +594,7 @@ class matrixFactorization(_globalModel.globalModel):
             # Reset last label
             lastLabel = experimentLabel
         
-        return np.array(Training_Data), np.array(Testing_Data), np.array(Training_Labels), np.array(Testing_Labels), trainingOrder
+        return np.asarray(Training_Data), np.asarray(Testing_Data), np.asarray(Training_Labels), np.asarray(Testing_Labels), trainingOrder
     
     def _loadModel(self):
         with open(self.modelPath, 'rb') as handle:
@@ -630,8 +630,8 @@ if __name__ == "__main__":
     itemInd = 0
     userItemRating = 30
     
-    Training_Data = np.array([Ui, Ui/1.5, Ui/2, Ui*2, Ui, Ui*2, Ui/2, Ui*4])
-    Training_Labels = np.array([[timePoint, userInd+1, itemInd, userItemRating], 
+    Training_Data = np.asarray([Ui, Ui/1.5, Ui/2, Ui*2, Ui, Ui*2, Ui/2, Ui*4])
+    Training_Labels = np.asarray([[timePoint, userInd+1, itemInd, userItemRating], 
                                 [timePoint+10, userInd+1, itemInd+1, userItemRating - 12.5],
                                 [timePoint+20, userInd+1, itemInd, userItemRating - 20],
                                 [timePoint+30, userInd+1, itemInd+1, userItemRating + 20],
@@ -640,13 +640,13 @@ if __name__ == "__main__":
                                 [timePoint+20, userInd, itemInd, userItemRating],
                                 [timePoint+30, userInd, itemInd, userItemRating*1.4]
                                 ], dtype=int)
-    Testing_Data = np.array([Ui, Ui*2, Ui, Ui*4])
-    Testing_Labels = np.array([[timePoint, userInd+1, itemInd, userItemRating], 
+    Testing_Data = np.asarray([Ui, Ui*2, Ui, Ui*4])
+    Testing_Labels = np.asarray([[timePoint, userInd+1, itemInd, userItemRating], 
                                 [timePoint+30, userInd+1, itemInd+1, userItemRating*2],
                                 [timePoint, userInd, itemInd+1, userItemRating],
                                 [timePoint+30, userInd, itemInd, userItemRating*3]
                                 ], dtype=int)
-    featureNames_CF = np.array([str(elem) for elem in Ui])
+    featureNames_CF = np.asarray([str(elem) for elem in Ui])
     
     trainingOrder_CF = np.arange(0, len(Testing_Data), 1)
 

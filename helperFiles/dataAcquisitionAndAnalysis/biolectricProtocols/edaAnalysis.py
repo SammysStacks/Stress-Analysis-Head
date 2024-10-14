@@ -1,333 +1,258 @@
-
-# -------------------------------------------------------------------------- #
-# ---------------------------- Imported Modules ---------------------------- #
-
-# Basic Modules
-import scipy
 import numpy as np
-# Feature Extraction Modules
-import eeglib
 import antropy
+import scipy
 
 # Import Files
 from .globalProtocol import globalProtocol
-        
-# ---------------------------------------------------------------------------#
-# ---------------------------------------------------------------------------#
+
 
 class edaProtocol(globalProtocol):
-    
-    def __init__(self, numPointsPerBatch = 3000, moveDataFinger = 10, numChannels = 2, plottingClass = None, readData = None):        
-        # Feature collection parameters
-        self.secondsPerFeature = 1         # The duration of time that passes between each feature.
-        self.featureTimeWindow_Tonic = 60   # The duration of time that each feature considers.
-        self.featureTimeWindow_Phasic = 15  # The duration of time that each feature considers.
-        # Filter Parameters
-        self.tonicFrequencyCutoff = 0.05    # Maximum tonic component frequency.
-        self.dataPointBuffer = 5000         # A Prepended Buffer in the Filtered Data that Represents BAD Filtering; Units: Points
-        self.cutOffFreq = [None, 15]        # Filter cutoff frequencies: [HPF, LPF].
-        
-        # Initialize common model class
-        super().__init__("eda", numPointsPerBatch, moveDataFinger, numChannels, plottingClass, readData)
-        
+
+    def __init__(self, numPointsPerBatch=3000, moveDataFinger=10, channelIndices=(), plottingClass=None, readData=None):
+        # Feature collection parameters.
+        self.startFeatureTimePointer_Phasic = None  # The start pointer of the feature window interval.
+        self.startFeatureTimePointer_Tonic = None  # The start pointer of the feature window interval.
+        self.featureTimeWindow_Phasic = None  # The duration of time that each feature considers.
+        self.featureTimeWindow_Tonic = None  # The duration of time that each feature considers.
+        self.minPointsPerBatchPhasic = None  # The minimum number of points required to extract features.
+        self.minPointsPerBatchTonic = None  # The minimum number of points required to extract features.
+
+        # Filter Parameters.
+        self.tonicFrequencyCutoff = 0.05  # Maximum tonic component frequency.
+        self.cutOffFreq = [None, 15]  # Filter cutoff frequencies: [HPF, LPF].
+
+        # Reset analysis variables
+        super().__init__("eda", numPointsPerBatch, moveDataFinger, channelIndices, plottingClass, readData)
+        self.resetAnalysisVariables()
+
     def resetAnalysisVariables(self):
         # General parameters
-        self.startFeatureTimePointer_Tonic = [0 for _ in range(self.numChannels)]    # The start pointer of the feature window interval.
-        self.startFeatureTimePointer_Phasic = [0 for _ in range(self.numChannels)]    # The start pointer of the feature window interval.
-            
+        self.startFeatureTimePointer_Phasic = [0 for _ in range(self.numChannels)]  # The start pointer of the feature window interval.
+        self.startFeatureTimePointer_Tonic = [0 for _ in range(self.numChannels)]  # The start pointer of the feature window interval.
+
+        # Feature collection parameters.
+        self.minPointsPerBatchPhasic = 0  # The minimum number of points required to extract features.
+        self.minPointsPerBatchTonic = 0  # The minimum number of points required to extract features.
+
+        # Confirm the feature time windows are set.
+        self.featureTimeWindow_Phasic = self.featureTimeWindow_highFreq  # The duration of time that each feature considers.
+        self.featureTimeWindow_Tonic = self.featureTimeWindow_lowFreq  # The duration of time that each feature considers.
+
     def checkParams(self):
-        assert self.featureTimeWindow_Tonic < self.dataPointBuffer, "The buffer does not include enough points for the feature window"
+        # Confirm the buffer is large enough for the feature window.
         assert self.featureTimeWindow_Phasic < self.dataPointBuffer, "The buffer does not include enough points for the feature window"
-        
+        assert self.featureTimeWindow_Tonic < self.dataPointBuffer, "The buffer does not include enough points for the feature window"
+
     def setSamplingFrequencyParams(self):
         maxFeatureTimeWindow = max(self.featureTimeWindow_Tonic, self.featureTimeWindow_Phasic, 15)
         # Set Parameters
-        self.minPointsPerBatchTonic = int(self.samplingFreq*self.featureTimeWindow_Tonic/2)
-        self.minPointsPerBatchPhasic = int(self.samplingFreq*self.featureTimeWindow_Phasic*3/4)
-        self.lastAnalyzedDataInd[:] = int(self.samplingFreq*maxFeatureTimeWindow)
-        self.dataPointBuffer = max(self.dataPointBuffer, int(self.samplingFreq*maxFeatureTimeWindow))
-        
+        self.minPointsPerBatchTonic = int(self.samplingFreq * self.featureTimeWindow_Tonic / 2)
+        self.minPointsPerBatchPhasic = int(self.samplingFreq * self.featureTimeWindow_Phasic * 3 / 4)
+        self.lastAnalyzedDataInd[:] = int(self.samplingFreq * maxFeatureTimeWindow)
+        self.dataPointBuffer = max(self.dataPointBuffer, int(self.samplingFreq * maxFeatureTimeWindow))
+
+        # Reset the cutoff frequencies if they are too high.
+        if self.samplingFreq < self.cutOffFreq[1]/2:
+            print(f"Resetting the cutoff frequencies from {self.cutOffFreq[1]} to {None}")
+            self.cutOffFreq[1] = None
     # ----------------------------------------------------------------------- #
     # ------------------------- Data Analysis Begins ------------------------ #
-    
+
     def analyzeData(self, dataFinger):
-        
+
         # Add incoming Data to Each Respective Channel's Plot
         for channelIndex in range(self.numChannels):
-            
+
             # ---------------------- Filter the Data ----------------------- #    
             # Find the starting/ending points of the data to analyze
             startFilterPointer = max(dataFinger - self.dataPointBuffer, 0)
-            dataBuffer = np.array(self.data[1][channelIndex][startFilterPointer:dataFinger + self.numPointsPerBatch])
-            timePoints = np.array(self.data[0][startFilterPointer:dataFinger + self.numPointsPerBatch])
-            
+            dataBuffer = np.asarray(self.channelData[channelIndex][startFilterPointer:dataFinger + self.numPointsPerBatch])
+            timepoints = np.asarray(self.timepoints[startFilterPointer:dataFinger + self.numPointsPerBatch])
+
             # Extract sampling frequency from the first batch of data
             if not self.samplingFreq:
                 self.setSamplingFrequency(startFilterPointer)
-                
+
             # Filter the data and remove bad indices
-            filteredTime, filteredData, goodIndicesMask = self.filterData(timePoints, dataBuffer, removePoints = True)
-            
-            # Seperate the tonic (baseline) from the phasic (peaks) data
+            filteredTime, filteredData, goodIndicesMask = self.filterData(timepoints, dataBuffer, removePoints=True)
+
+            # Separate the tonic (baseline) from the phasic (peaks) data
             tonicComponent, phasicComponent = self.splitPhasicTonic(filteredData)
             # --------------------------------------------------------------- #
-            
+
             # ---------------------- Feature Extraction --------------------- #
             if self.collectFeatures:
                 # Confirm assumptions made about EDA feature extraction
-                assert dataFinger <= self.lastAnalyzedDataInd[channelIndex], str(dataFinger) + "; " + str(self.lastAnalyzedDataInd[channelIndex]) # We are NOT analyzing data in the buffer region. self.startTimePointerSCL CAN be in the buffer region.
-                
+                assert dataFinger <= self.lastAnalyzedDataInd[channelIndex], f"{dataFinger}; {self.lastAnalyzedDataInd[channelIndex]}"  # We are NOT analyzing data in the buffer region. self.startTimePointerSCL CAN be in the buffer region.
+
+                # Initialize the new raw features and times.
+                newFeatureTimes, newRawFeatures = [], []
+
                 # Extract features across the dataset
-                while self.lastAnalyzedDataInd[channelIndex] < len(self.data[0]):
-                    featureTime = self.data[0][self.lastAnalyzedDataInd[channelIndex]]
-                    
+                while self.lastAnalyzedDataInd[channelIndex] < len(self.timepoints):
+                    featureTime = self.timepoints[self.lastAnalyzedDataInd[channelIndex]]
+
                     # Find the start window pointer and get the data.
                     self.startFeatureTimePointer_Tonic[channelIndex] = self.findStartFeatureWindow(self.startFeatureTimePointer_Tonic[channelIndex], featureTime, self.featureTimeWindow_Tonic)
-                    self.startFeatureTimePointer_Phasic[channelIndex] = self.findStartFeatureWindow(self.startFeatureTimePointer_Phasic[channelIndex], featureTime, self.featureTimeWindow_Phasic)                    
-                    # Compile the well-fromed data in the feature interval.
+                    self.startFeatureTimePointer_Phasic[channelIndex] = self.findStartFeatureWindow(self.startFeatureTimePointer_Phasic[channelIndex], featureTime, self.featureTimeWindow_Phasic)
+                    # Compile the well-formed data in the feature interval.
                     intervalTimesTonic, intervalTonicData = self.compileBatchData(filteredTime, tonicComponent, goodIndicesMask, startFilterPointer, self.startFeatureTimePointer_Tonic[channelIndex], channelIndex)
                     intervalTimesPhasic, intervalPhasicData = self.compileBatchData(filteredTime, phasicComponent, goodIndicesMask, startFilterPointer, self.startFeatureTimePointer_Phasic[channelIndex], channelIndex)
-                    
+
                     # Only extract features if enough information is provided.
                     if self.minPointsPerBatchTonic < len(intervalTimesTonic) and self.minPointsPerBatchPhasic < len(intervalTimesPhasic):
                         # Calculate the features in this window.
-                        finalFeatures = self.extractfinalFeatures(intervalTimesTonic, intervalTonicData)
+                        finalFeatures = self.extractFinalFeatures(intervalTimesTonic, intervalTonicData)
                         finalFeatures.extend(self.extractPhasicFeatures(intervalTimesPhasic, intervalPhasicData))
+
                         # Keep track of the new features.
-                        self.readData.averageFeatures([featureTime], [finalFeatures], self.featureTimes[channelIndex], 
-                                                      self.rawFeatures[channelIndex], self.compiledFeatures[channelIndex], self.featureAverageWindow)
-                
+                        newRawFeatures.append(finalFeatures)
+                        newFeatureTimes.append(featureTime)
+
                     # Keep track of which data has been analyzed 
-                    self.lastAnalyzedDataInd[channelIndex] += int(self.samplingFreq*self.secondsPerFeature)
+                    self.lastAnalyzedDataInd[channelIndex] += int(self.samplingFreq * self.secondsPerFeature)
+
+                # Compile the new raw features into a smoothened (averaged) feature.
+                self.readData.compileContinuousFeatures(newFeatureTimes, newRawFeatures, self.rawFeatureTimes[channelIndex], self.rawFeatures[channelIndex], self.compiledFeatures[channelIndex], self.featureAverageWindow)
+
             # -------------------------------------------------------------- #  
-        
+
             # ------------------- Plot Biolectric Signals ------------------ #
             if self.plotStreamedData:
                 # Format the raw data:.
-                timePoints = timePoints[dataFinger - startFilterPointer:] # Shared axis for all signals
+                timepoints = timepoints[dataFinger - startFilterPointer:]  # Shared axis for all signals
                 rawData = dataBuffer[dataFinger - startFilterPointer:]
                 # Format the filtered data
-                filterOffset = (goodIndicesMask[0:dataFinger - startFilterPointer]).sum(axis = 0, dtype=int)
+                filterOffset = (goodIndicesMask[0:dataFinger - startFilterPointer]).sum(axis=0, dtype=int)
 
                 # Plot Raw Bioelectric Data (Slide Window as Points Stream in)
-                self.plottingMethods.bioelectricDataPlots[channelIndex].set_data(timePoints, rawData)
-                self.plottingMethods.bioelectricPlotAxes[channelIndex].set_xlim(timePoints[0], timePoints[-1])
-                                            
+                self.plottingMethods.bioelectricDataPlots[channelIndex].set_data(timepoints, rawData)
+                self.plottingMethods.bioelectricPlotAxes[channelIndex].set_xlim(timepoints[0], timepoints[-1])
+
                 # Plot the Filtered + Digitized Data
                 self.plottingMethods.filteredBioelectricDataPlots[channelIndex].set_data(filteredTime[filterOffset:], filteredData[filterOffset:])
-                self.plottingMethods.filteredBioelectricPlotAxes[channelIndex].set_xlim(timePoints[0], timePoints[-1]) 
-                
+                self.plottingMethods.filteredBioelectricPlotAxes[channelIndex].set_xlim(timepoints[0], timepoints[-1])
+
                 # Plot a single feature.
                 if len(self.compiledFeatures[channelIndex]) != 0:
-                    self.plottingMethods.featureDataPlots[channelIndex].set_data(self.featureTimes[channelIndex], np.array(self.compiledFeatures[channelIndex])[:, 19])
+                    self.plottingMethods.featureDataPlots[channelIndex].set_data(self.rawFeatureTimes[channelIndex], np.asarray(self.compiledFeatures[channelIndex])[:, 19])
                     self.plottingMethods.featureDataPlotAxes[channelIndex].legend(["Hjorth Activity"], loc="upper left")
 
             # -------------------------------------------------------------- #   
 
-    def filterData(self, timePoints, data, removePoints = False):
+    def filterData(self, timepoints, data, removePoints=False):
         # Filter the data: LPF and moving average (Savgol) filter
-        filteredData = self.filteringMethods.bandPassFilter.butterFilter(data, self.cutOffFreq[1], self.samplingFreq, order = 1, filterType = 'low')
-        #filteredData = scipy.signal.savgol_filter(filteredData, max(int(self.samplingFreq*5), 3), 1, mode='nearest', deriv=0)
-        goodIndicesMask = np.full_like(data, True, dtype = bool)
-        filteredTime = timePoints.copy()
-        
+        filteredData = self.filteringMethods.bandPassFilter.butterFilter(data, self.cutOffFreq[1], self.samplingFreq, order=1, filterType='low')
+        goodIndicesMask = np.full_like(data, True, dtype=bool)
+        filteredTime = timepoints.copy()
+
         return filteredTime, filteredData, goodIndicesMask
-    
+
     def splitPhasicTonic(self, data):
         # Isolate the tonic component (baseline) of the EDA
-        tonicComponent = self.filteringMethods.bandPassFilter.butterFilter(data, self.tonicFrequencyCutoff, self.samplingFreq, order = 1, filterType = 'low')
+        tonicComponent = self.filteringMethods.bandPassFilter.butterFilter(data, self.tonicFrequencyCutoff, self.samplingFreq, order=1, filterType='low')
         # Extract the phasic component (peaks) of the EDA
         phasicComponent = tonicComponent - data
-        
+
         return tonicComponent, phasicComponent
-    
+
     def findStartFeatureWindow(self, timePointer, currentTime, timeWindow):
         # Loop through until you find the first time in the window 
-        while self.data[0][timePointer] < currentTime - timeWindow:
+        while self.timepoints[timePointer] < currentTime - timeWindow:
             timePointer += 1
-            
+
         return timePointer
-    
+
     def compileBatchData(self, filteredTime, filteredData, goodIndicesMask, startFilterPointer, startFeatureTimePointer, channelIndex):
         assert len(goodIndicesMask) >= len(filteredData) == len(filteredTime), print(len(goodIndicesMask), len(filteredData), len(filteredTime))
-        
+
         # Accounts for the missing points (count the number of viable points within each pointer).
-        startReferenceFinger = (goodIndicesMask[0:startFeatureTimePointer - startFilterPointer]).sum(axis = 0, dtype=int)
-        endReferenceFinger = startReferenceFinger + (goodIndicesMask[startFeatureTimePointer - startFilterPointer:self.lastAnalyzedDataInd[channelIndex]+1 - startFilterPointer]).sum(axis = 0, dtype=int)
+        startReferenceFinger = (goodIndicesMask[0:startFeatureTimePointer - startFilterPointer]).sum(axis=0, dtype=int)
+        endReferenceFinger = startReferenceFinger + (goodIndicesMask[startFeatureTimePointer - startFilterPointer:self.lastAnalyzedDataInd[channelIndex] + 1 - startFilterPointer]).sum(axis=0, dtype=int)
         # Compile the information in the interval.
         intervalTimes = filteredTime[startReferenceFinger:endReferenceFinger]
         intervalData = filteredData[startReferenceFinger:endReferenceFinger]
 
         return intervalTimes, intervalData
-                    
-    def extractfinalFeatures(self, timePoints, data):
-        # ------------------------------------------------------------------ #  
-        # ----------------------- Data Preprocessing ----------------------- #
-        
-        standardDeviation = np.std(data, ddof=1)
-        
-        # Normalize the data
-        if standardDeviation <= 1e-10:
-            # print(f'extractfinalFeatures Standard Deviation = 0. All data = {data[0]}')
-            standardizedData = (data - np.mean(data))
-            
-        else: standardizedData = (data - np.mean(data))/standardDeviation
-        
-        # Calculate the derivatives
-        firstDerivative = np.gradient(standardizedData, timePoints)
-        secondDerivative = np.gradient(firstDerivative, timePoints)
-        
-        # Get the baseline data
-        baselineX = timePoints - timePoints[0]
-        baselineY = data - data[0]
-                
-        # ------------------------------------------------------------------ #  
-        # ----------------------- Features from Data ----------------------- #
-        
-        # General Shape Parameters
-        mean = np.mean(data)
-        if standardDeviation <= 1e-10:
-            skewness = 0
-            kurtosis = 0
-        else:
-            skewness = scipy.stats.skew(data, bias=False)
-            kurtosis = scipy.stats.kurtosis(data, fisher=True, bias=False)
-    
-        # Other Parameters
-        signalRange = max(data) - min(data)
-        signalArea = scipy.integrate.simpson(data, timePoints) / (baselineX[-1] - baselineX[0])
-        
-        # ------------------------------------------------------------------ #  
-        # -------------------- Features from Derivatives ------------------- #
-        
-        # First derivative features
-        firstDerivativeMean = np.mean(firstDerivative)
-        firstDerivativeStdDev = np.std(firstDerivative, ddof=1)
-        firstDerivativePower = scipy.integrate.simpson(firstDerivative ** 2, timePoints) / (baselineX[-1] - baselineX[0])
-    
-        # Second derivative features
-        secondDerivativeMean = np.mean(secondDerivative)
-        secondDerivativeStdDev = np.std(secondDerivative, ddof=1)
-        secondDerivativePower = scipy.integrate.simpson(secondDerivative ** 2, timePoints) / (baselineX[-1] - baselineX[0])
 
-        # ------------------------------------------------------------------ #  
-        # ----------------- Features from Normalized Data ------------------ #
-        
-        # Linear fit.
-        signalSlope, slopeIntercept = np.polyfit(baselineX, baselineY, 1)
-        
-        # ------------------------------------------------------------------ #  
+    def extractFinalFeatures(self, timepoints, data):
+
+        # ----------------------- Data Preprocessing ----------------------- #
+
+        # Normalize the data
+        standardized_data = self.universalMethods.standardizeData(data, stdThreshold=1E-20)
+        if all(standardized_data == 0):
+            return [0 for _ in range(9)]
+
+        # Calculate the derivatives
+        firstDerivative = np.gradient(standardized_data, timepoints)
+
+        # ----------------------- Features from Data ----------------------- #
+
+        # General Shape Parameters
+        signalRange = max(standardized_data) - min(standardized_data)
+        standardDeviation = np.std(data, ddof=1)
+        mean = np.mean(data)
+
+        # -------------------- Features from Derivatives ------------------- #
+
+        # First derivative features
+        firstDerivativeStdDev = np.std(firstDerivative, ddof=1)
+        firstDerivativeMean = np.mean(firstDerivative)
+
+        # ------------------- Feature Extraction: Fractal ------------------- #
+
+        # Fractal analysis
+        petrosian_fd = antropy.petrosian_fd(standardized_data, axis=-1)  # Amplitude-invariant. Averages 25 μs.
+        higuchi_fd = antropy.higuchi_fd(standardized_data, kmax=6)  # Amplitude-invariant. Same if standardized or not
+        DFA = antropy.detrended_fluctuation(standardized_data)  # Amplitude-invariant. Same if standardized or not
+        katz_fd = antropy.katz_fd(standardized_data, axis=-1)  # Amplitude-invariant. Same if standardized or not
+
         # ----------------------- Organize Features ------------------------ #
-        
+
         finalFeatures = []
         # Add peak shape parameters
-        finalFeatures.extend([mean, standardDeviation, skewness, kurtosis])
-        finalFeatures.extend([signalRange, signalArea])
-    
+        finalFeatures.extend([mean, standardDeviation, signalRange])
         # Add derivative features
-        finalFeatures.extend([firstDerivativeMean, firstDerivativeStdDev, firstDerivativePower])
-        finalFeatures.extend([secondDerivativeMean, secondDerivativeStdDev, secondDerivativePower])
-    
-        # Add normalized features
-        finalFeatures.extend([signalSlope, slopeIntercept])
-    
+        finalFeatures.extend([firstDerivativeMean, firstDerivativeStdDev])
+        # Feature Extraction: Fractal
+        finalFeatures.extend([petrosian_fd, higuchi_fd, DFA, katz_fd])
+
         return finalFeatures
-            
-    def extractPhasicFeatures(self, timePoints, data):
-        # ------------------------------------------------------------------ #  
+
+    def extractPhasicFeatures(self, timepoints, data):
+
         # ----------------------- Data Preprocessing ----------------------- #
 
         # Normalize the data
-        standardDeviation = np.std(data, ddof=1)
-        if standardDeviation <= 1e-10:
-            # print(f'extractPhasicFeatures: Standard Deviation = 0. All data = {data[0]}')
-            standardizedData = (data - np.mean(data))
-            
-        else: standardizedData = (data - np.mean(data))/np.std(data, ddof=1)
+        standardized_data = self.universalMethods.standardizeData(data)
+        if all(standardized_data == 0):
+            return [0 for _ in range(6)]
 
-        # Calculate the power spectral density (PSD) of the signal. USE STANDARDIZED DATA
-        powerSpectrumDensityFreqs, powerSpectrumDensity = scipy.signal.welch(standardizedData, fs=self.samplingFreq, window='hann',
-                                                                             nperseg=int(self.samplingFreq*10), noverlap=None,
-                                                                             nfft=None, detrend='constant', return_onesided=True,
-                                                                             scaling='density', axis=-1, average='mean')
-        if standardDeviation <= 1e-10:
-            powerSpectrumDensity_Normalized = powerSpectrumDensity
-        else:
-            # print(powerSpectrumDensity, standardDeviation)
-            powerSpectrumDensity_Normalized = powerSpectrumDensity / np.sum(powerSpectrumDensity)
-                        
-        # ------------------------------------------------------------------ #  
+        # Calculate the power spectral density (PSD) of the signal. USE NORMALIZED DATA
+        powerSpectrumDensityFreqs, powerSpectrumDensity, powerSpectrumDensityNormalized = self.universalMethods.calculatePSD(standardized_data, self.samplingFreq)
+        # powerSpectrumDensityNormalized is amplitude-invariant to the original data UNLIKE powerSpectrumDensity.
+        # Note: we are removing the DC component from the power spectrum density.
+
         # ------------------- Feature Extraction: Hjorth ------------------- #
-        
+
         # Calculate the hjorth parameters
-        hjorthActivity, hjorthMobility, hjorthComplexity, firstDerivVariance, secondDerivVariance \
-                = self.universalMethods.hjorthParameters(timePoints, data)
-        hjorthActivityPSD, hjorthMobilityPSD, hjorthComplexityPSD, firstDerivVariancePSD, secondDerivVariancePSD \
-                = self.universalMethods.hjorthParameters(powerSpectrumDensityFreqs, powerSpectrumDensity_Normalized)
+        hjorthActivity, hjorthMobility, hjorthComplexity, firstDerivVariance, secondDerivVariance = self.universalMethods.hjorthParameters(timepoints, data, firstDeriv=None, secondDeriv=None, standardized_data=standardized_data)
 
-        # ------------------------------------------------------------------ #  
         # ------------------- Feature Extraction: Entropy ------------------ #
-        
-        # Entropy calculation
-        perm_entropy = antropy.perm_entropy(standardizedData, order = 3, delay = 1, normalize=True)      # Permutation entropy: same if standardized or not
-        if standardDeviation <= 1e-10:
-            spectral_entropy = 0
-            svd_entropy = 0
-        else:
-            spectral_entropy = -np.sum(powerSpectrumDensity_Normalized*np.log2(powerSpectrumDensity_Normalized)) / np.log2(len(powerSpectrumDensity_Normalized)) # Spectral entropy = - np.sum(psd * log(psd)) / np.log(len(psd)
-            svd_entropy = antropy.svd_entropy(standardizedData, order = 3, delay=1, normalize=True)          # Singular value decomposition entropy: same if standardized or not
-        
-        # Feature that take too long to process.
-        # app_entropy = antropy.app_entropy(data, order = 2, metric="chebyshev")             # Approximate sample entropy
-        # sample_entropy = antropy.sample_entropy(data, order = 2, metric="chebyshev")       # Sample entropy
 
-        # ------------------------------------------------------------------ #  
-        # ------------------- Feature Extraction: Fractal ------------------ #
-        
-        # Fractal analysis
-        if standardDeviation <= 1e-10:
-            katz_fd = 0
-        else:
-            katz_fd = antropy.katz_fd(standardizedData) # Same if standardized or not
-            
-        
-        higuchi_fd = antropy.higuchi_fd(x=data.astype('float64'), kmax = 5)    # Numba. Same if standardized or not
-        DFA = antropy.detrended_fluctuation(data)           # Numba. Same if standardized or not
-        LZC = eeglib.features.LZC(data)
-        
-        katz_fd = 0
-        svd_entropy = 0
-        
-        # ------------------------------------------------------------------ #  
-        # -------------------- Feature Extraction: Other ------------------- #
-        
-        # Frequency Features
-        num_zerocross = antropy.num_zerocross(data)
-        if standardDeviation <= 1e-10:
-            meanFrequency = 0
-        else:
-            meanFrequency = np.sum(powerSpectrumDensityFreqs * powerSpectrumDensity) / np.sum(powerSpectrumDensity)
-        
-        # ------------------------------------------------------------------ #
-        
+        # Entropy calculation
+        spectral_entropy = self.universalMethods.spectral_entropy(powerSpectrumDensityNormalized, normalizePSD=False)  # Spectral entropy: amplitude-independent if using normalized PSD
+        perm_entropy = antropy.perm_entropy(standardized_data, order=3, delay=1, normalize=True)  # Permutation entropy: same if standardized or not
+        # sample_entropy = antropy.sample_entropy(data, order=2, metric="chebyshev")       # Sample entropy
+        # app_entropy = antropy.app_entropy(data, order=2, metric="chebyshev")             # Approximate sample entropy
+
+        # ------------------- Feature Extraction: Fractals ------------------ #
+
         finalFeatures = []
         # Feature Extraction: Hjorth
-        finalFeatures.extend([hjorthActivity, hjorthMobility, hjorthComplexity, firstDerivVariance, secondDerivVariance])
-        finalFeatures.extend([hjorthActivityPSD, hjorthMobilityPSD, hjorthComplexityPSD, firstDerivVariancePSD, secondDerivVariancePSD])
+        finalFeatures.extend([hjorthActivity, hjorthMobility, hjorthComplexity, firstDerivVariance])
         # Feature Extraction: Entropy
-        finalFeatures.extend([perm_entropy, spectral_entropy, svd_entropy])
-        # Feature Extraction: Fractal
-        finalFeatures.extend([katz_fd, higuchi_fd, DFA, LZC])
-        # Feature Extraction: Other
-        finalFeatures.extend([num_zerocross, meanFrequency])
-                
+        finalFeatures.extend([spectral_entropy, perm_entropy])
+
         return finalFeatures
-
-
-
-
-    
-    
-    
-    
-    

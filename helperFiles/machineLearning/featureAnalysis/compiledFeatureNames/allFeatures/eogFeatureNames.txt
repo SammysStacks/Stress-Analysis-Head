@@ -1,0 +1,21 @@
+finalFeatures = []
+# Organize Amplitude Features        
+finalFeatures.extend([peakHeight, tentDeviationX, tentDeviationY, tentDeviationRatio])
+finalFeatures.extend([closingAmpSegmentFull, openingAmplitudeFull])
+finalFeatures.extend([velocityAmpInterval])
+finalFeatures.extend([velAmpRatio])
+
+# Organize Duration Features
+finalFeatures.extend([blinkDuration, closingTime_Tent, openingTime_Tent, closingFraction, openingFraction])
+finalFeatures.extend([halfClosedTime, eyesClosedTime, percentTimeEyesClosed])
+finalFeatures.extend([condensedDuration2, durationByVel1])
+finalFeatures.extend([startToVel, velToPeak])
+
+# Organize Derivative Features
+finalFeatures.extend([closingSlope_MaxVel, openingSlope_MinVel, velRatio])
+
+# Organize Integral Features
+finalFeatures.extend([portion5Integral, closingIntegral, openingIntegral, closingSlopeIntegral, peakToVel0Integral, peakToVel1Integral])
+
+# Organize Shape Features
+finalFeatures.extend([peakAverage, accelFullSTD, velFullEntropy, accelFullEntropy])

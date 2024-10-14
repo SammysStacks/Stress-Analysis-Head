@@ -59,7 +59,7 @@ class aStarProtocol(generalProtocol):
         deltaLoss = self.loss_bins - lossValue  # Assuming we want to minimize the loss
 
         # Compute the gradient using numpy.gradient()
-        gradients = np.gradient(currentMap * deltaLoss)  # Dimension: 2, numTempBins, numLossBins
+        gradients = np.gradient(currentMap * deltaLoss)  # Dimension: 2, allNumParameterBins, numPredictionBins
 
         # Assert that we calculated the correct gradient.
         assert len(gradients) == 2, "The gradient calculation is incorrect."
@@ -82,7 +82,7 @@ class aStarProtocol(generalProtocol):
 
     @staticmethod
     def personalizedMapWeightingFunc(timeDelays, decay_constant):
-        return np.exp(-decay_constant * np.array(timeDelays))
+        return np.exp(-decay_constant * np.asarray(timeDelays))
 
     def getUpdatedPersonalizedMap(self):
         # Assert the integrity of the state tracking.
