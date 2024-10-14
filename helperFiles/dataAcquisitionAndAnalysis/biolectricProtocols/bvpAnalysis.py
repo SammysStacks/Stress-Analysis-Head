@@ -2,11 +2,14 @@ import math
 
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy
+
 # Baseline Subtraction
+from BaselineRemoval import BaselineRemoval
 from scipy.signal import savgol_filter
 
 from helperFiles.dataAcquisitionAndAnalysis.biolectricProtocols.globalProtocol import globalProtocol
-from BaselineRemoval import BaselineRemoval
+
 
 class bvpProtocol(globalProtocol):
 
@@ -245,7 +248,7 @@ class bvpProtocol(globalProtocol):
                         if len(intervalPulseTime) >= self.minPointsPerPulse:
                             toBeNormalizedPulse = intervalPulseData.copy()
                             normalizedPulseData = self.normalizePulseBaseline(toBeNormalizedPulse, 1)
-                            finalFeatures = self.extractPulsePeaks(intervalPulseTime, normalizedPulseData, first_derivative, second_derivative, third_derivative)
+                            finalFeatures = self.extractPulsePeaks(intervalPulseTime, normalizedPulseData, first_derivative[pulseStartInd:pulseEndInd], second_derivative[pulseStartInd:pulseEndInd], third_derivative[pulseStartInd:pulseEndInd])
 
                             if finalFeatures is not None:
                                 newRawFeatures.append(finalFeatures)
@@ -258,7 +261,6 @@ class bvpProtocol(globalProtocol):
                             # Update the last analyzed index for this pulse.
                             self.timeOffset = pulseEndInd - pulseStartInd
                             self.endIndexPointer = pulseEndInd
-
 
                     self.lastAnalyzedDataInd[channelIndex] += self.timeOffset
                     print('self.lastAnalyzedDataInd', self.lastAnalyzedDataInd)
@@ -275,10 +277,149 @@ class bvpProtocol(globalProtocol):
                     )
 
     def extractFeatures(self, normalizedPulse, pulseTime, pulseVelocity, pulseAcceleration, allSystolicPeaks, allDicroticPeaks):
+        # unpack all the pulses
+        # systpolic peaks - related
+        systolicUpstrokeAccelMaxInd, systolicUpstrokeVelInd, systolicUpstrokeAccelMinInd, systolicPeakInd = allSystolicPeaks
+        dicroticNotchInd, dicroticInflectionInd, dicroticPeakInd, dicroticFallVelMinInd = allDicroticPeaks
 
+        # Find TimePoints of All Peaks
+        systolicUpstrokeAccelMaxTime, systolicUpstrokeVelTime, systolicUpstrokeAccelMinTime, systolicPeakTime = pulseTime[allSystolicPeaks]
+        dicroticNotchTime, maxVelDicroticRiseTime, dicroticPeakTime, minVelDicroticFallTime = pulseTime[allDicroticPeaks]
+
+        # Find Amplitude of All Peaks
+        systolicUpstrokeAccelMaxAmp, systolicUpstrokeVelAmp, systolicUpstrokeAccelMinAmp, pulsePressure = normalizedPulse[allSystolicPeaks]
+        dicroticNotchAmp, dicroticRiseVelMaxAmp, dicroticPeakAmp, dicroticFallVelMinAmp = normalizedPulse[allDicroticPeaks]
+
+        # Find Velocity of All Peaks
+        systolicUpstrokeAccelMaxVel, systolicUpstrokeVelVel, systolicUpstrokeAccelMinVel, systolicPeakVel = pulseVelocity[allSystolicPeaks]
+        dicroticNotchVel, dicroticRiseVelMaxVel, dicroticPeakVel, dicroticFallVelMinVel = pulseVelocity[allDicroticPeaks]
+
+        # Find Acceleration of All Peaks
+        systolicUpstrokeAccelMaxAccel, systolicUpstrokeVelAccel, systolicUpstrokeAccelMinAccel, systolicPeakAccel = pulseAcceleration[allSystolicPeaks]
+        dicroticNotchAccel, dicroticRiseVelMaxAccel, dicroticPeakAccel, dicroticFallVelMinAccel = pulseAcceleration[allDicroticPeaks]
+
+        # -------------------------- Time Features -------------------------- #
+        # Diastole and Systole Parameters
+        pulseDuration = pulseTime[-1]
+        systoleDuration = dicroticNotchTime
+        diastoleDuration = pulseDuration - dicroticNotchTime
+        leftVentricularPerformance = systoleDuration / diastoleDuration
+
+        # Time from Systolic Peak
+        maxDerivToSystolic = systolicPeakTime - systolicUpstrokeVelTime
+        systolicToDicroticNotch = dicroticNotchTime - systolicPeakTime
+
+        # Time from Dicrotic Notch
+        dicroticNotchToDicrotic = dicroticPeakTime - dicroticNotchTime
+
+        # General Times
+        systolicRiseDuration = systolicUpstrokeAccelMinTime - systolicUpstrokeAccelMaxTime
+
+        # --------------------- Under the Curve Features -------------------- #
+        # Calculate the Area Under the Curve
+        pulseArea = scipy.integrate.simpson(normalizedPulse, pulseTime)
+        pulseAreaSquared = scipy.integrate.simpson(normalizedPulse ** 2, pulseTime)
+        leftVentricleLoad = scipy.integrate.simpson(normalizedPulse[0:dicroticNotchInd + 1], pulseTime[0:dicroticNotchInd + 1])
+        diastolicArea = pulseArea - leftVentricleLoad
+
+        # General Areas
+        systolicUpSlopeArea = scipy.integrate.simpson(normalizedPulse[systolicUpstrokeAccelMaxInd:systolicUpstrokeAccelMinInd + 1], pulseTime[systolicUpstrokeAccelMaxInd:systolicUpstrokeAccelMinInd + 1])
+
+        # Average of the Pulse
+        pulseAverage = np.mean(normalizedPulse)
+
+        # -------------------------- Ratio Features ------------------------- #
+        # # Systole and Diastole Ratios
+        systoleDiastoleAreaRatio = leftVentricleLoad / diastolicArea
+        systolicDicroticNotchAmpRatio = dicroticNotchAmp / pulsePressure
+        systolicDicroticNotchVelRatio = dicroticNotchVel / systolicPeakVel
+        systolicDicroticNotchAccelRatio = dicroticNotchAccel / systolicPeakAccel
+
+        # Other Diastole Ratios
+        dicroticNotchDicroticAmpRatio = dicroticPeakAmp / dicroticNotchAmp
+
+        # Systolic Velocty Ratios
+        systolicDicroticVelRatio = dicroticPeakVel / systolicPeakVel
+
+        # Diastole Velocity Ratios
+        dicroticNotchDicroticVelRatio = dicroticPeakVel / dicroticNotchVel
+
+        # Systolic Acceleration Ratios
+        systolicDicroticAccelRatio = dicroticPeakAccel / systolicPeakAccel
+
+        # Diastole Acceleration Ratios
+        dicroticNotchDicroticAccelRatio = dicroticPeakAccel / dicroticNotchAccel
+        # ------------------------------------------------------------------- #
+
+        # -------------------------- Slope Features ------------------------- #
+        # Systolic Slopes
+        systolicSlopeUp = pulseVelocity[systolicUpstrokeVelInd]
+
+        # Dicrotic Slopes
+        dicroticSlopeUp = pulseVelocity[dicroticInflectionInd]
+
+        # Tail Slopes
+        endSlope = pulseVelocity[dicroticFallVelMinInd]
+
+        # -------------------------- Biological Features ------------------------- #
+        momentumDensity = 2 * pulseTime[-1] * pulseArea
+        pseudoCardiacOutput = pulseArea / pulseTime[-1]
+        pseudoStrokeVolume = pseudoCardiacOutput / pulseTime[-1]
+
+        maxSystolicVelocity = max(pulseVelocity)
+        valveCrossSectionalArea = pseudoCardiacOutput / maxSystolicVelocity
+
+        velocityTimeIntegral = scipy.integrate.simpson(pulseVelocity, pulseTime)
+        velocityTimeIntegralABS = scipy.integrate.simpson(abs(pulseVelocity), pulseTime)
+        velocityTimeIntegral_ALT = pseudoStrokeVolume / valveCrossSectionalArea
+
+        # Add Index Parameters: https://www.vitalscan.com/dtr_pwv_parameters.html
+        reflectionIndex = dicroticPeakAmp / pulsePressure  # Dicrotic Peak / Systolic Peak
+        stiffensIndex = 1 / (dicroticPeakTime - systolicPeakTime)  # 1/ Time from the Systolic to Dicrotic Peaks
+
+        # Save the major feature peak indices first
         featureList = [
             allSystolicPeaks, allDicroticPeaks
         ]
+
+        # Time Points features
+        featureList.extend([systolicUpstrokeAccelMaxTime, systolicUpstrokeVelTime, systolicUpstrokeAccelMinTime, systolicPeakTime])
+        featureList.extend([dicroticNotchTime, maxVelDicroticRiseTime, dicroticPeakTime, minVelDicroticFallTime])
+
+        # Peak/pressure amplitude features
+        featureList.extend([systolicUpstrokeAccelMaxAmp, systolicUpstrokeVelAmp, systolicUpstrokeAccelMinAmp, pulsePressure])
+        featureList.extend([dicroticNotchAmp, dicroticRiseVelMaxAmp, dicroticPeakAmp, dicroticFallVelMinAmp])
+
+        # First derivative (velocity features of peaks)
+        featureList.extend([systolicUpstrokeAccelMaxVel, systolicUpstrokeVelVel, systolicUpstrokeAccelMinVel, systolicPeakVel])
+        featureList.extend([dicroticNotchVel, dicroticRiseVelMaxVel, dicroticPeakVel, dicroticFallVelMinVel])
+
+        # Second derivative (acceleration features of peaks)
+        featureList.extend([systolicUpstrokeAccelMaxAccel, systolicUpstrokeVelAccel, systolicUpstrokeAccelMinAccel, systolicPeakAccel])
+        featureList.extend([dicroticNotchAccel, dicroticRiseVelMaxAccel, dicroticPeakAccel, dicroticFallVelMinAccel])
+
+        # Time features
+        featureList.extend([pulseDuration, systoleDuration, diastoleDuration, leftVentricularPerformance])
+        featureList.extend([maxDerivToSystolic, systolicToDicroticNotch, dicroticNotchToDicrotic, systolicRiseDuration])
+
+        # Under the area features
+        featureList.extend([pulseArea, pulseAreaSquared, leftVentricleLoad, diastolicArea])
+        featureList.extend([systolicUpSlopeArea, pulseAverage])
+
+        # Ratio features
+        featureList.extend([systoleDiastoleAreaRatio, systolicDicroticNotchAmpRatio, systolicDicroticNotchVelRatio, systolicDicroticNotchAccelRatio])
+        featureList.extend([dicroticNotchDicroticAmpRatio])
+        featureList.extend([systolicDicroticVelRatio, dicroticNotchDicroticVelRatio])
+        featureList.extend([systolicDicroticAccelRatio, dicroticNotchDicroticAccelRatio])
+
+        # Slope features
+        featureList.extend([systolicSlopeUp, dicroticSlopeUp, endSlope])
+
+        # Biological Features
+        featureList.extend([momentumDensity, pseudoCardiacOutput, pseudoStrokeVolume])
+        featureList.extend([maxSystolicVelocity, valveCrossSectionalArea, velocityTimeIntegral, velocityTimeIntegralABS, velocityTimeIntegral_ALT])
+        featureList.extend([reflectionIndex, stiffensIndex])
+
         return featureList
 
 
