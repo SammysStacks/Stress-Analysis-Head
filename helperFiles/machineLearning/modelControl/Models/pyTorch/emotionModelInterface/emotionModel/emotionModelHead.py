@@ -122,8 +122,9 @@ class emotionModelHead(nn.Module):
         signalData = signalData.double()
 
         # Initialize default output tensors.
-        basicEmotionProfile = torch.zeros((batchSize, numSignals, maxSequenceLength, numChannels), device=signalData.device)
-        emotionProfile = torch.zeros((batchSize, numSignals, maxSequenceLength, numChannels), device=signalData.device)
+        basicEmotionProfile = torch.zeros((batchSize, numSignals, maxSequenceLength), device=signalData.device)
+        activityProfile = torch.zeros((batchSize, numSignals, maxSequenceLength), device=signalData.device)
+        emotionProfile = torch.zeros((batchSize, numSignals, maxSequenceLength), device=signalData.device)
 
         # ------------------- Estimated Physiological Profile ------------------- #
 
@@ -131,7 +132,6 @@ class emotionModelHead(nn.Module):
         interpolatedSignalData = self.sharedSignalEncoderModel.learnedInterpolation(signalData=signalData)
         interpolatedSignalData = interpolatedSignalData*100
         # interpolatedData: batchSize, numSignals, encodedDimension
-        print(0, interpolatedSignalData[0][0][0:10])
 
         # Calculate the estimated physiological profile given each signal.
         metaLearningData = self.specificSignalEncoderModel.signalSpecificInterface(signalData=interpolatedSignalData, initialModel=True)  # Reversible signal-specific layers.
@@ -153,20 +153,22 @@ class emotionModelHead(nn.Module):
         metaLearningData = self.specificSignalEncoderModel.signalSpecificInterface(signalData=metaLearningData, initialModel=False)  # Reversible signal-specific layers.
         metaLearningData = self.sharedSignalEncoderModel.sharedLearning(signalData=metaLearningData)  # Reversible meta-learning layers.
         reconstructedInterpolatedData = self.specificSignalEncoderModel.signalSpecificInterface(signalData=metaLearningData, initialModel=True)  # Reversible signal-specific layers.
-        print(0, reconstructedInterpolatedData[0][0][0:10])
         # metaLearningData: batchSize, numSignals, encodedDimension
 
-        # Optionally, plot the original and reconstructed signals for visual comparison
-        plt.plot(interpolatedSignalData[0][0].detach().cpu().numpy(), 'k', linewidth=2, label='Interpolated Signal')
-        plt.plot(reconstructedInterpolatedData[0][0].detach().cpu().numpy(), 'tab:red', linewidth=1.5, label='Reconstructed Signal')
-        plt.plot(physiologicalProfile[0].detach().cpu().numpy(), 'tab:blue', linewidth=1, label='Physiological Profile', alpha=0.5)
-        plt.legend()
-        plt.show()
-        exit()
+        print(0, reconstructedInterpolatedData[0][0][0:10])
+        print(0, interpolatedSignalData[0][0][0:10])
+
+        # # Optionally, plot the original and reconstructed signals for visual comparison
+        # plt.plot(interpolatedSignalData[0][0].detach().cpu().numpy(), 'k', linewidth=2, label='Interpolated Signal')
+        # plt.plot(reconstructedInterpolatedData[0][0].detach().cpu().numpy(), 'tab:red', linewidth=1.5, label='Reconstructed Signal')
+        # plt.plot(physiologicalProfile[0].detach().cpu().numpy(), 'tab:blue', linewidth=1, label='Physiological Profile', alpha=0.5)
+        # plt.legend()
+        # plt.show()
+        # exit()
 
         # ------------------- Learned Emotion Mapping ------------------- #
 
         if submodel == modelConstants.emotionModel:
             activityProfile, basicEmotionProfile, emotionProfile = self.emotionPrediction(signalData, metadata)
 
-        return interpolatedSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile
+        return interpolatedSignalData, reconstructedInterpolatedData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile
