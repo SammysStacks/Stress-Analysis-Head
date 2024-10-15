@@ -2,7 +2,9 @@
 **/*__oldFiles/
 **/*_oldFiles/
 **/*.DS_Store
+**/~$*.docx
 **/*.cache
+**/*.lock
 **/*.out
 .idea/
 venv/
@@ -11,6 +13,7 @@ venv/
 **/*.png
 **/*.jpg
 **/*.mp3
+**/*.tmp
 **/$*
 **/~*
 **/.*
