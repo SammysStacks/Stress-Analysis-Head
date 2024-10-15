@@ -149,7 +149,7 @@ class globalMetaAnalysis(handlingExcelFormat):
             compiledRawData = compiledData_eachFreq[compiledDataInd]
 
             # Initialize instance to analyze the data
-            readData = streamingProtocols(mainSerialNum=None, modelClasses=[], actionControl=None, numPointsPerBatch=2048576, moveDataFinger=1048100, streamingOrder=currentStreamingOrder,
+            readData = streamingProtocols(deviceType="serial", mainSerialNum=None, modelClasses=[], actionControl=None, numPointsPerBatch=2048576, moveDataFinger=1048100, streamingOrder=currentStreamingOrder,
                                           extractFeaturesFrom=currentFeaturesExtracting, featureAverageWindows=currentFeatureAverageWindows, voltageRange=(None, None), plotStreamedData=False)
             readData.resetGlobalVariables()
             # Change filter of the analyses.
@@ -182,7 +182,7 @@ class globalMetaAnalysis(handlingExcelFormat):
 
     def trainingProtocolInterface(self, streamingOrder, biomarkerFeatureOrder, featureAverageWindows, biomarkerFeatureNames, plotTrainingData=True, metaTraining=True):
         # Initialize instance to train the data
-        readData = streamingProtocols(mainSerialNum=None, modelClasses=[], actionControl=None, numPointsPerBatch=2048576, moveDataFinger=1048100, streamingOrder=streamingOrder,
+        readData = streamingProtocols(deviceType="serial", mainSerialNum=None, modelClasses=[], actionControl=None, numPointsPerBatch=2048576, moveDataFinger=1048100, streamingOrder=streamingOrder,
                                       extractFeaturesFrom=biomarkerFeatureOrder, featureAverageWindows=featureAverageWindows, voltageRange=(None, None), plotStreamedData=False)
         trainingInterface = trainingProtocols(biomarkerFeatureNames, streamingOrder, biomarkerFeatureOrder, self.savedFeatureFolder, readData)
 

@@ -4,15 +4,13 @@ import transformers
 from torch.optim.lr_scheduler import SequentialLR
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
 
 
 class optimizerMethods:
 
-    def __init__(self, userInputParams, useFinalParams):
+    def __init__(self, userInputParams):
         # Set the user input parameters.
         self.userInputParams = userInputParams
-        self.useFinalParams = useFinalParams
 
     @staticmethod
     def getModelParams(submodel, sharedSignalEncoderModel, specificSignalEncoderModel, sharedEmotionModel, specificEmotionModel):

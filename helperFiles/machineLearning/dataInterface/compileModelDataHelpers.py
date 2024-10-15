@@ -56,7 +56,7 @@ class compileModelDataHelpers:
         self.minNumClasses, self.maxClassPercentage = self.modelParameters.getExclusionCriteria(submodel)
 
         # Embedded information for each model.
-        self.signalEncoderModelInfo = f"signalEncoder on {userInputParams['deviceListed']} with {userInputParams['waveletType'].replace('.', '')} at {userInputParams['optimizerType']} at numSpecificEncodingLayers {userInputParams['numSpecificEncodingLayers']} at numMetaEncodingLayers {userInputParams['numMetaEncodingLayers']} at latentQueryKeyDim {userInputParams['latentQueryKeyDim']} at encodedDimension {userInputParams['encodedDimension']}"
+        self.signalEncoderModelInfo = f"signalEncoder on {userInputParams['deviceListed']} with {userInputParams['waveletType'].replace('.', '')} at {userInputParams['optimizerType']} at numSpecificEncodingLayers {userInputParams['numSpecificEncodingLayers']} at numMetaEncodingLayers {userInputParams['numMetaEncodingLayers']} at encodedDimension {userInputParams['encodedDimension']}"
         self.emotionPredictionModelInfo = f"emotionPrediction on {userInputParams['deviceListed']} with {userInputParams['optimizerType']} with seqLength {userInputParams['finalDistributionLength']}"
 
     # ---------------------- Model Specific Parameters --------------------- #
@@ -178,13 +178,14 @@ class compileModelDataHelpers:
     # ---------------------------- Data Cleaning --------------------------- #
 
     @staticmethod
-    def _padSignalData(allRawFeatureTimeIntervals, allCompiledFeatureIntervals):
+    def _padSignalData(allRawFeatureTimeIntervals, allCompiledFeatureIntervals, surveyAnswerTimes):
         # allCompiledFeatureIntervals : batchSize, numBiomarkers, finalDistributionLength*, numBiomarkerFeatures*  ->  *finalDistributionLength, *numBiomarkerFeatures are not constant
         # allRawFeatureTimeIntervals : batchSize, numBiomarkers, finalDistributionLength*  ->  *finalDistributionLength is not constant
         # allSignalData : A list of size (batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel])
+        # surveyAnswerTimes : A list of size (batchSize, numSurveyQuestions)
         # allNumSignalPoints : A list of size (batchSize, numSignals)            
         # Determine the final dimensions of the padded array.
-        maxSequenceLength = max(max(len(biomarkerData) for biomarkerData in experimentalData) for experimentalData in allCompiledFeatureIntervals)
+        maxSequenceLength = max(max(len(biomarkerTimes[biomarkerTimes < modelConstants.timeWindows[-1]]) for biomarkerTimes in experimentalTimes) for experimentalTimes in allRawFeatureTimeIntervals)
         numSignals = sum(len(biomarkerData[0]) for biomarkerData in allCompiledFeatureIntervals[0])
         numExperiments = len(allCompiledFeatureIntervals)
 
@@ -206,6 +207,11 @@ class compileModelDataHelpers:
             for biomarkerInd, (biomarkerData, biomarkerTimes) in enumerate(zip(batchData, batchTimes)):
                 biomarkerData = torch.tensor(biomarkerData, dtype=torch.float32).T  # Dim: numBiomarkerFeatures, batchSpecificFeatureLength
                 biomarkerTimes = torch.tensor(biomarkerTimes, dtype=torch.float32)  # Dim: batchSpecificFeatureLength
+
+                # Remove data outside the time window.
+                timeWindowMask = biomarkerTimes <= modelConstants.timeWindows[-1]
+                biomarkerData = biomarkerData[:, timeWindowMask]
+                biomarkerTimes = batchTimes[timeWindowMask]
 
                 # Get the number of signals in the current biomarker.
                 numBiomarkerFeatures, batchSpecificFeatureLength = biomarkerData.shape
@@ -325,12 +331,10 @@ class compileModelDataHelpers:
         # signalBatchData dimension: numExperiments, numSignals, maxSequenceLength, [timeChannel, signalChannel]
         # allNumSignalPoints dimension: numExperiments, numSignals
         signalChannelInd = emotionDataInterface.getChannelInd(channelName=modelConstants.signalChannel)
-        timeChannelInd = emotionDataInterface.getChannelInd(channelName=modelConstants.timeChannel)
 
         for signalInd in range(len(signalBatchData[0])):
             # Standardize the signals (min-max scaling).
             signalBatchData[:, signalInd, :, signalChannelInd] = self.generalMethods.minMaxScale_noInverse(signalBatchData[:, signalInd, :, signalChannelInd], scale=modelConstants.minMaxScale)
-            signalBatchData[:, signalInd, :, timeChannelInd] = signalBatchData[:, signalInd, :, timeChannelInd] / modelConstants.maxTimeWindow
 
         # Reset the signal data to zero at the ends.
         signalBatchData[torch.isnan(signalBatchData)] = 0

@@ -3,12 +3,13 @@ from torch import nn
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.neuralOperators.neuralOperatorInterface import neuralOperatorInterface
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.transformerHelpers.ebbinghausInterpolation import ebbinghausInterpolation
 
 
 class specificSignalEncoderModel(neuralOperatorInterface):
 
-    def __init__(self, operatorType, sequenceLength, numOperatorLayers, numInputSignals, activationMethod, neuralOperatorParameters):
-        super(specificSignalEncoderModel, self).__init__(sequenceLength=sequenceLength, numInputSignals=numInputSignals, numOutputSignals=numInputSignals, addBiasTerm=False)
+    def __init__(self, operatorType, encodedDimension, numOperatorLayers, numInputSignals, activationMethod, neuralOperatorParameters):
+        super(specificSignalEncoderModel, self).__init__(sequenceLength=encodedDimension, numInputSignals=numInputSignals, numOutputSignals=numInputSignals, addBiasTerm=False)
         # General model parameters.
         self.activationFunction = activationFunctions.getActivationMethod(activationMethod=activationMethod)
         self.numOperatorLayers = numOperatorLayers  # The number of operator layers to use.
@@ -23,13 +24,23 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         for layerInd in range(self.numOperatorLayers):
             # Create the initial layers.
             self.initialNeuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=neuralOperatorParameters))
-            self.initialProcessingLayers.append(self.postProcessingLayer(inChannel=numInputSignals, groups=numInputSignals))
+            self.initialProcessingLayers.append(self.postProcessingLayer(inChannel=numInputSignals))
 
             # Create the final layers.
             self.finalNeuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=neuralOperatorParameters))
-            self.finalProcessingLayers.append(self.postProcessingLayer(inChannel=numInputSignals, groups=numInputSignals))
+            self.finalProcessingLayers.append(self.postProcessingLayer(inChannel=numInputSignals))
+
+        # The ebbinghaus interpolation model.
+        self.ebbinghausInterpolation = ebbinghausInterpolation(numSignals=numInputSignals, encodedDimension=encodedDimension)
 
     def forward(self): raise "You cannot call the dataset-specific signal encoder module."
+
+    def learnedInterpolation(self, signalData):
+        """ signalData: batchSize, numSignals, signalSpecificLength* """
+        interpolatedSignalData = self.ebbinghausInterpolation(signalData)
+        # interpolatedSignalData: batchSize, numSignals, encodedDimension
+
+        return interpolatedSignalData
 
     def signalSpecificInterface(self, signalData, initialModel):
         if initialModel: return self.initialLearning(signalData, self.initialNeuralLayers, self.initialProcessingLayers)

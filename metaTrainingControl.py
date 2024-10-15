@@ -23,6 +23,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.modelMigration impo
 from helperFiles.machineLearning.dataInterface.compileModelData import compileModelData  # Methods to organize model data.
 
 # Configure cuDNN and PyTorch's global settings.
+torch.autograd.set_detect_anomaly(True)  # If True: detect NaN values in the output of autograd.
 torch.backends.cudnn.deterministic = True  # If False: allow non-deterministic algorithms in cuDNN, which can enhance performance but reduce reproducibility.
 torch.set_default_dtype(torch.float64)  # Set the default data type to float32, which is typical for neural network computations.
 torch.backends.cudnn.benchmark = False  # If True: Enable cuDNN's auto-tuner to find the most efficient algorithm for the current configuration, potentially improving performance if fixed input size.
@@ -33,7 +34,7 @@ if __name__ == "__main__":
         dataloader_config=accelerate.DataLoaderConfiguration(split_batches=True),  # Whether to split batches across devices or not.
         cpu=torch.backends.mps.is_available(),  # Whether to use the CPU. MPS is NOT fully compatible yet.
         step_scheduler_with_optimizer=False,  # Whether to wrap the optimizer in a scheduler.
-        gradient_accumulation_steps=1,  # The number of gradient accumulation steps.
+        gradient_accumulation_steps=8,  # The number of gradient accumulation steps.
         mixed_precision="no",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"
     )
 
@@ -44,8 +45,7 @@ if __name__ == "__main__":
 
     # Training flags.
     useFinalParams = True  # If you want to use HPC parameters (and on the HPC).
-    storeLoss = False  # If you want to record any loss values.
-    fastPass = False  # If you want to only plot/train 240 points. No effect on training.
+    storeLoss = True  # If you want to record any loss values.
 
     # ----------------------- Parse Model Parameters ----------------------- #
 
@@ -62,9 +62,8 @@ if __name__ == "__main__":
     parser.add_argument('--waveletType', type=str, default='db3', help='The wavelet type for the wavelet transform: bior3.7, db3, dmey, etc')
 
     # Add arguments for the signal encoder prediction
-    parser.add_argument('--numSpecificEncodingLayers', type=int, default=10, help='The number of layers in the specific signal encoding neural operator.')
-    parser.add_argument('--numMetaEncodingLayers', type=int, default=10, help='The number of layers in the shared signal encoding operator.')
-    parser.add_argument('--latentQueryKeyDim', type=int, default=4, help='The dimension of the latent query and key vectors.')
+    parser.add_argument('--numSpecificEncodingLayers', type=int, default=2, help='The number of layers in the specific signal encoding neural operator.')
+    parser.add_argument('--numMetaEncodingLayers', type=int, default=8, help='The number of layers in the shared signal encoding operator.')
     parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
 
     # Add arguments for the emotion prediction
@@ -94,11 +93,13 @@ if __name__ == "__main__":
     trainingDate = modelCompiler.embedInformation(submodel, trainingDate)  # Embed training information into the name.
 
     # Compile the final modules.
-    allModels, allDataLoaders, allLossDataHolders, allMetaModels, allMetadataLoaders, allMetaLossDataHolders, _ \
-        = modelCompiler.compileModelsFull(metaDatasetNames, modelName, submodel, testSplitRatio, datasetNames, useFinalParams)
+    allModels, allDataLoaders, allMetaModels, allMetadataLoaders, _ = modelCompiler.compileModelsFull(metaDatasetNames, modelName, submodel, testSplitRatio, datasetNames)
+
+    trainingProtocols.plotModelState(0, allMetaModels, allMetadataLoaders, allModels, allDataLoaders, submodel, trainingDate)
+    exit()
 
     # Store the initial loss information.
-    if storeLoss: trainingProtocols.calculateLossInformation(allMetaLossDataHolders, allMetaModels, allModels, submodel, metaDatasetNames, fastPass)
+    if storeLoss: trainingProtocols.calculateLossInformation(allMetaModels, allMetadataLoaders, allModels, allDataLoaders, submodel)
 
     # -------------------------- Meta-model Training ------------------------- #
 
@@ -114,8 +115,8 @@ if __name__ == "__main__":
         trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels)
 
         # Store the initial loss information and plot.
-        if storeLoss: trainingProtocols.calculateLossInformation(allMetaLossDataHolders, allMetaModels, allModels, submodel, metaDatasetNames, fastPass)
-        if plotSteps: trainingProtocols.plotModelState(epoch, allMetaLossDataHolders, allMetaModels, allModels, submodel, metaDatasetNames, trainingDate, fastPass=fastPass)
+        if storeLoss: trainingProtocols.calculateLossInformation(allMetaModels, allMetadataLoaders, allModels, allDataLoaders, submodel)
+        if plotSteps: trainingProtocols.plotModelState(epoch, allMetaModels, allMetadataLoaders, allModels, allDataLoaders, submodel, trainingDate)
 
         # Save the model sometimes (only on the main device).
         if saveFullModel and accelerator.is_local_main_process:

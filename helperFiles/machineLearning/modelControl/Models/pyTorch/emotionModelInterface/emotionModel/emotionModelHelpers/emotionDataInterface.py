@@ -7,9 +7,10 @@ class emotionDataInterface:
     
     # ---------------------- Labeled Data Getters ---------------------- #
 
-    def getReconstructionIndex(self, allTrainingMasks):
+    @staticmethod
+    def getReconstructionIndex(allTrainingMasks):
         # Find the first label index with training points.
-        reconstructionIndices = self.getLabelInds_withPoints(allTrainingMasks)
+        reconstructionIndices = emotionDataInterface.getLabelInds_withPoints(allTrainingMasks)
         assert len(reconstructionIndices) != 0, f"We should have some training data: {reconstructionIndices}"
 
         return reconstructionIndices[0]
@@ -132,8 +133,8 @@ class emotionDataInterface:
         trainingColumnMask = self.getEmotionColumn(trainingMask, reconstructionIndex)
 
         # Apply the training data mask
-        batchTrainingMask = trainingMask[trainingColumnMask]
-        trueBatchLabels = signalLabels[trainingColumnMask]
-        batchData = signalData[trainingColumnMask]
+        trainingMaskRecon = trainingMask[trainingColumnMask]
+        signalLabelsRecon = signalLabels[trainingColumnMask]
+        signalDataRecon = signalData[trainingColumnMask]
 
-        return batchTrainingMask, trueBatchLabels, batchData
+        return trainingMaskRecon, signalLabelsRecon, signalDataRecon

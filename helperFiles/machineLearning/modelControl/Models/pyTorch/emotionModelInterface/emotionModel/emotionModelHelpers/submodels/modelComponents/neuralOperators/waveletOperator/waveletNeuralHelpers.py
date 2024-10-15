@@ -69,7 +69,7 @@ class waveletNeuralHelpers(emotionModelWeights):
         # Assert that the frequency protocol is valid.
         assert self.encodeHighFrequencyProtocol in ['highFreq', 'none'], "The high-frequency encoding protocol must be 'highFreq', 'none'."
         assert self.encodeLowFrequencyProtocol in ['lowFreq', 'none'], "The low-frequency encoding protocol must be 'lowFreq', 'none'."
-        assert self.learningProtocol in ['FC', 'FCC', 'rCNN', 'CNN'], "Invalid learning protocol. Must be in ['FC', 'FCC', 'rCNN', 'CNN']."
+        assert self.learningProtocol in ['rFC', 'FCC', 'rCNN'], "Invalid learning protocol. Must be in ['FC', 'FCC', 'rCNN']."
 
     @staticmethod
     def max_decompositions(signal_length, wavelet_name):

@@ -27,26 +27,22 @@ class modelParameters:
                 'encodeHighFrequencyProtocol': 'highFreq',  # The protocol for encoding the high frequency signals.
                 'encodeLowFrequencyProtocol': 'lowFreq',  # The protocol for encoding the low frequency signals.
                 'skipConnectionProtocol': 'none',  # The protocol for the skip connections.
-                'learningProtocol': 'rCNN'  # The learning protocol for the neural operator.
+                'learningProtocol': 'rFC'  # The learning protocol for the neural operator.
             }
         }
 
         return userInputParams
 
     def getTrainingBatchSize(self, submodel, numExperiments):
-        # Wesad: Found 32 (out of 32) well-labeled emotions across 59 experiments with 68 signals.
+        # Wesad: Found 32 (out of 32) well-labeled emotions across 59 experiments with 69 signals.
         # Emognition: Found 12 (out of 12) well-labeled emotions across 407 experiments with 55 signals.
-        # Amigos: Found 12 (out of 12) well-labeled emotions across 707 experiments with 127 signals.
+        # Amigos: Found 12 (out of 12) well-labeled emotions across 707 experiments with 125 signals.
         # Dapper: Found 12 (out of 12) well-labeled emotions across 364 experiments with 22 signals.
         # Case: Found 2 (out of 2) well-labeled emotions across 1584 experiments with 51 signals.
-        # Collected: Found 30 (out of 30) well-labeled emotions across 154 experiments with 81 signals.
-
-        if submodel == modelConstants.signalEncoderModel:
-            totalMinBatchSize = 16
-        elif submodel == modelConstants.emotionModel:
-            totalMinBatchSize = 16
-        else:
-            raise Exception()
+        # Collected: Found 30 (out of 30) well-labeled emotions across 154 experiments with 79 signals.
+        if submodel == modelConstants.signalEncoderModel: totalMinBatchSize = 16
+        elif submodel == modelConstants.emotionModel: totalMinBatchSize = 16
+        else: raise Exception()
 
         # Adjust the batch size based on the number of gradient accumulations.
         gradientAccumulation = self.accelerator.gradient_accumulation_steps
@@ -61,42 +57,17 @@ class modelParameters:
 
         return batchSize
 
-    def getInferenceBatchSize(self, submodel, numSignals):
-        # Wesad: Found 32 (out of 32) well-labeled emotions across 59 experiments with 68 signals.
-        # Emognition: Found 12 (out of 12) well-labeled emotions across 407 experiments with 55 signals.
-        # Amigos: Found 12 (out of 12) well-labeled emotions across 707 experiments with 127 signals.
-        # Dapper: Found 12 (out of 12) well-labeled emotions across 364 experiments with 22 signals.
-        # Case: Found 2 (out of 2) well-labeled emotions across 1584 experiments with 51 signals.
-        # Collected: Found 30 (out of 30) well-labeled emotions across 154 experiments with 81 signals.
-        # Set the minimum batch size.
-        if submodel == modelConstants.signalEncoderModel:
-            minimumBatchSize = 32 if self.gpuFlag else 32
-        elif submodel == modelConstants.emotionModel:
-            minimumBatchSize = 32 if self.gpuFlag else 32
-        else:
-            raise Exception()
-
-        # Adjust the batch size based on the number of signals used.
-        maxBatchSize = int(minimumBatchSize * modelConstants.maxNumSignals / numSignals)
-        maxBatchSize = min(maxBatchSize, numSignals)  # Ensure the maximum batch size is not larger than the number of signals.
-
-        return maxBatchSize
+    @staticmethod
+    def getInferenceBatchSize(submodel, device):
+        if submodel == modelConstants.signalEncoderModel: return 32 if device == "cpu" else 16
+        elif submodel == modelConstants.emotionModel: return 32 if device == "cpu" else 16
+        else: raise Exception()
 
     @staticmethod
     def getEpochInfo(useFinalParams):
-        return (10, 10, 10) if useFinalParams else (-1, -1, -1)  # numEpochs, numEpoch_toPlot, numEpoch_toSaveFull
+        return (1000, 10, 10) if useFinalParams else (-1, -1, -1)  # numEpochs, numEpoch_toPlot, numEpoch_toSaveFull
 
     # -------------------------- Compilation Parameters ------------------------- #
-
-    @staticmethod
-    def getSequenceLengthRange(submodel, sequenceLength):
-        if submodel == modelConstants.signalEncoderModel:
-            return modelConstants.timeWindows[0], modelConstants.timeWindows[-1]
-        elif submodel == modelConstants.emotionModel:
-            assert modelConstants.timeWindows[0] <= sequenceLength <= modelConstants.timeWindows[-1], "The sequence length must be within the trained time windows."
-            return sequenceLength, sequenceLength
-        else:
-            raise Exception()
 
     @staticmethod
     def getExclusionCriteria(submodel):

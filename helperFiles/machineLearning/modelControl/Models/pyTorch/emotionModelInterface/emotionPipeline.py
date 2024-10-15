@@ -2,6 +2,7 @@
 import random
 import time
 
+from .emotionModel.emotionModelHelpers.modelConstants import modelConstants
 # Import files for machine learning
 from .emotionPipelineHelpers import emotionPipelineHelpers
 
@@ -9,10 +10,10 @@ from .emotionPipelineHelpers import emotionPipelineHelpers
 class emotionPipeline(emotionPipelineHelpers):
 
     def __init__(self, accelerator, modelID, datasetName, modelName, allEmotionClasses, maxNumSignals, numSubjects, userInputParams,
-                 emotionNames, activityNames, featureNames, submodel, useFinalParams, debuggingResults=False):
+                 emotionNames, activityNames, featureNames, submodel, debuggingResults=False):
         # General parameters.
         super().__init__(accelerator, modelID, datasetName, modelName, allEmotionClasses, maxNumSignals, numSubjects, userInputParams,
-                         emotionNames, activityNames, featureNames, submodel, useFinalParams, debuggingResults)
+                         emotionNames, activityNames, featureNames, submodel, debuggingResults)
         # General parameters.
         self.augmentData = True
 
@@ -34,7 +35,7 @@ class emotionPipeline(emotionPipelineHelpers):
         self.accelerator.print(f"\nTraining {self.datasetName} model", flush=True)
 
         # Load in all the data and labels for final predictions and calculate the activity and emotion class weights.
-        allData, allLabels, allTrainingMasks, allTestingMasks, allSignalData, allMetadata, reconstructionIndex = self.prepareInformation(dataLoader)
+        allData, allLabels, allTrainingMasks, allTestingMasks, allSignalData, allSignalIdentifiers, allMetadata, reconstructionIndex = self.prepareInformation(dataLoader)
         allEmotionClassWeights, activityClassWeights = self.organizeLossInfo.getClassWeights(allLabels, allTrainingMasks, allTestingMasks, self.numActivities)
 
         # Prepare the model for training.
@@ -54,7 +55,8 @@ class emotionPipeline(emotionPipelineHelpers):
                     numPointsAnalyzed += batchSize
 
                     # Get the reconstruction column for auto encoding and activity prediction.
-                    batchTrainingMask_generalCol, batchSignalLabels_generalCol, batchSignalInfo_generalCol = self.dataInterface.getReconstructionData(batchTrainingMask, batchSignalLabels, batchSignalInfo, reconstructionIndex)
+                    trainingMaskRecon, signalLabelsRecon, signalInfoRecon = self.dataInterface.getReconstructionData(batchTrainingMask, batchSignalLabels, batchSignalInfo, reconstructionIndex)
+                    if submodel == modelConstants.signalEncoderModel: batchTrainingMask, batchSignalLabels, batchSignalInfo = trainingMaskRecon, signalLabelsRecon, signalInfoRecon
 
                     # We can skip this batch, and backpropagation if necessary.
                     if batchSignalInfo.size(0) == 0: self.backpropogateModel(); continue
@@ -79,7 +81,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     # ------------ Forward pass through the model  ------------- #
 
                     # Perform the forward pass through the model.
-                    interpolatedSignals, physiologicalProfile, activityProfile, emotionProfile = model.forward(self.accelerator, submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, trainingFlag=True)
+                    interpolatedSignalData, reconstructedInterpolatedData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = model.forward(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, fullDataPass=True)
                     # decodedPredictedIndexProbabilities dimension: batchSize, numSignals, maxNumEncodedSignals
                     # predictedIndexProbabilities dimension: batchSize, numSignals, maxNumEncodedSignals
                     # encodedData dimension: batchSize, numEncodedSignals, finalDistributionLength
@@ -87,34 +89,21 @@ class emotionPipeline(emotionPipelineHelpers):
                     # signalEncodingLayerLoss dimension: batchSize
 
                     # Assert that nothing is wrong with the predictions.
-                    self.modelHelpers.assertVariableIntegrity(interpolatedSignals, variableName="up-sampled signal data", assertGradient=False)
+                    self.modelHelpers.assertVariableIntegrity(reconstructedInterpolatedData, variableName="up-sampled reconstructed signal data", assertGradient=False)
+                    self.modelHelpers.assertVariableIntegrity(interpolatedSignalData, variableName="up-sampled signal data", assertGradient=False)
                     self.modelHelpers.assertVariableIntegrity(physiologicalProfile, variableName="physiological profile", assertGradient=False)
                     self.modelHelpers.assertVariableIntegrity(activityProfile, variableName="activity profile", assertGradient=False)
                     self.modelHelpers.assertVariableIntegrity(emotionProfile, variableName="emotion profile", assertGradient=False)
 
                     # Calculate the error in signal compression (signal encoding loss).
-                    signalReconstructedLoss, encodedSignalMeanLoss, encodedSignalMinMaxLoss, positionalEncodingTrainingLoss, decodedPositionalEncodingLoss, signalEncodingTrainingLayerLoss \
-                        = self.organizeLossInfo.calculateSignalEncodingLoss(signalBatchData, encodedData, reconstructedData, predictedIndexProbabilities, decodedPredictedIndexProbabilities, signalEncodingLayerLoss, batchTrainingMask, reconstructionIndex)
-                    if signalReconstructedLoss.item() == 0: self.accelerator.print("Not useful\n\n\n\n\n\n"); continue
+                    signalReconstructedLoss = self.organizeLossInfo.calculateSignalEncodingLoss(interpolatedSignalData, reconstructedInterpolatedData, batchTrainingMask, reconstructionIndex)
+                    if signalReconstructedLoss is None: self.accelerator.print("Not useful loss"); continue
 
                     # Initialize basic core loss value.
-                    compressionFactor = augmentedBatchData.size(1) / encodedData.size(1)  # Increase the learning rate for larger compressions.
-                    finalLoss = compressionFactor * signalReconstructedLoss
-
-                    # Compile the loss into one value
-                    if 0.3 < encodedSignalMinMaxLoss:
-                        finalLoss = finalLoss + 0.1*encodedSignalMinMaxLoss
-                    if 0.1 < signalEncodingTrainingLayerLoss:
-                        finalLoss = finalLoss + 0.25*signalEncodingTrainingLayerLoss
-                    if 0.1 < encodedSignalMeanLoss:
-                        finalLoss = finalLoss + encodedSignalMeanLoss
-                    if signalReconstructedLoss < 0.1 < decodedPositionalEncodingLoss:
-                        finalLoss = finalLoss + 0.25*decodedPositionalEncodingLoss
-                    # Account for the current training state when calculating the loss.
-                    finalLoss = finalLoss + 0.25*positionalEncodingTrainingLoss
+                    finalLoss = signalReconstructedLoss
 
                     # Update the user.
-                    self.accelerator.print("Final-Recon-Mean-MinMax-PE-PEDec-Layer", finalLoss.item(), signalReconstructedLoss.item(), encodedSignalMeanLoss.item(), encodedSignalMinMaxLoss.item(), positionalEncodingTrainingLoss.item(), decodedPositionalEncodingLoss.item(), signalEncodingTrainingLayerLoss.item(), "\n")
+                    self.accelerator.print("Final-Recon", finalLoss.item(), signalReconstructedLoss.item(), "\n")
 
                     # ------------------- Update the Model  -------------------- #
 

@@ -38,32 +38,32 @@ class trainingProtocolHelpers:
         # Unify all the model weights.
         self.unifyAllModelWeights(allMetaModels, allModels)
 
-    def calculateLossInformation(self, allMetaLossDataHolders, allMetaModels, allModels, submodel, metaDatasetNames, fastPass):
+    def calculateLossInformation(self, allMetaModels, allMetadataLoaders, allModels, allDataLoaders, submodel):
         self.unifyAllModelWeights(allMetaModels, allModels)  # Unify all the model weights.
 
         t1 = time.time()
         # For each meta-training model.
-        for modelInd in range(len(allMetaLossDataHolders)):
-            lossDataLoader = allMetaLossDataHolders[modelInd]  # Contains the same information but with a different batch size.
-            modelPipeline = allMetaModels[modelInd] if modelInd < len(metaDatasetNames) else allModels[0]  # Same pipeline instance in training loop.
+        for modelInd in range(len(allMetaModels) + len(allModels)):
+            lossDataLoader = allMetadataLoaders[modelInd] if modelInd < len(allMetadataLoaders) else allDataLoaders[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
+            modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
 
             # Calculate and store all the training and testing losses of the untrained model.
-            with torch.no_grad(): modelPipeline.organizeLossInfo.storeTrainingLosses(submodel, modelPipeline, lossDataLoader, fastPass)
+            with torch.no_grad(): modelPipeline.organizeLossInfo.storeTrainingLosses(submodel, modelPipeline, lossDataLoader)
         t2 = time.time(); self.accelerator.print("Total loss calculation time:", t2 - t1)
 
-    def plotModelState(self, epoch, allMetaLossDataHolders, allMetaModels, allModels, submodel, metaDatasetNames, trainingDate, fastPass=True):
+    def plotModelState(self, epoch, allMetaModels, allMetadataLoaders, allModels, allDataLoaders, submodel, trainingDate):
         self.unifyAllModelWeights(allMetaModels, allModels)  # Unify all the model weights.
 
         t1 = time.time()
         # For each meta-training model.
-        for modelInd in range(len(allMetaLossDataHolders)):
-            lossDataLoader = allMetaLossDataHolders[modelInd]  # Contains the same information but with a different batch size.
-            modelPipeline = allMetaModels[modelInd] if modelInd < len(metaDatasetNames) else allModels[0]  # Same pipeline instance in training loop.
+        for modelInd in range(len(allMetaModels) + len(allModels)):
+            lossDataLoader = allMetadataLoaders[modelInd] if modelInd < len(allMetadataLoaders) else allDataLoaders[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
+            modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
 
             with torch.no_grad():
                 numEpochs = modelPipeline.getTrainingEpoch(submodel) or epoch
-                modelPipeline.modelVisualization.plotAllTrainingEvents(submodel, modelPipeline, lossDataLoader, trainingDate, numEpochs, fastPass)
-        allMetaModels[0].modelVisualization.plotDatasetComparison(submodel, allMetaModels + allModels, trainingDate, fastPass)
+                modelPipeline.modelVisualization.plotAllTrainingEvents(submodel, modelPipeline, lossDataLoader, trainingDate, numEpochs)
+        allMetaModels[0].modelVisualization.plotDatasetComparison(submodel, allMetaModels + allModels, trainingDate)
         t2 = time.time()
         self.accelerator.print("Total plotting time:", t2 - t1)
 

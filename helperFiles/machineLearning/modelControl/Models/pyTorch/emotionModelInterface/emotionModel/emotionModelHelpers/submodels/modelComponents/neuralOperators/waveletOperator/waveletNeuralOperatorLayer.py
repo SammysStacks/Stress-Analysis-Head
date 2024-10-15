@@ -68,7 +68,7 @@ class waveletNeuralOperatorLayer(waveletNeuralOperatorWeights):
         # frequencies dimension: batchSize, numLiftedChannels, frequencyDimension
 
         if weights is not None:
-            if self.learningProtocol in ['FC', 'CNN', "rCNN"]:
+            if self.learningProtocol in ['rFC', 'rCNN']:
                 frequencies = weights(frequencies)  # Learn a new set of wavelet coefficients to transform the data.
                 # frequencies dimension: batchSize, numOutputSignals, frequencyDimension
             else:

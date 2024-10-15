@@ -19,6 +19,9 @@ def getActivationMethod(activationMethod):
         inversionPoint = float(activationMethod.split('_')[1]) if '_' in activationMethod else 2
         infiniteBound = float(activationMethod.split('_')[2]) if '_' in activationMethod else 0.5
         activationFunction = reversibleLinearSoftSign(inversionPoint=inversionPoint, infiniteBound=infiniteBound)
+    elif activationMethod.startswith('reversiblePolynomial'):
+        inversionPoint = float(activationMethod.split('_')[1]) if '_' in activationMethod else 2
+        activationFunction = reversiblePolynomial(inversionPoint=inversionPoint)
     elif activationMethod == 'boundedS':
         activationFunction = boundedS()
     elif activationMethod == 'linearOscillation':
@@ -88,6 +91,10 @@ class reversibleLinearSoftSign(reversibleInterface):
         self.inversionPoint = inversionPoint  # Corresponds to `r` in the equation
         self.infiniteBound = infiniteBound  # Corresponds to `a` in the equation
 
+        # Assert the validity of the inputs.
+        assert 0 < self.infiniteBound <= 1, "The magnitude of the inf bound has a domain of (0, 1] to ensure a stable convergence."
+        assert 0 < self.inversionPoint, "The inversion point must be positive to ensure a stable convergence."
+
     def forward(self, x):
         if self.forwardDirection:
             return self.forwardPass(x)
@@ -99,24 +106,31 @@ class reversibleLinearSoftSign(reversibleInterface):
         absX = x.abs()
 
         # Calculate the non-linearity term
-        nonLinearityTerm = 1 + (self.infiniteBound / (1 - self.infiniteBound)) * (absX / self.inversionPoint)
+        if self.infiniteBound != 1: nonLinearityTerm = 1 + (self.infiniteBound / (1 - self.infiniteBound)) * (absX / self.inversionPoint)
+        else: nonLinearityTerm = 1 + (absX / self.inversionPoint)
+
+        # Calculate the output.
         y = self.infiniteBound * x + x / nonLinearityTerm
 
         return y
 
     def inversePass(self, y):
         # Inverse function described in the problem
-        absY = y.abs()
+        absY, signY = y.abs(), y.sign()
 
-        # Calculate the non-linearity term
-        squareRootTerm = ((self.infiniteBound ** 2 - 1) ** 2 * self.inversionPoint ** 2
-                          - 2 * self.infiniteBound * self.inversionPoint * (self.infiniteBound - 1) ** 2 * absY
-                          + self.infiniteBound ** 2 * y ** 2).sqrt()
-        signDependentTerm = (squareRootTerm + (self.infiniteBound ** 2 - 1) * self.inversionPoint) / (2 * self.infiniteBound ** 2)
-        signDependentTerm = signDependentTerm * y.sign()
+        if self.infiniteBound != 1:
+            # Calculate the non-linearity term
+            squareRootTerm = ((self.infiniteBound ** 2 - 1) ** 2 * self.inversionPoint ** 2
+                              - 2 * self.infiniteBound * self.inversionPoint * (self.infiniteBound - 1) ** 2 * absY
+                              + self.infiniteBound ** 2 * y ** 2).sqrt()
+            signDependentTerm = (squareRootTerm + (self.infiniteBound ** 2 - 1) * self.inversionPoint) / (2 * self.infiniteBound ** 2)
+            signDependentTerm = signDependentTerm * y.sign()
 
-        # Combine terms, applying sign(x) for the final output
-        x = signDependentTerm + y / (2 * self.infiniteBound)
+            # Combine terms, applying sign(x) for the final output
+            x = signDependentTerm + y / (2 * self.infiniteBound)
+        else:
+            # Calculate the non-linearity term
+            x = signY*((4*self.inversionPoint**2 + y.pow(2)).sqrt() - 2*self.inversionPoint)/2 + y/2
 
         return x
 
@@ -145,16 +159,6 @@ class boundedExp(nn.Module):
         linearTerm = self.infiniteBound * x
 
         return linearTerm * exponentialTerm
-
-    def reverse(self, y):
-        numeratorTerm = 1 - (y / self.nonLinearityRegion).pow(2)
-        denominator = 2 * (1 + (y / self.nonLinearityRegion).pow(2))
-        logTerm = torch.log(y)
-
-        output = logTerm + numeratorTerm / denominator
-        output = torch.exp(output)
-
-        return output
 
 
 # CHECK IF USING
@@ -287,5 +291,5 @@ if __name__ == "__main__":
     data = torch.randn(2, 10, 100)
 
     # Perform the forward and inverse pass.
-    activationClass = reversibleLinearSoftSign(inversionPoint=2, infiniteBound=0.5)
+    activationClass = reversibleLinearSoftSign(inversionPoint=1, infiniteBound=1)
     _forwardData, _reconstructedData = activationClass.checkReconstruction(data, atol=1e-6)

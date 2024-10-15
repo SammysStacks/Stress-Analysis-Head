@@ -54,7 +54,7 @@ class dataAugmentation:
         batchSize, numSignals, maxSequenceLength = timeChannels.shape
 
         # Find the time window for the signal.
-        newTimeWindow = generalMethods.biasedSample(minTimeWindow, maxTimeWindow, biasType="high") / modelConstants.maxTimeWindow
+        newTimeWindow = generalMethods.biasedSample(minTimeWindow, maxTimeWindow, biasType="high")
         targetTimes = torch.full((batchSize, numSignals, 1), newTimeWindow, device=timeChannels.device)
 
         # Find the start time indices for the signals.
@@ -97,10 +97,6 @@ class dataAugmentation:
         augmentedBatchData = augmentedBatchData * dropoutMask.unsqueeze(-1)
 
         return augmentedBatchData
-
-    @staticmethod
-    def getRecentSignalPoints(signalData, finalLength):
-        assert False  # return signalChannel[:, :, :finalLength].contiguous()
 
     @staticmethod
     def getInitialSignals(signalData, finalLength):

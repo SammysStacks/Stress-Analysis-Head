@@ -40,7 +40,7 @@ class generalVisualizations(globalPlottingProtocols):
                  color='tab:blue', markersize=6, alpha=0.6, label="Testing Points")
         plt.xlabel("Predicted Emotion Rating")
         plt.ylabel("Emotion Rating")
-        plt.title(f"{plotTitle}")
+        plt.title(f"{plotTitle.split("/")[-1]}")
         plt.legend(loc="best")
         plt.xlim((-0.1, numClasses-0.9))
         plt.ylim((-0.1, numClasses-0.9))
@@ -59,7 +59,7 @@ class generalVisualizations(globalPlottingProtocols):
                  linewidth=2, alpha=0.6, label="Predicted Emotion Distribution")
         plt.ylabel("Probability (AU)")
         plt.xlabel("Emotion Rating")
-        plt.title(f"{plotTitle}")
+        plt.title(f"{plotTitle.split("/")[-1]}")
         plt.legend(loc="best")
         plt.show()
 
@@ -123,7 +123,7 @@ class generalVisualizations(globalPlottingProtocols):
         plt.legend(loc="upper right")
         plt.xlabel("Training Epoch")
         plt.ylabel("Path Values")
-        plt.title(f"{plotTitle}")
+        plt.title(f"{plotTitle.split("/")[-1]}")
 
         # Save the figure if desired.
         if self.saveDataFolder:
@@ -136,24 +136,23 @@ class generalVisualizations(globalPlottingProtocols):
 
         # Base case: there is no data to plot.
         if len(trainingLosses[0]) == 0: return None
-        
+
         # Plot the training loss.
         for trainingLossesInd in range(len(trainingLosses)):
-            plt.plot(trainingLosses[trainingLossesInd], label=f'{lossLabels[trainingLossesInd]} (Train)', color=self.lossColors[trainingLossesInd],  linewidth=2)
+            plt.plot(trainingLosses[trainingLossesInd], label=f'{lossLabels[trainingLossesInd]} (Train)', color=self.lossColors[trainingLossesInd], linewidth=2)
             if testingLosses is not None: plt.plot(testingLosses[trainingLossesInd], label=f'{lossLabels[trainingLossesInd]} (Test)', color=self.lossColors[trainingLossesInd], linewidth=2, alpha=0.5)
         # Set y-axis to a logarithmic scale
         if logY: plt.yscale('log')
-        
+
         # Label the plot.
         plt.legend(loc="upper right")
         plt.xlabel("Training Epoch")
         plt.ylabel("Loss Values")
-        plt.title(f"{plotTitle}")
+        plt.title(f"{plotTitle.split("/")[-1]}")
         
         # Save the figure if desired.
-        if self.saveDataFolder:
-            self.displayFigure(self.saveDataFolder + f"{plotTitle} at epoch {len(trainingLosses[0])}.pdf")
-        plt.show()
+        if self.saveDataFolder: self.displayFigure(self.saveDataFolder + f"{plotTitle} at epoch {len(trainingLosses[0])}.pdf")
+        plt.show(); plt.close('all')
 
     def generalDataPlotting(self, plottingData, plottingLabels, plotTitle="Model Convergence Loss"):
         # Plot the training path.
@@ -164,7 +163,7 @@ class generalVisualizations(globalPlottingProtocols):
         plt.legend(loc="upper right")
         plt.xlabel("Training Epoch")
         plt.ylabel("Data Values")
-        plt.title(f"{plotTitle}")
+        plt.title(f"{plotTitle.split("/")[-1]}")
 
         # Save the figure if desired.
         if self.saveDataFolder:

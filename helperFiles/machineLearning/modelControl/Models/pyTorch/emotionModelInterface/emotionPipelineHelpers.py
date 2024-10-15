@@ -16,11 +16,10 @@ from .emotionModel.emotionModelHelpers.optimizerMethods.optimizerMethods import 
 class emotionPipelineHelpers:
 
     def __init__(self, accelerator, modelID, datasetName, modelName, allEmotionClasses, maxNumSignals, numSubjects, userInputParams,
-                 emotionNames, activityNames, featureNames, submodel, useFinalParams, debuggingResults=False):
+                 emotionNames, activityNames, featureNames, submodel, debuggingResults=False):
         # General parameters.
         self.metadata = modelConstants.metadata  # The subject identifiers to consider. Dim: [numSubjects]
         self.debuggingResults = debuggingResults  # Whether to print debugging results. Type: bool
-        self.useFinalParams = useFinalParams  # Whether to use the HPC parameters.
         self.accelerator = accelerator  # Hugging face interface to speed up the training process.
         self.modelName = modelName  # The unique name of the model to initialize.
         self.modelID = modelID  # A unique integer identifier for this model.
@@ -51,10 +50,10 @@ class emotionPipelineHelpers:
         self.generalTimeWindow = modelConstants.timeWindows[-1]  # The default time window to use for training and testing.
 
         # Initialize helper classes.
-        self.organizeLossInfo = organizeTrainingLosses(accelerator, self.model, allEmotionClasses, self.activityLabelInd, self.generalTimeWindow, self.useFinalParams)
+        self.organizeLossInfo = organizeTrainingLosses(accelerator, self.model, allEmotionClasses, self.activityLabelInd, self.generalTimeWindow)
         self.modelVisualization = modelVisualizations(accelerator, self.generalTimeWindow, modelSubfolder="trainingFigures/")
         self.modelParameters = modelParameters(userInputParams=userInputParams, accelerator=accelerator)
-        self.optimizerMethods = optimizerMethods(userInputParams, useFinalParams)
+        self.optimizerMethods = optimizerMethods(userInputParams)
         self.weightInitialization = weightInitialization()
         self.modelMigration = modelMigration(accelerator)
         self.dataInterface = emotionDataInterface()
@@ -88,30 +87,28 @@ class emotionPipelineHelpers:
 
         return dataLoader
 
-    def prepareInformation(self, dataLoader):
+    @staticmethod
+    def prepareInformation(dataLoader):
         # Load in all the data and labels for final predictions.
         allData, allLabels, allTrainingMasks, allTestingMasks = dataLoader.dataset.getAll()
-        allSignalData, allSignalIdentifiers, allMetadata = self.dataInterface.separateData(allData)
-        reconstructionIndex = self.dataInterface.getReconstructionIndex(allTrainingMasks)
+        allSignalData, allSignalIdentifiers, allMetadata = emotionDataInterface.separateData(allData)
+        reconstructionIndex = emotionDataInterface.getReconstructionIndex(allTrainingMasks)
         assert reconstructionIndex is not None
 
         # Assert the integrity of the dataloader.
-        assert allLabels.shape[1] == self.numEmotions + 1, f"Found {allLabels.shape[1]} labels, but expected {self.numEmotions} emotions + 1 activity label."
         assert allLabels.shape == allTrainingMasks.shape, "We should specify the training indices for each label"
         assert allLabels.shape == allTestingMasks.shape, "We should specify the testing indices for each label"
 
-        return allData, allLabels, allTrainingMasks, allTestingMasks, allSignalData, allMetadata, reconstructionIndex
+        return allData, allLabels, allTrainingMasks, allTestingMasks, allSignalData, allSignalIdentifiers, allMetadata, reconstructionIndex
 
     # ------------------------------------------------------------------ #
 
     def getTrainingEpoch(self, submodel):
         # Get the models, while considering whether they are distributed or not.
-        trainingInformation, signalEncoderModel, autoencoderModel, signalMappingModel, sharedEmotionModel, specificEmotionModel = self.getDistributedModels()
+        trainingInformation, sharedSignalEncoderModel, specificSignalEncoderModel, sharedEmotionModel, specificEmotionModel = self.getDistributedModels()
 
         if submodel == modelConstants.signalEncoderModel:
-            return max(0, len(signalEncoderModel.trainingLosses_timeReconstructionAnalysis[self.generalTimeWindowInd]) - 1)
-        elif submodel == modelConstants.autoencoderModel:
-            return max(0, len(autoencoderModel.trainingLosses_timeReconstructionAnalysis[self.generalTimeWindowInd]) - 1)
+            return max(0, len(sharedSignalEncoderModel.trainingLosses_timeReconstructionAnalysis) - 1)
         elif submodel == modelConstants.emotionModel:
             return max(0, len(specificEmotionModel.trainingLosses_signalReconstruction) - 1)
         else:

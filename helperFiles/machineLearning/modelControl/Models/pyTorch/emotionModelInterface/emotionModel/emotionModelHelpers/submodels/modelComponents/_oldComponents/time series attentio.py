@@ -36,7 +36,7 @@ class attentionMethods(emotionModelWeights):
         # signalData dimension: [batchSize, numSignals, maxSequenceLength, numChannels]
         datapoints = emotionDataInterface.getChannelData(signalData, channelName=modelConstants.signalChannel).unsqueeze(-1)
         timepoints = emotionDataInterface.getChannelData(signalData, channelName=modelConstants.timeChannel).unsqueeze(-1)
-        validDataMask = torch.as_tensor((datapoints == 0) & (timepoints == 0))
+        missingDataMask = torch.as_tensor((datapoints == 0) & (timepoints == 0))
         # datapoints and timepoints dimension: [batchSize, numSignals, maxSequenceLength, inputQueryKeyDim = 1]
 
         # Calculate the query, key, and value.
@@ -49,7 +49,7 @@ class attentionMethods(emotionModelWeights):
         # similarityScores dimension: [batchSize, numSignals, maxSequenceLength, maxSequenceLength]
 
         # Calculate the attention weights.
-        attentionWeights = self.sparseSoftmax(similarityScores, validDataMask, dim=-1)
+        attentionWeights = self.sparseSoftmax(similarityScores, missingDataMask, dim=-1)
         # attentionWeights meaning: given a token in maxSequenceLength, how similar is it to all other tokens.
         # attentionWeights: [batchSize, numSignals, maxSequenceLength, maxSequenceLength]
 
@@ -60,7 +60,7 @@ class attentionMethods(emotionModelWeights):
 
         # See how the token is related to the other tokens.
         timeInfluence = self.queryTimeInfluence(timepoints) + timepoints  # Dimension: [batchSize, numSignals, maxSequenceLength, latentValueDim=finalOutputDim]
-        timeInfluence = self.sparseSoftmax(timeInfluence, validDataMask, dim=2)
+        timeInfluence = self.sparseSoftmax(timeInfluence.clone(), missingDataMask, dim=2)
 
         # Combine the attention values.
         finalSignalData = (selfAttentionValues * timeInfluence).sum(dim=2)
@@ -73,19 +73,19 @@ class attentionMethods(emotionModelWeights):
         # Calculate the exponential of the data.
         softmaxData = (data - data.max(dim=dim, keepdim=True)[0]).exp()
         fullMask = mask.expand(-1, -1, -1, softmaxData.size(-1))
-        softmaxData[fullMask] = 0
+        softmaxData = softmaxData.masked_fill(fullMask, 0)
 
         # Perform softmax with absent data as exp(-inf) = 0.
-        softmaxData = softmaxData / softmaxData.sum(dim=dim, keepdim=True)
-        softmaxData[fullMask] = 0
+        softmaxData = softmaxData / (1e-10 + softmaxData.sum(dim=dim, keepdim=True))
+        softmaxData = softmaxData.masked_fill(fullMask, 0)
 
         return softmaxData
 
 
 if __name__ == '__main__':
     # Test the attention mechanism.
-    attentionMechanism = attentionMethods(inputQueryKeyDim=1, latentQueryKeyDim=4, inputValueDim=1, latentValueDim=512, numHeads=1, addBias=False)
-    _signalData = torch.randn((4, 64, 128, 2))
+    attentionMechanism = attentionMethods(inputQueryKeyDim=1, latentQueryKeyDim=16, inputValueDim=1, latentValueDim=256, numHeads=1, addBias=False)
+    _signalData = torch.randn((4, 64, 512, 2))
     _signalData[:, :, 300:, :] = 0
 
-    attentionMechanism(_signalData)
+    _finalSignalData = attentionMechanism(_signalData)

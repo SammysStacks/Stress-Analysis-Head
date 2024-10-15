@@ -32,12 +32,27 @@ class emotionModelWeights(convolutionalHelpers):
             nn.Linear(numOutputFeatures, numOutputFeatures, bias=addBias),
         )
 
+    # ------------------- Ebbinghaus Forgetting Curve ------------------- #
+
+    @staticmethod
+    def ebbinghausDecayPoly(deltaTimes, signalWeights):
+        return signalWeights.pow(2)/(1 + deltaTimes.pow(2))
+
+    @staticmethod
+    def ebbinghausDecayExp(deltaTimes, signalWeights):
+        return signalWeights.pow(2)*torch.exp(-deltaTimes.pow(2))
+
+    def timeDependantSignalWeights(self, numSignals):
+        # Initialize the weights with a normal distribution.
+        parameter = nn.Parameter(torch.randn(1, numSignals, 1, 1))
+        return self.weightInitialization.xavierNormalInit(parameter, fan_in=1, fan_out=1)
+
     # ------------------- Wavelet Neural Operator Architectures ------------------- #
 
     @staticmethod
     def neuralWeightFC(numInputFeatures=1):
         return nn.Sequential(
-            reversibleLinearLayer(sequenceLength=numInputFeatures, numLayers=1, activationMethod='reversibleLinearSoftSign_2_0.9'),
+            reversibleLinearLayer(sequenceLength=numInputFeatures, numLayers=1, activationMethod=emotionModelWeights.getActivationType()),
         )
 
     def neuralWeightFCC(self, inChannel=1, outChannel=2, finalFrequencyDim=46):
@@ -50,7 +65,7 @@ class emotionModelWeights(convolutionalHelpers):
     def reversibleNeuralWeightCNN(inChannel=1):
         return nn.Sequential(
             # Convolution architecture: feature engineering
-            reversibleConvolution(numChannels=inChannel, kernelSize=3, activationMethod='reversibleLinearSoftSign_2_0.9', numLayers=4, skipConnection=True),
+            reversibleConvolution(numChannels=inChannel, kernelSize=3, activationMethod=emotionModelWeights.getActivationType(), numLayers=6, skipConnection=True),
         )
 
     @staticmethod
@@ -62,8 +77,11 @@ class emotionModelWeights(convolutionalHelpers):
     # ------------------- Signal Encoding Architectures ------------------- #
 
     @staticmethod
-    def postProcessingLayer(inChannel=1, groups=1):
+    def postProcessingLayer(inChannel=1):
         return nn.Sequential(
             # Convolution architecture: post-processing operator. 
-            reversibleConvolution(numChannels=inChannel, kernelSize=5, activationMethod='reversibleLinearSoftSign_2_0.9', numLayers=4, skipConnection=True),
+            reversibleConvolution(numChannels=inChannel, kernelSize=5, activationMethod=emotionModelWeights.getActivationType(), numLayers=6, skipConnection=True),
         )
+
+    @staticmethod
+    def getActivationType(): return 'reversibleLinearSoftSign_2_0.95'

@@ -90,7 +90,7 @@ class reversibleConvolution(reversibleInterface):
 if __name__ == "__main__":
     # General parameters.
     _batchSize, _numSignals, _sequenceLength = 4, 128, 512
-    _activationMethod = 'reversibleLinearSoftSign_2_0.9'
+    _activationMethod = 'reversibleLinearSoftSign_1_0.9'
     _numLayers = 25
     _kernelSize = 5
 

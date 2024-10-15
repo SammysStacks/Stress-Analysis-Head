@@ -1,14 +1,11 @@
 # General
 
-import matplotlib.pyplot as plt
 import torch
 from torch import nn
 
-from helperFiles.globalPlottingProtocols import globalPlottingProtocols
 from .modelComponents.neuralOperators.neuralOperatorInterface import neuralOperatorInterface
 from .modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
 # Import files for machine learning
-from .modelComponents.transformerHelpers.attentionMethods import attentionMethods
 from ..generalMethods.generalMethods import generalMethods
 from ..modelConstants import modelConstants
 from ..optimizerMethods import activationFunctions
@@ -16,8 +13,8 @@ from ..optimizerMethods import activationFunctions
 
 class sharedSignalEncoderModel(neuralOperatorInterface):
 
-    def __init__(self, operatorType, encodedDimension, latentQueryKeyDim, neuralOperatorParameters, sequenceLength, numOperatorLayers, numInputSignals, activationMethod):
-        super(sharedSignalEncoderModel, self).__init__(sequenceLength=sequenceLength, numInputSignals=numInputSignals, numOutputSignals=numInputSignals, addBiasTerm=False)
+    def __init__(self, operatorType, encodedDimension, neuralOperatorParameters, numOperatorLayers, activationMethod):
+        super(sharedSignalEncoderModel, self).__init__(sequenceLength=encodedDimension, numInputSignals=1, numOutputSignals=1, addBiasTerm=False)
         # General model parameters.
         self.numOperatorLayers = numOperatorLayers  # The number of operator layers to use.
         self.operatorType = operatorType  # The type of operator to use for the neural operator.
@@ -30,10 +27,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         # Create the operator layers.
         for layerInd in range(self.numOperatorLayers):
             self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=neuralOperatorParameters))
-            self.processingLayers.append(self.postProcessingLayer(inChannel=numInputSignals, groups=numInputSignals))
-
-        # Initialize the signal encoder modules.
-        self.attentionMechanism = attentionMethods(inputQueryKeyDim=1, latentQueryKeyDim=latentQueryKeyDim, inputValueDim=1, latentValueDim=encodedDimension, numHeads=1, addBias=False)
+            self.processingLayers.append(self.postProcessingLayer(inChannel=1))
 
         # Initialize loss holders.
         self.trainingLosses_timeReconstructionAnalysis = None
@@ -44,17 +38,14 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
 
     def resetModel(self):
         # Signal encoder reconstructed loss holders.
-        self.trainingLosses_timeReconstructionAnalysis = [[] for _ in modelConstants.timeWindows]  # List of list of data reconstruction training losses. Dim: numTimeWindows, numEpochs
-        self.testingLosses_timeReconstructionAnalysis = [[] for _ in modelConstants.timeWindows]  # List of list of data reconstruction testing losses. Dim: numTimeWindows, numEpochs
-
-    def learnedInterpolation(self, signalData):
-        """ signalData: batchSize, numSignals, signalSpecificLength* """
-        interpolatedSignalData = self.attentionMechanism(signalData)
-        # interpolatedSignalData: batchSize, numSignals, encodedDimension
-
-        return interpolatedSignalData
+        self.trainingLosses_timeReconstructionAnalysis = []  # List of list of data reconstruction training losses. Dim: numTimeWindows, numEpochs
+        self.testingLosses_timeReconstructionAnalysis = []  # List of list of data reconstruction testing losses. Dim: numTimeWindows, numEpochs
 
     def sharedLearning(self, signalData):
+        # Reshape the signal data.
+        batchSize, numSignals, signalLength = signalData.shape
+        signalData = signalData.view(batchSize*numSignals, 1, signalLength)
+
         for layerInd in range(self.numOperatorLayers):
             if reversibleInterface.forwardDirection:
                 # Apply the neural operator layer with activation.
@@ -71,6 +62,9 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
                 # Apply the neural operator layer with activation.
                 signalData = self.activationFunction(signalData)
                 signalData = self.neuralLayers[layerInd](signalData)
+
+        # Reshape the signal data.
+        signalData = signalData.view(batchSize, numSignals, signalLength)
 
         return signalData
 

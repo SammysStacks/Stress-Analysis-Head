@@ -1,6 +1,5 @@
 # General
 import math
-import random
 
 import torch
 
@@ -10,19 +9,17 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 from helperFiles.machineLearning.modelControl.Models.pyTorch.lossFunctions import pytorchLossMethods, weightLoss
 from ..emotionDataInterface import emotionDataInterface
 from ..generalMethods.generalMethods import generalMethods
-from ..modelConstants import modelConstants
 from ..modelParameters import modelParameters
 
 
 class lossCalculations:
 
-    def __init__(self, accelerator, model, allEmotionClasses, activityLabelInd, useFinalParams=False):
+    def __init__(self, accelerator, model, allEmotionClasses, activityLabelInd):
         # General parameters
         self.allEmotionClasses = allEmotionClasses  # The number of classes (intensity levels) within each emotion to predict. Dim: numEmotions
         self.emotionLength = model.compressedLength  # The number of indices in every final emotion distribution.
         self.activityLabelInd = activityLabelInd
         self.numEmotions = model.numEmotions  # The number of emotions to predict.
-        self.useFinalParams = useFinalParams  # Whether to use the HPC parameters.
         self.accelerator = accelerator  # Hugging face model optimizations.
         self.model = model
 
@@ -67,123 +64,23 @@ class lossCalculations:
         finalLoss = method(signalData).mean()
         return finalLoss
 
-    def calculatePositionalEncodingLoss(self, predictedPositionIndices):
-        # Extract the positional encoding information.
-        batchSize, numSignals = predictedPositionIndices.size()
-
-        # Reshape the data for the positional encoding loss.
-        targetPositionIndices = torch.arange(numSignals, device=predictedPositionIndices.mainDevice, dtype=torch.float32).repeat(batchSize, 1)
-        targetPositionIndices = self.generalMethods.minMaxScale_noInverse(targetPositionIndices, scale=0.5*self.posEncWeightScale, buffer=0) + 0.5*self.posEncWeightScale
-        # targetPositionIndices dim: batchSize, numSignals
-
-        # Calculate the positional encoding loss.
-        positionalEncodingLoss = self.positionalEncoderLoss(predictedPositionIndices, targetPositionIndices).mean()
-        if not self.useFinalParams and random.random() < 0.01: self.errorPerClass(predictedPositionIndices, targetPositionIndices)
-
-        # Weight the final loss based on the number of signals.
-        classWeights = targetPositionIndices + 1
-        positionalEncodingLoss = (positionalEncodingLoss * classWeights).sum() / classWeights.sum()
-
-        return positionalEncodingLoss
-
-    def calculateSignalEncodingLoss(self, allSignalData, allEncodedData, allReconstructedData, allPredictedIndexProbabilities, allDecodedPredictedIndexProbabilities, allSignalEncodingLayerLoss, allLabelsMask=None, reconstructionIndex=None):
+    def calculateSignalEncodingLoss(self, allInterpolatedSignalData, allReconstructedInterpolatedData, allLabelsMask=None, reconstructionIndex=None):
         # Find the boolean flags for the data involved in the loss calculation.
         reconstructionDataMask = self.getReconstructionDataMask(allLabelsMask, reconstructionIndex)
+
         # Isolate the signals for this loss (For example, training vs. testing).
-        signalData = self.getData(allSignalData, reconstructionDataMask)  # Dim: numExperiments, numSignals, compressedLength
-        encodedData = self.getData(allEncodedData, reconstructionDataMask)  # Dim: numExperiments, numCondensedSignals, compressedLength
-        reconstructedData = self.getData(allReconstructedData, reconstructionDataMask)  # Dim: numExperiments, numSignals, compressedLength
-        signalEncodingLayerLoss = self.getData(allSignalEncodingLayerLoss, reconstructionDataMask)  # Dim: numExperiments
-        predictedIndexProbabilities = self.getData(allPredictedIndexProbabilities, reconstructionDataMask)  # Dim: numExperiments, numSignals, maxNumEncodedSignals
-        decodedPredictedIndexProbabilities = self.getData(allDecodedPredictedIndexProbabilities, reconstructionDataMask)  # Dim: numExperiments, numSignals, maxNumEncodedSignals
-        assert signalData.shape[0] != 0, "There are no signals for this loss calculation."
+        interpolatedSignalData = self.getData(allInterpolatedSignalData, reconstructionDataMask)  # Dim: numExperiments, numSignals, encodedDimension
+        reconstructedInterpolatedData = self.getData(allReconstructedInterpolatedData, reconstructionDataMask)  # Dim: numExperiments, numCondensedSignals, encodedDimension
+        if interpolatedSignalData.size(0) == 0: return None
 
         # Calculate the error in signal reconstruction (encoding loss).
-        signalReconstructedLoss = self.reconstructionLoss(reconstructedData, signalData)
+        signalReconstructedLoss = self.reconstructionLoss(reconstructedInterpolatedData, interpolatedSignalData)
         signalReconstructedLoss = signalReconstructedLoss.mean(dim=2).mean(dim=1).mean()
 
-        # Enforce that the compressed data has a mean of 0 and a standard deviation of 1.
-        encodedSignalMeanLoss, encodedSignalMinMaxLoss = self.calculateMinMaxLoss(encodedData, expectedMean=0, expectedMinMax=modelConstants.minMaxScale, dim=-1, minMaxBuffer=0.1)
-        # Reduce the loss to a singular value.
-        encodedSignalMinMaxLoss = encodedSignalMinMaxLoss.mean(dim=2).mean(dim=1).mean()
-        encodedSignalMeanLoss = encodedSignalMeanLoss.mean(dim=1).mean()
-
-        # If there is a layer loss, average the loss.
-        if signalEncodingLayerLoss is not None: signalEncodingLayerLoss = signalEncodingLayerLoss.mean()
-
-        # Positional encoding loss.
-        decodedPositionalEncodingLoss = self.calculatePositionalEncodingLoss(decodedPredictedIndexProbabilities)
-        positionalEncodingLoss = self.calculatePositionalEncodingLoss(predictedIndexProbabilities)
-
         # Assert that nothing is wrong with the loss calculations.
-        self.modelHelpers.assertVariableIntegrity(encodedSignalMeanLoss, variableName="encoded signal mean loss", assertGradient=False)
-        self.modelHelpers.assertVariableIntegrity(positionalEncodingLoss, variableName="positional encoding loss", assertGradient=False)
         self.modelHelpers.assertVariableIntegrity(signalReconstructedLoss, variableName="encoded signal reconstructed loss", assertGradient=False)
-        self.modelHelpers.assertVariableIntegrity(encodedSignalMinMaxLoss, variableName="encoded signal standard deviation loss", assertGradient=False)
-        self.modelHelpers.assertVariableIntegrity(decodedPositionalEncodingLoss, variableName="Decoded positional encoding loss", assertGradient=False)
-        if signalEncodingLayerLoss is not None: self.modelHelpers.assertVariableIntegrity(signalEncodingLayerLoss, "encoded signal layer loss", assertGradient=False)
 
-        return signalReconstructedLoss, encodedSignalMeanLoss, encodedSignalMinMaxLoss, positionalEncodingLoss, decodedPositionalEncodingLoss, signalEncodingLayerLoss
-
-    def calculateAutoencoderLoss(self, allEncodedData, allCompressedData, allReconstructedEncodedData, allAutoencoderLayerLoss, allLabelsMask, reconstructionIndex):
-        # Find the boolean flags for the data involved in the loss calculation.
-        reconstructionDataMask = self.getReconstructionDataMask(allLabelsMask, reconstructionIndex)
-        # Isolate the signals for this loss (For example, training vs. testing).
-        reconstructedEncodedData = self.getData(allReconstructedEncodedData, reconstructionDataMask)  # Dim: numExperiments, numSignals, finalDistributionLength
-        compressedData = self.getData(allCompressedData, reconstructionDataMask)  # Dim: numExperiments, numSignals, compressedLength
-        encodedData = self.getData(allEncodedData, reconstructionDataMask)  # Dim: numExperiments, numSignals, finalDistributionLength
-        autoencoderLayerLoss = self.getData(allAutoencoderLayerLoss, reconstructionDataMask)  # Dim: numExperiments
-        assert encodedData.shape[0] != 0, f"There are no signals for this loss calculation. reconstructionDataMask: {reconstructionDataMask}"
-
-        # Calculate the error in signal reconstruction (autoencoder loss).
-        reconstructedLoss = self.reconstructionLoss(reconstructedEncodedData, encodedData)
-        reconstructedLoss = reconstructedLoss.mean(dim=2).mean(dim=1).mean()
-
-        # Enforce that the compressed data has a mean of 0 and a standard deviation of 1.
-        compressedMeanLoss, compressedMinMaxLoss = self.calculateMinMaxLoss(compressedData, expectedMean=0, expectedMinMax=modelConstants.minMaxScale, dim=-1, minMaxBuffer=0.1)
-        # Reduce the loss to a singular value.
-        compressedMinMaxLoss = compressedMinMaxLoss.mean(dim=1).mean()
-        compressedMeanLoss = compressedMeanLoss.mean(dim=1).mean()
-
-        # If there is a layer loss, average the loss.
-        if autoencoderLayerLoss is not None: autoencoderLayerLoss = autoencoderLayerLoss.mean()
-
-        # Assert that nothing is wrong with the loss calculations. 
-        self.modelHelpers.assertVariableIntegrity(compressedMeanLoss, variableName="autoencoder mean loss", assertGradient=False)
-        self.modelHelpers.assertVariableIntegrity(reconstructedLoss, variableName="autoencoder reconstructed loss", assertGradient=False)
-        self.modelHelpers.assertVariableIntegrity(compressedMinMaxLoss, variableName="autoencoder standard deviation loss", assertGradient=False)
-        if autoencoderLayerLoss is not None: self.modelHelpers.assertVariableIntegrity(autoencoderLayerLoss, "autoencoder layer loss", assertGradient=False)
-
-        return reconstructedLoss, compressedMeanLoss, compressedMinMaxLoss, autoencoderLayerLoss
-
-    def calculateSignalMappingLoss(self, allEncodedData, allManifoldData, allTransformedManifoldData, allReconstructedEncodedData, allLabelsMask, reconstructionIndex):
-        # Find the boolean flags for the data involved in the loss calculation.
-        reconstructionDataMask = self.getReconstructionDataMask(allLabelsMask, reconstructionIndex)
-        # Isolate the signals for this loss (For example, training vs testing).
-        encodedData = allEncodedData[reconstructionDataMask]  # Dim: numExperiments, numCondensedSignals, compressedLength
-        manifoldData = allManifoldData[reconstructionDataMask]  # Dim: numExperiments, numCondensedSignals, manifoldLength
-        transformedManifoldData = allTransformedManifoldData[reconstructionDataMask]  # Dim: numExperiments, finalNumSignals, compressedLength
-        reconstructedEncodedData = allReconstructedEncodedData[reconstructionDataMask]  # Dim: numExperiments, numCondensedSignals, compressedLength
-        assert manifoldData.shape[0] != 0, "There are no signals for this loss calculation."
-
-        # Calculate the error in signal reconstruction (autoencoder loss) and assert the integrity of the loss.
-        manifoldReconstructedLoss = self.reconstructionLoss(reconstructedEncodedData, encodedData)
-        manifoldReconstructedLoss = manifoldReconstructedLoss.mean(axis=2).mean()
-
-        # Enforce that the compressed data has a mean of 0 and a standard deviation of 1.
-        manifoldMeanLoss, manifoldMinMaxLoss = self.calculateMinMaxLoss(manifoldData, expectedMean=0, expectedMinMax=modelConstants.minMaxScale, dim=-1, minMaxBuffer=0.1)
-        # Reduce the loss to a singular value.
-        manifoldMeanLoss = manifoldMeanLoss.mean()
-        manifoldMinMaxLoss = manifoldMinMaxLoss.mean()
-
-        # Enforce the same properties across all the time series data.
-
-        # Assert that nothing is wrong with the loss calculations. 
-        self.modelHelpers.assertVariableIntegrity(manifoldMeanLoss, "manifold mean loss", assertGradient=False)
-        self.modelHelpers.assertVariableIntegrity(manifoldReconstructedLoss, "manifold reconstructed loss", assertGradient=False)
-        self.modelHelpers.assertVariableIntegrity(manifoldMinMaxLoss, "manifold standard deviation loss", assertGradient=False)
-
-        return manifoldReconstructedLoss, manifoldMeanLoss, manifoldMinMaxLoss
+        return signalReconstructedLoss
 
     def calculateActivityLoss(self, predictedActivityLabels, allLabels, allLabelsMask, activityClassWeights):
         # Find the boolean flags for the data involved in the loss calculation.
@@ -215,7 +112,7 @@ class lossCalculations:
         # For each emotion we are predicting that has training data.
         for validEmotionInd in validEmotionInds:
             # Calculate and add the loss due to misclassifying the emotion.
-            emotionLoss = self.lossCalculations.calculateEmotionLoss(validEmotionInd, predictedBatchEmotions, trueBatchLabels,
+            emotionLoss = self.calculateEmotionLoss(validEmotionInd, predictedBatchEmotions, trueBatchLabels,
                                                                      batchTrainingMask, allEmotionClassWeights)  # Calculate the error in the emotion predictions
             emotionLoss += emotionLoss / len(validEmotionInds)  # Add all the losses together into one value.
         # Average all the losses that were added together.
