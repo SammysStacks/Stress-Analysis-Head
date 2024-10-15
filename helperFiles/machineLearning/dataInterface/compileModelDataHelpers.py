@@ -182,10 +182,10 @@ class compileModelDataHelpers:
         # allCompiledFeatureIntervals : batchSize, numBiomarkers, finalDistributionLength*, numBiomarkerFeatures*  ->  *finalDistributionLength, *numBiomarkerFeatures are not constant
         # allRawFeatureTimeIntervals : batchSize, numBiomarkers, finalDistributionLength*  ->  *finalDistributionLength is not constant
         # allSignalData : A list of size (batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel])
-        # surveyAnswerTimes : A list of size (batchSize, numSurveyQuestions)
-        # allNumSignalPoints : A list of size (batchSize, numSignals)            
+        # allNumSignalPoints : A list of size (batchSize, numSignals)
+        # surveyAnswerTimes : A list of size (batchSize)
         # Determine the final dimensions of the padded array.
-        maxSequenceLength = max(max(len(biomarkerTimes[biomarkerTimes < modelConstants.timeWindows[-1]]) for biomarkerTimes in experimentalTimes) for experimentalTimes in allRawFeatureTimeIntervals)
+        maxSequenceLength = max(max(len(biomarkerTimes) for biomarkerTimes in experimentalTimes) for experimentalTimes in allRawFeatureTimeIntervals)
         numSignals = sum(len(biomarkerData[0]) for biomarkerData in allCompiledFeatureIntervals[0])
         numExperiments = len(allCompiledFeatureIntervals)
 
@@ -196,19 +196,22 @@ class compileModelDataHelpers:
         # Get the indices for each of the signal information.
         dataChannelInd = emotionDataInterface.getChannelInd(channelName=modelConstants.signalChannel)
         timeChannelInd = emotionDataInterface.getChannelInd(channelName=modelConstants.timeChannel)
+        maxSequenceLength = 0
 
         # For each batch of biomarkers.
         for experimentalInd in range(numExperiments):
             batchData = allCompiledFeatureIntervals[experimentalInd]
             batchTimes = allRawFeatureTimeIntervals[experimentalInd]
+            surveyAnswerTime = surveyAnswerTimes[experimentalInd]
 
             currentSignalInd = 0
             # For each biomarker in the batch.
-            for biomarkerInd, (biomarkerData, biomarkerTimes) in enumerate(zip(batchData, batchTimes)):
+            for (biomarkerData, biomarkerTimes) in zip(batchData, batchTimes):
                 biomarkerData = torch.tensor(biomarkerData, dtype=torch.float32).T  # Dim: numBiomarkerFeatures, batchSpecificFeatureLength
                 biomarkerTimes = torch.tensor(biomarkerTimes, dtype=torch.float32)  # Dim: batchSpecificFeatureLength
 
                 # Remove data outside the time window.
+                biomarkerTimes = surveyAnswerTime - biomarkerTimes
                 timeWindowMask = biomarkerTimes <= modelConstants.timeWindows[-1]
                 biomarkerData = biomarkerData[:, timeWindowMask]
                 biomarkerTimes = batchTimes[timeWindowMask]
@@ -218,7 +221,7 @@ class compileModelDataHelpers:
                 finalSignalInd = currentSignalInd + numBiomarkerFeatures
 
                 # Fill the padded array with the signal data
-                allSignalData[experimentalInd, currentSignalInd:finalSignalInd, 0:batchSpecificFeatureLength, timeChannelInd] = biomarkerTimes[-1] - biomarkerTimes
+                allSignalData[experimentalInd, currentSignalInd:finalSignalInd, 0:batchSpecificFeatureLength, timeChannelInd] = biomarkerTimes
                 allSignalData[experimentalInd, currentSignalInd:finalSignalInd, 0:batchSpecificFeatureLength, dataChannelInd] = biomarkerData
                 allNumSignalPoints[experimentalInd, currentSignalInd:finalSignalInd] = batchSpecificFeatureLength
 
@@ -226,7 +229,11 @@ class compileModelDataHelpers:
                 allSignalData[experimentalInd, currentSignalInd:finalSignalInd, batchSpecificFeatureLength:, dataChannelInd] = torch.nan
 
                 # Update the current signal index
+                maxSequenceLength = max(maxSequenceLength, batchSpecificFeatureLength)
                 currentSignalInd = finalSignalInd
+
+        # Remove unused points.
+        allSignalData = allSignalData[:, :, 0:maxSequenceLength, :]
 
         return allSignalData, allNumSignalPoints
 
