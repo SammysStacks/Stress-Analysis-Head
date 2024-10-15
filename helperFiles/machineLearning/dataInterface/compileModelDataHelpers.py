@@ -20,9 +20,7 @@ class compileModelDataHelpers:
         self.userInputParams = userInputParams
         self.missingLabelValue = torch.nan
         self.compiledExtension = ".pkl.gz"
-        self.standardizeSignals = True
         self.accelerator = accelerator
-        self.verbose = False
 
         # Make Output Folder Directory if Not Already Created
         os.makedirs(self.compiledInfoLocation, exist_ok=True)
@@ -30,20 +28,18 @@ class compileModelDataHelpers:
         # Initialize relevant classes.
         self.modelParameters = modelParameters(userInputParams,  accelerator)
         self.modelMigration = modelMigration(accelerator, debugFlag=False)
-        self.dataInterface = emotionDataInterface()
         self.dataAugmentation = dataAugmentation()
         self.generalMethods = generalMethods()
 
         # Submodel-specific parameters
         self.emotionPredictionModelInfo = None
         self.signalEncoderModelInfo = None
-        self.autoencoderModelInfo = None
         self.maxClassPercentage = None
         self.minNumClasses = None
 
         # Data cleaning parameters
-        self.minSequencePoints_perSmallestTimeWindow = modelConstants.timeWindows[0] / 10
-        self.maxTimeGap_perLargestTimeWindow = 60
+        self.minSequencePoints = int(modelConstants.timeWindows[0]/12)
+        self.maxTimeGap = modelConstants.timeWindows[0]
 
         # Set the submodel-specific parameters
         if submodel is not None: self.addSubmodelParameters(submodel, userInputParams)
@@ -251,15 +247,15 @@ class compileModelDataHelpers:
         biomarkerTimes = allSignalData[:, :, :, timeChannelInd]
 
         # Calculate the longest time gap within the longest time window.
-        deltaTimes = abs(torch.diff(biomarkerTimes, n=1, dim=-1))
+        deltaTimes = torch.diff(biomarkerTimes, n=1, dim=-1).abs()
         maxTimeGap = deltaTimes.max(dim=2).values.max(dim=1).values
 
         # Calculate the number of points within the smallest time window.
         numMinWindowPoints = allNumSignalPoints.min(dim=1).values
 
         # Remove the batch if the gap is large.
-        validExperimentMask = ((maxTimeGap <= self.maxTimeGap_perLargestTimeWindow) &
-                               (numMinWindowPoints >= self.minSequencePoints_perSmallestTimeWindow))
+        validExperimentMask = ((maxTimeGap <= self.maxTimeGap) &
+                               (numMinWindowPoints >= self.minSequencePoints))
 
         return allSignalData[validExperimentMask], allNumSignalPoints[validExperimentMask], allLabels[validExperimentMask], subjectInds[validExperimentMask]
 

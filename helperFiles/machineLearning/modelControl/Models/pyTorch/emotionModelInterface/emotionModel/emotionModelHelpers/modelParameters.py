@@ -34,14 +34,14 @@ class modelParameters:
         return userInputParams
 
     def getTrainingBatchSize(self, submodel, numExperiments):
-        # Wesad: Found 32 (out of 32) well-labeled emotions across 59 experiments with 69 signals.
+        # Wesad: Found 32 (out of 32) well-labeled emotions across 60 experiments with 69 signals.
         # Emognition: Found 12 (out of 12) well-labeled emotions across 407 experiments with 55 signals.
-        # Amigos: Found 12 (out of 12) well-labeled emotions across 707 experiments with 125 signals.
+        # Amigos: Found 12 (out of 12) well-labeled emotions across 707 experiments with 126 signals.
         # Dapper: Found 12 (out of 12) well-labeled emotions across 364 experiments with 22 signals.
-        # Case: Found 2 (out of 2) well-labeled emotions across 1584 experiments with 51 signals.
-        # Collected: Found 30 (out of 30) well-labeled emotions across 154 experiments with 79 signals.
-        if submodel == modelConstants.signalEncoderModel: totalMinBatchSize = 16
-        elif submodel == modelConstants.emotionModel: totalMinBatchSize = 16
+        # Case: Found 2 (out of 2) well-labeled emotions across 1460 experiments with 51 signals.
+        # Collected: Found 30 (out of 30) well-labeled emotions across 184 experiments with 80 signals.
+        if submodel == modelConstants.signalEncoderModel: totalMinBatchSize = 32
+        elif submodel == modelConstants.emotionModel: totalMinBatchSize = 32
         else: raise Exception()
 
         # Adjust the batch size based on the number of gradient accumulations.
