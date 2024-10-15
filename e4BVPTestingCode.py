@@ -20,7 +20,8 @@ if __name__ == "__main__":
     # Read the Excel file
     excel_data = pd.read_excel(excel_file, sheet_name='BVP')
     bvp_data = excel_data['BVP'].values
-    timepoints = excel_data['Timestamp']
+    timepoints = excel_data['Timestamp'].tolist()
+
 
 
     # Create the necessary input data for the bvpProtocol
