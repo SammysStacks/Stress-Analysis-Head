@@ -19,7 +19,7 @@ class ebbinghausInterpolation(emotionModelWeights):
         # Define the parameters.
         self.ebbinghausWeights = self.timeDependantSignalWeights(numSignals)
         pseudoEncodedTimes = torch.arange(0, self.encodedTimeWindow, step=self.encodedTimeWindow/self.encodedDimension, device=self.ebbinghausWeights.device)
-        self.register_buffer(name='pseudoEncodedTimes', tensor=pseudoEncodedTimes)
+        self.register_buffer(name='pseudoEncodedTimes', tensor=torch.flip(pseudoEncodedTimes, dims=[0]))
 
     def forward(self, signalData):
         # signalData dimension: [batchSize, numSignals, maxSequenceLength, numChannels]
@@ -27,6 +27,7 @@ class ebbinghausInterpolation(emotionModelWeights):
         timepoints = emotionDataInterface.getChannelData(signalData, channelName=modelConstants.timeChannel)
         missingDataMask = torch.as_tensor((datapoints == 0) & (timepoints == 0), device=datapoints.device)
         # datapoints and timepoints: [batchSize, numSignals, maxSequenceLength)
+        # timepoints: [further away from survey (300) -> closest to survey (0)]
 
         # Calculate the decay time weights.
         deltaTimes = self.pseudoEncodedTimes - timepoints.unsqueeze(-1)

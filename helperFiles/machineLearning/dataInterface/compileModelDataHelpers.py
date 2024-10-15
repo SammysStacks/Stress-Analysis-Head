@@ -233,7 +233,6 @@ class compileModelDataHelpers:
                 currentSignalInd = finalSignalInd
 
         # Remove unused points.
-        print(allSignalData[:, :, maxSequenceLength:, 0])
         allSignalData = allSignalData[:, :, 0:maxSequenceLength, :]
 
         return allSignalData, allNumSignalPoints

@@ -67,6 +67,7 @@ class emotionPipeline(emotionPipelineHelpers):
 
                     # Separate the data into signal and metadata information.
                     signalBatchData, batchSignalIdentifiers, metaBatchInfo = self.dataInterface.separateData(batchSignalInfo)
+                    # signalBatchData[:, :, :, 0] = timepoints: [further away from survey (300) -> closest to survey (0)]
                     # signalBatchData dimension: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
                     # batchSignalIdentifiers dimension: batchSize, numSignals, numSignalIdentifiers
                     # metaBatchInfo dimension: batchSize, numMetadata
