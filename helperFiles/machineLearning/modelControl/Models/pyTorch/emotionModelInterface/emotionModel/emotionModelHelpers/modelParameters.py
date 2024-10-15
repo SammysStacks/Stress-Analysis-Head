@@ -1,4 +1,6 @@
 # Import helper files.
+import torch
+
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.generalMethods.generalMethods import generalMethods
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
@@ -34,26 +36,28 @@ class modelParameters:
         return userInputParams
 
     def getTrainingBatchSize(self, submodel, numExperiments):
-        # Wesad: Found 32 (out of 32) well-labeled emotions across 60 experiments with 69 signals.
-        # Emognition: Found 12 (out of 12) well-labeled emotions across 407 experiments with 55 signals.
-        # Amigos: Found 12 (out of 12) well-labeled emotions across 707 experiments with 126 signals.
-        # Dapper: Found 12 (out of 12) well-labeled emotions across 364 experiments with 22 signals.
-        # Case: Found 2 (out of 2) well-labeled emotions across 1460 experiments with 51 signals.
-        # Collected: Found 30 (out of 30) well-labeled emotions across 184 experiments with 80 signals.
-        if submodel == modelConstants.signalEncoderModel: totalMinBatchSize = 32
-        elif submodel == modelConstants.emotionModel: totalMinBatchSize = 32
+        # Wesad: Found 32 (out of 32) well-labeled emotions across 60 experiments with 54 signals.
+        # Emognition: Found 12 (out of 12) well-labeled emotions across 407 experiments with 46 signals.
+        # Amigos: Found 12 (out of 12) well-labeled emotions across 707 experiments with 104 signals.
+        # Dapper: Found 12 (out of 12) well-labeled emotions across 364 experiments with 18 signals.
+        # Case: Found 2 (out of 2) well-labeled emotions across 1449 experiments with 44 signals.
+        # Collected: Found 30 (out of 30) well-labeled emotions across 172 experiments with 70 signals.
+        if submodel == modelConstants.signalEncoderModel: effectiveMinBatchSize, effectiveMaxBatchSize = 16, 64
+        elif submodel == modelConstants.emotionModel: effectiveMinBatchSize, effectiveMaxBatchSize = 16, 64
         else: raise Exception()
 
         # Adjust the batch size based on the number of gradient accumulations.
         gradientAccumulation = self.accelerator.gradient_accumulation_steps
-        minimumBatchSize = totalMinBatchSize // gradientAccumulation
+        minBatchSize_perLoop = effectiveMinBatchSize / gradientAccumulation
+        maxBatchSize_perLoop = effectiveMaxBatchSize / gradientAccumulation
         # Assert that the batch size is divisible by the gradient accumulation steps.
-        assert totalMinBatchSize % gradientAccumulation == 0, "The total batch size must be divisible by the gradient accumulation steps."
-        assert gradientAccumulation <= totalMinBatchSize, "The gradient accumulation steps must be less than the total batch size."
+        assert effectiveMinBatchSize % gradientAccumulation == 0, "The total batch size must be divisible by the gradient accumulation steps."
+        assert gradientAccumulation <= effectiveMinBatchSize, "The gradient accumulation steps must be less than the total batch size."
 
         # Adjust the batch size based on the total size.
-        batchSize = int(minimumBatchSize * numExperiments / modelConstants.minNumExperiments)
-        batchSize = min(batchSize, numExperiments)
+        dataRatio = numExperiments / modelConstants.minNumExperiments
+        batchSize = int(min(minBatchSize_perLoop * dataRatio, maxBatchSize_perLoop))
+        print(batchSize)
 
         return batchSize
 
@@ -77,8 +81,14 @@ class modelParameters:
 
     @staticmethod
     def getExclusionSequenceCriteria(submodel):
-        if submodel == modelConstants.signalEncoderModel: return int(modelConstants.timeWindows[0]/2), 30  # minSequencePoints, maxTimeGap
-        elif submodel == modelConstants.emotionModel: return int(modelConstants.timeWindows[0]/2), 30  # minSequencePoints, maxTimeGap
+        if submodel == modelConstants.signalEncoderModel: return 25, 90  # minSequencePoints, maxTimeGap
+        elif submodel == modelConstants.emotionModel: return 25, 90  # minSequencePoints, maxTimeGap
+        else: raise Exception()
+
+    @staticmethod
+    def getExclusionSNRCriteria(submodel):
+        if submodel == modelConstants.signalEncoderModel: return 0.01  # minSNR: absolute minimum should be 0
+        elif submodel == modelConstants.emotionModel: return 0.01  # minSNR: absolute minimum should be 0
         else: raise Exception()
 
     # -------------------------- Saving/Loading Parameters ------------------------- #

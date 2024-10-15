@@ -82,7 +82,7 @@ if __name__ == "__main__":
             readData.streamWearableData(adcResolution, stopTimeStreaming, currentFilename)
         else:
             # Stream in the data from the circuit board
-            streamingThread = threading.Thread(target=readData.streamWearableData, args=(adcResolution, stopTimeStreaming, currentFilename), daemon=False)
+            streamingThread = threading.Thread(target=readData.streamWearableData, args=(adcResolution, stopTimeStreaming, currentFilename), daemon=True)
             streamingThread.start()
 
             # Open the questionnaire GUI.

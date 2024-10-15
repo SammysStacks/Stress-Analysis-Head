@@ -4,6 +4,7 @@ import pickle
 
 import numpy as np
 import torch
+from matplotlib import pyplot as plt
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.generalMethods.dataAugmentation import dataAugmentation
@@ -38,6 +39,7 @@ class compileModelDataHelpers:
         self.minSequencePoints = None
         self.minNumClasses = None
         self.maxTimeGap = None
+        self.minSNR = None
 
         # Set the submodel-specific parameters
         if submodel is not None: self.addSubmodelParameters(submodel, userInputParams)
@@ -49,6 +51,7 @@ class compileModelDataHelpers:
         # Exclusion criterion.
         self.minNumClasses, self.maxClassPercentage = self.modelParameters.getExclusionClassCriteria(submodel)
         self.minSequencePoints, self.maxTimeGap = self.modelParameters.getExclusionSequenceCriteria(submodel)
+        self.minSNR = self.modelParameters.getExclusionSNRCriteria(submodel)
 
         # Embedded information for each model.
         self.signalEncoderModelInfo = f"signalEncoder on {userInputParams['deviceListed']} with {userInputParams['waveletType'].replace('.', '')} at {userInputParams['optimizerType']} at numSpecificEncodingLayers {userInputParams['numSpecificEncodingLayers']} at numMetaEncodingLayers {userInputParams['numMetaEncodingLayers']} at encodedDimension {userInputParams['encodedDimension']}"
@@ -274,7 +277,7 @@ class compileModelDataHelpers:
         signalSNRs = self.calculate_snr(allSignalData[:, :, :, signalChannelInd])
 
         # Generate a valid signal mask across the batch
-        validSignalInds = (signalSNRs > 1E-10)
+        validSignalInds = self.minSNR < signalSNRs
 
         # Apply the mask to filter valid signals and their corresponding points
         filteredSignalData = allSignalData[:, validSignalInds, :, :]
@@ -309,23 +312,22 @@ class compileModelDataHelpers:
         return experimentalIntervalData
 
     @staticmethod
-    def calculate_snr(allSignalData):
+    def calculate_snr(allSignalData, epsilon=1e-10):
         # signalBatchData dimension: numExperiments, numSignals, maxSequenceLength
         snr_values = torch.zeros(len(allSignalData[0]))
 
         # For each signal in the batch.
         for signalInd in range(len(allSignalData[0])):
             # Get the signal data for the current signal.
-            signalData = allSignalData[:, signalInd, :]  # Dim: eachSignal_numPoints
-            signalData = signalData[signalData != 0]
+            signalData = allSignalData[:, signalInd, :]  # Dim: numExperiments x numPoints
+            signalData = signalData[signalData != 0]  # Ignore zero-padding or zero segments
 
             # Calculate the signal power and noise power for the current signal.
-            signal_power = torch.mean(signalData ** 2, dim=-1)  # Dim: numExperiments
-            noise_power = torch.var(signalData, dim=-1)  # Dim: numExperiments
+            signal_power = torch.mean(signalData ** 2, dim=-1)  # Signal power
+            noise_power = torch.var(signalData, dim=-1)  # Noise power (variance)
 
-            # Calculate the signal-to-noise ratio for each signal.
-            if signal_power.any() == 0 or noise_power.any() == 0: snr_values[signalInd] = 0
-            else: snr_values[signalInd] = 10 * torch.log10(signal_power / noise_power).min()
+            # Calculate the SNR (adding epsilon to avoid log(0))
+            snr_values[signalInd] = 10 * torch.log10((signal_power + epsilon) / (noise_power + epsilon)).mean()
 
         return snr_values
 
