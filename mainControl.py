@@ -109,7 +109,6 @@ if __name__ == "__main__":
         readData.streamExcelData(deviceType, compiledRawData, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList,
                                  surveyQuestions, subjectInformationAnswers, subjectInformationQuestions, currentFilename)
 
-
     # ----------------------------- Extract Feature Data ----------------------------- #
 
     # Take Preprocessed (Saved) Features from Excel Sheet
@@ -243,19 +242,19 @@ if __name__ == "__main__":
 
         # Save the Data in Excel
         if saveRawSignals:
-            #   -------------------------- DEBUG--------------------------------  #
-            # print('analysis.timePoints', readData.analysisList)
-            # print('analysis.timePoints', readData.analysisList[0].timepoints)
-            # print('analysis.channelData', readData.analysisList[0].channelData)
-            # print('-----------------------------------------------------------------')
-            # print('analysis.timePoints', readData.analysisList[1].timepoints)
-            # print('analysis.channelData', readData.analysisList[1].channelData)
-            # print('-----------------------------------------------------------------')
-            # print('analysis.timePoints', readData.analysisList[2].timepoints)
-            # print('analysis.channelData', readData.analysisList[2].channelData)
-            # print('-----------------------------------------------------------------')
-            # print('analysis.timePoints', readData.analysisList[3].timepoints)
-            # print('analysis.channelData', readData.analysisList[3].channelData)
+              #-------------------------- DEBUG--------------------------------  #
+            print('analysis.timePoints', readData.analysisList)
+            print('analysis.timePoints', readData.analysisList[0].timepoints)
+            print('analysis.channelData', readData.analysisList[0].channelData)
+            print('-----------------------------------------------------------------')
+            print('analysis.timePoints', readData.analysisList[1].timepoints)
+            print('analysis.channelData', readData.analysisList[1].channelData)
+            print('-----------------------------------------------------------------')
+            print('analysis.timePoints', readData.analysisList[2].timepoints)
+            print('analysis.channelData', readData.analysisList[2].channelData)
+            print('-----------------------------------------------------------------')
+            print('analysis.timePoints', readData.analysisList[3].timepoints)
+            print('analysis.channelData', readData.analysisList[3].channelData)
 
             # Double Check to See if a User Wants to Save the Data
             verifiedSave = input("Are you Sure you Want to Save the Data (Y/N): ")
