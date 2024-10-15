@@ -16,7 +16,7 @@ class accelerationProtocol(globalProtocol):
         self.minPointsPerBatch = None  # The minimum number of points that must be present in a batch to extract features.
 
         # Filter parameters.
-        self.cutOffFreq = [0.05, 20]  # Band pass filter frequencies.
+        self.cutOffFreq = [0.05, 10]  # Band pass filter frequencies.
 
         # Reset analysis variables
         super().__init__("acc", numPointsPerBatch, moveDataFinger, channelIndices, plottingClass, readData)
@@ -48,6 +48,7 @@ class accelerationProtocol(globalProtocol):
             # Find the starting/ending points of the data to analyze
             startFilterPointer = max(dataFinger - self.dataPointBuffer, 0)
             dataBuffer = np.asarray(self.channelData[channelIndex][startFilterPointer:dataFinger + self.numPointsPerBatch])
+
             timepoints = np.asarray(self.timepoints[startFilterPointer:dataFinger + self.numPointsPerBatch])
 
             # Get the Sampling Frequency from the First Batch (If Not Given)
@@ -91,7 +92,9 @@ class accelerationProtocol(globalProtocol):
 
     def filterData(self, timepoints, data, removePoints=False):
         # Filter the Data: Low pass Filter and Savgol Filter
-        filteredData = self.filteringMethods.bandPassFilter.butterFilter(data, self.cutOffFreq, self.samplingFreq, order=3, filterType='low', fastFilt=True)
+        print('data', data)
+        print('dataLength', len(data))
+        filteredData = self.filteringMethods.bandPassFilter.butterFilter(data, self.cutOffFreq, self.samplingFreq, order=3, filterType='bandpass', fastFilt=True)
         filteredTime = timepoints.copy()
 
         return filteredTime, filteredData, np.ones(len(filteredTime))

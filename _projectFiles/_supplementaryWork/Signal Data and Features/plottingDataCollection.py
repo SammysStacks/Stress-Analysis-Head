@@ -81,7 +81,7 @@ if __name__ == "__main__":
         
         # Collect the Data from Excel
         compiledRawData, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions, subjectInformationAnswers, subjectInformationQuestions = \
-                                  extractDataProtocols.extractData().getData(testDataExcelFile, numberOfChannels = len(streamingOrder), testSheetNum = 0)
+                                  extractDataProtocols.extractData().getData(testDataExcelFile, deviceType, numberOfChannels = len(streamingOrder), testSheetNum = 0)
         # Analyze the Data using the Correct Protocol
         readData.streamExcelData(compiledRawData, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, 
                                   surveyQuestions, subjectInformationAnswers, subjectInformationQuestions, testDataExcelFile)

@@ -4,12 +4,14 @@ import re
 import sys
 import numpy as np
 
+
 # Data interface modules
 from openpyxl import load_workbook
 import csv
 
 # Import file for handling excel format
 from .excelFormatting import handlingExcelFormat
+
 
 
 class extractData(handlingExcelFormat):
@@ -71,6 +73,38 @@ class extractData(handlingExcelFormat):
                 data[1][dataInd - 1].append(float(dataRow[dataInd].value or 0))
 
         return data
+
+    @staticmethod
+    def extractRawSignalData_e4(excelSheet, startDataCol=1, endDataCol=2, data=None):
+        dataStartRow = 0
+        # If Header Exists, Skip Until You Find the Data
+        for row in excelSheet.rows:
+            if type(row[0].value) in [int, float]:
+                dataStartRow = row[0].row + 1
+                break
+
+        # Initialize the data structure if it's None
+        if data is None:
+            numPairs = (endDataCol - startDataCol) // 2  # Each pair is a time and data column
+            data = [[[] for _ in range(numPairs)], [[] for _ in range(numPairs)]]
+
+        # Now extract data for each time and data pair independently
+        for pairInd in range(0, endDataCol - startDataCol, 2):
+            timeCol = startDataCol + pairInd
+            dataCol = startDataCol + pairInd + 1
+
+            # Loop through the Excel worksheet for the current pair
+            for dataRow in excelSheet.iter_rows(min_col=timeCol, min_row=dataStartRow - 1, max_col=dataCol, max_row=excelSheet.max_row):
+                timeValue = dataRow[0].value
+                dataValue = dataRow[1].value
+
+                # Only add to the list if there is a valid time and data pair
+                if timeValue is not None and dataValue is not None:
+                    data[0][pairInd // 2].append(float(timeValue))
+                    data[1][pairInd // 2].append(float(dataValue))
+
+        return data
+
     @staticmethod
     def extractExperimentalInfo(excelSheet, experimentTimes=(), experimentNames=(), surveyAnswerTimes=(), surveyAnswersList=(), surveyQuestions=()):
         # If Header Exists, Skip Until You Find the Data
@@ -136,9 +170,16 @@ class extractData(handlingExcelFormat):
 
         return subjectInformationAnswers, subjectInformationQuestions
 
-    def extractExperimentalData(self, worksheets, numberOfChannels, surveyQuestions=(), finalSubjectInformationQuestions=()):
+    def extractExperimentalData(self, deviceType, worksheets, numberOfChannels, surveyQuestions=(), finalSubjectInformationQuestions=()):
         # Initialize data holder
-        compiledRawData = [[], [[] for _ in range(numberOfChannels)]]
+        if deviceType == 'serial':
+            compiledRawData = [[], [[] for _ in range(numberOfChannels)]]
+
+        elif deviceType == 'empatica':
+            # for each channel there's a corresponding time axis
+            compiledRawData = [[[] for _ in range(numberOfChannels)], [[] for _ in range(numberOfChannels)]]
+
+
         # Initialize experimental information
         experimentTimes = []
         experimentNames = []
@@ -158,7 +199,11 @@ class extractData(handlingExcelFormat):
                 subjectInformationAnswers, subjectInformationQuestions = self.extractSubjectInfo(excelSheet, subjectInformationAnswers, subjectInformationQuestions)
             # Extract Time and Current Data from the File
             else:
-                compiledRawData = self.extractRawSignalData(excelSheet, startDataCol=1, endDataCol=1 + numberOfChannels, data=compiledRawData)
+                if deviceType == 'serial':
+                    compiledRawData = self.extractRawSignalData(excelSheet, startDataCol=1, endDataCol=1 + numberOfChannels, data=compiledRawData)
+                elif deviceType == 'empatica':
+                    compiledRawData = self.extractRawSignalData_e4(excelSheet, startDataCol=1, endDataCol=2*numberOfChannels, data=compiledRawData)
+
 
         # Check the data integrity
         if len(compiledRawData[0]) == 0:
@@ -170,7 +215,7 @@ class extractData(handlingExcelFormat):
 
         return compiledRawData, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions, subjectInformationAnswers, subjectInformationQuestions
 
-    def getData(self, inputFile, numberOfChannels=1, testSheetNum=0):
+    def getData(self, inputFile, deviceType, numberOfChannels=1, testSheetNum=0):
         """
         Extracts Pulse Data from Excel Document (.xlsx). Data can be in any
         worksheet that the user can specify using 'testSheetNum' (0-indexed).
@@ -178,6 +223,10 @@ class extractData(handlingExcelFormat):
             Time Data must be in Column 'A' (x-Axis)
             Biolectric Data must be in Column 'B-x' (y-Axis)
         If No Data is present in one cell of a row, it will be read in as zero.
+        If deviceType is specified for empatica:
+            Time and data axis with different sampling frequency will be saved
+            accordingly
+            {Major change in the extractExperimentalData section}
         --------------------------------------------------------------------------
         Input Variable Definitions:
             inputFile: The Path to the Excel/TXT/CSV File Containing the Biolectric Data.
@@ -212,7 +261,7 @@ class extractData(handlingExcelFormat):
         print("Extracting Data from the Excel File:", inputFile)
 
         # Extract the data
-        compiledRawData, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions, subjectInformationAnswers, subjectInformationQuestions = self.extractExperimentalData(worksheets, numberOfChannels)
+        compiledRawData, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions, subjectInformationAnswers, subjectInformationQuestions = self.extractExperimentalData(deviceType, worksheets, numberOfChannels)
         xlWorkbook.close()
 
         # Finished Data Collection: Close Workbook and Return Data to User

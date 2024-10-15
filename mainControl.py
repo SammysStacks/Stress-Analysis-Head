@@ -27,9 +27,9 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------- #
 
     # Protocol switches: only the first true variably executes.
-    readDataFromExcel = False  # For SINGLE FILE analysis. Analyze Data from Excel File called 'currentFilename' on Sheet Number 'testSheetNum'
+    readDataFromExcel = True  # For SINGLE FILE analysis. Analyze Data from Excel File called 'currentFilename' on Sheet Number 'testSheetNum'
     trainModel = False  # Train Model with ALL Data in 'collectedDataFolder'.
-    streamData = True  # Stream in Data from the Board and Analyze.
+    streamData = False  # Stream in Data from the Board and Analyze.
 
     # User options during the run: any number can be true.
     useModelPredictions = False or trainModel  # Apply the learning algorithm to decode the signals.
@@ -41,9 +41,9 @@ if __name__ == "__main__":
     reverseOrder = False  # Reverse the order of the data for training.
 
     # Specify the user parameters.
-    userName = "Ruixiao".replace(" ", "")
-    trialName = "E4_Extract_Saving_test"
-    date = "2024-10-24"
+    userName = "Ruixiao".replace(" ", "") #Ruixiao
+    trialName = "E4_Extract_Saving_test" #E4_Extract_Saving_test
+    date = "2024-10-24" # 2024-10-24
 
     # Specify experimental parameters.
     deviceAddress = '12ba4cb61c85ec11bc01fc2b19c2d21c'  # Board's Serial Number (port.serial_number). Only used if streaming data, else it gets reset to None.
@@ -99,11 +99,16 @@ if __name__ == "__main__":
 
     elif readDataFromExcel:
         # Collect the Data from Excel
+        """if deviceType == 'empatica':
+            compiledRawData = [[[t1], [t2], [t3], [t4]], [[d1], [d2], [d3], [d4]]]]"""
+
         compiledRawData, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions, subjectInformationAnswers, subjectInformationQuestions = \
-            extractDataProtocols.extractData().getData(currentFilename, numberOfChannels=len(streamingOrder), testSheetNum=testSheetNum)
+            extractDataProtocols.extractData().getData(currentFilename, deviceType, numberOfChannels=len(streamingOrder), testSheetNum=testSheetNum)
+
         # Analyze the Data using the Correct Protocol
-        readData.streamExcelData(compiledRawData, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList,
+        readData.streamExcelData(deviceType, compiledRawData, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList,
                                  surveyQuestions, subjectInformationAnswers, subjectInformationQuestions, currentFilename)
+
 
     # ----------------------------- Extract Feature Data ----------------------------- #
 
@@ -125,6 +130,7 @@ if __name__ == "__main__":
             = trainingInterface.streamTrainingData(featureAverageWindows, plotTrainingData=plotTrainingData, reanalyzeData=reanalyzeData, metaTraining=False, reverseOrder=reverseOrder)
         # Assert the validity of the feature extraction
 
+        #TODO: for deviceType = Serial, this needs debug
         print(f"Compiled features length: {len(allCompiledFeatureIntervals[0][0])}")
         print(f"Expected feature names length: {len(featureNames)}")
 
@@ -237,20 +243,19 @@ if __name__ == "__main__":
 
         # Save the Data in Excel
         if saveRawSignals:
-            print('analysis.timePoints', readData.analysisList)
-            print('analysis.timePoints', readData.analysisList[0].timepoints)
-            print('analysis.channelData', readData.analysisList[0].channelData)
-            print('-----------------------------------------------------------------')
-            print('analysis.timePoints', readData.analysisList[1].timepoints)
-            print('analysis.channelData', readData.analysisList[1].channelData)
-            print('-----------------------------------------------------------------')
-            print('analysis.timePoints', readData.analysisList[2].timepoints)
-            print('analysis.channelData', readData.analysisList[2].channelData)
-            print('-----------------------------------------------------------------')
-            print('analysis.timePoints', readData.analysisList[3].timepoints)
-            print('analysis.channelData', readData.analysisList[3].channelData)
-            # exit()
-
+            #   -------------------------- DEBUG--------------------------------  #
+            # print('analysis.timePoints', readData.analysisList)
+            # print('analysis.timePoints', readData.analysisList[0].timepoints)
+            # print('analysis.channelData', readData.analysisList[0].channelData)
+            # print('-----------------------------------------------------------------')
+            # print('analysis.timePoints', readData.analysisList[1].timepoints)
+            # print('analysis.channelData', readData.analysisList[1].channelData)
+            # print('-----------------------------------------------------------------')
+            # print('analysis.timePoints', readData.analysisList[2].timepoints)
+            # print('analysis.channelData', readData.analysisList[2].channelData)
+            # print('-----------------------------------------------------------------')
+            # print('analysis.timePoints', readData.analysisList[3].timepoints)
+            # print('analysis.channelData', readData.analysisList[3].channelData)
 
             # Double Check to See if a User Wants to Save the Data
             verifiedSave = input("Are you Sure you Want to Save the Data (Y/N): ")

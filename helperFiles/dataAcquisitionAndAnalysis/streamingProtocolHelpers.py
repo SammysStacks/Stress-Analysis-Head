@@ -147,6 +147,22 @@ class streamingProtocolHelpers(featureOrganization):
         # Move the streamingDataFinger pointer to analyze the next batch of data
         return streamingDataFinger + self.moveDataFinger
 
+    def analyzeBatchData_e4(self, biomarkerIndex, streamingDataFinger):
+        # Analyze the current data
+
+        self.analysisList[biomarkerIndex].analyzeData(streamingDataFinger)
+
+        # Organize the new features
+        self.organizeRawFeatures()
+        self.alignFeatures()
+        # self.predictLabels()
+
+        # Plot the Data
+        if self.plotStreamedData: self.plottingClass.displayData()
+
+        # Move the streamingDataFinger pointer to analyze the next batch of data
+        return streamingDataFinger + self.moveDataFinger
+
     def recordData(self, maxVolt=3.3, adcResolution=4096):
         assert self.deviceType == "serial", f"Recording data is only supported for serial devices, not {self.deviceType}."
 
@@ -157,9 +173,9 @@ class streamingProtocolHelpers(featureOrganization):
 
         # Parse the Data
         timepoints, datapoints = self.deviceReader.parseCompressedRead(rawReadsList, self.numStreamedSignals, maxVolt, adcResolution)
-        self.organizeData(timepoints, datapoints)  # Organize the data for further processing
+        self.organizeData(self.deviceType, timepoints, datapoints)  # Organize the data for further processing
 
-    def organizeData(self, timepoints, datapoints):
+    def organizeData(self, deviceType, timepoints, datapoints):
         if len(timepoints) == 0: print("\tNO NEW timepoints ADDED")
 
         if not isinstance(datapoints, list): datapoints = list(datapoints)
@@ -173,13 +189,36 @@ class streamingProtocolHelpers(featureOrganization):
             if analysis.numChannels == 0: continue
 
             # Update the timepoints.
-            analysis.timepoints.extend(timepoints)
+            if deviceType == 'serial':
+                analysis.timepoints.extend(timepoints)
+            elif deviceType == 'empatica':
+                # since we are doing analysis separately, we clear out the previous time points
+                analysis.timepoints = []
+                analysis.timepoints.extend(timepoints)
 
-            # For each channel, update the voltage data.
-            for channelIndex in range(analysis.numChannels):
-                # Compile the datapoints for each of the sensor's channels.
-                streamingDataIndex = analysis.streamingChannelInds[channelIndex]
-                newData = datapoints[streamingDataIndex]
 
-                # Add the Data to the Correct Channel
-                analysis.channelData[channelIndex].extend(newData)
+            if deviceType == 'serial':
+                # For each channel, update the voltage data.
+                for channelIndex in range(analysis.numChannels):
+                    # Compile the datapoints for each of the sensor's channels.
+                    streamingDataIndex = analysis.streamingChannelInds[channelIndex]
+                    newData = datapoints[streamingDataIndex]
+                    # Add the Data to the Correct Channel
+                    analysis.channelData[channelIndex].extend(newData)
+
+            elif deviceType =='empatica':
+                for channelIndex in range(analysis.numChannels):
+                    # since we are doing analysis separately, we clear out the previous data points
+                    analysis.channelData[channelIndex] = []
+                    newData = datapoints
+                    analysis.channelData[channelIndex].extend(newData)
+
+
+
+
+
+
+
+
+
+

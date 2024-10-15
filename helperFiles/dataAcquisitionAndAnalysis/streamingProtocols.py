@@ -92,7 +92,7 @@ class streamingProtocols(streamingProtocolHelpers):
             print("\nFinished Streaming in Data; Closing Arduino\n")
             self.mainDevice.close()
 
-    def streamExcelData(self, compiledRawData, experimentTimes, experimentNames, surveyAnswerTimes,
+    def streamExcelData(self, deviceType, compiledRawData, experimentTimes, experimentNames, surveyAnswerTimes,
                         surveyAnswersList, surveyQuestions, subjectInformationAnswers, subjectInformationQuestions, filePath):
         print("\tAnalyzing the Excel Data")
         # Reset Global Variable in Case it Was Previously Populated
@@ -110,34 +110,72 @@ class streamingProtocols(streamingProtocolHelpers):
         self.setUserName(filePath)
 
         # Extract the Time and Voltage Data
-        timepoints, Voltages = compiledRawData
-        Voltages = np.asarray(Voltages)
+        if deviceType == "serial":
+            """timepoints = []
+                Voltages = [[], [], [], []] with same length as timepoints """
+            timepoints, Voltages = compiledRawData
+            Voltages = np.asarray(Voltages)
+            # Compile streaming parameters.
+            numPointsPerBatch = min(self.numPointsPerBatch, len(timepoints))
+            streamingDataFinger = 0
+            excelDataFinger = 0
 
-        # Compile streaming parameters.
-        numPointsPerBatch = min(self.numPointsPerBatch, len(timepoints))
-        streamingDataFinger = 0
-        excelDataFinger = 0
+            # Loop Through and Read the Excel Data in Pseudo-Real-Time
+            while excelDataFinger != len(timepoints):
+                self.organizeData(deviceType, timepoints=timepoints[excelDataFinger:excelDataFinger + self.moveDataFinger], datapoints=Voltages[:, excelDataFinger:excelDataFinger + self.moveDataFinger])
+                excelDataFinger = min(len(timepoints), excelDataFinger + self.moveDataFinger)
 
-        # Loop Through and Read the Excel Data in Pseudo-Real-Time
-        while excelDataFinger != len(timepoints):
-            self.organizeData(timepoints=timepoints[excelDataFinger:excelDataFinger + self.moveDataFinger], datapoints=Voltages[:, excelDataFinger:excelDataFinger + self.moveDataFinger])
-            excelDataFinger = min(len(timepoints), excelDataFinger + self.moveDataFinger)
+                # When enough data has been collected, analyze the new data in batches.
+                while numPointsPerBatch <= excelDataFinger - streamingDataFinger:
+                    streamingDataFinger = self.analyzeBatchData(streamingDataFinger)
+                # Organize experimental information.
+                self.organizeExperimentalInformation(timepoints, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, excelDataFinger)
 
-            # When enough data has been collected, analyze the new data in batches.
-            while numPointsPerBatch <= excelDataFinger - streamingDataFinger:
-                streamingDataFinger = self.analyzeBatchData(streamingDataFinger)
-            # Organize experimental information.
-            self.organizeExperimentalInformation(timepoints, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, excelDataFinger)
+            # Assert that experimental information was read in correctly.
 
-        # Assert that experimental information was read in correctly.
-        assert np.array_equal(experimentTimes, self.experimentTimes), f"{experimentTimes} \n {self.experimentTimes}"
-        assert np.all(np.asarray(experimentNames) == np.asarray(self.experimentNames)), experimentNames
-        # Assert that experimental information was read in correctly.
-        assert np.array_equal(surveyAnswerTimes, self.surveyAnswerTimes), print(surveyAnswerTimes, self.surveyAnswerTimes)
-        assert np.array_equal(surveyAnswersList, self.surveyAnswersList), print(surveyAnswersList, self.surveyAnswersList)
+            assert np.array_equal(experimentTimes, self.experimentTimes), f"{experimentTimes} \n {self.experimentTimes}"
+            assert np.all(np.asarray(experimentNames) == np.asarray(self.experimentNames)), experimentNames
+            # Assert that experimental information was read in correctly.
+            assert np.array_equal(surveyAnswerTimes, self.surveyAnswerTimes), print(surveyAnswerTimes, self.surveyAnswerTimes)
+            assert np.array_equal(surveyAnswersList, self.surveyAnswersList), print(surveyAnswersList, self.surveyAnswersList)
 
-        # Finished Analyzing the Data
-        print("\n\tFinished Analyzing Excel Data")
+            # Finished Analyzing the Data
+            print("\n\tFinished Analyzing Excel Data")
+
+        elif deviceType == "empatica":
+            """Note: timePoints [[t1], [t2], [t3], [t4]]
+                    Voltages: [[d1], [d2], [d3], [d4]]"""
+            biomarkerIndex = 0 # 0 for acc, 1 for bvp, 2, for eda, 3 for temp
+            # cannot process it this way
+            for pairInd in range (0, len(compiledRawData[0])):
+                timepoints = compiledRawData[0][pairInd]
+                Voltages = compiledRawData[1][pairInd]
+                Voltages = np.asarray(Voltages)
+                numPointsPerBatch = min(self.numPointsPerBatch, len(timepoints))
+                streamingDataFinger = 0
+                excelDataFinger = 0
+
+                # Loop Through and Read the Excel Data in Pseudo-Real-Time
+                while excelDataFinger != len(timepoints):
+                    self.organizeData(deviceType, timepoints=timepoints[excelDataFinger:excelDataFinger + self.moveDataFinger], datapoints=Voltages[excelDataFinger:excelDataFinger + self.moveDataFinger])
+                    excelDataFinger = min(len(timepoints), excelDataFinger + self.moveDataFinger)
+
+                    # When enough data has been collected, analyze the new data in batches.
+                    while numPointsPerBatch <= excelDataFinger - streamingDataFinger:
+                        streamingDataFinger = self.analyzeBatchData_e4(biomarkerIndex, streamingDataFinger)
+                    # Organize experimental information.
+                    self.organizeExperimentalInformation(timepoints, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, excelDataFinger)
+                # Assert that experimental information was read in correctly.
+                assert np.array_equal(experimentTimes, self.experimentTimes), f"{experimentTimes} \n {self.experimentTimes}"
+                assert np.all(np.asarray(experimentNames) == np.asarray(self.experimentNames)), experimentNames
+                # Assert that experimental information was read in correctly.
+                assert np.array_equal(surveyAnswerTimes, self.surveyAnswerTimes), print(surveyAnswerTimes, self.surveyAnswerTimes)
+                assert np.array_equal(surveyAnswersList, self.surveyAnswersList), print(surveyAnswersList, self.surveyAnswersList)
+
+                # Finished Analyzing the Data
+                print(f"\n\tFinished Analyzing Excel Data for pairs {pairInd + 1}")
+                biomarkerIndex += 1
+
 
     def organizeExperimentalInformation(self, timepoints, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, excelDataFinger):
         # Add the experiment information when the timepoint is reached.
