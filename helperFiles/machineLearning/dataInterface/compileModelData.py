@@ -80,7 +80,7 @@ class compileModelData(compileModelDataHelpers):
         self.saveCompiledInfo(data_to_store_Full, compiledModelName + self.fullAnalysisSuffix)
         self.saveCompiledInfo(data_to_store, compiledModelName)
 
-        return allRawFeatureIntervalTimes, allCompiledFeatureIntervals, surveyAnswersList, surveyQuestions, activityLabels, activityNames, numQuestionOptions, subjectOrder, featureNames
+        return allRawFeatureIntervalTimes, allCompiledFeatureIntervals, subjectOrder, featureNames, surveyQuestions, surveyAnswerTimes, surveyAnswersList, activityNames, activityLabels, numQuestionOptions
 
     def compileMetaAnalyses(self, metaDatasetNames, loadCompiledData=False, compiledModelName="compiledMetaTrainingInfo"):
         # Prepare to compile all the metadata analyses.
@@ -112,8 +112,8 @@ class compileModelData(compileModelDataHelpers):
                 activityNames, activityLabels = metaAnalysisProtocol.extractExperimentLabels(experimentalOrder)
 
                 # Compile the project data together
-                data_to_store = {f"{compiledModelName}": [allRawFeatureIntervalTimes, allCompiledFeatureIntervals, subjectOrder, featureNames, surveyQuestions, surveyAnswerTimes, surveyAnswersList, activityNames, activityLabels, numQuestionOptions]}
-                data_to_store_Full = {f"{compiledModelName}": [allRawFeatureTimesHolders, allRawFeatureHolders, allRawFeatureIntervalTimes, allRawFeatureIntervals, allCompiledFeatureIntervals, subjectOrder, experimentalOrder,
+                data_to_store = {f"{compiledModelFinalName}": [allRawFeatureIntervalTimes, allCompiledFeatureIntervals, subjectOrder, featureNames, surveyQuestions, surveyAnswerTimes, surveyAnswersList, activityNames, activityLabels, numQuestionOptions]}
+                data_to_store_Full = {f"{compiledModelFinalName}": [allRawFeatureTimesHolders, allRawFeatureHolders, allRawFeatureIntervalTimes, allRawFeatureIntervals, allCompiledFeatureIntervals, subjectOrder, experimentalOrder,
                                                                allFinalLabels, featureLabelTypes, surveyQuestions, surveyAnswersList, surveyAnswerTimes, activityNames, activityLabels, featureNames, numQuestionOptions]}
                 self.saveCompiledInfo(data_to_store_Full, compiledModelFinalName + self.fullAnalysisSuffix)
                 self.saveCompiledInfo(data_to_store, compiledModelFinalName)

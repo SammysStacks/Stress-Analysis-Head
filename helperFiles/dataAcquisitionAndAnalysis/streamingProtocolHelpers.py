@@ -68,7 +68,6 @@ class streamingProtocolHelpers(featureOrganization):
         assert np.sum(self.numChannelDist) == self.numStreamedSignals, f"The number of channels per biomarker ({self.numChannelDist}) does not align with the streaming order ({self.streamingOrder})"
 
         # Initialize global plotting class.
-        print(self.plotStreamedData)
         self.plottingClass = plottingProtocols(self.numStreamedSignals, self.channelDist, self.analysisOrder) if self.plotStreamedData else None
         self.analysisProtocols = {
             'highfreq': generalProtocol_highFreq(self.numPointsPerBatch, self.moveDataFinger, self.channelDist['highfreq'], self.plottingClass, self) if 'highfreq' in self.analysisOrder else None,
