@@ -34,7 +34,7 @@ if __name__ == "__main__":
         dataloader_config=accelerate.DataLoaderConfiguration(split_batches=True),  # Whether to split batches across devices or not.
         cpu=torch.backends.mps.is_available(),  # Whether to use the CPU. MPS is NOT fully compatible yet.
         step_scheduler_with_optimizer=False,  # Whether to wrap the optimizer in a scheduler.
-        gradient_accumulation_steps=16,  # The number of gradient accumulation steps.
+        gradient_accumulation_steps=32,  # The number of gradient accumulation steps.
         mixed_precision="no",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"
     )
 
@@ -54,12 +54,12 @@ if __name__ == "__main__":
 
     # Add arguments for the general model
     parser.add_argument('--submodel', type=str, default=modelConstants.signalEncoderModel, help='The component of the model we are training. Options: signalEncoderModel, emotionModel')
-    parser.add_argument('--optimizerType', type=str, default='AdamW', help='The optimizerType used during training convergence: Options: RMSprop, Adam, AdamW, SGD, etc.')
+    parser.add_argument('--optimizerType', type=str, default='SGD', help='The optimizerType used during training convergence: Options: RMSprop, Adam, AdamW, SGD, etc.')
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are running the platform on')
 
     # Add arguments for the neural operator.
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
-    parser.add_argument('--waveletType', type=str, default='bior2.2', help='The wavelet type for the wavelet transform: bior3.7, db3, dmey, etc')
+    parser.add_argument('--waveletType', type=str, default='bior1.1', help='The wavelet type for the wavelet transform: bior3.7, db3, dmey, etc')
 
     # Add arguments for the signal encoder prediction
     parser.add_argument('--numSpecificEncodingLayers', type=int, default=1, help='The number of layers in the specific signal encoding neural operator.')
