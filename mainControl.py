@@ -41,8 +41,8 @@ if __name__ == "__main__":
     reverseOrder = False  # Reverse the order of the data for training.
 
     # Specify the user parameters.
-    trialName = "E4_Extract_Saving_test"  # TODO: This is not a valid trial name
-    userName = "Ruixiao"
+    userName = "Ruixiao".replace(" ", "")
+    trialName = "E4_Extract_Saving_test"
     date = "2024-10-24"
 
     # Specify experimental parameters.
@@ -99,6 +99,9 @@ if __name__ == "__main__":
 
     elif readDataFromExcel:
         # Collect the Data from Excel
+        """if deviceType == 'empatica':
+            compiledRawData = [[[t1], [t2], [t3], [t4]], [[d1], [d2], [d3], [d4]]]]"""
+
         compiledRawData, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions, subjectInformationAnswers, subjectInformationQuestions = \
             extractDataProtocols.extractData().getData(currentFilename, deviceType, numberOfChannels=len(streamingOrder), testSheetNum=testSheetNum)
 
@@ -106,12 +109,13 @@ if __name__ == "__main__":
         readData.streamExcelData(deviceType, compiledRawData, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList,
                                  surveyQuestions, subjectInformationAnswers, subjectInformationQuestions, currentFilename)
 
+
     # ----------------------------- Extract Feature Data ----------------------------- #
 
     # Take Preprocessed (Saved) Features from Excel Sheet
     elif trainModel:
         # Initializing the training class.
-        trainingInterface = trainingProtocols.trainingProtocols(deviceType, biomarkerFeatureNames, streamingOrder, biomarkerFeatureOrder, collectedDataFolder, readData)
+        trainingInterface = trainingProtocols.trainingProtocols(biomarkerFeatureNames, streamingOrder, biomarkerFeatureOrder, collectedDataFolder, readData)
 
         checkFeatureWindow_EEG = False
         if checkFeatureWindow_EEG:
@@ -179,6 +183,33 @@ if __name__ == "__main__":
                 colors[-1] = 'skyblue'
             if 'heat' in experimentName.lower():
                 colors[-1] = '#D62728'
+        # exit()
+
+        # Standardize data
+        # standardizeClass_Features = standardizeData(allFinalFeatures, threshold=0)
+        # standardizedFeatures = standardizeClass_Features.standardize(allFinalFeatures)
+        # # Standardize labels
+        # standardizeClass_Labels = []
+        # standardizedLabels = []
+        # scoreTransformations = []
+        # for modelInd in range(len(performMachineLearning.modelControl.modelClasses)):
+        #     if modelInd == 2:
+        #         standardizeClass_Labels.append(standardizeData(allFinalLabels[modelInd], threshold=0))
+        #         standardizedLabels.append(standardizeClass_Labels[modelInd].standardize(allFinalLabels[modelInd]))
+        #
+        #         scoreTransformation = np.diff(standardizedLabels[modelInd]) / np.diff(allFinalLabels[modelInd])
+        #         scoreTransformations.append(scoreTransformation[~np.isnan(scoreTransformation)][0])
+        #     else:
+        #         oddLabels = allFinalLabels[modelInd]  # + (np.mod(allFinalLabels[modelInd],2)==0)
+        #         standardizeClass_Labels.append(standardizeData(oddLabels, threshold=0))
+        #         standardizedLabels.append(standardizeClass_Labels[modelInd].standardize(oddLabels))
+        #
+        #         scoreTransformation = np.diff(standardizedLabels[modelInd]) / np.diff(oddLabels)
+        #         scoreTransformations.append(scoreTransformation[~np.isnan(scoreTransformation)][0])
+        #
+        #     # Compile information into the model class
+        #     performMachineLearning.modelControl.modelClasses[modelInd].setStandardizationInfo(featureNames, standardizeClass_Features, standardizeClass_Labels[modelInd])
+        # standardizedLabels = np.asarray(standardizedLabels)
 
     # ------------------ Extract Data into this Namespace ------------------ #
 

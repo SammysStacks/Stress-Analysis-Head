@@ -146,10 +146,9 @@ class saveExcelData(handlingExcelFormat):
         worksheet.title = self.rawSignals_Sheetname
         worksheet.append(header)
 
-        if deviceType == 'empatica':
-            for firstIndexInFile in range(0, len(timepoints), self.maxAddToExcelSheet):
-                startTimer = time.time()
-
+        for firstIndexInFile in range(0, len(timepoints), self.maxAddToExcelSheet):
+            startTimer = time.time()
+            if deviceType == 'empatica':
                 # Now append data: align time points with corresponding signal data in the same row
                 max_rows = max(len(tp) for tp in timepoints)  # Determine the maximum number of rows to iterate over
 
@@ -169,35 +168,7 @@ class saveExcelData(handlingExcelFormat):
 
                     # Append the collected row data to the worksheet
                     worksheet.append(row_data)
-
-                # Finalize document aesthetics
-                self.addExcelAesthetics(worksheet)  # Add Excel Aesthetics
-                worksheet = WB.create_sheet(self.emptySheetName)  # Add Sheet
-
-                # Track and estimate time if writing in batches
-                maxNumberRows = max(len(tp) for tp in timepoints)
-                if firstIndexInFile + self.maxAddToExcelSheet < maxNumberRows:
-                    endTimer = time.time()
-                    numberOfSheetsLeft = 1 + (maxNumberRows - firstIndexInFile - self.maxAddToExcelSheet) // self.maxAddToExcelSheet
-                    timeRemaining = (endTimer - startTimer) * numberOfSheetsLeft
-                    print("\tEstimated Time Remaining " + str(timeRemaining) + " seconds; Excel Sheets Left to Add: " + str(numberOfSheetsLeft))
-
-            # Remove empty page
-            if worksheet.title == self.emptySheetName:
-                WB.remove(worksheet)
-
-            # ------------------------------------------------------------------ #
-            # ------------------------ Save the document ----------------------- #
-            WB.save(saveExcelPath)
-            WB.close()
-        else:
-            # Loop through/save all the data in batches of maxAddToExcelSheet.
-            for firstIndexInFile in range(0, len(timepoints), self.maxAddToExcelSheet):
-                startTimer = time.time()
-                # Add the information to the page
-                worksheet.title = self.rawSignals_Sheetname
-                worksheet.append(header)  # Add the header labels to this specific file.
-
+            elif deviceType == 'serial':
                 # Loop through all data to be saved within this sheet in the Excel file.
                 for dataInd in range(firstIndexInFile, min(firstIndexInFile + self.maxAddToExcelSheet, len(timepoints))):
                     # Organize all the data
@@ -207,27 +178,27 @@ class saveExcelData(handlingExcelFormat):
                     # Add the row to the worksheet
                     worksheet.append(row)
 
-                # Finalize document
-                self.addExcelAesthetics(worksheet)  # Add Excel Aesthetics
-                worksheet = WB.create_sheet(self.emptySheetName)  # Add Sheet
+            # Finalize document aesthetics
+            self.addExcelAesthetics(worksheet)  # Add Excel Aesthetics
+            worksheet = WB.create_sheet(self.emptySheetName)  # Add Sheet
 
-                # If I need to use another sheet
-                if firstIndexInFile + self.maxAddToExcelSheet < len(timepoints):
-                    # Keep track of how long it is taking.
-                    endTimer = time.time()
-                    numberOfSheetsLeft = 1 + (len(timepoints) - firstIndexInFile - self.maxAddToExcelSheet) // self.maxAddToExcelSheet
-                    timeRemaining = (endTimer - startTimer) * numberOfSheetsLeft
-                    print("\tEstimated Time Remaining " + str(timeRemaining) + " seconds; Excel Sheets Left to Add: " + str(numberOfSheetsLeft))
-            # Remove empty page
-            if worksheet.title == self.emptySheetName:
-                WB.remove(worksheet)
+            # Track and estimate time if writing in batches
+            maxNumberRows = max(len(tp) for tp in timepoints)
+            if firstIndexInFile + self.maxAddToExcelSheet < maxNumberRows:
+                endTimer = time.time()
+                numberOfSheetsLeft = 1 + (maxNumberRows - firstIndexInFile - self.maxAddToExcelSheet) // self.maxAddToExcelSheet
+                timeRemaining = (endTimer - startTimer) * numberOfSheetsLeft
+                print("\tEstimated Time Remaining " + str(timeRemaining) + " seconds; Excel Sheets Left to Add: " + str(numberOfSheetsLeft))
 
-            # ------------------------------------------------------------------ #
-            # ------------------------ Save the document ----------------------- #
-            # Save as New Excel File
-            WB.save(saveExcelPath)
-            WB.close()
+        # Remove empty page
+        if worksheet.title == self.emptySheetName:
+            WB.remove(worksheet)
 
+        # ------------------------------------------------------------------ #
+        # ------------------------ Save the document ----------------------- #
+        WB.save(saveExcelPath)
+        WB.close()
+   
     def saveRawFeatures(self, rawFeatureTimesHolder, rawFeatureHolder, biomarkerFeatureNames, biomarkerFeatureOrder, experimentTimes, experimentNames,
                         surveyAnswerTimes, surveyAnswersList, surveyQuestions, subjectInformationAnswers, subjectInformationQuestions, excelFilename, overwriteSave=True):
         print("\n\tSaving raw features")
