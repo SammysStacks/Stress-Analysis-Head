@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
     # Specify the user parameters.
     userName = "Ruixiao".replace(" ", "")
-    trialName = "E4_Extract_Saving_test"
+    trialName = "E4_Extract_Saving_test-2"
     date = "2024-10-24"
 
     # Specify experimental parameters.
