@@ -211,7 +211,7 @@ class compileModelDataHelpers:
                 biomarkerTimes = torch.tensor(biomarkerTimes, dtype=torch.float32)  # Dim: batchSpecificFeatureLength
 
                 # Remove data outside the time window.
-                biomarkerTimes = surveyAnswerTime - biomarkerTimes; print(biomarkerTimes)
+                biomarkerTimes = surveyAnswerTime - biomarkerTimes
                 timeWindowMask = (biomarkerTimes <= modelConstants.timeWindows[-1]).to(torch.bool)
                 biomarkerData = biomarkerData[:, timeWindowMask]
                 biomarkerTimes = biomarkerTimes[timeWindowMask]
