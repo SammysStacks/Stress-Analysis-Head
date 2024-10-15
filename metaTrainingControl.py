@@ -63,7 +63,7 @@ if __name__ == "__main__":
 
     # Add arguments for the signal encoder prediction
     parser.add_argument('--numSpecificEncodingLayers', type=int, default=1, help='The number of layers in the specific signal encoding neural operator.')
-    parser.add_argument('--numMetaEncodingLayers', type=int, default=4, help='The number of layers in the shared signal encoding operator.')
+    parser.add_argument('--numMetaEncodingLayers', type=int, default=8, help='The number of layers in the shared signal encoding operator.')
     parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
 
     # Add arguments for the emotion prediction

@@ -1,26 +1,22 @@
+from sklearn.model_selection import train_test_split
+import numpy as np
 import itertools
+import torch
 import os
 
-import numpy as np
-import torch
-from sklearn.model_selection import train_test_split
-
-from helperFiles.dataAcquisitionAndAnalysis.metadataAnalysis.amigosInterface import amigosInterface
-from helperFiles.dataAcquisitionAndAnalysis.metadataAnalysis.caseInterface import caseInterface
-from helperFiles.dataAcquisitionAndAnalysis.metadataAnalysis.dapperInterface import dapperInterface
-# Import interfaces for the metadata
-from helperFiles.dataAcquisitionAndAnalysis.metadataAnalysis.emognitionInterface import emognitionInterface
-from helperFiles.dataAcquisitionAndAnalysis.metadataAnalysis.wesadInterface import wesadInterface
-from .compileModelDataHelpers import compileModelDataHelpers
-from ..featureAnalysis.compiledFeatureNames.compileFeatureNames import compileFeatureNames  # Functions to extract feature names
-from helperFiles.machineLearning.modelControl.Models.pyTorch.dataLoaderPyTorch import pytorchDataInterface
-# Import files for training and testing the model
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionPipeline import emotionPipeline
 from ..modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
 from ..modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
-from ..modelControl.modelSpecifications.compileModelInfo import compileModelInfo  # Functions with model information
-# Import interfaces for the model's data
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionPipeline import emotionPipeline
+from helperFiles.dataAcquisitionAndAnalysis.metadataAnalysis.emognitionInterface import emognitionInterface
+from helperFiles.machineLearning.modelControl.Models.pyTorch.dataLoaderPyTorch import pytorchDataInterface
+from helperFiles.dataAcquisitionAndAnalysis.metadataAnalysis.amigosInterface import amigosInterface
+from helperFiles.dataAcquisitionAndAnalysis.metadataAnalysis.dapperInterface import dapperInterface
+from helperFiles.dataAcquisitionAndAnalysis.metadataAnalysis.wesadInterface import wesadInterface
 from ...dataAcquisitionAndAnalysis.metadataAnalysis.globalMetaAnalysis import globalMetaAnalysis
+from helperFiles.dataAcquisitionAndAnalysis.metadataAnalysis.caseInterface import caseInterface
+from ..featureAnalysis.compiledFeatureNames.compileFeatureNames import compileFeatureNames  # Functions to extract feature names
+from ..modelControl.modelSpecifications.compileModelInfo import compileModelInfo  # Functions with model information
+from .compileModelDataHelpers import compileModelDataHelpers
 
 
 class compileModelData(compileModelDataHelpers):

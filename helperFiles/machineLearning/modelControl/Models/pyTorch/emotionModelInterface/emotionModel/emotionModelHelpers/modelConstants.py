@@ -39,7 +39,7 @@ class modelConstants:
 
     # Specify the data interface parameters.
     timeWindows = [90, 120, 150, 180, 210, 240, 300]
-    minNumExperiments = 60  # The minimum number of experiments that can be used in the model
+    minNumExperiments = 40  # The minimum number of experiments that can be used in the model
     maxNumSignals = 128  # The maximum number of signals that can be used in the model (2**n)
     minMaxScale = 1  # The maximum value for the min-max scaling.
 

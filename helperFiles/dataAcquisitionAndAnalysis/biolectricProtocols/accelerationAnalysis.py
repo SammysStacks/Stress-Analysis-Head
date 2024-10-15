@@ -92,8 +92,6 @@ class accelerationProtocol(globalProtocol):
 
     def filterData(self, timepoints, data, removePoints=False):
         # Filter the Data: Low pass Filter and Savgol Filter
-        print('data', data)
-        print('dataLength', len(data))
         filteredData = self.filteringMethods.bandPassFilter.butterFilter(data, self.cutOffFreq, self.samplingFreq, order=3, filterType='bandpass', fastFilt=True)
         filteredTime = timepoints.copy()
 

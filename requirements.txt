@@ -5,7 +5,6 @@ hmmlearn
 joblib
 keras
 matplotlib
-mne
 natsort
 numpy
 oculus
@@ -14,17 +13,12 @@ openpyxl
 pandas
 playsound
 plotapi
-psutil
 pyexcel
 pyFirmata2
 pygame
 PyQt5
-PyQt5-sip
-PyQt5-stubs
 pyserial
 pysr
-pytz
-pytorch-wavelets
 PyWavelets
 Requests
 scikit-learn
@@ -39,16 +33,16 @@ SpeechRecognition
 sympy
 tensorflow
 tensorly
-tools
-torch --index-url https://download.pytorch.org/whl/cu124
-torchvision --index-url https://download.pytorch.org/whl/cu124
-torchaudio --index-url https://download.pytorch.org/whl/cu124
 torchsummary
 torchviz
 transformers
 webdriver-manager
 xgboost
-mne_features
-mne
 lightgbm
 pillow
+mpmath
+ipython
+torch
+torchvision
+BaselineRemoval
+pexpect

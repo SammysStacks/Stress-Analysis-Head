@@ -81,11 +81,6 @@ class globalProtocol(abc.ABC):
 
     def setSamplingFrequency(self, startFilterPointer):
         # Calculate the Sampling Frequency
-        # print('self.timepoints[startFilterPointer:-1]', self.timepoints[startFilterPointer:-1])
-        print('len(self.timepoints[startFilterPointer:-1])', len(self.timepoints[startFilterPointer:-1]))
-        print('self.timepoints[-1]', self.timepoints[-1])
-        print('self,timepoints[startFilterPointer]', self.timepoints[startFilterPointer] )
-
         self.samplingFreq = len(self.timepoints[startFilterPointer:-1]) / (self.timepoints[-1] - self.timepoints[startFilterPointer])
         print(f"\n\tSetting {self.analysisType} Sampling Frequency to {self.samplingFreq}")
         print("\tIf this protocol runs longer than", self.moveDataFinger / self.samplingFreq, ", the analysis will NOT be in real-time")

@@ -21,7 +21,7 @@ class bvpProtocol(globalProtocol):
         self.featureListExact = None
         self.maxPointsPerPulse = None
         self.minPointsPerPulse = None
-        self.peakStandard = 0  # The Max First Deriviative of the Previous Pulse's Systolic Peak
+        self.peakStandard = 0  # The Max First Derivative of the Previous Pulse's Systolic Peak
         self.peakStandardInd = 0  # The Index of the Max Derivative in the Previous Pulse's Systolic Peak
 
         # Pointer initialization
@@ -68,11 +68,9 @@ class bvpProtocol(globalProtocol):
         self.featureListExact = []  # List of Lists of Features; Each Index Represents a Pulse; Each Pulse's List Represents its Features
         self.featureListAverage = []  # List of Lists of Features Averaged in Time by self.numSecondsAverage; Each Index Represents a Pulse; Each Pulse's List Represents its Features
 
-        # Peak Seperation Parameters
-        self.peakStandard = 0  # The Max First Deriviative of the Previous Pulse's Systolic Peak
+        # Peak Separation Parameters
+        self.peakStandard = 0  # The Max First Derivative of the Previous Pulse's Systolic Peak
         self.peakStandardInd = 0  # The Index of the Max Derivative in the Previous Pulse's Systolic Peak
-
-
 
     def checkParams(self):
         pass
@@ -174,8 +172,6 @@ class bvpProtocol(globalProtocol):
                 self.maxPointsPerPulse = math.ceil(self.samplingFreq * 60 / self.minBPM)
 
             filteredTime, filteredData, goodIndicesMask = self.filterData(timepoints, dataBuffer, removePoints=False)
-            standardizeData = self.universalMethods.standardizeData(filteredData)
-            standardizeData = savgol_filter(standardizeData, 11, 3)
 
             if self.collectFeatures:
                 newFeatureTimes, newRawFeatures = [], []
@@ -188,7 +184,7 @@ class bvpProtocol(globalProtocol):
                         self.startFeatureTimePointer[channelIndex], featureTime, self.featureTimeWindow)
                     print('_____________________________defining intervalTimes____________________________________________')
                     intervalTimes, intervalData = self.compileBatchData(
-                        filteredTime, standardizeData, goodIndicesMask, startFilterPointer,
+                        filteredTime, filteredData, goodIndicesMask, startFilterPointer,
                         self.startFeatureTimePointer[channelIndex], channelIndex)
 
                     # If the interval data or times are empty, skip further analysis.
@@ -317,13 +313,13 @@ class bvpProtocol(globalProtocol):
 
         # --------------------- Under the Curve Features -------------------- #
         # Calculate the Area Under the Curve
-        pulseArea = scipy.integrate.simpson(normalizedPulse, pulseTime)
-        pulseAreaSquared = scipy.integrate.simpson(normalizedPulse ** 2, pulseTime)
-        leftVentricleLoad = scipy.integrate.simpson(normalizedPulse[0:dicroticNotchInd + 1], pulseTime[0:dicroticNotchInd + 1])
+        pulseArea = scipy.integrate.simpson(y=normalizedPulse, x=pulseTime)
+        pulseAreaSquared = scipy.integrate.simpson(y=normalizedPulse ** 2, x=pulseTime)
+        leftVentricleLoad = scipy.integrate.simpson(y=normalizedPulse[0:dicroticNotchInd + 1], x=pulseTime[0:dicroticNotchInd + 1])
         diastolicArea = pulseArea - leftVentricleLoad
 
         # General Areas
-        systolicUpSlopeArea = scipy.integrate.simpson(normalizedPulse[systolicUpstrokeAccelMaxInd:systolicUpstrokeAccelMinInd + 1], pulseTime[systolicUpstrokeAccelMaxInd:systolicUpstrokeAccelMinInd + 1])
+        systolicUpSlopeArea = scipy.integrate.simpson(y=normalizedPulse[systolicUpstrokeAccelMaxInd:systolicUpstrokeAccelMinInd + 1], x=pulseTime[systolicUpstrokeAccelMaxInd:systolicUpstrokeAccelMinInd + 1])
 
         # Average of the Pulse
         pulseAverage = np.mean(normalizedPulse)
@@ -369,8 +365,8 @@ class bvpProtocol(globalProtocol):
         maxSystolicVelocity = max(pulseVelocity)
         valveCrossSectionalArea = pseudoCardiacOutput / maxSystolicVelocity
 
-        velocityTimeIntegral = scipy.integrate.simpson(pulseVelocity, pulseTime)
-        velocityTimeIntegralABS = scipy.integrate.simpson(abs(pulseVelocity), pulseTime)
+        velocityTimeIntegral = scipy.integrate.simpson(y=pulseVelocity, x=pulseTime)
+        velocityTimeIntegralABS = scipy.integrate.simpson(y=abs(pulseVelocity), x=pulseTime)
         velocityTimeIntegral_ALT = pseudoStrokeVolume / valveCrossSectionalArea
 
         # Add Index Parameters: https://www.vitalscan.com/dtr_pwv_parameters.html

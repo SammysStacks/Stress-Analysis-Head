@@ -35,11 +35,9 @@ class compileModelDataHelpers:
         self.emotionPredictionModelInfo = None
         self.signalEncoderModelInfo = None
         self.maxClassPercentage = None
+        self.minSequencePoints = None
         self.minNumClasses = None
-
-        # Data cleaning parameters
-        self.minSequencePoints = int(modelConstants.timeWindows[0]/12)
-        self.maxTimeGap = modelConstants.timeWindows[0]
+        self.maxTimeGap = None
 
         # Set the submodel-specific parameters
         if submodel is not None: self.addSubmodelParameters(submodel, userInputParams)
@@ -49,7 +47,8 @@ class compileModelDataHelpers:
             self.userInputParams = userInputParams
 
         # Exclusion criterion.
-        self.minNumClasses, self.maxClassPercentage = self.modelParameters.getExclusionCriteria(submodel)
+        self.minNumClasses, self.maxClassPercentage = self.modelParameters.getExclusionClassCriteria(submodel)
+        self.minSequencePoints, self.maxTimeGap = self.modelParameters.getExclusionSequenceCriteria(submodel)
 
         # Embedded information for each model.
         self.signalEncoderModelInfo = f"signalEncoder on {userInputParams['deviceListed']} with {userInputParams['waveletType'].replace('.', '')} at {userInputParams['optimizerType']} at numSpecificEncodingLayers {userInputParams['numSpecificEncodingLayers']} at numMetaEncodingLayers {userInputParams['numMetaEncodingLayers']} at encodedDimension {userInputParams['encodedDimension']}"
@@ -122,7 +121,7 @@ class compileModelDataHelpers:
                 unique_classes, class_counts = torch.unique(featureLabels[goodLabelInds], return_counts=True)
 
             # Ensure greater variability in the class rating system.
-            if metaTraining and (len(unique_classes) < self.minNumClasses or len(featureLabels) * self.maxClassPercentage <= class_counts.max().item()):
+            if metaTraining and (len(unique_classes) < self.minNumClasses or self.maxClassPercentage <= class_counts.max().item()/batchSize):
                 featureLabels[:] = self.missingLabelValue
 
             # Save the edits made to the featureLabels

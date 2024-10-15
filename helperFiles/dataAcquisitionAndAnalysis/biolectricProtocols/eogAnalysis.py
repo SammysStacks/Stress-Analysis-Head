@@ -521,14 +521,14 @@ class eogProtocol(globalProtocol):
 
         # ------------------- Extract Integral Features ------------------- #
 
-        portion5Integral = scipy.integrate.simpson(yData[peakInd:accelInds[2]], xData[peakInd:accelInds[2]])
+        portion5Integral = scipy.integrate.simpson(y=yData[peakInd:accelInds[2]], x=xData[peakInd:accelInds[2]])
 
         # Other Integrals
-        closingIntegral = scipy.integrate.simpson(yData[startBlinkInd:peakInd], xData[startBlinkInd:peakInd])
-        openingIntegral = scipy.integrate.simpson(yData[peakInd:endBlinkInd], xData[peakInd:endBlinkInd])
-        closingSlopeIntegral = scipy.integrate.simpson(yData[accelInds[0]:accelInds[1]], xData[accelInds[0]:accelInds[1]])
-        peakToVel0Integral = scipy.integrate.simpson(yData[velInds[0]:peakInd], xData[velInds[0]:peakInd])
-        peakToVel1Integral = scipy.integrate.simpson(yData[peakInd:velInds[1]], xData[peakInd:velInds[1]])
+        closingIntegral = scipy.integrate.simpson(y=yData[startBlinkInd:peakInd], x=xData[startBlinkInd:peakInd])
+        openingIntegral = scipy.integrate.simpson(y=yData[peakInd:endBlinkInd], x=xData[peakInd:endBlinkInd])
+        closingSlopeIntegral = scipy.integrate.simpson(y=yData[accelInds[0]:accelInds[1]], x=xData[accelInds[0]:accelInds[1]])
+        peakToVel0Integral = scipy.integrate.simpson(y=yData[velInds[0]:peakInd], x=xData[velInds[0]:peakInd])
+        peakToVel1Integral = scipy.integrate.simpson(y=yData[peakInd:velInds[1]], x=xData[peakInd:velInds[1]])
 
         # ---------------------- Extract Shape Features --------------------- #
 

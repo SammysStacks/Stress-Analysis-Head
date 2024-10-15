@@ -80,10 +80,10 @@ if __name__ == "__main__":
         readData = streamingProtocols.streamingProtocols(None, [], None, 2048576, 1048100, streamingOrder, [], featureAverageWindows, False)
         
         # Collect the Data from Excel
-        compiledRawData, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions, subjectInformationAnswers, subjectInformationQuestions = \
-                                  extractDataProtocols.extractData().getData(testDataExcelFile, deviceType, numberOfChannels = len(streamingOrder), testSheetNum = 0)
+        compiledRawData_eachFreq, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions, subjectInformationAnswers, subjectInformationQuestions = \
+                                  extractDataProtocols.extractData().getData(testDataExcelFile, deviceType, streamingOrder = streamingOrder, testSheetNum = 0)
         # Analyze the Data using the Correct Protocol
-        readData.streamExcelData(compiledRawData, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, 
+        readData.streamExcelData(compiledRawData_eachFreq[0], experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList,
                                   surveyQuestions, subjectInformationAnswers, subjectInformationQuestions, testDataExcelFile)
 
         # Store the information

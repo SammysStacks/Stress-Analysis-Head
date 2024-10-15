@@ -52,6 +52,12 @@ class streamingProtocols(streamingProtocolHelpers):
 
         return stopTimeStreaming
 
+    def closeDeviceStream(self):
+        if self.deviceType == "empatica":
+            self.deviceReader.mainDevice.closeServer = True
+        if hasattr(self, "serverThread"): self.serverThread.join()
+        self.mainDevice.close()
+
     def streamWearableData(self, adcResolution, stopTimeStreaming, filePath):
         """Stop Streaming When we Obtain `stopTimeStreaming` from Arduino"""
         print("Beginning to stream in data!")
@@ -63,45 +69,41 @@ class streamingProtocols(streamingProtocolHelpers):
 
         # Prepare the arduino to stream in data
         self.stopTimeStreaming = self.setupDeviceStream(stopTimeStreaming, usingTimestamps=False)
-        timepoints = self.analysisList[0].timepoints
-        streamingDataFinger = 0
+        streamingDataFingers = [0 for _ in range(self.numUniqueSignals)]
+        highestSamplingFreqTimes = self.analysisList[0].timepoints
 
         try:
             # Loop Through and Read the Arduino Data in Real-Time
-            while len(timepoints) == 0 or (timepoints[-1] - timepoints[0]) < self.stopTimeStreaming:
+            while len(highestSamplingFreqTimes) == 0 or (highestSamplingFreqTimes[-1] - highestSamplingFreqTimes[0]) < self.stopTimeStreaming:
                 # Collect and compile the most recently available data points.
                 if self.deviceType == "serial": self.recordData(self.voltageRange[1], adcResolution)
 
-                # When enough data has been collected, analyze the new data in batches.
-                while len(timepoints) - streamingDataFinger >= self.numPointsPerBatch:
-                    streamingDataFinger = self.analyzeBatchData(streamingDataFinger)
-
-            # At the end, analyze all remaining data
-            self.analyzeBatchData(streamingDataFinger)
+                # Analyze the new data in batches.
+                streamingDataFingers = self.analyzeBatchData(streamingDataFingers)
+            self.analyzeBatchData(streamingDataFingers)
 
         except Exception as error:
-            self.mainDevice.close()
+            self.closeDeviceStream()
             print(error)
 
         finally:
             # Set the final experimental time to the end of the experiment
             if len(self.experimentTimes) != 0 and self.experimentTimes[-1][1] is None:
-                self.experimentTimes[-1][1] = timepoints[-1]
+                self.experimentTimes[-1][1] = highestSamplingFreqTimes[-1]
 
             # Close the Arduino's at the End
             print("\nFinished Streaming in Data; Closing Arduino\n")
-            self.mainDevice.close()
+            self.closeDeviceStream()
 
-    def streamExcelData(self, deviceType, compiledRawData, experimentTimes, experimentNames, surveyAnswerTimes,
-                        surveyAnswersList, surveyQuestions, subjectInformationAnswers, subjectInformationQuestions, filePath):
+    def streamExcelData(self, compiledRawData, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions, subjectInformationAnswers, subjectInformationQuestions, filePath):
         print("\tAnalyzing the Excel Data")
         # Reset Global Variable in Case it Was Previously Populated
         self.resetGlobalVariables()
 
         # Add Experimental information
-        self.surveyQuestions = surveyQuestions
-        self.subjectInformationAnswers = subjectInformationAnswers
         self.subjectInformationQuestions = subjectInformationQuestions
+        self.subjectInformationAnswers = subjectInformationAnswers
+        self.surveyQuestions = surveyQuestions
         # Experiment information parameters
         self.experimentInfoPointerStart = 0
         self.experimentInfoPointerEnd = 0
@@ -110,72 +112,33 @@ class streamingProtocols(streamingProtocolHelpers):
         self.setUserName(filePath)
 
         # Extract the Time and Voltage Data
-        if deviceType == "serial":
-            """timepoints = []
-                Voltages = [[], [], [], []] with same length as timepoints """
-            timepoints, Voltages = compiledRawData
-            Voltages = np.asarray(Voltages)
-            # Compile streaming parameters.
-            numPointsPerBatch = min(self.numPointsPerBatch, len(timepoints))
-            streamingDataFinger = 0
-            excelDataFinger = 0
+        timepoints, biomarkerData = compiledRawData
+        biomarkerData = np.asarray(biomarkerData)
+        # Compile streaming parameters.
+        self.numPointsPerBatch = min(self.numPointsPerBatch, len(timepoints))
+        streamingDataFingers = [0 for _ in range(self.numUniqueSignals)]
+        excelDataFinger = 0
 
-            # Loop Through and Read the Excel Data in Pseudo-Real-Time
-            while excelDataFinger != len(timepoints):
-                self.organizeData(deviceType, timepoints=timepoints[excelDataFinger:excelDataFinger + self.moveDataFinger], datapoints=Voltages[:, excelDataFinger:excelDataFinger + self.moveDataFinger])
-                excelDataFinger = min(len(timepoints), excelDataFinger + self.moveDataFinger)
+        # Loop Through and Read the Excel Data in Pseudo-Real-Time
+        while excelDataFinger != len(timepoints):
+            self.organizeData(timepoints=timepoints[excelDataFinger:excelDataFinger + self.moveDataFinger], datapoints=biomarkerData[:, excelDataFinger:excelDataFinger + self.moveDataFinger])
+            excelDataFinger = min(len(timepoints), excelDataFinger + self.moveDataFinger)
 
-                # When enough data has been collected, analyze the new data in batches.
-                while numPointsPerBatch <= excelDataFinger - streamingDataFinger:
-                    streamingDataFinger = self.analyzeBatchData(streamingDataFinger)
-                # Organize experimental information.
-                self.organizeExperimentalInformation(timepoints, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, excelDataFinger)
+            # When enough data has been collected, analyze the new data in batches.
+            streamingDataFingers = self.analyzeBatchData(streamingDataFingers)
 
-            # Assert that experimental information was read in correctly.
+            # Organize experimental information.
+            self.organizeExperimentalInformation(timepoints, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, excelDataFinger)
 
-            assert np.array_equal(experimentTimes, self.experimentTimes), f"{experimentTimes} \n {self.experimentTimes}"
-            assert np.all(np.asarray(experimentNames) == np.asarray(self.experimentNames)), experimentNames
+        if experimentTimes[-1][-1] < timepoints[-1]:
             # Assert that experimental information was read in correctly.
             assert np.array_equal(surveyAnswerTimes, self.surveyAnswerTimes), print(surveyAnswerTimes, self.surveyAnswerTimes)
             assert np.array_equal(surveyAnswersList, self.surveyAnswersList), print(surveyAnswersList, self.surveyAnswersList)
+            assert np.array_equal(experimentTimes, self.experimentTimes), f"{experimentTimes} != {self.experimentTimes}"
+            assert np.all(np.asarray(experimentNames) == np.asarray(self.experimentNames)), experimentNames
 
-            # Finished Analyzing the Data
-            print("\n\tFinished Analyzing Excel Data")
-
-        elif deviceType == "empatica":
-            """Note: timePoints [[t1], [t2], [t3], [t4]]
-                    Voltages: [[d1], [d2], [d3], [d4]]"""
-            biomarkerIndex = 0 # 0 for acc, 1 for bvp, 2, for eda, 3 for temp
-            # cannot process it this way
-            for pairInd in range (0, len(compiledRawData[0])):
-                timepoints = compiledRawData[0][pairInd]
-                Voltages = compiledRawData[1][pairInd]
-                Voltages = np.asarray(Voltages)
-                numPointsPerBatch = min(self.numPointsPerBatch, len(timepoints))
-                streamingDataFinger = 0
-                excelDataFinger = 0
-
-                # Loop Through and Read the Excel Data in Pseudo-Real-Time
-                while excelDataFinger != len(timepoints):
-                    self.organizeData(deviceType, timepoints=timepoints[excelDataFinger:excelDataFinger + self.moveDataFinger], datapoints=Voltages[excelDataFinger:excelDataFinger + self.moveDataFinger])
-                    excelDataFinger = min(len(timepoints), excelDataFinger + self.moveDataFinger)
-
-                    # When enough data has been collected, analyze the new data in batches.
-                    while numPointsPerBatch <= excelDataFinger - streamingDataFinger:
-                        streamingDataFinger = self.analyzeBatchData_e4(biomarkerIndex, streamingDataFinger)
-                    # Organize experimental information.
-                    self.organizeExperimentalInformation(timepoints, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, excelDataFinger)
-                # Assert that experimental information was read in correctly.
-                assert np.array_equal(experimentTimes, self.experimentTimes), f"{experimentTimes} \n {self.experimentTimes}"
-                assert np.all(np.asarray(experimentNames) == np.asarray(self.experimentNames)), experimentNames
-                # Assert that experimental information was read in correctly.
-                assert np.array_equal(surveyAnswerTimes, self.surveyAnswerTimes), print(surveyAnswerTimes, self.surveyAnswerTimes)
-                assert np.array_equal(surveyAnswersList, self.surveyAnswersList), print(surveyAnswersList, self.surveyAnswersList)
-
-                # Finished Analyzing the Data
-                print(f"\n\tFinished Analyzing Excel Data for pairs {pairInd + 1}")
-                biomarkerIndex += 1
-
+        # Finished Analyzing the Data
+        print("\n\tFinished Analyzing Excel Data")
 
     def organizeExperimentalInformation(self, timepoints, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, excelDataFinger):
         # Add the experiment information when the timepoint is reached.
@@ -195,7 +158,8 @@ class streamingProtocols(streamingProtocolHelpers):
     def getCurrentTime(self):
         # Return the last streaming timePoint
         while len(self.analysisList[0].timepoints) == 0:
-            print("\tWaiting for arduino to initialize!"); time.sleep(1)
+            print("\tWaiting for arduino to initialize!")
+            time.sleep(1)
         return self.analysisList[0].timepoints[-1]
 
     @staticmethod

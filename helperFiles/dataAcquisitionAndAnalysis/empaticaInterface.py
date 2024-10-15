@@ -35,7 +35,6 @@ class empaticaInterface:
 
     def startStreamingData(self, serverSocket):
         self.sendMessage(serverSocket, message=f"pause OFF\r\n")
-        time.sleep(1)  # Stabilize connection
 
     def sendMessage(self, serverSocket, message):
         # Send the message.
@@ -45,6 +44,9 @@ class empaticaInterface:
         response = serverSocket.recv(self.buffer_size)
         response = response.decode("utf-8").replace("\n", "")
         print(f"\t{response}")
+
+        # Check if the connection is still valid.
+        if "You are not connected to any device" in response: self.closeServer = True
 
         return response
 
@@ -60,8 +62,8 @@ class empaticaInterface:
 
             # Separate out the data.
             rawTimeSeconds = float(sensorData[1])
-            sensorType = sensorData[0]
             dataChannels = sensorData[2:]
+            sensorType = sensorData[0]
 
             # Initialize start time on first sample
             if self.firstTimePoint is None: self.firstTimePoint = rawTimeSeconds
@@ -72,7 +74,7 @@ class empaticaInterface:
                 case "E4_Bvp": analysis = self.analysisProtocols['bvp']
                 case "E4_Gsr": analysis = self.analysisProtocols['eda']
                 case "E4_Temperature": analysis = self.analysisProtocols['temp']
-                case _: raise ValueError(f"Unknown stream type: {sensorType}")
+                case _: raise ValueError(f"Unknown stream type: {sensorType} {sensorReading}")
 
             # Organize the data.
             self.organizeData(analysis=analysis, timepoint=normalized_timestamp, datapoint=dataChannels)
@@ -92,8 +94,6 @@ class empaticaInterface:
 
             # Add the data to the correct channel
             analysis.channelData[channelIndex].append(newData)
-        # print('analysis', analysis)
-        # print('analysis.timepoints', analysis.timepoints)
-        # print('analysis.channelData', analysis.channelData)
+
     def close(self):
         self.closeServer = True

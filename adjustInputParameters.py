@@ -18,7 +18,7 @@ class adjustInputParameters:
     def getGeneralParameters(self):
         if self.deviceType == "empatica":
             # Specify biomarker information.
-            streamingOrder = self.compileModelInfo.streamingOrder_e4  # A List Representing the Order of the Sensors being Streamed in: ["acc", "bvp", "eda", "temp"]
+            streamingOrder = self.compileModelInfo.streamingOrder_e4  # A List Representing the Order of the Sensors being Streamed in: ["bvp", "acc", "eda", "temp"]
             extractFeaturesFrom = streamingOrder if self.useModelPredictions else []  # A list with all the biomarkers from streamingOrder for feature extraction
             allAverageIntervals = self.compileModelInfo.featureAverageWindows_e4  # acc: 30, bvp: 60, eda: 30, temp: 30
         else:
@@ -92,7 +92,7 @@ class adjustInputParameters:
             return None, [], None, None, None
 
         # Specify the Machine Learning Parameters
-        plotTrainingData = True  # Plot all training information
+        plotTrainingData = False  # Plot all training information
         actionControl = None  # NOT IMPLEMENTED YET
         # If training, read the data as quickly as possible
 

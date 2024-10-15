@@ -27,7 +27,7 @@ testSheetNum = 0
 calibrationFile = 'calibrationADCData.xlsx'
 
 # Extract the calibration data
-voltages, serialReads = excelDataProtocol.getExcelData().getData(calibrationFile, testSheetNum = testSheetNum)
+voltages, serialReads = excelDataProtocol.getExcelData().getData(calibrationFile, testSheetNum = testSheetNum)[0]
 
 # Remove top points
 voltages = voltages[1:-2]

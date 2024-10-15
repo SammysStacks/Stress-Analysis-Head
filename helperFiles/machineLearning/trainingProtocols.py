@@ -97,15 +97,15 @@ class trainingProtocols(extractData):
 
                 self.readData.resetGlobalVariables()
                 # Extract and analyze the raw data.
-                compiledRawData, experimentTimes, experimentNames, currentSurveyAnswerTimes, currentSurveyAnswersList, surveyQuestions, currentSubjectInformationAnswers, subjectInformationQuestions \
+                compiledRawData_eachFreq, experimentTimes, experimentNames, currentSurveyAnswerTimes, currentSurveyAnswersList, surveyQuestions, currentSubjectInformationAnswers, subjectInformationQuestions \
                     = self.extractExperimentalData(self.deviceType, WB.worksheets, self.numberOfChannels, surveyQuestions=surveyQuestions, finalSubjectInformationQuestions=subjectInformationQuestions)
-                self.readData.streamExcelData(self.deviceType, compiledRawData, experimentTimes, experimentNames, currentSurveyAnswerTimes, currentSurveyAnswersList, surveyQuestions, currentSubjectInformationAnswers, subjectInformationQuestions, excelFileName)
+                for compiledRawData in compiledRawData_eachFreq: self.readData.streamExcelData(compiledRawData, experimentTimes, experimentNames, currentSurveyAnswerTimes, currentSurveyAnswersList, surveyQuestions, currentSubjectInformationAnswers, subjectInformationQuestions, excelFileName)
                 # Extract information from the streamed data
                 rawFeatureTimesHolder = self.readData.rawFeatureTimesHolder.copy()  # dim: numBiomarkers, numTimePoints
                 rawFeatureHolder = self.readData.rawFeatureHolder.copy()  # dim: numBiomarkers, numTimePoints, numBiomarkerFeatures
 
                 # Plot the signals
-                self.analyzeFeatures.plotRawData(self.readData, compiledRawData, currentSurveyAnswerTimes, experimentTimes, experimentNames, self.streamingOrder, folderName=excelFileName + "/rawSignals/")
+                for compiledRawData in compiledRawData_eachFreq: self.analyzeFeatures.plotRawData(self.readData, compiledRawData, currentSurveyAnswerTimes, experimentTimes, experimentNames, self.streamingOrder, folderName=excelFileName + "/rawSignals/")
 
                 # Save the features to be analyzed in the future.
                 self.saveInputs.saveRawFeatures(rawFeatureTimesHolder, rawFeatureHolder, self.biomarkerFeatureNames, self.biomarkerFeatureOrder, experimentTimes, experimentNames, currentSurveyAnswerTimes,
@@ -269,7 +269,7 @@ class trainingProtocols(extractData):
         allRawFeatureHolders = []
 
         # Extract and analyze the raw data.
-        compiledRawData, experimentTimes, experimentNames, currentSurveyAnswerTimes, currentSurveyAnswersList, surveyQuestions, currentSubjectInformationAnswers, subjectInformationQuestions \
+        compiledRawData_eachFreq, experimentTimes, experimentNames, currentSurveyAnswerTimes, currentSurveyAnswersList, surveyQuestions, currentSubjectInformationAnswers, subjectInformationQuestions \
             = self.extractExperimentalData(WB.worksheets, self.numberOfChannels, surveyQuestions=[], finalSubjectInformationQuestions=[])
 
         # For each test parameter
@@ -279,7 +279,7 @@ class trainingProtocols(extractData):
             self.readData.setFeatureWindowEEG(featureTimeWindow)
 
             # Stream the data
-            self.readData.streamExcelData(compiledRawData, experimentTimes, experimentNames, currentSurveyAnswerTimes, currentSurveyAnswersList, surveyQuestions, currentSubjectInformationAnswers, subjectInformationQuestions, dataFile)
+            for compiledRawData in compiledRawData_eachFreq: self.readData.streamExcelData(compiledRawData, experimentTimes, experimentNames, currentSurveyAnswerTimes, currentSurveyAnswersList, surveyQuestions, currentSubjectInformationAnswers, subjectInformationQuestions, dataFile)
             # Extract information from the streamed data
             allRawFeatureTimesHolders.append(self.readData.rawFeatureTimesHolder.copy())
             allRawFeatureHolders.append(self.readData.rawFeatureHolder.copy())

@@ -20,7 +20,7 @@ class e4ExcelProcessing:
             acc_y = excel_data['ACC_Y'].values
             acc_z = excel_data['ACC_Z'].values
             return acc_x, acc_y, acc_z
-        elif self.biomarker == "Bvp":
+        elif self.biomarker == "bvp":
             excel_data = self.excel_data['BVP']
             timePointer = excel_data['Timestamp'].values
             bvp = excel_data['BVP'].values

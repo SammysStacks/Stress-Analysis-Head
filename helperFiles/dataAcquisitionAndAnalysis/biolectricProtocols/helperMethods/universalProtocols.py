@@ -78,10 +78,10 @@ class universalMethods:
             assert idx_band.sum() != 0, f"You do not have enough sampling frequency to view this band: {freqBand}"
 
             # Calculate the power in the band of interest
-            power = scipy.integrate.simpson(y=powerSpectrumDensity[idx_band], dx=dFreq, even='simpson', axis=-1)
+            power = scipy.integrate.simpson(y=powerSpectrumDensity[idx_band], dx=dFreq, axis=-1)
 
             if relative:
-                power /= scipy.integrate.simpson(y=powerSpectrumDensity, dx=dFreq, even='simpson', axis=-1)
+                power /= scipy.integrate.simpson(y=powerSpectrumDensity, dx=dFreq, axis=-1)
 
             bandPowers.append(power)
 

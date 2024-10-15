@@ -53,8 +53,13 @@ class edaProtocol(globalProtocol):
 
         # Reset the cutoff frequencies if they are too high.
         if self.samplingFreq < self.cutOffFreq[1]/2:
-            print(f"Resetting the cutoff frequencies from {self.cutOffFreq[1]} to {None}")
+            print(f"\tResetting the cutoff frequencies from {self.cutOffFreq[1]} to {None}")
             self.cutOffFreq[1] = None
+
+        if self.samplingFreq < self.tonicFrequencyCutoff/2:
+            print(f"\tResetting the tonicFrequencyCutoff from {self.tonicFrequencyCutoff} to {self.tonicFrequencyCutoff/2}")
+            self.tonicFrequencyCutoff = self.tonicFrequencyCutoff/2
+
     # ----------------------------------------------------------------------- #
     # ------------------------- Data Analysis Begins ------------------------ #
 
@@ -78,6 +83,7 @@ class edaProtocol(globalProtocol):
 
             # Separate the tonic (baseline) from the phasic (peaks) data
             tonicComponent, phasicComponent = self.splitPhasicTonic(filteredData)
+
             # --------------------------------------------------------------- #
 
             # ---------------------- Feature Extraction --------------------- #

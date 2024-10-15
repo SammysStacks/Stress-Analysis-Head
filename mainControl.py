@@ -12,7 +12,6 @@ os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
 # Import helper files.
 from helperFiles.dataAcquisitionAndAnalysis.excelProcessing import extractDataProtocols, saveDataProtocols  # Import interfaces for reading/writing data
-from helperFiles.machineLearning.modelControl.modelSpecifications.compileModelInfo import compileModelInfo  # Import files for machine learning
 from helperFiles.surveyInformation.questionaireGUI import stressQuestionnaireGUI  # Import file for GUI control
 from helperFiles.dataAcquisitionAndAnalysis import streamingProtocols  # Import interfaces for reading/writing data
 from helperFiles.machineLearning import trainingProtocols  # Import interfaces for reading/writing data
@@ -42,12 +41,12 @@ if __name__ == "__main__":
 
     # Specify the user parameters.
     userName = "Ruixiao".replace(" ", "")
-    trialName = "E4_Extract_Saving_test-2"
-    date = "2024-10-15"
+    trialName = "del"  # Experiment Type: Music ....
+    date = "2024-10-24"
 
     # Specify experimental parameters.
     deviceAddress = '12ba4cb61c85ec11bc01fc2b19c2d21c'  # Board's Serial Number (port.serial_number). Only used if streaming data, else it gets reset to None.
-    stopTimeStreaming = 60  # If Float/Int: The Number of Seconds to Stream Data; If String, it is the TimeStamp to Stop (Military Time) as "Hours:Minutes:Seconds:MicroSeconds"
+    stopTimeStreaming = 60*100  # If Float/Int: The Number of Seconds to Stream Data; If String, it is the TimeStamp to Stop (Military Time) as "Hours:Minutes:Seconds:MicroSeconds"
     deviceType = 'empatica'  # The type of device being used for streaming.
 
     # ---------------------------------------------------------------------- #
@@ -62,7 +61,7 @@ if __name__ == "__main__":
                                                 trainModel=trainModel, useModelPredictions=useModelPredictions, useTherapyData=useTherapyData)
 
     # Get the reading/saving information.
-    numPointsPerBatch, moveDataFinger = inputParameterClass.getPlottingParams(analyzeBatches=plotStreamedData)
+    numPointsPerBatch, moveDataFinger = inputParameterClass.getPlottingParams(analyzeBatches=not readDataFromExcel)
     collectedDataFolder, currentFilename = inputParameterClass.getSavingInformation(date, trialName, userName)
 
     # Compile all the protocol information.
@@ -73,8 +72,7 @@ if __name__ == "__main__":
     saveRawFeatures, testSheetNum = inputParameterClass.getExcelParams()
 
     # Initialize instance to analyze the data
-    readData = streamingProtocols.streamingProtocols(deviceType, deviceAddress, modelClasses, actionControl, numPointsPerBatch, moveDataFinger,
-                                                     streamingOrder, extractFeaturesFrom, featureAverageWindows, voltageRange, plotStreamedData)
+    readData = streamingProtocols.streamingProtocols(deviceType, deviceAddress, modelClasses, actionControl, numPointsPerBatch, moveDataFinger, streamingOrder, extractFeaturesFrom, featureAverageWindows, voltageRange, plotStreamedData)
 
     # ----------------------------- Stream the Data from circuit board ----------------------------- #
 
@@ -84,7 +82,7 @@ if __name__ == "__main__":
             readData.streamWearableData(adcResolution, stopTimeStreaming, currentFilename)
         else:
             # Stream in the data from the circuit board
-            streamingThread = threading.Thread(target=readData.streamWearableData, args=(adcResolution, stopTimeStreaming, currentFilename), daemon=True)
+            streamingThread = threading.Thread(target=readData.streamWearableData, args=(adcResolution, stopTimeStreaming, currentFilename), daemon=False)
             streamingThread.start()
 
             # Open the questionnaire GUI.
@@ -99,22 +97,30 @@ if __name__ == "__main__":
 
     elif readDataFromExcel:
         # Collect the Data from Excel
-        """if deviceType == 'empatica':
-            compiledRawData = [[[t1], [t2], [t3], [t4]], [[d1], [d2], [d3], [d4]]]]"""
+        compiledRawData_eachFreq, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions, subjectInformationAnswers, subjectInformationQuestions = \
+            extractDataProtocols.extractData().getData(currentFilename, deviceType, streamingOrder=streamingOrder, testSheetNum=testSheetNum)
+        # Empatica: compiledRawData = [[[T1], ... [Tn]], [[biomarker1], [biomarkerN]]]
+        # Serial: compiledRawData = [[T1], [[biomarker1], [biomarkerN]]]
 
-        compiledRawData, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions, subjectInformationAnswers, subjectInformationQuestions = \
-            extractDataProtocols.extractData().getData(currentFilename, deviceType, numberOfChannels=len(streamingOrder), testSheetNum=testSheetNum)
-
+        streamingIndex = 0
         # Analyze the Data using the Correct Protocol
-        readData.streamExcelData(deviceType, compiledRawData, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList,
-                                 surveyQuestions, subjectInformationAnswers, subjectInformationQuestions, currentFilename)
+        for compiledRawDataInd in range(len(compiledRawData_eachFreq)):
+            numStreamingSignals = len(compiledRawData_eachFreq[compiledRawDataInd][1])
+            startStreamInd, endStreamInd = streamingIndex, streamingIndex + numStreamingSignals
+            streamingIndex = endStreamInd
+
+            newStreamingOrder = streamingOrder[startStreamInd:endStreamInd]
+            newExtractFeaturesFrom = [item for item in extractFeaturesFrom if item in newStreamingOrder]
+
+            readData = streamingProtocols.streamingProtocols(deviceType, deviceAddress, modelClasses, actionControl, numPointsPerBatch, moveDataFinger, newStreamingOrder, newExtractFeaturesFrom, featureAverageWindows, voltageRange, plotStreamedData)
+            readData.streamExcelData(compiledRawData_eachFreq[compiledRawDataInd], experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions, subjectInformationAnswers, subjectInformationQuestions, currentFilename)
 
     # ----------------------------- Extract Feature Data ----------------------------- #
 
     # Take Preprocessed (Saved) Features from Excel Sheet
     elif trainModel:
         # Initializing the training class.
-        trainingInterface = trainingProtocols.trainingProtocols(biomarkerFeatureNames, streamingOrder, biomarkerFeatureOrder, collectedDataFolder, readData)
+        trainingInterface = trainingProtocols.trainingProtocols(deviceType, biomarkerFeatureNames, streamingOrder, biomarkerFeatureOrder, collectedDataFolder, readData)
 
         checkFeatureWindow_EEG = False
         if checkFeatureWindow_EEG:
@@ -127,88 +133,11 @@ if __name__ == "__main__":
         allRawFeatureTimesHolders, allRawFeatureHolders, allRawFeatureIntervalTimes, allRawFeatureIntervals, allCompiledFeatureIntervals, \
             subjectOrder, experimentalOrder, allFinalLabels, featureLabelTypes, surveyQuestions, surveyAnswersList, surveyAnswerTimes \
             = trainingInterface.streamTrainingData(featureAverageWindows, plotTrainingData=plotTrainingData, reanalyzeData=reanalyzeData, metaTraining=False, reverseOrder=reverseOrder)
+
         # Assert the validity of the feature extraction
-
-        #TODO: for deviceType = Serial, this needs debug
-        print(f"Compiled features length: {len(allCompiledFeatureIntervals[0][0])}")
-        print(f"Expected feature names length: {len(featureNames)}")
-
         for analysisInd in range(len(allRawFeatureHolders[0])):
             assert len(allRawFeatureHolders[0][analysisInd][0]) == len(biomarkerFeatureNames[analysisInd]), "Incorrect number of raw features extracted"
         print("\nFinished Feature Extraction")
-
-        import matplotlib.pyplot as plt
-        bounds = compileModelInfo().predictionBounds
-
-        colors = []
-        currentSubjectName = ""
-        subjectExperimentInds = []
-        for experimentInd in range(len(experimentalOrder)):
-            subjectName = subjectOrder[experimentInd]
-
-            if (currentSubjectName != subjectName and len(subjectExperimentInds)) != 0 or experimentInd == len(experimentalOrder) - 1:
-                if experimentInd == len(experimentalOrder) - 1:
-                    subjectExperimentInds.append(experimentInd)
-                    colors.append('#333333')
-
-                for finalLabelInd in range(len(featureLabelTypes)):
-                    finalLabel = featureLabelTypes[finalLabelInd]
-                    experimentNames = [experimentalOrder[i] for i in subjectExperimentInds]
-                    plt.figure(figsize=(12, 6))  # Increase the figure size for better readability
-                    bar_positions = np.arange(len(experimentNames))
-                    bars = plt.bar(bar_positions, [allFinalLabels[finalLabelInd][i] for i in subjectExperimentInds], color=colors)
-
-                    for bar in bars:
-                        yval = bar.get_height()
-                        plt.text(bar.get_x() + bar.get_width() / 2, yval + 0.5, round(yval, 2), ha='center', va='bottom', fontsize=12, color='black')
-
-                    plt.xticks(ticks=bar_positions, labels=experimentNames, rotation=45, fontsize=12, ha='right')
-                    plt.title(f'{currentSubjectName} - {finalLabel}', fontsize=16)
-                    plt.xlabel("Experiment Number", fontsize=14)
-                    plt.ylabel("Label Value", fontsize=14)
-                    plt.grid(axis='y', linestyle='--', alpha=0.7)
-                    plt.ylim(bounds[finalLabelInd])
-                    plt.tight_layout()
-                    plt.show()
-
-                colors = []
-                subjectExperimentInds = []
-            experimentName = experimentalOrder[experimentInd]
-            subjectExperimentInds.append(experimentInd)
-            currentSubjectName = subjectName
-
-            colors.append('#333333')
-            if 'cpt' in experimentName.lower():
-                colors[-1] = 'skyblue'
-            if 'heat' in experimentName.lower():
-                colors[-1] = '#D62728'
-        # exit()
-
-        # Standardize data
-        # standardizeClass_Features = standardizeData(allFinalFeatures, threshold=0)
-        # standardizedFeatures = standardizeClass_Features.standardize(allFinalFeatures)
-        # # Standardize labels
-        # standardizeClass_Labels = []
-        # standardizedLabels = []
-        # scoreTransformations = []
-        # for modelInd in range(len(performMachineLearning.modelControl.modelClasses)):
-        #     if modelInd == 2:
-        #         standardizeClass_Labels.append(standardizeData(allFinalLabels[modelInd], threshold=0))
-        #         standardizedLabels.append(standardizeClass_Labels[modelInd].standardize(allFinalLabels[modelInd]))
-        #
-        #         scoreTransformation = np.diff(standardizedLabels[modelInd]) / np.diff(allFinalLabels[modelInd])
-        #         scoreTransformations.append(scoreTransformation[~np.isnan(scoreTransformation)][0])
-        #     else:
-        #         oddLabels = allFinalLabels[modelInd]  # + (np.mod(allFinalLabels[modelInd],2)==0)
-        #         standardizeClass_Labels.append(standardizeData(oddLabels, threshold=0))
-        #         standardizedLabels.append(standardizeClass_Labels[modelInd].standardize(oddLabels))
-        #
-        #         scoreTransformation = np.diff(standardizedLabels[modelInd]) / np.diff(oddLabels)
-        #         scoreTransformations.append(scoreTransformation[~np.isnan(scoreTransformation)][0])
-        #
-        #     # Compile information into the model class
-        #     performMachineLearning.modelControl.modelClasses[modelInd].setStandardizationInfo(featureNames, standardizeClass_Features, standardizeClass_Labels[modelInd])
-        # standardizedLabels = np.asarray(standardizedLabels)
 
     # ------------------ Extract Data into this Namespace ------------------ #
 
@@ -242,19 +171,6 @@ if __name__ == "__main__":
 
         # Save the Data in Excel
         if saveRawSignals:
-              #-------------------------- DEBUG--------------------------------  #
-            print('analysis.timePoints', readData.analysisList)
-            print('analysis.timePoints', readData.analysisList[0].timepoints)
-            print('analysis.channelData', readData.analysisList[0].channelData)
-            print('-----------------------------------------------------------------')
-            print('analysis.timePoints', readData.analysisList[1].timepoints)
-            print('analysis.channelData', readData.analysisList[1].channelData)
-            print('-----------------------------------------------------------------')
-            print('analysis.timePoints', readData.analysisList[2].timepoints)
-            print('analysis.channelData', readData.analysisList[2].channelData)
-            print('-----------------------------------------------------------------')
-            print('analysis.timePoints', readData.analysisList[3].timepoints)
-            print('analysis.channelData', readData.analysisList[3].channelData)
 
             # Double Check to See if a User Wants to Save the Data
             verifiedSave = input("Are you Sure you Want to Save the Data (Y/N): ")

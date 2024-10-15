@@ -9,7 +9,7 @@ if __name__ == "__main__":
     date = "20240924"
     user = "Ruixiao"
     experiment = "Baseline"
-    biomarker = "Bvp"
+    biomarker = "bBvp"
 
     # Load data
     script_dir = os.path.dirname(os.path.abspath(__file__))

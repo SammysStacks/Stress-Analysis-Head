@@ -161,8 +161,7 @@ class globalMetaAnalysis(handlingExcelFormat):
                 readData.analysisProtocols[analysisType].cutOffFreq = cutOffFreqs
 
             # Extract and analyze the raw data.
-            readData.streamExcelData(compiledRawData, experimentTimes, experimentNames, currentSurveyAnswerTimes,
-                                     currentSurveyAnswersList, self.surveyQuestions, subjectInformationAnswers=[], subjectInformationQuestions=[], filePath=interfaceType + " " + subjectName)
+            readData.streamExcelData(compiledRawData, experimentTimes, experimentNames, currentSurveyAnswerTimes, currentSurveyAnswersList, self.surveyQuestions, subjectInformationAnswers=[], subjectInformationQuestions=[], filePath=interfaceType + " " + subjectName)
             # Compile all the features from each signal
             rawFeatureHolder.extend(readData.rawFeatureHolder.copy())
             rawFeatureTimesHolder.extend(readData.rawFeatureTimesHolder.copy())

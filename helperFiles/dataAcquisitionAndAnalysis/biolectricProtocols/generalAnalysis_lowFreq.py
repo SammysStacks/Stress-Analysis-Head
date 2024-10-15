@@ -160,8 +160,8 @@ class generalProtocol_lowFreq(globalProtocol):
         # ----------------------- Features from Data ----------------------- #
         
         # General Shape Parameters
-        signalPower = scipy.integrate.simpson(data ** 2, timepoints) / (baselineX[-1] - baselineX[0])
-        signalArea = scipy.integrate.simpson(data, timepoints) / (baselineX[-1] - baselineX[0])
+        signalPower = scipy.integrate.simpson(y=data ** 2, x=timepoints) / (baselineX[-1] - baselineX[0])
+        signalArea = scipy.integrate.simpson(y=data, x=timepoints) / (baselineX[-1] - baselineX[0])
         signalRange = max(data) - min(data)
         standardDeviation = np.std(data, ddof=1)
         mean = np.mean(data)
@@ -171,7 +171,7 @@ class generalProtocol_lowFreq(globalProtocol):
         # First derivative features
         firstDerivativeMean = np.mean(firstDerivative)
         firstDerivativeStdDev = np.std(firstDerivative, ddof=1)
-        firstDerivativePower = scipy.integrate.simpson(firstDerivative ** 2, timepoints) / (baselineX[-1] - baselineX[0])
+        firstDerivativePower = scipy.integrate.simpson(y=firstDerivative ** 2, x=timepoints) / (baselineX[-1] - baselineX[0])
 
         # ----------------------- Organize Features ------------------------ #
         

@@ -53,36 +53,62 @@ class extractData(handlingExcelFormat):
         return featureListFull
 
     @staticmethod
-    def extractRawSignalData(excelSheet, startDataCol=1, endDataCol=2, data=None):
+    def extractRawSignalData(excelSheet, startDataCol=1, endDataCol=2, data=None, streamingOrder=None):
+        # Set up parameters.
+        timeColumns, dataColumns = [0], []
         dataStartRow = 0
+
         # If Header Exists, Skip Until You Find the Data
         for row in excelSheet.rows:
+            print(row[0].value, row[0].row)
             if type(row[0].value) in [int, float]:
-                dataStartRow = row[0].row + 1
+                dataStartRow = row[0].row
                 break
+            elif "Time_" in row[0].value:
+                for cellInd in range(1, len(row)):
+                    if "Time_" in row[cellInd].value: timeColumns.append(cellInd)
+                    elif type(row[0].value) is str:
+                        if streamingOrder is not None:
+                            assert streamingOrder[len(dataColumns)] in row[cellInd].value.lower(), f"streamingOrder: {streamingOrder}; dataColumns: {dataColumns}; row[cellInd].value: {row[cellInd].value}"
+                        dataColumns.append(cellInd)
+                    else: break
 
-        if data is None: data = [[], [[] for _ in range(endDataCol - startDataCol)]]
+        # Assert the data columns are correct.
+        assert endDataCol - startDataCol == dataColumns[-1], f"Data columns: {dataColumns}; timeColumns: {timeColumns}; startDataCol: {startDataCol}; endDataCol: {endDataCol}"
+        numFreqs = len(timeColumns)
+
+        # Create the data
+        if data is None:
+            data = []
+            for freqInd in range(numFreqs):
+                if len(timeColumns) == freqInd + 1: numBiomarkers = endDataCol - timeColumns[freqInd] - 1
+                else: numBiomarkers = timeColumns[freqInd + 1] - timeColumns[freqInd] - 1
+                data.append([[], [[] for _ in range(numBiomarkers)]])
+        else:
+            assert len(data) == numFreqs, f"Data: {data}; numFreqs: {numFreqs}; timeColumns: {timeColumns}"
+
         # Loop Through the Excel Worksheet to collect all the data
-        for dataRow in excelSheet.iter_rows(min_col=startDataCol, min_row=dataStartRow - 1, max_col=endDataCol, max_row=excelSheet.max_row):
+        for dataRow in excelSheet.iter_rows(min_col=startDataCol, min_row=dataStartRow, max_col=endDataCol, max_row=excelSheet.max_row):
             # Stop Collecting Data When there is No More
             if dataRow[0].value is None: break
+            freqInd = None
 
             # Compile the data.
-            data[0].append(float(dataRow[0].value))
-            for dataInd in range(1, len(dataRow)):
-                data[1][dataInd - 1].append(float(dataRow[dataInd].value or 0))
+            for columnInd in range(len(dataRow)):
+                columnValue = dataRow[columnInd].value
+                if columnValue is None: continue
+
+                if columnInd in timeColumns:
+                    freqInd = timeColumns.index(columnInd)
+                    data[freqInd][0].append(float(columnValue))
+                else:
+                    lastTimeColumn = timeColumns[freqInd] + 1
+                    data[freqInd][1][columnInd - lastTimeColumn].append(float(columnValue or 0))
 
         return data
 
     @staticmethod
-    def extractRawSignalData_e4(excelSheet, startDataCol=1, endDataCol=2, data=None):
-        dataStartRow = 0
-        # If Header Exists, Skip Until You Find the Data
-        for row in excelSheet.rows:
-            if type(row[0].value) in [int, float]:
-                dataStartRow = row[0].row + 1
-                break
-
+    def _extractRawEmpaticaData(dataStartRow, excelSheet, startDataCol=1, endDataCol=2, data=None):
         # Initialize the data structure if it's None
         if data is None:
             numPairs = (endDataCol - startDataCol) // 2  # Each pair is a time and data column
@@ -91,7 +117,7 @@ class extractData(handlingExcelFormat):
         # Now extract data for each time and data pair independently
         for pairInd in range(0, endDataCol - startDataCol, 2):
             timeCol = startDataCol + pairInd
-            dataCol = startDataCol + pairInd + 1
+            dataCol = timeCol + 1
 
             # Loop through the Excel worksheet for the current pair
             for dataRow in excelSheet.iter_rows(min_col=timeCol, min_row=dataStartRow - 1, max_col=dataCol, max_row=excelSheet.max_row):
@@ -116,7 +142,7 @@ class extractData(handlingExcelFormat):
             elif type(cellA.value) == str:
                 headersFound = []
                 for cell in row[4:]:
-                    if cell.value == None: break
+                    if cell.value is None: break
                     headersFound.append(str(cell.value))
                 headersFound = np.asarray(headersFound, dtype=str)
                 endDataCol = 4 + len(headersFound)
@@ -130,7 +156,7 @@ class extractData(handlingExcelFormat):
         # Loop Through the Excel Worksheet to collect all the data
         for dataRow in excelSheet.iter_rows(min_col=1, min_row=dataStartRow - 1, max_col=4, max_row=excelSheet.max_row):
             # Stop Collecting Data When there is No More
-            if dataRow[0].value == None:
+            if dataRow[0].value is None:
                 break
 
             # Get Data
@@ -141,7 +167,7 @@ class extractData(handlingExcelFormat):
         # Loop Through the Excel Worksheet to collect all the data
         for dataRow in excelSheet.iter_rows(min_col=4, min_row=dataStartRow - 1, max_col=endDataCol, max_row=excelSheet.max_row):
             # Stop Collecting Data When there is No More
-            if dataRow[0].value == None:
+            if dataRow[0].value is None:
                 break
 
             # Get Data
@@ -150,11 +176,13 @@ class extractData(handlingExcelFormat):
 
         return experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions
 
-    def extractSubjectInfo(self, excelSheet, subjectInformationAnswers=(), subjectInformationQuestions=()):
+    @staticmethod
+    def extractSubjectInfo(excelSheet, subjectInformationAnswers=(), subjectInformationQuestions=()):
+        dataStartRow = None
         # If Header Exists, Skip Until You Find the Data
         for row in excelSheet.rows:
             cellA = row[0]
-            if type(cellA.value) == str:
+            if type(cellA.value) is str:
                 dataStartRow = cellA.row + 1
                 break
 
@@ -170,23 +198,16 @@ class extractData(handlingExcelFormat):
 
         return subjectInformationAnswers, subjectInformationQuestions
 
-    def extractExperimentalData(self, deviceType, worksheets, numberOfChannels, surveyQuestions=(), finalSubjectInformationQuestions=()):
+    def extractExperimentalData(self, deviceType, worksheets, streamingOrder, surveyQuestions=(), finalSubjectInformationQuestions=()):
         # Initialize data holder
-        if deviceType == 'serial':
-            compiledRawData = [[], [[] for _ in range(numberOfChannels)]]
-
-        elif deviceType == 'empatica':
-            # for each channel there's a corresponding time axis
-            compiledRawData = [[[] for _ in range(numberOfChannels)], [[] for _ in range(numberOfChannels)]]
+        compiledRawData_eachFreq = None
+        numberOfChannels = len(streamingOrder)
 
         # Initialize experimental information
-        experimentTimes = []
-        experimentNames = []
-        surveyAnswerTimes = []
-        surveyAnswersList = []
+        experimentTimes, experimentNames = [], []
+        surveyAnswerTimes, surveyAnswersList= [], []
         # Initialize subject information
-        subjectInformationAnswers = []
-        subjectInformationQuestions = []
+        subjectInformationAnswers, subjectInformationQuestions = [], []
 
         # Loop through and compile all the data in the file
         for excelSheet in worksheets:
@@ -198,23 +219,24 @@ class extractData(handlingExcelFormat):
                 subjectInformationAnswers, subjectInformationQuestions = self.extractSubjectInfo(excelSheet, subjectInformationAnswers, subjectInformationQuestions)
             # Extract Time and Current Data from the File
             else:
-                if deviceType == 'serial':
-                    compiledRawData = self.extractRawSignalData(excelSheet, startDataCol=1, endDataCol=1 + numberOfChannels, data=compiledRawData)
-                elif deviceType == 'empatica':
-                    compiledRawData = self.extractRawSignalData_e4(excelSheet, startDataCol=1, endDataCol=2*numberOfChannels, data=compiledRawData)
+                if deviceType == 'serial': endDataCol = 1 + numberOfChannels
+                elif deviceType == 'empatica': endDataCol = 2*numberOfChannels
+                else: raise ValueError(f"Unknown device type: {deviceType}")
 
+                # Extract the data
+                compiledRawData_eachFreq = self.extractRawSignalData(excelSheet, startDataCol=1, endDataCol=endDataCol, data=compiledRawData_eachFreq, streamingOrder=streamingOrder)
 
         # Check the data integrity
-        if len(compiledRawData[0]) == 0:
+        if len(compiledRawData_eachFreq[0]) == 0:
             print("\tNo data found in this file")
         # Check that the subject background questions are all the same
         if len(finalSubjectInformationQuestions) != 0:
             assert np.all(np.asarray(finalSubjectInformationQuestions) == subjectInformationQuestions), (
                 f"finalSubjectInformationQuestions: {finalSubjectInformationQuestions}; subjectInformationQuestions: {subjectInformationQuestions}")
 
-        return compiledRawData, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions, subjectInformationAnswers, subjectInformationQuestions
+        return compiledRawData_eachFreq, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions, subjectInformationAnswers, subjectInformationQuestions
 
-    def getData(self, inputFile, deviceType, numberOfChannels=1, testSheetNum=0):
+    def getData(self, inputFile, deviceType, streamingOrder, testSheetNum=0):
         """
         Extracts Pulse Data from Excel Document (.xlsx). Data can be in any
         worksheet that the user can specify using 'testSheetNum' (0-indexed).
@@ -260,12 +282,12 @@ class extractData(handlingExcelFormat):
         print("Extracting Data from the Excel File:", inputFile)
 
         # Extract the data
-        compiledRawData, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions, subjectInformationAnswers, subjectInformationQuestions = self.extractExperimentalData(deviceType, worksheets, numberOfChannels)
+        compiledRawData_eachFreq, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions, subjectInformationAnswers, subjectInformationQuestions = self.extractExperimentalData(deviceType, worksheets, streamingOrder)
         xlWorkbook.close()
 
+        print("\tFinished Collecting Biolectric Data")
         # Finished Data Collection: Close Workbook and Return Data to User
-        print("\tFinished Collecting Biolectric Data");
-        return compiledRawData, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions, subjectInformationAnswers, subjectInformationQuestions
+        return compiledRawData_eachFreq, experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions, subjectInformationAnswers, subjectInformationQuestions
 
     @staticmethod
     def extractFeatures(excelSheet, biomarkerFeatureOrder, features, featuresTimesHolder, biomarkerFeatureNames):

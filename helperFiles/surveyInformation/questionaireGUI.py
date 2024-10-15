@@ -146,20 +146,11 @@ class stressQuestionnaireGUI(QtWidgets.QMainWindow):
             # Track the experiment information.
             self.readData.experimentTimes.append([currentTime, None])
             self.readData.experimentNames.append(self.currentExperimentName)
-            # self._resumeDataStreaming()
         else:
             print("\nNew Experiment Recorded:", self.currentExperimentName)
 
         # Display the experiment screen.
         self.displayExperimentScreen()
-
-    def _pauseDataStreaming(self):
-        if self.readData is not None:
-            self.readData.storeIncomingData = False
-
-    def _resumeDataStreaming(self):
-        if self.readData is not None:
-            self.readData.storeIncomingData = True
 
     def _changeExperimentName(self, newExperimentalName=""):
         # Change the saved experimental name
@@ -270,7 +261,6 @@ class stressQuestionnaireGUI(QtWidgets.QMainWindow):
         # height has two separate answer boxes and needs to be a singular integer and in meters
         if len(heightInfo) == 2:
             if metricChecks["Height"].isChecked():
-                print("here")
                 convertedHeight = heightInfo[0] / 100
                 subjectInformationAnswers.append(convertedHeight)
             else:
@@ -296,12 +286,11 @@ class stressQuestionnaireGUI(QtWidgets.QMainWindow):
     def finishedRun(self):
         # Close the GUI App
         self.close()
+
         # Close the arduino streaming
         if self.readData is not None:
-            self.readData.stopTimeStreaming = 0
-            self._pauseDataStreaming()
-        if hasattr(self.readData.mainDevice, "close"):
-            self.readData.mainDevice.close()
+            self.readData.stopTimeStreaming = -1
+            self.readData.closeDeviceStream()
 
     # ---------------------------------------------------------------------- #
     # ------------------------ Creating GUI Buttons ------------------------ #
@@ -310,7 +299,7 @@ class stressQuestionnaireGUI(QtWidgets.QMainWindow):
     def setButtonAesthetics(widget, backgroundColor="black", textColor="white", fontFamily="Arial", fontSize=15):
         """
         This method sets the style sheet of a given widget, using either default
-        stylistic choices, or user-inputted choices.
+        stylistic choices or user-inputted choices.
         """
         widget.setAutoFillBackground(True)
         widget.setStyleSheet(

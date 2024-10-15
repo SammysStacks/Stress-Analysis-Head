@@ -2,8 +2,10 @@ import socket
 import threading
 import time
 
+from pexpect import TIMEOUT
 
 from helperFiles.dataAcquisitionAndAnalysis.empaticaInterface import empaticaInterface
+from helperFiles.machineLearning.modelControl.modelSpecifications.compileModelInfo import compileModelInfo
 
 
 class serverInterface:
@@ -25,6 +27,8 @@ class serverInterface:
                 # Try to bind to the communication port.
                 try:
                     serverSocket.connect(('127.0.0.1', self.mainDevice.communication_port))
+                    serverSocket.setblocking(False)
+                    serverSocket.settimeout(3)
                     break
                 except OSError:
                     continue
@@ -34,7 +38,6 @@ class serverInterface:
             self.mainDevice.deviceSpecificConnection(serverSocket)
             while self.mainDevice.closeServer: time.sleep(1)
             self.mainDevice.startStreamingData(serverSocket)
-            serverSocket.settimeout(3)
 
             while True:
                 try:
@@ -44,7 +47,7 @@ class serverInterface:
 
                     # Process the message (modify as needed for your use case)
                     connectionLost = self.mainDevice.process_message(responseMessage)
-                    if connectionLost or self.mainDevice.closeServer: break
+                    if connectionLost or self.mainDevice.closeServer: return None
                 except TIMEOUT as e:
                     print("Timeout occurred:", e)
 
@@ -55,7 +58,7 @@ class serverInterface:
 
 if __name__ == "__main__":
     # Specify the device and the streaming order.
-    streamingOrderTEMP = ["acc", "bvp", "eda", "temp"]
+    streamingOrderTEMP = compileModelInfo().streamingOrder_e4
     serverClass = serverInterface(streamingOrderTEMP, analysisProtocols=(), deviceType='empatica')
     serverClass.mainDevice.closeServer = False
     serverClass.startServer()
