@@ -179,7 +179,6 @@ class extractData(handlingExcelFormat):
             # for each channel there's a corresponding time axis
             compiledRawData = [[[] for _ in range(numberOfChannels)], [[] for _ in range(numberOfChannels)]]
 
-
         # Initialize experimental information
         experimentTimes = []
         experimentNames = []

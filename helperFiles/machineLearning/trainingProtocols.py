@@ -16,9 +16,10 @@ from .modelControl.modelSpecifications.compileModelInfo import compileModelInfo
 from ..dataAcquisitionAndAnalysis.excelProcessing.extractDataProtocols import extractData
 from ..dataAcquisitionAndAnalysis.excelProcessing.saveDataProtocols import saveExcelData
 
+
 class trainingProtocols(extractData):
 
-    def __init__(self, biomarkerFeatureNames, streamingOrder, biomarkerFeatureOrder, trainingFolder, readData):
+    def __init__(self, deviceType, biomarkerFeatureNames, streamingOrder, biomarkerFeatureOrder, trainingFolder, readData):
         super().__init__()
         # General parameters
         self.biomarkerFeatureOrder = biomarkerFeatureOrder
@@ -26,6 +27,7 @@ class trainingProtocols(extractData):
         self.numberOfChannels = len(streamingOrder)
         self.trainingFolder = trainingFolder
         self.streamingOrder = streamingOrder
+        self.deviceType = deviceType
         self.readData = readData
 
         # Extract feature information
@@ -96,8 +98,8 @@ class trainingProtocols(extractData):
                 self.readData.resetGlobalVariables()
                 # Extract and analyze the raw data.
                 compiledRawData, experimentTimes, experimentNames, currentSurveyAnswerTimes, currentSurveyAnswersList, surveyQuestions, currentSubjectInformationAnswers, subjectInformationQuestions \
-                    = self.extractExperimentalData(WB.worksheets, self.numberOfChannels, surveyQuestions=surveyQuestions, finalSubjectInformationQuestions=subjectInformationQuestions)
-                self.readData.streamExcelData(compiledRawData, experimentTimes, experimentNames, currentSurveyAnswerTimes, currentSurveyAnswersList, surveyQuestions, currentSubjectInformationAnswers, subjectInformationQuestions, excelFileName)
+                    = self.extractExperimentalData(self.deviceType, WB.worksheets, self.numberOfChannels, surveyQuestions=surveyQuestions, finalSubjectInformationQuestions=subjectInformationQuestions)
+                self.readData.streamExcelData(self.deviceType, compiledRawData, experimentTimes, experimentNames, currentSurveyAnswerTimes, currentSurveyAnswersList, surveyQuestions, currentSubjectInformationAnswers, subjectInformationQuestions, excelFileName)
                 # Extract information from the streamed data
                 rawFeatureTimesHolder = self.readData.rawFeatureTimesHolder.copy()  # dim: numBiomarkers, numTimePoints
                 rawFeatureHolder = self.readData.rawFeatureHolder.copy()  # dim: numBiomarkers, numTimePoints, numBiomarkerFeatures
@@ -151,13 +153,10 @@ class trainingProtocols(extractData):
 
             # ----------- Segment the Experimental Feature Signals ----------- #
 
-            # Calculate a buffer for the experiment.
-            modelFeatureTimeBuffer = modelConstants.maxTimeWindow
-
-            badExperimentalInds = []
+            finalSurveyAnswerTimes, finalSurveyAnswerList = [], []
             # For each experiment performed in the trial.
             for experimentInd in range(len(experimentTimes)):
-                startIntervalTime = max(0, currentSurveyAnswerTimes[experimentInd] - modelFeatureTimeBuffer)
+                startIntervalTime = max(0, currentSurveyAnswerTimes[experimentInd] - modelConstants.timeWindows[-1])
                 startSurveyTime = currentSurveyAnswerTimes[experimentInd]
 
                 # Calculate the feature intervals
@@ -167,25 +166,21 @@ class trainingProtocols(extractData):
                 # newRawFeatureIntervals dim: numBiomarkers, numTimePoints, numBiomarkerFeatures
                 # newRawFeatureIntervalTimes dim: numBiomarkers, numTimePoints
 
-                # Check the features.
-                if newRawFeatureIntervalTimes is None:
-                    badExperimentalInds.append(experimentInd)
-                    continue
+                # Check for valid features.
+                if newRawFeatureIntervalTimes is None: continue
 
                 # Save the interval information
+                finalSurveyAnswerList.append(currentSurveyAnswersList[experimentInd])
                 allCompiledFeatureIntervals.append(newCompiledFeatureIntervals)
                 allRawFeatureIntervalTimes.append(newRawFeatureIntervalTimes)
                 experimentalOrder.append(experimentNames[experimentInd])
                 allRawFeatureIntervals.append(newRawFeatureIntervals)
+                finalSurveyAnswerTimes.append(startSurveyTime)
 
                 # Save the subject order
                 if metaTraining: subjectOrder.append(int(re.search(r'\d+', excelFileName).group()))
                 else: subjectOrder.append(" ".join(excelFileName.split(" ")[1:]))
-
-            # Remove indices where no features were collected.
-            for experimentInd in sorted(badExperimentalInds, reverse=True):
-                currentSurveyAnswersList = np.delete(currentSurveyAnswersList, experimentInd, axis=0)
-                del currentSurveyAnswerTimes[experimentInd]
+            del currentSurveyAnswerTimes, currentSurveyAnswersList
 
             # -------------------- Plot the features ------------------- #
 
@@ -203,7 +198,7 @@ class trainingProtocols(extractData):
 
                     # Plot each biomarker's features from the training file.
                     self.analyzeFeatures.singleFeatureAnalysis(self.readData, rawFeatureTimes, rawFeatures, self.biomarkerFeatureNames[biomarkerInd], preAveragingSeconds=0, averageIntervalList=[30, 60, 90],
-                                                               surveyCollectionTimes=currentSurveyAnswerTimes, experimentTimes=experimentTimes, experimentNames=experimentNames,
+                                                               surveyCollectionTimes=finalSurveyAnswerTimes, experimentTimes=experimentTimes, experimentNames=experimentNames,
                                                                folderName=excelFileName + "/Feature Analysis/singleFeatureAnalysis - " + self.biomarkerFeatureOrder[biomarkerInd].upper() + "/")
 
             # ------------------ Organize Information ------------------ #
@@ -214,8 +209,8 @@ class trainingProtocols(extractData):
             allRawFeatureHolders.append(rawFeatureHolder)
 
             # Save the survey labels.
-            surveyAnswersList.extend(currentSurveyAnswersList)
-            surveyAnswerTimes.append(currentSurveyAnswerTimes)
+            surveyAnswerTimes.append(finalSurveyAnswerTimes)
+            surveyAnswersList.extend(finalSurveyAnswerList)
 
             # -------------------------------------------------------------- #
 
@@ -223,8 +218,7 @@ class trainingProtocols(extractData):
 
         # Organize the final labels for the features
         featureLabelTypes, allFinalLabels = [], []
-        if not metaTraining:
-            featureLabelTypes, allFinalLabels = self.compileModelInfo.extractFinalLabels(surveyAnswersList, allFinalLabels)
+        if not metaTraining: featureLabelTypes, allFinalLabels = self.compileModelInfo.extractFinalLabels(surveyAnswersList, allFinalLabels)
 
         # ------------------------------------------------------------------ #
 

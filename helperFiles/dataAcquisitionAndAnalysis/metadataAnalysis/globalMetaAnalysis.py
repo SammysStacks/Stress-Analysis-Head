@@ -25,6 +25,7 @@ class globalMetaAnalysis(handlingExcelFormat):
         self.trainingFolder = trainingFolder
         self.surveyQuestions = surveyQuestions
         self.savedFeatureFolder = self.trainingFolder + self.saveFeatureFolder
+        self.deviceType = "serial"
 
         # Define general classes to process data.
         self.saveInputs = saveExcelData()
@@ -184,7 +185,7 @@ class globalMetaAnalysis(handlingExcelFormat):
         # Initialize instance to train the data
         readData = streamingProtocols(deviceType="serial", mainSerialNum=None, modelClasses=[], actionControl=None, numPointsPerBatch=2048576, moveDataFinger=1048100, streamingOrder=streamingOrder,
                                       extractFeaturesFrom=biomarkerFeatureOrder, featureAverageWindows=featureAverageWindows, voltageRange=(None, None), plotStreamedData=False)
-        trainingInterface = trainingProtocols(biomarkerFeatureNames, streamingOrder, biomarkerFeatureOrder, self.savedFeatureFolder, readData)
+        trainingInterface = trainingProtocols(self.deviceType, biomarkerFeatureNames, streamingOrder, biomarkerFeatureOrder, self.savedFeatureFolder, readData)
 
         # Extract the features from the training files and organize them.
         allRawFeatureTimesHolders, allRawFeatureHolders, allRawFeatureIntervalTimes, allRawFeatureIntervals, allCompiledFeatureIntervals, \

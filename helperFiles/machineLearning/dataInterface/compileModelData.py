@@ -1,3 +1,4 @@
+import itertools
 import os
 
 import numpy as np
@@ -136,8 +137,7 @@ class compileModelData(compileModelDataHelpers):
 
     def compileModelsFull(self, metaDatasetNames, modelName, submodel, testSplitRatio, datasetNames):
         # Compile the project data and metadata together
-        metaRawFeatureTimeIntervals, metaCompiledFeatureIntervals, metaSurveyAnswerTimes, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions, metaSubjectOrder, metaFeatureNames, metaDatasetNames = self.compileMetaAnalyses(
-            metaDatasetNames, loadCompiledData=True)
+        metaRawFeatureTimeIntervals, metaCompiledFeatureIntervals, metaSurveyAnswerTimes, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions, metaSubjectOrder, metaFeatureNames, metaDatasetNames = self.compileMetaAnalyses(metaDatasetNames, loadCompiledData=True)
         allRawFeatureIntervalTimes, allCompiledFeatureIntervals, subjectOrder, featureNames, surveyQuestions, surveyAnswerTimes, surveyAnswersList, activityNames, activityLabels, numQuestionOptions = self.compileProjectAnalysis(loadCompiledData=True)
 
         # Compile the meta-learning modules.
@@ -145,9 +145,8 @@ class compileModelData(compileModelDataHelpers):
                                                                metaSubjectOrder, metaFeatureNames, metaDatasetNames, modelName, submodel, testSplitRatio, metaTraining=True, specificInfo=None, random_state=42)
         # Compile the final modules.
         allModels, allDataLoaders = self.compileModels(metaRawFeatureTimeIntervals=[allRawFeatureIntervalTimes], metaCompiledFeatureIntervals=[allCompiledFeatureIntervals], metaSurveyAnswerTimes=[surveyAnswerTimes], metaSurveyAnswersList=[surveyAnswersList],
-                                                       metaSurveyQuestions=[surveyQuestions],
-                                                       metaActivityLabels=[activityLabels], metaActivityNames=[activityNames], metaNumQuestionOptions=[numQuestionOptions], metaSubjectOrder=[subjectOrder], metaFeatureNames=[featureNames], metaDatasetNames=datasetNames,
-                                                       modelName=modelName, submodel=submodel, testSplitRatio=testSplitRatio, metaTraining=False, specificInfo=None, random_state=42)
+                                                       metaSurveyQuestions=[surveyQuestions], metaActivityLabels=[activityLabels], metaActivityNames=[activityNames], metaNumQuestionOptions=[numQuestionOptions], metaSubjectOrder=[subjectOrder],
+                                                       metaFeatureNames=[featureNames], metaDatasetNames=datasetNames, modelName=modelName, submodel=submodel, testSplitRatio=testSplitRatio, metaTraining=False, specificInfo=None, random_state=42)
 
         return allModels, allDataLoaders, allMetaModels, allMetadataLoaders, metaDatasetNames
 
@@ -185,6 +184,7 @@ class compileModelData(compileModelDataHelpers):
             # ---------------------- Data Preparation ---------------------- #
 
             # Convert the incoming information to torch tensors.
+            surveyAnswerTimes = torch.as_tensor(list(itertools.chain.from_iterable(surveyAnswerTimes)), dtype=torch.float32)
             activityLabels = torch.as_tensor(activityLabels, dtype=torch.float32).reshape(-1, 1)
             surveyAnswersList = torch.as_tensor(surveyAnswersList, dtype=torch.float32)
             subjectOrder = torch.as_tensor(subjectOrder, dtype=torch.int)

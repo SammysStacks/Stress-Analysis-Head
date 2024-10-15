@@ -138,7 +138,7 @@ if __name__ == "__main__":
     # Take Preprocessed (Saved) Features from Excel Sheet
     elif trainModel:
         # Initializing the training class.
-        trainingInterface = trainingProtocols.trainingProtocols(biomarkerFeatureNames, streamingOrder, biomarkerFeatureOrder, collectedDataFolder, readData)
+        trainingInterface = trainingProtocols.trainingProtocols(deviceType, biomarkerFeatureNames, streamingOrder, biomarkerFeatureOrder, collectedDataFolder, readData)
 
         checkFeatureWindow_EEG = False
         if checkFeatureWindow_EEG:

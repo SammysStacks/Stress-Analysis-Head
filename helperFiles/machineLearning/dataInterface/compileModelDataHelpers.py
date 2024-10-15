@@ -211,10 +211,10 @@ class compileModelDataHelpers:
                 biomarkerTimes = torch.tensor(biomarkerTimes, dtype=torch.float32)  # Dim: batchSpecificFeatureLength
 
                 # Remove data outside the time window.
-                biomarkerTimes = surveyAnswerTime - biomarkerTimes
-                timeWindowMask = biomarkerTimes <= modelConstants.timeWindows[-1]
+                biomarkerTimes = surveyAnswerTime - biomarkerTimes; print(biomarkerTimes)
+                timeWindowMask = (biomarkerTimes <= modelConstants.timeWindows[-1]).to(torch.bool)
                 biomarkerData = biomarkerData[:, timeWindowMask]
-                biomarkerTimes = batchTimes[timeWindowMask]
+                biomarkerTimes = biomarkerTimes[timeWindowMask]
 
                 # Get the number of signals in the current biomarker.
                 numBiomarkerFeatures, batchSpecificFeatureLength = biomarkerData.shape
@@ -233,6 +233,7 @@ class compileModelDataHelpers:
                 currentSignalInd = finalSignalInd
 
         # Remove unused points.
+        print(allSignalData[:, :, maxSequenceLength:, 0])
         allSignalData = allSignalData[:, :, 0:maxSequenceLength, :]
 
         return allSignalData, allNumSignalPoints
