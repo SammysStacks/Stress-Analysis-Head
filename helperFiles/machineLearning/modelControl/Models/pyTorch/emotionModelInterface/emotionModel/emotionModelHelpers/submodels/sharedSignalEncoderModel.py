@@ -30,16 +30,20 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
             self.processingLayers.append(self.postProcessingLayer(inChannel=1))
 
         # Initialize loss holders.
-        self.trainingLosses_timeReconstructionAnalysis = None
-        self.testingLosses_timeReconstructionAnalysis = None
+        self.trainingLosses_signalReconstruction = None
+        self.testingLosses_signalReconstruction = None
+        self.trainingLosses_manifoldProjection = None
+        self.testingLosses_manifoldProjection = None
 
         # Reset the model.
         self.resetModel()
 
     def resetModel(self):
         # Signal encoder reconstructed loss holders.
-        self.trainingLosses_timeReconstructionAnalysis = []  # List of list of data reconstruction training losses. Dim: numTimeWindows, numEpochs
-        self.testingLosses_timeReconstructionAnalysis = []  # List of list of data reconstruction testing losses. Dim: numTimeWindows, numEpochs
+        self.trainingLosses_signalReconstruction = []  # List of list of data reconstruction training losses. Dim: numTimeWindows, numEpochs
+        self.testingLosses_signalReconstruction = []  # List of list of data reconstruction testing losses. Dim: numTimeWindows, numEpochs
+        self.trainingLosses_manifoldProjection = []  # List of list of data reconstruction testing losses. Dim: numTimeWindows, numEpochs
+        self.testingLosses_manifoldProjection = []  # List of list of data reconstruction testing losses. Dim: numTimeWindows, numEpochs
 
     def sharedLearning(self, signalData):
         # Reshape the signal data.

@@ -203,13 +203,13 @@ class trainingPlots(globalPlottingProtocols):
             for metaModelInd in range(len(allMetaModelPipelines)):
                 metaModel = self.getSubmodel(allMetaModelPipelines[metaModelInd], loadSubmodel)
                 metadatasetName = allMetaModelPipelines[metaModelInd].datasetName
-                print(metadatasetName, metaModel.trainingLosses_timeReconstructionAnalysis[timeWindowInd])
-                print(metadatasetName, metaModel.testingLosses_timeReconstructionAnalysis[timeWindowInd])
+                print(metadatasetName, metaModel.trainingLosses_signalReconstruction[timeWindowInd])
+                print(metadatasetName, metaModel.testingLosses_signalReconstruction[timeWindowInd])
                 print(metadatasetName, metaModel.numEncodingsPath_timeAnalysis[timeWindowInd])
 
                 # Plot the training loss.
-                plt.plot(metaModel.trainingLosses_timeReconstructionAnalysis[timeWindowInd], label=f'{metadatasetName} Training Loss', color=self.lossColors[metaModelInd], linewidth=2, alpha=1)
-                plt.plot(metaModel.testingLosses_timeReconstructionAnalysis[timeWindowInd], label=f'{metadatasetName} Testing Loss', color=self.lossColors[metaModelInd], linewidth=2, alpha=0.5)
+                plt.plot(metaModel.trainingLosses_signalReconstruction[timeWindowInd], label=f'{metadatasetName} Training Loss', color=self.lossColors[metaModelInd], linewidth=2, alpha=1)
+                plt.plot(metaModel.testingLosses_signalReconstruction[timeWindowInd], label=f'{metadatasetName} Testing Loss', color=self.lossColors[metaModelInd], linewidth=2, alpha=0.5)
                 plt.plot(metaModel.numEncodingsPath_timeAnalysis[timeWindowInd], label=f'{metadatasetName} Num Encodings', color=self.lossColors[metaModelInd], linewidth=2, alpha=0.5, linestyle='--')
 
             # Label the plot.
@@ -230,8 +230,8 @@ class trainingPlots(globalPlottingProtocols):
             metadatasetName = allMetaModelPipelines[metaModelInd].datasetName
             # Plot the training loss.
             for timeWindowInd, timeWindow in enumerate(timeWindows):
-                plt.plot(metaModel.trainingLosses_timeReconstructionAnalysis[timeWindowInd], label=f'{metadatasetName} Training Loss, {timeWindow}s', color=self.lossColors[metaModelInd], linewidth=2, alpha=1)
-                plt.plot(metaModel.testingLosses_timeReconstructionAnalysis[timeWindowInd], label=f'{metadatasetName} Testing Loss, {timeWindow}s', color=self.lossColors[metaModelInd], linewidth=2, alpha=0.5)
+                plt.plot(metaModel.trainingLosses_signalReconstruction[timeWindowInd], label=f'{metadatasetName} Training Loss, {timeWindow}s', color=self.lossColors[metaModelInd], linewidth=2, alpha=1)
+                plt.plot(metaModel.testingLosses_signalReconstruction[timeWindowInd], label=f'{metadatasetName} Testing Loss, {timeWindow}s', color=self.lossColors[metaModelInd], linewidth=2, alpha=0.5)
                 plt.plot(metaModel.numEncodingsPath_timeAnalysis[timeWindowInd], label=f'{metadatasetName} Num Encodings, {timeWindow}s', color=self.lossColors[metaModelInd], linewidth=2, alpha=0.5, linestyle='--')
 
             # Label the plot.
@@ -258,8 +258,8 @@ class trainingPlots(globalPlottingProtocols):
             numEncodings_list = metaModel.numEncodingsPath_timeAnalysis[timeWindowInd]
             for i in range(1, len(numEncodings_list)):
                 if numEncodings_list[i] > numEncodings_list[i - 1]:
-                    accuracy_per_comp_factor.append(metaModel.trainingLosses_timeReconstructionAnalysis[timeWindowInd][i])
-            accuracy_per_comp_factor.append(metaModel.trainingLosses_timeReconstructionAnalysis[timeWindowInd][-1])
+                    accuracy_per_comp_factor.append(metaModel.trainingLosses_signalReconstruction[timeWindowInd][i])
+            accuracy_per_comp_factor.append(metaModel.trainingLosses_signalReconstruction[timeWindowInd][-1])
             accuracy.append(accuracy_per_comp_factor)
         # plot heatmap from 2d list
         plt.imshow(np.asarray(accuracy).T, cmap='Blues', interpolation='nearest')

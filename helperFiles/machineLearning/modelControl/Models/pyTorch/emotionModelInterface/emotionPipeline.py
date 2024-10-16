@@ -55,8 +55,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     numPointsAnalyzed += batchSize
 
                     # Get the reconstruction column for auto encoding and activity prediction.
-                    trainingMaskRecon, signalLabelsRecon, signalInfoRecon = self.dataInterface.getReconstructionData(batchTrainingMask, batchSignalLabels, batchSignalInfo, reconstructionIndex)
-                    if submodel == modelConstants.signalEncoderModel: batchTrainingMask, batchSignalLabels, batchSignalInfo = trainingMaskRecon, signalLabelsRecon, signalInfoRecon
+                    if submodel == modelConstants.signalEncoderModel: batchTrainingMask, batchSignalLabels, batchSignalInfo = self.dataInterface.getReconstructionData(batchTrainingMask, batchSignalLabels, batchSignalInfo, reconstructionIndex)
 
                     # We can skip this batch, and backpropagation if necessary.
                     if batchSignalInfo.size(0) == 0: self.backpropogateModel(); continue
@@ -82,7 +81,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     # ------------ Forward pass through the model  ------------- #
 
                     # Perform the forward pass through the model.
-                    interpolatedSignalData, reconstructedInterpolatedData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = model.forward(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, fullDataPass=True)
+                    interpolatedSignalData, finalManifoldProjectionLoss, reconstructedInterpolatedData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = model.forward(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, fullDataPass=True)
                     # decodedPredictedIndexProbabilities dimension: batchSize, numSignals, maxNumEncodedSignals
                     # predictedIndexProbabilities dimension: batchSize, numSignals, maxNumEncodedSignals
                     # encodedData dimension: batchSize, numEncodedSignals, finalDistributionLength
@@ -91,20 +90,20 @@ class emotionPipeline(emotionPipelineHelpers):
 
                     # Assert that nothing is wrong with the predictions.
                     self.modelHelpers.assertVariableIntegrity(reconstructedInterpolatedData, variableName="up-sampled reconstructed signal data", assertGradient=False)
-                    self.modelHelpers.assertVariableIntegrity(interpolatedSignalData, variableName="up-sampled signal data", assertGradient=False)
+                    self.modelHelpers.assertVariableIntegrity(finalManifoldProjectionLoss, variableName="manifold projected signals", assertGradient=False)
                     self.modelHelpers.assertVariableIntegrity(physiologicalProfile, variableName="physiological profile", assertGradient=False)
                     self.modelHelpers.assertVariableIntegrity(activityProfile, variableName="activity profile", assertGradient=False)
                     self.modelHelpers.assertVariableIntegrity(emotionProfile, variableName="emotion profile", assertGradient=False)
 
                     # Calculate the error in signal compression (signal encoding loss).
-                    signalReconstructedLoss = self.organizeLossInfo.calculateSignalEncodingLoss(interpolatedSignalData, reconstructedInterpolatedData, batchTrainingMask, reconstructionIndex)
+                    signalReconstructedLoss, finalManifoldProjectionLoss = self.organizeLossInfo.calculateSignalEncodingLoss(interpolatedSignalData, finalManifoldProjectionLoss, reconstructedInterpolatedData, batchTrainingMask, reconstructionIndex)
                     if signalReconstructedLoss is None: self.accelerator.print("Not useful loss"); continue
 
                     # Initialize basic core loss value.
-                    finalLoss = signalReconstructedLoss
+                    finalLoss = signalReconstructedLoss + finalManifoldProjectionLoss
 
                     # Update the user.
-                    self.accelerator.print("Final-Recon", finalLoss.item(), signalReconstructedLoss.item(), "\n")
+                    self.accelerator.print("Final-Recon", finalLoss.item(), signalReconstructedLoss.item(), finalManifoldProjectionLoss.item(), "\n")
 
                     # ------------------- Update the Model  -------------------- #
 

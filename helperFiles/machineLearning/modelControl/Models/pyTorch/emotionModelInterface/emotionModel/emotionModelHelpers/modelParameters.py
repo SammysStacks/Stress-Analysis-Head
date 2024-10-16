@@ -57,7 +57,6 @@ class modelParameters:
         # Adjust the batch size based on the total size.
         dataRatio = numExperiments / modelConstants.minNumExperiments
         batchSize = int(min(minBatchSize_perLoop * dataRatio, maxBatchSize_perLoop))
-        print(batchSize)
 
         return batchSize
 

@@ -64,23 +64,28 @@ class lossCalculations:
         finalLoss = method(signalData).mean()
         return finalLoss
 
-    def calculateSignalEncodingLoss(self, allInterpolatedSignalData, allReconstructedInterpolatedData, allLabelsMask=None, reconstructionIndex=None):
+    def calculateSignalEncodingLoss(self, allInterpolatedSignalData, allFinalManifoldProjectionLoss, allReconstructedInterpolatedData, allLabelsMask=None, reconstructionIndex=None):
         # Find the boolean flags for the data involved in the loss calculation.
         reconstructionDataMask = self.getReconstructionDataMask(allLabelsMask, reconstructionIndex)
 
         # Isolate the signals for this loss (For example, training vs. testing).
-        interpolatedSignalData = self.getData(allInterpolatedSignalData, reconstructionDataMask)  # Dim: numExperiments, numSignals, encodedDimension
         reconstructedInterpolatedData = self.getData(allReconstructedInterpolatedData, reconstructionDataMask)  # Dim: numExperiments, numCondensedSignals, encodedDimension
+        finalManifoldProjectionLoss = self.getData(allFinalManifoldProjectionLoss, reconstructionDataMask)  # Dim: numExperiments, numSignals, encodedDimension
+        interpolatedSignalData = self.getData(allInterpolatedSignalData, reconstructionDataMask)  # Dim: numExperiments, numSignals, encodedDimension
         if interpolatedSignalData.size(0) == 0: return None
 
         # Calculate the error in signal reconstruction (encoding loss).
         signalReconstructedLoss = self.reconstructionLoss(reconstructedInterpolatedData, interpolatedSignalData)
         signalReconstructedLoss = signalReconstructedLoss.mean(dim=2).mean(dim=1).mean()
 
+        # Calculate the error in the manifold projection.
+        finalManifoldProjectionLoss = finalManifoldProjectionLoss.mean()
+
         # Assert that nothing is wrong with the loss calculations.
         self.modelHelpers.assertVariableIntegrity(signalReconstructedLoss, variableName="encoded signal reconstructed loss", assertGradient=False)
+        self.modelHelpers.assertVariableIntegrity(finalManifoldProjectionLoss, variableName="signal-specific manifold loss", assertGradient=False)
 
-        return signalReconstructedLoss
+        return signalReconstructedLoss, finalManifoldProjectionLoss
 
     def calculateActivityLoss(self, predictedActivityLabels, allLabels, allLabelsMask, activityClassWeights):
         # Find the boolean flags for the data involved in the loss calculation.

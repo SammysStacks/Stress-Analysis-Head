@@ -63,8 +63,8 @@ class modelVisualizations(globalPlottingProtocols):
             sharedModels = [modelPipeline.model.sharedSignalEncoderModel for modelPipeline in allModelPipelines]
 
             # Plot reconstruction loss.
-            self.generalViz.plotTrainingLosses([sharedModel.trainingLosses_timeReconstructionAnalysis for sharedModel in sharedModels],
-                                               [sharedModel.testingLosses_timeReconstructionAnalysis for sharedModel in sharedModels],
+            self.generalViz.plotTrainingLosses([sharedModel.trainingLosses_signalReconstruction for sharedModel in sharedModels],
+                                               [sharedModel.testingLosses_signalReconstruction for sharedModel in sharedModels],
                                                lossLabels=[f"{modelPipeline.model.datasetName} Signal Encoding Reconstruction Loss" for modelPipeline in allModelPipelines],
                                                plotTitle="trainingLosses/Signal Encoder Convergence Losses")
 
@@ -121,12 +121,12 @@ class modelVisualizations(globalPlottingProtocols):
 
         with torch.no_grad():  # Stop gradient tracking
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
-            interpolatedSignalTrainingData, reconstructedInterpolatedTrainingData, physiologicalTrainingProfile, activityTrainingProfile, basicEmotionTrainingProfile, emotionTrainingProfile = model.forward(submodel, trainingSignalData, trainingSignalIdentifiers, trainingMetadata, device=self.accelerator.device, fullDataPass=True)
-            interpolatedSignalTestingData, reconstructedInterpolatedTestingData, physiologicalTestingProfile, activityTestingProfile, basicEmotionTestingProfile, emotionTestingProfile = model.forward(submodel, testingSignalData, testingSignalIdentifiers, testingMetadata, device=self.accelerator.device, fullDataPass=True)
+            interpolatedSignalTrainingData, finalTrainingManifoldProjectionLoss, reconstructedInterpolatedTrainingData, physiologicalTrainingProfile, activityTrainingProfile, basicEmotionTrainingProfile, emotionTrainingProfile = model.forward(submodel, trainingSignalData, trainingSignalIdentifiers, trainingMetadata, device=self.accelerator.device, fullDataPass=True)
+            interpolatedSignalTestingData, finalTestingManifoldProjectionLoss, reconstructedInterpolatedTestingData, physiologicalTestingProfile, activityTestingProfile, basicEmotionTestingProfile, emotionTestingProfile = model.forward(submodel, testingSignalData, testingSignalIdentifiers, testingMetadata, device=self.accelerator.device, fullDataPass=True)
 
             # Detach the data from the GPU and tensor format.
-            interpolatedSignalTrainingData, reconstructedInterpolatedTrainingData, physiologicalTrainingProfile, activityTrainingProfile, basicEmotionTrainingProfile, emotionTrainingProfile = interpolatedSignalTrainingData.detach().cpu().numpy(), reconstructedInterpolatedTrainingData.detach().cpu().numpy(), physiologicalTrainingProfile.detach().cpu().numpy(), activityTrainingProfile.detach().cpu().numpy(), basicEmotionTrainingProfile.detach().cpu().numpy(), emotionTrainingProfile.detach().cpu().numpy()
-            interpolatedSignalTestingData, reconstructedInterpolatedTestingData, physiologicalTestingProfile, activityTestingProfile, basicEmotionTestingProfile, emotionTestingProfile = interpolatedSignalTestingData.detach().cpu().numpy(), reconstructedInterpolatedTestingData.detach().cpu().numpy(), physiologicalTestingProfile.detach().cpu().numpy(), activityTestingProfile.detach().cpu().numpy(), basicEmotionTestingProfile.detach().cpu().numpy(), emotionTestingProfile.detach().cpu().numpy()
+            interpolatedSignalTrainingData, finalTrainingManifoldProjectionLoss, reconstructedInterpolatedTrainingData, physiologicalTrainingProfile, activityTrainingProfile, basicEmotionTrainingProfile, emotionTrainingProfile = interpolatedSignalTrainingData.detach().cpu().numpy(), finalTrainingManifoldProjectionLoss.detach().cpu().numpy(), reconstructedInterpolatedTrainingData.detach().cpu().numpy(), physiologicalTrainingProfile.detach().cpu().numpy(), activityTrainingProfile.detach().cpu().numpy(), basicEmotionTrainingProfile.detach().cpu().numpy(), emotionTrainingProfile.detach().cpu().numpy()
+            interpolatedSignalTestingData, finalTestingManifoldProjectionLoss, reconstructedInterpolatedTestingData, physiologicalTestingProfile, activityTestingProfile, basicEmotionTestingProfile, emotionTestingProfile = interpolatedSignalTestingData.detach().cpu().numpy(), finalTestingManifoldProjectionLoss.detach().cpu().numpy(), reconstructedInterpolatedTestingData.detach().cpu().numpy(), physiologicalTestingProfile.detach().cpu().numpy(), activityTestingProfile.detach().cpu().numpy(), basicEmotionTestingProfile.detach().cpu().numpy(), emotionTestingProfile.detach().cpu().numpy()
             physiologicalTimes = model.specificSignalEncoderModel.ebbinghausInterpolation.pseudoEncodedTimes.detach().cpu().numpy()
 
         # ------------------- Plot the Data on One Device ------------------ # 

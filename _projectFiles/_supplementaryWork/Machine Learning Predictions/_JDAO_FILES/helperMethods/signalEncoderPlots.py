@@ -129,19 +129,19 @@ class signalEncoderPlots(trainingPlots):
                         currentModel = self.getSubmodel(allDummyModelPipelines[modelInd], submodel=modelConstants.signalEncoderModel)
 
                         for timeWindowInd in range(len(modelConstants.timeWindows)):
-                            trainLoss = currentModel.trainingLosses_timeReconstructionAnalysis[timeWindowInd]
-                            smoothedTrainLoss = self.getSmoothedLosses(currentModel.trainingLosses_timeReconstructionAnalysis[timeWindowInd])
+                            trainLoss = currentModel.trainingLosses_signalReconstruction[timeWindowInd]
+                            smoothedTrainLoss = self.getSmoothedLosses(currentModel.trainingLosses_signalReconstruction[timeWindowInd])
 
-                            testLoss = currentModel.testingLosses_timeReconstructionAnalysis[timeWindowInd]
-                            smoothedTestLoss = self.getSmoothedLosses(currentModel.testingLosses_timeReconstructionAnalysis[timeWindowInd])
+                            testLoss = currentModel.testingLosses_signalReconstruction[timeWindowInd]
+                            smoothedTestLoss = self.getSmoothedLosses(currentModel.testingLosses_signalReconstruction[timeWindowInd])
 
                             lossCurves[timeWindowInd, modelInd] = [trainLoss, testLoss]
                             smoothedLossCurves[timeWindowInd, modelInd] = [smoothedTrainLoss, smoothedTestLoss]
 
                         # Get the losses.
                         optimalLossHolders[:, modelInd, numLiftedChannelInd, numExpandedSignalInd, numEncodingLayerInd] = self.getSmoothedFinalLosses(currentModel.trainingLosses_timeReconstructionOptimalAnalysis)
-                        trainingLossHolders[:, modelInd, numLiftedChannelInd, numExpandedSignalInd, numEncodingLayerInd] = self.getSmoothedFinalLosses(currentModel.trainingLosses_timeReconstructionAnalysis)
-                        testingLossHolders[:, modelInd, numLiftedChannelInd, numExpandedSignalInd, numEncodingLayerInd] = self.getSmoothedFinalLosses(currentModel.testingLosses_timeReconstructionAnalysis)
+                        trainingLossHolders[:, modelInd, numLiftedChannelInd, numExpandedSignalInd, numEncodingLayerInd] = self.getSmoothedFinalLosses(currentModel.trainingLosses_signalReconstruction)
+                        testingLossHolders[:, modelInd, numLiftedChannelInd, numExpandedSignalInd, numEncodingLayerInd] = self.getSmoothedFinalLosses(currentModel.testingLosses_signalReconstruction)
 
                         # Plot the loss curves for each model
                         print(lossCurves[:, modelInd][0].shape)

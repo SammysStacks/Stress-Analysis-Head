@@ -65,7 +65,7 @@ class emotionModelWeights(convolutionalHelpers):
     def reversibleNeuralWeightCNN(inChannel=1):
         return nn.Sequential(
             # Convolution architecture: feature engineering
-            reversibleConvolution(numChannels=inChannel, kernelSize=3, activationMethod=emotionModelWeights.getActivationType(), numLayers=4, skipConnection=True),
+            reversibleConvolution(numChannels=inChannel, kernelSize=3, activationMethod=emotionModelWeights.getActivationType(), numLayers=1, skipConnection=True),
         )
 
     @staticmethod
@@ -80,7 +80,7 @@ class emotionModelWeights(convolutionalHelpers):
     def postProcessingLayer(inChannel=1):
         return nn.Sequential(
             # Convolution architecture: post-processing operator. 
-            reversibleConvolution(numChannels=inChannel, kernelSize=3, activationMethod=emotionModelWeights.getActivationType(), numLayers=4, skipConnection=True),
+            reversibleConvolution(numChannels=inChannel, kernelSize=3, activationMethod=emotionModelWeights.getActivationType(), numLayers=1, skipConnection=True),
         )
 
     @staticmethod
