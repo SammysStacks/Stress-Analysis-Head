@@ -522,52 +522,49 @@ class featurePlotting(globalPlottingProtocols):
             fig.savefig(saveDataFolder + featureNames[featureInd] + ".png", dpi=300, bbox_inches='tight')
             self.clearFigure(fig, None)
 
+    @staticmethod
+    def stressLabelPlotting(experimentalOrder, subjectOrder, featureLabelTypes, allFinalLabels):
+        bounds = compileModelInfo().predictionBounds
 
+        colors = []
+        currentSubjectName = ""
+        subjectExperimentInds = []
+        for experimentInd in range(len(experimentalOrder)):
+            subjectName = subjectOrder[experimentInd]
 
+            if (currentSubjectName != subjectName and len(subjectExperimentInds)) != 0 or experimentInd == len(experimentalOrder) - 1:
+                if experimentInd == len(experimentalOrder) - 1:
+                    subjectExperimentInds.append(experimentInd)
+                    colors.append('#333333')
 
+                for finalLabelInd in range(len(featureLabelTypes)):
+                    finalLabel = featureLabelTypes[finalLabelInd]
+                    experimentNames = [experimentalOrder[i] for i in subjectExperimentInds]
+                    plt.figure(figsize=(12, 6))  # Increase the figure size for better readability
+                    bar_positions = np.arange(len(experimentNames))
+                    bars = plt.bar(bar_positions, [allFinalLabels[finalLabelInd][i] for i in subjectExperimentInds], color=colors)
 
-        # import matplotlib.pyplot as plt
-        # bounds = compileModelInfo().predictionBounds
-        #
-        # colors = []
-        # currentSubjectName = ""
-        # subjectExperimentInds = []
-        # for experimentInd in range(len(experimentalOrder)):
-        #     subjectName = subjectOrder[experimentInd]
-        #
-        #     if (currentSubjectName != subjectName and len(subjectExperimentInds)) != 0 or experimentInd == len(experimentalOrder) - 1:
-        #         if experimentInd == len(experimentalOrder) - 1:
-        #             subjectExperimentInds.append(experimentInd)
-        #             colors.append('#333333')
-        #
-        #         for finalLabelInd in range(len(featureLabelTypes)):
-        #             finalLabel = featureLabelTypes[finalLabelInd]
-        #             experimentNames = [experimentalOrder[i] for i in subjectExperimentInds]
-        #             plt.figure(figsize=(12, 6))  # Increase the figure size for better readability
-        #             bar_positions = np.arange(len(experimentNames))
-        #             bars = plt.bar(bar_positions, [allFinalLabels[finalLabelInd][i] for i in subjectExperimentInds], color=colors)
-        #
-        #             for bar in bars:
-        #                 yval = bar.get_height()
-        #                 plt.text(bar.get_x() + bar.get_width() / 2, yval + 0.5, round(yval, 2), ha='center', va='bottom', fontsize=12, color='black')
-        #
-        #             plt.xticks(ticks=bar_positions, labels=experimentNames, rotation=45, fontsize=12, ha='right')
-        #             plt.title(f'{currentSubjectName} - {finalLabel}', fontsize=16)
-        #             plt.xlabel("Experiment Number", fontsize=14)
-        #             plt.ylabel("Label Value", fontsize=14)
-        #             plt.grid(axis='y', linestyle='--', alpha=0.7)
-        #             plt.ylim(bounds[finalLabelInd])
-        #             plt.tight_layout()
-        #             plt.show()
-        #
-        #         colors = []
-        #         subjectExperimentInds = []
-        #     experimentName = experimentalOrder[experimentInd]
-        #     subjectExperimentInds.append(experimentInd)
-        #     currentSubjectName = subjectName
-        #
-        #     colors.append('#333333')
-        #     if 'cpt' in experimentName.lower():
-        #         colors[-1] = 'skyblue'
-        #     if 'heat' in experimentName.lower():
-        #         colors[-1] = '#D62728'
+                    for bar in bars:
+                        yval = bar.get_height()
+                        plt.text(bar.get_x() + bar.get_width() / 2, yval + 0.5, round(yval, 2), ha='center', va='bottom', fontsize=12, color='black')
+
+                    plt.xticks(ticks=bar_positions, labels=experimentNames, rotation=45, fontsize=12, ha='right')
+                    plt.title(f'{currentSubjectName} - {finalLabel}', fontsize=16)
+                    plt.xlabel("Experiment Number", fontsize=14)
+                    plt.ylabel("Label Value", fontsize=14)
+                    plt.grid(axis='y', linestyle='--', alpha=0.7)
+                    plt.ylim(bounds[finalLabelInd])
+                    plt.tight_layout()
+                    plt.show()
+
+                colors = []
+                subjectExperimentInds = []
+            experimentName = experimentalOrder[experimentInd]
+            subjectExperimentInds.append(experimentInd)
+            currentSubjectName = subjectName
+
+            colors.append('#333333')
+            if 'cpt' in experimentName.lower():
+                colors[-1] = 'skyblue'
+            if 'heat' in experimentName.lower():
+                colors[-1] = '#D62728'

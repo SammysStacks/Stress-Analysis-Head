@@ -7,6 +7,8 @@ import threading
 # General
 import numpy as np
 
+from helperFiles.machineLearning.featureAnalysis.featurePlotting import featurePlotting
+
 # Compiler flags.
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
@@ -48,7 +50,7 @@ if __name__ == "__main__":
     deviceAddress = '12ba4cb61c85ec11bc01fc2b19c2d21c'  # Board's Serial Number (port.serial_number). Only used if streaming data, else it gets reset to None.
     stopTimeStreaming = 60*100  # If Float/Int: The Number of Seconds to Stream Data; If String, it is the TimeStamp to Stop (Military Time) as "Hours:Minutes:Seconds:MicroSeconds"
     deviceType = 'serial'  # The type of device being used for streaming.
-
+    
     # ---------------------------------------------------------------------- #
 
     # Assert the proper use of the program
@@ -138,6 +140,9 @@ if __name__ == "__main__":
         for analysisInd in range(len(allRawFeatureHolders[0])):
             assert len(allRawFeatureHolders[0][analysisInd][0]) == len(biomarkerFeatureNames[analysisInd]), "Incorrect number of raw features extracted"
         print("\nFinished Feature Extraction")
+
+        # plotting the stress score labels for different experiments
+        featurePlotting.stressLabelPlotting(experimentalOrder, subjectOrder, featureLabelTypes, allFinalLabels)
 
     # ------------------ Extract Data into this Namespace ------------------ #
 
