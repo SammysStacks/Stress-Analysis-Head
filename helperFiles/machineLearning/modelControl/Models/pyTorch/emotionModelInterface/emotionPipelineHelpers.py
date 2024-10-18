@@ -16,10 +16,9 @@ from .emotionModel.emotionModelHelpers.optimizerMethods.optimizerMethods import 
 class emotionPipelineHelpers:
 
     def __init__(self, accelerator, modelID, datasetName, modelName, allEmotionClasses, maxNumSignals, numSubjects, userInputParams,
-                 emotionNames, activityNames, featureNames, submodel, debuggingResults=False):
+                 emotionNames, activityNames, featureNames, submodel):
         # General parameters.
         self.metadata = modelConstants.metadata  # The subject identifiers to consider. Dim: [numSubjects]
-        self.debuggingResults = debuggingResults  # Whether to print debugging results. Type: bool
         self.accelerator = accelerator  # Hugging face interface to speed up the training process.
         self.modelName = modelName  # The unique name of the model to initialize.
         self.modelID = modelID  # A unique integer identifier for this model.
@@ -42,7 +41,7 @@ class emotionPipelineHelpers:
 
         # Initialize the emotion model.
         if modelName == "emotionModel":
-            self.model = emotionModelHead(submodel, self.metadata, userInputParams, emotionNames, activityNames, featureNames, numSubjects, datasetName, debuggingResults)
+            self.model = emotionModelHead(submodel, self.metadata, userInputParams, emotionNames, activityNames, featureNames, numSubjects, datasetName)
         # Assert that the model has been initialized.
         assert hasattr(self, 'model'), f"Unknown Model Type Requested: {modelName}"
 

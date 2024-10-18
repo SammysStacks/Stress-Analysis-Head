@@ -64,9 +64,16 @@ class lossCalculations:
         finalLoss = method(signalData).mean()
         return finalLoss
 
-    def calculateSignalEncodingLoss(self, allInterpolatedSignalData, allFinalManifoldProjectionLoss, allReconstructedInterpolatedData, allLabelsMask=None, reconstructionIndex=None):
+    def calculateSignalEncodingLoss(self, allInterpolatedSignalData, allFinalManifoldProjectionLoss, allReconstructedInterpolatedData, missingDataMask, allLabelsMask=None, reconstructionIndex=None):
         # Find the boolean flags for the data involved in the loss calculation.
         reconstructionDataMask = self.getReconstructionDataMask(allLabelsMask, reconstructionIndex)
+        batchSize, numSignals, encodedDimension = allInterpolatedSignalData.size()
+
+        # Zero out the signals if the data was missing.
+        missingSignalMask = (missingDataMask == 0).all(dim=-1)  # Dim: numExperiments, numSignals
+        allReconstructedInterpolatedData = missingSignalMask*allReconstructedInterpolatedData
+        allInterpolatedSignalData = missingSignalMask*allInterpolatedSignalData
+        numValidSignals = numSignals - missingSignalMask.sum(dim=1)  # Dim: batchSize
 
         # Isolate the signals for this loss (For example, training vs. testing).
         reconstructedInterpolatedData = self.getData(allReconstructedInterpolatedData, reconstructionDataMask)  # Dim: numExperiments, numCondensedSignals, encodedDimension
@@ -76,10 +83,11 @@ class lossCalculations:
 
         # Calculate the error in signal reconstruction (encoding loss).
         signalReconstructedLoss = self.reconstructionLoss(reconstructedInterpolatedData, interpolatedSignalData)
-        signalReconstructedLoss = signalReconstructedLoss.mean(dim=2).mean(dim=1).mean()
+        signalReconstructedLoss = signalReconstructedLoss.mean(dim=2).sum(dim=1) / numValidSignals
 
-        # Calculate the error in the manifold projection.
+        # Average the loss over all batches.
         finalManifoldProjectionLoss = finalManifoldProjectionLoss.mean()
+        signalReconstructedLoss = signalReconstructedLoss.mean()
 
         # Assert that nothing is wrong with the loss calculations.
         self.modelHelpers.assertVariableIntegrity(signalReconstructedLoss, variableName="encoded signal reconstructed loss", assertGradient=False)

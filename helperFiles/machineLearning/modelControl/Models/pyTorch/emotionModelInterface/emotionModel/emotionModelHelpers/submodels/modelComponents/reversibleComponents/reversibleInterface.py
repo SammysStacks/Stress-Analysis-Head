@@ -30,7 +30,7 @@ class reversibleInterface(nn.Module):
         # Optionally, plot the original and reconstructed signals for visual comparison
         plt.plot(inputData[0][0].detach().numpy(), 'k', linewidth=2, label='Initial Signal')
         plt.plot(reconstructedData[0][0].detach().numpy(), 'tab:red', linewidth=1.5, label='Reconstructed Signal')
-        plt.plot(forwardData[0][0].detach().numpy(), 'tab:blue', linewidth=1, label='Latent Signal', alpha=0.5)
+        plt.plot(forwardData[0][0].detach().numpy(), 'o', color='tab:blue', linewidth=1, label='Latent Signal', alpha=0.5)
         plt.legend()
         plt.show()
 

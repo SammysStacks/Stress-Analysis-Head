@@ -1,6 +1,5 @@
 # General
 import torch
-import random
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
 # Helper classes
@@ -64,39 +63,35 @@ class dataAugmentation:
 
         return startTimeIndices
 
-    def changeNumSignals(self, signalData, minNumSignals=1, maxNumSignals=128, alteredDim=1):
+    @staticmethod
+    def changeNumSignals(signalData, dropoutPercent):
         # signalData: [batchSize, numSignals, maxSequenceLength, numChannels]
-        numSignals = signalData.size(alteredDim)
+        batchSize, numSignals, maxSequenceLength, numChannels = signalData.size()
 
-        # Find a random place to cut the data.
-        minNumSignals = max(minNumSignals + 1, int(numSignals / 3))
-        randomEnd = int(generalMethods.biasedSample(minNumSignals, maxNumSignals, biasType="high"))
+        # Create a mask to drop p% of the signals
+        dropoutMask = dropoutPercent < torch.rand(batchSize, numSignals)  # Randomly keep (1-p)% of the signals
 
-        # Expand the number of signals.
-        repeat_times = (maxNumSignals + numSignals - 1) // numSignals  # Calculate the number of times we need to repeat the tensor
-        signalData = signalData.repeat_interleave(repeat_times, dim=alteredDim)
-        signalData = self.getInitialSignals(signalData, maxNumSignals)
+        # Expand the mask to cover all timesteps and channels
+        dropoutMask = dropoutMask.unsqueeze(-1).unsqueeze(-1).expand(-1, -1, maxSequenceLength, 2)
 
-        # Shuffle the signals to ensure that we are not always removing the same signals.
-        signalData, shuffle_indices = self.shuffleDimension(signalData, shuffle_indices=None)
-        signalData = self.getInitialSignals(signalData, randomEnd)
+        # Apply the mask to the data
+        augmentedData = signalData * dropoutMask
 
-        return signalData
+        return augmentedData
     
     @staticmethod
-    def signalDropout(augmentedBatchData, dropoutPercent):
+    def signalDropout(signalData, dropoutPercent):
         # Assuming signalDatas is your tensor with dimensions [batchSize, numSignals, maxSequenceLength, numChannels]
-        batchSize, numSignals, sequenceLength, numChannels = augmentedBatchData.size()
-        if dropoutPercent == 0: return augmentedBatchData
+        batchSize, numSignals, sequenceLength, numChannels = signalData.size()
+        if dropoutPercent == 0: return signalData
 
         # Find a random percentage to drop the data.
-        finalDropoutPercent = generalMethods.biasedSample(range_start=0, range_end=dropoutPercent, biasType="low")
-        dropoutMask = finalDropoutPercent < torch.rand((batchSize, numSignals, sequenceLength), device=augmentedBatchData.device)
+        dropoutMask = dropoutPercent < torch.rand((batchSize, numSignals, sequenceLength), device=signalData.device)
 
         # Slice all the data at the same index
-        augmentedBatchData = augmentedBatchData * dropoutMask.unsqueeze(-1)
+        augmentedData = signalData * dropoutMask.unsqueeze(-1)
 
-        return augmentedBatchData
+        return augmentedData
 
     @staticmethod
     def getInitialSignals(signalData, finalLength):

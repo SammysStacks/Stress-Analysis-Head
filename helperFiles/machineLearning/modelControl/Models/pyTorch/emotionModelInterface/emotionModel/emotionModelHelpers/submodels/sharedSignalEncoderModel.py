@@ -7,7 +7,6 @@ from .modelComponents.neuralOperators.neuralOperatorInterface import neuralOpera
 from .modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
 # Import files for machine learning
 from ..generalMethods.generalMethods import generalMethods
-from ..modelConstants import modelConstants
 from ..optimizerMethods import activationFunctions
 
 
@@ -54,18 +53,18 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
             if reversibleInterface.forwardDirection:
                 # Apply the neural operator layer with activation.
                 signalData = self.neuralLayers[layerInd](signalData)
-                signalData = self.activationFunction(signalData)
+                signalData = self.activationFunction(signalData, layerInd % 2 == 0)
 
                 # Apply the post-processing layer.
                 signalData = self.processingLayers[layerInd](signalData)
             else:
                 # Apply the post-processing layer.
-                layerInd = self.numOperatorLayers - layerInd - 1
-                signalData = self.processingLayers[layerInd](signalData)
+                pseudoLayerInd = self.numOperatorLayers - layerInd - 1
+                signalData = self.processingLayers[pseudoLayerInd](signalData)
 
                 # Apply the neural operator layer with activation.
-                signalData = self.activationFunction(signalData)
-                signalData = self.neuralLayers[layerInd](signalData)
+                signalData = self.activationFunction(signalData, pseudoLayerInd % 2 == 0)
+                signalData = self.neuralLayers[pseudoLayerInd](signalData)
 
         # Reshape the signal data.
         signalData = signalData.view(batchSize, numSignals, signalLength)

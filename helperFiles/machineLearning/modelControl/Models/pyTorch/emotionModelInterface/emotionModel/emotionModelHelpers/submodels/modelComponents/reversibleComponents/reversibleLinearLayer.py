@@ -23,10 +23,11 @@ class reversibleLinearLayer(reversibleInterface):
     def forward(self, inputData):
         for layerInd in range(self.numLayers):
             if self.forwardDirection:
-                inputData = self.applyLayer(inputData, self.numLayers - layerInd - 1)
-                inputData = self.activationFunction(inputData)
+                pseudoLayerInd = self.numLayers - layerInd - 1
+                inputData = self.applyLayer(inputData, pseudoLayerInd)
+                inputData = self.activationFunction(inputData, pseudoLayerInd % 2 == 0)
             else:
-                inputData = self.activationFunction(inputData)
+                inputData = self.activationFunction(inputData, layerInd % 2 == 0)
                 inputData = self.applyLayer(inputData, layerInd)
 
         return inputData
@@ -63,7 +64,7 @@ class reversibleLinearLayer(reversibleInterface):
 if __name__ == "__main__":
     # General parameters.
     _batchSize, _numSignals, _sequenceLength = 2, 4, 128
-    _activationMethod = 'reversibleLinearSoftSign_1_0.9'
+    _activationMethod = 'nonLinearAddition_0.2'
     _numLayers = 10
 
     # Set up the parameters.
@@ -71,4 +72,4 @@ if __name__ == "__main__":
     _inputData = torch.randn(_batchSize, _numSignals, _sequenceLength)
 
     # Perform the convolution in the fourier and spatial domains.
-    _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(_inputData)
+    _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(_inputData, atol=1e-6)

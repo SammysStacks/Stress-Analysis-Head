@@ -284,7 +284,7 @@ class compileModelData(compileModelDataHelpers):
             # Initialize and train the model class.
             modelPipeline = emotionPipeline(accelerator=self.accelerator, modelID=metadataInd, datasetName=metadatasetName, modelName=modelName, allEmotionClasses=numQuestionOptions,
                                             maxNumSignals=numSignals, numSubjects=numSubjects, userInputParams=self.userInputParams, emotionNames=surveyQuestions, activityNames=activityNames,
-                                            featureNames=featureNames, submodel=submodel, debuggingResults=False)
+                                            featureNames=featureNames, submodel=submodel)
 
             # Hugging face integration.
             trainingInformation = modelPipeline.getDistributedModels(model=None, submodel=modelConstants.trainingInformation)
@@ -317,7 +317,7 @@ class compileModelData(compileModelDataHelpers):
                 # Initialize and train the model class.
                 dummyModelPipeline = emotionPipeline(accelerator=self.accelerator, modelID=metadataInd, datasetName=datasetName, modelName=modelName, allEmotionClasses=[],
                                                      maxNumSignals=500, numSubjects=1, userInputParams=userInputParams, emotionNames=[], activityNames=[], featureNames=[],
-                                                     submodel=loadSubmodel, debuggingResults=True)
+                                                     submodel=loadSubmodel)
                 # Hugging face integration.
                 dummyModelPipeline.acceleratorInterface()
 

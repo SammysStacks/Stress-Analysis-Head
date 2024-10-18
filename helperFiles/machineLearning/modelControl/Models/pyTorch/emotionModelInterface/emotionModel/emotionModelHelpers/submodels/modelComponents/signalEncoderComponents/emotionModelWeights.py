@@ -40,7 +40,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def ebbinghausDecayExp(deltaTimes, signalWeights):
-        return signalWeights.pow(2)*torch.exp(-deltaTimes.pow(2))
+        return torch.exp(-(deltaTimes.pow(2) / (torch.tensor(1) + signalWeights.pow(2))))
 
     def timeDependantSignalWeights(self, numSignals):
         # Initialize the weights with a normal distribution.
@@ -65,7 +65,7 @@ class emotionModelWeights(convolutionalHelpers):
     def reversibleNeuralWeightCNN(inChannel=1):
         return nn.Sequential(
             # Convolution architecture: feature engineering
-            reversibleConvolution(numChannels=inChannel, kernelSize=3, activationMethod=emotionModelWeights.getActivationType(), numLayers=1, skipConnection=True),
+            reversibleConvolution(numChannels=inChannel, kernelSize=3, activationMethod=emotionModelWeights.getActivationType(), numLayers=4, skipConnection=True),
         )
 
     @staticmethod
@@ -80,8 +80,8 @@ class emotionModelWeights(convolutionalHelpers):
     def postProcessingLayer(inChannel=1):
         return nn.Sequential(
             # Convolution architecture: post-processing operator. 
-            reversibleConvolution(numChannels=inChannel, kernelSize=3, activationMethod=emotionModelWeights.getActivationType(), numLayers=1, skipConnection=True),
+            reversibleConvolution(numChannels=inChannel, kernelSize=3, activationMethod=emotionModelWeights.getActivationType(), numLayers=4, skipConnection=True),
         )
 
     @staticmethod
-    def getActivationType(): return 'reversibleLinearSoftSign_2_0.95'
+    def getActivationType(): return 'nonLinearAddition_0.25'

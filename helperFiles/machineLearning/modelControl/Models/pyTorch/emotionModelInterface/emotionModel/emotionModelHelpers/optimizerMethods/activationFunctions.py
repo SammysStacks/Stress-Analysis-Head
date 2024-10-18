@@ -1,5 +1,6 @@
 import math
 
+import numpy as np
 import torch
 import torch.nn as nn
 
@@ -17,15 +18,11 @@ def getActivationMethod(activationMethod):
         activationFunction = boundedExp(decayConstant=topExponent, nonLinearityRegion=nonLinearityRegion)
     elif activationMethod.startswith('reversibleLinearSoftSign'):
         inversionPoint = float(activationMethod.split('_')[1]) if '_' in activationMethod else 2
-        infiniteBound = float(activationMethod.split('_')[2]) if '_' in activationMethod else 0.5
+        infiniteBound = float(activationMethod.split('_')[2]) if '_' in activationMethod else 1
         activationFunction = reversibleLinearSoftSign(inversionPoint=inversionPoint, infiniteBound=infiniteBound)
-    elif activationMethod.startswith('reversiblePolynomial'):
-        inversionPoint = float(activationMethod.split('_')[1]) if '_' in activationMethod else 2
-        activationFunction = reversiblePolynomial(inversionPoint=inversionPoint)
-    elif activationMethod == 'boundedS':
-        activationFunction = boundedS()
-    elif activationMethod == 'linearOscillation':
-        activationFunction = linearOscillation()
+    elif activationMethod.startswith('nonLinearAddition'):
+        terms = activationMethod.split('_')[1:]
+        activationFunction = nonLinearAddition(amplitude=float(terms[0]))
     elif activationMethod == 'PReLU':
         activationFunction = nn.PReLU()
     elif activationMethod == 'selu':
@@ -34,8 +31,6 @@ def getActivationMethod(activationMethod):
         activationFunction = nn.GELU()
     elif activationMethod == 'relu':
         activationFunction = nn.ReLU()
-    elif activationMethod == 'sinh':
-        activationFunction = sinh()
     else:
         raise ValueError("Activation type must be in ['Tanhshrink', 'none', 'boundedExp', 'boundedS' 'PReLU', 'selu', 'gelu', 'relu', 'sinh']")
 
@@ -55,38 +50,8 @@ class switchActivation(nn.Module):
             return x
 
 
-class reversiblePolynomial(reversibleInterface):
-    def __init__(self, inversionPoint=2):
-        super(reversiblePolynomial, self).__init__()
-        self.squaredInversionPoint = inversionPoint ** 2
-        self.inversionPoint = inversionPoint
-
-    def forward(self, x):
-        if self.forwardDirection:
-            return self.forwardPass(x)
-        else:
-            return self.inversePass(x)
-
-    def inversePass(self, x):
-        return (x + x.pow(3) / self.squaredInversionPoint) / 2
-
-    def forwardPass(self, y):
-        # Solve the cubic equation terms.
-        secondTerm = self.squaredInversionPoint * torch.sqrt(y.pow(2) + self.squaredInversionPoint / 27)
-        firstTerm = self.squaredInversionPoint * y
-
-        # Combine the cubic functions.
-        secondRoot = firstTerm - secondTerm
-        firstRoot = firstTerm + secondTerm
-
-        # Invert the cubic function.
-        x = torch.pow(firstRoot.abs(), 1 / 3) * firstRoot.sign() + torch.pow(secondRoot.abs(), 1 / 3) * secondRoot.sign()
-
-        return x
-
-
 class reversibleLinearSoftSign(reversibleInterface):
-    def __init__(self, inversionPoint=2, infiniteBound=0.75):
+    def __init__(self, inversionPoint=1, infiniteBound=0.75):
         super(reversibleLinearSoftSign, self).__init__()
         self.inversionPoint = inversionPoint  # Corresponds to `r` in the equation
         self.infiniteBound = infiniteBound  # Corresponds to `a` in the equation
@@ -96,10 +61,8 @@ class reversibleLinearSoftSign(reversibleInterface):
         assert 0 < self.inversionPoint, "The inversion point must be positive to ensure a stable convergence."
 
     def forward(self, x):
-        if self.forwardDirection:
-            return self.forwardPass(x)
-        else:
-            return self.inversePass(x)
+        if self.forwardDirection: return self.forwardPass(x)
+        else: return self.inversePass(x)
 
     def forwardPass(self, x):
         # f(x) = ax + x / (1 + (a / (1 - a)) * (|x| / r))
@@ -116,7 +79,7 @@ class reversibleLinearSoftSign(reversibleInterface):
 
     def inversePass(self, y):
         # Inverse function described in the problem
-        absY, signY = y.abs(), y.sign()
+        absY = y.abs()
 
         if self.infiniteBound != 1:
             # Calculate the non-linearity term
@@ -129,11 +92,11 @@ class reversibleLinearSoftSign(reversibleInterface):
             # Combine terms, applying sign(x) for the final output
             x = signDependentTerm + y / (2 * self.infiniteBound)
         else:
+            signY = torch.nn.Tanh()(y*1e5)
             # Calculate the non-linearity term
             x = signY*((4*self.inversionPoint**2 + y.pow(2)).sqrt() - 2*self.inversionPoint)/2 + y/2
 
         return x
-
 
 class boundedExp(nn.Module):
     def __init__(self, decayConstant=0, nonLinearityRegion=2, infiniteBound=math.exp(-0.5)):
@@ -160,136 +123,110 @@ class boundedExp(nn.Module):
 
         return linearTerm * exponentialTerm
 
-
-# CHECK IF USING
-class linearOscillation(nn.Module):
-    def __init__(self, linearity=1, amplitude=1):
-        super(linearOscillation, self).__init__()
-        # NOTE MONOTONICITY: The linearity term must be greater or equal to the MAGNITUDE (ABS) of the amplitude to ensure the activation is monotonically increasing.
-        self.linearity = linearity
-        self.amplitude = amplitude
-
-    def forward(self, x):
-        # Ensure monotonicity.
-        linearity = torch.clamp(self.linearity, min=abs(self.amplitude))
-
-        return linearity * x + self.amplitude * torch.sin(x)
-
-
-class boundedS(nn.Module):
-    def __init__(self, boundedValue=1):
+class boundedS(reversibleInterface):
+    def __init__(self, nonLinearity):
         super(boundedS, self).__init__()
-        # Initialize coefficients with a starting value.
-        self.coefficients = nn.Parameter(torch.tensor([0.01]))
-        self.boundedValue = boundedValue
+        self.nonLinearity = torch.as_tensor(nonLinearity)  # Assign r as nonLinearity
+        assert 1 <= self.nonLinearity, "The non-linearity parameter must be greater than or equal to 1."
 
     def forward(self, x):
+        if self.forwardDirection: return self.forwardPass(x)
+        else: return self.inversePass(x)
+
+    def forwardPass(self, x):
         # Update the coefficient clamp.
-        a = self.coefficients[0].clamp(min=0.01, max=0.5)
+        r = self.nonLinearity
 
-        return (x / (1 + torch.pow(x, 2))) + a * x
+        return x*(1 + 1/(1 + r*x.pow(2)))
 
+    def inversePass(self, y):
+        r = self.nonLinearity
+        ySign = y.sign()
+        yAbs = y.abs()
 
-class learnableBoundedS(nn.Module):
-    def __init__(self):
-        super(learnableBoundedS, self).__init__()
-        # Initialize coefficients with a starting value.
-        self.coefficients = nn.Parameter(torch.tensor([1.0000]))
+        # Compute terms step by step for numerical stability
+        # Avoid any computation under the square root from becoming negative due to rounding or instability
+        inner_term_sqrt = torch.clamp(4 * r**2 * yAbs**4 - 13 * r * yAbs**2 + 32, min=1e-200)
+        term1_inner_sqrt = math.sqrt(3) * torch.sqrt(r**3 * inner_term_sqrt)
 
-    def forward(self, x):
-        # Update the coefficient clamp.
-        a = self.coefficients[0].clamp(min=1, max=100) + 25
+        term1_numerator = torch.clamp(2 * r**3 * yAbs**3 + 9 * r**2 * yAbs + term1_inner_sqrt, min=1e-200)
+        term1 = torch.pow(term1_numerator, 1 / 3)
 
-        return a * x / (25 + torch.pow(x, 2))
+        term2 = 2 * (r * yAbs**2 - 6)
 
+        term3_inner_sqrt = math.sqrt(3) * torch.sqrt(r**3 * inner_term_sqrt)
+        term3_numerator = torch.clamp(r**3 * yAbs**3 + (9 * r**2 * yAbs) / 2 + (3 / 2) * term3_inner_sqrt, min=1e-200)
+        term3 = torch.pow(term3_numerator, 1 / 3)
 
-class sinh(nn.Module):
-    def __init__(self, clampCoeff=[0.5, 0.75]):
-        super(sinh, self).__init__()
-        # Initialize coefficients with a starting value.
-        self.coefficients = nn.Parameter(torch.tensor(0.5))
-        self.clampCoeff = clampCoeff
+        # Final expression for x, using clamp to prevent overflow/underflow where necessary
+        x = (1 / 6) * ((2**(2 / 3) * term1) / r + term2 / term3 + 2 * yAbs)
 
-    def forward(self, x):
-        # Update the coefficient clamp.
-        coefficients = self.coefficients.clamp(min=self.clampCoeff[0], max=self.clampCoeff[1])
-
-        return torch.sinh(coefficients * x)
+        return x*ySign
 
 
-class powerSeriesActivation(nn.Module):
-    def __init__(self, numCoeffs=3, stabilityConstant=3.0, maxGrad=1, seriesType='full'):
-        super(powerSeriesActivation, self).__init__()
-        self.stabilityConstant = nn.Parameter(torch.tensor(stabilityConstant))
-        self.coefficients = nn.Parameter(torch.ones(numCoeffs))
-        self.seriesType = seriesType
-        self.maxGrad = maxGrad
-
-        # Register the hook with the coefficients
-        self.stabilityConstant.register_hook(self.stabilityGradientHook)
-        self.coefficients.register_hook(self.coeffGradientHook)
-
-    def coeffGradientHook(self, grad):
-        return grad.clamp(min=-self.maxGrad, max=self.maxGrad)
-
-    def stabilityGradientHook(self, grad):
-        # Clamp the gradients to be within the range [-self.stabilityConstant, self.stabilityConstant]
-        return grad.clamp(min=-self.maxGrad, max=self.maxGrad)
+class signWrap(reversibleInterface):
+    def __init__(self, period=1):
+        super(reversibleInterface, self).__init__()
+        self.period = torch.as_tensor(period)  # Assign r as nonLinearity
+        assert period != 0, "The period parameter must be non-zero."
 
     def forward(self, x):
-        output = 0
+        wrappedData = self.arcsin(self.sin(x))
 
-        for coeffInd in range(len(self.coefficients)):
-            functionPower = coeffInd + 1  # Skip the bias term.
+        if self.forwardDirection: return self.forwardPass(wrappedData)
+        else: return self.inversePass(wrappedData)
 
-            if self.seriesType == 'full':
-                functionPower = functionPower  # Full series: f(x) = a_0*x + a_1*x^2 + ... + a_n*x^n
-            elif self.seriesType == 'even':
-                functionPower = 2 * functionPower  # Even series: f(x) = a_0*x^2 + a_1*x^4 + ... + a_n*x^(2n)
-            elif self.seriesType == 'odd':
-                functionPower = 2 * functionPower - 1  # Odd series: f(x) = a_0*x + a_1*x^3 + ... + a_n*x^(2n+1)
-            else:
-                raise NotImplementedError
+    def forwardPass(self, x):
+        return self.sin(x)
 
-            # Adjust the output.
-            output += torch.exp(self.stabilityConstant) * torch.pow(x, functionPower) * self.coefficients[coeffInd]
+    def inversePass(self, y):
+        return self.arcsin(y)
 
-        return output
+    def sin(self, x):
+        return self.period*(x*torch.pi/self.period).sin()
+
+    def arcsin(self, x):
+        return (self.period/torch.pi) * (x/self.period).asin()
 
 
-class powerActivation(nn.Module):
-    def __init__(self, initial_exponent=2.0, min_exponent=0.1, max_exponent=5.0):
-        super(powerActivation, self).__init__()
-        self.exponent = nn.Parameter(torch.tensor(initial_exponent))
-        self.min_exponent = min_exponent
-        self.max_exponent = max_exponent
+class nonLinearAddition(reversibleInterface):
+    def __init__(self, amplitude=1.0):
+        super(nonLinearAddition, self).__init__()
+        self.amplitude = torch.as_tensor(amplitude)  # Assign r as nonLinearity
+        self.period = torch.as_tensor(1).exp()  # Assign r as nonLinearity
+        self.nonLinearityTerm = None  # The non-linearity term to add to the data.
 
-    def forward(self, x):
-        # Apply constraints to the exponent
-        constrained_exponent = torch.clamp(self.exponent, self.min_exponent, self.max_exponent)
+        # Assert the validity of the inputs.
+        assert amplitude != 0, "The amplitude parameter must be non-zero."
 
-        # Apply the power series activation
-        return torch.pow(x, constrained_exponent)
+    def forward(self, x, addingFlag=True):
+        # Check if the non-linearity term has been calculated.
+        if self.nonLinearityTerm is None: self.nonLinearityTerm = self.addNonLinearity(sequenceLength=x.size(-1), device=x.device)
+        assert x.size(-1) == self.nonLinearityTerm.size(-1), "The sequence length of the input data must match the sequence length of the non-linearity term."
+        coefficient = 1 if addingFlag else -1
 
+        if self.forwardDirection: return self.forwardPass(x, coefficient)
+        else: return self.inversePass(x, coefficient)
 
-class learnableTanhshrink(nn.Module):
-    def __init__(self, initial_scale=1.0):
-        super(learnableTanhshrink, self).__init__()
-        # Initialize the learnable scale parameter
-        self.nonLinearScale = nn.Parameter(torch.tensor(initial_scale))
+    def forwardPass(self, x, coefficient):
+        return x + self.nonLinearityTerm*coefficient
 
-    def forward(self, x):
-        # Apply the tanh function to constrain the scale parameter between -1 and 1
-        constrainedScale = torch.tanh(self.nonLinearScale)
+    def inversePass(self, y, coefficient):
+        return y - self.nonLinearityTerm*coefficient
 
-        # Apply the Tanhshrink activation function with the learnable scale
-        return x - constrainedScale * torch.tanh(x)
+    def addNonLinearity(self, sequenceLength, device):
+        positions = torch.arange(start=0, end=sequenceLength, step=1, dtype=torch.float32, device=device)
+
+        return self.amplitude*(positions*torch.pi/self.period).sin().round(decimals=6)
 
 
 if __name__ == "__main__":
     # Test the activation functions
     data = torch.randn(2, 10, 100)
+    data = data - data.min()
+    data = data / data.max()
+    data = 2 * data - 1
 
     # Perform the forward and inverse pass.
-    activationClass = reversibleLinearSoftSign(inversionPoint=1, infiniteBound=1)
+    activationClass = nonLinearAddition(amplitude=0.1)
     _forwardData, _reconstructedData = activationClass.checkReconstruction(data, atol=1e-6)

@@ -29,10 +29,11 @@ class reversibleConvolution(reversibleInterface):
     def forward(self, inputData):
         for layerInd in range(self.numLayers):
             if self.forwardDirection:
-                inputData = self.applyLayer(inputData, self.numLayers - layerInd - 1)
-                inputData = self.activationFunction(inputData)
+                pseudoLayerInd = self.numLayers - layerInd - 1
+                inputData = self.applyLayer(inputData, pseudoLayerInd)
+                inputData = self.activationFunction(inputData, pseudoLayerInd % 2 == 0)
             else:
-                inputData = self.activationFunction(inputData)
+                inputData = self.activationFunction(inputData, layerInd % 2 == 0)
                 inputData = self.applyLayer(inputData, layerInd)
 
         return inputData
@@ -62,7 +63,6 @@ class reversibleConvolution(reversibleInterface):
         # Perform the convolution.
         convolutionalData = torch.nn.functional.conv1d(inputData, neuralWeights[:, :, :, 0], bias=None, stride=1, padding=kernelSize, dilation=1, groups=self.numChannels)
         convolutionalData = convolutionalData[:, :, kernelSize:-1]
-        convolutionalData.half()
 
         return convolutionalData
 
@@ -90,16 +90,16 @@ class reversibleConvolution(reversibleInterface):
 if __name__ == "__main__":
     # General parameters.
     _batchSize, _numSignals, _sequenceLength = 4, 128, 512
-    _activationMethod = 'reversibleLinearSoftSign_1_0.9'
+    _activationMethod = 'nonLinearAddition_0.2'
     _numLayers = 2
     _kernelSize = 3
 
     # Set up the parameters.
-    neuralLayerClass = reversibleConvolution(numChannels=_numSignals, kernelSize=_kernelSize, activationMethod=_activationMethod, numLayers=_numLayers, skipConnection=True)
+    neuralLayerClass = reversibleConvolution(numChannels=_numSignals, kernelSize=_kernelSize, activationMethod=_activationMethod, numLayers=_numLayers, skipConnection=False)
     _inputData = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float32)
     _inputData = _inputData - _inputData.min()
     _inputData = _inputData / _inputData.max()
     _inputData = 2*_inputData - 1
 
     # Perform the convolution in the fourier and spatial domains.
-    _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(_inputData, atol=1e-4)
+    _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(_inputData, atol=1e-6)

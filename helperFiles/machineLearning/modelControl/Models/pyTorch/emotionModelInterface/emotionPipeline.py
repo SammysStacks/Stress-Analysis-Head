@@ -10,10 +10,10 @@ from .emotionPipelineHelpers import emotionPipelineHelpers
 class emotionPipeline(emotionPipelineHelpers):
 
     def __init__(self, accelerator, modelID, datasetName, modelName, allEmotionClasses, maxNumSignals, numSubjects, userInputParams,
-                 emotionNames, activityNames, featureNames, submodel, debuggingResults=False):
+                 emotionNames, activityNames, featureNames, submodel):
         # General parameters.
         super().__init__(accelerator, modelID, datasetName, modelName, allEmotionClasses, maxNumSignals, numSubjects, userInputParams,
-                         emotionNames, activityNames, featureNames, submodel, debuggingResults)
+                         emotionNames, activityNames, featureNames, submodel)
         # General parameters.
         self.augmentData = True
 
@@ -60,10 +60,6 @@ class emotionPipeline(emotionPipelineHelpers):
                     # We can skip this batch, and backpropagation if necessary.
                     if batchSignalInfo.size(0) == 0: self.backpropogateModel(); continue
 
-                    # For every new batch.
-                    if self.accelerator.sync_gradients:
-                        self.augmentData = random.uniform(a=0, b=1) < 0.5
-
                     # Separate the data into signal and metadata information.
                     signalBatchData, batchSignalIdentifiers, metaBatchInfo = self.dataInterface.separateData(batchSignalInfo)
                     # signalBatchData[:, :, :, 0] = timepoints: [further away from survey (300) -> closest to survey (0)]
@@ -71,32 +67,39 @@ class emotionPipeline(emotionPipelineHelpers):
                     # batchSignalIdentifiers dimension: batchSize, numSignals, numSignalIdentifiers
                     # metaBatchInfo dimension: batchSize, numMetadata
 
+                    # For every new batch.
+                    if self.accelerator.sync_gradients: self.augmentData = random.uniform(a=0, b=1) < 0.5
+
                     if self.augmentData:
                         # Augment the signals to train an arbitrary sequence length and order.
-                        # augmentedBatchData = self.dataAugmentation.changeNumSignals(signalBatchData, minNumSignals=max(int(numSignals/2), model.numEncodedSignals), maxNumSignals=numSignals, alteredDim=1)
-                        augmentedBatchData = self.dataAugmentation.signalDropout(signalBatchData, dropoutPercent=0.1)
+                        augmentedBatchData = self.dataAugmentation.changeNumSignals(signalBatchData, dropoutPercent=0.1)
+                        augmentedBatchData = self.dataAugmentation.signalDropout(augmentedBatchData, dropoutPercent=0.1)
                         # augmentedBatchData: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
                     else: augmentedBatchData = signalBatchData
 
                     # ------------ Forward pass through the model  ------------- #
 
                     # Perform the forward pass through the model.
-                    interpolatedSignalData, finalManifoldProjectionLoss, reconstructedInterpolatedData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = model.forward(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, fullDataPass=True)
-                    # decodedPredictedIndexProbabilities dimension: batchSize, numSignals, maxNumEncodedSignals
-                    # predictedIndexProbabilities dimension: batchSize, numSignals, maxNumEncodedSignals
-                    # encodedData dimension: batchSize, numEncodedSignals, finalDistributionLength
-                    # reconstructedData dimension: batchSize, numSignals, finalDistributionLength
-                    # signalEncodingLayerLoss dimension: batchSize
+                    missingDataMask, interpolatedSignalData, finalManifoldProjectionLoss, reconstructedInterpolatedData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = model.forward(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, fullDataPass=True)
+                    # reconstructedInterpolatedData dimension: batchSize, numEncodedSignals, encodedDimension
+                    # interpolatedSignalData dimension: batchSize, numSignals, encodedDimension
+                    # physiologicalProfile dimension: batchSize, numSignals, encodedDimension
+                    # missingDataMask dimension: batchSize, numSignals, maxSequenceLength
+                    # basicEmotionProfile: batchSize, numSignals, encodedDimension
+                    # activityProfile: batchSize, numSignals, encodedDimension
+                    # emotionProfile: batchSize, numSignals, encodedDimension
+                    # finalManifoldProjectionLoss dimension: batchSize
 
                     # Assert that nothing is wrong with the predictions.
                     self.modelHelpers.assertVariableIntegrity(reconstructedInterpolatedData, variableName="up-sampled reconstructed signal data", assertGradient=False)
                     self.modelHelpers.assertVariableIntegrity(finalManifoldProjectionLoss, variableName="manifold projected signals", assertGradient=False)
                     self.modelHelpers.assertVariableIntegrity(physiologicalProfile, variableName="physiological profile", assertGradient=False)
+                    self.modelHelpers.assertVariableIntegrity(missingDataMask, variableName="missing data mask", assertGradient=False)
                     self.modelHelpers.assertVariableIntegrity(activityProfile, variableName="activity profile", assertGradient=False)
                     self.modelHelpers.assertVariableIntegrity(emotionProfile, variableName="emotion profile", assertGradient=False)
 
                     # Calculate the error in signal compression (signal encoding loss).
-                    signalReconstructedLoss, finalManifoldProjectionLoss = self.organizeLossInfo.calculateSignalEncodingLoss(interpolatedSignalData, finalManifoldProjectionLoss, reconstructedInterpolatedData, batchTrainingMask, reconstructionIndex)
+                    signalReconstructedLoss, finalManifoldProjectionLoss = self.organizeLossInfo.calculateSignalEncodingLoss(interpolatedSignalData, finalManifoldProjectionLoss, reconstructedInterpolatedData, missingDataMask, batchTrainingMask, reconstructionIndex)
                     if signalReconstructedLoss is None: self.accelerator.print("Not useful loss"); continue
 
                     # Initialize basic core loss value.

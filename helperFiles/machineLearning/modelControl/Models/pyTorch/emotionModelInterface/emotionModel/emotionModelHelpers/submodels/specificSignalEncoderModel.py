@@ -37,10 +37,10 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
     def learnedInterpolation(self, signalData):
         """ signalData: batchSize, numSignals, signalSpecificLength* """
-        interpolatedSignalData = self.ebbinghausInterpolation(signalData)
+        interpolatedSignalData, missingDataMask = self.ebbinghausInterpolation(signalData)
         # interpolatedSignalData: batchSize, numSignals, encodedDimension
 
-        return interpolatedSignalData
+        return interpolatedSignalData, missingDataMask
 
     def signalSpecificInterface(self, signalData, initialModel):
         if initialModel: return self.initialLearning(signalData, self.initialNeuralLayers, self.initialProcessingLayers)
@@ -52,17 +52,17 @@ class specificSignalEncoderModel(neuralOperatorInterface):
             if reversibleInterface.forwardDirection:
                 # Apply the neural operator layer with activation.
                 signalData = neuralLayers[layerInd](signalData)
-                signalData = self.activationFunction(signalData)
+                signalData = self.activationFunction(signalData, layerInd % 2 == 0)
 
                 # Apply the post-processing layer.
                 signalData = processingLayers[layerInd](signalData)
             else:
                 # Apply the post-processing layer.
-                layerInd = self.numOperatorLayers - layerInd - 1
-                signalData = processingLayers[layerInd](signalData)
+                pseudoLayerInd = self.numOperatorLayers - layerInd - 1
+                signalData = processingLayers[pseudoLayerInd](signalData)
 
                 # Apply the neural operator layer with activation.
-                signalData = self.activationFunction(signalData)
-                signalData = neuralLayers[layerInd](signalData)
+                signalData = self.activationFunction(signalData, pseudoLayerInd % 2 == 0)
+                signalData = neuralLayers[pseudoLayerInd](signalData)
 
         return signalData

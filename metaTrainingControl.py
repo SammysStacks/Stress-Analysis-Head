@@ -34,7 +34,7 @@ if __name__ == "__main__":
         dataloader_config=accelerate.DataLoaderConfiguration(split_batches=True),  # Whether to split batches across devices or not.
         cpu=torch.backends.mps.is_available(),  # Whether to use the CPU. MPS is NOT fully compatible yet.
         step_scheduler_with_optimizer=False,  # Whether to wrap the optimizer in a scheduler.
-        gradient_accumulation_steps=4,  # The number of gradient accumulation steps.
+        gradient_accumulation_steps=8,  # The number of gradient accumulation steps.
         mixed_precision="no",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"
     )
 
@@ -59,11 +59,11 @@ if __name__ == "__main__":
 
     # Add arguments for the neural operator.
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
-    parser.add_argument('--waveletType', type=str, default='bior2.2', help='The wavelet type for the wavelet transform: bior3.7, db3, dmey, etc')
+    parser.add_argument('--waveletType', type=str, default='bior3.7', help='The wavelet type for the wavelet transform: bior3.7, db3, dmey, etc')
 
     # Add arguments for the signal encoder prediction
-    parser.add_argument('--numSpecificEncodingLayers', type=int, default=2, help='The number of layers in the specific signal encoding neural operator.')
-    parser.add_argument('--numMetaEncodingLayers', type=int, default=12, help='The number of layers in the shared signal encoding operator.')
+    parser.add_argument('--numSpecificEncodingLayers', type=int, default=1, help='The number of layers in the specific signal encoding neural operator.')
+    parser.add_argument('--numMetaEncodingLayers', type=int, default=4, help='The number of layers in the shared signal encoding operator.')
     parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
 
     # Add arguments for the emotion prediction

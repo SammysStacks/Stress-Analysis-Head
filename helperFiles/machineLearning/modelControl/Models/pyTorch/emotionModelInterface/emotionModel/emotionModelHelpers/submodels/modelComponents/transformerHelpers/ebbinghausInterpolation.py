@@ -21,6 +21,9 @@ class ebbinghausInterpolation(emotionModelWeights):
         pseudoEncodedTimes = torch.arange(0, self.encodedTimeWindow, step=self.encodedTimeWindow/self.encodedDimension, device=self.ebbinghausWeights.device)
         self.register_buffer(name='pseudoEncodedTimes', tensor=torch.flip(pseudoEncodedTimes, dims=[0]))
 
+        # Extra components.
+        self.selfAttention = self.linearModel(numInputFeatures=encodedDimension, numOutputFeatures=encodedDimension, activationMethod='none', layerType='fc', addBias=False)
+
     def forward(self, signalData):
         # signalData dimension: [batchSize, numSignals, maxSequenceLength, numChannels]
         datapoints = emotionDataInterface.getChannelData(signalData, channelName=modelConstants.signalChannel)
@@ -34,6 +37,9 @@ class ebbinghausInterpolation(emotionModelWeights):
         decayWeights = self.ebbinghausDecayExp(deltaTimes, self.ebbinghausWeights)
         # deltaTimes and decayWeights: [batchSize, numSignals, maxSequenceLength, encodedDimension]
 
+        # Add self-attention to the decay weights.
+        # decayWeights = self.selfAttention(decayWeights)
+
         # Normalize the weights.
         decayWeights = self.sparseSoftmax(decayWeights.clone(), missingDataMask.unsqueeze(-1), dim=-1)
         # decayWeights: [batchSize, numSignals, maxSequenceLength, encodedDimension]
@@ -46,7 +52,7 @@ class ebbinghausInterpolation(emotionModelWeights):
         finalSignalData = self.standardizeData(datapoints, finalSignalData)
         # finalSignalData: [batchSize, numSignals, encodedDimension]
 
-        return finalSignalData
+        return finalSignalData, missingDataMask
 
     @staticmethod
     def standardizeData(datapoints, finalSignalData):

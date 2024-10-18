@@ -16,8 +16,8 @@ class optimizerMethods:
     def getModelParams(submodel, sharedSignalEncoderModel, specificSignalEncoderModel, sharedEmotionModel, specificEmotionModel):
         modelParams = [
             # Specify the model parameters for the signal encoding.
-            {'params': specificSignalEncoderModel.parameters(), 'weight_decay': 1E-10, 'lr': 1E-4},  # Empirically: 1E-10 < weight_decay < 1E-6; 5E-5 < lr < 5E-4
-            {'params': sharedSignalEncoderModel.parameters(), 'weight_decay': 1E-10, 'lr': 1E-5}]  # Empirically: 1E-10 < weight_decay < 1E-6; 5E-5 < lr < 5E-4
+            {'params': specificSignalEncoderModel.parameters(), 'weight_decay': 0, 'lr': 5E-4},  # Empirically: 1E-10 < weight_decay < 1E-6; 5E-5 < lr < 5E-4
+            {'params': sharedSignalEncoderModel.parameters(), 'weight_decay': 0, 'lr': 5E-4}]  # Empirically: 1E-10 < weight_decay < 1E-6; 5E-5 < lr < 5E-4
 
         if submodel == modelConstants.emotionModel:
             modelParams.extend([
