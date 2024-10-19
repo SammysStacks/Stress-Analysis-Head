@@ -1,7 +1,3 @@
-# General
-import random
-
-# PyTorch
 import torch
 from matplotlib import pyplot as plt
 from torch import nn
@@ -144,7 +140,7 @@ class emotionModelHead(nn.Module):
         # metaLearningData: batchSize, numSignals, encodedDimension
 
         # Remove the influence of missing data from the path.
-        missingSignalMask = (missingDataMask == 0).all(dim=-1)
+        missingSignalMask = torch.all(missingDataMask, dim=-1).unsqueeze(-1)
         interpolatedSignalData = missingSignalMask*interpolatedSignalData
         metaLearningDataF1 = missingSignalMask*metaLearningDataF1
         metaLearningDataF2 = missingSignalMask*metaLearningDataF2
@@ -152,7 +148,7 @@ class emotionModelHead(nn.Module):
         # missingDataMask: batchSize, numSignals
 
         # Finalize the physiological profile.
-        numValidSignals = numSignals - missingSignalMask.sum(dim=1)  # Dim: batchSize
+        numValidSignals = numSignals - missingSignalMask.squeeze(-1).sum(dim=1)  # Dim: batchSize
         physiologicalProfile = metaLearningDataF3.sum(dim=1) / numValidSignals.unsqueeze(-1)
         # interpolatedData: batchSize, encodedDimension
 

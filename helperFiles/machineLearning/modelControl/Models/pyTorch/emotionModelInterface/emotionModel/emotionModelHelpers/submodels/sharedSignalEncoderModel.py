@@ -15,6 +15,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
     def __init__(self, operatorType, encodedDimension, neuralOperatorParameters, numOperatorLayers, activationMethod):
         super(sharedSignalEncoderModel, self).__init__(sequenceLength=encodedDimension, numInputSignals=1, numOutputSignals=1, addBiasTerm=False)
         # General model parameters.
+        self.learningProtocol = neuralOperatorParameters['wavelet']['learningProtocol']  # The learning protocol for the neural operator.
         self.numOperatorLayers = numOperatorLayers  # The number of operator layers to use.
         self.operatorType = operatorType  # The type of operator to use for the neural operator.
 
@@ -26,7 +27,8 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         # Create the operator layers.
         for layerInd in range(self.numOperatorLayers):
             self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=neuralOperatorParameters))
-            self.processingLayers.append(self.postProcessingLayer(inChannel=1))
+            if self.learningProtocol == 'rCNN': self.processingLayers.append(self.postProcessingLayerCNN(numSignals=1))
+            else: self.processingLayers.append(self.postProcessingLayerFC(numSignals=1, sequenceLength=encodedDimension))
 
         # Initialize loss holders.
         self.trainingLosses_signalReconstruction = None

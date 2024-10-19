@@ -193,40 +193,47 @@ class nonLinearAddition(reversibleInterface):
     def __init__(self, amplitude=1.0):
         super(nonLinearAddition, self).__init__()
         self.amplitude = torch.as_tensor(amplitude)  # Assign r as nonLinearity
-        self.period = torch.as_tensor(1).exp()  # Assign r as nonLinearity
-        self.nonLinearityTerm = None  # The non-linearity term to add to the data.
+        self.sequenceLength = None  # The length of the input signal
+
+        # Create a learnable parameter, initialized to the given initial value
+        self.learnableFrequency = nn.Parameter(torch.as_tensor(1).exp())
 
         # Assert the validity of the inputs.
         assert amplitude != 0, "The amplitude parameter must be non-zero."
 
     def forward(self, x, addingFlag=True):
         # Check if the non-linearity term has been calculated.
-        if self.nonLinearityTerm is None: self.nonLinearityTerm = self.addNonLinearity(sequenceLength=x.size(-1), device=x.device)
-        assert x.size(-1) == self.nonLinearityTerm.size(-1), "The sequence length of the input data must match the sequence length of the non-linearity term."
+        if self.sequenceLength is None: self.sequenceLength = x.size(-1)
+        assert x.size(-1) == self.sequenceLength, "The sequence length of the input data must match the sequence length of the non-linearity term."
         coefficient = 1 if addingFlag else -1
 
-        if self.forwardDirection: return self.forwardPass(x, coefficient)
-        else: return self.inversePass(x, coefficient)
+        # Get the non-linearity term.
+        nonLinearityTerm = self.getNonLinearity(device=x.device)*coefficient
 
-    def forwardPass(self, x, coefficient):
-        return x + self.nonLinearityTerm*coefficient
+        if self.forwardDirection: return self.forwardPass(x, nonLinearityTerm)
+        else: return self.inversePass(x, nonLinearityTerm)
 
-    def inversePass(self, y, coefficient):
-        return y - self.nonLinearityTerm*coefficient
+    @staticmethod
+    def forwardPass(x, nonLinearityTerm):
+        return x + nonLinearityTerm
 
-    def addNonLinearity(self, sequenceLength, device):
-        positions = torch.arange(start=0, end=sequenceLength, step=1, dtype=torch.float32, device=device)
+    @staticmethod
+    def inversePass(y, nonLinearityTerm):
+        return y - nonLinearityTerm
 
-        return self.amplitude*(positions*torch.pi/self.period).sin().round(decimals=6)
+    def getNonLinearity(self, device):
+        positions = torch.arange(start=0, end=self.sequenceLength, step=1, dtype=torch.float32, device=device)
+
+        return self.amplitude*(positions*2*torch.pi*self.learnableFrequency).sin().round(decimals=6)
 
 
 if __name__ == "__main__":
     # Test the activation functions
-    data = torch.randn(2, 10, 100)
+    data = torch.randn(2, 10, 100, dtype=torch.float64)
     data = data - data.min()
     data = data / data.max()
     data = 2 * data - 1
 
     # Perform the forward and inverse pass.
     activationClass = nonLinearAddition(amplitude=0.1)
-    _forwardData, _reconstructedData = activationClass.checkReconstruction(data, atol=1e-6)
+    _forwardData, _reconstructedData = activationClass.checkReconstruction(data, atol=1e-6, numLayers=100)

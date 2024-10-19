@@ -1,3 +1,5 @@
+import math
+
 import torch
 import torch.fft
 import torch.nn as nn
@@ -8,19 +10,32 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class reversibleLinearLayer(reversibleInterface):
 
-    def __init__(self, sequenceLength, numLayers, activationMethod):
+    def __init__(self, numSignals, sequenceLength, kernelSize, numLayers, activationMethod):
         super(reversibleLinearLayer, self).__init__()
         # General parameters.
         self.activationFunction = activationFunctions.getActivationMethod(activationMethod)  # The activation function to use for the neural operator.
         self.sequenceLength = sequenceLength  # The length of the input signal.
+        self.kernelSize = kernelSize  # The restricted window for the neural weights.
         self.numLayers = numLayers  # The number of layers in the reversible linear layer.
 
         # Initialize the neural weights.
-        self.linearOperators = nn.ModuleList()
+        self.linearOperators = nn.ParameterList()
         for layerInd in range(self.numLayers):
-            self.linearOperators.append(nn.Linear(sequenceLength, sequenceLength, bias=False))
+            parameters = nn.Parameter(torch.randn(numSignals, sequenceLength, sequenceLength, dtype=torch.float64))
+            self.linearOperators.append(nn.init.kaiming_uniform_(parameters, a=math.sqrt(5), mode='fan_in', nonlinearity='leaky_relu'))
+
+        # The stability term to add to the diagonal.
+        self.stabilityTerm = torch.eye(self.sequenceLength, dtype=torch.float64)
+
+        # The restricted window for the neural weights.
+        self.restrictedWindowMask = torch.ones(self.sequenceLength, self.sequenceLength, dtype=torch.float64)
+        self.restrictedWindowMask = torch.tril(torch.triu(self.restrictedWindowMask, diagonal=-kernelSize//2), diagonal=kernelSize//2)
 
     def forward(self, inputData):
+        # Cast the stability term to the device.
+        self.restrictedWindowMask = self.restrictedWindowMask.to(inputData.device)
+        self.stabilityTerm = self.stabilityTerm.to(inputData.device)
+
         for layerInd in range(self.numLayers):
             if self.forwardDirection:
                 pseudoLayerInd = self.numLayers - layerInd - 1
@@ -34,42 +49,32 @@ class reversibleLinearLayer(reversibleInterface):
 
     def applyLayer(self, inputData, layerInd):
         # Apply a mask to the neural weights.
-        originalWeights = self.linearOperators[layerInd].weight.data.clone()
-        firstNeuralWeights = torch.triu(originalWeights, diagonal=0)  # Causal weights
-        secondNeuralWeights = torch.tril(originalWeights, diagonal=0)  # Non-causal weights
-        # neuralWeight: outFeatures=sequenceLength, inFeatures=sequenceLength
+        neuralWeights = self.linearOperators[layerInd]
+        # neuralWeight: numSignals, sequenceLength, sequenceLength
 
         # Add a stability term to the diagonal.
-        stabilityTerm = self.getStabilityTerm(self.sequenceLength, scalingFactor=1, device=inputData.device)
-        firstNeuralWeights = firstNeuralWeights + stabilityTerm
-        secondNeuralWeights = secondNeuralWeights - stabilityTerm
-        # TODO: The stability term does not yet ensure convertibility.
+        if self.kernelSize == self.sequenceLength: neuralWeights = self.restrictedWindowMask * neuralWeights + self.stabilityTerm
+        else: neuralWeights = neuralWeights * (1 - self.stabilityTerm) + self.stabilityTerm
 
-        # Backward direction
-        if not self.forwardDirection:
-            # Invert the neural weights.
-            firstNeuralWeights = torch.linalg.inv(firstNeuralWeights)
-            secondNeuralWeights = torch.linalg.inv(secondNeuralWeights)
-
-            # Swap the neural weights: A @ B -> A_inv @ B_inv
-            secondNeuralWeights, firstNeuralWeights = firstNeuralWeights, secondNeuralWeights
+        # Backward direction: invert the neural weights.
+        if not self.forwardDirection: neuralWeights = torch.linalg.inv(neuralWeights)
 
         # Apply the neural weights to the input data.
-        outputData = torch.matmul(inputData, firstNeuralWeights)
-        outputData = torch.matmul(outputData, secondNeuralWeights)
+        outputData = torch.einsum('bns,nsi->bni', inputData, neuralWeights)
 
         return outputData
 
 
 if __name__ == "__main__":
     # General parameters.
-    _batchSize, _numSignals, _sequenceLength = 2, 4, 128
+    _batchSize, _numSignals, _sequenceLength = 2, 60, 128
     _activationMethod = 'nonLinearAddition_0.2'
-    _numLayers = 10
+    _kernelSize = 5
+    _numLayers = 8
 
     # Set up the parameters.
-    neuralLayerClass = reversibleLinearLayer(sequenceLength=_sequenceLength, numLayers=_numLayers, activationMethod=_activationMethod)
-    _inputData = torch.randn(_batchSize, _numSignals, _sequenceLength)
+    neuralLayerClass = reversibleLinearLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod)
+    _inputData = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float64)
 
     # Perform the convolution in the fourier and spatial domains.
-    _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(_inputData, atol=1e-6)
+    _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(_inputData, atol=1e-6, numLayers=1)

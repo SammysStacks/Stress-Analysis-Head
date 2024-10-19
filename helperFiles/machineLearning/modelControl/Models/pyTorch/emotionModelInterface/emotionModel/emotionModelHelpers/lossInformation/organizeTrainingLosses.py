@@ -34,12 +34,12 @@ class organizeTrainingLosses(lossCalculations):
 
             t1 = time.time()
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
-            interpolatedSignalData, finalManifoldProjectionLoss, reconstructedInterpolatedData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = model.fullPass(submodel, allSignalData, allSignalIdentifiers, allMetadata, device=self.accelerator.device, fullDataPass=True)
+            missingDataMask, interpolatedSignalData, finalManifoldProjectionLoss, reconstructedInterpolatedData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = model.fullPass(submodel, allSignalData, allSignalIdentifiers, allMetadata, device=self.accelerator.device, fullDataPass=True)
             t2 = time.time(); self.accelerator.print("Full Pass", t2 - t1)
 
             # Calculate the signal encoding loss.
-            signalReconstructedTrainingLoss, signalSpecificTrainingLoss = self.calculateSignalEncodingLoss(interpolatedSignalData, finalManifoldProjectionLoss, reconstructedInterpolatedData, allTrainingMasks, reconstructionIndex)
-            signalReconstructedTestingLoss, signalSpecificTestingLoss = self.calculateSignalEncodingLoss(interpolatedSignalData, finalManifoldProjectionLoss, reconstructedInterpolatedData, allTestingMasks, reconstructionIndex)
+            signalReconstructedTrainingLoss, signalSpecificTrainingLoss = self.calculateSignalEncodingLoss(interpolatedSignalData, finalManifoldProjectionLoss, reconstructedInterpolatedData, missingDataMask, allTrainingMasks, reconstructionIndex)
+            signalReconstructedTestingLoss, signalSpecificTestingLoss = self.calculateSignalEncodingLoss(interpolatedSignalData, finalManifoldProjectionLoss, reconstructedInterpolatedData, missingDataMask, allTestingMasks, reconstructionIndex)
 
             # Store the signal encoder loss information.
             self.storeLossInformation(signalReconstructedTrainingLoss, signalReconstructedTestingLoss, model.sharedSignalEncoderModel.trainingLosses_signalReconstruction, model.sharedSignalEncoderModel.testingLosses_signalReconstruction)

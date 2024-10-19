@@ -12,6 +12,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         super(specificSignalEncoderModel, self).__init__(sequenceLength=encodedDimension, numInputSignals=numInputSignals, numOutputSignals=numInputSignals, addBiasTerm=False)
         # General model parameters.
         self.activationFunction = activationFunctions.getActivationMethod(activationMethod=activationMethod)
+        self.learningProtocol = neuralOperatorParameters['wavelet']['learningProtocol']  # The learning protocol for the neural operator.
         self.numOperatorLayers = numOperatorLayers  # The number of operator layers to use.
         self.operatorType = operatorType  # The type of operator to use for the neural operator.
 
@@ -24,11 +25,13 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         for layerInd in range(self.numOperatorLayers):
             # Create the initial layers.
             self.initialNeuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=neuralOperatorParameters))
-            self.initialProcessingLayers.append(self.postProcessingLayer(inChannel=numInputSignals))
+            if self.learningProtocol == 'rCNN': self.initialProcessingLayers.append(self.postProcessingLayerCNN(numSignals=numInputSignals))
+            else: self.initialProcessingLayers.append(self.postProcessingLayerFC(numSignals=numInputSignals, sequenceLength=encodedDimension))
 
             # Create the final layers.
             self.finalNeuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=neuralOperatorParameters))
-            self.finalProcessingLayers.append(self.postProcessingLayer(inChannel=numInputSignals))
+            if self.learningProtocol == 'rCNN': self.finalProcessingLayers.append(self.postProcessingLayerCNN(numSignals=numInputSignals))
+            else: self.finalProcessingLayers.append(self.postProcessingLayerFC(numSignals=numInputSignals, sequenceLength=encodedDimension))
 
         # The ebbinghaus interpolation model.
         self.ebbinghausInterpolation = ebbinghausInterpolation(numSignals=numInputSignals, encodedDimension=encodedDimension)
@@ -65,4 +68,4 @@ class specificSignalEncoderModel(neuralOperatorInterface):
                 signalData = self.activationFunction(signalData, pseudoLayerInd % 2 == 0)
                 signalData = neuralLayers[pseudoLayerInd](signalData)
 
-        return signalData
+        return signalData.contiguous()

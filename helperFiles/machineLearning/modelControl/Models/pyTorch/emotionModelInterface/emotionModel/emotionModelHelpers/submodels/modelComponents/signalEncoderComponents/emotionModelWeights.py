@@ -1,8 +1,5 @@
-import math
-
-import torch.nn.functional as F
-from torch import nn
 import torch
+from torch import nn
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
 # Import files for machine learning
@@ -40,7 +37,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def ebbinghausDecayExp(deltaTimes, signalWeights):
-        return torch.exp(-(deltaTimes.pow(2) / (torch.tensor(1) + signalWeights.pow(2))))
+        return signalWeights.pow(2)*torch.exp(-deltaTimes.pow(2))
 
     def timeDependantSignalWeights(self, numSignals):
         # Initialize the weights with a normal distribution.
@@ -50,9 +47,9 @@ class emotionModelWeights(convolutionalHelpers):
     # ------------------- Wavelet Neural Operator Architectures ------------------- #
 
     @staticmethod
-    def neuralWeightFC(numInputFeatures=1):
+    def neuralWeightFC(numSignals, sequenceLength):
         return nn.Sequential(
-            reversibleLinearLayer(sequenceLength=numInputFeatures, numLayers=1, activationMethod=emotionModelWeights.getActivationType()),
+            reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=5, numLayers=8, activationMethod=emotionModelWeights.getActivationType()),
         )
 
     def neuralWeightFCC(self, inChannel=1, outChannel=2, finalFrequencyDim=46):
@@ -65,22 +62,27 @@ class emotionModelWeights(convolutionalHelpers):
     def reversibleNeuralWeightCNN(inChannel=1):
         return nn.Sequential(
             # Convolution architecture: feature engineering
-            reversibleConvolution(numChannels=inChannel, kernelSize=3, activationMethod=emotionModelWeights.getActivationType(), numLayers=4, skipConnection=True),
+            reversibleConvolution(numChannels=inChannel, kernelSize=3, activationMethod=emotionModelWeights.getActivationType(), numLayers=4),
         )
 
     @staticmethod
     def neuralBiasParameters(numChannels=2):
-        parameter = nn.Parameter(torch.zeros((1, numChannels, 1)))
-
-        return parameter
+        return nn.Parameter(torch.zeros((1, numChannels, 1)))
 
     # ------------------- Signal Encoding Architectures ------------------- #
 
     @staticmethod
-    def postProcessingLayer(inChannel=1):
+    def postProcessingLayerCNN(numSignals=1):
         return nn.Sequential(
             # Convolution architecture: post-processing operator. 
-            reversibleConvolution(numChannels=inChannel, kernelSize=3, activationMethod=emotionModelWeights.getActivationType(), numLayers=4, skipConnection=True),
+            reversibleConvolution(numChannels=numSignals, kernelSize=3, activationMethod=emotionModelWeights.getActivationType(), numLayers=4),
+        )
+
+    @staticmethod
+    def postProcessingLayerFC(numSignals, sequenceLength):
+        return nn.Sequential(
+            # Convolution architecture: post-processing operator.
+            reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=5, numLayers=8, activationMethod=emotionModelWeights.getActivationType()),
         )
 
     @staticmethod

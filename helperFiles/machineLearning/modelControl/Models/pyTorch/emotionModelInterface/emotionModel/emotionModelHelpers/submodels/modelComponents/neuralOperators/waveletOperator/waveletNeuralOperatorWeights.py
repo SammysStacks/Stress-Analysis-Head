@@ -52,8 +52,8 @@ class waveletNeuralOperatorWeights(waveletNeuralHelpers):
 
     def getNeuralWeightParameters(self, inChannel, outChannel, initialFrequencyDim, finalFrequencyDim):
         if self.learningProtocol == 'FCC': return self.neuralWeightFCC(inChannel=inChannel, outChannel=outChannel, finalFrequencyDim=finalFrequencyDim)
+        elif self.learningProtocol == 'rFC': return self.neuralWeightFC(numSignals=inChannel, sequenceLength=initialFrequencyDim)
         elif self.learningProtocol == 'rCNN': return self.reversibleNeuralWeightCNN(inChannel=inChannel)
-        elif self.learningProtocol == 'rFC': return self.neuralWeightFC(numInputFeatures=initialFrequencyDim)
         else: raise ValueError(f"The learning protocol ({self.learningProtocol}) must be in ['rFC', 'FCC', 'rCNN', 'CNN'].")
 
     @staticmethod

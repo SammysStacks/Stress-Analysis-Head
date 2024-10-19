@@ -19,7 +19,8 @@ class ebbinghausInterpolation(emotionModelWeights):
         # Define the parameters.
         self.ebbinghausWeights = self.timeDependantSignalWeights(numSignals)
         pseudoEncodedTimes = torch.arange(0, self.encodedTimeWindow, step=self.encodedTimeWindow/self.encodedDimension, device=self.ebbinghausWeights.device)
-        self.register_buffer(name='pseudoEncodedTimes', tensor=torch.flip(pseudoEncodedTimes, dims=[0]))
+        # self.register_buffer(name='pseudoEncodedTimes', tensor=torch.flip(pseudoEncodedTimes, dims=[0]))
+        self.register_buffer(name='pseudoEncodedTimes', tensor=pseudoEncodedTimes)
 
         # Extra components.
         self.selfAttention = self.linearModel(numInputFeatures=encodedDimension, numOutputFeatures=encodedDimension, activationMethod='none', layerType='fc', addBias=False)
@@ -34,14 +35,11 @@ class ebbinghausInterpolation(emotionModelWeights):
 
         # Calculate the decay time weights.
         deltaTimes = self.pseudoEncodedTimes - timepoints.unsqueeze(-1)
-        decayWeights = self.ebbinghausDecayExp(deltaTimes, self.ebbinghausWeights)
+        decayWeights = self.ebbinghausDecayExp(deltaTimes, self.ebbinghausWeights)*10
         # deltaTimes and decayWeights: [batchSize, numSignals, maxSequenceLength, encodedDimension]
 
-        # Add self-attention to the decay weights.
-        # decayWeights = self.selfAttention(decayWeights)
-
         # Normalize the weights.
-        decayWeights = self.sparseSoftmax(decayWeights.clone(), missingDataMask.unsqueeze(-1), dim=-1)
+        decayWeights = self.sparseSoftmax(decayWeights, missingDataMask.unsqueeze(-1), dim=-1)
         # decayWeights: [batchSize, numSignals, maxSequenceLength, encodedDimension]
 
         # Combine the attention values.
@@ -104,10 +102,10 @@ if __name__ == '__main__':
     _batchSize = 4
 
     # Set up the parameters.
-    _signalDataTimes = torch.arange(0, _signalDimension, step=1)
+    _signalDataTimes = torch.arange(_signalDimension, 0, step=-1)
     _signalData = torch.randn((_batchSize, _numSignals, _signalDimension, 2))
     _signalData[:, :, :, 0] = _signalDataTimes
-    _signalData[:, :, 300:, :] = 0
+    _signalData[:, :, _signalDimension//2:, :] = 0
 
     # Initialize the model.
     ebbinghausModel = ebbinghausInterpolation(numSignals=_numSignals, encodedDimension=_encodedDimension)

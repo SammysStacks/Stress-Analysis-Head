@@ -64,13 +64,13 @@ class lossCalculations:
         finalLoss = method(signalData).mean()
         return finalLoss
 
-    def calculateSignalEncodingLoss(self, allInterpolatedSignalData, allFinalManifoldProjectionLoss, allReconstructedInterpolatedData, missingDataMask, allLabelsMask=None, reconstructionIndex=None):
+    def calculateSignalEncodingLoss(self, allInterpolatedSignalData, allFinalManifoldProjectionLoss, allReconstructedInterpolatedData, missingDataMask, allLabelsMask, reconstructionIndex):
         # Find the boolean flags for the data involved in the loss calculation.
         reconstructionDataMask = self.getReconstructionDataMask(allLabelsMask, reconstructionIndex)
         batchSize, numSignals, encodedDimension = allInterpolatedSignalData.size()
 
         # Zero out the signals if the data was missing.
-        missingSignalMask = (missingDataMask == 0).all(dim=-1)  # Dim: numExperiments, numSignals
+        missingSignalMask = torch.all(missingDataMask, dim=-1).unsqueeze(-1)  # Dim: numExperiments, numSignals
         allReconstructedInterpolatedData = missingSignalMask*allReconstructedInterpolatedData
         allInterpolatedSignalData = missingSignalMask*allInterpolatedSignalData
         numValidSignals = numSignals - missingSignalMask.sum(dim=1)  # Dim: batchSize
