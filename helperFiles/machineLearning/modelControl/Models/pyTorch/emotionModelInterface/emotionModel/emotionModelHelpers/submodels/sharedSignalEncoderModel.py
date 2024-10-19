@@ -56,10 +56,19 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         self.testingLosses_manifoldProjection = []  # List of list of data reconstruction testing losses. Dim: numTimeWindows, numEpochs
 
     def forwardFFT(self, inputData):
-        return torch.fft.rfft(inputData, n=self.encodedDimension, dim=-1, norm='ortho')
+        # Perform the forward FFT and extract the magnitude and phase.
+        fourierData = torch.fft.rfft(inputData, n=self.encodedDimension, dim=-1, norm='ortho')
+        fourierMagnitudeData = fourierData.abs()
+        fourierPhaseData = fourierData.angle()
 
-    def backwardFFT(self, inputData):
-        return torch.fft.irfft(inputData, n=self.encodedDimension, dim=-1, norm='ortho')
+        return fourierMagnitudeData, fourierPhaseData
+
+    def backwardFFT(self, fourierMagnitudeData, fourierPhaseData):
+        # Reconstruct the fourier data from the magnitude and phase.
+        fourierData = fourierMagnitudeData * torch.exp(1j * fourierPhaseData)
+        initialData = torch.fft.irfft(fourierData, n=self.encodedDimension, dim=-1, norm='ortho')
+
+        return initialData
 
     def sharedLearning(self, signalData):
         # Reshape the signal data.
