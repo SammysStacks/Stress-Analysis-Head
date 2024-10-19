@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
     # Training flags.
     useFinalParams = True  # If you want to use HPC parameters (and on the HPC).
-    storeLoss = True  # If you want to record any loss values.
+    storeLoss = False  # If you want to record any loss values.
 
     # ----------------------- Parse Model Parameters ----------------------- #
 
@@ -56,6 +56,7 @@ if __name__ == "__main__":
     parser.add_argument('--submodel', type=str, default=modelConstants.signalEncoderModel, help='The component of the model we are training. Options: signalEncoderModel, emotionModel')
     parser.add_argument('--optimizerType', type=str, default='AdamW', help='The optimizerType used during training convergence: Options: RMSprop, Adam, AdamW, SGD, etc.')
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are running the platform on')
+    parser.add_argument('--learningProtocol', type=str, default='rFC', help='The learning rate for the optimizer.')
 
     # Add arguments for the neural operator.
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
@@ -63,7 +64,7 @@ if __name__ == "__main__":
 
     # Add arguments for the signal encoder prediction
     parser.add_argument('--numSpecificEncodingLayers', type=int, default=1, help='The number of layers in the specific signal encoding neural operator.')
-    parser.add_argument('--numMetaEncodingLayers', type=int, default=4, help='The number of layers in the shared signal encoding operator.')
+    parser.add_argument('--numMetaEncodingLayers', type=int, default=6, help='The number of layers in the shared signal encoding operator.')
     parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
 
     # Add arguments for the emotion prediction

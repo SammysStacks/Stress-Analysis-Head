@@ -1,20 +1,24 @@
+import math
+
+import torch
 from torch import nn
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.neuralOperators.neuralOperatorInterface import neuralOperatorInterface
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.transformerHelpers.ebbinghausInterpolation import ebbinghausInterpolation
 
 
 class specificSignalEncoderModel(neuralOperatorInterface):
 
-    def __init__(self, operatorType, encodedDimension, numOperatorLayers, numInputSignals, activationMethod, neuralOperatorParameters):
-        super(specificSignalEncoderModel, self).__init__(sequenceLength=encodedDimension, numInputSignals=numInputSignals, numOutputSignals=numInputSignals, addBiasTerm=False)
+    def __init__(self, numExperiments, operatorType, encodedDimension, fourierDimension, numOperatorLayers, numSignals, activationMethod, learningProtocol, neuralOperatorParameters):
+        super(specificSignalEncoderModel, self).__init__(sequenceLength=fourierDimension, numInputSignals=numSignals, numOutputSignals=numSignals, learningProtocol=learningProtocol, addBiasTerm=False)
         # General model parameters.
         self.activationFunction = activationFunctions.getActivationMethod(activationMethod=activationMethod)
-        self.learningProtocol = neuralOperatorParameters['wavelet']['learningProtocol']  # The learning protocol for the neural operator.
         self.numOperatorLayers = numOperatorLayers  # The number of operator layers to use.
-        self.operatorType = operatorType  # The type of operator to use for the neural operator.
+        self.learningProtocol = learningProtocol  # The learning protocol for the model.
+        self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
+        self.fourierDimension = fourierDimension  # The dimension of the fourier signal.
+        self.operatorType = operatorType  # The operator type for the neural operator.
 
         # The neural layers for the signal encoder.
         self.initialProcessingLayers = nn.ModuleList()
@@ -25,25 +29,35 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         for layerInd in range(self.numOperatorLayers):
             # Create the initial layers.
             self.initialNeuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=neuralOperatorParameters))
-            if self.learningProtocol == 'rCNN': self.initialProcessingLayers.append(self.postProcessingLayerCNN(numSignals=numInputSignals))
-            else: self.initialProcessingLayers.append(self.postProcessingLayerFC(numSignals=numInputSignals, sequenceLength=encodedDimension))
+            if self.learningProtocol == 'rCNN': self.initialProcessingLayers.append(self.postProcessingLayerCNN(numSignals=numSignals))
+            elif self.learningProtocol == 'rFC': self.initialProcessingLayers.append(self.postProcessingLayerFC(numSignals=numSignals, sequenceLength=fourierDimension))
+            else: raise "The learning protocol is not yet implemented."
 
             # Create the final layers.
             self.finalNeuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=neuralOperatorParameters))
-            if self.learningProtocol == 'rCNN': self.finalProcessingLayers.append(self.postProcessingLayerCNN(numSignals=numInputSignals))
-            else: self.finalProcessingLayers.append(self.postProcessingLayerFC(numSignals=numInputSignals, sequenceLength=encodedDimension))
+            if self.learningProtocol == 'rCNN': self.finalProcessingLayers.append(self.postProcessingLayerCNN(numSignals=numSignals))
+            elif self.learningProtocol == 'rFC': self.finalProcessingLayers.append(self.postProcessingLayerFC(numSignals=numSignals, sequenceLength=fourierDimension))
+            else: raise "The learning protocol is not yet implemented."
 
-        # The ebbinghaus interpolation model.
-        self.ebbinghausInterpolation = ebbinghausInterpolation(numSignals=numInputSignals, encodedDimension=encodedDimension)
+        # Initialize the blank signal profile.
+        physiologicalProfileAnsatz = nn.Parameter(torch.randn(numExperiments, encodedDimension, dtype=torch.float64))
+        self.physiologicalProfileAnsatz = nn.init.kaiming_uniform_(physiologicalProfileAnsatz, a=math.sqrt(5), mode='fan_in', nonlinearity='leaky_relu')
+
+        # Assert the validity of the input parameters.
+        assert 0 < self.numOperatorLayers, "The number of operator layers must be greater than 0."
+        assert self.encodedDimension % 2 == 0, "The encoded dimension must be divisible by 2."
+        assert 0 < self.encodedDimension, "The encoded dimension must be greater than 0."
 
     def forward(self): raise "You cannot call the dataset-specific signal encoder module."
 
-    def learnedInterpolation(self, signalData):
-        """ signalData: batchSize, numSignals, signalSpecificLength* """
-        interpolatedSignalData, missingDataMask = self.ebbinghausInterpolation(signalData)
-        # interpolatedSignalData: batchSize, numSignals, encodedDimension
+    def getPhysiologicalProfileEstimation(self, batchInds, trainingFlag):
+        # batchInds: The indices of the signals to estimate. Dims: batchSize
+        if trainingFlag: return self.physiologicalProfileAnsatz[batchInds]
+        batchSize = batchInds.size()
 
-        return interpolatedSignalData, missingDataMask
+        # Initialize the blank signal profile.
+        physiologicalProfileGuess = nn.Parameter(torch.randn(batchSize, self.encodedDimension, dtype=torch.float64))
+        return nn.init.kaiming_uniform_(physiologicalProfileGuess, a=math.sqrt(5), mode='fan_in', nonlinearity='leaky_relu')
 
     def signalSpecificInterface(self, signalData, initialModel):
         if initialModel: return self.initialLearning(signalData, self.initialNeuralLayers, self.initialProcessingLayers)

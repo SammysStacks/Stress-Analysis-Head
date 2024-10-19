@@ -10,10 +10,10 @@ from .emotionPipelineHelpers import emotionPipelineHelpers
 class emotionPipeline(emotionPipelineHelpers):
 
     def __init__(self, accelerator, modelID, datasetName, modelName, allEmotionClasses, maxNumSignals, numSubjects, userInputParams,
-                 emotionNames, activityNames, featureNames, submodel):
+                 emotionNames, activityNames, featureNames, submodel, numExperiments):
         # General parameters.
         super().__init__(accelerator, modelID, datasetName, modelName, allEmotionClasses, maxNumSignals, numSubjects, userInputParams,
-                         emotionNames, activityNames, featureNames, submodel)
+                         emotionNames, activityNames, featureNames, submodel, numExperiments)
         # General parameters.
         self.augmentData = True
 
@@ -67,6 +67,11 @@ class emotionPipeline(emotionPipelineHelpers):
                     # batchSignalIdentifiers dimension: batchSize, numSignals, numSignalIdentifiers
                     # metaBatchInfo dimension: batchSize, numMetadata
 
+                    # Adjust the data precision.
+                    signalBatchData = signalBatchData.round(decimals=6).double()
+                    batchSignalIdentifiers = batchSignalIdentifiers.int()
+                    metaBatchInfo = metaBatchInfo.double()
+
                     # For every new batch.
                     if self.accelerator.sync_gradients: self.augmentData = random.uniform(a=0, b=1) < 0.5
 
@@ -79,19 +84,22 @@ class emotionPipeline(emotionPipelineHelpers):
 
                     # ------------ Forward pass through the model  ------------- #
 
+                    # Get the physiological times.
+                    physiologicalTimes = model.sharedSignalEncoderModel.pseudoEncodedTimes
+
                     # Perform the forward pass through the model.
-                    missingDataMask, interpolatedSignalData, finalManifoldProjectionLoss, reconstructedInterpolatedData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = model.forward(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, fullDataPass=True)
-                    # reconstructedInterpolatedData dimension: batchSize, numEncodedSignals, encodedDimension
-                    # interpolatedSignalData dimension: batchSize, numSignals, encodedDimension
+                    missingDataMask, reconstructedSignalData, finalManifoldProjectionLoss, fourierData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = model.forward(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, trainingFlag=True)
+                    # reconstructedSignalData dimension: batchSize, numSignals, encodedDimension
                     # physiologicalProfile dimension: batchSize, numSignals, encodedDimension
+                    # fourierData dimension: batchSize, numEncodedSignals, fourierDimension
                     # missingDataMask dimension: batchSize, numSignals, maxSequenceLength
-                    # basicEmotionProfile: batchSize, numSignals, encodedDimension
+                    # basicEmotionProfile: batchSize, numBasicEmotions, encodedDimension
                     # activityProfile: batchSize, numSignals, encodedDimension
-                    # emotionProfile: batchSize, numSignals, encodedDimension
+                    # emotionProfile: batchSize, numEmotions, encodedDimension
                     # finalManifoldProjectionLoss dimension: batchSize
 
                     # Assert that nothing is wrong with the predictions.
-                    self.modelHelpers.assertVariableIntegrity(reconstructedInterpolatedData, variableName="up-sampled reconstructed signal data", assertGradient=False)
+                    self.modelHelpers.assertVariableIntegrity(fourierData, variableName="up-sampled reconstructed signal data", assertGradient=False)
                     self.modelHelpers.assertVariableIntegrity(finalManifoldProjectionLoss, variableName="manifold projected signals", assertGradient=False)
                     self.modelHelpers.assertVariableIntegrity(physiologicalProfile, variableName="physiological profile", assertGradient=False)
                     self.modelHelpers.assertVariableIntegrity(missingDataMask, variableName="missing data mask", assertGradient=False)
@@ -99,7 +107,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     self.modelHelpers.assertVariableIntegrity(emotionProfile, variableName="emotion profile", assertGradient=False)
 
                     # Calculate the error in signal compression (signal encoding loss).
-                    signalReconstructedLoss, finalManifoldProjectionLoss = self.organizeLossInfo.calculateSignalEncodingLoss(interpolatedSignalData, finalManifoldProjectionLoss, reconstructedInterpolatedData, missingDataMask, batchTrainingMask, reconstructionIndex)
+                    signalReconstructedLoss, finalManifoldProjectionLoss = self.organizeLossInfo.calculateSignalEncodingLoss(augmentedBatchData, reconstructedSignalData, finalManifoldProjectionLoss, physiologicalTimes, missingDataMask, batchTrainingMask, reconstructionIndex)
                     if signalReconstructedLoss is None: self.accelerator.print("Not useful loss"); continue
 
                     # Initialize basic core loss value.

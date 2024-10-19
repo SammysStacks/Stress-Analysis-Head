@@ -1,6 +1,5 @@
 import math
 
-import numpy as np
 import torch
 import torch.nn as nn
 
@@ -21,8 +20,7 @@ def getActivationMethod(activationMethod):
         infiniteBound = float(activationMethod.split('_')[2]) if '_' in activationMethod else 1
         activationFunction = reversibleLinearSoftSign(inversionPoint=inversionPoint, infiniteBound=infiniteBound)
     elif activationMethod.startswith('nonLinearAddition'):
-        terms = activationMethod.split('_')[1:]
-        activationFunction = nonLinearAddition(amplitude=float(terms[0]))
+        activationFunction = nonLinearAddition()
     elif activationMethod == 'PReLU':
         activationFunction = nn.PReLU()
     elif activationMethod == 'selu':
@@ -190,16 +188,14 @@ class signWrap(reversibleInterface):
 
 
 class nonLinearAddition(reversibleInterface):
-    def __init__(self, amplitude=1.0):
+    def __init__(self):
         super(nonLinearAddition, self).__init__()
-        self.amplitude = torch.as_tensor(amplitude)  # Assign r as nonLinearity
         self.sequenceLength = None  # The length of the input signal
 
         # Create a learnable parameter, initialized to the given initial value
+        self.learnablePhaseShift = nn.Parameter(torch.as_tensor(torch.pi))
         self.learnableFrequency = nn.Parameter(torch.as_tensor(1).exp())
-
-        # Assert the validity of the inputs.
-        assert amplitude != 0, "The amplitude parameter must be non-zero."
+        self.learnableAmplitude = nn.Parameter(torch.as_tensor(0.1))
 
     def forward(self, x, addingFlag=True):
         # Check if the non-linearity term has been calculated.
@@ -224,7 +220,7 @@ class nonLinearAddition(reversibleInterface):
     def getNonLinearity(self, device):
         positions = torch.arange(start=0, end=self.sequenceLength, step=1, dtype=torch.float32, device=device)
 
-        return self.amplitude*(positions*2*torch.pi*self.learnableFrequency).sin().round(decimals=6)
+        return self.learnableAmplitude*(positions*2*torch.pi*self.learnableFrequency + self.learnablePhaseShift).sin().round(decimals=6)
 
 
 if __name__ == "__main__":
@@ -235,5 +231,5 @@ if __name__ == "__main__":
     data = 2 * data - 1
 
     # Perform the forward and inverse pass.
-    activationClass = nonLinearAddition(amplitude=0.1)
+    activationClass = nonLinearAddition()
     _forwardData, _reconstructedData = activationClass.checkReconstruction(data, atol=1e-6, numLayers=100)

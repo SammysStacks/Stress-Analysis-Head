@@ -25,6 +25,15 @@ class waveletNeuralOperatorLayer(waveletNeuralOperatorWeights):
         return neuralOperatorOutput
 
     def waveletNeuralOperator(self, inputData, lowFrequencyTerms=None, highFrequencyTerms=None):
+        # Extract the input data parameters.
+        batchSize, numInputSignals, sequenceLength = inputData.size()
+        left_pad = (self.sequenceLength - sequenceLength) // 2
+        right_pad = self.sequenceLength - sequenceLength - left_pad
+
+        # Apply padding to the input data
+        inputData = torch.nn.functional.pad(inputData, pad=(left_pad, right_pad), mode='constant', value=0, dtype=inputData.float64)
+        # inputData dimension: batchSize, numInputSignals, paddedSequenceLength
+
         # Perform wavelet decomposition.
         lowFrequency, highFrequencies = self.dwt(inputData)  # Note: each channel is treated independently here.
         # highFrequencies[decompositionLayer] dimension: batchSize, numLiftedChannels, highFrequenciesShapes[decompositionLayer]
@@ -37,7 +46,11 @@ class waveletNeuralOperatorLayer(waveletNeuralOperatorWeights):
 
         # Perform wavelet reconstruction.
         reconstructedData = self.idwt((lowFrequency, highFrequencies))
-        # reconstructedData dimension: batchSize, numOutputSignals, finalSequenceLength
+        # reconstructedData dimension: batchSize, numOutputSignals, paddedSequenceLength
+
+        # Remove the padding from the reconstructed data.
+        reconstructedData = reconstructedData[:, :, left_pad:-right_pad if right_pad > 0 else None]
+        # reconstructedData dimension: batchSize, numOutputSignals, sequenceLength
 
         # Add a bias term if needed.
         if self.addBiasTerm: reconstructedData = reconstructedData + self.operatorBiases

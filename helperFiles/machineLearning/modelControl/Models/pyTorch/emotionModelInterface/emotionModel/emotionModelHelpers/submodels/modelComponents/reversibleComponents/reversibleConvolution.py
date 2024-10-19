@@ -7,7 +7,7 @@ import torch.nn as nn
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
 
-
+# NOT WORKING YET!
 class reversibleConvolution(reversibleInterface):
 
     def __init__(self, numChannels, kernelSize, activationMethod, numLayers):
@@ -89,7 +89,7 @@ class reversibleConvolution(reversibleInterface):
 if __name__ == "__main__":
     # General parameters.
     _batchSize, _numSignals, _sequenceLength = 4, 128, 512
-    _activationMethod = 'nonLinearAddition_0.2'
+    _activationMethod = 'nonLinearAddition'
     _numLayers = 1
     _kernelSize = 3
 

@@ -29,7 +29,6 @@ class modelParameters:
                 'encodeHighFrequencyProtocol': 'highFreq',  # The protocol for encoding the high frequency signals.
                 'encodeLowFrequencyProtocol': 'lowFreq',  # The protocol for encoding the low frequency signals.
                 'skipConnectionProtocol': 'none',  # The protocol for the skip connections.
-                'learningProtocol': 'rFC'  # The learning protocol for the neural operator.
             }
         }
 

@@ -28,13 +28,14 @@ class modelConstants:
     subjectIndexMD = "subjectIndex"
     datasetIndexMD = "datasetIndex"
     signalIndexSI = "signalIndex"
+    batchIndexSI = "batchIndex"
 
     # Specify the channel information.
     signalChannel = "signalPoints"
     timeChannel = "time"
 
     # Compile the contextual identifiers.
-    signalIdentifiers = [numSignalPointsSI, signalIndexSI]
+    signalIdentifiers = [numSignalPointsSI, signalIndexSI, batchIndexSI]
     metadata = [datasetIndexMD, subjectIndexMD]
 
     # Specify the data interface parameters.

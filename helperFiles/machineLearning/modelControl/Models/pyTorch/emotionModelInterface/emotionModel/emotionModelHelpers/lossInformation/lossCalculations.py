@@ -9,6 +9,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 from helperFiles.machineLearning.modelControl.Models.pyTorch.lossFunctions import pytorchLossMethods, weightLoss
 from ..emotionDataInterface import emotionDataInterface
 from ..generalMethods.generalMethods import generalMethods
+from ..modelConstants import modelConstants
 from ..modelParameters import modelParameters
 
 
@@ -64,30 +65,59 @@ class lossCalculations:
         finalLoss = method(signalData).mean()
         return finalLoss
 
-    def calculateSignalEncodingLoss(self, allInterpolatedSignalData, allFinalManifoldProjectionLoss, allReconstructedInterpolatedData, missingDataMask, allLabelsMask, reconstructionIndex):
+    def calculateSignalEncodingLoss(self, allInitialSignalData, allReconstructedSignalData, allFinalManifoldProjectionLoss, physiologicalTimes, missingDataMask, allLabelsMask, reconstructionIndex):
         # Find the boolean flags for the data involved in the loss calculation.
         reconstructionDataMask = self.getReconstructionDataMask(allLabelsMask, reconstructionIndex)
-        batchSize, numSignals, encodedDimension = allInterpolatedSignalData.size()
 
-        # Zero out the signals if the data was missing.
-        missingSignalMask = torch.all(missingDataMask, dim=-1).unsqueeze(-1)  # Dim: numExperiments, numSignals
-        allReconstructedInterpolatedData = missingSignalMask*allReconstructedInterpolatedData
-        allInterpolatedSignalData = missingSignalMask*allInterpolatedSignalData
-        numValidSignals = numSignals - missingSignalMask.sum(dim=1)  # Dim: batchSize
+        # Unpack the signal data.
+        allDatapoints = emotionDataInterface.getChannelData(allInitialSignalData, channelName=modelConstants.signalChannel)
+        allTimepoints = emotionDataInterface.getChannelData(allInitialSignalData, channelName=modelConstants.timeChannel)
+        batchSize, numSignals, maxSequenceLength = missingDataMask.size()
 
         # Isolate the signals for this loss (For example, training vs. testing).
-        reconstructedInterpolatedData = self.getData(allReconstructedInterpolatedData, reconstructionDataMask)  # Dim: numExperiments, numCondensedSignals, encodedDimension
-        finalManifoldProjectionLoss = self.getData(allFinalManifoldProjectionLoss, reconstructionDataMask)  # Dim: numExperiments, numSignals, encodedDimension
-        interpolatedSignalData = self.getData(allInterpolatedSignalData, reconstructionDataMask)  # Dim: numExperiments, numSignals, encodedDimension
-        if interpolatedSignalData.size(0) == 0: return None
+        finalManifoldProjectionLoss = self.getData(allFinalManifoldProjectionLoss, reconstructionDataMask)  # Dim: numExperiments
+        reconstructedSignalData = self.getData(allReconstructedSignalData, reconstructionDataMask)  # Dim: numExperiments, numSignals, encodedDimension
+        datapoints = self.getData(allDatapoints, reconstructionDataMask)  # Dim: numExperiments, numSignals, maxSequenceLength
+        timepoints = self.getData(allTimepoints, reconstructionDataMask)  # Dim: numExperiments, numSignals, maxSequenceLength
+        if reconstructedSignalData.size(0) == 0: return None
+
+        # Prepare the loss tensors.
+        signalReconstructedLoss = 0  # Initialize the loss tensor.
+        numValidLosses = 0  # Initialize the number of valid losses.
+
+        # Iterate over the batch and each signal.
+        for batchInd in range(batchSize):
+            for signalInd in range(numSignals):
+                # Only consider valid data points (those not in the missing data mask).
+                reconstructedSignal = reconstructedSignalData[batchInd, signalInd]
+                valid_mask = missingDataMask[batchInd, signalInd].bool()
+                validTimes = timepoints[batchInd, signalInd][valid_mask]
+                validData = datapoints[batchInd, signalInd][valid_mask]
+                # validTimes, validData dimension: validpoints
+
+                # Assert that the time and data dimensions match.
+                assert validTimes.size() == validData.size(), f"Time ({validTimes.size()}) and data ({validData.size()}) dimensions do not match"
+                if validTimes.size(0) == 0: continue  # Skip if no valid timepoints.
+
+                # Align the timepoints to the physiological times.
+                mappedPhysiologicalTimedInds = torch.searchsorted(physiologicalTimes, validTimes, out_int32=False, right=False, side=None, out=None, sorter=None)
+                physiologicalDataUncertainty = reconstructedSignal.diff()[mappedPhysiologicalTimedInds - 1].pow(2)  # Initialize the uncertainty tensor.
+                closestPhysiologicalData = reconstructedSignal[mappedPhysiologicalTimedInds]  # Initialize the closest data tensor.
+
+                # Calculate the error in signal reconstruction (encoding loss).
+                reconstructionLoss = (validData - closestPhysiologicalData).pow(2)
+                reconstructionLoss = reconstructionLoss[physiologicalDataUncertainty <= reconstructionLoss]
+
+                # Add the loss to the total loss.
+                signalReconstructedLoss = signalReconstructedLoss + reconstructionLoss.mean()
+                numValidLosses += 1
 
         # Calculate the error in signal reconstruction (encoding loss).
-        signalReconstructedLoss = self.reconstructionLoss(reconstructedInterpolatedData, interpolatedSignalData)
-        signalReconstructedLoss = signalReconstructedLoss.mean(dim=2).sum(dim=1) / numValidSignals
+        if numValidLosses == 0: return torch.tensor(data=0.0, device=signalReconstructedLoss.mainDevice)
+        signalReconstructedLoss = signalReconstructedLoss / numValidLosses / batchSize
 
         # Average the loss over all batches.
         finalManifoldProjectionLoss = finalManifoldProjectionLoss.mean()
-        signalReconstructedLoss = signalReconstructedLoss.mean()
 
         # Assert that nothing is wrong with the loss calculations.
         self.modelHelpers.assertVariableIntegrity(signalReconstructedLoss, variableName="encoded signal reconstructed loss", assertGradient=False)

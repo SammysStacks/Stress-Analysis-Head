@@ -151,20 +151,21 @@ class compileModelDataHelpers:
             subjectInds = torch.full(size=(numSignals, 1, numChannels), fill_value=allSubjectInds[experimentInd])
             datasetInds = torch.full(size=(numSignals, 1, numChannels), fill_value=datasetInd)
             metadata = torch.hstack((datasetInds, subjectInds))
-            # metadata dim: numSignals, 2, numChannels
+            # metadata dim: numSignals, numMetadata, numChannels
 
             # Compile all the signal information: signal specific.
             eachSignal_numPoints = allNumSignalPoints[experimentInd].unsqueeze(-1).unsqueeze(-1).repeat(1, 1, numChannels)
             signalInds = torch.arange(numSignals).unsqueeze(-1).unsqueeze(-1).repeat(1, 1, numChannels)
-            signalIdentifiers = torch.hstack((eachSignal_numPoints, signalInds))
-            # signalIdentifiers dim: numSignals, 2, numChannels
+            batchInds = torch.full(size=(numSignals, 1, numChannels), fill_value=experimentInd)
+            signalIdentifiers = torch.hstack((eachSignal_numPoints, signalInds, batchInds))
+            # signalIdentifiers dim: numSignals, numSignalIdentifiers, numChannels
 
             # Assert the correct hardcoded dimensions.
             assert emotionDataInterface.getSignalIdentifierIndex(identifierName=modelConstants.numSignalPointsSI) == 0, "Asserting I am self-consistent. Hardcoded assertion"
             assert emotionDataInterface.getSignalIdentifierIndex(identifierName=modelConstants.signalIndexSI) == 1, "Asserting I am self-consistent. Hardcoded assertion"
             assert emotionDataInterface.getMetadataIndex(metadataName=modelConstants.datasetIndexMD) == 0, "Asserting I am self-consistent. Hardcoded assertion"
             assert emotionDataInterface.getMetadataIndex(metadataName=modelConstants.subjectIndexMD) == 1, "Asserting I am self-consistent. Hardcoded assertion"
-            assert numSignalIdentifiers == 2, "Asserting I am self-consistent. Hardcoded assertion"
+            assert numSignalIdentifiers == 3, "Asserting I am self-consistent. Hardcoded assertion"
             assert numMetadata == 2, "Asserting I am self-consistent. Hardcoded assertion"
 
             # Add the demographic data to the feature array.

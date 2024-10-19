@@ -4,9 +4,10 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class neuralOperatorInterface(emotionModelWeights):
 
-    def __init__(self, sequenceLength, numInputSignals, numOutputSignals, addBiasTerm):
+    def __init__(self, sequenceLength, numInputSignals, numOutputSignals, learningProtocol, addBiasTerm):
         super().__init__()
         # General parameters.
+        self.learningProtocol = learningProtocol  # The learning protocol for the neural operator.
         self.numOutputSignals = numOutputSignals  # The number of output signals.
         self.numInputSignals = numInputSignals  # The number of input signals.
         self.sequenceLength = sequenceLength  # The length of the input signals.
@@ -22,7 +23,6 @@ class neuralOperatorInterface(emotionModelWeights):
         encodeHighFrequencyProtocol = neuralOperatorParameters['encodeHighFrequencyProtocol']  # The protocol for encoding the high frequency signals.
         encodeLowFrequencyProtocol = neuralOperatorParameters['encodeLowFrequencyProtocol']  # The protocol for encoding the low frequency signals.
         skipConnectionProtocol = neuralOperatorParameters['skipConnectionProtocol']  # The protocol for the skip connections.
-        learningProtocol = neuralOperatorParameters['learningProtocol']  # The learning protocol for the neural operator.
         waveletType = neuralOperatorParameters['waveletType']  # The type of wavelet to use for the wavelet transform.
 
         # Hardcoded parameters.
@@ -30,10 +30,8 @@ class neuralOperatorInterface(emotionModelWeights):
         mode = 'periodization'  # Mode for the waveletType transform.
 
         # Specify the default parameters.
-        if encodeHighFrequencyProtocol is None: encodeHighFrequencyProtocol = 'residual'  # The protocol for encoding the high frequency signals.
         if numDecompositions is None: numDecompositions = min(5, waveletNeuralOperatorLayer.max_decompositions(signal_length=self.sequenceLength, wavelet_name=waveletType))  # Number of decompositions for the waveletType transform.
-        if mode is None: mode = 'zero'  # Mode for the waveletType transform.
 
         return waveletNeuralOperatorLayer(sequenceLength=self.sequenceLength, numInputSignals=self.numInputSignals, numOutputSignals=self.numOutputSignals, numDecompositions=numDecompositions,
                                           waveletType=waveletType, mode=mode, addBiasTerm=self.addBiasTerm, activationMethod='none', skipConnectionProtocol=skipConnectionProtocol,
-                                          encodeLowFrequencyProtocol=encodeLowFrequencyProtocol, encodeHighFrequencyProtocol=encodeHighFrequencyProtocol, learningProtocol=learningProtocol)
+                                          encodeLowFrequencyProtocol=encodeLowFrequencyProtocol, encodeHighFrequencyProtocol=encodeHighFrequencyProtocol, learningProtocol=self.learningProtocol)

@@ -1,7 +1,6 @@
 # General
 import matplotlib.pyplot as plt
 import numpy as np
-import os
 
 # Visualization protocols
 from helperFiles.globalPlottingProtocols import globalPlottingProtocols
@@ -113,94 +112,3 @@ class autoencoderVisualizations(globalPlottingProtocols):
         self.heatmap(signalData[0:25], saveDataPath=None, title="Initial Signals", xlabel="Points", ylabel="Signal Index")
         self.heatmap(encodedData[0:25], saveDataPath=None, title="Encoded Signals", xlabel="Points", ylabel="Signal Index")
 
-    def plotAutoencoderWeights(self, autoencoderWeightsCNN, autoencoderWeightsFC):
-        # For each convolutional weight.
-        for layerInd in range(len(autoencoderWeightsCNN)):
-            autoencoderWeightCNN = autoencoderWeightsCNN[layerInd]
-            # Dim: numOutChannels, numInchannels/Groups, kernelSize
-            numOutChannels, numInchannels, kernelSize = autoencoderWeightCNN.shape
-
-            if numOutChannels == 1:
-                plt.plot(autoencoderWeightCNN.reshape(-1))
-                plt.title("numOutChannels = 1")
-            if numInchannels == 1:
-                plt.plot(autoencoderWeightCNN.reshape(-1))
-                plt.title("numInchannels = 1")
-            if kernelSize == 1:
-                plt.plot(autoencoderWeightCNN.reshape(-1))
-                plt.title("kernelSize = 1")
-            # else:
-            #     # Create meshgrids for x, y, and z coordinates
-            #     x, y = np.meshgrid(np.arange(numOutChannels), np.arange(numInchannels))
-            #     z = np.zeros_like(x)
-
-            #     # Create separate 2D heatmaps for each color channel
-            #     fig = plt.figure(figsize=(12, 6))
-
-            #     for kernelInd in range(kernelSize):
-            #         ax = fig.add_subplot(131 + kernelInd, projection='3d')
-            #         z = autoencoderWeightCNN[:, :, kernelInd]  # Choose the current color channel
-
-            #         ax.plot_surface(x, y, z, cmap='bwr')  # Adjust the cmap for different colormaps
-
-            #         ax.set_title(f'kernelInd: {kernelInd}')
-            #         ax.set_xlabel('numOutChannels')
-            #         ax.set_ylabel('numInchannels')
-            #         ax.set_zlabel('Weight (A.U.)')
-
-            plt.tight_layout()
-            plt.show()
-            plt.rcdefaults()
-
-    def plotAllAutoencoderWeights(self, allAutoencoderWeightsCNN, allAutoresponderWeightsFC):
-        """
-        Dim allAutoencoderWeightsCNN: numEpochs, numLayers, numOutChannels, numInchannels/Groups, kernelSize
-        Dim: allAautoencoderWeightsFC: numEpochs, numLayers, numOutFeatures, numInFeatures
-        """
-        assert len(allAutoencoderWeightsCNN) == len(allAutoresponderWeightsFC)
-        numEpochs = len(allAutoencoderWeightsCNN)
-
-        # Create folder to save the data
-        if self.saveDataFolder:
-            saveAutoencoderFolder = self.saveDataFolder + "/Autoencoder/"
-            os.makedirs(saveAutoencoderFolder, exist_ok=True)
-
-        # For each epoch
-        for layerInd in range(len(allAutoencoderWeightsCNN[0])):
-            autoencoderWeightsCNN = np.asarray([epoch[layerInd] for epoch in allAutoencoderWeightsCNN])
-            # Dim: numEpochs, numOutChannels, numInchannels/Groups, kernelSize
-            autoencoderWeightsCNN = autoencoderWeightsCNN.reshape(numEpochs, -1)
-
-            # Plot the heatmap
-            self.heatmap(autoencoderWeightsCNN, saveDataPath=saveAutoencoderFolder + f"Autoencoder CNN Weights at Layer {layerInd}.pdf",
-                         title=f'Autoencoder CNN Weights at Layer {layerInd}', xlabel="Kernel Index", ylabel="Epoch")
-
-        for layerInd in range(len(allAutoresponderWeightsFC[0])):
-            encoderWeightsFC = np.asarray([epoch[layerInd] for epoch in allAutoresponderWeightsFC])
-            encoderWeightsFC = encoderWeightsFC.reshape(len(encoderWeightsFC), -1)
-
-            # Plot the heatmap
-            self.heatmap(encoderWeightsFC, saveDataPath=saveAutoencoderFolder + f"Autoencoder FC Weights at Layer {layerInd}.pdf",
-                         title=f'Autoencoder FC Weights at Layer {layerInd}', xlabel="FC Weights", ylabel="Epoch")
-
-    # def plotLatentSpace(self, latentData, latentLabels, epoch, plotTitle="Latent Space PCA", numSignalPlots=1):
-    #     batchSize, numSignals, latentDimension = latentData.shape
-    #
-    #     # Use PCA to reduce the dimensionality of latent space to 2D for visualization
-    #     pca = PCA(n_components=2, random_state=42)
-    #     latent_2d = pca.fit_transform(latentData.reshape(batchSize * numSignals, latentDimension))
-    #     latent_2d = latent_2d.reshape(batchSize, numSignals, 2)
-    #
-    #     for batchInd in range(batchSize):
-    #         # Plot the 2D projection of latent space
-    #         plt.plot(latent_2d[:, batchInd, 0], latent_2d[:, batchInd, 1], 'o', markersize=5, alpha=0.5)
-    #
-    #         if batchInd == numSignalPlots: break
-    #
-    #     plt.xlabel('PCA Component 1')
-    #     plt.ylabel('PCA Component 2')
-    #     plt.title('2D PCA Visualization of Latent Space')
-    #     # Save the plot
-    #     if self.saveDataFolder:
-    #         self.saveFigure(self.saveDataFolder + f"{plotTitle} epochs = {epoch}.pdf")
-    #     plt.show()

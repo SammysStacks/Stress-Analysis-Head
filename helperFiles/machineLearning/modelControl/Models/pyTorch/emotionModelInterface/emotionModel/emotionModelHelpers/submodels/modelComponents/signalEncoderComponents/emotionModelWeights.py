@@ -86,4 +86,4 @@ class emotionModelWeights(convolutionalHelpers):
         )
 
     @staticmethod
-    def getActivationType(): return 'nonLinearAddition_0.25'
+    def getActivationType(): return 'nonLinearAddition'

@@ -1,3 +1,5 @@
+import time
+
 import torch
 from matplotlib import pyplot as plt
 from torch import nn
@@ -21,6 +23,7 @@ class reversibleInterface(nn.Module):
         return torch.eye(kernelSize, device=device)*scalingFactor
 
     def checkReconstruction(self, inputData, atol=1e-8, numLayers=10):
+        t1 = time.time()
         # Initialize the forward data.
         reversibleInterface.changeDirections(True)
         forwardData = inputData.clone().double()
@@ -36,6 +39,9 @@ class reversibleInterface(nn.Module):
         # Perform the backward passes.
         for layerInd in range(numLayers):
             reconstructedData = self.forward(reconstructedData)
+
+        # Calculate the time taken for the forward and backward passes.
+        t2 = time.time(); print(f"Time taken for {numLayers} layers: {t2 - t1}")
 
         # Compare the original and reconstructed inputData
         if torch.allclose(inputData, reconstructedData, atol=atol): print("Successfully reconstructed the original inputData!")

@@ -52,7 +52,7 @@ class reversibleLinearLayer(reversibleInterface):
         neuralWeights = self.linearOperators[layerInd]
         # neuralWeight: numSignals, sequenceLength, sequenceLength
 
-        # Add a stability term to the diagonal.
+        # Add a stability term to the diagonal. TODO: Add sparse matrix support.
         if self.kernelSize == self.sequenceLength: neuralWeights = self.restrictedWindowMask * neuralWeights + self.stabilityTerm
         else: neuralWeights = neuralWeights * (1 - self.stabilityTerm) + self.stabilityTerm
 
@@ -68,9 +68,9 @@ class reversibleLinearLayer(reversibleInterface):
 if __name__ == "__main__":
     # General parameters.
     _batchSize, _numSignals, _sequenceLength = 2, 60, 128
-    _activationMethod = 'nonLinearAddition_0.2'
-    _kernelSize = 5
-    _numLayers = 8
+    _activationMethod = 'nonLinearAddition'
+    _kernelSize = 7
+    _numLayers = 100
 
     # Set up the parameters.
     neuralLayerClass = reversibleLinearLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod)

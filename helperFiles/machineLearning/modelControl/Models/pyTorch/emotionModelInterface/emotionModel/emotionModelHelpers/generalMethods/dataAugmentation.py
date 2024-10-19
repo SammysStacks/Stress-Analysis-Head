@@ -69,7 +69,7 @@ class dataAugmentation:
         batchSize, numSignals, maxSequenceLength, numChannels = signalData.size()
 
         # Create a mask to drop p% of the signals
-        dropoutMask = dropoutPercent < torch.rand(batchSize, numSignals)  # Randomly keep (1-p)% of the signals
+        dropoutMask = dropoutPercent < torch.rand(batchSize, numSignals, device=signalData.device)  # Randomly keep (1-p)% of the signals
 
         # Expand the mask to cover all timesteps and channels
         dropoutMask = dropoutMask.unsqueeze(-1).unsqueeze(-1).expand(-1, -1, maxSequenceLength, 2)

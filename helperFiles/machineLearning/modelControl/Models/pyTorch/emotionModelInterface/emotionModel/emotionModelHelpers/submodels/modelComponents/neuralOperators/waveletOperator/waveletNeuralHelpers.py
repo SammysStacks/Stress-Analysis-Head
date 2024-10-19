@@ -38,6 +38,7 @@ class waveletNeuralHelpers(emotionModelWeights):
                  skipConnectionProtocol, encodeLowFrequencyProtocol='lowFreq', encodeHighFrequencyProtocol='highFreq', learningProtocol='CNN'):
         super(waveletNeuralHelpers, self).__init__()
         # Fourier neural operator parameters.
+        self.sequenceLength = 2 ** int(torch.tensor(sequenceLength).log2().ceil())  # The length of the input signals.
         self.encodeHighFrequencyProtocol = encodeHighFrequencyProtocol  # The high-frequency encoding protocol to use.
         self.encodeLowFrequencyProtocol = encodeLowFrequencyProtocol  # The low-frequency encoding protocol to use.
         self.skipConnectionProtocol = skipConnectionProtocol  # The skip connection protocol to use.
@@ -46,7 +47,6 @@ class waveletNeuralHelpers(emotionModelWeights):
         self.learningProtocol = learningProtocol  # The learning protocol to use.
         self.numOutputSignals = numOutputSignals  # Number of output signals.
         self.numInputSignals = numInputSignals  # Number of input signals.
-        self.sequenceLength = sequenceLength  # The length of the input signals.
         self.addBiasTerm = addBiasTerm  # Whether to add bias terms to the output.
         self.waveletType = waveletType  # The wavelet to use for the decomposition. Options: 'haar', 'db', 'sym', 'coif', 'bior', 'rbio', 'dmey', 'gaus', 'mexh', 'morl', 'cgau', 'shan', 'fbsp', 'cmor'
         self.mode = mode  # The padding mode to use for the decomposition. Options: 'zero', 'symmetric', 'reflect' or 'periodization'.

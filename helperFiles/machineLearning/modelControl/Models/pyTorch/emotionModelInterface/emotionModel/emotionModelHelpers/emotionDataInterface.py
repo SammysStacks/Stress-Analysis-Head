@@ -127,6 +127,13 @@ class emotionDataInterface:
         channelData = emotionDataInterface.getChannelData_fromInd(signalData, channelInd)
         
         return channelData
+
+    @staticmethod
+    def getSignalIdentifierData(signalIdentifiers, channelName):
+        # signalIdentifiers dim: (batchSize, numSignals, numSignalIdentifiers)
+        channelInd = modelConstants.signalIdentifiers.index(channelName)
+
+        return signalIdentifiers[:, :, channelInd]
     
     def getReconstructionData(self, trainingMask, signalLabels, signalData, reconstructionIndex):
         # Get the current training data mask.
