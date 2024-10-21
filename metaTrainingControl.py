@@ -23,8 +23,8 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.modelMigration impo
 from helperFiles.machineLearning.dataInterface.compileModelData import compileModelData  # Methods to organize model data.
 
 # Configure cuDNN and PyTorch's global settings.
-torch.autograd.set_detect_anomaly(True)  # If True: detect NaN values in the output of autograd.
 torch.backends.cudnn.deterministic = True  # If False: allow non-deterministic algorithms in cuDNN, which can enhance performance but reduce reproducibility.
+torch.autograd.set_detect_anomaly(True)  # If True: detect NaN values in the output of autograd.
 torch.set_default_dtype(torch.float64)  # Set the default data type to float32, which is typical for neural network computations.
 torch.backends.cudnn.benchmark = False  # If True: Enable cuDNN's auto-tuner to find the most efficient algorithm for the current configuration, potentially improving performance if fixed input size.
 
@@ -34,7 +34,7 @@ if __name__ == "__main__":
         dataloader_config=accelerate.DataLoaderConfiguration(split_batches=True),  # Whether to split batches across devices or not.
         cpu=torch.backends.mps.is_available(),  # Whether to use the CPU. MPS is NOT fully compatible yet.
         step_scheduler_with_optimizer=False,  # Whether to wrap the optimizer in a scheduler.
-        gradient_accumulation_steps=8,  # The number of gradient accumulation steps.
+        gradient_accumulation_steps=1,  # The number of gradient accumulation steps.
         mixed_precision="no",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"
     )
 
@@ -44,7 +44,6 @@ if __name__ == "__main__":
     testSplitRatio = 0.2  # The percentage of testing points.
 
     # Training flags.
-    useFinalParams = True  # If you want to use HPC parameters (and on the HPC).
     storeLoss = False  # If you want to record any loss values.
 
     # ----------------------- Parse Model Parameters ----------------------- #
@@ -60,11 +59,11 @@ if __name__ == "__main__":
 
     # Add arguments for the neural operator.
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
-    parser.add_argument('--waveletType', type=str, default='bior3.7', help='The wavelet type for the wavelet transform: bior3.7, db3, dmey, etc')
+    parser.add_argument('--waveletType', type=str, default='bior2.2', help='The wavelet type for the wavelet transform: bior3.7, db3, dmey, etc')
 
     # Add arguments for the signal encoder prediction
-    parser.add_argument('--numSpecificEncodingLayers', type=int, default=1, help='The number of layers in the specific signal encoding neural operator.')
-    parser.add_argument('--numMetaEncodingLayers', type=int, default=6, help='The number of layers in the shared signal encoding operator.')
+    parser.add_argument('--numSpecificEncodingLayers', type=int, default=2, help='The number of layers in the specific signal encoding neural operator.')
+    parser.add_argument('--numMetaEncodingLayers', type=int, default=8, help='The number of layers in the shared signal encoding operator.')
     parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
 
     # Add arguments for the emotion prediction
@@ -89,7 +88,7 @@ if __name__ == "__main__":
     modelMigration = modelMigration(accelerator)  # Initialize the model migration class.
 
     # Specify training parameters
-    numEpochs, numEpoch_toPlot, numEpoch_toSaveFull = modelParameters.getEpochInfo(useFinalParams)  # The number of epochs to plot and save the model.
+    numEpochs, numEpoch_toPlot, numEpoch_toSaveFull = modelParameters.getEpochInfo()  # The number of epochs to plot and save the model.
     datasetNames, metaDatasetNames, allDatasetNames = modelParameters.compileModelNames()  # Compile the model names.
     trainingDate = modelCompiler.embedInformation(submodel, trainingDate)  # Embed training information into the name.
 

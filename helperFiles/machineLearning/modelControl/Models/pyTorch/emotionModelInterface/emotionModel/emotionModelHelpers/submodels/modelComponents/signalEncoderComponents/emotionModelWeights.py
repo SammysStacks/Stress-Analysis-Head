@@ -19,16 +19,6 @@ class emotionModelWeights(convolutionalHelpers):
 
         return nn.Sequential(linearLayer, activationFunctions.getActivationMethod(activationMethod))
 
-    @staticmethod
-    def linearModelSelfAttention(numInputFeatures=1, numOutputFeatures=1, addBias=False):
-        assert numInputFeatures == 1, "The self-attention model is not yet implemented for multiple input features."
-
-        return nn.Sequential(
-            nn.Linear(numInputFeatures, numOutputFeatures, bias=addBias),
-            nn.Linear(numOutputFeatures, numOutputFeatures, bias=addBias),
-            nn.Linear(numOutputFeatures, numOutputFeatures, bias=addBias),
-        )
-
     # ------------------- Ebbinghaus Forgetting Curve ------------------- #
 
     @staticmethod
@@ -49,7 +39,7 @@ class emotionModelWeights(convolutionalHelpers):
     @staticmethod
     def neuralWeightFC(numSignals, sequenceLength):
         return nn.Sequential(
-            reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=5, numLayers=8, activationMethod=emotionModelWeights.getActivationType()),
+            reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=13, numLayers=4, activationMethod=emotionModelWeights.getActivationType()),
         )
 
     def neuralWeightFCC(self, inChannel=1, outChannel=2, finalFrequencyDim=46):
@@ -62,7 +52,7 @@ class emotionModelWeights(convolutionalHelpers):
     def reversibleNeuralWeightCNN(inChannel=1):
         return nn.Sequential(
             # Convolution architecture: feature engineering
-            reversibleConvolution(numChannels=inChannel, kernelSize=3, activationMethod=emotionModelWeights.getActivationType(), numLayers=4),
+            reversibleConvolution(numChannels=inChannel, kernelSize=13, activationMethod=emotionModelWeights.getActivationType(), numLayers=4),
         )
 
     @staticmethod
@@ -75,14 +65,14 @@ class emotionModelWeights(convolutionalHelpers):
     def postProcessingLayerCNN(numSignals=1):
         return nn.Sequential(
             # Convolution architecture: post-processing operator. 
-            reversibleConvolution(numChannels=numSignals, kernelSize=3, activationMethod=emotionModelWeights.getActivationType(), numLayers=4),
+            reversibleConvolution(numChannels=numSignals, kernelSize=13, activationMethod=emotionModelWeights.getActivationType(), numLayers=4),
         )
 
     @staticmethod
     def postProcessingLayerFC(numSignals, sequenceLength):
         return nn.Sequential(
             # Convolution architecture: post-processing operator.
-            reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=5, numLayers=8, activationMethod=emotionModelWeights.getActivationType()),
+            reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=13, numLayers=4, activationMethod=emotionModelWeights.getActivationType()),
         )
 
     @staticmethod

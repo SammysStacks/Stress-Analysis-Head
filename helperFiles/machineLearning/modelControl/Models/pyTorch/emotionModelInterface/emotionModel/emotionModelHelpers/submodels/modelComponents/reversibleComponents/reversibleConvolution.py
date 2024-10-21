@@ -57,7 +57,7 @@ class reversibleConvolution(reversibleInterface):
         print(neuralWeights[0, 0], neuralWeights[0, 0, self.kernelSize//2, :])
 
         # Invert the neural weights if needed.
-        if not self.forwardDirection: neuralWeights = torch.linalg.inv(neuralWeights)
+        if self.forwardDirection: neuralWeights = torch.linalg.inv(neuralWeights)
 
         # Perform the convolution.
         convolutionalData = torch.nn.functional.conv1d(inputData, neuralWeights[:, :, :, -1], bias=None, stride=1, padding=self.kernelSize, dilation=1, groups=self.numChannels)

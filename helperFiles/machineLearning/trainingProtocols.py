@@ -41,7 +41,7 @@ class trainingProtocols(extractData):
 
     def streamTrainingData(self, featureAverageWindows, plotTrainingData=False, reanalyzeData=False, metaTraining=False, reverseOrder=False):
         # Hold time series analysis of features.
-        allRawFeatureIntervalTimes, allRawFeatureIntervals, allCompiledFeatureIntervals = [], [], []
+        allRawFeatureIntervalTimes, allRawFeatureIntervals, allCompiledFeatureIntervalTimes, allCompiledFeatureIntervals = [], [], [], []
         # Hold features extraction information.
         allRawFeatureHolders, allRawFeatureTimesHolders, allCompiledFeatureHolders = [], [], []
         # Hold survey information.
@@ -145,7 +145,6 @@ class trainingProtocols(extractData):
 
             # Assert the compiled features are the same length as the raw features
             assert len(compiledFeatureHolder[0][0]) == len(rawFeatureHolder[0][0]), "Compiled features are not the same length as the raw features"
-            assert len(compiledFeatureHolder[0]) == len(rawFeatureHolder[0]), "Compiled features are not the same length as the raw features"
             assert len(compiledFeatureHolder) == len(rawFeatureHolder), "Compiled features are not the same length as the raw features"
 
             # Finished analyzing the data
@@ -161,15 +160,16 @@ class trainingProtocols(extractData):
 
                 # Calculate the feature intervals
                 newRawFeatureIntervalTimes, newRawFeatureIntervals = self.organizeRawFeatureIntervals(startIntervalTime, startSurveyTime, rawFeatureTimesHolder, rawFeatureHolder)
-                _, newCompiledFeatureIntervals = self.organizeRawFeatureIntervals(startIntervalTime, startSurveyTime, rawFeatureTimesHolder, compiledFeatureHolder)
+                newCompiledFeatureIntervalTimes, newCompiledFeatureIntervals = self.organizeRawFeatureIntervals(startIntervalTime, startSurveyTime, rawFeatureTimesHolder, compiledFeatureHolder)
                 # newCompiledFeatureIntervals dim: numBiomarkers, numTimePoints, numBiomarkerFeatures
                 # newRawFeatureIntervals dim: numBiomarkers, numTimePoints, numBiomarkerFeatures
                 # newRawFeatureIntervalTimes dim: numBiomarkers, numTimePoints
 
                 # Check for valid features.
-                if newRawFeatureIntervalTimes is None: continue
+                if newRawFeatureIntervalTimes is None or newCompiledFeatureIntervalTimes is None: continue
 
                 # Save the interval information
+                allCompiledFeatureIntervalTimes.append(newCompiledFeatureIntervalTimes)
                 finalSurveyAnswerList.append(currentSurveyAnswersList[experimentInd])
                 allCompiledFeatureIntervals.append(newCompiledFeatureIntervals)
                 allRawFeatureIntervalTimes.append(newRawFeatureIntervalTimes)
@@ -227,11 +227,11 @@ class trainingProtocols(extractData):
         print(f'surveyQuestions: {surveyQuestions}')
 
         # Assert consistency across training data.
-        assert len(allRawFeatureIntervals) == len(allRawFeatureIntervalTimes) == len(allCompiledFeatureIntervals)
+        assert len(allRawFeatureIntervals) == len(allRawFeatureIntervalTimes) == len(allCompiledFeatureIntervals) == len(allCompiledFeatureIntervalTimes)
         assert len(allRawFeatureTimesHolders) == len(allRawFeatureHolders)
 
         # Return Training Data and Labels
-        return allRawFeatureTimesHolders, allRawFeatureHolders, allRawFeatureIntervalTimes, allRawFeatureIntervals, allCompiledFeatureIntervals, \
+        return allRawFeatureTimesHolders, allRawFeatureHolders, allRawFeatureIntervalTimes, allRawFeatureIntervals, allCompiledFeatureIntervalTimes, allCompiledFeatureIntervals, \
             subjectOrder, experimentalOrder, allFinalLabels, featureLabelTypes, surveyQuestions, surveyAnswersList, surveyAnswerTimes
 
     def organizeRawFeatureIntervals(self, startExperimentTime, startSurveyTime, rawFeatureTimesHolder, rawFeatureHolder):

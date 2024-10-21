@@ -35,12 +35,12 @@ class modelParameters:
         return userInputParams
 
     def getTrainingBatchSize(self, submodel, numExperiments):
-        # Wesad: Found 32 (out of 32) well-labeled emotions across 60 experiments with 54 signals.
+        # Wesad: Found 32 (out of 32) well-labeled emotions across 55 experiments with 55 signals.
         # Emognition: Found 12 (out of 12) well-labeled emotions across 407 experiments with 46 signals.
-        # Amigos: Found 12 (out of 12) well-labeled emotions across 707 experiments with 104 signals.
+        # Amigos: Found 12 (out of 12) well-labeled emotions across 318 experiments with 105 signals.
         # Dapper: Found 12 (out of 12) well-labeled emotions across 364 experiments with 18 signals.
-        # Case: Found 2 (out of 2) well-labeled emotions across 1449 experiments with 44 signals.
-        # Collected: Found 30 (out of 30) well-labeled emotions across 172 experiments with 70 signals.
+        # Case: Found 2 (out of 2) well-labeled emotions across 1411 experiments with 44 signals.
+        # Collected: Found 30 (out of 30) well-labeled emotions across 116 experiments with 69 signals.
         if submodel == modelConstants.signalEncoderModel: effectiveMinBatchSize, effectiveMaxBatchSize = 32, 64
         elif submodel == modelConstants.emotionModel: effectiveMinBatchSize, effectiveMaxBatchSize = 32, 64
         else: raise Exception()
@@ -66,8 +66,8 @@ class modelParameters:
         else: raise Exception()
 
     @staticmethod
-    def getEpochInfo(useFinalParams):
-        return (1000, 10, 10) if useFinalParams else (-1, -1, -1)  # numEpochs, numEpoch_toPlot, numEpoch_toSaveFull
+    def getEpochInfo():
+        return 1000, 10, 10  # numEpochs, numEpoch_toPlot, numEpoch_toSaveFull
 
     # -------------------------- Compilation Parameters ------------------------- #
 
@@ -79,8 +79,8 @@ class modelParameters:
 
     @staticmethod
     def getExclusionSequenceCriteria(submodel):
-        if submodel == modelConstants.signalEncoderModel: return 25, 90  # minSequencePoints, maxTimeGap
-        elif submodel == modelConstants.emotionModel: return 25, 90  # minSequencePoints, maxTimeGap
+        if submodel == modelConstants.signalEncoderModel: return 45, 30, 2  # minSequencePoints, maxTimeGap, maxSequenceGap
+        elif submodel == modelConstants.emotionModel: return 45, 30, 2  # minSequencePoints, maxTimeGap, maxSequenceGap
         else: raise Exception()
 
     @staticmethod

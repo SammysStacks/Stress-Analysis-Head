@@ -31,7 +31,7 @@ class waveletNeuralOperatorLayer(waveletNeuralOperatorWeights):
         right_pad = self.sequenceLength - sequenceLength - left_pad
 
         # Apply padding to the input data
-        inputData = torch.nn.functional.pad(inputData, pad=(left_pad, right_pad), mode='constant', value=0, dtype=inputData.float64)
+        inputData = torch.nn.functional.pad(inputData, pad=(left_pad, right_pad), mode='constant', value=0)
         # inputData dimension: batchSize, numInputSignals, paddedSequenceLength
 
         # Perform wavelet decomposition.

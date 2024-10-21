@@ -37,6 +37,7 @@ class compileModelDataHelpers:
         self.signalEncoderModelInfo = None
         self.maxClassPercentage = None
         self.minSequencePoints = None
+        self.maxSequenceGap = None
         self.minNumClasses = None
         self.maxTimeGap = None
         self.minSNR = None
@@ -50,7 +51,7 @@ class compileModelDataHelpers:
 
         # Exclusion criterion.
         self.minNumClasses, self.maxClassPercentage = self.modelParameters.getExclusionClassCriteria(submodel)
-        self.minSequencePoints, self.maxTimeGap = self.modelParameters.getExclusionSequenceCriteria(submodel)
+        self.minSequencePoints, self.maxTimeGap, self.maxSequenceGap = self.modelParameters.getExclusionSequenceCriteria(submodel)
         self.minSNR = self.modelParameters.getExclusionSNRCriteria(submodel)
 
         # Embedded information for each model.
@@ -177,14 +178,14 @@ class compileModelDataHelpers:
     # ---------------------------- Data Cleaning --------------------------- #
 
     @staticmethod
-    def _padSignalData(allRawFeatureTimeIntervals, allCompiledFeatureIntervals, surveyAnswerTimes):
+    def _padSignalData(allCompiledFeatureIntervalTimes, allCompiledFeatureIntervals, surveyAnswerTimes):
         # allCompiledFeatureIntervals : batchSize, numBiomarkers, finalDistributionLength*, numBiomarkerFeatures*  ->  *finalDistributionLength, *numBiomarkerFeatures are not constant
         # allRawFeatureTimeIntervals : batchSize, numBiomarkers, finalDistributionLength*  ->  *finalDistributionLength is not constant
         # allSignalData : A list of size (batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel])
         # allNumSignalPoints : A list of size (batchSize, numSignals)
         # surveyAnswerTimes : A list of size (batchSize)
         # Determine the final dimensions of the padded array.
-        maxSequenceLength = max(max(len(biomarkerTimes) for biomarkerTimes in experimentalTimes) for experimentalTimes in allRawFeatureTimeIntervals)
+        maxSequenceLength = max(max(len(biomarkerTimes) for biomarkerTimes in experimentalTimes) for experimentalTimes in allCompiledFeatureIntervalTimes)
         numSignals = sum(len(biomarkerData[0]) for biomarkerData in allCompiledFeatureIntervals[0])
         numExperiments = len(allCompiledFeatureIntervals)
 
@@ -200,7 +201,7 @@ class compileModelDataHelpers:
         # For each batch of biomarkers.
         for experimentalInd in range(numExperiments):
             batchData = allCompiledFeatureIntervals[experimentalInd]
-            batchTimes = allRawFeatureTimeIntervals[experimentalInd]
+            batchTimes = allCompiledFeatureIntervalTimes[experimentalInd]
             surveyAnswerTime = surveyAnswerTimes[experimentalInd]
 
             currentSignalInd = 0
@@ -245,20 +246,28 @@ class compileModelDataHelpers:
         allLabels : A torch array of size (batchSize, numLabels)
         subjectInds : A torch array of size (batchSize)
         """
+        # Standardize all signals at once for the entire batch
+        allSignalData = self.normalizeSignals(allSignalData)
+
         # Calculate the time gap within the longest time window.
-        timeChannelInd = emotionDataInterface.getChannelInd(channelName=modelConstants.timeChannel)
-        biomarkerTimes = allSignalData[:, :, :, timeChannelInd]
+        biomarkerTimes = emotionDataInterface.getChannelData(signalData=allSignalData, channelName=modelConstants.timeChannel)
 
         # Calculate the longest time gap within the longest time window.
         deltaTimes = torch.diff(biomarkerTimes, n=1, dim=-1).abs()
         maxTimeGap = deltaTimes.max(dim=2).values.max(dim=1).values
 
+        # Calculate the smallest time window for each experiment.
+        timeWindows = biomarkerTimes.max(dim=2).values.min(dim=-1).values
+
         # Calculate the number of points within the smallest time window.
         numMinWindowPoints = allNumSignalPoints.min(dim=1).values
 
         # Remove the batch if the gap is large.
-        validExperimentMask = ((maxTimeGap <= self.maxTimeGap) &
-                               (numMinWindowPoints >= self.minSequencePoints))
+        validExperimentMask = (
+                (maxTimeGap <= self.maxTimeGap) &
+                (numMinWindowPoints >= self.minSequencePoints) &
+                (modelConstants.timeWindows[0] <= timeWindows)
+        )
 
         return allSignalData[validExperimentMask], allNumSignalPoints[validExperimentMask], allLabels[validExperimentMask], subjectInds[validExperimentMask]
 
@@ -270,12 +279,29 @@ class compileModelDataHelpers:
         assert len(allSignalData) == 0 or len(featureNames) == allSignalData.shape[1], \
             f"Feature names do not match data dimensions. {len(featureNames)} != {allSignalData.shape[1]}"
 
+        # Get the signal data dimensions.
+        batchSize, numSignals, maxSequenceLength, numChannels = allSignalData.shape
+        maxSequenceGaps = torch.zeros(numSignals, dtype=torch.float32)
+
         # Standardize all signals at once for the entire batch
         allSignalData = self.normalizeSignals(allSignalData)
 
         # Calculate SNRs for all signals in the batch
-        signalChannelInd = emotionDataInterface.getChannelInd(channelName=modelConstants.signalChannel)
-        signalSNRs = self.calculate_snr(allSignalData[:, :, :, signalChannelInd])
+        biomarkerData = emotionDataInterface.getChannelData(signalData=allSignalData, channelName=modelConstants.signalChannel)
+        signalSNRs = self.calculate_snr(biomarkerData)
+
+        for batchInd in range(batchSize):
+            for signalInd in range(numSignals):
+                # Get the signal data for the current signal.
+                numPoints = allNumSignalPoints[batchInd, signalInd]
+                signalData = biomarkerData[batchInd, signalInd, 0:numPoints]
+
+                # Calculate the largest signal jump within the time window.
+                maxSequenceGaps[signalInd] = max(maxSequenceGaps[signalInd].item(), signalData.diff().abs().max().item())
+                if signalData.diff().abs().max().item() == 2.0:
+                    plt.plot(signalData)
+                    plt.show()
+        print(maxSequenceGaps)
 
         # Generate a valid signal mask across the batch
         validSignalInds = self.minSNR < signalSNRs
@@ -313,14 +339,14 @@ class compileModelDataHelpers:
         return experimentalIntervalData
 
     @staticmethod
-    def calculate_snr(allSignalData, epsilon=1e-10):
+    def calculate_snr(biomarkerData, epsilon=1e-10):
         # signalBatchData dimension: numExperiments, numSignals, maxSequenceLength
-        snr_values = torch.zeros(len(allSignalData[0]))
+        snr_values = torch.zeros(len(biomarkerData[0]))
 
         # For each signal in the batch.
-        for signalInd in range(len(allSignalData[0])):
+        for signalInd in range(len(biomarkerData[0])):
             # Get the signal data for the current signal.
-            signalData = allSignalData[:, signalInd, :]  # Dim: numExperiments x numPoints
+            signalData = biomarkerData[:, signalInd, :]  # Dim: numExperiments x numPoints
             signalData = signalData[signalData != 0]  # Ignore zero-padding or zero segments
 
             # Calculate the signal power and noise power for the current signal.

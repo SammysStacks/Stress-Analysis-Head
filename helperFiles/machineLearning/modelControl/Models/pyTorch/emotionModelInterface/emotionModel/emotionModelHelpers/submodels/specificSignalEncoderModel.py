@@ -10,14 +10,15 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class specificSignalEncoderModel(neuralOperatorInterface):
 
-    def __init__(self, numExperiments, operatorType, encodedDimension, fourierDimension, numOperatorLayers, numSignals, activationMethod, learningProtocol, neuralOperatorParameters):
-        super(specificSignalEncoderModel, self).__init__(sequenceLength=fourierDimension, numInputSignals=numSignals, numOutputSignals=numSignals, learningProtocol=learningProtocol, addBiasTerm=False)
+    def __init__(self, numExperiments, operatorType, encodedDimension, fourierDimension, numOperatorLayers, numSignals, numLiftingLayers, activationMethod, learningProtocol, neuralOperatorParameters):
+        super(specificSignalEncoderModel, self).__init__(sequenceLength=fourierDimension, numInputSignals=numSignals*numLiftingLayers, numOutputSignals=numSignals, learningProtocol=learningProtocol, addBiasTerm=False)
         # General model parameters.
         self.activationFunction = activationFunctions.getActivationMethod(activationMethod=activationMethod)
         self.numOperatorLayers = numOperatorLayers  # The number of operator layers to use.
         self.learningProtocol = learningProtocol  # The learning protocol for the model.
         self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
         self.fourierDimension = fourierDimension  # The dimension of the fourier signal.
+        self.numLiftingLayers = numLiftingLayers  # The number of lifting layers to use.
         self.operatorType = operatorType  # The operator type for the neural operator.
 
         # The neural layers for the signal encoder.
@@ -29,19 +30,19 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         for layerInd in range(self.numOperatorLayers):
             # Create the initial layers.
             self.initialNeuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=neuralOperatorParameters))
-            if self.learningProtocol == 'rCNN': self.initialProcessingLayers.append(self.postProcessingLayerCNN(numSignals=numSignals))
-            elif self.learningProtocol == 'rFC': self.initialProcessingLayers.append(self.postProcessingLayerFC(numSignals=numSignals, sequenceLength=fourierDimension))
+            if self.learningProtocol == 'rCNN': self.initialProcessingLayers.append(self.postProcessingLayerCNN(numSignals=numSignals*numLiftingLayers))
+            elif self.learningProtocol == 'rFC': self.initialProcessingLayers.append(self.postProcessingLayerFC(numSignals=numSignals*numLiftingLayers, sequenceLength=fourierDimension))
             else: raise "The learning protocol is not yet implemented."
 
             # Create the final layers.
             self.finalNeuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=neuralOperatorParameters))
-            if self.learningProtocol == 'rCNN': self.finalProcessingLayers.append(self.postProcessingLayerCNN(numSignals=numSignals))
-            elif self.learningProtocol == 'rFC': self.finalProcessingLayers.append(self.postProcessingLayerFC(numSignals=numSignals, sequenceLength=fourierDimension))
+            if self.learningProtocol == 'rCNN': self.finalProcessingLayers.append(self.postProcessingLayerCNN(numSignals=numSignals*numLiftingLayers))
+            elif self.learningProtocol == 'rFC': self.finalProcessingLayers.append(self.postProcessingLayerFC(numSignals=numSignals*numLiftingLayers, sequenceLength=fourierDimension))
             else: raise "The learning protocol is not yet implemented."
 
         # Initialize the blank signal profile.
         physiologicalProfileAnsatz = nn.Parameter(torch.randn(numExperiments, encodedDimension, dtype=torch.float64))
-        self.physiologicalProfileAnsatz = nn.init.kaiming_uniform_(physiologicalProfileAnsatz, a=math.sqrt(5), mode='fan_in', nonlinearity='leaky_relu')
+        self.physiologicalProfileAnsatz = nn.init.normal_(physiologicalProfileAnsatz, mean=0, std=0.25)
 
         # Assert the validity of the input parameters.
         assert 0 < self.numOperatorLayers, "The number of operator layers must be greater than 0."

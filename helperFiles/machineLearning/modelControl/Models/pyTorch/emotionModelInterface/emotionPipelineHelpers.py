@@ -49,7 +49,7 @@ class emotionPipelineHelpers:
         self.generalTimeWindow = modelConstants.timeWindows[-1]  # The default time window to use for training and testing.
 
         # Initialize helper classes.
-        self.organizeLossInfo = organizeTrainingLosses(accelerator, self.model, allEmotionClasses, self.activityLabelInd, self.generalTimeWindow)
+        self.organizeLossInfo = organizeTrainingLosses(accelerator, allEmotionClasses, self.activityLabelInd)
         self.modelVisualization = modelVisualizations(accelerator, self.generalTimeWindow, modelSubfolder="trainingFigures/")
         self.modelParameters = modelParameters(userInputParams=userInputParams, accelerator=accelerator)
         self.optimizerMethods = optimizerMethods(userInputParams)

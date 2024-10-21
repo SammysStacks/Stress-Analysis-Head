@@ -9,9 +9,8 @@ from .lossCalculations import lossCalculations
 
 class organizeTrainingLosses(lossCalculations):
 
-    def __init__(self, accelerator, model, allEmotionClasses, activityLabelInd, generalTimeWindow):
-        super(organizeTrainingLosses, self).__init__(accelerator, model, allEmotionClasses, activityLabelInd)
-        self.generalTimeWindow = generalTimeWindow
+    def __init__(self, accelerator, allEmotionClasses, activityLabelInd):
+        super(organizeTrainingLosses, self).__init__(accelerator, allEmotionClasses, activityLabelInd)
 
     # ---------------------------------------------------------------------- #
     # -------------------------- Loss Calculations ------------------------- #     
@@ -31,15 +30,16 @@ class organizeTrainingLosses(lossCalculations):
         # Stop gradient tracking.
         with torch.no_grad():
             model, allSignalData, allSignalIdentifiers, allMetadata = (tensor.to(self.accelerator.device) for tensor in (model, allSignalData, allSignalIdentifiers, allMetadata))
+            physiologicalTimes = model.sharedSignalEncoderModel.pseudoEncodedTimes
 
             t1 = time.time()
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
-            missingDataMask, reconstructedSignalData, finalManifoldProjectionLoss, fourierData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = model.fullPass(submodel, allSignalData, allSignalIdentifiers, allMetadata, device=self.accelerator.device, trainingFlag=False)
+            missingDataMask, reconstructedSignalData, generalEncodingLoss, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = model.fullPass(submodel, allSignalData, allSignalIdentifiers, allMetadata, device=self.accelerator.device, trainingFlag=False)
             t2 = time.time(); self.accelerator.print("Full Pass", t2 - t1)
 
             # Calculate the signal encoding loss.
-            signalReconstructedTrainingLoss, signalSpecificTrainingLoss = self.calculateSignalEncodingLoss(reconstructedSignalData, finalManifoldProjectionLoss, fourierData, missingDataMask, allTrainingMasks, reconstructionIndex)
-            signalReconstructedTestingLoss, signalSpecificTestingLoss = self.calculateSignalEncodingLoss(reconstructedSignalData, finalManifoldProjectionLoss, fourierData, missingDataMask, allTestingMasks, reconstructionIndex)
+            signalReconstructedTrainingLoss, signalSpecificTrainingLoss = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, generalEncodingLoss, physiologicalTimes, missingDataMask, allTrainingMasks, reconstructionIndex)
+            signalReconstructedTestingLoss, signalSpecificTestingLoss = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, generalEncodingLoss, physiologicalTimes, missingDataMask, allTestingMasks, reconstructionIndex)
 
             # Store the signal encoder loss information.
             self.storeLossInformation(signalReconstructedTrainingLoss, signalReconstructedTestingLoss, model.sharedSignalEncoderModel.trainingLosses_signalReconstruction, model.sharedSignalEncoderModel.testingLosses_signalReconstruction)

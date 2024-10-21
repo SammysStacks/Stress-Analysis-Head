@@ -210,6 +210,8 @@ class featureOrganization(humanMachineInterface):
     def averageFeatures_static(self, rawFeatureTimes, rawFeatures, averageWindow, startTimeInd=0):
         # rawFeatures dim: numTimePoints, numBiomarkerFeatures
         # rawFeatureTimes dim: numTimePoints
+        minStartInd = bisect_left(rawFeatureTimes, rawFeatureTimes[0] + averageWindow)
+        startTimeInd = max(startTimeInd, minStartInd)
 
         compiledFeatures = []
         # Average the Feature Together at Each Point
