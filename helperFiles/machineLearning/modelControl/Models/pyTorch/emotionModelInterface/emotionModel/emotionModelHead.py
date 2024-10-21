@@ -199,7 +199,7 @@ class emotionModelHead(nn.Module):
             if layerInd % self.goldenRatio == 0: metaLearningData = validFourierMask * self.specificSignalEncoderModel.learningInterface(layerInd=layerInd//self.goldenRatio, signalData=metaLearningData, firstComponentFlag=firstComponentFlag); firstComponentFlag = not firstComponentFlag  # Reversible signal-specific layers.
             metaLearningData = validFourierMask * self.sharedSignalEncoderModel.learningInterface(layerInd=layerInd, signalData=metaLearningData, firstComponentFlag=not firstComponentFlag); firstComponentFlag = not firstComponentFlag  # Reversible meta-learning layers.
         # metaLearningData: batchSize, numSignals, fourierDimension
-        metaLearningData = validFourierMask * self.specificSignalEncoderModel.learningInterface(layerInd=((layerInd + self.goldenRatio)//self.goldenRatio), signalData=metaLearningData, firstComponentFlag=firstComponentFlag)  # Reversible signal-specific layers.
+        metaLearningData = validFourierMask * self.specificSignalEncoderModel.learningInterface(layerInd=None, signalData=metaLearningData, firstComponentFlag=firstComponentFlag)  # Reversible signal-specific layers.
 
         # Reconstruct the signal data from the Fourier data.
         fourierMagnitudeData, fourierPhaseData = metaLearningData[:, :numSignals], metaLearningData[:, numSignals:]
