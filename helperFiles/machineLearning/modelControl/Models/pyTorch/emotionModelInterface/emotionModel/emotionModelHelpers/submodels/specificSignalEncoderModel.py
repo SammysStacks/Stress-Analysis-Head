@@ -30,7 +30,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
         # Initialize the blank signal profile.
         self.physiologicalProfileAnsatz = nn.Parameter(torch.randn(numExperiments, encodedDimension, dtype=torch.float64))
-        self.physiologicalProfileAnsatz = nn.init.normal_(self.physiologicalProfileAnsatz, mean=0, std=0.25)
+        self.physiologicalProfileAnsatz = nn.init.normal_(self.physiologicalProfileAnsatz, mean=0, std=0.2)
 
         # Assert the validity of the input parameters.
         assert self.numModelLayers % self.goldenRatio == 0, "The number of model layers must be divisible by the golden ratio."
@@ -60,7 +60,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         if reversibleInterface.forwardDirection:
             # Apply the neural operator layer with activation.
             signalData = self.neuralLayers[layerInd](signalData)
-            signalData = self.activationFunction(signalData, layerInd % 2 == 0)
+            signalData = self.activationFunction(signalData, layerInd % 2 == 1)
 
             # Apply the post-processing layer.
             signalData = self.processingLayers[layerInd](signalData)
@@ -73,7 +73,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
             signalData = self.processingLayers[pseudoLayerInd](signalData)
 
             # Apply the neural operator layer with activation.
-            signalData = self.activationFunction(signalData, pseudoLayerInd % 2 == 0)
+            signalData = self.activationFunction(signalData, pseudoLayerInd % 2 == 1)
             signalData = self.neuralLayers[pseudoLayerInd](signalData)
 
         return signalData
