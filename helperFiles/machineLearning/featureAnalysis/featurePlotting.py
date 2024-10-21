@@ -234,10 +234,10 @@ class featurePlotting(globalPlottingProtocols):
             for colorInd, windowSize in enumerate(averageIntervalList):
 
                 # Average the Feature Together at Each Point
-                features = readData.averageFeatures_static(timepoints, allFeatures, windowSize, startTimeInd = 0)
+                featureTimes, features = readData.averageFeatures_static(timepoints, allFeatures, windowSize, startTimeInd = 0)
 
                 # Plot the features and track the legend
-                legendAxes.append(ax.plot(timepoints, features, 'o', c=self.colorList[colorInd], markersize=4)[0])
+                legendAxes.append(ax.plot(featureTimes, features, 'o', c=self.colorList[colorInd], markersize=4)[0])
                 legendLabels.append(str(windowSize + preAveragingSeconds) + " " + timeUnit + " Feature Average")
 
                 # Keep track of all feature's bounds

@@ -209,6 +209,7 @@ class compileModelDataHelpers:
             for (biomarkerData, biomarkerTimes) in zip(batchData, batchTimes):
                 biomarkerData = torch.tensor(biomarkerData, dtype=torch.float32).T  # Dim: numBiomarkerFeatures, batchSpecificFeatureLength
                 biomarkerTimes = torch.tensor(biomarkerTimes, dtype=torch.float32)  # Dim: batchSpecificFeatureLength
+                print(biomarkerTimes.size(), biomarkerData.size())
 
                 # Remove data outside the time window.
                 biomarkerTimes = surveyAnswerTime - biomarkerTimes

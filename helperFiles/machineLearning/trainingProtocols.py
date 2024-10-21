@@ -43,7 +43,7 @@ class trainingProtocols(extractData):
         # Hold time series analysis of features.
         allRawFeatureIntervalTimes, allRawFeatureIntervals, allCompiledFeatureIntervalTimes, allCompiledFeatureIntervals = [], [], [], []
         # Hold features extraction information.
-        allRawFeatureHolders, allRawFeatureTimesHolders, allCompiledFeatureHolders = [], [], []
+        allRawFeatureHolders, allRawFeatureTimesHolders, allCompiledFeatureTimesHolders, allCompiledFeatureHolders = [], [], [], []
         # Hold survey information.
         subjectInformationQuestions, surveyAnswersList, surveyAnswerTimes, surveyQuestions = [], [], [], []
         # Hold experimental information.
@@ -140,11 +140,12 @@ class trainingProtocols(extractData):
             # ----------------- Extract Compiled Features ----------------- #
 
             # Average the features across a sliding window at each timePoint
-            compiledFeatureHolder = self.readData.compileStaticFeatures(rawFeatureTimesHolder, rawFeatureHolder, featureAverageWindows)
+            compiledFeatureTimesHolder, compiledFeatureHolder = self.readData.compileStaticFeatures(rawFeatureTimesHolder, rawFeatureHolder, featureAverageWindows)
             # compiledFeatureHolder dim: numBiomarkers, numTimePoints, numBiomarkerFeatures
 
             # Assert the compiled features are the same length as the raw features
             assert len(compiledFeatureHolder[0][0]) == len(rawFeatureHolder[0][0]), "Compiled features are not the same length as the raw features"
+            assert len(compiledFeatureTimesHolder) == len(compiledFeatureHolder), "Compiled features are not the same length as the times."
             assert len(compiledFeatureHolder) == len(rawFeatureHolder), "Compiled features are not the same length as the raw features"
 
             # Finished analyzing the data
@@ -160,7 +161,7 @@ class trainingProtocols(extractData):
 
                 # Calculate the feature intervals
                 newRawFeatureIntervalTimes, newRawFeatureIntervals = self.organizeRawFeatureIntervals(startIntervalTime, startSurveyTime, rawFeatureTimesHolder, rawFeatureHolder)
-                newCompiledFeatureIntervalTimes, newCompiledFeatureIntervals = self.organizeRawFeatureIntervals(startIntervalTime, startSurveyTime, rawFeatureTimesHolder, compiledFeatureHolder)
+                newCompiledFeatureIntervalTimes, newCompiledFeatureIntervals = self.organizeRawFeatureIntervals(startIntervalTime, startSurveyTime, compiledFeatureTimesHolder, compiledFeatureHolder)
                 # newCompiledFeatureIntervals dim: numBiomarkers, numTimePoints, numBiomarkerFeatures
                 # newRawFeatureIntervals dim: numBiomarkers, numTimePoints, numBiomarkerFeatures
                 # newRawFeatureIntervalTimes dim: numBiomarkers, numTimePoints
@@ -204,6 +205,7 @@ class trainingProtocols(extractData):
             # ------------------ Organize Information ------------------ #
 
             # Set up the compilation variables
+            allCompiledFeatureTimesHolders.append(compiledFeatureTimesHolder)
             allCompiledFeatureHolders.append(compiledFeatureHolder)
             allRawFeatureTimesHolders.append(rawFeatureTimesHolder)
             allRawFeatureHolders.append(rawFeatureHolder)
@@ -302,10 +304,10 @@ class trainingProtocols(extractData):
                 rawFeatureTimes = np.asarray(allRawFeatureTimesHolders[trialInd][biomarkerInd])
 
                 # Perform the feature averaging
-                compiledFeatures = self.readData.averageFeatures_static(rawFeatureTimes, rawFeatures, averageWindow, startTimeInd=0)
+                compiledFeatureTimes, compiledFeatures = self.readData.averageFeatures_static(rawFeatureTimes, rawFeatures, averageWindow, startTimeInd=0)
 
                 # Interpolate all the features within the same time-window
-                featurePolynomial = scipy.interpolate.interp1d(rawFeatureTimes, compiledFeatures, kind='linear')
+                featurePolynomial = scipy.interpolate.interp1d(compiledFeatureTimes, compiledFeatures, kind='linear')
                 finalFeatures = featurePolynomial(finalTimePoints)
 
                 # Track the heatmap

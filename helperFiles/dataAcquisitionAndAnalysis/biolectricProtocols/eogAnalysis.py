@@ -193,7 +193,7 @@ class eogProtocol(globalProtocol):
 
                 # Plot a single feature.
                 if len(self.compiledFeatures[channelIndex]) != 0:
-                    self.plottingMethods.featureDataPlots[channelIndex].set_data(self.rawFeatureTimes[channelIndex], np.asarray(self.compiledFeatures[channelIndex])[:, 24])
+                    self.plottingMethods.featureDataPlots[channelIndex].set_data(self.compiledFeatureTimes[channelIndex], np.asarray(self.compiledFeatures[channelIndex])[:, 24])
                     self.plottingMethods.featureDataPlotAxes[channelIndex].legend(["Blink Duration"], loc="upper left")
 
         # -------------------- Update Virtual Reality  ---------------------- #
@@ -332,7 +332,7 @@ class eogProtocol(globalProtocol):
             self.lastAnalyzedDataInd[channelIndex] = self.findStartFeatureWindow(self.lastAnalyzedDataInd[channelIndex], xData[-1], timeWindow=10)
 
         # Compile the new raw features into a smoothened (averaged) feature.
-        self.readData.compileContinuousFeatures(newFeatureTimes, newRawFeatures, self.rawFeatureTimes[channelIndex], self.rawFeatures[channelIndex], self.compiledFeatures[channelIndex], self.featureAverageWindow)
+        self.readData.compileContinuousFeatures(newFeatureTimes, newRawFeatures, self.rawFeatureTimes[channelIndex], self.rawFeatures[channelIndex], self.compiledFeatureTimes[channelIndex], self.compiledFeatures[channelIndex], self.featureAverageWindow)
 
     def findStartFeatureWindow(self, timePointer, currentTime, timeWindow):
         # Loop through until you find the first time in the window.

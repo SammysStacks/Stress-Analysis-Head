@@ -86,7 +86,7 @@ class accelerationProtocol(globalProtocol):
                     self.lastAnalyzedDataInd[channelIndex] += int(self.samplingFreq * self.secondsPerFeature)
 
                 # Compile the new raw features into a smoothened (averaged) feature.
-                self.readData.compileContinuousFeatures(newFeatureTimes, newRawFeatures, self.rawFeatureTimes[channelIndex], self.rawFeatures[channelIndex], self.compiledFeatures[channelIndex], self.featureAverageWindow)
+                self.readData.compileContinuousFeatures(newFeatureTimes, newRawFeatures, self.rawFeatureTimes[channelIndex], self.rawFeatures[channelIndex], self.compiledFeatureTimes[channelIndex], self.compiledFeatures[channelIndex], self.featureAverageWindow)
 
             # -------------------------------------------------------------- #
 

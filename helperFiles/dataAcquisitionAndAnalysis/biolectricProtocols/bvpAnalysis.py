@@ -268,7 +268,7 @@ class bvpProtocol(globalProtocol):
                 else:
                     self.readData.compileContinuousFeatures(
                         newFeatureTimes, newRawFeatures, self.rawFeatureTimes[channelIndex],
-                        self.rawFeatures[channelIndex], self.compiledFeatures[channelIndex],
+                        self.rawFeatures[channelIndex], self.compiledFeatureTimes[channelIndex], self.compiledFeatures[channelIndex],
                         self.featureAverageWindow
                     )
 

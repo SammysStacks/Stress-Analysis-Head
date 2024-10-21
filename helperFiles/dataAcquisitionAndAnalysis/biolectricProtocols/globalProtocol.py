@@ -32,6 +32,7 @@ class globalProtocol(abc.ABC):
         # Feature parameters.
         self.featureChannelIndices = None  # The Indices of the Channels to Analyze in biomarkerFeatureOrder
         self.featureAverageWindow = None  # The number of seconds before each feature to average the features together. Set in streamData if collecting features.
+        self.compiledFeatureTimes = None
         self.lastAnalyzedDataInd = None
         self.compiledFeatures = None
         self.rawFeatureTimes = None
@@ -62,6 +63,7 @@ class globalProtocol(abc.ABC):
 
         # Reset Feature Extraction
         self.lastAnalyzedDataInd = np.asarray([0 for _ in range(self.numChannels)])  # The index of the last point analyzed.
+        self.compiledFeatureTimes = [[] for _ in range(self.numChannels)]  # The time of each feature.
         self.compiledFeatures = [[] for _ in range(self.numChannels)]  # FINAL compiled features at the current timepoint. Could be average of last x features.
         self.rawFeatureTimes = [[] for _ in range(self.numChannels)]  # The time of each feature.
         self.rawFeatures = [[] for _ in range(self.numChannels)]  # Raw features extraction at the current timepoint.

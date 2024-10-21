@@ -113,7 +113,7 @@ class ecgProtocol(globalProtocol):
                     self.lastAnalyzedDataInd[channelIndex] += int(self.samplingFreq * self.secondsPerFeature)
 
                 # Compile the new raw features into a smoothened (averaged) feature.
-                self.readData.compileContinuousFeatures(newFeatureTimes, newRawFeatures, self.rawFeatureTimes[channelIndex], self.rawFeatures[channelIndex], self.compiledFeatures[channelIndex], self.featureAverageWindow)
+                self.readData.compileContinuousFeatures(newFeatureTimes, newRawFeatures, self.rawFeatureTimes[channelIndex], self.rawFeatures[channelIndex], self.compiledFeatureTimes[channelIndex], self.compiledFeatures[channelIndex], self.featureAverageWindow)
 
             # -------------------------------------------------------------- #   
             if self.debug:
@@ -122,8 +122,8 @@ class ecgProtocol(globalProtocol):
                             'netDirectionQRS', 'QAreaBelow', 'SAreaBelow', 'ratioDirectionQRS', 'ratioQSArea']
 
                 for i, feature in enumerate(features):
-                    plt.scatter(self.rawFeatureTimes[channelIndex], [row[i] for row in self.compiledFeatures[channelIndex]], marker='o')
-                    plt.title(f'{feature}, N={len(self.rawFeatureTimes[channelIndex])}')
+                    plt.scatter(self.compiledFeatureTimes[channelIndex], [row[i] for row in self.compiledFeatures[channelIndex]], marker='o')
+                    plt.title(f'{feature}, N={len(self.compiledFeatureTimes[channelIndex])}')
                     plt.xlabel('Time (s)')
                     plt.show()
 
@@ -145,7 +145,7 @@ class ecgProtocol(globalProtocol):
 
                 # Plot a single feature.
                 if len(self.compiledFeatures[channelIndex]) != 0:
-                    self.plottingMethods.featureDataPlots[channelIndex].set_data(self.rawFeatureTimes[channelIndex], np.asarray(self.compiledFeatures[channelIndex])[:, 0])
+                    self.plottingMethods.featureDataPlots[channelIndex].set_data(self.compiledFeatureTimes[channelIndex], np.asarray(self.compiledFeatures[channelIndex])[:, 0])
                     self.plottingMethods.featureDataPlotAxes[channelIndex].legend(["QRSWaveLength"], loc="upper left")
 
             # -------------------------------------------------------------- #   

@@ -106,10 +106,10 @@ class varyWindows:
                     rawFeatureTimes = np.asarray(allRawFeatureTimesHolders[trialInd][biomarkerInd])
 
                     # Perform the feature averaging
-                    compiledFeatures = readData.averageFeatures_static(rawFeatureTimes, rawFeatures, averageWindow, startTimeInd=0)
+                    compiledFeatureTimes, compiledFeatures = readData.averageFeatures_static(rawFeatureTimes, rawFeatures, averageWindow, startTimeInd=0)
 
                     # Interpolate all the features within the same time-window
-                    featurePolynomial = scipy.interpolate.interp1d(rawFeatureTimes, compiledFeatures, kind='linear')
+                    featurePolynomial = scipy.interpolate.interp1d(compiledFeatureTimes, compiledFeatures, kind='linear')
                     finalFeatures = featurePolynomial(finalTimePoints)
 
                     # Track the heatmap

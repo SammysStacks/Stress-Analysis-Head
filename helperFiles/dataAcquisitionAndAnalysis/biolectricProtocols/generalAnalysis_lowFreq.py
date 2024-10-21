@@ -86,7 +86,7 @@ class generalProtocol_lowFreq(globalProtocol):
                     self.lastAnalyzedDataInd[channelIndex] += int(self.samplingFreq*self.secondsPerFeature)
 
                 # Compile the new raw features into a smoothened (averaged) feature.
-                self.readData.compileContinuousFeatures(newFeatureTimes, newRawFeatures, self.rawFeatureTimes[channelIndex], self.rawFeatures[channelIndex], self.compiledFeatures[channelIndex], self.featureAverageWindow)
+                self.readData.compileContinuousFeatures(newFeatureTimes, newRawFeatures, self.rawFeatureTimes[channelIndex], self.rawFeatures[channelIndex], self.compiledFeatureTimes[channelIndex], self.compiledFeatures[channelIndex], self.featureAverageWindow)
 
             # -------------------------------------------------------------- #  
         
@@ -108,7 +108,7 @@ class generalProtocol_lowFreq(globalProtocol):
                 
                 # Plot a single feature.
                 if len(self.compiledFeatures[channelIndex]) != 0:
-                    self.plottingMethods.featureDataPlots[channelIndex].set_data(self.rawFeatureTimes[channelIndex], np.asarray(self.compiledFeatures[channelIndex])[:, 9])
+                    self.plottingMethods.featureDataPlots[channelIndex].set_data(self.compiledFeatureTimes[channelIndex], np.asarray(self.compiledFeatures[channelIndex])[:, 9])
                     self.plottingMethods.featureDataPlotAxes[channelIndex].legend(["Signal Slope"], loc="upper left")
 
             # -------------------------------------------------------------- #   

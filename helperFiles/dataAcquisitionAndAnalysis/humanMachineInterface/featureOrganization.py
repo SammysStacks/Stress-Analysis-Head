@@ -213,7 +213,7 @@ class featureOrganization(humanMachineInterface):
         minStartInd = bisect_left(rawFeatureTimes, rawFeatureTimes[0] + averageWindow)
         startTimeInd = max(startTimeInd, minStartInd)
 
-        compiledFeatures = []
+        compiledFeatures, compiledFeatureTimes = [], []
         # Average the Feature Together at Each Point
         for timePointInd in range(startTimeInd, len(rawFeatureTimes)):
             currentTimepoint = rawFeatureTimes[timePointInd]
@@ -224,12 +224,14 @@ class featureOrganization(humanMachineInterface):
 
             # Take the trimmed average
             compiledFeature = scipy.stats.trim_mean(featureInterval, proportiontocut=self.trimMeanCut, axis=0).tolist()
+            compiledFeatureTimes.append(currentTimepoint)
             compiledFeatures.append(compiledFeature)
         # compiledFeatures dim: numTimePoints, numBiomarkerFeatures
+        # compiledFeatureTimes dim: numTimePoints
 
-        return compiledFeatures
+        return compiledFeatureTimes, compiledFeatures
 
-    def compileContinuousFeatures(self, newFeatureTimes, newRawFeatures, rawFeatureTimes, rawFeatures, compiledFeatures, averageWindow):
+    def compileContinuousFeatures(self, newFeatureTimes, newRawFeatures, rawFeatureTimes, rawFeatures, compiledFeatureTimes, compiledFeatures, averageWindow):
         # newRawFeatures dim: numNewTimePoints, numBiomarkerFeatures
         # compiledFeatures dim: numTimePoints, numBiomarkerFeatures
         # rawFeatures dim: numTimePoints, numBiomarkerFeatures
@@ -247,7 +249,8 @@ class featureOrganization(humanMachineInterface):
         rawFeatures.extend(newRawFeatures)
 
         # Perform the feature averaging
-        newCompiledFeatures = self.averageFeatures_static(rawFeatureTimes, rawFeatures, averageWindow, startTimeInd=startTimeInd)
+        newCompiledFeatureTimes, newCompiledFeatures = self.averageFeatures_static(rawFeatureTimes, rawFeatures, averageWindow, startTimeInd=startTimeInd)
+        compiledFeatureTimes.extend(newCompiledFeatureTimes)
         compiledFeatures.extend(newCompiledFeatures)
 
         # Assert the integrity of the feature compilation.
@@ -262,7 +265,7 @@ class featureOrganization(humanMachineInterface):
         assert len(rawFeatureTimesHolder) == len(rawFeatureHolder), \
             f"Found {len(rawFeatureTimesHolder)} times and {len(rawFeatureHolder)} features. These must be the same length."
 
-        compiledFeatureHolders = []
+        compiledFeatureHolders, compiledFeatureTimesHolders = [], []
         # Average the features across a sliding window at each timePoint
         for biomarkerInd in range(len(rawFeatureTimesHolder)):
             rawFeatureTimes = rawFeatureTimesHolder[biomarkerInd]
@@ -274,8 +277,9 @@ class featureOrganization(humanMachineInterface):
                 f"Found {len(rawFeatureTimes)} times and {len(rawFeatures)} features. These must be the same length."
 
             # Perform the feature averaging
-            compiledFeatures = self.averageFeatures_static(rawFeatureTimes, rawFeatures, averageWindow, startTimeInd=0)
+            compiledFeatureTimes, compiledFeatures = self.averageFeatures_static(rawFeatureTimes, rawFeatures, averageWindow, startTimeInd=0)
+            compiledFeatureTimesHolders.append(compiledFeatureTimes)
             compiledFeatureHolders.append(compiledFeatures)
         # compiledFeatures dim: numBiomarkers, numTimePoints, numBiomarkerFeatures
 
-        return compiledFeatureHolders
+        return compiledFeatureTimesHolders, compiledFeatureHolders
