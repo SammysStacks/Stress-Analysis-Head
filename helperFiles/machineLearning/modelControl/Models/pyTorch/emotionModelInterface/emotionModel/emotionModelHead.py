@@ -136,7 +136,7 @@ class emotionModelHead(nn.Module):
         # Inform the user of the model changes.
         print(f"Epoch: {epochNumber}, numModelLayers: {self.numModelLayers}, Specific Layers: {len(self.specificSignalEncoderModel.neuralLayers)}, Shared Layers: {len(self.sharedSignalEncoderModel.neuralLayers)}")
         assert self.numModelLayers == numSharedLayers, f"The number of layers in the shared model ({numSharedLayers}) does not match the number of layers in the model ({self.numModelLayers})."
-        if self.numModelLayers % self.goldenRatio == 0: assert numSpecificLayers == math.log2(self.numModelLayers) + 1, f"The number of layers in the specific model ({numSpecificLayers}) does not match the number of layers in the model ({self.numModelLayers})."
+        if self.numModelLayers % self.goldenRatio == 0 and self.numModelLayers != 0: assert numSpecificLayers == math.log2(self.numModelLayers) + 1, f"The number of layers in the specific model ({numSpecificLayers}) does not match the number of layers in the model ({self.numModelLayers})."
 
     def forward(self, submodel, signalData, signalIdentifiers, metadata, device, trainingFlag=False):
         # decodeSignals: whether to decode the signals after encoding, which is used for the autoencoder loss.
@@ -199,7 +199,7 @@ class emotionModelHead(nn.Module):
             if layerInd % self.goldenRatio == 0: metaLearningData = validFourierMask * self.specificSignalEncoderModel.learningInterface(layerInd=layerInd//self.goldenRatio, signalData=metaLearningData)  # Reversible signal-specific layers.
             metaLearningData = validFourierMask * self.sharedSignalEncoderModel.learningInterface(layerInd=layerInd, signalData=metaLearningData)  # Reversible meta-learning layers.
         # metaLearningData: batchSize, numSignals, fourierDimension
-        metaLearningData = validFourierMask * self.specificSignalEncoderModel.learningInterface(layerInd=1 + (layerInd//self.goldenRatio), signalData=metaLearningData)  # Reversible signal-specific layers.
+        metaLearningData = validFourierMask * self.specificSignalEncoderModel.learningInterface(layerInd=((layerInd + self.goldenRatio)//self.goldenRatio), signalData=metaLearningData)  # Reversible signal-specific layers.
 
         # Reconstruct the signal data from the Fourier data.
         fourierMagnitudeData, fourierPhaseData = metaLearningData[:, :numSignals], metaLearningData[:, numSignals:]
