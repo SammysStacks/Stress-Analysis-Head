@@ -1,5 +1,5 @@
 from scipy.interpolate import Akima1DInterpolator
-from bisect import bisect_left
+from bisect import bisect_left, bisect_right
 import collections
 import numpy as np
 import scipy
@@ -210,7 +210,7 @@ class featureOrganization(humanMachineInterface):
     def averageFeatures_static(self, rawFeatureTimes, rawFeatures, averageWindow, startTimeInd=0):
         # rawFeatures dim: numTimePoints, numBiomarkerFeatures
         # rawFeatureTimes dim: numTimePoints
-        minStartInd = bisect_left(rawFeatureTimes, rawFeatureTimes[0] + averageWindow)
+        minStartInd = bisect_right(rawFeatureTimes, rawFeatureTimes[0] + averageWindow + 1)
         startTimeInd = max(startTimeInd, minStartInd)
 
         compiledFeatures, compiledFeatureTimes = [], []

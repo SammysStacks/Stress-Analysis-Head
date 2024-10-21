@@ -298,10 +298,6 @@ class compileModelDataHelpers:
 
                 # Calculate the largest signal jump within the time window.
                 maxSequenceGaps[signalInd] = max(maxSequenceGaps[signalInd].item(), signalData.diff().abs().max().item())
-                if signalData.diff().abs().max().item() == 2.0:
-                    plt.plot(signalData)
-                    plt.show()
-        print(maxSequenceGaps)
 
         # Generate a valid signal mask across the batch
         validSignalInds = self.minSNR < signalSNRs

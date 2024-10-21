@@ -184,6 +184,7 @@ class modelHelpers:
     def l2Normalization(model, maxNorm=2, checkOnly=False):
         # For each trainable parameter in the model with its name.
         for name, layerParams in model.named_parameters():
+            if 'physiologicalProfileAnsatz' in name: continue
             # Calculate the L2 norm. THIS IS NOT SN, except for the 1D case.
             paramNorm = torch.norm(layerParams, p='fro').item()
 

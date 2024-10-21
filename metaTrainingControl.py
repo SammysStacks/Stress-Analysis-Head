@@ -10,6 +10,9 @@ os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Suppress TensorFlow logging (1 = INFO, 2 = WARNING and ERROR, 3 = ERROR only)
 os.environ["TORCH_COMPILE_DEBUG"] = "1"
 
+import torch._dynamo.config
+torch._dynamo.config.cache_size_limit = 32  # Increase cache size
+
 # General
 import accelerate
 import argparse
@@ -107,6 +110,8 @@ if __name__ == "__main__":
 
         # Get the saving information.
         saveFullModel, plotSteps = modelParameters.getSavingInformation(epoch, numEpoch_toSaveFull, numEpoch_toPlot)
+        saveFullModel = False
+        plotSteps = False
 
         # Train the model for a single epoch.
         trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels)

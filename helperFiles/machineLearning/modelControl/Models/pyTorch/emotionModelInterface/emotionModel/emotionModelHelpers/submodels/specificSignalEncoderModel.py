@@ -22,10 +22,8 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         self.operatorType = operatorType  # The operator type for the neural operator.
 
         # The neural layers for the signal encoder.
-        self.initialProcessingLayers = nn.ModuleList()
-        self.finalProcessingLayers = nn.ModuleList()
-        self.initialNeuralLayers = nn.ModuleList()
-        self.finalNeuralLayers = nn.ModuleList()
+        self.initialProcessingLayers, self.initialNeuralLayers = nn.ModuleList(), nn.ModuleList()
+        self.finalProcessingLayers, self.finalNeuralLayers = nn.ModuleList(), nn.ModuleList()
 
         for layerInd in range(self.numOperatorLayers):
             # Create the initial layers.

@@ -1,4 +1,5 @@
 # Import files for machine learning
+
 from helperFiles.machineLearning.modelControl.Models.pyTorch.modelMigration import modelMigration
 from .emotionModel.emotionModelHead import emotionModelHead
 from .emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
@@ -44,6 +45,7 @@ class emotionPipelineHelpers:
             self.model = emotionModelHead(submodel, self.metadata, userInputParams, emotionNames, activityNames, featureNames, numSubjects, datasetName, numExperiments)
         # Assert that the model has been initialized.
         assert hasattr(self, 'model'), f"Unknown Model Type Requested: {modelName}"
+        # self.model = torch.compile(self.model, backend='eager')
 
         # Extract relevant properties from the model.
         self.generalTimeWindow = modelConstants.timeWindows[-1]  # The default time window to use for training and testing.

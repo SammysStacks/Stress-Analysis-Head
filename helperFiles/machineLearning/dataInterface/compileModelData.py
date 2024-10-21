@@ -263,7 +263,7 @@ class compileModelData(compileModelDataHelpers):
             # ---------------------- Data Adjustments ---------------------- #
 
             # Remove any unused activity labels/names.
-            goodActivityMask = (currentTestingMask[:, activityLabelInd]) | (currentTrainingMask[:, activityLabelInd])
+            goodActivityMask = ((currentTestingMask[:, activityLabelInd]) | (currentTrainingMask[:, activityLabelInd])) & ~torch.isnan(allFeatureLabels[:, activityLabelInd])
             activityNames, allFeatureLabels[:, activityLabelInd][goodActivityMask] \
                 = self.organizeActivityLabels(activityNames, allFeatureLabels[:, activityLabelInd][goodActivityMask])  # Expects inputs/outputs from 0 to n-1
             allFeatureLabels[~goodActivityMask] = self.missingLabelValue  # Remove any unused activity indices (as the good indices were rehashed)
