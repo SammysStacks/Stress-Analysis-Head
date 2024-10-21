@@ -121,11 +121,8 @@ class emotionModelHead(nn.Module):
     # ------------------------- Full Forward Calls ------------------------- #
 
     def addNewLayer(self):
-        # Get the epoch number for the model.
-        epochNumber = len(self.sharedSignalEncoderModel.trainingLosses_signalReconstruction)
-
         # Adjust the model architecture.
-        if epochNumber % self.goldenRatio == 1: self.specificSignalEncoderModel.addLayer()
+        if (self.numModelLayers - 1) % self.goldenRatio == 0: self.specificSignalEncoderModel.addLayer()
         self.sharedSignalEncoderModel.addLayer()
         self.numModelLayers += 1
 
@@ -134,7 +131,7 @@ class emotionModelHead(nn.Module):
         numSharedLayers = len(self.sharedSignalEncoderModel.neuralLayers)
 
         # Inform the user of the model changes.
-        print(f"Epoch: {epochNumber}, numModelLayers: {self.numModelLayers}, Specific Layers: {len(self.specificSignalEncoderModel.neuralLayers)}, Shared Layers: {len(self.sharedSignalEncoderModel.neuralLayers)}")
+        print(f"numModelLayers: {self.numModelLayers}, Specific Layers: {len(self.specificSignalEncoderModel.neuralLayers)}, Shared Layers: {len(self.sharedSignalEncoderModel.neuralLayers)}")
         assert self.numModelLayers == numSharedLayers, f"The number of layers in the shared model ({numSharedLayers}) does not match the number of layers in the model ({self.numModelLayers})."
         if self.numModelLayers % self.goldenRatio == 0 and self.numModelLayers != 0: assert numSpecificLayers == math.log2(self.numModelLayers) + 1, f"The number of layers in the specific model ({numSpecificLayers}) does not match the number of layers in the model ({self.numModelLayers})."
 
