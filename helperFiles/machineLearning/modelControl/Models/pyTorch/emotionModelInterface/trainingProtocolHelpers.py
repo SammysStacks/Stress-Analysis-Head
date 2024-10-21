@@ -33,7 +33,7 @@ class trainingProtocolHelpers:
 
             # Check if we should add a new layer.
             # if numEpochs != 0 and numEpochs % 10 != 0: return None
-            # if modelLosses[-1] < 0.01: return None
+            if modelLosses[-1] < 0.01: return None
 
         # Add a new layer to the model.
         self.addModelLayer(allMetaModels, allModels)
