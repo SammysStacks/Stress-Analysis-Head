@@ -38,7 +38,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def neuralWeightFC(numSignals, sequenceLength):
-        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=13, numLayers=4, activationMethod=emotionModelWeights.getActivationType())
+        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=13, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
 
     def neuralWeightFCC(self, inChannel=1, outChannel=2, finalFrequencyDim=46):
         # Initialize the weights with a normal distribution.
@@ -48,7 +48,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def reversibleNeuralWeightCNN(inChannel=1):
-        return reversibleConvolution(numChannels=inChannel, kernelSize=13, activationMethod=emotionModelWeights.getActivationType(), numLayers=4)
+        return reversibleConvolution(numChannels=inChannel, kernelSize=13, activationMethod=emotionModelWeights.getActivationType(), numLayers=1)
 
     @staticmethod
     def neuralBiasParameters(numChannels=2):
@@ -58,11 +58,11 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def postProcessingLayerCNN(numSignals=1):
-        return reversibleConvolution(numChannels=numSignals, kernelSize=13, activationMethod=emotionModelWeights.getActivationType(), numLayers=4)
+        return reversibleConvolution(numChannels=numSignals, kernelSize=13, activationMethod=emotionModelWeights.getActivationType(), numLayers=1)
 
     @staticmethod
     def postProcessingLayerFC(numSignals, sequenceLength):
-        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=13, numLayers=4, activationMethod=emotionModelWeights.getActivationType())
+        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=13, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
 
     @staticmethod
     def getActivationType(): return 'nonLinearAddition'

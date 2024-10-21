@@ -10,9 +10,6 @@ os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Suppress TensorFlow logging (1 = INFO, 2 = WARNING and ERROR, 3 = ERROR only)
 os.environ["TORCH_COMPILE_DEBUG"] = "1"
 
-import torch._dynamo.config
-torch._dynamo.config.cache_size_limit = 32  # Increase cache size
-
 # General
 import accelerate
 import argparse
@@ -47,7 +44,7 @@ if __name__ == "__main__":
     testSplitRatio = 0.2  # The percentage of testing points.
 
     # Training flags.
-    storeLoss = False  # If you want to record any loss values.
+    storeLoss = True  # If you want to record any loss values.
 
     # ----------------------- Parse Model Parameters ----------------------- #
 
@@ -65,8 +62,6 @@ if __name__ == "__main__":
     parser.add_argument('--waveletType', type=str, default='bior3.7', help='The wavelet type for the wavelet transform: bior3.7, db3, dmey, etc')
 
     # Add arguments for the signal encoder prediction
-    parser.add_argument('--numSpecificEncodingLayers', type=int, default=4, help='The number of layers in the specific signal encoding neural operator.')
-    parser.add_argument('--numMetaEncodingLayers', type=int, default=16, help='The number of layers in the shared signal encoding operator.')
     parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
 
     # Add arguments for the emotion prediction
@@ -123,6 +118,9 @@ if __name__ == "__main__":
         # Save the model sometimes (only on the main device).
         if saveFullModel and accelerator.is_local_main_process:
             trainingProtocols.saveModelState(epoch, allMetaModels, allModels, submodel, modelName, allDatasetNames, trainingDate)
+
+        # Adjust the model architecture if needed.
+        trainingProtocols.adjustModelArchitecture(allMetaModels, allModels)
 
         # Finalize the epoch parameters.
         accelerator.wait_for_everyone()  # Wait before continuing.

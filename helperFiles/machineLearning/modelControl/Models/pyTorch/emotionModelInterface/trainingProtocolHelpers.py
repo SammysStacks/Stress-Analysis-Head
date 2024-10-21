@@ -13,13 +13,44 @@ class trainingProtocolHelpers:
     def __init__(self, submodel, accelerator, sharedModelWeights):
         # General parameters.
         self.submodelsSaving = modelParameters.getSubmodelsSaving(submodel)  # The submodels to save.
-        self.sharedModelWeights = sharedModelWeights
+        self.sharedModelWeights = sharedModelWeights  # The shared model weights.
+        self.minEpochs_modelAdjustment = 1  # The minimum number of epochs before adjusting the model architecture.
         self.accelerator = accelerator
         self.unifiedLayerData = None
 
         # Helper classes.
         self.modelMigration = modelMigration(accelerator)
         self.modelHelpers = modelHelpers()
+
+    def adjustModelArchitecture(self, allMetaModels, allModels):
+        # For each meta-training model.
+        for modelInd in range(len(allMetaModels) + len(allModels)):
+            modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]
+
+            # Get the model losses.
+            modelLosses = modelPipeline.model.sharedSignalEncoderModel.trainingLosses_signalReconstruction
+            numEpochs = len(modelLosses)
+
+            # Check if we should add a new layer.
+            # if numEpochs != 0 and numEpochs % 10 != 0: return None
+            # if modelLosses[-1] < 0.01: return None
+
+        # Add a new layer to the model.
+        self.addModelLayer(allMetaModels, allModels)
+
+    def addModelLayer(self, allMetaModels, allModels):
+        # For each meta-training model.
+        for modelInd in range(len(allMetaModels) + len(allModels)):
+            modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
+
+            # Train the updated model.
+            modelPipeline.model.addNewLayer()
+
+            # Store the new model weights.
+            self.unifiedLayerData = self.modelMigration.copyModelWeights(modelPipeline, self.sharedModelWeights)
+
+        # Unify all the model weights.
+        self.unifyAllModelWeights(allMetaModels, allModels)
 
     def trainEpoch(self, submodel, allMetadataLoaders, allMetaModels, allModels):
         # For each meta-training model.

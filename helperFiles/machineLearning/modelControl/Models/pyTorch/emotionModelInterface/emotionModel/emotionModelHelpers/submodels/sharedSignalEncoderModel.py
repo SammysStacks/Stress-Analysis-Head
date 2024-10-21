@@ -13,15 +13,17 @@ from ..optimizerMethods import activationFunctions
 
 class sharedSignalEncoderModel(neuralOperatorInterface):
 
-    def __init__(self, operatorType, encodedDimension, fourierDimension, numOperatorLayers, activationMethod, learningProtocol, neuralOperatorParameters):
+    def __init__(self, operatorType, encodedDimension, fourierDimension, numModelLayers, goldenRatio, activationMethod, learningProtocol, neuralOperatorParameters):
         super(sharedSignalEncoderModel, self).__init__(sequenceLength=fourierDimension, numInputSignals=1, numOutputSignals=1, learningProtocol=learningProtocol, addBiasTerm=False)
         # General model parameters.
+        self.neuralOperatorParameters = neuralOperatorParameters  # The parameters for the neural operator.
         self.encodedTimeWindow = modelConstants.timeWindows[-1]  # The time window for the encoded signal.
-        self.numOperatorLayers = numOperatorLayers  # The number of operator layers to use.
         self.learningProtocol = learningProtocol  # The learning protocol for the model.
         self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
         self.fourierDimension = fourierDimension  # The dimension of the fourier signal.
+        self.numModelLayers = numModelLayers  # The number of model layers to use.
         self.operatorType = operatorType  # The operator type for the neural operator.
+        self.goldenRatio = goldenRatio  # The golden ratio for the model.
 
         # Initialize the pseudo-encoded times for the fourier data.
         pseudoEncodedTimes = torch.arange(0, self.encodedTimeWindow, step=self.encodedTimeWindow/self.encodedDimension)
@@ -29,15 +31,8 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
 
         # The neural layers for the signal encoder.
         self.activationFunction = activationFunctions.getActivationMethod(activationMethod=activationMethod)
-        self.processingLayers = nn.ModuleList()
-        self.neuralLayers = nn.ModuleList()
-
-        # Create the operator layers.
-        for layerInd in range(self.numOperatorLayers):
-            self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=neuralOperatorParameters))
-            if self.learningProtocol == 'rCNN': self.processingLayers.append(self.postProcessingLayerCNN(numSignals=1))
-            elif self.learningProtocol == 'rFC': self.processingLayers.append(self.postProcessingLayerFC(numSignals=1, sequenceLength=fourierDimension))
-            else: raise "The learning protocol is not yet implemented."
+        self.processingLayers, self.neuralLayers = nn.ModuleList(), nn.ModuleList()
+        for layerInd in range(self.numModelLayers): self.addLayer()
 
         # Initialize loss holders.
         self.trainingLosses_signalReconstruction = None
@@ -47,6 +42,16 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
 
         # Reset the model.
         self.resetModel()
+
+    def forward(self):
+        raise "You cannot call the dataset-specific signal encoder module."
+
+    def addLayer(self):
+        # Create the layers.
+        self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters))
+        if self.learningProtocol == 'rCNN': self.processingLayers.append(self.postProcessingLayerCNN(numSignals=1))
+        elif self.learningProtocol == 'rFC': self.processingLayers.append(self.postProcessingLayerFC(numSignals=1, sequenceLength=self.fourierDimension))
+        else: raise "The learning protocol is not yet implemented."
 
     def resetModel(self):
         # Signal encoder reconstructed loss holders.
@@ -70,27 +75,30 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
 
         return initialData
 
-    def sharedLearning(self, signalData):
+    def learningInterface(self, layerInd, signalData):
         # Reshape the signal data.
         batchSize, numSignals, signalLength = signalData.shape
         signalData = signalData.view(batchSize*numSignals, 1, signalLength)
 
-        for layerInd in range(self.numOperatorLayers):
-            if reversibleInterface.forwardDirection:
-                # Apply the neural operator layer with activation.
-                signalData = self.neuralLayers[layerInd](signalData)
-                signalData = self.activationFunction(signalData, layerInd % 2 == 0)
+        # For the forward/harder direction.
+        if reversibleInterface.forwardDirection:
+            # Apply the neural operator layer with activation.
+            signalData = self.neuralLayers[layerInd](signalData)
+            signalData = self.activationFunction(signalData, layerInd % 2 == 0)
 
-                # Apply the post-processing layer.
-                signalData = self.processingLayers[layerInd](signalData)
-            else:
-                # Apply the post-processing layer.
-                pseudoLayerInd = self.numOperatorLayers - layerInd - 1
-                signalData = self.processingLayers[pseudoLayerInd](signalData)
+            # Apply the post-processing layer.
+            signalData = self.processingLayers[layerInd](signalData)
+        else:
+            # Get the reverse layer index.
+            pseudoLayerInd = len(self.neuralLayers) - layerInd - 1
+            assert 0 <= pseudoLayerInd < len(self.neuralLayers), f"The pseudo layer index is out of bounds: {pseudoLayerInd}, {len(self.neuralLayers)}, {layerInd}"
 
-                # Apply the neural operator layer with activation.
-                signalData = self.activationFunction(signalData, pseudoLayerInd % 2 == 0)
-                signalData = self.neuralLayers[pseudoLayerInd](signalData)
+            # Apply the neural operator layer with activation.
+            signalData = self.processingLayers[pseudoLayerInd](signalData)
+
+            # Apply the neural operator layer with activation.
+            signalData = self.activationFunction(signalData, pseudoLayerInd % 2 == 0)
+            signalData = self.neuralLayers[pseudoLayerInd](signalData)
 
         # Reshape the signal data.
         signalData = signalData.view(batchSize, numSignals, signalLength)
