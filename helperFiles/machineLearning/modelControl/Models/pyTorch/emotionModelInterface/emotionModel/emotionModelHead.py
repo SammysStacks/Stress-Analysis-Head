@@ -163,7 +163,7 @@ class emotionModelHead(nn.Module):
         # timepoints: [further away from survey (300) -> closest to survey (0)]
 
         # Check which points were missing in the data.
-        missingDataMask = torch.as_tensor((datapoints == 0) & (timepoints == 0), device=datapoints.device, dtype=torch.bool)
+        missingDataMask = torch.as_tensor((datapoints == 0) & (timepoints == 0), device=device, dtype=torch.bool)
         validSignalMask = ~torch.all(missingDataMask, dim=-1).unsqueeze(-1)
         numValidSignals = validSignalMask.sum(dim=1).float()
         # missingDataMask: batchSize, numSignals, maxSequenceLength
