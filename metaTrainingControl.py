@@ -44,7 +44,7 @@ if __name__ == "__main__":
     testSplitRatio = 0.2  # The percentage of testing points.
 
     # Training flags.
-    storeLoss = True  # If you want to record any loss values.
+    storeLoss = False  # If you want to record any loss values.
 
     # ----------------------- Parse Model Parameters ----------------------- #
 

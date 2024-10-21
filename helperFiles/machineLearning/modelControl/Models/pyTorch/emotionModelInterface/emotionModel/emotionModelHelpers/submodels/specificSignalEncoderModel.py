@@ -30,7 +30,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
         # Initialize the blank signal profile.
         self.physiologicalProfileAnsatz = nn.Parameter(torch.randn(numExperiments, encodedDimension, dtype=torch.float64))
-        self.physiologicalProfileAnsatz = nn.init.normal_(self.physiologicalProfileAnsatz, mean=0, std=0.1)
+        self.physiologicalProfileAnsatz = nn.init.normal_(self.physiologicalProfileAnsatz, mean=0, std=0.2)
 
         # Assert the validity of the input parameters.
         assert self.numModelLayers % self.goldenRatio == 0, "The number of model layers must be divisible by the golden ratio."

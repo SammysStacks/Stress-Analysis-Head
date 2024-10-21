@@ -121,7 +121,7 @@ class emotionModelHead(nn.Module):
 
     def addNewLayer(self):
         # Get the epoch number for the model.
-        epochNumber = len(self.specificSignalEncoderModel.trainingLosses_signalReconstruction)
+        epochNumber = len(self.sharedSignalEncoderModel.trainingLosses_signalReconstruction)
 
         # Adjust the model architecture.
         if epochNumber % self.goldenRatio == 0: self.specificSignalEncoderModel.addLayer()
