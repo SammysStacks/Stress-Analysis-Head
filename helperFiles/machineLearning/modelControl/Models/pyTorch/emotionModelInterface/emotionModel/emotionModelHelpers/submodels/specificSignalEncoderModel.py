@@ -58,10 +58,6 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         return nn.init.kaiming_uniform_(physiologicalProfileGuess, a=math.sqrt(5), mode='fan_in', nonlinearity='leaky_relu')
 
     def learningInterface(self, layerInd, signalData):
-        if layerInd is None: layerInd = len(self.neuralLayers) - 1
-        else: assert layerInd <= len(self.neuralLayers) - 2, \
-            f"The layer index is out of bounds: {layerInd}, {len(self.neuralLayers)}"
-
         # For the forward/harder direction.
         if reversibleInterface.forwardDirection:
             # Apply the neural operator layer with activation.
