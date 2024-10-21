@@ -55,12 +55,12 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         physiologicalProfileGuess = nn.Parameter(torch.randn(size=(batchSize, self.encodedDimension), dtype=torch.float64, device=batchInds.device))
         return nn.init.kaiming_uniform_(physiologicalProfileGuess, a=math.sqrt(5), mode='fan_in', nonlinearity='leaky_relu')
 
-    def learningInterface(self, layerInd, signalData):
+    def learningInterface(self, layerInd, signalData, firstComponentFlag):
         # For the forward/harder direction.
         if reversibleInterface.forwardDirection:
             # Apply the neural operator layer with activation.
             signalData = self.neuralLayers[layerInd](signalData)
-            signalData = self.activationFunction(signalData, layerInd % 2 == 1)
+            signalData = self.activationFunction(signalData, layerInd % 2 == int(firstComponentFlag))
 
             # Apply the post-processing layer.
             signalData = self.processingLayers[layerInd](signalData)
@@ -73,7 +73,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
             signalData = self.processingLayers[pseudoLayerInd](signalData)
 
             # Apply the neural operator layer with activation.
-            signalData = self.activationFunction(signalData, pseudoLayerInd % 2 == 1)
+            signalData = self.activationFunction(signalData, pseudoLayerInd % 2 == int(firstComponentFlag))
             signalData = self.neuralLayers[pseudoLayerInd](signalData)
 
         return signalData

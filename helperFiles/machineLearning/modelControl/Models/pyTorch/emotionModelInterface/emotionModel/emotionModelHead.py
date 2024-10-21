@@ -191,15 +191,15 @@ class emotionModelHead(nn.Module):
         # physiologicalFourierData: batchSize, 2*numSignals, fourierDimension
         # validFourierMask: batchSize, 2*numSignals
         metaLearningData = physiologicalFourierData
-        layerInd = 0
+        layerInd, firstComponentFlag = 0, False
 
         # For each layer in the model.
         for layerInd in range(self.numModelLayers):
             # Calculate the estimated physiological profile given each signal.
-            if layerInd % self.goldenRatio == 0: metaLearningData = validFourierMask * self.specificSignalEncoderModel.learningInterface(layerInd=layerInd//self.goldenRatio, signalData=metaLearningData)  # Reversible signal-specific layers.
-            metaLearningData = validFourierMask * self.sharedSignalEncoderModel.learningInterface(layerInd=layerInd, signalData=metaLearningData)  # Reversible meta-learning layers.
+            if layerInd % self.goldenRatio == 0: metaLearningData = validFourierMask * self.specificSignalEncoderModel.learningInterface(layerInd=layerInd//self.goldenRatio, signalData=metaLearningData, firstComponentFlag=firstComponentFlag); firstComponentFlag = not firstComponentFlag  # Reversible signal-specific layers.
+            metaLearningData = validFourierMask * self.sharedSignalEncoderModel.learningInterface(layerInd=layerInd, signalData=metaLearningData, firstComponentFlag=not firstComponentFlag); firstComponentFlag = not firstComponentFlag  # Reversible meta-learning layers.
         # metaLearningData: batchSize, numSignals, fourierDimension
-        metaLearningData = validFourierMask * self.specificSignalEncoderModel.learningInterface(layerInd=((layerInd + self.goldenRatio)//self.goldenRatio), signalData=metaLearningData)  # Reversible signal-specific layers.
+        metaLearningData = validFourierMask * self.specificSignalEncoderModel.learningInterface(layerInd=((layerInd + self.goldenRatio)//self.goldenRatio), signalData=metaLearningData, firstComponentFlag=firstComponentFlag)  # Reversible signal-specific layers.
 
         # Reconstruct the signal data from the Fourier data.
         fourierMagnitudeData, fourierPhaseData = metaLearningData[:, :numSignals], metaLearningData[:, numSignals:]
