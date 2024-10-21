@@ -1,4 +1,5 @@
 import math
+from ast import Index
 
 import torch
 from torch import nn
@@ -58,7 +59,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
     def learningInterface(self, layerInd, signalData):
         if layerInd is None: layerInd = len(self.neuralLayers) - 1
-        else: assert layerInd != len(self.neuralLayers) - 1, \
+        else: assert layerInd <= len(self.neuralLayers) - 2, \
             f"The layer index is out of bounds: {layerInd}, {len(self.neuralLayers)}"
 
         # For the forward/harder direction.

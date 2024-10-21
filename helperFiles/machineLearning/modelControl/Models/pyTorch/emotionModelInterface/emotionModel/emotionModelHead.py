@@ -191,12 +191,12 @@ class emotionModelHead(nn.Module):
         # physiologicalFourierData: batchSize, 2*numSignals, fourierDimension
         # validFourierMask: batchSize, 2*numSignals
         metaLearningData = physiologicalFourierData
-        layerInd, firstComponentFlag = 0, False
+        specificLayerCounter = 0
 
         # For each layer in the model.
         for layerInd in range(self.numModelLayers):
             # Calculate the estimated physiological profile given each signal.
-            if layerInd % self.goldenRatio == 0: metaLearningData = validFourierMask * self.specificSignalEncoderModel.learningInterface(layerInd=layerInd//self.goldenRatio, signalData=metaLearningData)  # Reversible signal-specific layers.
+            if layerInd % self.goldenRatio == 0: metaLearningData = validFourierMask * self.specificSignalEncoderModel.learningInterface(layerInd=specificLayerCounter, signalData=metaLearningData); specificLayerCounter += 1  # Reversible signal-specific layers.
             metaLearningData = validFourierMask * self.sharedSignalEncoderModel.learningInterface(layerInd=layerInd, signalData=metaLearningData)  # Reversible meta-learning layers.
         # metaLearningData: batchSize, numSignals, fourierDimension
         metaLearningData = validFourierMask * self.specificSignalEncoderModel.learningInterface(layerInd=None, signalData=metaLearningData)  # Reversible signal-specific layers.

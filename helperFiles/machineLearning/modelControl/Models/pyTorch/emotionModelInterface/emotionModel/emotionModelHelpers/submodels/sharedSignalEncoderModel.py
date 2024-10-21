@@ -31,7 +31,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
 
         # The neural layers for the signal encoder.
         self.activationFunction = activationFunctions.getActivationMethod(activationMethod=activationMethod)
-        self.processingLayers, self.neuralLayers = nn.ModuleList(), nn.ModuleList()
+        self.processingLayers, self.neuralLayers, self.addingFlags = nn.ModuleList(), nn.ModuleList(), []
         for layerInd in range(self.numModelLayers): self.addLayer()
 
         # Initialize loss holders.
@@ -48,6 +48,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
 
     def addLayer(self):
         # Create the layers.
+        self.addingFlags.append(not self.addingFlags[-1] if len(self.addingFlags) != 0 else False)
         self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters))
         if self.learningProtocol == 'rCNN': self.processingLayers.append(self.postProcessingLayerCNN(numSignals=1))
         elif self.learningProtocol == 'rFC': self.processingLayers.append(self.postProcessingLayerFC(numSignals=1, sequenceLength=self.fourierDimension))
@@ -84,7 +85,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         if reversibleInterface.forwardDirection:
             # Apply the neural operator layer with activation.
             signalData = self.neuralLayers[layerInd](signalData)
-            signalData = self.activationFunction(signalData, layerInd % 2 == 0)
+            signalData = self.activationFunction(signalData, addingFlag=self.addingFlags[layerInd])
 
             # Apply the post-processing layer.
             signalData = self.processingLayers[layerInd](signalData)
@@ -97,7 +98,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
             signalData = self.processingLayers[pseudoLayerInd](signalData)
 
             # Apply the neural operator layer with activation.
-            signalData = self.activationFunction(signalData, pseudoLayerInd % 2 == 0)
+            signalData = self.activationFunction(signalData, addingFlag=self.addingFlags[layerInd])
             signalData = self.neuralLayers[pseudoLayerInd](signalData)
 
         # Reshape the signal data.
