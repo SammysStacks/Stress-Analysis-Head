@@ -109,7 +109,7 @@ if __name__ == "__main__":
         plotSteps = False
 
         # Train the model for a single epoch.
-        # trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels)
+        trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels)
 
         # Store the initial loss information and plot.
         if storeLoss: trainingProtocols.calculateLossInformation(allMetaModels, allMetadataLoaders, allModels, allDataLoaders, submodel)
