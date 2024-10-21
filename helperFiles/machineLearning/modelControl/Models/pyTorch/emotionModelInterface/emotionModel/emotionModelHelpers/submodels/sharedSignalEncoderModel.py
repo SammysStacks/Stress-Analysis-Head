@@ -75,7 +75,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
 
         return initialData
 
-    def learningInterface(self, layerInd, signalData, firstComponentFlag):
+    def learningInterface(self, layerInd, signalData):
         # Reshape the signal data.
         batchSize, numSignals, signalLength = signalData.shape
         signalData = signalData.view(batchSize*numSignals, 1, signalLength)
@@ -84,7 +84,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         if reversibleInterface.forwardDirection:
             # Apply the neural operator layer with activation.
             signalData = self.neuralLayers[layerInd](signalData)
-            signalData = self.activationFunction(signalData, layerInd % 2 == int(firstComponentFlag))
+            signalData = self.activationFunction(signalData, layerInd % 2 == 0)
 
             # Apply the post-processing layer.
             signalData = self.processingLayers[layerInd](signalData)
@@ -97,7 +97,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
             signalData = self.processingLayers[pseudoLayerInd](signalData)
 
             # Apply the neural operator layer with activation.
-            signalData = self.activationFunction(signalData, pseudoLayerInd % 2 == int(firstComponentFlag))
+            signalData = self.activationFunction(signalData, pseudoLayerInd % 2 == 0)
             signalData = self.neuralLayers[pseudoLayerInd](signalData)
 
         # Reshape the signal data.

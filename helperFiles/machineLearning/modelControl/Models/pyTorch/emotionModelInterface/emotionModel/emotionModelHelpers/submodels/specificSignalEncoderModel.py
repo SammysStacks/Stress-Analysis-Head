@@ -25,7 +25,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         self.numSignals = numSignals  # The number of signals to encode.
 
         # The neural layers for the signal encoder.
-        self.processingLayers, self.neuralLayers = nn.ModuleList(), nn.ModuleList()
+        self.processingLayers, self.neuralLayers, self.addingFlags = nn.ModuleList(), nn.ModuleList(), []
         for layerInd in range(1 + self.numModelLayers // self.goldenRatio): self.addLayer()
 
         # Initialize the blank signal profile.
@@ -41,6 +41,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
     def addLayer(self):
         # Create the layers.
+        self.addingFlags.append(not self.addingFlags[-1] if len(self.addingFlags) != 0 else True)
         self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters))
         if self.learningProtocol == 'rCNN': self.processingLayers.append(self.postProcessingLayerCNN(numSignals=self.numSignals*self.numLiftingLayers))
         elif self.learningProtocol == 'rFC': self.processingLayers.append(self.postProcessingLayerFC(numSignals=self.numSignals*self.numLiftingLayers, sequenceLength=self.fourierDimension))
@@ -55,14 +56,16 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         physiologicalProfileGuess = nn.Parameter(torch.randn(size=(batchSize, self.encodedDimension), dtype=torch.float64, device=batchInds.device))
         return nn.init.kaiming_uniform_(physiologicalProfileGuess, a=math.sqrt(5), mode='fan_in', nonlinearity='leaky_relu')
 
-    def learningInterface(self, layerInd, signalData, firstComponentFlag):
+    def learningInterface(self, layerInd, signalData):
         if layerInd is None: layerInd = len(self.neuralLayers) - 1
+        else: assert layerInd != len(self.neuralLayers) - 1, \
+            f"The layer index is out of bounds: {layerInd}, {len(self.neuralLayers)}"
 
         # For the forward/harder direction.
         if reversibleInterface.forwardDirection:
             # Apply the neural operator layer with activation.
             signalData = self.neuralLayers[layerInd](signalData)
-            signalData = self.activationFunction(signalData, layerInd % 2 == int(firstComponentFlag))
+            signalData = self.activationFunction(signalData, addingFlag=self.addingFlags[layerInd])
 
             # Apply the post-processing layer.
             signalData = self.processingLayers[layerInd](signalData)
@@ -75,7 +78,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
             signalData = self.processingLayers[pseudoLayerInd](signalData)
 
             # Apply the neural operator layer with activation.
-            signalData = self.activationFunction(signalData, pseudoLayerInd % 2 == int(firstComponentFlag))
+            signalData = self.activationFunction(signalData, addingFlag=self.addingFlags[pseudoLayerInd])
             signalData = self.neuralLayers[pseudoLayerInd](signalData)
 
         return signalData
