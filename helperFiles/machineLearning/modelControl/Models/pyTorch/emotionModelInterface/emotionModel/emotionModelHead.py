@@ -177,6 +177,8 @@ class emotionModelHead(nn.Module):
 
         # ------------------- Learned Signal Mapping ------------------- #
 
+        print(device, physiologicalProfile.device, signalData.device)
+
         # Remap the signal data to the estimated physiological profile.
         fourierMagnitudeData, fourierPhaseData = self.sharedSignalEncoderModel.forwardFFT(physiologicalProfile)
         fourierMagnitudeData = validSignalMask * fourierMagnitudeData.unsqueeze(1).repeat(1, numSignals, 1)
