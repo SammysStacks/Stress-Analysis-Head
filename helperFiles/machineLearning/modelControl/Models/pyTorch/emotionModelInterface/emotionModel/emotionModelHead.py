@@ -122,7 +122,7 @@ class emotionModelHead(nn.Module):
 
     def addNewLayer(self):
         # Adjust the model architecture.
-        if (self.numModelLayers - 1) % self.goldenRatio == 0: self.specificSignalEncoderModel.addLayer()
+        if self.numModelLayers % self.goldenRatio == 0: self.specificSignalEncoderModel.addLayer()
         self.sharedSignalEncoderModel.addLayer()
         self.numModelLayers += 1
 
