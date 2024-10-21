@@ -133,7 +133,7 @@ class emotionModelHead(nn.Module):
         numSharedLayers = len(self.sharedSignalEncoderModel.neuralLayers)
 
         # Inform the user of the model changes.
-        print(f"Epoch: {epochNumber}, Specific Layers: {self.specificSignalEncoderModel.numOperatorLayers}, Shared Layers: {self.sharedSignalEncoderModel.numOperatorLayers}")
+        print(f"Epoch: {epochNumber}, numModelLayers: {self.numModelLayers}, Specific Layers: {len(self.specificSignalEncoderModel.neuralLayers)}, Shared Layers: {len(self.sharedSignalEncoderModel.neuralLayers)}")
         assert self.numModelLayers == numSharedLayers, f"The number of layers in the shared model ({numSharedLayers}) does not match the number of layers in the model ({self.numModelLayers})."
         if numSpecificLayers % self.goldenRatio == 1: assert self.numModelLayers == numSpecificLayers*self.goldenRatio + 1, f"The number of layers in the specific model ({numSpecificLayers}) does not match the number of layers in the model ({self.numModelLayers})."
 
