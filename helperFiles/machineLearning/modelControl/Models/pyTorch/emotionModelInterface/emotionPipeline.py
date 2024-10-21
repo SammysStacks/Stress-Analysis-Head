@@ -39,6 +39,7 @@ class emotionPipeline(emotionPipelineHelpers):
 
         # Prepare the model for training.
         model = self.getDistributedModel()
+        model.to(self.accelerator.device)
         self.setupTraining(submodel)
 
         # For each training epoch.
