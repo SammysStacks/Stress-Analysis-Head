@@ -29,8 +29,8 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         for layerInd in range(1 + self.numModelLayers // self.goldenRatio): self.addLayer()
 
         # Initialize the blank signal profile.
-        physiologicalProfileAnsatz = nn.Parameter(torch.randn(numExperiments, encodedDimension, dtype=torch.float64))
-        self.physiologicalProfileAnsatz = nn.init.normal_(physiologicalProfileAnsatz, mean=0, std=0.1)
+        self.physiologicalProfileAnsatz = nn.Parameter(torch.randn(numExperiments, encodedDimension, dtype=torch.float64))
+        self.physiologicalProfileAnsatz = nn.init.normal_(self.physiologicalProfileAnsatz, mean=0, std=0.1)
 
         # Assert the validity of the input parameters.
         assert self.numModelLayers % self.goldenRatio == 0, "The number of model layers must be divisible by the golden ratio."
@@ -52,7 +52,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         batchSize = batchInds.size(0)
 
         # Initialize the blank signal profile.
-        physiologicalProfileGuess = nn.Parameter(torch.randn(size=(batchSize, self.encodedDimension), dtype=torch.float64))
+        physiologicalProfileGuess = nn.Parameter(torch.randn(size=(batchSize, self.encodedDimension), dtype=torch.float64, device=batchInds.device))
         return nn.init.kaiming_uniform_(physiologicalProfileGuess, a=math.sqrt(5), mode='fan_in', nonlinearity='leaky_relu')
 
     def learningInterface(self, layerInd, signalData):
