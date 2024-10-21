@@ -163,7 +163,7 @@ class emotionModelHead(nn.Module):
         # timepoints: [further away from survey (300) -> closest to survey (0)]
 
         # Check which points were missing in the data.
-        missingDataMask = torch.as_tensor((datapoints == 0) & (timepoints == 0), device=datapoints.device)
+        missingDataMask = torch.as_tensor((datapoints == 0) & (timepoints == 0), device=datapoints.device, dtype=torch.bool)
         validSignalMask = ~torch.all(missingDataMask, dim=-1).unsqueeze(-1)
         numValidSignals = validSignalMask.sum(dim=1).float()
         # missingDataMask: batchSize, numSignals, maxSequenceLength
@@ -230,25 +230,24 @@ class emotionModelHead(nn.Module):
         with torch.no_grad():
             # Preallocate the output tensors.
             batchSize, numSignals, maxSequenceLength, numChannels = signalData.size()
-            reconstructedSignalData = torch.zeros((batchSize, numSignals, self.encodedDimension), device=device)
-            basicEmotionProfile = torch.zeros((batchSize, self.numBasicEmotions, self.encodedDimension), device=device)
-            emotionProfile = torch.zeros((batchSize, self.numEmotions, self.encodedDimension), device=device)
-            missingDataMask = torch.zeros((batchSize, numSignals, maxSequenceLength), device=device)
-            physiologicalProfile = torch.zeros((batchSize, self.encodedDimension), device=device)
-            activityProfile = torch.zeros((batchSize, self.encodedDimension), device=device)
+            basicEmotionProfile = torch.zeros((batchSize, self.numBasicEmotions, self.encodedDimension), device=device, dtype=torch.float64)
+            reconstructedSignalData = torch.zeros((batchSize, numSignals, self.encodedDimension), device=device, dtype=torch.float64)
+            emotionProfile = torch.zeros((batchSize, self.numEmotions, self.encodedDimension), device=device, dtype=torch.float64)
+            missingDataMask = torch.zeros((batchSize, numSignals, maxSequenceLength), device=device, dtype=torch.bool)
+            physiologicalProfile = torch.zeros((batchSize, self.encodedDimension), device=device, dtype=torch.float64)
+            activityProfile = torch.zeros((batchSize, self.encodedDimension), device=device, dtype=torch.float64)
+            generalEncodingLoss = torch.zeros(batchSize, device=device, dtype=torch.float64)
             testingBatchSize = modelParameters.getInferenceBatchSize(submodel, device)
-            generalEncodingLoss = torch.zeros(batchSize, device=device)
             startBatchInd = 0
 
             while startBatchInd + testingBatchSize < batchSize:
                 endBatchInd = startBatchInd + testingBatchSize
 
                 # Perform a full pass of the model.
-                missingDataMask[startBatchInd:endBatchInd], reconstructedSignalData[startBatchInd:endBatchInd], generalEncodingLoss[startBatchInd:endBatchInd], physiologicalProfile[startBatchInd:endBatchInd], activityProfile[
-                                                                                                                                                                                                                 startBatchInd:endBatchInd], basicEmotionProfile[
-                                                                                                                                                                                                                                             startBatchInd:endBatchInd], emotionProfile[
-                                                                                                                                                                                                                                                                         startBatchInd:endBatchInd] \
-                    = self.forward(submodel=submodel, signalData=signalData[startBatchInd:endBatchInd], signalIdentifiers=signalIdentifiers[startBatchInd:endBatchInd], metadata=metadata[startBatchInd:endBatchInd], device=device, trainingFlag=trainingFlag)
+                missingDataMask[startBatchInd:endBatchInd], reconstructedSignalData[startBatchInd:endBatchInd], generalEncodingLoss[startBatchInd:endBatchInd], physiologicalProfile[startBatchInd:endBatchInd], \
+                    activityProfile[startBatchInd:endBatchInd], basicEmotionProfile[startBatchInd:endBatchInd], emotionProfile[startBatchInd:endBatchInd] \
+                    = self.forward(submodel=submodel, signalData=signalData[startBatchInd:endBatchInd], signalIdentifiers=signalIdentifiers[startBatchInd:endBatchInd],
+                                   metadata=metadata[startBatchInd:endBatchInd], device=device, trainingFlag=trainingFlag)
 
                 # Update the batch index.
                 startBatchInd = endBatchInd
