@@ -133,7 +133,7 @@ class emotionModelHead(nn.Module):
         # Inform the user of the model changes.
         print(f"numModelLayers: {self.numModelLayers}, Specific Layers: {len(self.specificSignalEncoderModel.neuralLayers)}, Shared Layers: {len(self.sharedSignalEncoderModel.neuralLayers)}")
         assert self.numModelLayers == numSharedLayers, f"The number of layers in the shared model ({numSharedLayers}) does not match the number of layers in the model ({self.numModelLayers})."
-        if self.numModelLayers % self.goldenRatio == 0 and self.numModelLayers != 0: assert numSpecificLayers == math.log2(self.numModelLayers) + 1, f"The number of layers in the specific model ({numSpecificLayers}) does not match the number of layers in the model ({self.numModelLayers})."
+        if self.numModelLayers % self.goldenRatio == 0 and self.numModelLayers != 0: assert numSpecificLayers == 1 + self.numModelLayers // self.goldenRatio, f"The number of layers in the specific model ({numSpecificLayers}) does not match the number of layers in the model ({self.numModelLayers})."
 
     def forward(self, submodel, signalData, signalIdentifiers, metadata, device, trainingFlag=False):
         # decodeSignals: whether to decode the signals after encoding, which is used for the autoencoder loss.
