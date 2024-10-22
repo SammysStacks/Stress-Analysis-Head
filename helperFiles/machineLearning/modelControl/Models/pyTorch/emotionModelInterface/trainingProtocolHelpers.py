@@ -47,9 +47,7 @@ class trainingProtocolHelpers:
             # Train the updated model.
             modelPipeline.model.addNewLayer()
 
-            # Store the new model weights.
-            self.unifiedLayerData = self.modelMigration.copyModelWeights(modelPipeline, self.sharedModelWeights)
-
+        self.unifiedLayerData = None
         # Unify all the model weights.
         self.unifyAllModelWeights(allMetaModels, allModels)
 
