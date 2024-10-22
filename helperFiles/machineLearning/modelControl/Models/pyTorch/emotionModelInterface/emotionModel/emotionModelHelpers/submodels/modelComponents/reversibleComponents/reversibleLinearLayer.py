@@ -61,7 +61,7 @@ class reversibleLinearLayer(reversibleInterface):
         # neuralWeight: numSignals, sequenceLength, sequenceLength
 
         # Add a stability term to the diagonal. TODO: Add sparse matrix support.
-        if self.kernelSize != self.sequenceLength: neuralWeights = self.restrictedWindowMask * neuralWeights + self.stabilityTerm*0.95
+        if self.kernelSize != self.sequenceLength: neuralWeights = self.restrictedWindowMask * neuralWeights + self.stabilityTerm*0.94
         else: neuralWeights = neuralWeights * (1 - self.stabilityTerm) + self.stabilityTerm
 
         # Backward direction: invert the neural weights.
