@@ -44,8 +44,8 @@ class emotionModelHead(nn.Module):
         # Signal encoder parameters.
         self.neuralOperatorParameters = userInputParams['neuralOperatorParameters']  # The parameters for the neural operator.
         self.numLiftingLayers = 2  # The number of lifting layers to use.
-        self.numModelLayers = 32  # The number of layers to use in the signal encoder.
-        self.goldenRatio = 4  # The golden ratio for the signal encoder.
+        self.numModelLayers = 24  # The number of layers to use in the signal encoder.
+        self.goldenRatio = 6  # The golden ratio for the signal encoder.
 
         # Emotion parameters.
         self.numInterpreterHeads = userInputParams['numInterpreterHeads']  # The number of ways to interpret a set of physiological signals.
