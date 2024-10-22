@@ -109,9 +109,9 @@ class emotionPipelineHelpers:
         trainingInformation, sharedSignalEncoderModel, specificSignalEncoderModel, sharedEmotionModel, specificEmotionModel = self.getDistributedModels()
 
         if submodel == modelConstants.signalEncoderModel:
-            return max(0, len(sharedSignalEncoderModel.trainingLosses_signalReconstruction) - 1)
+            return max(0, len(specificSignalEncoderModel.trainingLosses_signalReconstruction) - 1)
         elif submodel == modelConstants.emotionModel:
-            return max(0, len(specificEmotionModel.trainingLosses_signalReconstruction) - 1)
+            return max(0, len(specificSignalEncoderModel.trainingLosses_signalReconstruction) - 1)
         else:
             raise Exception()
 

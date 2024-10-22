@@ -17,6 +17,7 @@ class trainingProtocolHelpers:
         self.minEpochs_modelAdjustment = 1  # The minimum number of epochs before adjusting the model architecture.
         self.accelerator = accelerator
         self.unifiedLayerData = None
+        self.numTrailingLosses = 8
 
         # Helper classes.
         self.modelMigration = modelMigration(accelerator)
@@ -28,11 +29,11 @@ class trainingProtocolHelpers:
             modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]
 
             # Get the model losses.
-            modelLosses = modelPipeline.model.sharedSignalEncoderModel.trainingLosses_signalReconstruction
-            numEpochs = len(modelLosses)
+            modelLosses = modelPipeline.model.specificSignalEncoderModel.trainingLosses_signalReconstruction
+            if len(modelLosses) < 2*self.numTrailingLosses: return None
 
             # Check if we should add a new layer.
-            if numEpochs != 0 and numEpochs % 10 != 0: return None
+            if sum(modelLosses[-self.numTrailingLosses:]) / sum(modelLosses[-self.numTrailingLosses*2:-self.numTrailingLosses]) < 0.9: return None
             if modelLosses[-1] < 0.01: return None
 
         # Add a new layer to the model.
@@ -82,7 +83,7 @@ class trainingProtocolHelpers:
             with torch.no_grad(): modelPipeline.organizeLossInfo.storeTrainingLosses(submodel, modelPipeline, lossDataLoader)
         t2 = time.time(); self.accelerator.print("Total loss calculation time:", t2 - t1)
 
-    def plotModelState(self, epoch, allMetaModels, allMetadataLoaders, allModels, allDataLoaders, submodel, trainingDate):
+    def plotModelState(self, allMetaModels, allMetadataLoaders, allModels, allDataLoaders, submodel, trainingDate):
         self.unifyAllModelWeights(allMetaModels, allModels)  # Unify all the model weights.
 
         t1 = time.time()
@@ -92,7 +93,7 @@ class trainingProtocolHelpers:
             modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
 
             with torch.no_grad():
-                numEpochs = modelPipeline.getTrainingEpoch(submodel) or epoch
+                numEpochs = modelPipeline.getTrainingEpoch(submodel)
                 modelPipeline.modelVisualization.plotAllTrainingEvents(submodel, modelPipeline, lossDataLoader, trainingDate, numEpochs)
         allMetaModels[0].modelVisualization.plotDatasetComparison(submodel, allMetaModels + allModels, trainingDate)
         t2 = time.time()

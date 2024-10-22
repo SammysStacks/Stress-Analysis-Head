@@ -25,7 +25,7 @@ class reversibleInterface(nn.Module):
     def checkReconstruction(self, inputData, atol=1e-8, numLayers=10):
         t1 = time.time()
         # Initialize the forward data.
-        reversibleInterface.changeDirections(True)
+        reversibleInterface.changeDirections(False)
         forwardData = inputData.clone().double()
 
         # Perform the forward passes.
@@ -33,7 +33,7 @@ class reversibleInterface(nn.Module):
             forwardData = self.forward(forwardData)
 
         # Initialize the backward data.
-        reversibleInterface.changeDirections(False)
+        reversibleInterface.changeDirections(True)
         reconstructedData = forwardData.clone()
 
         # Perform the backward passes.
@@ -56,6 +56,10 @@ class reversibleInterface(nn.Module):
             plt.show()
 
             plt.plot((inputData - reconstructedData)[0][signalInd].detach().numpy(), 'k', linewidth=2, label='Signal Error')
+            plt.legend()
+            plt.show()
+
+            plt.plot((inputData - forwardData)[0][signalInd].detach().numpy(), 'k', linewidth=2, label='Signal Change')
             plt.legend()
             plt.show()
 

@@ -34,7 +34,7 @@ class organizeTrainingLosses(lossCalculations):
 
             t1 = time.time()
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
-            missingDataMask, reconstructedSignalData, generalEncodingLoss, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = model.fullPass(submodel, allSignalData, allSignalIdentifiers, allMetadata, device=self.accelerator.device, trainingFlag=False)
+            missingDataMask, reconstructedSignalData, generalEncodingLoss, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = model.fullPass(submodel, allSignalData, allSignalIdentifiers, allMetadata, device=self.accelerator.device, trainingFlag=True)
             t2 = time.time(); self.accelerator.print("Full Pass", t2 - t1)
 
             # Calculate the signal encoding loss.
@@ -42,8 +42,8 @@ class organizeTrainingLosses(lossCalculations):
             signalReconstructedTestingLoss, signalSpecificTestingLoss = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, generalEncodingLoss, physiologicalTimes, missingDataMask, allTestingMasks, reconstructionIndex)
 
             # Store the signal encoder loss information.
-            self.storeLossInformation(signalReconstructedTrainingLoss, signalReconstructedTestingLoss, model.sharedSignalEncoderModel.trainingLosses_signalReconstruction, model.sharedSignalEncoderModel.testingLosses_signalReconstruction)
-            self.storeLossInformation(signalSpecificTrainingLoss, signalSpecificTrainingLoss, model.sharedSignalEncoderModel.trainingLosses_manifoldProjection, model.sharedSignalEncoderModel.testingLosses_manifoldProjection)
+            self.storeLossInformation(signalReconstructedTrainingLoss, signalReconstructedTestingLoss, model.specificSignalEncoderModel.trainingLosses_signalReconstruction, model.specificSignalEncoderModel.testingLosses_signalReconstruction)
+            self.storeLossInformation(signalSpecificTrainingLoss, signalSpecificTrainingLoss, model.specificSignalEncoderModel.trainingLosses_manifoldProjection, model.specificSignalEncoderModel.testingLosses_manifoldProjection)
 
             # if submodel == modelConstants.emotionModel:
                 # Segment the data into its time window.

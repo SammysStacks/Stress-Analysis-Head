@@ -43,15 +43,6 @@ class trainingPlots(globalPlottingProtocols):
             '#918ae1',  # Purple shades
         ]
 
-        self.lossColors = [
-            '#3498db',  # Blue shades
-            '#fc827f',  # Red shades
-            '#9ED98F',  # Green shades
-            '#918ae1',  # Purple shades
-            '#eca163',  # Orange shades
-            '#f0d0ff',  # Pink shades (ADDED TO HAVE ENOUGH COLORS, CHANGE HEX)
-        ]
-
     # ---------------------------------------------------------------------- #
     # ------------------------- Feature Label Plots ------------------------ #
 
@@ -139,9 +130,9 @@ class trainingPlots(globalPlottingProtocols):
                 print(metadatasetName, metaModel.numEncodingsPath_timeAnalysis[timeWindowInd])
 
                 # Plot the training loss.
-                plt.plot(metaModel.trainingLosses_timeLayerAnalysis[timeWindowInd], label=f'{metadatasetName} Training Loss', color=self.lossColors[metaModelInd], linewidth=2, alpha=1)
-                plt.plot(metaModel.testingLosses_timeLayerAnalysis[timeWindowInd], label=f'{metadatasetName} Testing Loss', color=self.lossColors[metaModelInd], linewidth=2, alpha=0.5)
-                plt.plot(metaModel.numEncodingsPath_timeAnalysis[timeWindowInd], label=f'{metadatasetName} Num Encodings', color=self.lossColors[metaModelInd], linewidth=2, alpha=0.5, linestyle='--')
+                plt.plot(metaModel.trainingLosses_timeLayerAnalysis[timeWindowInd], label=f'{metadatasetName} Training Loss', color=self.darkColors[metaModelInd], linewidth=2, alpha=1)
+                plt.plot(metaModel.testingLosses_timeLayerAnalysis[timeWindowInd], label=f'{metadatasetName} Testing Loss', color=self.darkColors[metaModelInd], linewidth=2, alpha=0.5)
+                plt.plot(metaModel.numEncodingsPath_timeAnalysis[timeWindowInd], label=f'{metadatasetName} Num Encodings', color=self.darkColors[metaModelInd], linewidth=2, alpha=0.5, linestyle='--')
 
             # Label the plot.
             plt.legend(loc="upper right")
@@ -161,9 +152,9 @@ class trainingPlots(globalPlottingProtocols):
             metadatasetName = allMetaModelPipelines[metaModelInd].datasetName
             # Plot the training loss.
             for timeWindowInd, timeWindow in enumerate(timeWindows):
-                plt.plot(metaModel.trainingLosses_timeLayerAnalysis[timeWindowInd], label=f'{metadatasetName} Training Loss, {timeWindow}s', color=self.lossColors[metaModelInd], linewidth=2, alpha=1)
-                plt.plot(metaModel.testingLosses_timeLayerAnalysis[timeWindowInd], label=f'{metadatasetName} Testing Loss, {timeWindow}s', color=self.lossColors[metaModelInd], linewidth=2, alpha=0.5)
-                plt.plot(metaModel.numEncodingsPath_timeAnalysis[timeWindowInd], label=f'{metadatasetName} Num Encodings, {timeWindow}s', color=self.lossColors[metaModelInd], linewidth=2, alpha=0.5, linestyle='--')
+                plt.plot(metaModel.trainingLosses_timeLayerAnalysis[timeWindowInd], label=f'{metadatasetName} Training Loss, {timeWindow}s', color=self.darkColors[metaModelInd], linewidth=2, alpha=1)
+                plt.plot(metaModel.testingLosses_timeLayerAnalysis[timeWindowInd], label=f'{metadatasetName} Testing Loss, {timeWindow}s', color=self.darkColors[metaModelInd], linewidth=2, alpha=0.5)
+                plt.plot(metaModel.numEncodingsPath_timeAnalysis[timeWindowInd], label=f'{metadatasetName} Num Encodings, {timeWindow}s', color=self.darkColors[metaModelInd], linewidth=2, alpha=0.5, linestyle='--')
 
             # Label the plot.
             plt.legend(loc="upper right")
@@ -208,9 +199,9 @@ class trainingPlots(globalPlottingProtocols):
                 print(metadatasetName, metaModel.numEncodingsPath_timeAnalysis[timeWindowInd])
 
                 # Plot the training loss.
-                plt.plot(metaModel.trainingLosses_signalReconstruction[timeWindowInd], label=f'{metadatasetName} Training Loss', color=self.lossColors[metaModelInd], linewidth=2, alpha=1)
-                plt.plot(metaModel.testingLosses_signalReconstruction[timeWindowInd], label=f'{metadatasetName} Testing Loss', color=self.lossColors[metaModelInd], linewidth=2, alpha=0.5)
-                plt.plot(metaModel.numEncodingsPath_timeAnalysis[timeWindowInd], label=f'{metadatasetName} Num Encodings', color=self.lossColors[metaModelInd], linewidth=2, alpha=0.5, linestyle='--')
+                plt.plot(metaModel.trainingLosses_signalReconstruction[timeWindowInd], label=f'{metadatasetName} Training Loss', color=self.darkColors[metaModelInd], linewidth=2, alpha=1)
+                plt.plot(metaModel.testingLosses_signalReconstruction[timeWindowInd], label=f'{metadatasetName} Testing Loss', color=self.darkColors[metaModelInd], linewidth=2, alpha=0.5)
+                plt.plot(metaModel.numEncodingsPath_timeAnalysis[timeWindowInd], label=f'{metadatasetName} Num Encodings', color=self.darkColors[metaModelInd], linewidth=2, alpha=0.5, linestyle='--')
 
             # Label the plot.
             plt.legend(loc="upper right")
@@ -230,9 +221,9 @@ class trainingPlots(globalPlottingProtocols):
             metadatasetName = allMetaModelPipelines[metaModelInd].datasetName
             # Plot the training loss.
             for timeWindowInd, timeWindow in enumerate(timeWindows):
-                plt.plot(metaModel.trainingLosses_signalReconstruction[timeWindowInd], label=f'{metadatasetName} Training Loss, {timeWindow}s', color=self.lossColors[metaModelInd], linewidth=2, alpha=1)
-                plt.plot(metaModel.testingLosses_signalReconstruction[timeWindowInd], label=f'{metadatasetName} Testing Loss, {timeWindow}s', color=self.lossColors[metaModelInd], linewidth=2, alpha=0.5)
-                plt.plot(metaModel.numEncodingsPath_timeAnalysis[timeWindowInd], label=f'{metadatasetName} Num Encodings, {timeWindow}s', color=self.lossColors[metaModelInd], linewidth=2, alpha=0.5, linestyle='--')
+                plt.plot(metaModel.trainingLosses_signalReconstruction[timeWindowInd], label=f'{metadatasetName} Training Loss, {timeWindow}s', color=self.darkColors[metaModelInd], linewidth=2, alpha=1)
+                plt.plot(metaModel.testingLosses_signalReconstruction[timeWindowInd], label=f'{metadatasetName} Testing Loss, {timeWindow}s', color=self.darkColors[metaModelInd], linewidth=2, alpha=0.5)
+                plt.plot(metaModel.numEncodingsPath_timeAnalysis[timeWindowInd], label=f'{metadatasetName} Num Encodings, {timeWindow}s', color=self.darkColors[metaModelInd], linewidth=2, alpha=0.5, linestyle='--')
 
             # Label the plot.
             # no legend for now
@@ -305,9 +296,9 @@ class trainingPlots(globalPlottingProtocols):
                 print(metadatasetName, metaModel.numEncodingsPath_timeAnalysis[timeWindowInd])
 
                 # Plot the training loss.
-                plt.plot(metaModel.trainingLosses_timeMeanAnalysis[timeWindowInd], label=f'{metadatasetName} Training Loss', color=self.lossColors[metaModelInd], linewidth=2, alpha=1)
-                plt.plot(metaModel.testingLosses_timeMeanAnalysis[timeWindowInd], label=f'{metadatasetName} Testing Loss', color=self.lossColors[metaModelInd], linewidth=2, alpha=0.5)
-                plt.plot(metaModel.numEncodingsPath_timeAnalysis[timeWindowInd], label=f'{metadatasetName} Num Encodings', color=self.lossColors[metaModelInd], linewidth=2, alpha=0.5, linestyle='--')
+                plt.plot(metaModel.trainingLosses_timeMeanAnalysis[timeWindowInd], label=f'{metadatasetName} Training Loss', color=self.darkColors[metaModelInd], linewidth=2, alpha=1)
+                plt.plot(metaModel.testingLosses_timeMeanAnalysis[timeWindowInd], label=f'{metadatasetName} Testing Loss', color=self.darkColors[metaModelInd], linewidth=2, alpha=0.5)
+                plt.plot(metaModel.numEncodingsPath_timeAnalysis[timeWindowInd], label=f'{metadatasetName} Num Encodings', color=self.darkColors[metaModelInd], linewidth=2, alpha=0.5, linestyle='--')
 
             # Label the plot.
             plt.legend(loc="upper right")
@@ -327,9 +318,9 @@ class trainingPlots(globalPlottingProtocols):
             metadatasetName = allMetaModelPipelines[metaModelInd].datasetName
             # Plot the training loss.
             for timeWindowInd, timeWindow in enumerate(timeWindows):
-                plt.plot(metaModel.trainingLosses_timeMeanAnalysis[timeWindowInd], label=f'{metadatasetName} Training Loss, {timeWindow}s', color=self.lossColors[metaModelInd], linewidth=2, alpha=1)
-                plt.plot(metaModel.testingLosses_timeMeanAnalysis[timeWindowInd], label=f'{metadatasetName} Testing Loss, {timeWindow}s', color=self.lossColors[metaModelInd], linewidth=2, alpha=0.5)
-                plt.plot(metaModel.numEncodingsPath_timeAnalysis[timeWindowInd], label=f'{metadatasetName} Num Encodings, {timeWindow}s', color=self.lossColors[metaModelInd], linewidth=2, alpha=0.5, linestyle='--')
+                plt.plot(metaModel.trainingLosses_timeMeanAnalysis[timeWindowInd], label=f'{metadatasetName} Training Loss, {timeWindow}s', color=self.darkColors[metaModelInd], linewidth=2, alpha=1)
+                plt.plot(metaModel.testingLosses_timeMeanAnalysis[timeWindowInd], label=f'{metadatasetName} Testing Loss, {timeWindow}s', color=self.darkColors[metaModelInd], linewidth=2, alpha=0.5)
+                plt.plot(metaModel.numEncodingsPath_timeAnalysis[timeWindowInd], label=f'{metadatasetName} Num Encodings, {timeWindow}s', color=self.darkColors[metaModelInd], linewidth=2, alpha=0.5, linestyle='--')
 
             # Label the plot.
             plt.xlabel("Training Epoch")
@@ -373,9 +364,9 @@ class trainingPlots(globalPlottingProtocols):
                 print(metadatasetName, metaModel.numEncodingsPath_timeAnalysis[timeWindowInd])
 
                 # Plot the training loss.
-                plt.plot(metaModel.trainingLosses_timeSTDAnalysis[timeWindowInd], label=f'{metadatasetName} Training Loss', color=self.lossColors[metaModelInd], linewidth=2, alpha=1)
-                plt.plot(metaModel.testingLosses_timeSTDAnalysis[timeWindowInd], label=f'{metadatasetName} Testing Loss', color=self.lossColors[metaModelInd], linewidth=2, alpha=0.5)
-                plt.plot(metaModel.numEncodingsPath_timeAnalysis[timeWindowInd], label=f'{metadatasetName} Num Encodings', color=self.lossColors[metaModelInd], linewidth=2, alpha=0.5, linestyle='--')
+                plt.plot(metaModel.trainingLosses_timeSTDAnalysis[timeWindowInd], label=f'{metadatasetName} Training Loss', color=self.darkColors[metaModelInd], linewidth=2, alpha=1)
+                plt.plot(metaModel.testingLosses_timeSTDAnalysis[timeWindowInd], label=f'{metadatasetName} Testing Loss', color=self.darkColors[metaModelInd], linewidth=2, alpha=0.5)
+                plt.plot(metaModel.numEncodingsPath_timeAnalysis[timeWindowInd], label=f'{metadatasetName} Num Encodings', color=self.darkColors[metaModelInd], linewidth=2, alpha=0.5, linestyle='--')
 
             # Label the plot.
             plt.legend(loc="upper right")
@@ -395,9 +386,9 @@ class trainingPlots(globalPlottingProtocols):
             metadatasetName = allMetaModelPipelines[metaModelInd].datasetName
             # Plot the training loss.
             for timeWindowInd, timeWindow in enumerate(timeWindows):
-                plt.plot(metaModel.trainingLosses_timeSTDAnalysis[timeWindowInd], label=f'{metadatasetName} Training Loss, {timeWindow}s', color=self.lossColors[metaModelInd], linewidth=2, alpha=1)
-                plt.plot(metaModel.testingLosses_timeSTDAnalysis[timeWindowInd], label=f'{metadatasetName} Testing Loss, {timeWindow}s', color=self.lossColors[metaModelInd], linewidth=2, alpha=0.5)
-                plt.plot(metaModel.numEncodingsPath_timeAnalysis[timeWindowInd], label=f'{metadatasetName} Num Encodings, {timeWindow}s', color=self.lossColors[metaModelInd], linewidth=2, alpha=0.5, linestyle='--')
+                plt.plot(metaModel.trainingLosses_timeSTDAnalysis[timeWindowInd], label=f'{metadatasetName} Training Loss, {timeWindow}s', color=self.darkColors[metaModelInd], linewidth=2, alpha=1)
+                plt.plot(metaModel.testingLosses_timeSTDAnalysis[timeWindowInd], label=f'{metadatasetName} Testing Loss, {timeWindow}s', color=self.darkColors[metaModelInd], linewidth=2, alpha=0.5)
+                plt.plot(metaModel.numEncodingsPath_timeAnalysis[timeWindowInd], label=f'{metadatasetName} Num Encodings, {timeWindow}s', color=self.darkColors[metaModelInd], linewidth=2, alpha=0.5, linestyle='--')
 
             # Label the plot.
             plt.xlabel("Training Epoch")
@@ -425,8 +416,8 @@ class trainingPlots(globalPlottingProtocols):
             metadatasetName = metaModel.datasetName
 
             # Plot the training loss.
-            plt.plot(metaModel.model.autoencoderModel.trainingLosses_signalReconstruction, label=f'{metadatasetName} Training Loss', color=self.lossColors[metaModelInd], linewidth=2, alpha=1)
-            plt.plot(metaModel.model.autoencoderModel.testingLosses_signalReconstruction, label=f'{metadatasetName} Testing Loss', color=self.lossColors[metaModelInd], linewidth=2, alpha=0.5)
+            plt.plot(metaModel.model.autoencoderModel.trainingLosses_signalReconstruction, label=f'{metadatasetName} Training Loss', color=self.darkColors[metaModelInd], linewidth=2, alpha=1)
+            plt.plot(metaModel.model.autoencoderModel.testingLosses_signalReconstruction, label=f'{metadatasetName} Testing Loss', color=self.darkColors[metaModelInd], linewidth=2, alpha=0.5)
 
         # Load in the previous model weights and attributes.
         loadSubmodel, loadSubmodelDate, loadSubmodelEpochs = modelComparisonInfo

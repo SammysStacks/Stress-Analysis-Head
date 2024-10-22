@@ -58,12 +58,13 @@ class modelVisualizations(globalPlottingProtocols):
 
         # Plot the loss on the primary GPU.
         if self.accelerator.is_local_main_process:
-            sharedModels = [modelPipeline.model.sharedSignalEncoderModel for modelPipeline in allModelPipelines]
+            specificModels = [modelPipeline.model.specificSignalEncoderModel for modelPipeline in allModelPipelines]
+            datasetNames = [modelPipeline.model.datasetName for modelPipeline in allModelPipelines]
 
             # Plot reconstruction loss.
-            self.generalViz.plotTrainingLosses([sharedModel.trainingLosses_signalReconstruction for sharedModel in sharedModels],
-                                               [sharedModel.testingLosses_signalReconstruction for sharedModel in sharedModels],
-                                               lossLabels=[f"{modelPipeline.model.datasetName} Signal Encoding Reconstruction Loss" for modelPipeline in allModelPipelines],
+            self.generalViz.plotTrainingLosses([sharedModel.trainingLosses_signalReconstruction for sharedModel in specificModels],
+                                               [sharedModel.testingLosses_signalReconstruction for sharedModel in specificModels],
+                                               lossLabels=[f"{datasetName} Signal Encoding Reconstruction Loss" for datasetName in datasetNames],
                                                plotTitle="trainingLosses/Signal Encoder Convergence Losses")
 
     def plotAllTrainingEvents(self, submodel, modelPipeline, lossDataLoader, trainingDate, currentEpoch):
@@ -123,8 +124,8 @@ class modelVisualizations(globalPlottingProtocols):
             missingDataTestingMask, reconstructedSignalTestingData, finalTestingManifoldProjectionLoss, physiologicalTestingProfile, activityTestingProfile, basicEmotionTestingProfile, emotionTestingProfile = model.forward(submodel, testingSignalData, testingSignalIdentifiers, testingMetadata, device=self.accelerator.device, trainingFlag=True)
 
             # Detach the data from the GPU and tensor format.
-            reconstructedSignalTrainingData, finalTrainingManifoldProjectionLoss, physiologicalTrainingProfile, activityTrainingProfile, basicEmotionTrainingProfile, emotionTrainingProfile = reconstructedSignalTrainingData.detach().cpu().numpy(), finalTrainingManifoldProjectionLoss.detach().cpu().numpy(), physiologicalTrainingProfile.detach().cpu().numpy(), activityTrainingProfile.detach().cpu().numpy(), basicEmotionTrainingProfile.detach().cpu().numpy(), emotionTrainingProfile.detach().cpu().numpy()
-            reconstructedSignalTestingData, finalTestingManifoldProjectionLoss, physiologicalTestingProfile, activityTestingProfile, basicEmotionTestingProfile, emotionTestingProfile = reconstructedSignalTestingData.detach().cpu().numpy(), finalTestingManifoldProjectionLoss.detach().cpu().numpy(), physiologicalTestingProfile.detach().cpu().numpy(), activityTestingProfile.detach().cpu().numpy(), basicEmotionTestingProfile.detach().cpu().numpy(), emotionTestingProfile.detach().cpu().numpy()
+            missingDataTrainingMask, reconstructedSignalTrainingData, finalTrainingManifoldProjectionLoss, physiologicalTrainingProfile, activityTrainingProfile, basicEmotionTrainingProfile, emotionTrainingProfile = missingDataTrainingMask.detach().cpu().numpy(), reconstructedSignalTrainingData.detach().cpu().numpy(), finalTrainingManifoldProjectionLoss.detach().cpu().numpy(), physiologicalTrainingProfile.detach().cpu().numpy(), activityTrainingProfile.detach().cpu().numpy(), basicEmotionTrainingProfile.detach().cpu().numpy(), emotionTrainingProfile.detach().cpu().numpy()
+            missingDataTestingMask, reconstructedSignalTestingData, finalTestingManifoldProjectionLoss, physiologicalTestingProfile, activityTestingProfile, basicEmotionTestingProfile, emotionTestingProfile = missingDataTestingMask.detach().cpu().numpy(), reconstructedSignalTestingData.detach().cpu().numpy(), finalTestingManifoldProjectionLoss.detach().cpu().numpy(), physiologicalTestingProfile.detach().cpu().numpy(), activityTestingProfile.detach().cpu().numpy(), basicEmotionTestingProfile.detach().cpu().numpy(), emotionTestingProfile.detach().cpu().numpy()
             physiologicalTimes = model.sharedSignalEncoderModel.pseudoEncodedTimes.detach().cpu().numpy()
 
         # ------------------- Plot the Data on One Device ------------------ # 
@@ -132,16 +133,16 @@ class modelVisualizations(globalPlottingProtocols):
         # Plot the loss on the primary GPU.
         if self.accelerator.is_local_main_process:
 
-            # ------------------- Signal Encoding Plots -------------------- # 
+            # ------------------- Signal Encoding Plots -------------------- #
 
             if submodel == modelConstants.signalEncoderModel:
                 # Plot the encoding example.
-                self.signalEncoderViz.plotSignalEncodingMap(physiologicalTimes, physiologicalTrainingProfile, trainingSignalData, epoch=currentEpoch, plotTitle="signalEncoding/Testing Physiological Profile", numBatchPlots=1, numSignalPlots=1)
-                self.signalEncoderViz.plotSignalEncodingMap(physiologicalTimes, physiologicalTestingProfile, testingSignalData, epoch=currentEpoch, plotTitle="signalEncoding/Training Physiological Profile", numBatchPlots=1, numSignalPlots=1)
+                self.signalEncoderViz.plotOneSignalEncoding(physiologicalTimes, physiologicalTrainingProfile, epoch=currentEpoch, plotTitle="signalEncoding/Testing Physiological Profile", numSignalPlots=1)
+                self.signalEncoderViz.plotOneSignalEncoding(physiologicalTimes, physiologicalTestingProfile, epoch=currentEpoch, plotTitle="signalEncoding/Training Physiological Profile", numSignalPlots=1)
 
             # Plot the autoencoder results.
-            self.autoencoderViz.plotEncoder(trainingSignalData, reconstructedSignalTrainingData, epoch=currentEpoch, plotTitle="signalReconstruction/Signal Encoding Training Reconstruction", numSignalPlots=2)
-            self.autoencoderViz.plotEncoder(testingSignalData, reconstructedSignalTestingData, epoch=currentEpoch, plotTitle="signalReconstruction/Signal Encoding Testing Reconstruction", numSignalPlots=2)
+            self.autoencoderViz.plotEncoder(trainingSignalData, physiologicalTimes, reconstructedSignalTrainingData, epoch=currentEpoch, plotTitle="signalReconstruction/Signal Encoding Training Reconstruction", numSignalPlots=1)
+            self.autoencoderViz.plotEncoder(testingSignalData, physiologicalTimes, reconstructedSignalTestingData, epoch=currentEpoch, plotTitle="signalReconstruction/Signal Encoding Testing Reconstruction", numSignalPlots=1)
 
             # Dont keep plotting untrained models.
             if submodel == modelConstants.signalEncoderModel: return None

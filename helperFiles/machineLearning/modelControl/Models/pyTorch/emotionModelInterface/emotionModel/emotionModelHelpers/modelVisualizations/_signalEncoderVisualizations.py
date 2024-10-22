@@ -20,37 +20,21 @@ class signalEncoderVisualizations(globalPlottingProtocols):
     def setSavingFolder(self, saveDataFolder):
         self.saveDataFolder = saveDataFolder
 
-    # ---------------------------------------------------------------------- #
     # --------------------- Visualize Model Parameters --------------------- #
 
-    def plotSignalEncoding(self, allEncodedData, epoch, plotTitle="Signal Encoding"):
-        # allEncodedData dimension: batchSize, numCondensedSignals, compressedLength
+    def plotOneSignalEncoding(self, encodedTimes, allEncodedData, epoch=0, plotTitle="Signal Encoding", numSignalPlots=1):
         # Plot the signal reconstruction.
-        plt.plot(allEncodedData[0].view(-1), 'k', linewidth=2, alpha=1)
-        plt.plot(allEncodedData[1].view(-1), 'k', linewidth=2, alpha=0.6)
-        plt.plot(allEncodedData[-2].view(-1), 'tab:red', linewidth=2, alpha=1)
-        plt.plot(allEncodedData[-1].view(-1), 'tab:red', linewidth=2, alpha=0.6)
+        for batchInd in range(numSignalPlots): plt.plot(encodedTimes, allEncodedData[batchInd], c=self.darkColors[batchInd], label=f"Physiological profile: #{batchInd}", linewidth=1, alpha=1)
 
-        plt.xlabel("All Encoding Dimensions (Points)")
-        plt.ylabel("Signal (AU)")
+        # Plotting aesthetics.
+        plt.xlabel("Encoding Dimension (Points)")
         plt.title(f"{plotTitle.split("/")[-1]}")
-        if self.saveDataFolder:
-            self.displayFigure(self.saveDataFolder + f"{plotTitle} epochs{epoch}.pdf")
-        plt.show()
+        plt.ylabel("Signal (AU)")
+        plt.legend()
 
-    def plotOneSignalEncoding(self, allEncodedData, referenceEncodedData=None, epoch=0, plotTitle="Signal Encoding", numSignalPlots=1, plotIndOffset=0):
-        for batchInd in range(numSignalPlots):
-            # Plot the signal reconstruction.
-            plt.plot(allEncodedData[batchInd], c=self.colorOrder[batchInd+plotIndOffset], label=f"batchInd{batchInd}", linewidth=2, alpha=1)
-            if referenceEncodedData is not None:
-                plt.plot(referenceEncodedData[batchInd], c=self.colorOrder[batchInd+plotIndOffset], label=f"Ref-batchInd{batchInd}", linewidth=1, alpha=0.6)
-            plt.legend()
-
-            plt.xlabel("Encoding Dimension (Points)")
-            plt.ylabel("Signal (AU)")
-            plt.title(f"{plotTitle.split("/")[-1]}")
-            if self.saveDataFolder: self.displayFigure(self.saveDataFolder + f"{plotTitle} epochs{epoch} batchInd{batchInd}.pdf")
-            plt.show()
+        # Save the figure.
+        if self.saveDataFolder: self.displayFigure(self.saveDataFolder + f"{plotTitle} epochs{epoch} batchInd{batchInd}.pdf")
+        else: plt.show()
 
     def plotSignalEncodingMap(self, physiologicalTimes, allPhysiologicalProfiles, allSignalData, epoch, plotTitle="Signal Encoding", numBatchPlots=1, numSignalPlots=1):
         datapoints = emotionDataInterface.getChannelData(allSignalData, channelName=modelConstants.signalChannel)
@@ -70,7 +54,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
                 # Save the figure.
                 if self.saveDataFolder: self.displayFigure(self.saveDataFolder + f"{plotTitle} epochs{epoch} batchInd{batchInd}.pdf")
-                plt.show(); plt.close('all'); plt.cla(); plt.clf()
+                else: plt.show(); plt.close('all')
 
                 # There are too many signals to plot.
                 if signalInd + 1 == numSignalPlots: break

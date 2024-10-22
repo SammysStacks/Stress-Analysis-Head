@@ -17,10 +17,7 @@ class generalVisualizations(globalPlottingProtocols):
 
         # Set the location for saving the models.
         self.setSavingFolder(saveDataFolder)
-        
-        # Plotting colors.
-        self.lossColors = ['k', 'tab:red', 'tab:blue', 'tab:purple', 'tab:brown', 'tab:orange', 'tab:green', 'tab:pink', 'tab:gray', 'tab:olive', 'tab:cyan']
-        
+                
     def setSavingFolder(self, saveDataFolder):
         self.saveDataFolder = saveDataFolder
         
@@ -117,7 +114,7 @@ class generalVisualizations(globalPlottingProtocols):
     def plotTrainingPath_timeAnalysis(self, pathParameters, timeLabels, plotTitle="Model Convergence Loss"):
         # Plot the training path.
         for timeWindowInd in range(len(pathParameters)):
-            plt.plot(pathParameters[timeWindowInd], label=f'{timeLabels[timeWindowInd]}', color=self.lossColors[timeWindowInd], linewidth=2)
+            plt.plot(pathParameters[timeWindowInd], label=f'{timeLabels[timeWindowInd]}', color=self.darkColors[timeWindowInd], linewidth=2)
 
         # Label the plot.
         plt.legend(loc="upper right")
@@ -139,8 +136,8 @@ class generalVisualizations(globalPlottingProtocols):
 
         # Plot the training loss.
         for trainingLossesInd in range(len(trainingLosses)):
-            plt.plot(trainingLosses[trainingLossesInd], label=f'{lossLabels[trainingLossesInd]} (Train)', color=self.lossColors[trainingLossesInd], linewidth=2)
-            if testingLosses is not None: plt.plot(testingLosses[trainingLossesInd], label=f'{lossLabels[trainingLossesInd]} (Test)', color=self.lossColors[trainingLossesInd], linewidth=2, alpha=0.5)
+            plt.plot(trainingLosses[trainingLossesInd], label=f'{lossLabels[trainingLossesInd]} (Train)', color=self.darkColors[trainingLossesInd], linewidth=2)
+            if testingLosses is not None: plt.plot(testingLosses[trainingLossesInd], label=f'{lossLabels[trainingLossesInd]} (Test)', color=self.darkColors[trainingLossesInd], linewidth=2, alpha=0.5)
         # Set y-axis to a logarithmic scale
         if logY: plt.yscale('log')
 
@@ -157,7 +154,7 @@ class generalVisualizations(globalPlottingProtocols):
     def generalDataPlotting(self, plottingData, plottingLabels, plotTitle="Model Convergence Loss"):
         # Plot the training path.
         for plottingDataInd in range(len(plottingData)):
-            plt.plot(plottingData[plottingDataInd], label=f'{plottingLabels[plottingDataInd]}', color=self.lossColors[plottingDataInd], linewidth=2)
+            plt.plot(plottingData[plottingDataInd], label=f'{plottingLabels[plottingDataInd]}', color=self.darkColors[plottingDataInd], linewidth=2)
 
         # Label the plot.
         plt.legend(loc="upper right")

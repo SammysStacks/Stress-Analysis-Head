@@ -1,5 +1,4 @@
 import math
-from ast import Index
 
 import torch
 from torch import nn
@@ -31,14 +30,28 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
         # Initialize the blank signal profile.
         self.physiologicalProfileAnsatz = nn.Parameter(torch.randn(numExperiments, encodedDimension, dtype=torch.float64))
-        self.physiologicalProfileAnsatz = nn.init.normal_(self.physiologicalProfileAnsatz, mean=0, std=0.2)
+        self.physiologicalProfileAnsatz = nn.init.normal_(self.physiologicalProfileAnsatz, mean=0, std=0.5)
 
         # Assert the validity of the input parameters.
         assert self.numModelLayers % self.goldenRatio == 0, "The number of model layers must be divisible by the golden ratio."
         assert self.encodedDimension % 2 == 0, "The encoded dimension must be divisible by 2."
         assert 0 < self.encodedDimension, "The encoded dimension must be greater than 0."
 
+        # Initialize loss holders.
+        self.trainingLosses_signalReconstruction = None
+        self.testingLosses_signalReconstruction = None
+        self.trainingLosses_manifoldProjection = None
+        self.testingLosses_manifoldProjection = None
+        self.resetModel()
+
     def forward(self): raise "You cannot call the dataset-specific signal encoder module."
+
+    def resetModel(self):
+        # Signal encoder reconstructed loss holders.
+        self.trainingLosses_signalReconstruction = []  # List of list of data reconstruction training losses. Dim: numEpochs
+        self.testingLosses_signalReconstruction = []  # List of list of data reconstruction testing losses. Dim: numEpochs
+        self.trainingLosses_manifoldProjection = []  # List of list of data reconstruction testing losses. Dim: numEpochs
+        self.testingLosses_manifoldProjection = []  # List of list of data reconstruction testing losses. Dim: numEpochs
 
     def addLayer(self):
         # Create the layers.

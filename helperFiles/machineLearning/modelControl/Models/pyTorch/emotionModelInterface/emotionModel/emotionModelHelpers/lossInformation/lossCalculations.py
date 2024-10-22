@@ -74,6 +74,7 @@ class lossCalculations:
         # Unpack the signal data.
         allDatapoints = emotionDataInterface.getChannelData(allInitialSignalData, channelName=modelConstants.signalChannel)
         allTimepoints = emotionDataInterface.getChannelData(allInitialSignalData, channelName=modelConstants.timeChannel)
+        # allDatapoints and allTimepoints: numExperiments, numSignals, maxSequenceLength
 
         # Isolate the signals for this loss (For example, training vs. testing).
         reconstructedSignalData = self.getData(allReconstructedSignalData, reconstructionDataMask)  # Dim: numExperiments, numSignals, encodedDimension

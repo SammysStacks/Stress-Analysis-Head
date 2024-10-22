@@ -16,13 +16,14 @@ class reversibleLinearLayer(reversibleInterface):
         self.kernelSize = kernelSize  # The restricted window for the neural weights.
         self.bounds = 1 / kernelSize  # The bounds for the neural weights.
         self.numLayers = numLayers  # The number of layers in the reversible linear layer.
+        self.gradientScale = 0.2  # The scaling factor for the gradients.
 
         # The stability term to add to the diagonal.
         self.stabilityTerm = torch.eye(self.sequenceLength, dtype=torch.float64)
 
         # The restricted window for the neural weights.
         self.restrictedWindowMask = torch.ones(self.sequenceLength, self.sequenceLength, dtype=torch.float64)
-        self.restrictedWindowMask = torch.tril(torch.triu(self.restrictedWindowMask, diagonal=-kernelSize//2), diagonal=kernelSize//2 - 1)
+        self.restrictedWindowMask = torch.tril(torch.triu(self.restrictedWindowMask, diagonal=-kernelSize//2 + 1), diagonal=kernelSize//2)
         self.restrictedWindowMask = self.restrictedWindowMask.unsqueeze(0)  # Dim: 1, sequenceLength, sequenceLength
 
         # Initialize the neural weights.
@@ -30,6 +31,13 @@ class reversibleLinearLayer(reversibleInterface):
         for layerInd in range(self.numLayers):
             parameters = nn.Parameter(torch.randn(numSignals, sequenceLength, sequenceLength, dtype=torch.float64))
             self.linearOperators.append(nn.init.uniform_(parameters, a=-self.bounds, b=self.bounds) * self.restrictedWindowMask)
+
+        # Register hooks for each parameter in the list
+        for param in self.linearOperators:
+            param.register_hook(self.scaleGradients)
+
+    def scaleGradients(self, grad):
+        return grad * self.gradientScale
 
     def forward(self, inputData):
         # Cast the stability term to the device.
@@ -53,7 +61,7 @@ class reversibleLinearLayer(reversibleInterface):
         # neuralWeight: numSignals, sequenceLength, sequenceLength
 
         # Add a stability term to the diagonal. TODO: Add sparse matrix support.
-        if self.kernelSize != self.sequenceLength: neuralWeights = self.restrictedWindowMask * neuralWeights + self.stabilityTerm
+        if self.kernelSize != self.sequenceLength: neuralWeights = self.restrictedWindowMask * neuralWeights + self.stabilityTerm*0.95
         else: neuralWeights = neuralWeights * (1 - self.stabilityTerm) + self.stabilityTerm
 
         # Backward direction: invert the neural weights.
@@ -63,14 +71,17 @@ class reversibleLinearLayer(reversibleInterface):
         outputData = torch.einsum('bns,nsi->bni', inputData, neuralWeights)
 
         return outputData
+# 6, 13 -> 1.01
+# 3, 7 -> 1.025
+# 1, 3 -> 1.075
 
 
 if __name__ == "__main__":
     # General parameters.
-    _batchSize, _numSignals, _sequenceLength = 100, 256, 128
+    _batchSize, _numSignals, _sequenceLength = 2, 3, 512
     _activationMethod = 'nonLinearAddition'
     _kernelSize = 13
-    _numLayers = 4
+    _numLayers = 1
 
     # Set up the parameters.
     neuralLayerClass = reversibleLinearLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod)

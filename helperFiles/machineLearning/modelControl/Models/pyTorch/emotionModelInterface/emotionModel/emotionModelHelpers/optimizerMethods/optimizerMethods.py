@@ -16,8 +16,8 @@ class optimizerMethods:
     def getModelParams(submodel, sharedSignalEncoderModel, specificSignalEncoderModel, sharedEmotionModel, specificEmotionModel):
         modelParams = [
             # Specify the model parameters for the signal encoding.
-            {'params': specificSignalEncoderModel.parameters(), 'weight_decay': 0, 'lr': 5E-4},  # Empirically: 1E-10 < weight_decay < 1E-6; 5E-5 < lr < 5E-4
-            {'params': sharedSignalEncoderModel.parameters(), 'weight_decay': 0, 'lr': 1E-4}]  # Empirically: 1E-10 < weight_decay < 1E-6; 5E-5 < lr < 5E-4
+            {'params': specificSignalEncoderModel.parameters(), 'weight_decay': 0, 'lr': 1E-2},  # Empirically: 1E-10 < weight_decay < 1E-6; 5E-5 < lr < 5E-4
+            {'params': sharedSignalEncoderModel.parameters(), 'weight_decay': 0, 'lr': 1E-3}]  # Empirically: 1E-10 < weight_decay < 1E-6; 5E-5 < lr < 5E-4
 
         if submodel == modelConstants.emotionModel:
             modelParams.extend([
@@ -68,11 +68,11 @@ class optimizerMethods:
         # Reduce on plateau (need further editing of loop): optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=0.5, patience=10, threshold=1e-4, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08)
         # Defined lambda function: optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda=lambda_function); lambda_function = lambda epoch: (epoch/50) if epoch < -1 else 1
         # torch.optim.lr_scheduler.constrainedLR(optimizer, start_factor=0.3333333333333333, end_factor=1.0, total_iters=5, last_epoch=-1)
-        numWarmUps = 50
+        numWarmUps = 10
 
         schedulers = [
             transformers.get_constant_schedule_with_warmup(optimizer=optimizer, num_warmup_steps=numWarmUps),
-            optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=20, eta_min=1e-5, last_epoch=-1),
+            optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=10, eta_min=1e-5, last_epoch=-1),
         ]
 
         # Set the scheduler.

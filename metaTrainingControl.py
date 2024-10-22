@@ -62,7 +62,7 @@ if __name__ == "__main__":
     parser.add_argument('--waveletType', type=str, default='bior3.7', help='The wavelet type for the wavelet transform: bior3.7, db3, dmey, etc')
 
     # Add arguments for the signal encoder prediction
-    parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
+    parser.add_argument('--encodedDimension', type=int, default=512, help='The dimension of the encoded signal.')
 
     # Add arguments for the emotion prediction
     parser.add_argument('--numInterpreterHeads', type=int, default=4, help='The number of ways to interpret a set of physiological signals.')
@@ -105,19 +105,17 @@ if __name__ == "__main__":
 
         # Get the saving information.
         saveFullModel, plotSteps = modelParameters.getSavingInformation(epoch, numEpoch_toSaveFull, numEpoch_toPlot)
-        saveFullModel = False
-        plotSteps = False
 
         # Train the model for a single epoch.
         trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels)
 
         # Store the initial loss information and plot.
         if storeLoss: trainingProtocols.calculateLossInformation(allMetaModels, allMetadataLoaders, allModels, allDataLoaders, submodel)
-        if plotSteps: trainingProtocols.plotModelState(epoch, allMetaModels, allMetadataLoaders, allModels, allDataLoaders, submodel, trainingDate)
+        if plotSteps: trainingProtocols.plotModelState(allMetaModels, allMetadataLoaders, allModels, allDataLoaders, submodel, trainingDate)
 
         # Save the model sometimes (only on the main device).
-        if saveFullModel and accelerator.is_local_main_process:
-            trainingProtocols.saveModelState(epoch, allMetaModels, allModels, submodel, modelName, allDatasetNames, trainingDate)
+        # if saveFullModel and accelerator.is_local_main_process:
+        #     trainingProtocols.saveModelState(epoch, allMetaModels, allModels, submodel, modelName, allDatasetNames, trainingDate)
 
         # Adjust the model architecture if needed.
         trainingProtocols.adjustModelArchitecture(allMetaModels, allModels)

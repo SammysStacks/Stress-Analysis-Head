@@ -18,7 +18,6 @@ class emotionPipeline(emotionPipelineHelpers):
         self.augmentData = True
 
         # Finish setting up the model.
-        self.modelHelpers.l2Normalization(self.model, maxNorm=30, checkOnly=True)
         self.compileOptimizer(submodel)  # Initialize the optimizer (for back propagation)
 
     def trainModel(self, dataLoader, submodel, numEpochs=500):
@@ -139,7 +138,7 @@ class emotionPipeline(emotionPipelineHelpers):
             self.optimizer.step()  # Adjust the weights.
             self.scheduler.step()  # Update the learning rate.
             self.optimizer.zero_grad()  # Zero your gradients to restart the gradient tracking.
-            self.accelerator.print("Backprop with LR:", self.scheduler.get_last_lr(), flush=True)
+            self.accelerator.print(f"Backprop {self.model.numModelLayers} layers with LR: {self.scheduler.get_last_lr()}", flush=True)
         
     def extractBatchInformation(self, batchData):
         # Extract the data, labels, and testing/training indices.

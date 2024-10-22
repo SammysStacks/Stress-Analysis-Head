@@ -24,30 +24,8 @@ class specificEmotionModel(nn.Module):
         # Reset the model
         self.resetModel()
 
-        # Initialize loss holders.
-        self.trainingLosses_signalReconstruction = None
-        self.testingLosses_signalReconstruction = None
-        self.trainingLosses_timeAnalysis = None
-        self.testingLosses_timeAnalysis = None
-        self.trainingLosses_mappedMean = None
-        self.testingLosses_mappedMean = None
-        self.trainingLosses_mappedSTD = None
-        self.testingLosses_mappedSTD = None
-
     def forward(self):
         return None
-
-    def resetModel(self):
-        # Autoencoder manifold reconstructed loss holders.
-        self.trainingLosses_signalReconstruction = []  # List of manifold reconstruction (autoencoder) training losses. Dim: numEpochs
-        self.testingLosses_signalReconstruction = []  # List of manifold reconstruction (autoencoder) testing losses. Dim: numEpochs
-
-        # Autoencoder manifold mean loss holders.
-        self.trainingLosses_manifoldMean = []  # List of manifold mean (autoencoder) training losses. Dim: numEpochs
-        self.testingLosses_manifoldMean = []  # List of manifold mean (autoencoder) testing losses. Dim: numEpochs
-        # Autoencoder manifold standard deviation loss holders.
-        self.trainingLosses_manifoldSTD = []  # List of manifold standard deviation (autoencoder) training losses. Dim: numEpochs
-        self.testingLosses_manifoldSTD = []  # List of manifold standard deviation (autoencoder) testing losses. Dim: numEpochs
 
         # ------------------------------------------------------------------ #  
 

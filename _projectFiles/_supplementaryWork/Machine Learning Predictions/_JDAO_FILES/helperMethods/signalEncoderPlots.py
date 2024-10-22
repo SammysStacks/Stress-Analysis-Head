@@ -21,7 +21,7 @@ class signalEncoderPlots(trainingPlots):
         # Define saving folder locations.
         self.heatmapFolder = self.savingFolder + "heatmapParamsPlots/"
 
-        self.lossColors = [
+        self.darkColors = [
             '#3498db',  # Blue shades
             '#fc827f',  # Red shades
             '#9ED98F',  # Green shades
@@ -145,10 +145,10 @@ class signalEncoderPlots(trainingPlots):
 
                         # Plot the loss curves for each model
                         print(lossCurves[:, modelInd][0].shape)
-                        axs[0].plot(lossCurves[:, modelInd][0], color=self.lossColors[modelInd], alpha=0.1)
-                        axs[0].plot(smoothedLossCurves[:, modelInd][0], label=f'{self.datasetNames[modelInd]} Smoothed Train Loss', color=self.lossColors[modelInd])
-                        axs[1].plot(lossCurves[:, modelInd][1], color=self.lossColors[modelInd], alpha=0.1)
-                        axs[1].plot(smoothedLossCurves[:, modelInd][1], label=f'{self.datasetNames[modelInd]} Smoothed Test Loss', color=self.lossColors[modelInd])
+                        axs[0].plot(lossCurves[:, modelInd][0], color=self.darkColors[modelInd], alpha=0.1)
+                        axs[0].plot(smoothedLossCurves[:, modelInd][0], label=f'{self.datasetNames[modelInd]} Smoothed Train Loss', color=self.darkColors[modelInd])
+                        axs[1].plot(lossCurves[:, modelInd][1], color=self.darkColors[modelInd], alpha=0.1)
+                        axs[1].plot(smoothedLossCurves[:, modelInd][1], label=f'{self.datasetNames[modelInd]} Smoothed Test Loss', color=self.darkColors[modelInd])
 
                     axs[0].set_title("Training Loss")
                     axs[1].set_title("Testing Loss")

@@ -44,8 +44,8 @@ class emotionModelHead(nn.Module):
         # Signal encoder parameters.
         self.neuralOperatorParameters = userInputParams['neuralOperatorParameters']  # The parameters for the neural operator.
         self.numLiftingLayers = 2  # The number of lifting layers to use.
-        self.numModelLayers = 64  # The number of layers to use in the signal encoder.
-        self.goldenRatio = 4  # The golden ratio for the signal encoder.
+        self.numModelLayers = 32  # The number of layers to use in the signal encoder.
+        self.goldenRatio = 8  # The golden ratio for the signal encoder.
 
         # Emotion parameters.
         self.numInterpreterHeads = userInputParams['numInterpreterHeads']  # The number of ways to interpret a set of physiological signals.
@@ -143,7 +143,6 @@ class emotionModelHead(nn.Module):
         signalIdentifiers, signalData, metadata = signalIdentifiers.int(), signalData.double(), metadata.double()
         batchSize, numSignals, maxSequenceLength, numChannels = signalData.size()
         assert numChannels == len(modelConstants.signalChannelNames)
-        reversibleInterface.changeDirections(forwardDirection=True)
 
         # Initialize default output tensors.
         basicEmotionProfile = torch.zeros((batchSize, self.numBasicEmotions, self.encodedDimension), device=device)
@@ -197,6 +196,7 @@ class emotionModelHead(nn.Module):
             metaLearningData = validFourierMask * self.sharedSignalEncoderModel.learningInterface(layerInd=layerInd, signalData=metaLearningData)  # Reversible meta-learning layers.
         # metaLearningData: batchSize, numSignals, fourierDimension
         metaLearningData = validFourierMask * self.specificSignalEncoderModel.learningInterface(layerInd=specificLayerCounter, signalData=metaLearningData)  # Reversible signal-specific layers.
+        assert specificLayerCounter + 1 == len(self.specificSignalEncoderModel.neuralLayers), f"The specific layer counter ({specificLayerCounter}) does not match the number of specific layers ({len(self.specificSignalEncoderModel.neuralLayers)})."
 
         # Reconstruct the signal data from the Fourier data.
         fourierMagnitudeData, fourierPhaseData = metaLearningData[:, :numSignals], metaLearningData[:, numSignals:]

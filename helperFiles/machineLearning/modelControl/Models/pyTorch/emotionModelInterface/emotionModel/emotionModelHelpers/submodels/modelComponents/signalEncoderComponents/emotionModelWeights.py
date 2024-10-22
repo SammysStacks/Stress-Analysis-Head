@@ -29,11 +29,6 @@ class emotionModelWeights(convolutionalHelpers):
     def ebbinghausDecayExp(deltaTimes, signalWeights):
         return signalWeights.pow(2)*torch.exp(-deltaTimes.pow(2))
 
-    def timeDependantSignalWeights(self, numSignals):
-        # Initialize the weights with a normal distribution.
-        parameter = nn.Parameter(torch.randn(1, numSignals, 1, 1))
-        return self.weightInitialization.xavierNormalInit(parameter, fan_in=1, fan_out=1)
-
     # ------------------- Wavelet Neural Operator Architectures ------------------- #
 
     @staticmethod
@@ -43,7 +38,7 @@ class emotionModelWeights(convolutionalHelpers):
     def neuralWeightFCC(self, inChannel=1, outChannel=2, finalFrequencyDim=46):
         # Initialize the weights with a normal distribution.
         parameter = nn.Parameter(torch.randn((outChannel, inChannel, finalFrequencyDim)))
-        parameter = self.weightInitialization.xavierNormalInit(parameter, fan_in=inChannel * finalFrequencyDim, fan_out=outChannel * finalFrequencyDim)
+        self.weightInitialization.xavierNormalInit(parameter, fan_in=inChannel * finalFrequencyDim, fan_out=outChannel * finalFrequencyDim)
         assert False, "The neuralWeightFCC method is not yet implemented."
 
     @staticmethod

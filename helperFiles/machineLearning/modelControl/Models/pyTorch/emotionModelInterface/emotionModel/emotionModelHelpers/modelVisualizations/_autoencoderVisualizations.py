@@ -22,7 +22,7 @@ class autoencoderVisualizations(globalPlottingProtocols):
     # ---------------------------------------------------------------------- #
     # --------------------- Visualize Model Parameters --------------------- #
 
-    def plotEncoder(self, initialSignal, comparisonSignal, epoch, plotTitle="Encoder Prediction", numSignalPlots=1):
+    def plotEncoder(self, initialSignal, comparisonTimes, comparisonSignal, epoch, plotTitle="Encoder Prediction", numSignalPlots=1):
         # Assert the integrity of the incoming data
         assert initialSignal.shape[0:2] == comparisonSignal.shape[0:2], f"{initialSignal.shape} {comparisonSignal.shape}"
         batchSize, numSignals, numEncodedPoints = comparisonSignal.shape
@@ -36,15 +36,14 @@ class autoencoderVisualizations(globalPlottingProtocols):
         batchInd = 0
         for signalInd in plottingSignals:
             # Plot the signal reconstruction.
-            plt.plot(initialSignal[batchInd, signalInd, :], 'k', linewidth=2, alpha=0.5, label="Initial Signal")
-            plt.plot(comparisonSignal[batchInd, signalInd, :], 'tab:blue', linewidth=2, alpha=0.8, label="Reconstructed Signal")
+            plt.plot(initialSignal[batchInd, signalInd, :, 0], initialSignal[batchInd, signalInd, :, 1], self.blackColor, linewidth=2, alpha=0.5, label="Initial Signal")
+            plt.plot(comparisonTimes, comparisonSignal[batchInd, signalInd, :], self.lightColors[1], linewidth=2, alpha=0.8, label="Reconstructed Signal")
             plt.xlabel("Points")
             plt.ylabel("Signal (AU)")
             plt.title(f"{plotTitle.split('/')[-1]}; Signal {signalInd + 1}")
             plt.legend(loc="best")
-            if self.saveDataFolder:
-                self.displayFigure(self.saveDataFolder + f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf")
-            plt.show()
+            if self.saveDataFolder: self.displayFigure(self.saveDataFolder + f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf")
+            else: plt.show()
 
     def plotSignalComparison(self, originalSignal, comparisonSignal, epoch, plotTitle, numSignalPlots=1):
         """ originalSignal dimension: batchSize, numSignals, numTotalPoints """
@@ -70,9 +69,8 @@ class autoencoderVisualizations(globalPlottingProtocols):
             plt.title(plotTitle)
 
             # Save the plot
-            if self.saveDataFolder:
-                self.displayFigure(self.saveDataFolder + f"{plotTitle} epochs = {epoch} signalInd = {signalInd}.pdf")
-            plt.show()
+            if self.saveDataFolder: self.displayFigure(self.saveDataFolder + f"{plotTitle} epochs = {epoch} signalInd = {signalInd}.pdf")
+            else: plt.show()
 
             # There are too many signals to plot.
             if signalInd + 1 == numSignalPlots: break
@@ -92,9 +90,8 @@ class autoencoderVisualizations(globalPlottingProtocols):
         plt.ylabel("Arbitrary Axis (AU)")
         plt.legend(['Noisy Signal', 'True Signal', 'Reconstructed Signal'], loc='best')
         # Save the plot
-        if self.saveDataFolder:
-            self.displayFigure(self.saveDataFolder + f"{plotTitle} epochs = {epoch} signalInd{signalInd}.pdf")
-        plt.show()
+        if self.saveDataFolder: self.displayFigure(self.saveDataFolder + f"{plotTitle} epochs = {epoch} signalInd{signalInd}.pdf")
+        else: plt.show()
 
     def plotSignalComparisonHeatmap(self, originalSignal, comparisonSignal):
         # Assert the integrity of the incoming data
@@ -104,7 +101,7 @@ class autoencoderVisualizations(globalPlottingProtocols):
         batchSize, numSignals, numTotalPoints = originalSignal.shape
         batchSize, numSignals, numEncodedPoints = comparisonSignal.shape
 
-        # Seperate out all the signals
+        # Separate out all the signals
         signalData = originalSignal.reshape(batchSize * numSignals, numTotalPoints)
         encodedData = comparisonSignal.reshape(batchSize * numSignals, numEncodedPoints)
 

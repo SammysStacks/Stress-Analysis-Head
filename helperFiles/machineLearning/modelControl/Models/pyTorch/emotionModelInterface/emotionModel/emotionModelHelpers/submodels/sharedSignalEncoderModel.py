@@ -34,32 +34,19 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         self.processingLayers, self.neuralLayers, self.addingFlags = nn.ModuleList(), nn.ModuleList(), []
         for layerInd in range(self.numModelLayers): self.addLayer()
 
-        # Initialize loss holders.
-        self.trainingLosses_signalReconstruction = None
-        self.testingLosses_signalReconstruction = None
-        self.trainingLosses_manifoldProjection = None
-        self.testingLosses_manifoldProjection = None
-
-        # Reset the model.
-        self.resetModel()
-
     def forward(self):
         raise "You cannot call the dataset-specific signal encoder module."
 
     def addLayer(self):
         # Create the layers.
-        self.addingFlags.append(not self.addingFlags[-1] if len(self.addingFlags) != 0 else False)
+        self.addingFlags.append(not self.addingFlags[-1] if len(self.addingFlags) != 0 else True)
         self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters))
         if self.learningProtocol == 'rCNN': self.processingLayers.append(self.postProcessingLayerCNN(numSignals=1))
         elif self.learningProtocol == 'rFC': self.processingLayers.append(self.postProcessingLayerFC(numSignals=1, sequenceLength=self.fourierDimension))
         else: raise "The learning protocol is not yet implemented."
 
-    def resetModel(self):
-        # Signal encoder reconstructed loss holders.
-        self.trainingLosses_signalReconstruction = []  # List of list of data reconstruction training losses. Dim: numTimeWindows, numEpochs
-        self.testingLosses_signalReconstruction = []  # List of list of data reconstruction testing losses. Dim: numTimeWindows, numEpochs
-        self.trainingLosses_manifoldProjection = []  # List of list of data reconstruction testing losses. Dim: numTimeWindows, numEpochs
-        self.testingLosses_manifoldProjection = []  # List of list of data reconstruction testing losses. Dim: numTimeWindows, numEpochs
+        # Adjust the addingFlag to account for the specific layers.
+        if len(self.addingFlags) % self.goldenRatio == 1: self.addingFlags[-1] = not self.addingFlags[-1]
 
     def forwardFFT(self, inputData):
         # Perform the forward FFT and extract the magnitude and phase.
@@ -98,7 +85,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
             signalData = self.processingLayers[pseudoLayerInd](signalData)
 
             # Apply the neural operator layer with activation.
-            signalData = self.activationFunction(signalData, addingFlag=self.addingFlags[layerInd])
+            signalData = self.activationFunction(signalData, addingFlag=self.addingFlags[pseudoLayerInd])
             signalData = self.neuralLayers[pseudoLayerInd](signalData)
 
         # Reshape the signal data.

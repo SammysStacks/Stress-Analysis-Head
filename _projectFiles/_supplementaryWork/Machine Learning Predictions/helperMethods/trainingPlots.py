@@ -43,7 +43,7 @@ class trainingPlots(globalPlottingProtocols):
             '#918ae1',  # Purple shades
         ]
 
-        self.lossColors = [
+        self.darkColors = [
             '#3498db',  # Blue shades
             '#fc827f',  # Red shades
             '#9ED98F',  # Green shades
