@@ -17,7 +17,7 @@ class trainingProtocolHelpers:
         self.minEpochs_modelAdjustment = 1  # The minimum number of epochs before adjusting the model architecture.
         self.accelerator = accelerator
         self.unifiedLayerData = None
-        self.numTrailingLosses = 8
+        self.numTrailingLosses = 4
 
         # Helper classes.
         self.modelMigration = modelMigration(accelerator)
