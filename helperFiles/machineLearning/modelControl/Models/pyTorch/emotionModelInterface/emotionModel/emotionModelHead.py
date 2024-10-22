@@ -204,7 +204,7 @@ class emotionModelHead(nn.Module):
         # fourierMagnitudeData and fourierPhaseData: batchSize, numSignals, fourierDimension
         # reconstructedSignalData: batchSize, numSignals, encodedDimension
 
-        if self.debugging and random.random() < 0.01:
+        if self.debugging and random.random() < 0.005:
             # Optionally, plot the physiological profile for visual comparison
             physiologicalTimes = self.sharedSignalEncoderModel.pseudoEncodedTimes.detach().cpu().numpy()
             plt.plot(physiologicalTimes, physiologicalProfile[0].detach().cpu().numpy(), 'tab:blue', linewidth=1, label='Physiological Profile', alpha=0.5)
