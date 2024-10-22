@@ -30,10 +30,10 @@ class trainingProtocolHelpers:
 
             # Get the model losses.
             modelLosses = modelPipeline.model.specificSignalEncoderModel.trainingLosses_signalReconstruction
-            lossPercent = sum(modelLosses[-self.numTrailingLosses:]) / sum(modelLosses[-self.numTrailingLosses*2:-self.numTrailingLosses])
             if len(modelLosses) < 2*self.numTrailingLosses: return None
 
             # Check if we should add a new layer.
+            lossPercent = sum(modelLosses[-self.numTrailingLosses:]) / sum(modelLosses[-self.numTrailingLosses*2:-self.numTrailingLosses])
             if not (0.9 < lossPercent < 1): return None
             if modelLosses[-1] < 0.01: return None
 
