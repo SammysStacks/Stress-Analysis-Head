@@ -8,7 +8,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 class specificSignalEncoderModel(neuralOperatorInterface):
 
     def __init__(self, numExperiments, operatorType, encodedDimension, fourierDimension, numSignals, numLiftingLayers, numModelLayers, goldenRatio, activationMethod, learningProtocol, neuralOperatorParameters):
-        super(specificSignalEncoderModel, self).__init__(sequenceLength=fourierDimension, numInputSignals=numSignals*numLiftingLayers, numOutputSignals=numSignals, learningProtocol=learningProtocol, addBiasTerm=False)
+        super(specificSignalEncoderModel, self).__init__(sequenceLength=fourierDimension, numInputSignals=numSignals*numLiftingLayers, numOutputSignals=numSignals*numLiftingLayers, learningProtocol=learningProtocol, addBiasTerm=False)
         # General model parameters.
         self.activationFunction = activationFunctions.getActivationMethod(activationMethod=activationMethod)
         self.neuralOperatorParameters = neuralOperatorParameters  # The parameters for the neural operator.
@@ -48,7 +48,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
     def addLayer(self):
         # Create the layers.
         self.addingFlags.append(not self.addingFlags[-1] if len(self.addingFlags) != 0 else True)
-        self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters))
+        self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True))
         if self.learningProtocol == 'rCNN': self.processingLayers.append(self.postProcessingLayerRCNN(numSignals=self.numSignals*self.numLiftingLayers))
         elif self.learningProtocol == 'rFC': self.processingLayers.append(self.postProcessingLayerRFC(numSignals=self.numSignals*self.numLiftingLayers, sequenceLength=self.fourierDimension))
         else: raise "The learning protocol is not yet implemented."

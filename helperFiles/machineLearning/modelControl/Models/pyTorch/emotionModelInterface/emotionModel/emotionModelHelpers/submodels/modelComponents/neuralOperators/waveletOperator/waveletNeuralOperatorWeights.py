@@ -25,7 +25,11 @@ class waveletNeuralOperatorWeights(waveletNeuralHelpers):
             skipConnectionModel = self.zeros
         elif skipConnectionProtocol == 'identity':
             skipConnectionModel = nn.Identity()
-        else: raise ValueError("The skip connection protocol must be in ['none', 'identity'].")
+        elif skipConnectionProtocol == 'CNN':
+            skipConnectionModel = self.skipConnectionCNN(numSignals=self.numInputSignals)
+        elif skipConnectionProtocol == 'FC':
+            skipConnectionModel = self.skipConnectionFC(sequenceLength=self.sequenceLength)
+        else: raise ValueError("The skip connection protocol must be in ['none', 'identity', 'CNN'].")
 
         return skipConnectionModel
 
@@ -52,6 +56,7 @@ class waveletNeuralOperatorWeights(waveletNeuralHelpers):
     def getNeuralWeightParameters(self, inChannel, initialFrequencyDim):
         if self.learningProtocol == 'rFC': return self.neuralWeightRFC(numSignals=inChannel, sequenceLength=initialFrequencyDim)
         elif self.learningProtocol == 'rCNN': return self.reversibleNeuralWeightRCNN(inChannel=inChannel)
+        elif self.learningProtocol == 'FC': return self.neuralWeightFC(sequenceLength=initialFrequencyDim)
         else: raise ValueError(f"The learning protocol ({self.learningProtocol}) must be in ['rFC', 'FCC', 'rCNN', 'CNN'].")
 
     @staticmethod

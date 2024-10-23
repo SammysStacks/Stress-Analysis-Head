@@ -33,21 +33,22 @@ class emotionModelHead(nn.Module):
         self.metadata = metadata  # The subject identifiers for the model (e.g., subjectIndex, datasetIndex, etc.)
 
         # General parameters.
+        self.irreversibleLearningProtocol = userInputParams['irreversibleLearningProtocol']  # The learning protocol for the model.
+        self.reversibleLearningProtocol = userInputParams['reversibleLearningProtocol']  # The learning protocol for the model.
         self.activationMethod = emotionModelWeights.getActivationType()  # The activation method to use for the neural operator.
         self.encodedDimension = userInputParams['encodedDimension']  # The dimension of the encoded signal.
-        self.learningProtocol = userInputParams['learningProtocol']  # The learning protocol for the model.
         self.fourierDimension = int(self.encodedDimension / 2 + 1)  # The dimension of the fourier signal.
         self.operatorType = userInputParams['operatorType']  # The type of operator to use for the neural operator.
         self.debugging = True
 
         # Signal encoder parameters.
         self.neuralOperatorParameters = userInputParams['neuralOperatorParameters']  # The parameters for the neural operator.
-        self.numLiftingLayers = 2  # The number of lifting layers to use.
+        self.numLiftingLayersEmotionActivity = 2  # The number of lifting layers to use.
+        self.numLiftingLayersSignalEncoder = 2  # The number of lifting layers to use.
         self.numModelLayers = 16  # The number of layers to use in the signal encoder.
         self.goldenRatio = 4  # The golden ratio for the signal encoder.
 
         # Emotion parameters.
-        self.numInterpreterHeads = userInputParams['numInterpreterHeads']  # The number of ways to interpret a set of physiological signals.
         self.numBasicEmotions = userInputParams['numBasicEmotions']  # The number of basic emotions (basis states of emotions).
 
         # Tunable encoding parameters.
@@ -69,11 +70,11 @@ class emotionModelHead(nn.Module):
         # The signal encoder model to find a common feature vector across all signals.
         self.specificSignalEncoderModel = specificSignalEncoderModel(
             neuralOperatorParameters=self.neuralOperatorParameters,
+            numLiftingLayers=self.numLiftingLayersSignalEncoder,
+            learningProtocol=self.reversibleLearningProtocol,
             activationMethod=self.activationMethod,
             encodedDimension=self.encodedDimension,
-            learningProtocol=self.learningProtocol,
             fourierDimension=self.fourierDimension,
-            numLiftingLayers=self.numLiftingLayers,
             numModelLayers=self.numModelLayers,
             operatorType=self.operatorType,
             numExperiments=numExperiments,
@@ -84,9 +85,9 @@ class emotionModelHead(nn.Module):
         # The autoencoder model reduces the incoming signal's dimension.
         self.sharedSignalEncoderModel = sharedSignalEncoderModel(
             neuralOperatorParameters=self.neuralOperatorParameters,
+            learningProtocol=self.reversibleLearningProtocol,
             encodedDimension=self.encodedDimension,
             activationMethod=self.activationMethod,
-            learningProtocol=self.learningProtocol,
             fourierDimension=self.fourierDimension,
             numModelLayers=self.numModelLayers,
             operatorType=self.operatorType,
@@ -101,27 +102,28 @@ class emotionModelHead(nn.Module):
         if submodel == modelConstants.emotionModel:
             self.specificEmotionModel = specificEmotionModel(
                 neuralOperatorParameters=self.neuralOperatorParameters,
+                numLiftingLayers=self.numLiftingLayersEmotionActivity,
+                learningProtocol=self.irreversibleLearningProtocol,
                 activationMethod=self.activationMethod,
                 encodedDimension=self.encodedDimension,
-                learningProtocol=self.learningProtocol,
                 fourierDimension=self.fourierDimension,
-                numLiftingLayers=self.numLiftingLayers,
                 numModelLayers=self.numModelLayers,
                 operatorType=self.operatorType,
-                numExperiments=numExperiments,
                 goldenRatio=self.goldenRatio,
-                numSignals=self.numSignals,
+                numEmotions=self.numEmotions,
             )
 
             self.sharedEmotionModel = sharedEmotionModel(
                 neuralOperatorParameters=self.neuralOperatorParameters,
-                encodedDimension=self.encodedDimension,
+                numLiftingLayers=self.numLiftingLayersEmotionActivity,
+                learningProtocol=self.irreversibleLearningProtocol,
                 activationMethod=self.activationMethod,
-                learningProtocol=self.learningProtocol,
+                encodedDimension=self.encodedDimension,
                 fourierDimension=self.fourierDimension,
                 numModelLayers=self.numModelLayers,
                 operatorType=self.operatorType,
                 goldenRatio=self.goldenRatio,
+                numEmotions=self.numEmotions,
             )
 
     # ------------------------- Full Forward Calls ------------------------- #
@@ -182,8 +184,8 @@ class emotionModelHead(nn.Module):
 
         # Remap the signal data to the estimated physiological profile.
         realFourierData, imaginaryFourierData = self.sharedSignalEncoderModel.forwardFFT(physiologicalProfile)
-        realFourierData = validSignalMask * realFourierData.unsqueeze(1).repeat(1, numSignals, 1)
         imaginaryFourierData = validSignalMask * imaginaryFourierData.unsqueeze(1).repeat(1, numSignals, 1)
+        realFourierData = validSignalMask * realFourierData.unsqueeze(1).repeat(1, numSignals, 1)
         # realFourierData and imaginaryFourierData: batchSize, numSignals, fourierDimension
         # physiologicalFourierData: batchSize, 2*numSignals, fourierDimension
 

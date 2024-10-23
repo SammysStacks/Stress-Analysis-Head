@@ -40,7 +40,6 @@ class emotionModelWeights(convolutionalHelpers):
 
         # Reconstruct the spatial data.
         physiologicalProfile = torch.fft.irfft(fourierData, n=encodedDimension, dim=-1, norm='ortho')
-        physiologicalProfile = emotionModelWeights.smoothingFilter(physiologicalProfile, kernelSize=3)
 
         return nn.Parameter(physiologicalProfile)
 
@@ -70,6 +69,10 @@ class emotionModelWeights(convolutionalHelpers):
         return reversibleConvolution(numChannels=inChannel, kernelSize=3, activationMethod=emotionModelWeights.getActivationType(), numLayers=1)
 
     @staticmethod
+    def neuralWeightFC(sequenceLength):
+        return emotionModelWeights.linearModel(numOutputFeatures=sequenceLength, activationMethod=emotionModelWeights.getActivationType(), addBias=False)
+
+    @staticmethod
     def neuralBiasParameters(numChannels=2):
         return nn.Parameter(torch.zeros((1, numChannels, 1)))
 
@@ -77,11 +80,11 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def postProcessingLayerRCNN(numSignals=1):
-        return reversibleConvolution(numChannels=numSignals, kernelSize=5, activationMethod=emotionModelWeights.getActivationType(), numLayers=1)
+        return reversibleConvolution(numChannels=numSignals, kernelSize=9, activationMethod=emotionModelWeights.getActivationType(), numLayers=1)
 
     @staticmethod
     def postProcessingLayerRFC(numSignals, sequenceLength):
-        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=5, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
+        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=9, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
 
     # ------------------- Emotion/Activity Encoding Architectures ------------------- #
 
@@ -90,8 +93,18 @@ class emotionModelWeights(convolutionalHelpers):
         return emotionModelWeights.linearModel(numOutputFeatures=sequenceLength, activationMethod=emotionModelWeights.getActivationType(), addBias=False)
 
     def postProcessingLayerCNN(self, numSignals):
-        return self.convolutionalFiltersBlocks(numBlocks=4, numChannels=numSignals, kernel_sizes=11, dilations=1, groups=numSignals, strides=1,
-                                               convType='conv1D', activationMethod=emotionModelWeights.getActivationType(), numLayers=None, addBias=False)
+        return self.convolutionalFiltersBlocks(numBlocks=4, numChannels=numSignals, kernel_sizes=3, dilations=1, groups=numSignals, strides=1, convType='conv1D', activationMethod=emotionModelWeights.getActivationType(), numLayers=None, addBias=False)
+
+    def skipConnectionCNN(self, numSignals):
+        return self.convolutionalFiltersBlocks(numBlocks=4, numChannels=numSignals, kernel_sizes=3, dilations=1, groups=numSignals, strides=1, convType='conv1D', activationMethod=emotionModelWeights.getActivationType(), numLayers=None, addBias=False)
+
+    @staticmethod
+    def skipConnectionFC(sequenceLength):
+        return emotionModelWeights.linearModel(numOutputFeatures=sequenceLength, activationMethod=emotionModelWeights.getActivationType(), addBias=False)
+
+    def liftingLayers(self, numSignals, liftedSignals):
+        return self.convolutionalFilters(numChannels=[numSignals, numSignals*liftedSignals], kernel_sizes=1, dilations=1, groups=numSignals, strides=1,
+                                         convType='conv1D', activationMethod='none', numLayers=None, addBias=False)
 
     # ------------------- Universal Architectures ------------------- #
 

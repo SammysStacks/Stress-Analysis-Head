@@ -56,7 +56,7 @@ class compileModelDataHelpers:
 
         # Embedded information for each model.
         self.signalEncoderModelInfo = f"signalEncoder on {userInputParams['deviceListed']} with {userInputParams['waveletType'].replace('.', '')} at {userInputParams['optimizerType']} at encodedDimension {userInputParams['encodedDimension']}"
-        self.emotionPredictionModelInfo = f"emotionPrediction on {userInputParams['deviceListed']} with {userInputParams['optimizerType']} with seqLength {userInputParams['finalDistributionLength']}"
+        self.emotionPredictionModelInfo = f"emotionPrediction on {userInputParams['deviceListed']} with {userInputParams['optimizerType']}"
 
     # ---------------------- Model Specific Parameters --------------------- #
 
@@ -288,6 +288,7 @@ class compileModelDataHelpers:
 
         # Calculate SNRs for all signals in the batch
         biomarkerData = emotionDataInterface.getChannelData(signalData=allSignalData, channelName=modelConstants.signalChannel)
+        biomarkerTimes = emotionDataInterface.getChannelData(signalData=allSignalData, channelName=modelConstants.timeChannel)
         signalSNRs = self.calculate_snr(biomarkerData)
 
         for batchInd in range(batchSize):
@@ -295,6 +296,11 @@ class compileModelDataHelpers:
                 # Get the signal data for the current signal.
                 numPoints = allNumSignalPoints[batchInd, signalInd]
                 signalData = biomarkerData[batchInd, signalInd, 0:numPoints]
+                signalTimes = biomarkerTimes[batchInd, signalInd, 0:numPoints]
+
+                # Calculate the derivative of the signal data.
+                firstDeriv = torch.gradient(input=signalData, spacing=signalTimes, edge_order=2)
+                print(firstDeriv.abs().max())
 
                 # Calculate the largest signal jump within the time window.
                 maxSequenceGaps[signalInd] = max(maxSequenceGaps[signalInd].item(), signalData.diff().abs().max().item())

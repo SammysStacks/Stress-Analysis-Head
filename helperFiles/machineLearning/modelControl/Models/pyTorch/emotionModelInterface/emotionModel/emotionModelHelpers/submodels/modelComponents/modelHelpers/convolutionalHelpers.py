@@ -74,7 +74,7 @@ class convolutionalHelpers(abnormalConvolutions):
 
         return nn.Sequential(*layers)
 
-    def convolutionalFilters_resNetBlocks(self, numResNets, numBlocks, numChannels, kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod='selu', numLayers=None, addBias=True):
+    def convolutionalFilters_resNetBlocks(self, numResNets, numBlocks, numChannels, kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod='selu', numLayers=None, addBias=False):
         if not isinstance(numChannels, list):
             assert numLayers is not None
         else:
@@ -89,7 +89,7 @@ class convolutionalHelpers(abnormalConvolutions):
 
         return nn.Sequential(*layers)
 
-    def convolutionalFiltersBlocks(self, numBlocks, numChannels, kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod='selu', numLayers=None, addBias=True):
+    def convolutionalFiltersBlocks(self, numBlocks, numChannels, kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod='selu', numLayers=None, addBias=False):
         if not isinstance(kernel_sizes, list): kernel_sizes = [kernel_sizes] * numBlocks
         if not isinstance(dilations, list): dilations = [dilations] * numBlocks
         if not isinstance(strides, list): strides = [strides] * numBlocks
@@ -102,7 +102,7 @@ class convolutionalHelpers(abnormalConvolutions):
 
         return nn.Sequential(*layers)
 
-    def convolutionalFilters(self, numChannels, kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod='selu', numLayers=None, addBias=True):
+    def convolutionalFilters(self, numChannels, kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod='selu', numLayers=None, addBias=False):
         # Assert the integrity of the inputs.
         assert isinstance(numChannels, list) or numLayers is not None, f"If numLayers is not provided, numChannels must be a list: {numChannels} {numLayers}"
 

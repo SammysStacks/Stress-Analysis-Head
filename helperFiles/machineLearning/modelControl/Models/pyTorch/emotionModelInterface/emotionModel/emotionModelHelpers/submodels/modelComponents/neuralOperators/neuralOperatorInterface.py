@@ -30,8 +30,8 @@ class neuralOperatorInterface(emotionModelWeights):
         numDecompositions = 1  # Number of decompositions for the waveletType transform.
         mode = 'periodization'  # Mode for the waveletType transform.
 
-        if reversibleFlag:
-            skipConnectionProtocol = 'identity'
+        # Hardcoded non-reversible parameters.
+        if not reversibleFlag: skipConnectionProtocol = 'CNN'  # The protocol for the skip connections.
 
         # Specify the default parameters.
         if numDecompositions is None: numDecompositions = min(5, waveletNeuralOperatorLayer.max_decompositions(signal_length=self.sequenceLength, wavelet_name=waveletType))  # Number of decompositions for the waveletType transform.

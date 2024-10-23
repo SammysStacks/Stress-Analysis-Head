@@ -124,7 +124,7 @@ class generalVisualizations(globalPlottingProtocols):
 
         # Save the figure if desired.
         if self.saveDataFolder: self.displayFigure(self.saveDataFolder + f"{plotTitle} at epoch {len(pathParameters[0])}.pdf")
-        else: plt.show()
+        else: plt.show(); plt.close('all')
 
     def plotTrainingLosses(self, trainingLosses, testingLosses, lossLabels, plotTitle="Model Convergence Loss", logY=True):
         # Assert the validity of the input data.
@@ -136,16 +136,16 @@ class generalVisualizations(globalPlottingProtocols):
         # Plot the training loss.
         for trainingLossesInd in range(len(trainingLosses)):
             plt.plot(trainingLosses[trainingLossesInd], label=f'{lossLabels[trainingLossesInd]} (Train)', color=self.darkColors[trainingLossesInd], linewidth=2)
-            if testingLosses is not None: plt.plot(testingLosses[trainingLossesInd], label=f'{lossLabels[trainingLossesInd]} (Test)', color=self.darkColors[trainingLossesInd], linewidth=2, alpha=0.5)
+            if testingLosses is not None: plt.plot(testingLosses[trainingLossesInd], color=self.darkColors[trainingLossesInd], linewidth=2, alpha=0.5)
         # Set y-axis to a logarithmic scale
         if logY: plt.yscale('log')
 
         # Label the plot.
-        plt.legend(loc="upper right")
         plt.xlabel("Training Epoch")
         plt.ylabel("Loss Values")
         plt.title(f"{plotTitle.split("/")[-1]}")
-        
+        plt.legend(loc="upper right", bbox_to_anchor=(1.35, 1))  # Move legend off to the right, level with the top
+
         # Save the figure if desired.
         if self.saveDataFolder: self.displayFigure(self.saveDataFolder + f"{plotTitle} at epoch {len(trainingLosses[0])}.pdf")
         else: plt.show(); plt.close('all')
@@ -163,4 +163,4 @@ class generalVisualizations(globalPlottingProtocols):
 
         # Save the figure if desired.
         if self.saveDataFolder: self.displayFigure(self.saveDataFolder + f"{plotTitle} at epoch {len(plottingData[0])}.pdf")
-        else: plt.show()
+        else: plt.show(); plt.close('all')

@@ -40,7 +40,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
     def addLayer(self):
         # Create the layers.
         self.addingFlags.append(not self.addingFlags[-1] if len(self.addingFlags) != 0 else True)
-        self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters))
+        self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True))
         if self.learningProtocol == 'rCNN': self.processingLayers.append(self.postProcessingLayerRCNN(numSignals=1))
         elif self.learningProtocol == 'rFC': self.processingLayers.append(self.postProcessingLayerRFC(numSignals=1, sequenceLength=self.fourierDimension))
         else: raise "The learning protocol is not yet implemented."

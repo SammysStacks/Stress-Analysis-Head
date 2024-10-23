@@ -1,69 +1,70 @@
-# PyTorch
-import torch
 from torch import nn
 
-class sharedEmotionModel(nn.Module):
-    def __init__(self, compressedLength, numEncodedSignals, numCommonSignals, numActivityFeatures, numInterpreterHeads, numBasicEmotions, emotionLength):
-        super(sharedEmotionModel, self).__init__()
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.neuralOperators.neuralOperatorInterface import neuralOperatorInterface
+
+
+class sharedEmotionModel(neuralOperatorInterface):
+
+    def __init__(self, operatorType, encodedDimension, fourierDimension, numEmotions, numLiftingLayers, numModelLayers, goldenRatio, activationMethod, learningProtocol, neuralOperatorParameters):
+        super(sharedEmotionModel, self).__init__(sequenceLength=fourierDimension, numInputSignals=numEmotions * numLiftingLayers, numOutputSignals=numEmotions, learningProtocol=learningProtocol, addBiasTerm=False)
         # General model parameters.
-        self.numInterpreterHeads = numInterpreterHeads  # The number of ways to interpret a set of physiological signals.
-        self.numActivityFeatures = numActivityFeatures  # The number of common activity features to extract.
-        self.numEncodedSignals = numEncodedSignals  # The number of signals in each batch. Each signal is a combination of multiple.
-        self.numCommonSignals = numCommonSignals  # The number of features from considering all the signals.
-        self.numBasicEmotions = numBasicEmotions  # The number of basic emotions (basis states of emotions).
-        self.compressedLength = compressedLength  # The final length of each signal after projection.
+        self.activationFunction = activationFunctions.getActivationMethod(activationMethod=activationMethod)
+        self.neuralOperatorParameters = neuralOperatorParameters  # The parameters for the neural operator.
+        self.learningProtocol = learningProtocol  # The learning protocol for the model.
+        self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
+        self.fourierDimension = fourierDimension  # The dimension of the fourier signal.
+        self.numLiftingLayers = numLiftingLayers  # The number of lifting layers to use.
+        self.numModelLayers = numModelLayers  # The number of model layers to use.
+        self.operatorType = operatorType  # The operator type for the neural operator.
+        self.goldenRatio = goldenRatio  # The golden ratio for the model.
+        self.numEmotions = numEmotions  # The number of signals to encode.
 
-        # Last layer activation.
-        self.lastActivityLayer = None  # A string representing the last layer for activity prediction. Option: 'softmax', 'logsoftmax', or None.
-        self.lastEmotionLayer = None  # A string representing the last layer for emotion prediction. Option: 'softmax', 'logsoftmax', or None.
+        # The neural layers for the signal encoder.
+        self.processingLayers, self.neuralLayers, self.addingFlags = nn.ModuleList(), nn.ModuleList(), []
+        for layerInd in range(1 + self.numModelLayers // self.goldenRatio): self.addLayer()
 
-    def forward(self, mappedSignalData, metadata, specificEmotionModel):
-        """ The shape of manifoldData: (batchSize, numEncodedSignals, compressedLength) """
+        # Assert the validity of the input parameters.
+        assert self.numModelLayers % self.goldenRatio == 0, "The number of model layers must be divisible by the golden ratio."
+        assert self.encodedDimension % 2 == 0, "The encoded dimension must be divisible by 2."
+        assert 0 < self.encodedDimension, "The encoded dimension must be greater than 0."
 
-        # ----------------------- Data Preprocessing ----------------------- #  
+        # Initialize loss holders.
+        self.trainingLosses_emotionPrediction = None
+        self.testingLosses_emotionPrediction = None
+        self.trainingLosses_activityPrediction = None
+        self.testingLosses_activityPrediction = None
+        self.resetModel()
 
-        # Extract the incoming data's dimension.
-        batchSize, numEncodedSignals, compressedLength = mappedSignalData.size()
-        subjectInds = metadata[:, 0]  # The first subject identifier is the subject index. subjectInds dimension: batchSize
+    def forward(self):
+        raise "You cannot call the dataset-specific signal encoder module."
 
-        # Assert the integrity of the incoming data.
-        assert numEncodedSignals == self.numEncodedSignals, f"The model was expecting {self.numEncodedSignals} signals, but received {numEncodedSignals}"
-        assert compressedLength == self.compressedLength, f"The signals have length {compressedLength}, but the model expected {self.compressedLength} points."
+    def resetModel(self):
+        # Emotion loss holders.
+        self.trainingLosses_emotionPrediction = []  # List of list of prediction training losses. Dim: numEpochs
+        self.testingLosses_emotionPrediction = []  # List of list of prediction testing losses. Dim: numEpochs
 
-        # ----------------------- Feature Extraction ----------------------- #  
+        # Activity loss holders.
+        self.trainingLosses_activityPrediction = []  # List of list of prediction testing losses. Dim: numEpochs
+        self.testingLosses_activityPrediction = []  # List of list of prediction testing losses. Dim: numEpochs
 
-        # Extract features synthesizing all the signal information.
-        featureData = self.extractCommonFeatures(mappedSignalData)
-        # featureData dimension: batchSize, self.numCommonSignals
+    def addLayer(self):
+        # Create the layers.
+        self.addingFlags.append(not self.addingFlags[-1] if len(self.addingFlags) != 0 else True)
+        self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=False))
+        if self.learningProtocol == 'rCNN':
+            self.processingLayers.append(self.postProcessingLayerCNN(numSignals=self.numEmotions * self.numLiftingLayers))
+        elif self.learningProtocol == 'rFC':
+            self.processingLayers.append(self.postProcessingLayerFC(sequenceLength=self.fourierDimension))
+        else:
+            raise "The learning protocol is not yet implemented."
 
-        # ------------------- Human Activity Recognition ------------------- #  
+    def learningInterface(self, layerInd, signalData):
+        # Apply the neural operator layer with activation.
+        signalData = self.neuralLayers[layerInd](signalData)
+        signalData = self.activationFunction(signalData, addingFlag=self.addingFlags[layerInd])
 
-        # Predict which activity the subject is experiencing.
-        activityFeatures = self.extractActivityFeatures(featureData)
-        activityDistribution = specificEmotionModel.classifyHumanActivity(activityFeatures)
-        activityDistribution = self.applyFinalActivation(activityDistribution, self.lastActivityLayer)  # Normalize the distributions for the expected loss function.
-        # activityDistribution dimension: batchSize, self.numActivities
+        # Apply the post-processing layer.
+        signalData = self.processingLayers[layerInd](signalData)
 
-        # ------------------ Basic Emotion Classification ------------------ #  
-
-        # For each possible interpretation, predict a set of basic emotional states.
-        eachBasicEmotionDistribution = self.predictBasicEmotions(featureData)
-        # eachBasicEmotionDistribution dimension: batchSize, self.numInterpreterHeads, self.numBasicEmotions, self.emotionLength
-
-        # Decide which set of interpretations the user is following. 
-        basicEmotionDistributions = specificEmotionModel.predictUserEmotions(eachBasicEmotionDistribution, activityDistribution, subjectInds)
-        # basicEmotionDistributions dimension: batchSize, self.numBasicEmotions, self.emotionLength
-
-        # ----------------- Complex Emotion Classification ----------------- #  
-
-        # Recombine the basic emotions into one complex emotional state.
-        finalEmotionDistributions = specificEmotionModel.predictComplexEmotions(basicEmotionDistributions, featureData)
-        # finalEmotionDistributions = self.applyFinalActivation(finalEmotionDistributions, self.lastEmotionLayer) # Normalize the distributions for the expected loss function.
-        # finalEmotionDistributions dimension: self.numEmotions, batchSize, self.emotionLength
-
-        # # import matplotlib.pyplot as plt
-        # # plt.plot(torch.arange(0, 10, 10/self.emotionLength).detach().cpu().numpy() - 0.5, finalEmotionDistributions[emotionInd][0].detach().cpu().numpy()); plt.show()
-
-        return featureData, activityDistribution, eachBasicEmotionDistribution, finalEmotionDistributions
-
-        # ------------------------------------------------------------------ #  
+        return signalData
