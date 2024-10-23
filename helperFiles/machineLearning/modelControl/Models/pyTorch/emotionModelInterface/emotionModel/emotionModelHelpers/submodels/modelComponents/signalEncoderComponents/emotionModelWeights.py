@@ -1,4 +1,5 @@
 import torch
+from matplotlib import pyplot as plt
 from torch import nn
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
@@ -30,8 +31,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     # ------------------- Physiological Profile ------------------- #
 
-    @staticmethod
-    def getInitialPhysiologicalProfile(numExperiments, encodedDimension):
+    def getInitialPhysiologicalProfile(self, numExperiments, encodedDimension):
         # Initialize the physiological profile in the frequency domain.
         imaginaryFourierData = torch.randn(numExperiments, encodedDimension//2 + 1, dtype=torch.float64)/2
         realFourierData = torch.randn(numExperiments, encodedDimension//2 + 1, dtype=torch.float64)/2
@@ -39,6 +39,7 @@ class emotionModelWeights(convolutionalHelpers):
 
         # Reconstruct the spatial data.
         physiologicalProfile = torch.fft.irfft(fourierData, n=encodedDimension, dim=-1, norm='ortho')
+        physiologicalProfile = self.smoothingFilter(physiologicalProfile, kernelSize=7)
 
         return nn.Parameter(physiologicalProfile)
 
@@ -79,11 +80,11 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def postProcessingLayerCNN(numSignals=1):
-        return reversibleConvolution(numChannels=numSignals, kernelSize=7, activationMethod=emotionModelWeights.getActivationType(), numLayers=1)
+        return reversibleConvolution(numChannels=numSignals, kernelSize=5, activationMethod=emotionModelWeights.getActivationType(), numLayers=1)
 
     @staticmethod
     def postProcessingLayerFC(numSignals, sequenceLength):
-        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=7, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
+        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=5, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
 
     @staticmethod
     def getActivationType(): return 'nonLinearAddition'
@@ -91,7 +92,7 @@ class emotionModelWeights(convolutionalHelpers):
 
 if __name__ == "__main__":
     # General parameters.
-    _batchSize, _numSignals, _sequenceLength = 2, 3, 512
+    _batchSize, _numSignals, _sequenceLength = 2, 3, 256
 
     # Initialize the model weights.
     modelWeights = emotionModelWeights()
