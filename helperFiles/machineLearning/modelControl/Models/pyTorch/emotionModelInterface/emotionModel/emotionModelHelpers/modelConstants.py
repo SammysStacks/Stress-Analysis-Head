@@ -19,7 +19,9 @@ class modelConstants:
     sharedSignalEncoderModel = "sharedSignalEncoderModel"
     specificEmotionModel = "specificEmotionModel"
     sharedEmotionModel = "sharedEmotionModel"
-    trainingInformation = "trainingInformation"
+    inferenceModel = "inferenceModel"
+
+    # Specify the models.
     signalEncoderModel = "signalEncoderModel"
     emotionModel = "emotionModel"
 
@@ -41,13 +43,14 @@ class modelConstants:
     # Specify the data interface parameters.
     timeWindows = [90, 120, 150, 180, 210, 240, 300]
     minNumExperiments = 55  # The minimum number of experiments that can be used in the model
-    maxNumSignals = 128  # The maximum number of signals that can be used in the model (2**n)
     minMaxScale = 1  # The maximum value for the min-max scaling.
 
     # Specify the data interface parameter names.
     signalChannelNames = [timeChannel, signalChannel]
 
     # Specify the saving parameters.
-    sharedModelWeights = ["sharedSignalEncoderModel", "sharedEmotionModel"]
+    specificModelWeights = [specificSignalEncoderModel, specificEmotionModel]
+    sharedModelWeights = [sharedSignalEncoderModel, sharedEmotionModel]
+    inferenceModelWeights = [inferenceModel]
 
     # -------------------------------------------------------------------- #

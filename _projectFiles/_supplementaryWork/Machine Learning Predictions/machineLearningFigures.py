@@ -18,7 +18,7 @@ from helperMethods.signalEncoderPlots import signalEncoderPlots
 
 if __name__ == "__main__":
     # Specify the general model information.
-    sharedModelWeights = [modelConstants.signalEncoderModel, modelConstants.autoencoderModel, modelConstants.emotionModel]  # Possible models: [modelConstants.trainingInformation, modelConstants.signalEncoderModel, modelConstants.autoencoderModel, modelConstants.signalMappingModel, modelConstants.specificEmotionModel, modelConstants.sharedEmotionModel]
+    sharedModelWeights = [modelConstants.signalEncoderModel, modelConstants.autoencoderModel, modelConstants.emotionModel]  # Possible models: [modelConstants.signalEncoderModel, modelConstants.autoencoderModel, modelConstants.signalMappingModel, modelConstants.specificEmotionModel, modelConstants.sharedEmotionModel]
     datasetNames = [modelConstants.wesadDatasetName, modelConstants.emognitionDatasetName, modelConstants.amigosDatasetName, modelConstants.dapperDatasetName, modelConstants.caseDatasetName, modelConstants.empatchDatasetName]  # Specify which metadata analyses to compile
     modelName = "emotionModel"  # The emotion model's unique identifier. Options: emotionModel
 

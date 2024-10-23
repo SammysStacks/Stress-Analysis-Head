@@ -80,7 +80,7 @@ if __name__ == "__main__":
     # --------------------------- Setup Training --------------------------- #
 
     # Initialize the model information classes.
-    trainingProtocols = trainingProtocolHelpers(submodel=submodel, accelerator=accelerator, sharedModelWeights=modelConstants.sharedModelWeights)  # Initialize the training protocols.
+    trainingProtocols = trainingProtocolHelpers(submodel=submodel, accelerator=accelerator)  # Initialize the training protocols.
     modelCompiler = compileModelData(submodel, userInputParams, useTherapyData=False, accelerator=accelerator)
     modelParameters = modelParameters(userInputParams, accelerator)  # Initialize the model parameters class.
     modelMigration = modelMigration(accelerator)  # Initialize the model migration class.
@@ -118,7 +118,7 @@ if __name__ == "__main__":
         #     trainingProtocols.saveModelState(epoch, allMetaModels, allModels, submodel, modelName, allDatasetNames, trainingDate)
 
         # Adjust the model architecture if needed.
-        trainingProtocols.adjustModelArchitecture(allMetaModels, allModels)
+        # trainingProtocols.adjustModelArchitecture(allMetaModels, allModels)
 
         # Finalize the epoch parameters.
         accelerator.wait_for_everyone()  # Wait before continuing.

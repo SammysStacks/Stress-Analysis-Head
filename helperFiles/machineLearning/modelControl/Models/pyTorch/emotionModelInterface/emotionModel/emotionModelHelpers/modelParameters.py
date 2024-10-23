@@ -119,9 +119,9 @@ class modelParameters:
     def getSubmodelsSaving(submodel):
         # Get the submodels to save
         if submodel == modelConstants.signalEncoderModel:
-            submodelsSaving = [modelConstants.trainingInformation, modelConstants.specificSignalEncoderModel, modelConstants.sharedSignalEncoderModel]
+            submodelsSaving = [modelConstants.specificSignalEncoderModel, modelConstants.sharedSignalEncoderModel]
         elif submodel == modelConstants.emotionModel:
-            submodelsSaving = [modelConstants.trainingInformation, modelConstants.specificSignalEncoderModel, modelConstants.sharedSignalEncoderModel, modelConstants.specificEmotionModel, modelConstants.sharedEmotionModel]
+            submodelsSaving = [modelConstants.specificSignalEncoderModel, modelConstants.sharedSignalEncoderModel, modelConstants.specificEmotionModel, modelConstants.sharedEmotionModel]
         else: assert False, "No model initialized"
 
         return submodelsSaving

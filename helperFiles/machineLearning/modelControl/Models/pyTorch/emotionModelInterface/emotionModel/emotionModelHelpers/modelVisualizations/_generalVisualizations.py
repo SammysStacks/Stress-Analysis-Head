@@ -123,9 +123,8 @@ class generalVisualizations(globalPlottingProtocols):
         plt.title(f"{plotTitle.split("/")[-1]}")
 
         # Save the figure if desired.
-        if self.saveDataFolder:
-            self.displayFigure(self.saveDataFolder + f"{plotTitle} at epoch {len(pathParameters[0])}.pdf")
-        plt.show()
+        if self.saveDataFolder: self.displayFigure(self.saveDataFolder + f"{plotTitle} at epoch {len(pathParameters[0])}.pdf")
+        else: plt.show()
 
     def plotTrainingLosses(self, trainingLosses, testingLosses, lossLabels, plotTitle="Model Convergence Loss", logY=True):
         # Assert the validity of the input data.
@@ -149,7 +148,7 @@ class generalVisualizations(globalPlottingProtocols):
         
         # Save the figure if desired.
         if self.saveDataFolder: self.displayFigure(self.saveDataFolder + f"{plotTitle} at epoch {len(trainingLosses[0])}.pdf")
-        plt.show(); plt.close('all')
+        else: plt.show(); plt.close('all')
 
     def generalDataPlotting(self, plottingData, plottingLabels, plotTitle="Model Convergence Loss"):
         # Plot the training path.
@@ -163,6 +162,5 @@ class generalVisualizations(globalPlottingProtocols):
         plt.title(f"{plotTitle.split("/")[-1]}")
 
         # Save the figure if desired.
-        if self.saveDataFolder:
-            self.displayFigure(self.saveDataFolder + f"{plotTitle} at epoch {len(plottingData[0])}.pdf")
-        plt.show()
+        if self.saveDataFolder: self.displayFigure(self.saveDataFolder + f"{plotTitle} at epoch {len(plottingData[0])}.pdf")
+        else: plt.show()

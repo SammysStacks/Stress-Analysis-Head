@@ -1,26 +1,25 @@
-# General
 import random
 import time
 
 from .emotionModel.emotionModelHelpers.modelConstants import modelConstants
-# Import files for machine learning
 from .emotionPipelineHelpers import emotionPipelineHelpers
 
 
 class emotionPipeline(emotionPipelineHelpers):
 
-    def __init__(self, accelerator, modelID, datasetName, modelName, allEmotionClasses, maxNumSignals, numSubjects, userInputParams,
-                 emotionNames, activityNames, featureNames, submodel, numExperiments):
+    def __init__(self, accelerator, datasetName, modelName, allEmotionClasses, numSubjects, userInputParams,
+                 emotionNames, activityNames, featureNames, submodel, numExperiments, reconstructionIndex):
         # General parameters.
-        super().__init__(accelerator, modelID, datasetName, modelName, allEmotionClasses, maxNumSignals, numSubjects, userInputParams,
+        super().__init__(accelerator, datasetName, modelName, allEmotionClasses, numSubjects, userInputParams,
                          emotionNames, activityNames, featureNames, submodel, numExperiments)
         # General parameters.
+        self.reconstructionIndex = reconstructionIndex  # The index of the signal to reconstruct.
         self.augmentData = True
 
         # Finish setting up the model.
         self.compileOptimizer(submodel)  # Initialize the optimizer (for back propagation)
 
-    def trainModel(self, dataLoader, submodel, numEpochs=500):
+    def trainModel(self, dataLoader, submodel, trainSharedLayers, inferenceTraining, numEpochs):
         """
         Stored items in the dataLoader.dataset:
             allData: The standardized testing and training data → Dim: numExperiments, numSignals, totalLength, numChannels
@@ -33,13 +32,9 @@ class emotionPipeline(emotionPipelineHelpers):
         self.accelerator.print(f"\nTraining {self.datasetName} model", flush=True)
 
         # Load in all the data and labels for final predictions and calculate the activity and emotion class weights.
-        allData, allLabels, allTrainingMasks, allTestingMasks, allSignalData, allSignalIdentifiers, allMetadata, reconstructionIndex = self.prepareInformation(dataLoader)
-        allEmotionClassWeights, activityClassWeights = self.organizeLossInfo.getClassWeights(allLabels, allTrainingMasks, allTestingMasks, self.numActivities)
-
-        # Prepare the model for training.
-        model = self.getDistributedModel()
-        model.to(self.accelerator.device)
-        self.setupTraining(submodel)
+        # allData, allLabels, allTrainingMasks, allTestingMasks, allSignalData, allSignalIdentifiers, allMetadata, reconstructionIndex = self.prepareInformation(dataLoader)
+        # allEmotionClassWeights, activityClassWeights = self.organizeLossInfo.getClassWeights(allLabels, allTrainingMasks, allTestingMasks, self.numActivities)
+        self.setupTraining(submodel, trainSharedLayers=trainSharedLayers, inferenceTraining=inferenceTraining)
 
         # For each training epoch.
         for epoch in range(numEpochs):
@@ -47,14 +42,14 @@ class emotionPipeline(emotionPipelineHelpers):
 
             # For each data batch in the epoch.
             for batchDataInd, batchData in enumerate(dataLoader):
-                with self.accelerator.accumulate(model):  # Accumulate gradients.
+                with self.accelerator.accumulate(self.model):  # Accumulate gradients.
                     # Extract the data, labels, and testing/training indices.
                     batchSignalInfo, batchSignalLabels, batchTrainingMask, batchTestingMask = self.extractBatchInformation(batchData)
                     batchSize, numSignals, maxSequenceLength, numChannels = batchSignalInfo.size()
                     numPointsAnalyzed += batchSize
 
                     # Get the reconstruction column for auto encoding and activity prediction.
-                    if submodel == modelConstants.signalEncoderModel: batchTrainingMask, batchSignalLabels, batchSignalInfo = self.dataInterface.getReconstructionData(batchTrainingMask, batchSignalLabels, batchSignalInfo, reconstructionIndex)
+                    if not inferenceTraining and submodel == modelConstants.signalEncoderModel: batchTrainingMask, batchSignalLabels, batchSignalInfo = self.dataInterface.getReconstructionData(batchTrainingMask, batchSignalLabels, batchSignalInfo, self.reconstructionIndex)
 
                     # We can skip this batch, and backpropagation if necessary.
                     if batchSignalInfo.size(0) == 0: self.backpropogateModel(); continue
@@ -67,14 +62,14 @@ class emotionPipeline(emotionPipelineHelpers):
                     # metaBatchInfo dimension: batchSize, numMetadata
 
                     # Adjust the data precision.
-                    signalBatchData = signalBatchData.round(decimals=6).double()
                     batchSignalIdentifiers = batchSignalIdentifiers.int()
+                    signalBatchData = signalBatchData.double()
                     metaBatchInfo = metaBatchInfo.double()
 
                     # For every new batch.
-                    if self.accelerator.sync_gradients: self.augmentData = random.uniform(a=0, b=1) < 0.25
+                    if not inferenceTraining and self.accelerator.sync_gradients: self.augmentData = random.uniform(a=0, b=1) < 0.25
 
-                    if self.augmentData:
+                    if not inferenceTraining and self.augmentData:
                         # Augment the signals to train an arbitrary sequence length and order.
                         augmentedBatchData = self.dataAugmentation.changeNumSignals(signalBatchData, dropoutPercent=0.1)
                         augmentedBatchData = self.dataAugmentation.signalDropout(augmentedBatchData, dropoutPercent=0.1)
@@ -83,16 +78,13 @@ class emotionPipeline(emotionPipelineHelpers):
 
                     # ------------ Forward pass through the model  ------------- #
 
-                    # Get the physiological times.
-                    physiologicalTimes = model.sharedSignalEncoderModel.pseudoEncodedTimes
-
                     # Perform the forward pass through the model.
-                    missingDataMask, reconstructedSignalData, generalEncodingLoss, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = model.forward(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, trainingFlag=True)
+                    missingDataMask, reconstructedSignalData, generalEncodingLoss, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = self.model.forward(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, inferenceTraining=False)
                     # reconstructedSignalData dimension: batchSize, numSignals, encodedDimension
-                    # physiologicalProfile dimension: batchSize, numSignals, encodedDimension
                     # fourierData dimension: batchSize, numEncodedSignals, fourierDimension
                     # missingDataMask dimension: batchSize, numSignals, maxSequenceLength
                     # basicEmotionProfile: batchSize, numBasicEmotions, encodedDimension
+                    # physiologicalProfile dimension: batchSize, encodedDimension
                     # activityProfile: batchSize, numSignals, encodedDimension
                     # emotionProfile: batchSize, numEmotions, encodedDimension
                     # generalEncodingLoss dimension: batchSize
@@ -105,7 +97,8 @@ class emotionPipeline(emotionPipelineHelpers):
                     self.modelHelpers.assertVariableIntegrity(emotionProfile, variableName="emotion profile", assertGradient=False)
 
                     # Calculate the error in signal compression (signal encoding loss).
-                    signalReconstructedLoss, generalEncodingLoss = self.organizeLossInfo.calculateSignalEncodingLoss(augmentedBatchData, reconstructedSignalData, generalEncodingLoss, physiologicalTimes, missingDataMask, batchTrainingMask, reconstructionIndex)
+                    physiologicalTimes = self.model.sharedSignalEncoderModel.pseudoEncodedTimes
+                    signalReconstructedLoss, generalEncodingLoss = self.organizeLossInfo.calculateSignalEncodingLoss(augmentedBatchData, reconstructedSignalData, generalEncodingLoss, physiologicalTimes, missingDataMask, batchTrainingMask, self.reconstructionIndex)
                     if signalReconstructedLoss is None: self.accelerator.print("Not useful loss"); continue
 
                     # Initialize basic core loss value.
@@ -116,17 +109,13 @@ class emotionPipeline(emotionPipelineHelpers):
 
                     # ------------------- Update the Model  -------------------- #
 
-                    # Prevent too high losses from randomizing weights.
-                    while 10 < finalLoss: finalLoss = finalLoss / 10
-
                     t1 = time.time()
                     # Calculate the gradients.
                     self.accelerator.backward(finalLoss)  # Calculate the gradients.
                     self.backpropogateModel()  # Backpropagation.
-                    t2 = time.time(); self.accelerator.print(f"{self.datasetName} {numPointsAnalyzed}:", t2 - t1, "\n")
+                    t2 = time.time(); self.accelerator.print(f"{'Shared' if trainSharedLayers else 'Specific'} layer training {self.datasetName} {numPointsAnalyzed}:", t2 - t1, "\n")
 
         # Prepare the model/data for evaluation.
-        self.setupTrainingFlags(self.model, trainingFlag=False)  # Set all models into evaluation mode.
         self.accelerator.wait_for_everyone()  # Wait before continuing.
 
     def backpropogateModel(self):

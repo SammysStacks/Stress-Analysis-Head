@@ -1,7 +1,6 @@
 # General
 import os
 
-import matplotlib.pyplot as plt
 import torch
 
 # Visualization protocols
@@ -16,15 +15,14 @@ from ..modelConstants import modelConstants
 
 class modelVisualizations(globalPlottingProtocols):
 
-    def __init__(self, accelerator, generalTimeWindow, modelSubfolder):
+    def __init__(self, accelerator, modelSubfolder):
         super(modelVisualizations, self).__init__()
         # General parameters.
-        self.generalTimeWindow = generalTimeWindow
         self.accelerator = accelerator
         self.saveDataFolder = None
 
         # Plotting settings.
-        plt.ion()
+        # plt.ion()
 
         # Initialize helper classes.
         self.dataInterface = emotionDataInterface()
@@ -76,21 +74,11 @@ class modelVisualizations(globalPlottingProtocols):
 
         # Load in all the data and labels for final predictions.
         # Load in all the data and labels for final predictions and calculate the activity and emotion class weights.
-        allData, allLabels, allTrainingMasks, allTestingMasks, allSignalData, allSignalIdentifiers, allMetadata, reconstructionIndex = modelPipeline.prepareInformation(lossDataLoader)
-        assert reconstructionIndex is not None
+        allData, allLabels, allTrainingMasks, allTestingMasks, allSignalData, allSignalIdentifiers, allMetadata = modelPipeline.prepareInformation(lossDataLoader)
+
         with torch.no_grad():
-
-            # ---------------------- Time-Specific Plots ----------------------- #
-
             # Go through all the plots at this specific time window.
-            self.plotTrainingEvent(model, currentEpoch, allSignalData, allSignalIdentifiers, allMetadata, allTrainingMasks, allTestingMasks, reconstructionIndex, submodel, trainingDate, model.datasetName)
-
-            # ---------------------- Time-Agnostic Plots ----------------------- #
-
-            # Prepare the model/data for evaluation.
-            self.setSavingFolder(f"trainingFigures/{submodel}/{trainingDate}/{model.datasetName}/")  # Label the correct folder to save this analysis.
-
-            # Wait before continuing.
+            self.plotTrainingEvent(model, currentEpoch, allSignalData, allSignalIdentifiers, allMetadata, allTrainingMasks, allTestingMasks, modelPipeline.reconstructionIndex, submodel, trainingDate, model.datasetName)
             self.accelerator.wait_for_everyone()
 
         # ------------------------------------------------------------------ #
@@ -120,8 +108,8 @@ class modelVisualizations(globalPlottingProtocols):
 
         with torch.no_grad():  # Stop gradient tracking
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
-            missingDataTrainingMask, reconstructedSignalTrainingData, finalTrainingManifoldProjectionLoss, physiologicalTrainingProfile, activityTrainingProfile, basicEmotionTrainingProfile, emotionTrainingProfile = model.forward(submodel, trainingSignalData, trainingSignalIdentifiers, trainingMetadata, device=self.accelerator.device, trainingFlag=True)
-            missingDataTestingMask, reconstructedSignalTestingData, finalTestingManifoldProjectionLoss, physiologicalTestingProfile, activityTestingProfile, basicEmotionTestingProfile, emotionTestingProfile = model.forward(submodel, testingSignalData, testingSignalIdentifiers, testingMetadata, device=self.accelerator.device, trainingFlag=True)
+            missingDataTrainingMask, reconstructedSignalTrainingData, finalTrainingManifoldProjectionLoss, physiologicalTrainingProfile, activityTrainingProfile, basicEmotionTrainingProfile, emotionTrainingProfile = model.forward(submodel, trainingSignalData, trainingSignalIdentifiers, trainingMetadata, device=self.accelerator.device, inferenceTraining=False)
+            missingDataTestingMask, reconstructedSignalTestingData, finalTestingManifoldProjectionLoss, physiologicalTestingProfile, activityTestingProfile, basicEmotionTestingProfile, emotionTestingProfile = model.forward(submodel, testingSignalData, testingSignalIdentifiers, testingMetadata, device=self.accelerator.device, inferenceTraining=False)
 
             # Detach the data from the GPU and tensor format.
             missingDataTrainingMask, reconstructedSignalTrainingData, finalTrainingManifoldProjectionLoss, physiologicalTrainingProfile, activityTrainingProfile, basicEmotionTrainingProfile, emotionTrainingProfile = missingDataTrainingMask.detach().cpu().numpy(), reconstructedSignalTrainingData.detach().cpu().numpy(), finalTrainingManifoldProjectionLoss.detach().cpu().numpy(), physiologicalTrainingProfile.detach().cpu().numpy(), activityTrainingProfile.detach().cpu().numpy(), basicEmotionTrainingProfile.detach().cpu().numpy(), emotionTrainingProfile.detach().cpu().numpy()

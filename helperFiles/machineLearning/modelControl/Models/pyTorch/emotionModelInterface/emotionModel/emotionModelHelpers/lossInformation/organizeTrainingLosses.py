@@ -22,10 +22,8 @@ class organizeTrainingLosses(lossCalculations):
         modelPipeline.setupTrainingFlags(modelPipeline.model, trainingFlag=False)  # Set all models into evaluation mode.
         model = modelPipeline.model
 
-        # Load in all the data and labels for final predictions.
         # Load in all the data and labels for final predictions and calculate the activity and emotion class weights.
-        allData, allLabels, allTrainingMasks, allTestingMasks, allSignalData, allSignalIdentifiers, allMetadata, reconstructionIndex = modelPipeline.prepareInformation(lossDataLoader)
-        assert reconstructionIndex is not None
+        allData, allLabels, allTrainingMasks, allTestingMasks, allSignalData, allSignalIdentifiers, allMetadata = modelPipeline.prepareInformation(lossDataLoader)
 
         # Stop gradient tracking.
         with torch.no_grad():
@@ -34,49 +32,49 @@ class organizeTrainingLosses(lossCalculations):
 
             t1 = time.time()
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
-            missingDataMask, reconstructedSignalData, generalEncodingLoss, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = model.fullPass(submodel, allSignalData, allSignalIdentifiers, allMetadata, device=self.accelerator.device, trainingFlag=True)
+            missingDataMask, reconstructedSignalData, generalEncodingLoss, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = model.fullPass(submodel, allSignalData, allSignalIdentifiers, allMetadata, device=self.accelerator.device, inferenceTraining=False)
             t2 = time.time(); self.accelerator.print("Full Pass", t2 - t1)
 
             # Calculate the signal encoding loss.
-            signalReconstructedTrainingLoss, signalSpecificTrainingLoss = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, generalEncodingLoss, physiologicalTimes, missingDataMask, allTrainingMasks, reconstructionIndex)
-            signalReconstructedTestingLoss, signalSpecificTestingLoss = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, generalEncodingLoss, physiologicalTimes, missingDataMask, allTestingMasks, reconstructionIndex)
+            signalReconstructedTrainingLoss, signalSpecificTrainingLoss = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, generalEncodingLoss, physiologicalTimes, missingDataMask, allTrainingMasks, modelPipeline.reconstructionIndex)
+            signalReconstructedTestingLoss, signalSpecificTestingLoss = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, generalEncodingLoss, physiologicalTimes, missingDataMask, allTestingMasks, modelPipeline.reconstructionIndex)
 
             # Store the signal encoder loss information.
             self.storeLossInformation(signalReconstructedTrainingLoss, signalReconstructedTestingLoss, model.specificSignalEncoderModel.trainingLosses_signalReconstruction, model.specificSignalEncoderModel.testingLosses_signalReconstruction)
             self.storeLossInformation(signalSpecificTrainingLoss, signalSpecificTrainingLoss, model.specificSignalEncoderModel.trainingLosses_manifoldProjection, model.specificSignalEncoderModel.testingLosses_manifoldProjection)
 
             # if submodel == modelConstants.emotionModel:
-                # Segment the data into its time window.
-                # segmentedSignalData = dataAugmentation.getRecentSignalPoints(allSignalData, self.generalTimeWindow)
+            # Segment the data into its time window.
+            # segmentedSignalData = dataAugmentation.getRecentSignalPoints(allSignalData, self.generalTimeWindow)
 
-                # Calculate the signal encoding loss.
-                # manifoldReconstructedTestingLoss, manifoldMeanTestingLoss, manifoldMinMaxTestingLoss = \
-                #     self.calculateManifoldReductionLoss(allEncodedData, allManifoldData, allTransformedManifoldData, allReconstructedEncodedData, allTestingMasks, reconstructionIndex)
-                # manifoldReconstructedTrainingLoss, manifoldMeanTrainingLoss, manifoldMinMaxTrainingLoss = \
-                #     self.calculateManifoldReductionLoss(allEncodedData, allManifoldData, allTransformedManifoldData, allReconstructedEncodedData, allTrainingMasks, reconstructionIndex)
-                # # Store the latent reconstruction loss.
-                # self.storeLossInformation(manifoldReconstructedTrainingLoss, manifoldReconstructedTestingLoss, model.signalMappingModel.trainingLosses_encodingReconstruction,
-                #                           model.signalMappingModel.testingLosses_encodingReconstruction)
-                # self.storeLossInformation(manifoldMinMaxTrainingLoss, manifoldMinMaxTestingLoss, model.signalMappingModel.trainingLosses_manifoldMinMax, model.signalMappingModel.testingLosses_manifoldMinMax)
-                # self.storeLossInformation(manifoldMeanTrainingLoss, manifoldMeanTestingLoss, model.signalMappingModel.trainingLosses_manifoldMean, model.signalMappingModel.testingLosses_manifoldMean)
+            # Calculate the signal encoding loss.
+            # manifoldReconstructedTestingLoss, manifoldMeanTestingLoss, manifoldMinMaxTestingLoss = \
+            #     self.calculateManifoldReductionLoss(allEncodedData, allManifoldData, allTransformedManifoldData, allReconstructedEncodedData, allTestingMasks, reconstructionIndex)
+            # manifoldReconstructedTrainingLoss, manifoldMeanTrainingLoss, manifoldMinMaxTrainingLoss = \
+            #     self.calculateManifoldReductionLoss(allEncodedData, allManifoldData, allTransformedManifoldData, allReconstructedEncodedData, allTrainingMasks, reconstructionIndex)
+            # # Store the latent reconstruction loss.
+            # self.storeLossInformation(manifoldReconstructedTrainingLoss, manifoldReconstructedTestingLoss, model.signalMappingModel.trainingLosses_encodingReconstruction,
+            #                           model.signalMappingModel.testingLosses_encodingReconstruction)
+            # self.storeLossInformation(manifoldMinMaxTrainingLoss, manifoldMinMaxTestingLoss, model.signalMappingModel.trainingLosses_manifoldMinMax, model.signalMappingModel.testingLosses_manifoldMinMax)
+            # self.storeLossInformation(manifoldMeanTrainingLoss, manifoldMeanTestingLoss, model.signalMappingModel.trainingLosses_manifoldMean, model.signalMappingModel.testingLosses_manifoldMean)
 
-                # Calculate the activity classification accuracy/loss and assert the integrity of the loss.
-                # activityTestingLoss = self.calculateActivityLoss(allActivityDistributions, allLabels, allTestingMasks, activityClassWeights)
-                # activityTrainingLoss = self.calculateActivityLoss(allActivityDistributions, allLabels, allTrainingMasks, activityClassWeights)
-                # # Store the activity loss information.
-                # self.testingLosses_activities.append(activityTestingLoss)
-                # self.trainingLosses_activities.append(activityTrainingLoss)
+            # Calculate the activity classification accuracy/loss and assert the integrity of the loss.
+            # activityTestingLoss = self.calculateActivityLoss(allActivityDistributions, allLabels, allTestingMasks, activityClassWeights)
+            # activityTrainingLoss = self.calculateActivityLoss(allActivityDistributions, allLabels, allTrainingMasks, activityClassWeights)
+            # # Store the activity loss information.
+            # self.testingLosses_activities.append(activityTestingLoss)
+            # self.trainingLosses_activities.append(activityTrainingLoss)
 
-                # # For each emotion we are predicting.
-                # for emotionInd in range(self.numEmotions):
-                #     if allEmotionClassWeights[emotionInd] is torch.nan: continue
-                #     # Calculate and add the loss due to misclassifying an emotion.
-                #     emotionTestingLoss = self.calculateEmotionLoss(emotionInd, allFinalEmotionDistributions, allLabels, allTestingMasks, allEmotionClassWeights) # Calculate the error in the emotion predictions
-                #     emotionTrainingLoss = self.calculateEmotionLoss(emotionInd, allFinalEmotionDistributions, allLabels, allTrainingMasks, allEmotionClassWeights) # Calculate the error in the emotion predictions
-                #     # Store the loss information.
-                #     self.testingLosses_emotions[emotionInd].append(emotionTestingLoss)
-                #     self.trainingLosses_emotions[emotionInd].append(emotionTrainingLoss)
-                # return None
+            # # For each emotion we are predicting.
+            # for emotionInd in range(self.numEmotions):
+            #     if allEmotionClassWeights[emotionInd] is torch.nan: continue
+            #     # Calculate and add the loss due to misclassifying an emotion.
+            #     emotionTestingLoss = self.calculateEmotionLoss(emotionInd, allFinalEmotionDistributions, allLabels, allTestingMasks, allEmotionClassWeights) # Calculate the error in the emotion predictions
+            #     emotionTrainingLoss = self.calculateEmotionLoss(emotionInd, allFinalEmotionDistributions, allLabels, allTrainingMasks, allEmotionClassWeights) # Calculate the error in the emotion predictions
+            #     # Store the loss information.
+            #     self.testingLosses_emotions[emotionInd].append(emotionTestingLoss)
+            #     self.trainingLosses_emotions[emotionInd].append(emotionTrainingLoss)
+            # return None
 
             # # For each time window analysis.
             # for timeWindowInd in range(len(modelConstants.timeWindows)):

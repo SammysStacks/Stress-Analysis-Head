@@ -1,4 +1,3 @@
-import math
 import random
 
 import torch
@@ -9,6 +8,7 @@ from .emotionModelHelpers.emotionDataInterface import emotionDataInterface
 # Import helper modules
 from .emotionModelHelpers.modelConstants import modelConstants
 from .emotionModelHelpers.modelParameters import modelParameters
+from .emotionModelHelpers.submodels.inferenceModel import inferenceModel
 from .emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
 from .emotionModelHelpers.submodels.modelComponents.signalEncoderComponents.emotionModelWeights import emotionModelWeights
 from .emotionModelHelpers.submodels.sharedEmotionModel import sharedEmotionModel
@@ -16,7 +16,6 @@ from .emotionModelHelpers.submodels.sharedSignalEncoderModel import sharedSignal
 # Import submodels
 from .emotionModelHelpers.submodels.specificEmotionModel import specificEmotionModel
 from .emotionModelHelpers.submodels.specificSignalEncoderModel import specificSignalEncoderModel
-from .emotionModelHelpers.submodels.trainingInformation import trainingInformation
 
 
 class emotionModelHead(nn.Module):
@@ -44,8 +43,8 @@ class emotionModelHead(nn.Module):
         # Signal encoder parameters.
         self.neuralOperatorParameters = userInputParams['neuralOperatorParameters']  # The parameters for the neural operator.
         self.numLiftingLayers = 2  # The number of lifting layers to use.
-        self.numModelLayers = 24  # The number of layers to use in the signal encoder.
-        self.goldenRatio = 6  # The golden ratio for the signal encoder.
+        self.numModelLayers = 16  # The number of layers to use in the signal encoder.
+        self.goldenRatio = 4  # The golden ratio for the signal encoder.
 
         # Emotion parameters.
         self.numInterpreterHeads = userInputParams['numInterpreterHeads']  # The number of ways to interpret a set of physiological signals.
@@ -61,9 +60,11 @@ class emotionModelHead(nn.Module):
 
         # Setup holder for the model's training information
         self.reversibleInterface = reversibleInterface()
-        self.trainingInformation = trainingInformation()
 
-        # ------------------------ Data Compression ------------------------ # 
+        # ------------------------ Data Compression ------------------------ #
+
+        # Inference interface for the model.
+        self.inferenceModel = inferenceModel(encodedDimension=self.encodedDimension)
 
         # The signal encoder model to find a common feature vector across all signals.
         self.specificSignalEncoderModel = specificSignalEncoderModel(
@@ -110,12 +111,14 @@ class emotionModelHead(nn.Module):
             )
 
             self.sharedEmotionModel = sharedEmotionModel(
-                numInterpreterHeads=self.numInterpreterHeads,
-                numActivityFeatures=self.numCommonSignals,
-                numEncodedSignals=self.numEncodedSignals,
-                numCommonSignals=self.numCommonSignals,
-                numBasicEmotions=self.numBasicEmotions,
-                compressedLength=self.compressedLength,
+                neuralOperatorParameters=self.neuralOperatorParameters,
+                encodedDimension=self.encodedDimension,
+                activationMethod=self.activationMethod,
+                learningProtocol=self.learningProtocol,
+                fourierDimension=self.fourierDimension,
+                numModelLayers=self.numModelLayers,
+                operatorType=self.operatorType,
+                goldenRatio=self.goldenRatio,
             )
 
     # ------------------------- Full Forward Calls ------------------------- #
@@ -135,7 +138,7 @@ class emotionModelHead(nn.Module):
         assert self.numModelLayers == numSharedLayers, f"The number of layers in the shared model ({numSharedLayers}) does not match the number of layers in the model ({self.numModelLayers})."
         if self.numModelLayers % self.goldenRatio == 0 and self.numModelLayers != 0: assert numSpecificLayers == 1 + self.numModelLayers // self.goldenRatio, f"The number of layers in the specific model ({numSpecificLayers}) does not match the number of layers in the model ({self.numModelLayers})."
 
-    def forward(self, submodel, signalData, signalIdentifiers, metadata, device, trainingFlag=False):
+    def forward(self, submodel, signalData, signalIdentifiers, metadata, device, inferenceTraining=False):
         # decodeSignals: whether to decode the signals after encoding, which is used for the autoencoder loss.
         # trainingFlag: whether the model is training or testing.
         # Preprocess the data to ensure integrity.
@@ -150,7 +153,7 @@ class emotionModelHead(nn.Module):
         activityProfile = torch.zeros((batchSize, self.encodedDimension), device=device)
         generalEncodingLoss = torch.zeros(batchSize, device=device)
 
-        # ------------------- Estimated Physiological Profile ------------------- #
+        # ------------------- Organize the Incoming Data ------------------- #
 
         # Unpack the incoming data.
         batchInds = emotionDataInterface.getSignalIdentifierData(signalIdentifiers, channelName=modelConstants.batchIndexSI)[:, 0]  # Dim: batchSize
@@ -162,30 +165,35 @@ class emotionModelHead(nn.Module):
         # Check which points were missing in the data.
         missingDataMask = torch.as_tensor((datapoints == 0) & (timepoints == 0), device=device, dtype=torch.bool)
         validSignalMask = ~torch.all(missingDataMask, dim=-1).unsqueeze(-1)
-        numValidSignals = validSignalMask.sum(dim=1).float()
         # missingDataMask: batchSize, numSignals, maxSequenceLength
         # validSignalMask: batchSize, numSignals, 1
-        # numValidSignals: batchSize
+
+        # ------------------- Estimated Physiological Profile ------------------- #
 
         # Get the estimated physiological profiles.
-        physiologicalProfile = self.specificSignalEncoderModel.getPhysiologicalProfileEstimation(batchInds, trainingFlag=trainingFlag)
-        reversibleInterface.changeDirections(forwardDirection=False)
+        if inferenceTraining: physiologicalProfile = self.inferenceModel.getInitialPhysiologicalProfile(batchSize)
+        else: physiologicalProfile = self.specificSignalEncoderModel.getInitialPhysiologicalProfile(batchInds)
         # physiologicalProfile: batchSize, encodedDimension
 
-        # ------------------- Learned Signal Mapping ------------------- #
+        # ------------------- Preprocess Signal Mapping ------------------- #
 
         # Remap the signal data to the estimated physiological profile.
-        fourierMagnitudeData, fourierPhaseData = self.sharedSignalEncoderModel.forwardFFT(physiologicalProfile)
-        fourierMagnitudeData = validSignalMask * fourierMagnitudeData.unsqueeze(1).repeat(1, numSignals, 1)
-        fourierPhaseData = validSignalMask * fourierPhaseData.unsqueeze(1).repeat(1, numSignals, 1)
-        # fourierMagnitudeData and fourierPhaseData: batchSize, numSignals, fourierDimension
+        realFourierData, imaginaryFourierData = self.sharedSignalEncoderModel.forwardFFT(physiologicalProfile)
+        realFourierData = validSignalMask * realFourierData.unsqueeze(1).repeat(1, numSignals, 1)
+        imaginaryFourierData = validSignalMask * imaginaryFourierData.unsqueeze(1).repeat(1, numSignals, 1)
+        # realFourierData and imaginaryFourierData: batchSize, numSignals, fourierDimension
         # physiologicalFourierData: batchSize, 2*numSignals, fourierDimension
 
         # Combine the magnitude and phase data.
-        physiologicalFourierData = torch.cat(tensors=(fourierMagnitudeData, fourierPhaseData), dim=1)
+        physiologicalFourierData = torch.cat(tensors=(realFourierData, imaginaryFourierData), dim=1)
         validFourierMask = validSignalMask.repeat(repeats=(1, 2, 1))
         # physiologicalFourierData: batchSize, 2*numSignals, fourierDimension
         # validFourierMask: batchSize, 2*numSignals
+
+        # ------------------- Learned Signal Mapping ------------------- #
+
+        # Prepare for the backward pass: physiologically -> signal data.
+        reversibleInterface.changeDirections(forwardDirection=False)
         metaLearningData = physiologicalFourierData
         specificLayerCounter = 0
 
@@ -194,37 +202,44 @@ class emotionModelHead(nn.Module):
             # Calculate the estimated physiological profile given each signal.
             if layerInd % self.goldenRatio == 0: metaLearningData = validFourierMask * self.specificSignalEncoderModel.learningInterface(layerInd=specificLayerCounter, signalData=metaLearningData); specificLayerCounter += 1  # Reversible signal-specific layers.
             metaLearningData = validFourierMask * self.sharedSignalEncoderModel.learningInterface(layerInd=layerInd, signalData=metaLearningData)  # Reversible meta-learning layers.
-        # metaLearningData: batchSize, numSignals, fourierDimension
         metaLearningData = validFourierMask * self.specificSignalEncoderModel.learningInterface(layerInd=specificLayerCounter, signalData=metaLearningData)  # Reversible signal-specific layers.
         assert specificLayerCounter + 1 == len(self.specificSignalEncoderModel.neuralLayers), f"The specific layer counter ({specificLayerCounter}) does not match the number of specific layers ({len(self.specificSignalEncoderModel.neuralLayers)})."
+        # metaLearningData: batchSize, numSignals, fourierDimension
 
         # Reconstruct the signal data from the Fourier data.
-        fourierMagnitudeData, fourierPhaseData = metaLearningData[:, :numSignals], metaLearningData[:, numSignals:]
-        reconstructedSignalData = validSignalMask * self.sharedSignalEncoderModel.backwardFFT(fourierMagnitudeData, fourierPhaseData)
-        # fourierMagnitudeData and fourierPhaseData: batchSize, numSignals, fourierDimension
+        realFourierData, imaginaryFourierData = metaLearningData[:, :numSignals], metaLearningData[:, numSignals:]
+        reconstructedSignalData = validSignalMask * self.sharedSignalEncoderModel.backwardFFT(realFourierData, imaginaryFourierData)
+        # realFourierData and imaginaryFourierData: batchSize, numSignals, fourierDimension
         # reconstructedSignalData: batchSize, numSignals, encodedDimension
 
-        if self.debugging and random.random() < 0.005:
-            # Optionally, plot the physiological profile for visual comparison
-            physiologicalTimes = self.sharedSignalEncoderModel.pseudoEncodedTimes.detach().cpu().numpy()
-            plt.plot(physiologicalTimes, physiologicalProfile[0].detach().cpu().numpy(), 'tab:blue', linewidth=1, label='Physiological Profile', alpha=0.5)
-            plt.legend()
-            plt.show()
-
-            # Optionally, plot the original and reconstructed signals for visual comparison
-            plt.plot(timepoints[0, 0, ~missingDataMask[0][0]].detach().cpu().numpy(), datapoints[0, 0, ~missingDataMask[0][0]].detach().cpu().numpy(), 'ok', markersize=3, label='Initial Signal', alpha=0.5)
-            plt.plot(physiologicalTimes, reconstructedSignalData[0, 0, :].detach().cpu().numpy(), 'tab:red', linewidth=1, label='Reconstructed Signal')
-            plt.legend()
-            plt.show()
+        # Visualize the data transformations within signal encoding.
+        if not inferenceTraining and random.random() < 0.01: self.visualizeSignalEncoding(physiologicalProfile, reconstructedSignalData, timepoints, datapoints, missingDataMask)
 
         # ------------------- Learned Emotion Mapping ------------------- #
+
+        # Prepare for the backward pass: physiologically -> signal data.
+        metaLearningData = physiologicalProfile.unsqueeze(1).repeat(repeats=(1, self.numEmotions, 1))
+        reversibleInterface.changeDirections(forwardDirection=False)
+        # metaLearningData: batchSize, numEmotions, encodedDimension
+        specificLayerCounter = 0
+
+        # For each layer in the model.
+        for layerInd in range(self.numModelLayers):
+            # Calculate the estimated physiological profile given each signal.
+            if layerInd % self.goldenRatio == 0: metaLearningData = self.specificEmotionModel.learningInterface(layerInd=specificLayerCounter, signalData=metaLearningData); specificLayerCounter += 1  # Reversible signal-specific layers.
+            metaLearningData = self.sharedEmotionModel.learningInterface(layerInd=layerInd, signalData=metaLearningData)  # Reversible meta-learning layers.
+        metaLearningData = self.specificEmotionModel.learningInterface(layerInd=specificLayerCounter, signalData=metaLearningData)  # Reversible signal-specific layers.
+        assert specificLayerCounter + 1 == len(self.specificEmotionModel.neuralLayers), f"The specific layer counter ({specificLayerCounter}) does not match the number of specific layers ({len(self.specificEmotionModel.neuralLayers)})."
+        # metaLearningData: batchSize, numEmotions, fourierDimension
 
         if submodel == modelConstants.emotionModel:
             activityProfile, basicEmotionProfile, emotionProfile = self.emotionPrediction(signalData, metadata)
 
+        # --------------------------------------------------------------- #
+
         return missingDataMask, reconstructedSignalData, generalEncodingLoss, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile
 
-    def fullPass(self, submodel, signalData, signalIdentifiers, metadata, device, trainingFlag):
+    def fullPass(self, submodel, signalData, signalIdentifiers, metadata, device, inferenceTraining):
         with torch.no_grad():
             # Preallocate the output tensors.
             batchSize, numSignals, maxSequenceLength, numChannels = signalData.size()
@@ -245,9 +260,22 @@ class emotionModelHead(nn.Module):
                 missingDataMask[startBatchInd:endBatchInd], reconstructedSignalData[startBatchInd:endBatchInd], generalEncodingLoss[startBatchInd:endBatchInd], physiologicalProfile[startBatchInd:endBatchInd], \
                     activityProfile[startBatchInd:endBatchInd], basicEmotionProfile[startBatchInd:endBatchInd], emotionProfile[startBatchInd:endBatchInd] \
                     = self.forward(submodel=submodel, signalData=signalData[startBatchInd:endBatchInd], signalIdentifiers=signalIdentifiers[startBatchInd:endBatchInd],
-                                   metadata=metadata[startBatchInd:endBatchInd], device=device, trainingFlag=trainingFlag)
+                                   metadata=metadata[startBatchInd:endBatchInd], device=device, inferenceTraining=inferenceTraining)
 
                 # Update the batch index.
                 startBatchInd = endBatchInd
 
         return missingDataMask, reconstructedSignalData, generalEncodingLoss, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile
+
+    def visualizeSignalEncoding(self, physiologicalProfile, reconstructedSignalData, timepoints, datapoints, missingDataMask):
+        # Optionally, plot the physiological profile for visual comparison
+        physiologicalTimes = self.sharedSignalEncoderModel.pseudoEncodedTimes.detach().cpu().numpy()
+        plt.plot(physiologicalTimes, physiologicalProfile[0].detach().cpu().numpy(), 'tab:blue', linewidth=1, label='Physiological Profile', alpha=0.5)
+        plt.legend()
+        plt.show()
+
+        # Optionally, plot the original and reconstructed signals for visual comparison
+        plt.plot(timepoints[0, 0, ~missingDataMask[0][0]].detach().cpu().numpy(), datapoints[0, 0, ~missingDataMask[0][0]].detach().cpu().numpy(), 'ok', markersize=3, label='Initial Signal', alpha=0.5)
+        plt.plot(physiologicalTimes, reconstructedSignalData[0, 0, :].detach().cpu().numpy(), 'tab:red', linewidth=1, label='Reconstructed Signal')
+        plt.legend()
+        plt.show()

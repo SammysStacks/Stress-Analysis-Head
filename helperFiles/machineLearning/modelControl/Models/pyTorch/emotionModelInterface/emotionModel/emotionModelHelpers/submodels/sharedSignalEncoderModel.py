@@ -51,14 +51,14 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
     def forwardFFT(self, inputData):
         # Perform the forward FFT and extract the magnitude and phase.
         fourierData = torch.fft.rfft(inputData, n=self.encodedDimension, dim=-1, norm='ortho')
-        fourierMagnitudeData = fourierData.abs()
-        fourierPhaseData = fourierData.angle()
+        imaginaryFourierData = fourierData.imag
+        realFourierData = fourierData.real
 
-        return fourierMagnitudeData, fourierPhaseData
+        return realFourierData, imaginaryFourierData
 
-    def backwardFFT(self, fourierMagnitudeData, fourierPhaseData):
-        # Reconstruct the fourier data from the magnitude and phase.
-        fourierData = fourierMagnitudeData * torch.exp(1j * fourierPhaseData)
+    def backwardFFT(self, realFourierData, imaginaryFourierData):
+        # Reconstruct the fourier data and the initial data.
+        fourierData = realFourierData + 1j * imaginaryFourierData
         initialData = torch.fft.irfft(fourierData, n=self.encodedDimension, dim=-1, norm='ortho')
 
         return initialData

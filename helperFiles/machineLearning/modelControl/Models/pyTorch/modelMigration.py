@@ -1,10 +1,6 @@
-# General
 import os
-
 import torch
 import torch.nn as nn
-
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
 
 class modelMigration:
@@ -44,20 +40,20 @@ class modelMigration:
     # ---------------------------------------------------------------------- #
     # ------------------- Alter/Transfer Model Parameters ------------------ #
 
-    def copyModelWeights(self, modelClass, sharedModelWeights):
+    def copyModelWeights(self, modelClass, modelWeights):
         layerInfo = {}
         # For each parameter in the model
         for layerName, layerParams in modelClass.model.named_parameters():
             currentSubmodel = self.getSubmodel(layerName)
 
             # If the layer should be saved.
-            if currentSubmodel in sharedModelWeights:
+            if currentSubmodel in modelWeights:
                 # Save the layer (bias and weight individually)
                 layerInfo[layerName] = layerParams.data.clone()
 
         return layerInfo
 
-    def unifyModelWeights(self, allModels, sharedModelWeights, layerInfo):
+    def unifyModelWeights(self, allModels, modelWeights, layerInfo):
         if layerInfo is None: return None
 
         # For each model provided.
@@ -69,22 +65,9 @@ class modelMigration:
                 currentSubmodel = self.getSubmodel(layerName)
 
                 # If the layer should be saved.
-                if currentSubmodel in sharedModelWeights:
+                if currentSubmodel in modelWeights:
                     assert layerName in layerInfo, layerName
                     layerParams.data = layerInfo[layerName].clone()
-
-    def changeGradTracking(self, allModels, sharedModelWeights, requires_grad=False):
-        # For each model provided.
-        for modelInd in range(len(allModels)):
-            pytorchModel = allModels[modelInd].model
-
-            # For each parameter in the model
-            for layerName, layerParams in pytorchModel.named_parameters():
-                currentSubmodel = self.getSubmodel(layerName)
-
-                # If the layer should be saved.
-                if currentSubmodel in sharedModelWeights:
-                    layerParams.requires_grad = requires_grad
 
     @staticmethod
     def getSubmodel(layerName):
@@ -176,6 +159,7 @@ class modelMigration:
             # Remove hidden attributes.
             if attr_name.startswith(("_", "accelerator")): continue
             if 'accelerator' in attr_name: continue
+            if 'accelerate' in attr_name: continue
 
             # Remove the DDP addon for modules.
             if attr_name.startswith("module."): attr_name = attr_name[len("module."):]
@@ -184,13 +168,10 @@ class modelMigration:
 
         return newModelAttributes
 
-    def _compileModelBaseName(self, modelName, submodel, datasetName, trainingDate, numEpochs, metaTraining=True, generalInformation=False):
+    def _compileModelBaseName(self, modelName, submodel, datasetName, trainingDate, numEpochs, metaTraining=True):
         # Organize information about the model.
         trainingType = "metaTrainingModels" if metaTraining else "trainingModels"
 
-        if generalInformation:
-            # Compile the location to save/load the model.
-            return self.saveModelFolder + f"{modelName}/{trainingType}/{submodel}/{trainingDate}/commonBackgroundInfo/trainingInformation.pth"
         # Compile the location to save/load the model.
         modelFolderPath = self.saveModelFolder + f"{modelName}/{trainingType}/{submodel}/{trainingDate}/{datasetName}/"
 
@@ -226,24 +207,18 @@ class modelMigration:
 
         # For each model, save the shared and specific weights
         for datasetInd, (modelPipeline, datasetName) in enumerate(zip(modelPipelines, datasetNames)):
-            # Update the specific model information to save.
-            trainingInformation = modelPipeline.getDistributedModels(model=modelPipeline.model, submodel=modelConstants.trainingInformation)
-            trainingInformation.storeOptimizer(modelPipeline.optimizer, storeOptimizer)
-            trainingInformation.storeScheduler(modelPipeline.scheduler, storeOptimizer)
-
-            # Save the individual model's information.
             self._saveModel(modelPipeline.model, modelName, datasetName, sharedModelWeights, submodelsSaving, subAttributesSaving,
                             submodel, trainingDate, numEpochs, metaTraining, saveModelAttributes, datasetInd)
 
     def _saveModel(self, model, modelName, datasetName, sharedModelWeights, submodelsSaving, subAttributesSaving,
                    submodel, trainingDate, numEpochs, metaTraining, saveModelAttributes=True, datasetInd=0):
         # Create a path to where we want to save the model.
-        modelBaseName = self._compileModelBaseName(modelName, submodel, datasetName, trainingDate, numEpochs, metaTraining, generalInformation=False)
-        sharedModelBaseName = self._compileModelBaseName(modelName, submodel, self.sharedWeightsName, trainingDate, numEpochs, metaTraining, generalInformation=False)
+        modelBaseName = self._compileModelBaseName(modelName, submodel, datasetName, trainingDate, numEpochs, metaTraining)
+        sharedModelBaseName = self._compileModelBaseName(modelName, submodel, self.sharedWeightsName, trainingDate, numEpochs, metaTraining)
 
         # Filter the state_dict based on sharedModelWeights
         shared_params, specific_params = self._filterStateDict(model, sharedModelWeights, submodelsSaving)
-        shared_attributes, specific_attributes = self._filterClassAttributes(model, [], subAttributesSaving)
+        shared_attributes, specific_attributes = self._filterClassAttributes(model, sharedModelWeights=[], submodelsSaving=subAttributesSaving)
 
         # Save the pytorch models.
         self._savePyTorchModel(specific_params, specific_attributes, modelBaseName, saveModelAttributes)  # Save dataset-specific parameters
@@ -266,22 +241,6 @@ class modelMigration:
         # Save the model information.
         self.accelerator.save(model_info, saveModelPath)
 
-    # DEPRECATED
-    def storeTrainingMask(self, modelPipelines, modelName, datasetNames, submodel, trainingDate, metaTraining):
-        # Assert the integrity of the input variables.
-        assert len(modelPipelines) == len(datasetNames), f"You provided {len(modelPipelines)} models to save, but only {len(datasetNames)} datasetNames."
-        assert 0 < len(modelPipelines), "No models provided to save."
-        augmentedTrainingMask = None
-        augmentedTestingMask = None
-
-        # For each model, save the shared and specific weights
-        for datasetInd, (modelPipeline, datasetName) in enumerate(zip(modelPipelines, datasetNames)):
-            savingTrainingInfo = {"submodel": submodel, "augmentedTrainingMask": augmentedTrainingMask, "augmentedTestingMask": augmentedTestingMask}
-            saveTrainingInfoPath = self._compileModelBaseName(modelName, submodel, datasetName, trainingDate, 0, metaTraining, generalInformation=True)
-
-            # Save the model information.
-            self.accelerator.save(savingTrainingInfo, saveTrainingInfoPath)
-
     # ---------------------------------------------------------------------- #
     # ------------------------ Loading Model Methods ----------------------- #
     
@@ -295,15 +254,10 @@ class modelMigration:
             # Save the individual model's information.
             self._loadModel(modelPipeline.model, modelPipeline.modelName, modelPipeline.datasetName, submodel, trainingDate, numEpochs, metaTraining, loadModelAttributes, loadModelWeights)
 
-            if loadModelWeights:
-                # Load in the specific model information.
-                trainingInformation = modelPipeline.getDistributedModels(model=modelPipeline.model, submodel=modelConstants.trainingInformation)
-                trainingInformation.setSubmodelInfo(modelPipeline, submodel)
-
     def _loadModel(self, model, modelName, datasetName, submodel, trainingDate, numEpochs, metaTraining, loadModelAttributes=True, loadModelWeights=True):
         # Construct base names for loading model and attributes
-        modelBaseName = self._compileModelBaseName(modelName, submodel, datasetName, trainingDate, numEpochs, metaTraining, generalInformation=False)
-        sharedModelBaseName = self._compileModelBaseName(modelName, submodel, self.sharedWeightsName, trainingDate, numEpochs, metaTraining, generalInformation=False)
+        modelBaseName = self._compileModelBaseName(modelName, submodel, datasetName, trainingDate, numEpochs, metaTraining)
+        sharedModelBaseName = self._compileModelBaseName(modelName, submodel, self.sharedWeightsName, trainingDate, numEpochs, metaTraining)
 
         # Load in the pytorch models.
         self._loadPyTorchModel(model, modelBaseName, loadModelAttributes, loadModelWeights, submodel)  # Load dataset-specific parameters

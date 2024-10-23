@@ -4,6 +4,7 @@ import torch
 from torch import nn
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.inferenceModel import inferenceModel
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.neuralOperators.neuralOperatorInterface import neuralOperatorInterface
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
 
@@ -29,8 +30,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         for layerInd in range(1 + self.numModelLayers // self.goldenRatio): self.addLayer()
 
         # Initialize the blank signal profile.
-        self.physiologicalProfileAnsatz = nn.Parameter(torch.randn(numExperiments, encodedDimension, dtype=torch.float64))
-        self.physiologicalProfileAnsatz = nn.init.normal_(self.physiologicalProfileAnsatz, mean=0, std=0.5)
+        self.physiologicalProfileAnsatz = self.getInitialPhysiologicalProfile(numExperiments=numExperiments, encodedDimension=encodedDimension)
 
         # Assert the validity of the input parameters.
         assert self.numModelLayers % self.goldenRatio == 0, "The number of model layers must be divisible by the golden ratio."
@@ -61,14 +61,9 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         elif self.learningProtocol == 'rFC': self.processingLayers.append(self.postProcessingLayerFC(numSignals=self.numSignals*self.numLiftingLayers, sequenceLength=self.fourierDimension))
         else: raise "The learning protocol is not yet implemented."
 
-    def getPhysiologicalProfileEstimation(self, batchInds, trainingFlag):
+    def getInitialPhysiologicalProfile(self, batchInds):
         # batchInds: The indices of the signals to estimate. Dims: batchSize
-        if trainingFlag: return self.physiologicalProfileAnsatz[batchInds]
-        batchSize = batchInds.size(0)
-
-        # Initialize the blank signal profile.
-        physiologicalProfileGuess = nn.Parameter(torch.randn(size=(batchSize, self.encodedDimension), dtype=torch.float64, device=batchInds.device))
-        return nn.init.kaiming_uniform_(physiologicalProfileGuess, a=math.sqrt(5), mode='fan_in', nonlinearity='leaky_relu')
+        return self.physiologicalProfileAnsatz[batchInds]
 
     def learningInterface(self, layerInd, signalData):
         # For the forward/harder direction.

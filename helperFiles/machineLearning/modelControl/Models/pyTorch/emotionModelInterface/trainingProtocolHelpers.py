@@ -4,16 +4,18 @@ import time
 
 # Helper classes.
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.generalMethods.modelHelpers import modelHelpers
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
 from helperFiles.machineLearning.modelControl.Models.pyTorch.modelMigration import modelMigration
 
 
 class trainingProtocolHelpers:
 
-    def __init__(self, submodel, accelerator, sharedModelWeights):
+    def __init__(self, submodel, accelerator):
         # General parameters.
         self.submodelsSaving = modelParameters.getSubmodelsSaving(submodel)  # The submodels to save.
-        self.sharedModelWeights = sharedModelWeights  # The shared model weights.
+        self.specificModelWeights = modelConstants.specificModelWeights  # The dataset-specific model weights.
+        self.sharedModelWeights = modelConstants.sharedModelWeights  # The shared model weights.
         self.minEpochs_modelAdjustment = 1  # The minimum number of epochs before adjusting the model architecture.
         self.accelerator = accelerator
         self.unifiedLayerData = None
@@ -52,6 +54,18 @@ class trainingProtocolHelpers:
         # Unify all the model weights.
         self.unifyAllModelWeights(allMetaModels, allModels)
 
+    @staticmethod
+    def inferenceTraining(modelPipeline, inputData, numEpochs):
+        # Prepare the model for inference training.
+        inputData = torch.as_tensor(inputData, dtype=torch.float64)
+        numExperiments, numSignals, sequenceLength, numChannels = inputData.size()
+        modelPipeline.model.inferenceModel.resetInferenceModel(numExperiments)
+        experimentalInds = torch.arange(0, numExperiments, dtype=torch.int64)
+        dataLoader = zip(experimentalInds, inputData)
+
+        # Train the inference model.
+        modelPipeline.trainModel(dataLoader, submodel=modelConstants.signalEncoderModel, inferenceTraining=True, trainSharedLayers=False, numEpochs=numEpochs)
+
     def trainEpoch(self, submodel, allMetadataLoaders, allMetaModels, allModels):
         # For each meta-training model.
         for modelInd in range(len(allMetadataLoaders)):
@@ -59,15 +73,31 @@ class trainingProtocolHelpers:
             modelPipeline = allMetaModels[modelInd]
 
             # Train the updated model.
-            self.modelMigration.unifyModelWeights(allModels=[modelPipeline], sharedModelWeights=self.sharedModelWeights, layerInfo=self.unifiedLayerData)
-            modelPipeline.trainModel(dataLoader, submodel, numEpochs=1)
+            self.modelMigration.unifyModelWeights(allModels=[modelPipeline], modelWeights=self.sharedModelWeights, layerInfo=self.unifiedLayerData)
+            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, trainSharedLayers=True, numEpochs=1)
             self.accelerator.wait_for_everyone()
+
+            # Train the specific layers.
+            self.trainSpecificLayers(submodel, allMetadataLoaders, allMetaModels, allModels)
 
             # Store the new model weights.
             self.unifiedLayerData = self.modelMigration.copyModelWeights(modelPipeline, self.sharedModelWeights)
 
         # Unify all the model weights.
         self.unifyAllModelWeights(allMetaModels, allModels)
+
+    def trainSpecificLayers(self, submodel, allMetadataLoaders, allMetaModels, allModels):
+        # Unify all the model weights.
+        self.unifyAllModelWeights(allMetaModels, allModels)
+
+        # For each meta-training model.
+        for modelInd in range(len(allMetadataLoaders)):
+            dataLoader = allMetadataLoaders[modelInd]
+            modelPipeline = allMetaModels[modelInd]
+
+            # Train the updated model.
+            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, trainSharedLayers=False, numEpochs=1)
+            self.accelerator.wait_for_everyone()
 
     def calculateLossInformation(self, allMetaModels, allMetadataLoaders, allModels, allDataLoaders, submodel):
         self.unifyAllModelWeights(allMetaModels, allModels)  # Unify all the model weights.
@@ -112,8 +142,8 @@ class trainingProtocolHelpers:
         if self.unifiedLayerData is None: self.unifiedLayerData = self.modelMigration.copyModelWeights(allMetaModels[0], self.sharedModelWeights)
 
         # Unify all the model weights.
-        if allMetaModels: self.modelMigration.unifyModelWeights(allModels=allMetaModels, sharedModelWeights=self.sharedModelWeights, layerInfo=self.unifiedLayerData)
-        if allModels: self.modelMigration.unifyModelWeights(allModels=allModels, sharedModelWeights=self.sharedModelWeights, layerInfo=self.unifiedLayerData)
+        if allMetaModels: self.modelMigration.unifyModelWeights(allModels=allMetaModels, modelWeights=self.sharedModelWeights, layerInfo=self.unifiedLayerData)
+        if allModels: self.modelMigration.unifyModelWeights(allModels=allModels, modelWeights=self.sharedModelWeights, layerInfo=self.unifiedLayerData)
 
     # DEPRECATED
     def constrainSpectralNorm(self, allMetaModels, allModels, unifiedLayerData, addingSN):

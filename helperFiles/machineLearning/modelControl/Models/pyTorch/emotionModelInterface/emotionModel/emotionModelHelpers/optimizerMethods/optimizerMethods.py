@@ -13,34 +13,35 @@ class optimizerMethods:
         self.userInputParams = userInputParams
 
     @staticmethod
-    def getModelParams(submodel, sharedSignalEncoderModel, specificSignalEncoderModel, sharedEmotionModel, specificEmotionModel):
+    def getModelParams(submodel, model):
         modelParams = [
             # Specify the model parameters for the signal encoding.
-            {'params': specificSignalEncoderModel.parameters(), 'weight_decay': 0, 'lr': 1E-2},  # Empirically: 1E-10 < weight_decay < 1E-6; 5E-5 < lr < 5E-4
-            {'params': sharedSignalEncoderModel.parameters(), 'weight_decay': 0, 'lr': 1E-3}]  # Empirically: 1E-10 < weight_decay < 1E-6; 5E-5 < lr < 5E-4
+            {'params': model.inferenceModel.parameters(), 'weight_decay': 0, 'lr': 1E-3},
+            {'params': model.specificSignalEncoderModel.parameters(), 'weight_decay': 0, 'lr': 1E-3},  # Empirically: 1E-10 < weight_decay < 1E-6; 5E-5 < lr < 5E-4
+            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': 0, 'lr': 1E-3}]  # Empirically: 1E-10 < weight_decay < 1E-6; 5E-5 < lr < 5E-4
 
         if submodel == modelConstants.emotionModel:
             modelParams.extend([
                 # Specify the model parameters for the feature extraction.
-                {'params': sharedEmotionModel.extractCommonFeatures.parameters(), 'weight_decay': 1E-10, 'lr': 1E-4},
+                {'params': model.sharedEmotionModel.extractCommonFeatures.parameters(), 'weight_decay': 1E-10, 'lr': 1E-4},
 
                 # Specify the model parameters for the human activity recognition.
-                {'params': sharedEmotionModel.extractActivityFeatures.parameters(), 'weight_decay': 1E-10, 'lr': 1E-4},
-                {'params': specificEmotionModel.classifyHumanActivity.parameters(), 'weight_decay': 1E-10, 'lr': 1E-4},
+                {'params': model.sharedEmotionModel.extractActivityFeatures.parameters(), 'weight_decay': 1E-10, 'lr': 1E-4},
+                {'params': model.specificEmotionModel.classifyHumanActivity.parameters(), 'weight_decay': 1E-10, 'lr': 1E-4},
 
                 # Specify the model parameters for the emotion prediction.
-                {'params': sharedEmotionModel.predictBasicEmotions.parameters(), 'weight_decay': 1E-10, 'lr': 1E-4},
-                {'params': specificEmotionModel.predictUserEmotions.parameters(), 'weight_decay': 1E-10, 'lr': 1E-4},
-                {'params': specificEmotionModel.predictComplexEmotions.parameters(), 'weight_decay': 1E-10, 'lr': 1E-4}])
+                {'params': model.sharedEmotionModel.predictBasicEmotions.parameters(), 'weight_decay': 1E-10, 'lr': 1E-4},
+                {'params': model.specificEmotionModel.predictUserEmotions.parameters(), 'weight_decay': 1E-10, 'lr': 1E-4},
+                {'params': model.specificEmotionModel.predictComplexEmotions.parameters(), 'weight_decay': 1E-10, 'lr': 1E-4}])
 
         return modelParams
 
-    def addOptimizer(self, submodel, sharedSignalEncoderModel, specificSignalEncoderModel, sharedEmotionModel, specificEmotionModel):
+    def addOptimizer(self, submodel, model):
         # Get the model parameters.
-        modelParams = self.getModelParams(submodel, sharedSignalEncoderModel, specificSignalEncoderModel, sharedEmotionModel, specificEmotionModel)
+        modelParams = self.getModelParams(submodel, model)
 
         # Set the optimizer and scheduler.
-        optimizer = self.setOptimizer(modelParams, lr=5E-5, weight_decay=0, optimizerType=self.userInputParams["optimizerType"])
+        optimizer = self.setOptimizer(modelParams, lr=1E-3, weight_decay=0, optimizerType=self.userInputParams["optimizerType"])
         scheduler = self.getLearningRateScheduler(optimizer)
 
         return optimizer, scheduler
@@ -68,7 +69,7 @@ class optimizerMethods:
         # Reduce on plateau (need further editing of loop): optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=0.5, patience=10, threshold=1e-4, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08)
         # Defined lambda function: optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda=lambda_function); lambda_function = lambda epoch: (epoch/50) if epoch < -1 else 1
         # torch.optim.lr_scheduler.constrainedLR(optimizer, start_factor=0.3333333333333333, end_factor=1.0, total_iters=5, last_epoch=-1)
-        numWarmUps = 100
+        numWarmUps = 500
 
         schedulers = [
             transformers.get_constant_schedule_with_warmup(optimizer=optimizer, num_warmup_steps=numWarmUps),

@@ -4,9 +4,8 @@ import torch.nn as nn
 from torch.utils.checkpoint import checkpoint
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
-# Import files.
-from .abnormalConvolutions import abnormalConvolutions
-from ..reversibleComponents.reversibleConvolution import reversibleConvolution
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.modelHelpers.abnormalConvolutions import abnormalConvolutions
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleConvolution import reversibleConvolution
 
 
 class convolutionalHelpers(abnormalConvolutions):

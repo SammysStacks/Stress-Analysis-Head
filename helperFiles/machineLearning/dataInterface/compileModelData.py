@@ -280,16 +280,15 @@ class compileModelData(compileModelDataHelpers):
             # Organize the training data into the expected pytorch format.
             pytorchDataClass = pytorchDataInterface(batch_size=batch_size, num_workers=0, shuffle=True, accelerator=self.accelerator)
             modelDataLoader = pytorchDataClass.getDataLoader(allSignalData, allFeatureLabels, currentTrainingMask, currentTestingMask)
+            reconstructionIndex = emotionDataInterface.getReconstructionIndex(currentTrainingMask)
 
             # Initialize and train the model class.
-            modelPipeline = emotionPipeline(accelerator=self.accelerator, modelID=metadataInd, datasetName=metadatasetName, modelName=modelName, allEmotionClasses=numQuestionOptions,
-                                            maxNumSignals=numSignals, numSubjects=numSubjects, userInputParams=self.userInputParams, emotionNames=surveyQuestions, activityNames=activityNames,
-                                            featureNames=featureNames, submodel=submodel, numExperiments=len(allSignalData))
+            modelPipeline = emotionPipeline(accelerator=self.accelerator, datasetName=metadatasetName, modelName=modelName, allEmotionClasses=numQuestionOptions,
+                                            numSubjects=numSubjects, userInputParams=self.userInputParams, emotionNames=surveyQuestions, activityNames=activityNames,
+                                            featureNames=featureNames, submodel=submodel, numExperiments=len(allSignalData), reconstructionIndex=reconstructionIndex)
 
             # Hugging face integration.
-            trainingInformation = modelPipeline.getDistributedModels(model=None, submodel=modelConstants.trainingInformation)
             modelDataLoader = modelPipeline.acceleratorInterface(modelDataLoader)
-            trainingInformation.addSubmodel(submodel)
 
             # Store the information.
             allModelPipelines.append(modelPipeline)
@@ -315,9 +314,9 @@ class compileModelData(compileModelDataHelpers):
                 datasetName = datasetNames[metadataInd]
 
                 # Initialize and train the model class.
-                dummyModelPipeline = emotionPipeline(accelerator=self.accelerator, modelID=metadataInd, datasetName=datasetName, modelName=modelName, allEmotionClasses=[],
-                                                     maxNumSignals=500, numSubjects=1, userInputParams=userInputParams, emotionNames=[], activityNames=[], featureNames=[],
-                                                     submodel=loadSubmodel, numExperiments=1)
+                dummyModelPipeline = emotionPipeline(accelerator=self.accelerator, datasetName=datasetName, modelName=modelName, allEmotionClasses=[],
+                                                     numSubjects=1, userInputParams=userInputParams, emotionNames=[], activityNames=[], featureNames=[],
+                                                     submodel=loadSubmodel, numExperiments=1, reconstructionIndex=1)
                 # Hugging face integration.
                 dummyModelPipeline.acceleratorInterface()
 
