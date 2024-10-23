@@ -13,12 +13,12 @@ class neuralOperatorInterface(emotionModelWeights):
         self.sequenceLength = sequenceLength  # The length of the input signals.
         self.addBiasTerm = addBiasTerm  # Whether to add a bias term to the neural operator.
 
-    def getNeuralOperatorLayer(self, neuralOperatorParameters):
+    def getNeuralOperatorLayer(self, neuralOperatorParameters, reversibleFlag=False):
         # Decide on the neural operator layer.
-        if self.operatorType == 'wavelet': return self.initializeWaveletLayer(neuralOperatorParameters[self.operatorType])
+        if self.operatorType == 'wavelet': return self.initializeWaveletLayer(neuralOperatorParameters[self.operatorType], reversibleFlag)
         else: raise ValueError(f"The operator type ({self.operatorType}) must be in ['wavelet'].")
 
-    def initializeWaveletLayer(self, neuralOperatorParameters):
+    def initializeWaveletLayer(self, neuralOperatorParameters, reversibleFlag):
         # Unpack the neural operator parameters.
         encodeHighFrequencyProtocol = neuralOperatorParameters['encodeHighFrequencyProtocol']  # The protocol for encoding the high frequency signals.
         encodeLowFrequencyProtocol = neuralOperatorParameters['encodeLowFrequencyProtocol']  # The protocol for encoding the low frequency signals.
@@ -26,12 +26,16 @@ class neuralOperatorInterface(emotionModelWeights):
         waveletType = neuralOperatorParameters['waveletType']  # The type of wavelet to use for the wavelet transform.
 
         # Hardcoded parameters.
+        activationMethod = 'none'  # I am handling this outside the operator right now.
         numDecompositions = 1  # Number of decompositions for the waveletType transform.
         mode = 'periodization'  # Mode for the waveletType transform.
+
+        if reversibleFlag:
+            skipConnectionProtocol = 'identity'
 
         # Specify the default parameters.
         if numDecompositions is None: numDecompositions = min(5, waveletNeuralOperatorLayer.max_decompositions(signal_length=self.sequenceLength, wavelet_name=waveletType))  # Number of decompositions for the waveletType transform.
 
         return waveletNeuralOperatorLayer(sequenceLength=self.sequenceLength, numInputSignals=self.numInputSignals, numOutputSignals=self.numOutputSignals, numDecompositions=numDecompositions,
-                                          waveletType=waveletType, mode=mode, addBiasTerm=self.addBiasTerm, activationMethod='none', skipConnectionProtocol=skipConnectionProtocol,
+                                          waveletType=waveletType, mode=mode, addBiasTerm=self.addBiasTerm, activationMethod=activationMethod, skipConnectionProtocol=skipConnectionProtocol,
                                           encodeLowFrequencyProtocol=encodeLowFrequencyProtocol, encodeHighFrequencyProtocol=encodeHighFrequencyProtocol, learningProtocol=self.learningProtocol)

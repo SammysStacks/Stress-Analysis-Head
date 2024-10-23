@@ -36,8 +36,7 @@ class waveletNeuralOperatorWeights(waveletNeuralHelpers):
             # For each high frequency term.
             highFrequenciesWeights = nn.ParameterList()
             for highFrequenciesInd in range(len(self.highFrequenciesShapes)):
-                highFrequencyParam = self.getNeuralWeightParameters(inChannel=self.numInputSignals, outChannel=self.numOutputSignals, initialFrequencyDim=self.highFrequenciesShapes[highFrequenciesInd],
-                                                                    finalFrequencyDim=self.highFrequenciesShapes[highFrequenciesInd])
+                highFrequencyParam = self.getNeuralWeightParameters(inChannel=self.numInputSignals, initialFrequencyDim=self.highFrequenciesShapes[highFrequenciesInd])
                 # Store the high-frequency weights.
                 highFrequenciesWeights.append(highFrequencyParam)
 
@@ -45,15 +44,14 @@ class waveletNeuralOperatorWeights(waveletNeuralHelpers):
 
     def getLowFrequencyWeights(self):
         # Initialize the low-frequency weights.
-        if self.encodeLowFrequency: lowFrequencyWeights = self.getNeuralWeightParameters(inChannel=self.numInputSignals, outChannel=self.numOutputSignals, initialFrequencyDim=self.lowFrequencyShape, finalFrequencyDim=self.lowFrequencyShape)
+        if self.encodeLowFrequency: lowFrequencyWeights = self.getNeuralWeightParameters(inChannel=self.numInputSignals, initialFrequencyDim=self.lowFrequencyShape)
         else: lowFrequencyWeights = None
 
         return lowFrequencyWeights
 
-    def getNeuralWeightParameters(self, inChannel, outChannel, initialFrequencyDim, finalFrequencyDim):
-        if self.learningProtocol == 'FCC': return self.neuralWeightFCC(inChannel=inChannel, outChannel=outChannel, finalFrequencyDim=finalFrequencyDim)
-        elif self.learningProtocol == 'rFC': return self.neuralWeightFC(numSignals=inChannel, sequenceLength=initialFrequencyDim)
-        elif self.learningProtocol == 'rCNN': return self.reversibleNeuralWeightCNN(inChannel=inChannel)
+    def getNeuralWeightParameters(self, inChannel, initialFrequencyDim):
+        if self.learningProtocol == 'rFC': return self.neuralWeightRFC(numSignals=inChannel, sequenceLength=initialFrequencyDim)
+        elif self.learningProtocol == 'rCNN': return self.reversibleNeuralWeightRCNN(inChannel=inChannel)
         else: raise ValueError(f"The learning protocol ({self.learningProtocol}) must be in ['rFC', 'FCC', 'rCNN', 'CNN'].")
 
     @staticmethod

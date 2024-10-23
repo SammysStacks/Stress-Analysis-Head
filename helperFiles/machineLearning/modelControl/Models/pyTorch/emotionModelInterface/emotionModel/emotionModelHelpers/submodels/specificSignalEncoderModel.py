@@ -1,10 +1,6 @@
-import math
-
-import torch
 from torch import nn
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.inferenceModel import inferenceModel
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.neuralOperators.neuralOperatorInterface import neuralOperatorInterface
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
 
@@ -40,8 +36,6 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         # Initialize loss holders.
         self.trainingLosses_signalReconstruction = None
         self.testingLosses_signalReconstruction = None
-        self.trainingLosses_manifoldProjection = None
-        self.testingLosses_manifoldProjection = None
         self.resetModel()
 
     def forward(self): raise "You cannot call the dataset-specific signal encoder module."
@@ -50,15 +44,13 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         # Signal encoder reconstructed loss holders.
         self.trainingLosses_signalReconstruction = []  # List of list of data reconstruction training losses. Dim: numEpochs
         self.testingLosses_signalReconstruction = []  # List of list of data reconstruction testing losses. Dim: numEpochs
-        self.trainingLosses_manifoldProjection = []  # List of list of data reconstruction testing losses. Dim: numEpochs
-        self.testingLosses_manifoldProjection = []  # List of list of data reconstruction testing losses. Dim: numEpochs
 
     def addLayer(self):
         # Create the layers.
         self.addingFlags.append(not self.addingFlags[-1] if len(self.addingFlags) != 0 else True)
         self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters))
-        if self.learningProtocol == 'rCNN': self.processingLayers.append(self.postProcessingLayerCNN(numSignals=self.numSignals*self.numLiftingLayers))
-        elif self.learningProtocol == 'rFC': self.processingLayers.append(self.postProcessingLayerFC(numSignals=self.numSignals*self.numLiftingLayers, sequenceLength=self.fourierDimension))
+        if self.learningProtocol == 'rCNN': self.processingLayers.append(self.postProcessingLayerRCNN(numSignals=self.numSignals*self.numLiftingLayers))
+        elif self.learningProtocol == 'rFC': self.processingLayers.append(self.postProcessingLayerRFC(numSignals=self.numSignals*self.numLiftingLayers, sequenceLength=self.fourierDimension))
         else: raise "The learning protocol is not yet implemented."
 
     def getCurrentPhysiologicalProfile(self, batchInds):

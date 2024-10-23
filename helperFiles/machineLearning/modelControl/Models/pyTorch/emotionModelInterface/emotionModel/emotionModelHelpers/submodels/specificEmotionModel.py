@@ -1,45 +1,79 @@
-# PyTorch
-import torch
 from torch import nn
 
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.neuralOperators.neuralOperatorInterface import neuralOperatorInterface
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
 
-class specificEmotionModel(nn.Module):
 
-    def __init__(self, numCommonSignals, numActivityFeatures, activityNames, numBasicEmotions, numInterpreterHeads, numSubjects, emotionNames, featureNames):
-        super(specificEmotionModel, self).__init__()
+class specificEmotionModel(neuralOperatorInterface):
+
+    def __init__(self, numExperiments, operatorType, encodedDimension, fourierDimension, numSignals, numLiftingLayers, numModelLayers, goldenRatio, activationMethod, learningProtocol, neuralOperatorParameters):
+        super(specificEmotionModel, self).__init__(sequenceLength=fourierDimension, numInputSignals=numSignals*numLiftingLayers, numOutputSignals=numSignals, learningProtocol=learningProtocol, addBiasTerm=False)
         # General model parameters.
-        self.numActivityFeatures = numActivityFeatures  # The number of common activity features to extract.
-        self.numInterpreterHeads = numInterpreterHeads  # The number of ways to interpret a set of physiological signals.
-        self.numCommonSignals = numCommonSignals  # The number of features from considering all the signals.
-        self.numBasicEmotions = numBasicEmotions  # The number of basic emotions (basis states of emotions).
-        self.numActivities = len(activityNames)  # The number of activities to predict.
-        self.numEmotions = len(emotionNames)  # The number of emotions to predict.
-        self.activityNames = activityNames  # The names of each activity we are predicting. Dim: numActivities
-        self.featureNames = featureNames  # The names of each feature/signal in the model. Dim: numSignals
-        self.emotionNames = emotionNames  # The names of each emotion we are predicting. Dim: numEmotions
-        self.numSubjects = numSubjects  # The maximum number of subjects the model is training on.
+        self.activationFunction = activationFunctions.getActivationMethod(activationMethod=activationMethod)
+        self.neuralOperatorParameters = neuralOperatorParameters  # The parameters for the neural operator.
+        self.learningProtocol = learningProtocol  # The learning protocol for the model.
+        self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
+        self.fourierDimension = fourierDimension  # The dimension of the fourier signal.
+        self.numLiftingLayers = numLiftingLayers  # The number of lifting layers to use.
+        self.numModelLayers = numModelLayers  # The number of model layers to use.
+        self.operatorType = operatorType  # The operator type for the neural operator.
+        self.goldenRatio = goldenRatio  # The golden ratio for the model.
+        self.numSignals = numSignals  # The number of signals to encode.
 
-        # ------------------------------------------------------------------ # 
+        # The neural layers for the signal encoder.
+        self.processingLayers, self.neuralLayers, self.addingFlags = nn.ModuleList(), nn.ModuleList(), []
+        for layerInd in range(1 + self.numModelLayers // self.goldenRatio): self.addLayer()
+        
+        # Assert the validity of the input parameters.
+        assert self.numModelLayers % self.goldenRatio == 0, "The number of model layers must be divisible by the golden ratio."
+        assert self.encodedDimension % 2 == 0, "The encoded dimension must be divisible by 2."
+        assert 0 < self.encodedDimension, "The encoded dimension must be greater than 0."
 
-        # Reset the model
+        # Initialize loss holders.
+        self.trainingLosses_emotionPrediction = None
+        self.testingLosses_emotionPrediction = None
+        self.trainingLosses_activityPrediction = None
+        self.testingLosses_activityPrediction = None
         self.resetModel()
 
     def forward(self):
-        return None
+        raise "You cannot call the dataset-specific signal encoder module."
 
-        # ------------------------------------------------------------------ #  
+    def resetModel(self):
+        # Signal encoder reconstructed loss holders.
+        self.trainingLosses_emotionPrediction = []  # List of list of data Prediction training losses. Dim: numEpochs
+        self.testingLosses_emotionPrediction = []  # List of list of data Prediction testing losses. Dim: numEpochs
+        self.trainingLosses_activityPrediction = []  # List of list of data Prediction testing losses. Dim: numEpochs
+        self.testingLosses_activityPrediction = []  # List of list of data Prediction testing losses. Dim: numEpochs
 
-    # DEPRECATED
-    def shapInterface(self, reshapedSignalFeatures):
-        # Extract the incoming data's dimension and ensure proper data format.
-        batchSize, numFeatures = reshapedSignalFeatures.shape
-        reshapedSignalFeatures = torch.tensor(reshapedSignalFeatures.tolist())
-        assert numFeatures == self.numSignals * self.numSignalFeatures, f"{numFeatures} {self.numSignals} {self.numSignalFeatures}"
+    def addLayer(self):
+        # Create the layers.
+        self.addingFlags.append(not self.addingFlags[-1] if len(self.addingFlags) != 0 else True)
+        self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters))
+        if self.learningProtocol == 'rCNN': self.processingLayers.append(self.postProcessingLayerCNN(numSignals=self.numSignals * self.numLiftingLayers))
+        elif self.learningProtocol == 'rFC': self.processingLayers.append(self.postProcessingLayerFC(sequenceLength=self.fourierDimension))
+        else: raise "The learning protocol is not yet implemented."
 
-        # Reshape the inputs to integrate into the model's expected format.
-        signalFeatures = reshapedSignalFeatures.view((batchSize, self.numSignals, self.numSignalFeatures))
+    def learningInterface(self, layerInd, signalData):
+        # For the forward/harder direction.
+        if reversibleInterface.forwardDirection:
+            # Apply the neural operator layer with activation.
+            signalData = self.neuralLayers[layerInd](signalData)
+            signalData = self.activationFunction(signalData, addingFlag=self.addingFlags[layerInd])
 
-        # predict the activities.
-        activityDistribution = self.forward(signalFeatures, predictActivity=True, allSignalFeatures=True)
+            # Apply the post-processing layer.
+            signalData = self.processingLayers[layerInd](signalData)
+        else:
+            # Get the reverse layer index.
+            pseudoLayerInd = len(self.neuralLayers) - layerInd - 1
+            assert 0 <= pseudoLayerInd < len(self.neuralLayers), f"The pseudo layer index is out of bounds: {pseudoLayerInd}, {len(self.neuralLayers)}, {layerInd}"
 
-        return activityDistribution.detach().numpy()
+            # Apply the neural operator layer with activation.
+            signalData = self.processingLayers[pseudoLayerInd](signalData)
+
+            # Apply the neural operator layer with activation.
+            signalData = self.activationFunction(signalData, addingFlag=self.addingFlags[pseudoLayerInd])
+            signalData = self.neuralLayers[pseudoLayerInd](signalData)
+
+        return signalData

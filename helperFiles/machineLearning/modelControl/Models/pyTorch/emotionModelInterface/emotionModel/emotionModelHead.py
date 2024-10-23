@@ -100,14 +100,17 @@ class emotionModelHead(nn.Module):
 
         if submodel == modelConstants.emotionModel:
             self.specificEmotionModel = specificEmotionModel(
-                numInterpreterHeads=self.numInterpreterHeads,
-                numActivityFeatures=self.numCommonSignals,
-                numCommonSignals=self.numCommonSignals,
-                numBasicEmotions=self.numBasicEmotions,
-                activityNames=self.activityNames,
-                emotionNames=self.emotionNames,
-                featureNames=self.featureNames,
-                numSubjects=self.numSubjects,
+                neuralOperatorParameters=self.neuralOperatorParameters,
+                activationMethod=self.activationMethod,
+                encodedDimension=self.encodedDimension,
+                learningProtocol=self.learningProtocol,
+                fourierDimension=self.fourierDimension,
+                numLiftingLayers=self.numLiftingLayers,
+                numModelLayers=self.numModelLayers,
+                operatorType=self.operatorType,
+                numExperiments=numExperiments,
+                goldenRatio=self.goldenRatio,
+                numSignals=self.numSignals,
             )
 
             self.sharedEmotionModel = sharedEmotionModel(
@@ -232,9 +235,6 @@ class emotionModelHead(nn.Module):
             metaLearningData = self.specificEmotionModel.learningInterface(layerInd=specificLayerCounter, signalData=metaLearningData)  # Reversible signal-specific layers.
             assert specificLayerCounter + 1 == len(self.specificEmotionModel.neuralLayers), f"The specific layer counter ({specificLayerCounter}) does not match the number of specific layers ({len(self.specificEmotionModel.neuralLayers)})."
             # metaLearningData: batchSize, numEmotions, fourierDimension
-
-            if submodel == modelConstants.emotionModel:
-                activityProfile, basicEmotionProfile, emotionProfile = self.emotionPrediction(signalData, metadata)
 
         # --------------------------------------------------------------- #
 

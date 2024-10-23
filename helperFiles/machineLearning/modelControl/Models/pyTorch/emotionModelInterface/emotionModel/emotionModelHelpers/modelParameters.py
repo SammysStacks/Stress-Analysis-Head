@@ -43,24 +43,23 @@ class modelParameters:
         # Dapper: Found 12 (out of 12) well-labeled emotions across 364 experiments with 18 signals.
         # Case: Found 2 (out of 2) well-labeled emotions across 1411 experiments with 44 signals.
         # Collected: Found 30 (out of 30) well-labeled emotions across 110 experiments with 68 signals.
-        if submodel == modelConstants.signalEncoderModel: effectiveMinBatchSize, effectiveMaxBatchSize = 12, 96
-        elif submodel == modelConstants.emotionModel: effectiveMinBatchSize, effectiveMaxBatchSize = 12, 96
+        if submodel == modelConstants.signalEncoderModel: effectiveMinBatchSize, effectiveMaxBatchSize = 12, 128
+        elif submodel == modelConstants.emotionModel: effectiveMinBatchSize, effectiveMaxBatchSize = 12, 128
         else: raise Exception()
 
         # Adjust the batch size based on the number of gradient accumulations.
         gradientAccumulation = self.accelerator.gradient_accumulation_steps
         minBatchSize_perLoop = effectiveMinBatchSize / gradientAccumulation
         maxBatchSize_perLoop = effectiveMaxBatchSize / gradientAccumulation
+        metaBatchSize = numExperiments / modelConstants.numBatches / gradientAccumulation
         # Assert that the batch size is divisible by the gradient accumulation steps.
         assert effectiveMinBatchSize % gradientAccumulation == 0, "The total batch size must be divisible by the gradient accumulation steps."
         assert gradientAccumulation <= effectiveMinBatchSize, "The gradient accumulation steps must be less than the total batch size."
 
-        # Adjust the batch size based on the total size.
-        metaBatchSize = numExperiments / modelConstants.numBatches
-
         # Adjust the batch size based on the data ratio.
         batchSize = max(metaBatchSize, minBatchSize_perLoop)
         batchSize = math.ceil(min(batchSize, maxBatchSize_perLoop))
+        batchSize = batchSize + batchSize % gradientAccumulation
 
         return batchSize
 
