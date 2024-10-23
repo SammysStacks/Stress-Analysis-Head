@@ -299,14 +299,13 @@ class compileModelDataHelpers:
                 signalTimes = biomarkerTimes[batchInd, signalInd, 0:numPoints]
 
                 # Calculate the derivative of the signal data.
-                firstDeriv = torch.gradient(input=signalData, spacing=signalTimes, edge_order=2)
-                print(firstDeriv.abs().max())
+                firstDeriv = torch.gradient(input=signalData, spacing=(signalTimes,), edge_order=2)[0]
 
                 # Calculate the largest signal jump within the time window.
-                maxSequenceGaps[signalInd] = max(maxSequenceGaps[signalInd].item(), signalData.diff().abs().max().item())
+                maxSequenceGaps[signalInd] = max(maxSequenceGaps[signalInd].item(), firstDeriv.abs().max().item())
 
         # Generate a valid signal mask across the batch
-        validSignalInds = self.minSNR < signalSNRs
+        validSignalInds = torch.logical_and(self.minSNR < signalSNRs, maxSequenceGaps < self.maxSequenceGap)
 
         # Apply the mask to filter valid signals and their corresponding points
         filteredSignalData = allSignalData[:, validSignalInds, :, :]
