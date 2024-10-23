@@ -171,8 +171,8 @@ class emotionModelHead(nn.Module):
         # ------------------- Estimated Physiological Profile ------------------- #
 
         # Get the estimated physiological profiles.
-        if inferenceTraining: physiologicalProfile = self.inferenceModel.getInitialPhysiologicalProfile(batchSize)
-        else: physiologicalProfile = self.specificSignalEncoderModel.getInitialPhysiologicalProfile(batchInds)
+        if inferenceTraining: physiologicalProfile = self.inferenceModel.getCurrentPhysiologicalProfile(batchSize)
+        else: physiologicalProfile = self.specificSignalEncoderModel.getCurrentPhysiologicalProfile(batchInds)
         # physiologicalProfile: batchSize, encodedDimension
 
         # ------------------- Preprocess Signal Mapping ------------------- #
@@ -217,23 +217,24 @@ class emotionModelHead(nn.Module):
 
         # ------------------- Learned Emotion Mapping ------------------- #
 
-        # Prepare for the backward pass: physiologically -> signal data.
-        metaLearningData = physiologicalProfile.unsqueeze(1).repeat(repeats=(1, self.numEmotions, 1))
-        reversibleInterface.changeDirections(forwardDirection=False)
-        # metaLearningData: batchSize, numEmotions, encodedDimension
-        specificLayerCounter = 0
-
-        # For each layer in the model.
-        for layerInd in range(self.numModelLayers):
-            # Calculate the estimated physiological profile given each signal.
-            if layerInd % self.goldenRatio == 0: metaLearningData = self.specificEmotionModel.learningInterface(layerInd=specificLayerCounter, signalData=metaLearningData); specificLayerCounter += 1  # Reversible signal-specific layers.
-            metaLearningData = self.sharedEmotionModel.learningInterface(layerInd=layerInd, signalData=metaLearningData)  # Reversible meta-learning layers.
-        metaLearningData = self.specificEmotionModel.learningInterface(layerInd=specificLayerCounter, signalData=metaLearningData)  # Reversible signal-specific layers.
-        assert specificLayerCounter + 1 == len(self.specificEmotionModel.neuralLayers), f"The specific layer counter ({specificLayerCounter}) does not match the number of specific layers ({len(self.specificEmotionModel.neuralLayers)})."
-        # metaLearningData: batchSize, numEmotions, fourierDimension
-
         if submodel == modelConstants.emotionModel:
-            activityProfile, basicEmotionProfile, emotionProfile = self.emotionPrediction(signalData, metadata)
+            # Prepare for the backward pass: physiologically -> signal data.
+            metaLearningData = physiologicalProfile.unsqueeze(1).repeat(repeats=(1, self.numEmotions, 1))
+            reversibleInterface.changeDirections(forwardDirection=False)
+            # metaLearningData: batchSize, numEmotions, encodedDimension
+            specificLayerCounter = 0
+
+            # For each layer in the model.
+            for layerInd in range(self.numModelLayers):
+                # Calculate the estimated physiological profile given each signal.
+                if layerInd % self.goldenRatio == 0: metaLearningData = self.specificEmotionModel.learningInterface(layerInd=specificLayerCounter, signalData=metaLearningData); specificLayerCounter += 1  # Reversible signal-specific layers.
+                metaLearningData = self.sharedEmotionModel.learningInterface(layerInd=layerInd, signalData=metaLearningData)  # Reversible meta-learning layers.
+            metaLearningData = self.specificEmotionModel.learningInterface(layerInd=specificLayerCounter, signalData=metaLearningData)  # Reversible signal-specific layers.
+            assert specificLayerCounter + 1 == len(self.specificEmotionModel.neuralLayers), f"The specific layer counter ({specificLayerCounter}) does not match the number of specific layers ({len(self.specificEmotionModel.neuralLayers)})."
+            # metaLearningData: batchSize, numEmotions, fourierDimension
+
+            if submodel == modelConstants.emotionModel:
+                activityProfile, basicEmotionProfile, emotionProfile = self.emotionPrediction(signalData, metadata)
 
         # --------------------------------------------------------------- #
 

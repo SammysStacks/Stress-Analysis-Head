@@ -61,7 +61,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         elif self.learningProtocol == 'rFC': self.processingLayers.append(self.postProcessingLayerFC(numSignals=self.numSignals*self.numLiftingLayers, sequenceLength=self.fourierDimension))
         else: raise "The learning protocol is not yet implemented."
 
-    def getInitialPhysiologicalProfile(self, batchInds):
+    def getCurrentPhysiologicalProfile(self, batchInds):
         # batchInds: The indices of the signals to estimate. Dims: batchSize
         return self.physiologicalProfileAnsatz[batchInds]
 

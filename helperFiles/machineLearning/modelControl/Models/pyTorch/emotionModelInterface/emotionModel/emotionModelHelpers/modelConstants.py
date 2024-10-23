@@ -42,8 +42,8 @@ class modelConstants:
 
     # Specify the data interface parameters.
     timeWindows = [90, 120, 150, 180, 210, 240, 300]
-    minNumExperiments = 55  # The minimum number of experiments that can be used in the model
     minMaxScale = 1  # The maximum value for the min-max scaling.
+    numBatches = 10  # The number of batches to use in the model.
 
     # Specify the data interface parameter names.
     signalChannelNames = [timeChannel, signalChannel]

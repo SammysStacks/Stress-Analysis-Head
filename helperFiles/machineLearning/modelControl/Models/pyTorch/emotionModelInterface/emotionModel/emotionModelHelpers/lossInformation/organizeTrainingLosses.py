@@ -36,12 +36,11 @@ class organizeTrainingLosses(lossCalculations):
             t2 = time.time(); self.accelerator.print("Full Pass", t2 - t1)
 
             # Calculate the signal encoding loss.
-            signalReconstructedTrainingLoss, signalSpecificTrainingLoss = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, generalEncodingLoss, physiologicalTimes, missingDataMask, allTrainingMasks, modelPipeline.reconstructionIndex)
-            signalReconstructedTestingLoss, signalSpecificTestingLoss = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, generalEncodingLoss, physiologicalTimes, missingDataMask, allTestingMasks, modelPipeline.reconstructionIndex)
+            signalReconstructedTrainingLoss = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, physiologicalTimes, missingDataMask, allTrainingMasks, modelPipeline.reconstructionIndex)
+            signalReconstructedTestingLoss = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, physiologicalTimes, missingDataMask, allTestingMasks, modelPipeline.reconstructionIndex)
 
             # Store the signal encoder loss information.
             self.storeLossInformation(signalReconstructedTrainingLoss, signalReconstructedTestingLoss, model.specificSignalEncoderModel.trainingLosses_signalReconstruction, model.specificSignalEncoderModel.testingLosses_signalReconstruction)
-            self.storeLossInformation(signalSpecificTrainingLoss, signalSpecificTrainingLoss, model.specificSignalEncoderModel.trainingLosses_manifoldProjection, model.specificSignalEncoderModel.testingLosses_manifoldProjection)
 
             # if submodel == modelConstants.emotionModel:
             # Segment the data into its time window.

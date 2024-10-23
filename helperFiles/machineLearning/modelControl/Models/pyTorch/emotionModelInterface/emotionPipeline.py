@@ -1,3 +1,4 @@
+import math
 import random
 import time
 
@@ -98,14 +99,14 @@ class emotionPipeline(emotionPipelineHelpers):
 
                     # Calculate the error in signal compression (signal encoding loss).
                     physiologicalTimes = self.model.sharedSignalEncoderModel.pseudoEncodedTimes
-                    signalReconstructedLoss, generalEncodingLoss = self.organizeLossInfo.calculateSignalEncodingLoss(augmentedBatchData, reconstructedSignalData, generalEncodingLoss, physiologicalTimes, missingDataMask, batchTrainingMask, self.reconstructionIndex)
+                    signalReconstructedLoss = self.organizeLossInfo.calculateSignalEncodingLoss(augmentedBatchData, reconstructedSignalData, physiologicalTimes, missingDataMask, batchTrainingMask, self.reconstructionIndex)
                     if signalReconstructedLoss is None: self.accelerator.print("Not useful loss"); continue
 
                     # Initialize basic core loss value.
-                    finalLoss = signalReconstructedLoss + generalEncodingLoss
+                    finalLoss = signalReconstructedLoss
 
                     # Update the user.
-                    self.accelerator.print("Final-Recon", finalLoss.item(), signalReconstructedLoss.item(), generalEncodingLoss.item())
+                    self.accelerator.print("Final-Recon", finalLoss.item(), signalReconstructedLoss.item())
 
                     # ------------------- Update the Model  -------------------- #
 

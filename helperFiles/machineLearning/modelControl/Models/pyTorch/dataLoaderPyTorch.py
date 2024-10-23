@@ -1,4 +1,4 @@
-
+import keras
 # General
 import numpy as np
 
@@ -19,7 +19,7 @@ class CustomDataset(Dataset):
         self.testingMasks = None
 
         # Pad and realign the data if needed.
-        if variableSequence: features = torch.tensor(tf.keras.utils.pad_sequences(features, padding='post', dtype=float))
+        if variableSequence: features = torch.tensor(keras.utils.pad_sequences(features, padding='post', dtype=float))
 
         # Read in the feature and labels.
         self.labels = self.copyDataFormat(labels, dtype=torch.float)
@@ -90,11 +90,6 @@ class pytorchDataInterface:
         # CUDA differences.
         if self.device != "cpu":
             self.pinMemory = True
-
-        # Multiprocessing.
-        # min(8, multiprocessing.cpu_count()) if self.device.startswith("HPC") else min(4, multiprocessing.cpu_count())
-        # self.num_workers = 0 if self.num_workers == 1 else self.num_workers
-        # self.num_workers = min(num_workers, batch_size, self.num_workers)
 
     def getDataLoader(self, allFeatures, allLabels, trainingMasks=None, testingMasks=None):
         dataset = CustomDataset(allFeatures, allLabels, trainingMasks, testingMasks, variableSequence=False)

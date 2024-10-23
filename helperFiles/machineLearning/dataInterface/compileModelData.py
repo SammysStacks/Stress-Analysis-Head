@@ -212,17 +212,6 @@ class compileModelData(compileModelDataHelpers):
             if numExperiments == 0: continue
             if numSignals == 0: continue
 
-            # Gather the number of bits of information per second.
-            allSignalTimes = emotionDataInterface.getChannelData(allSignalData, channelName=modelConstants.timeChannel)
-            allDataFrequencies = allNumSignalPoints / allSignalTimes[:, :, 0]
-            maxExperimentalBits = round(allDataFrequencies.sum(dim=-1).max().item(), 2)
-            maxSignalBits = round(allDataFrequencies.max().item(), 2)
-
-            # Print the data information.
-            numGoodEmotions = torch.sum(~torch.all(torch.isnan(allFeatureLabels), dim=0)).item()
-            print(f"\t{metadatasetName.capitalize()}: Found {numGoodEmotions - 1} (out of {numLabels - 1}) well-labeled emotions across {numExperiments} experiments "
-                  f"with {numSignals} signals with a maximum of {maxExperimentalBits}/experiment and {maxSignalBits}/signal bits of information/second.", flush=True)
-
             # ---------------------- Test/Train Split ---------------------- #
 
             # Initialize masks for distinguishing between training and testing data.
@@ -293,6 +282,11 @@ class compileModelData(compileModelDataHelpers):
             # Store the information.
             allModelPipelines.append(modelPipeline)
             allDataLoaders.append(modelDataLoader)
+
+            # Gather the number of bits of information per second.
+            numGoodEmotions = torch.sum(~torch.all(torch.isnan(allFeatureLabels), dim=0)).item()
+            print(f"\t{metadatasetName.capitalize()}: Found {numGoodEmotions - 1} (out of {numLabels - 1}) emotions across {numExperiments} experiments "
+                  f"for {numSignals} signals with {round(numExperiments/batch_size, 3)} batches of {batch_size} experiments", flush=True)
 
         # Load in the previous model weights and attributes.
         self.modelMigration.loadModels(allModelPipelines, loadSubmodel, loadSubmodelDate, loadSubmodelEpochs, metaTraining=True, loadModelAttributes=True, loadModelWeights=True)

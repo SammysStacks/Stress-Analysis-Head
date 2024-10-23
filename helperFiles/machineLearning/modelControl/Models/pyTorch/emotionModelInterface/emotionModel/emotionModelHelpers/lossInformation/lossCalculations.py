@@ -63,7 +63,7 @@ class lossCalculations:
         finalLoss = method(signalData).mean()
         return finalLoss
 
-    def calculateSignalEncodingLoss(self, allInitialSignalData, allReconstructedSignalData, allGeneralEncodingLoss, physiologicalTimes, allMissingDataMask, allLabelsMask, reconstructionIndex):
+    def calculateSignalEncodingLoss(self, allInitialSignalData, allReconstructedSignalData, physiologicalTimes, allMissingDataMask, allLabelsMask, reconstructionIndex):
         # Find the boolean flags for the data involved in the loss calculation.
         reconstructionDataMask = self.getReconstructionDataMask(allLabelsMask, reconstructionIndex)
         # reconstructionDataMask dimension: numExperiments
@@ -78,7 +78,6 @@ class lossCalculations:
 
         # Isolate the signals for this loss (For example, training vs. testing).
         reconstructedSignalData = self.getData(allReconstructedSignalData, reconstructionDataMask)  # Dim: numExperiments, numSignals, encodedDimension
-        generalEncodingLoss = self.getData(allGeneralEncodingLoss, reconstructionDataMask)  # Dim: numExperiments
         missingDataMask = self.getData(allMissingDataMask, reconstructionDataMask)  # Dim: numExperiments, numSignals, maxSequenceLength
         datapoints = self.getData(allDatapoints, reconstructionDataMask)  # Dim: numExperiments, numSignals, maxSequenceLength
         timepoints = self.getData(allTimepoints, reconstructionDataMask)  # Dim: numExperiments, numSignals, maxSequenceLength
@@ -87,45 +86,40 @@ class lossCalculations:
         if batchSize == 0: return None
 
         # Align the timepoints to the physiological times.
-        physiologicalTimesExpanded = torch.flip(physiologicalTimes, dims=[0])
-        mappedPhysiologicalTimedInds = torch.searchsorted(sorted_sequence=physiologicalTimesExpanded, input=timepoints, out=None, out_int32=False, right=False)  # timepoints <= physiologicalTimesExpanded[mappedPhysiologicalTimedInds]
+        reversedPhysiologicalTimes = torch.flip(physiologicalTimes, dims=[0])
+        mappedPhysiologicalTimedInds = encodedDimension - 1 - torch.searchsorted(sorted_sequence=reversedPhysiologicalTimes, input=timepoints, out=None, out_int32=False, right=False)  # timepoints <= physiologicalTimesExpanded[mappedPhysiologicalTimedInds]
         # Ensure the indices don't exceed the size of the last dimension of reconstructedSignalData.
-        validIndsLeft = torch.clamp(mappedPhysiologicalTimedInds - 1, min=0, max=encodedDimension - 1)  # physiologicalTimesExpanded[validIndsLeft] < timepoints
-        validIndsRight = torch.clamp(mappedPhysiologicalTimedInds, min=0, max=encodedDimension - 1)  # timepoints <= physiologicalTimesExpanded[validIndsRight]
+        validIndsRight = torch.clamp(mappedPhysiologicalTimedInds, min=0, max=encodedDimension - 1)  # physiologicalTimesExpanded[validIndsLeft] < timepoints
+        validIndsLeft = torch.clamp(mappedPhysiologicalTimedInds + 1, min=0, max=encodedDimension - 1)  # timepoints <= physiologicalTimesExpanded[validIndsRight]
         # mappedPhysiologicalTimedInds dimension: batchSize, numSignals, maxSequenceLength
 
         # Get the closest physiological data to the timepoints.
-        physiologicalTimesExpanded = physiologicalTimesExpanded.unsqueeze(0).unsqueeze(0).expand(batchSize, numSignals, encodedDimension)
+        physiologicalTimesExpanded = physiologicalTimes.unsqueeze(0).unsqueeze(0).expand(batchSize, numSignals, encodedDimension)
+        closestPhysiologicalTimesRight = torch.gather(input=physiologicalTimesExpanded, dim=2, index=validIndsRight)  # Initialize the tensor.
         closestPhysiologicalTimesLeft = torch.gather(input=physiologicalTimesExpanded, dim=2, index=validIndsLeft)  # Initialize the tensor.
-        closestPhysiologicalTimes = torch.gather(input=physiologicalTimesExpanded, dim=2, index=validIndsRight)  # Initialize the tensor.
+        closestPhysiologicalDataRight = torch.gather(input=reconstructedSignalData, dim=2, index=validIndsRight)  # Initialize the tensor.
         closestPhysiologicalDataLeft = torch.gather(input=reconstructedSignalData, dim=2, index=validIndsLeft)  # Initialize the tensor.
-        closestPhysiologicalData = torch.gather(input=reconstructedSignalData, dim=2, index=validIndsRight)  # Initialize the tensor.
+        assert ((closestPhysiologicalTimesLeft <= timepoints) & (timepoints <= closestPhysiologicalTimesRight)).all(), "The timepoints must be within the range of the closest physiological times."
         # closestPhysiologicalData dimension: batchSize, numSignals, maxSequenceLength
 
-        # Calculate the uncertainty in the physiological data.
-        physiologicalDataUncertainty = (closestPhysiologicalData - closestPhysiologicalDataLeft).pow(2)  # Initialize the uncertainty tensor.
-        # physiologicalDataUncertainty dimension: batchSize, numSignals, maxSequenceLength
-
         # Perform linear interpolation.
-        linearSlope = (closestPhysiologicalData - closestPhysiologicalDataLeft) / (closestPhysiologicalTimes - closestPhysiologicalTimesLeft).clamp(min=1e-10)
-        interpolatedData = closestPhysiologicalDataLeft + (timepoints - closestPhysiologicalTimesLeft) * linearSlope
+        linearSlopes = (closestPhysiologicalDataRight - closestPhysiologicalDataLeft) / (closestPhysiologicalTimesRight - closestPhysiologicalTimesLeft).clamp(min=1e-4)
+        linearSlopes[closestPhysiologicalTimesLeft == closestPhysiologicalTimesRight] = 0
 
         # Calculate the error in signal reconstruction (encoding loss).
+        interpolatedData = closestPhysiologicalDataLeft + (timepoints - closestPhysiologicalTimesLeft) * linearSlopes
+        physiologicalDataUncertainty = (closestPhysiologicalDataRight - closestPhysiologicalDataLeft).pow(2)  # Initialize the uncertainty tensor.
         signalReconstructedLoss = (datapoints - interpolatedData).pow(2)
+        # signalReconstructedLoss dimension: batchSize, numSignals, maxSequenceLength
 
         # Mask out the missing data.
         validDataMask = ~missingDataMask & (physiologicalDataUncertainty <= signalReconstructedLoss) & (0 < physiologicalDataUncertainty)
-        signalReconstructedLoss = signalReconstructedLoss[validDataMask]
-
-        # Average the loss over all batches.
-        signalReconstructedLoss = signalReconstructedLoss.mean()
-        generalEncodingLoss = generalEncodingLoss.mean()
+        signalReconstructedLoss1 = signalReconstructedLoss[validDataMask].mean()
 
         # Assert that nothing is wrong with the loss calculations.
-        self.modelHelpers.assertVariableIntegrity(signalReconstructedLoss, variableName="encoded signal reconstructed loss", assertGradient=False)
-        self.modelHelpers.assertVariableIntegrity(generalEncodingLoss, variableName="signal-specific manifold loss", assertGradient=False)
+        self.modelHelpers.assertVariableIntegrity(signalReconstructedLoss1, variableName="encoded signal reconstructed loss", assertGradient=False)
 
-        return signalReconstructedLoss, generalEncodingLoss
+        return signalReconstructedLoss1
 
     def calculateActivityLoss(self, predictedActivityLabels, allLabels, allLabelsMask, activityClassWeights):
         # Find the boolean flags for the data involved in the loss calculation.

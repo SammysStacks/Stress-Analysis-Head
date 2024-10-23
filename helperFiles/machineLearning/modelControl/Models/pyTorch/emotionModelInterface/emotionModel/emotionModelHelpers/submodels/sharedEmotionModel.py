@@ -17,7 +17,7 @@ class sharedEmotionModel(nn.Module):
         self.lastActivityLayer = None  # A string representing the last layer for activity prediction. Option: 'softmax', 'logsoftmax', or None.
         self.lastEmotionLayer = None  # A string representing the last layer for emotion prediction. Option: 'softmax', 'logsoftmax', or None.
 
-    def forward(self, mappedSignalData, metadata, specificEmotionModel, trainingFlag=False):
+    def forward(self, mappedSignalData, metadata, specificEmotionModel):
         """ The shape of manifoldData: (batchSize, numEncodedSignals, compressedLength) """
 
         # ----------------------- Data Preprocessing ----------------------- #  
@@ -67,18 +67,3 @@ class sharedEmotionModel(nn.Module):
         return featureData, activityDistribution, eachBasicEmotionDistribution, finalEmotionDistributions
 
         # ------------------------------------------------------------------ #  
-
-    # DEPRECATED
-    def shapInterface(self, reshapedSignalFeatures):
-        # Extract the incoming data's dimension and ensure proper data format.
-        batchSize, numFeatures = reshapedSignalFeatures.shape
-        reshapedSignalFeatures = torch.tensor(reshapedSignalFeatures.tolist())
-        assert numFeatures == self.numSignals * self.numSignalFeatures, f"{numFeatures} {self.numSignals} {self.numSignalFeatures}"
-
-        # Reshape the inputs to integrate into the model's expected format.
-        signalFeatures = reshapedSignalFeatures.view((batchSize, self.numSignals, self.numSignalFeatures))
-
-        # predict the activities.
-        activityDistribution = self.forward(signalFeatures, predictActivity=True, allSignalFeatures=True)
-
-        return activityDistribution.detach().numpy()
