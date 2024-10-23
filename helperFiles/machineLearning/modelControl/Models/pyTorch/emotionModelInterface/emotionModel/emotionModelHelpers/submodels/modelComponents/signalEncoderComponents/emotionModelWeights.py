@@ -79,11 +79,11 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def postProcessingLayerCNN(numSignals=1):
-        return reversibleConvolution(numChannels=numSignals, kernelSize=3, activationMethod=emotionModelWeights.getActivationType(), numLayers=1)
+        return reversibleConvolution(numChannels=numSignals, kernelSize=7, activationMethod=emotionModelWeights.getActivationType(), numLayers=1)
 
     @staticmethod
     def postProcessingLayerFC(numSignals, sequenceLength):
-        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=3, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
+        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=7, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
 
     @staticmethod
     def getActivationType(): return 'nonLinearAddition'

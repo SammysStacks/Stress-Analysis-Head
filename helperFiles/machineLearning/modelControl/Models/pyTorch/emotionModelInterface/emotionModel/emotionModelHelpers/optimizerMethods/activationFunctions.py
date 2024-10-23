@@ -197,7 +197,7 @@ class nonLinearAddition(reversibleInterface):
         # Create a learnable parameter, initialized to the given initial value
         self.learnablePhaseShift = nn.Parameter(torch.as_tensor(torch.pi))
         self.learnableFrequency = nn.Parameter(torch.as_tensor(1).exp())
-        self.learnableAmplitude = nn.Parameter(torch.as_tensor(0.25))
+        self.learnableAmplitude = nn.Parameter(torch.as_tensor(0.5))
 
         # Register a hook to scale gradients
         self.learnablePhaseShift.register_hook(self.gradientHook)

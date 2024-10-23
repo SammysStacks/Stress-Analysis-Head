@@ -26,8 +26,8 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         self.goldenRatio = goldenRatio  # The golden ratio for the model.
 
         # Initialize the pseudo-encoded times for the fourier data.
-        pseudoEncodedTimes = torch.arange(0, self.encodedTimeWindow, step=self.encodedTimeWindow/self.encodedDimension)
-        self.register_buffer(name='pseudoEncodedTimes', tensor=torch.flip(pseudoEncodedTimes, dims=[0]))  # Non-learnable parameter.
+        pseudoEncodedTimes = torch.linspace(start=0, end=self.encodedTimeWindow, steps=self.encodedDimension).flip(dims=[0])
+        self.register_buffer(name='pseudoEncodedTimes', tensor=pseudoEncodedTimes)  # Non-learnable parameter.
 
         # The neural layers for the signal encoder.
         self.activationFunction = activationFunctions.getActivationMethod(activationMethod=activationMethod)

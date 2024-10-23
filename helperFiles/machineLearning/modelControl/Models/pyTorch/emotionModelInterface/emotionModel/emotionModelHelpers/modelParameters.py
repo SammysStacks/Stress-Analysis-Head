@@ -66,8 +66,8 @@ class modelParameters:
 
     @staticmethod
     def getInferenceBatchSize(submodel, device):
-        if submodel == modelConstants.signalEncoderModel: return 32 if device == "cpu" else 16
-        elif submodel == modelConstants.emotionModel: return 32 if device == "cpu" else 16
+        if submodel == modelConstants.signalEncoderModel: return 96 if device == "cpu" else 96
+        elif submodel == modelConstants.emotionModel: return 96 if device == "cpu" else 96
         else: raise Exception()
 
     @staticmethod

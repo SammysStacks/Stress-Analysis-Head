@@ -42,22 +42,23 @@ class reversibleConvolution(reversibleInterface):
     def applyLayer(self, inputData, layerInd):
         # Create a square neural weight matrix.
         neuralWeights = self.linearOperators[layerInd].weight.unsqueeze(-1)
-        neuralWeights = torch.matmul(neuralWeights, neuralWeights.transpose(2, 3))
+        # neuralWeights = torch.matmul(neuralWeights, neuralWeights.transpose(2, 3))
         # numInputChannels, numOutputChannels, kernelSize, kernelSize
 
         # Add a stability term to the diagonal.
         # TODO: The stability term does not yet ensure convertibility.
-        stabilityTerm = self.getStabilityTerm(self.kernelSize, scalingFactor=1, device=inputData.device)
-        neuralWeights = torch.triu(neuralWeights, diagonal=0) + stabilityTerm.unsqueeze(0).unsqueeze(0)
+        # stabilityTerm = self.getStabilityTerm(self.kernelSize, scalingFactor=1, device=inputData.device)
+        # neuralWeights = torch.triu(neuralWeights, diagonal=0) + stabilityTerm.unsqueeze(0).unsqueeze(0)
         # neuralWeights = neuralWeights / neuralWeights.norm(dim=-1, keepdim=True)
 
         # Skip connection.
         # neuralWeights = torch.linalg.qr(neuralWeights, mode='reduced')[1]
         # neuralWeights[:, :, 0, self.kernelSize//2] = 1  # Skip connection.
-        print(neuralWeights[0, 0], neuralWeights[0, 0, self.kernelSize//2, :])
+        # print(neuralWeights[0, 0], neuralWeights[0, 0, self.kernelSize//2, :])
 
         # Invert the neural weights if needed.
-        if self.forwardDirection: neuralWeights = torch.linalg.inv(neuralWeights)
+        # if self.forwardDirection: neuralWeights[:, :, :, -1] = torch.linalg.pinv(neuralWeights[:, :, :, -1]).transpose(-1, -2)
+        if self.forwardDirection: neuralWeights = torch.linalg.pinv(neuralWeights).transpose(-1, -2)
 
         # Perform the convolution.
         convolutionalData = torch.nn.functional.conv1d(inputData, neuralWeights[:, :, :, -1], bias=None, stride=1, padding=self.kernelSize, dilation=1, groups=self.numChannels)

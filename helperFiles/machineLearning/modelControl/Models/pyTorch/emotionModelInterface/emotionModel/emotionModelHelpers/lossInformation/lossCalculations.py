@@ -113,7 +113,7 @@ class lossCalculations:
         # signalReconstructedLoss dimension: batchSize, numSignals, maxSequenceLength
 
         # Mask out the missing data.
-        validDataMask = ~missingDataMask & (physiologicalDataUncertainty <= signalReconstructedLoss) & (0 < physiologicalDataUncertainty)
+        validDataMask = ~missingDataMask & (physiologicalDataUncertainty <= signalReconstructedLoss)
         signalReconstructedLoss1 = signalReconstructedLoss[validDataMask].mean()
 
         # Assert that nothing is wrong with the loss calculations.

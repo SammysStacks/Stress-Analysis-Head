@@ -243,18 +243,18 @@ class emotionModelHead(nn.Module):
     def fullPass(self, submodel, signalData, signalIdentifiers, metadata, device, inferenceTraining):
         with torch.no_grad():
             # Preallocate the output tensors.
-            batchSize, numSignals, maxSequenceLength, numChannels = signalData.size()
-            basicEmotionProfile = torch.zeros((batchSize, self.numBasicEmotions, self.encodedDimension), device=device, dtype=torch.float64)
-            reconstructedSignalData = torch.zeros((batchSize, numSignals, self.encodedDimension), device=device, dtype=torch.float64)
-            emotionProfile = torch.zeros((batchSize, self.numEmotions, self.encodedDimension), device=device, dtype=torch.float64)
-            missingDataMask = torch.zeros((batchSize, numSignals, maxSequenceLength), device=device, dtype=torch.bool)
-            physiologicalProfile = torch.zeros((batchSize, self.encodedDimension), device=device, dtype=torch.float64)
-            activityProfile = torch.zeros((batchSize, self.encodedDimension), device=device, dtype=torch.float64)
-            generalEncodingLoss = torch.zeros(batchSize, device=device, dtype=torch.float64)
+            numExperiments, numSignals, maxSequenceLength, numChannels = signalData.size()
+            basicEmotionProfile = torch.zeros((numExperiments, self.numBasicEmotions, self.encodedDimension), device=device, dtype=torch.float64)
+            reconstructedSignalData = torch.zeros((numExperiments, numSignals, self.encodedDimension), device=device, dtype=torch.float64)
+            emotionProfile = torch.zeros((numExperiments, self.numEmotions, self.encodedDimension), device=device, dtype=torch.float64)
+            missingDataMask = torch.zeros((numExperiments, numSignals, maxSequenceLength), device=device, dtype=torch.bool)
+            physiologicalProfile = torch.zeros((numExperiments, self.encodedDimension), device=device, dtype=torch.float64)
+            activityProfile = torch.zeros((numExperiments, self.encodedDimension), device=device, dtype=torch.float64)
+            generalEncodingLoss = torch.zeros(numExperiments, device=device, dtype=torch.float64)
             testingBatchSize = modelParameters.getInferenceBatchSize(submodel, device)
             startBatchInd = 0
 
-            while startBatchInd + testingBatchSize < batchSize:
+            while startBatchInd < numExperiments:
                 endBatchInd = startBatchInd + testingBatchSize
 
                 # Perform a full pass of the model.
