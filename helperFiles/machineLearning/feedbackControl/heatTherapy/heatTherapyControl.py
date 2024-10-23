@@ -1,11 +1,3 @@
-# General.
-import torch
-import sys
-
-# Spyder interface.
-sys.path.append("./../../../../")
-import helperFiles
-
 # Import the necessary libraries.
 from helperFiles.machineLearning.feedbackControl.heatTherapy.heatTherapyHelpers import heatTherapyHelpers
 
@@ -85,6 +77,5 @@ if __name__ == "__main__":
 
     # Initialize the therapy protocol
     therapyProtocol = heatTherapyControl(testingUserName, temperatureBounds, temperatureBinWidth, currentSimulationParameters, therapyMethod=userTherapyMethod, plotResults=plotTherapyResults)
-
     # Run the therapy protocol.
     therapyProtocol.runTherapyProtocol(maxIterations=None)
