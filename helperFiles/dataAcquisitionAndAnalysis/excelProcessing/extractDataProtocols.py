@@ -64,9 +64,9 @@ class extractData(handlingExcelFormat):
             if type(row[0].value) in [int, float]:
                 dataStartRow = row[0].row
                 break
-            elif "Time_" in row[0].value:
+            elif "Time" in row[0].value:
                 for cellInd in range(1, len(row)):
-                    if "Time_" in row[cellInd].value: timeColumns.append(cellInd)
+                    if "Time" in row[cellInd].value: timeColumns.append(cellInd)
                     elif type(row[0].value) is str:
                         if streamingOrder is not None:
                             assert streamingOrder[len(dataColumns)] in row[cellInd].value.lower(), f"streamingOrder: {streamingOrder}; dataColumns: {dataColumns}; row[cellInd].value: {row[cellInd].value}"
@@ -74,6 +74,7 @@ class extractData(handlingExcelFormat):
                     else: break
 
         # Assert the data columns are correct.
+
         assert endDataCol - startDataCol == dataColumns[-1], f"Data columns: {dataColumns}; timeColumns: {timeColumns}; startDataCol: {startDataCol}; endDataCol: {endDataCol}"
         numFreqs = len(timeColumns)
 

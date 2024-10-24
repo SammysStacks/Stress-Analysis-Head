@@ -169,6 +169,9 @@ class featureOrganization(humanMachineInterface):
                 compiledFeatureTimes = rawFeatureTimes[alignmentDataPointer:]  # Dim: numCompiledPoints
 
                 # Interpolate the features.
+                print(f"Length of compiledFeatureTimes: {len(compiledFeatureTimes)}")
+                print(f"length of compiledFeatures: {len(compiledFeatures)}")
+
                 makimaInterpFunc = Akima1DInterpolator(compiledFeatureTimes, compiledFeatures, method='makima', axis=0)
                 alignedFeatures = makimaInterpFunc(newInterpolatedFeatureTimes)
                 # alignedFeatures dim: numTimePoints, numBiomarkerFeatures
@@ -221,7 +224,6 @@ class featureOrganization(humanMachineInterface):
             # Get the interval of features to average
             windowTimeInd = bisect_left(rawFeatureTimes, currentTimepoint - averageWindow)
             featureInterval = rawFeatures[windowTimeInd:timePointInd + 1]
-
             # Take the trimmed average
             compiledFeature = scipy.stats.trim_mean(featureInterval, proportiontocut=self.trimMeanCut, axis=0).tolist()
             compiledFeatureTimes.append(currentTimepoint)
@@ -254,7 +256,8 @@ class featureOrganization(humanMachineInterface):
         compiledFeatures.extend(newCompiledFeatures)
 
         # Assert the integrity of the feature compilation.
-        assert len(rawFeatures) == len(compiledFeatures), f"Found {len(rawFeatures)} raw features and {len(compiledFeatures)} compiled features. {len(rawFeatures[0])} {len(compiledFeatures[0])}"
+        assert len(rawFeatures) == len(rawFeatureTimes), f''
+        assert len(compiledFeatures) == len(compiledFeatureTimes), f''
 
     def compileStaticFeatures(self, rawFeatureTimesHolder, rawFeatureHolder, featureAverageWindows):
         # rawFeatureHolder dim: numBiomarkers, numTimePoints, numBiomarkerFeatures

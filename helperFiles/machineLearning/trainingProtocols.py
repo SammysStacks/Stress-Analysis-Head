@@ -98,7 +98,7 @@ class trainingProtocols(extractData):
                 self.readData.resetGlobalVariables()
                 # Extract and analyze the raw data.
                 compiledRawData_eachFreq, experimentTimes, experimentNames, currentSurveyAnswerTimes, currentSurveyAnswersList, surveyQuestions, currentSubjectInformationAnswers, subjectInformationQuestions \
-                    = self.extractExperimentalData(self.deviceType, WB.worksheets, self.numberOfChannels, surveyQuestions=surveyQuestions, finalSubjectInformationQuestions=subjectInformationQuestions)
+                    = self.extractExperimentalData(self.deviceType, WB.worksheets, self.streamingOrder, surveyQuestions=surveyQuestions, finalSubjectInformationQuestions=subjectInformationQuestions)
                 for compiledRawData in compiledRawData_eachFreq: self.readData.streamExcelData(compiledRawData, experimentTimes, experimentNames, currentSurveyAnswerTimes, currentSurveyAnswersList, surveyQuestions, currentSubjectInformationAnswers, subjectInformationQuestions, excelFileName)
                 # Extract information from the streamed data
                 rawFeatureTimesHolder = self.readData.rawFeatureTimesHolder.copy()  # dim: numBiomarkers, numTimePoints
@@ -184,7 +184,7 @@ class trainingProtocols(extractData):
             del currentSurveyAnswerTimes, currentSurveyAnswersList
 
             # -------------------- Plot the features ------------------- #
-
+            plotTrainingData = False
             if plotTrainingData:
                 startBiomarkerFeatureIndex = 0
                 for biomarkerInd in range(len(rawFeatureHolder)):
@@ -272,7 +272,7 @@ class trainingProtocols(extractData):
 
         # Extract and analyze the raw data.
         compiledRawData_eachFreq, experimentTimes, experimentNames, currentSurveyAnswerTimes, currentSurveyAnswersList, surveyQuestions, currentSubjectInformationAnswers, subjectInformationQuestions \
-            = self.extractExperimentalData(WB.worksheets, self.numberOfChannels, surveyQuestions=[], finalSubjectInformationQuestions=[])
+            = self.extractExperimentalData(self.deviceType, WB.worksheets, self.streamingOrder, surveyQuestions=[], finalSubjectInformationQuestions=[])
 
         # For each test parameter
         for featureTimeWindow in featureTimeWindows:

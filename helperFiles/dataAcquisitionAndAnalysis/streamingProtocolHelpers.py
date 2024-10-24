@@ -144,7 +144,7 @@ class streamingProtocolHelpers(featureOrganization):
 
         # Organize the new features
         self.organizeRawFeatures()
-        self.alignFeatures()
+        # self.alignFeatures()
         # self.predictLabels()
 
         # Plot the Data

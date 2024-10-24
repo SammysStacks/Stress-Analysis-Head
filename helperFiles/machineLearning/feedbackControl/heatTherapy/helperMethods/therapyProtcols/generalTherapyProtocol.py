@@ -256,13 +256,13 @@ class generalTherapyProtocol(abc.ABC):
                 probabilityMap = self.simulationProtocols.realSimMapCompiledLoss
             currentProbability = probabilityMap[currentParamIndex][currentLossIndex]
 
-            # Check if currentProbability is greater than 80% of other probabilities under currentParam
+            # Check if currentProbability is greater than 90% of other probabilities under currentParam
             param_probs = probabilityMap[currentParamIndex]
-            param_quantile = torch.quantile(param_probs, 0.8)
+            param_quantile = torch.quantile(param_probs, 0.9)
 
-            # Check if currentProbability is greater than 80% of probabilities for all parameters under the same loss bin
+            # Check if currentProbability is greater than 90% of probabilities for all parameters under the same loss bin
             loss_probs = probabilityMap[:, currentLossIndex]
-            loss_quantile = torch.quantile(loss_probs, 0.8)
+            loss_quantile = torch.quantile(loss_probs, 0.9)
 
             if currentCompiledLoss < 0.2:
                 if currentProbability > param_quantile and currentProbability > loss_quantile:

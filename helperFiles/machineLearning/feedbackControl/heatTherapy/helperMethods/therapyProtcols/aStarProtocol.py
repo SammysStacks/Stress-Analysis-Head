@@ -8,9 +8,8 @@ class aStarTherapyProtocol(generalTherapyProtocol):
     def __init__(self, initialParameterBounds, unNormalizedParameterBinWidths, simulationParameters, therapyMethod, learningRate=5):
         super().__init__(initialParameterBounds, unNormalizedParameterBinWidths, simulationParameters, therapyMethod)
         # Define update parameters.
-        # TODO: rexamine the gausSTD
-        self.gausParam_STD = self.gausParameterSTDs #self.gausParameterSTDs  # The standard deviation for the Gaussian distribution.
-        self.gausLoss_STD = torch.tensor([0.0580]) #self.gausLossSTDs
+        self.gausParam_STD = self.gausParameterSTDs # The standard deviation for the Gaussian distribution.
+        self.gausLoss_STD = torch.tensor([0.0580]) # self.gausLossSTDs
         self.learningRate = learningRate  # The learning rate for the therapy.
         self.discretePersonalizedMap = []  # The discrete personalized map.
 

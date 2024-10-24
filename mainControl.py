@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
     # General program flags.
     reanalyzeData = False  # Reanalyze training files: don't use saved features
-    reverseOrder = False  # Reverse the order of the data for training.
+    reverseOrder = True  # Reverse the order of the data for training.
 
     # Specify the user parameters.
     userName = "Ruixiao".replace(" ", "")

@@ -72,7 +72,7 @@ if __name__ == "__main__":
         'simulatedMapType': 'uniformSampling',  # The method for generating the simulated map. Options: 'uniformSampling', 'linearSampling', 'parabolicSampling'
         'numSimulationHeuristicSamples': 50,  # The number of simulation samples to generate.
         'numSimulationTrueSamples': 30,  # The number of simulation samples to generate.
-        'simulateTherapy': True,  # Whether to simulate the therapy.
+        'simulateTherapy': False,  # Whether to simulate the therapy.
     }
 
     # Initialize the therapy protocol

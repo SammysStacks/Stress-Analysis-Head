@@ -3,6 +3,9 @@ import os
 # Import Files
 from helperFiles.machineLearning.featureAnalysis.compiledFeatureNames.compileFeatureNames import compileFeatureNames
 from helperFiles.machineLearning.modelControl.modelSpecifications.compileModelInfo import compileModelInfo
+from helperFiles.machineLearning.feedbackControl.heatTherapy.heatTherapyHelpers import heatTherapyHelpers
+
+
 
 
 class humanMachineInterface:
@@ -46,36 +49,12 @@ class humanMachineInterface:
         fileName = os.path.basename(filePath).split(".")[0]
         self.userName = fileName.split(" ")[-1].lower()
 
-    # Deprecated
     def predictLabels(self): 
         # Find the new final features, where no label has been predicted yet
         allNewFeaturesTimes = self.alignedFeatureTimes[len(self.alignedFeatureLabels[0]):].copy()
         allNewFeatures = self.alignedFeatures[:, len(self.alignedFeatureLabels[0]):].copy()
 
-        # Find new subject information
-        newItemNames = self.alignedItemNames[len(self.alignedFeatureLabels[0]):].copy()
-        
-        # For each prediction model
-        for modelInd in range(len(self.modelClasses)):
-            # If the model was never trained, don't use it.
-            if len(self.modelClasses[modelInd].finalFeatureNames) == 0:
-                continue
-            
-            modelClass = self.modelClasses[modelInd]  
-            # Standardize the incoming features (if the model requires)
-            standardizedFeatures = modelClass.standardizeClass_Features.standardize(allNewFeatures) if modelClass.standardizeClass_Features else allNewFeatures
-            # Select the model features
-            newFinalFeatures = modelClass.getSpecificFeatures(modelClass.allFeatureNames, modelClass.finalFeatureNames, standardizedFeatures)
-            
-            # Predict the final labels
-            if modelClass.modelType == "MF":
-                standardizedPredictions = modelClass.model.predict(newFinalFeatures, allNewFeaturesTimes, newUserNames, newItemNames)
-            else:
-                standardizedPredictions = modelClass.predict(newFinalFeatures)
-            # Rescale up the labels (if the model requires)
-            predictedLabels = modelClass.standardizeClass_Labels.unStandardize(standardizedPredictions) if modelClass.standardizeClass_Labels else standardizedPredictions
-            
-            # Save the final results
-            self.alignedFeatureLabels[modelInd].extend(predictedLabels[-len(predictedLabels):])
+        if self.actionControl == 'heat':
 
-        return self.alignedFeatureLabels
+            return None
+
