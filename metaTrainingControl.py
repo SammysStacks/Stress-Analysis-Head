@@ -56,7 +56,7 @@ if __name__ == "__main__":
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are running the platform on')
     parser.add_argument('--reversibleLearningProtocol', type=str, default='rFC', help='The learning rate for the optimizer.')
     parser.add_argument('--irreversibleLearningProtocol', type=str, default='rFC', help='The learning rate for the optimizer.')
-    parser.add_argument('--goldenRatio', type=int, default=4, help='The number of shared layers per specific layer.')
+    parser.add_argument('--goldenRatio', type=int, default=8, help='The number of shared layers per specific layer.')
     parser.add_argument('--numModelLayers', type=int, default=16, help='The number of layers in the model.')
 
     # Add arguments for the neural operator.

@@ -19,7 +19,7 @@ class trainingProtocolHelpers:
         self.minEpochs_modelAdjustment = 1  # The minimum number of epochs before adjusting the model architecture.
         self.accelerator = accelerator
         self.unifiedLayerData = None
-        self.numTrailingLosses = 4
+        self.numTrailingLosses = 2
 
         # Helper classes.
         self.modelMigration = modelMigration(accelerator)
@@ -36,8 +36,8 @@ class trainingProtocolHelpers:
 
             # Check if we should add a new layer.
             lossPercent = sum(modelLosses[-self.numTrailingLosses:]) / sum(modelLosses[-self.numTrailingLosses*2:-self.numTrailingLosses])
-            if not (0.9 < lossPercent < 1): return None
-            if modelLosses[-1] < 0.01: return None
+            if not (0.95 < lossPercent < 1): return None
+            if modelLosses[-1] < 0.1: return None
 
         # Add a new layer to the model.
         self.addModelLayer(allMetaModels, allModels)
