@@ -114,7 +114,7 @@ class signalEncoderPlots(trainingPlots):
 
                     # Load in the previous model attributes.
                     loadSubmodelDate = finalTrainingDataString.replace("XX", str(numLiftedChannels)).replace("YY", str(encodedSamplingFreq)).replace("ZZ", str(numEncodingLayers))
-                    allDummyModelPipelines = self.modelCompiler.onlyPreloadModelAttributes(self.modelName, self.datasetNames, loadSubmodel=modelConstants.signalEncoderModel, loadSubmodelDate=loadSubmodelDate, loadSubmodelEpochs=-1, allDummyModelPipelines=allDummyModelPipelines)
+                    allDummyModelPipelines = self.modelCompiler.onlyPreloadModelAttributes(self.datasetNames, loadSubmodel=modelConstants.signalEncoderModel, loadSubmodelDate=loadSubmodelDate, loadSubmodelEpochs=-1, allDummyModelPipelines=allDummyModelPipelines)
 
                     # For each model, get the losses.
                     for modelInd in range(len(allDummyModelPipelines)):

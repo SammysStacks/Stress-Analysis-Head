@@ -23,8 +23,8 @@ class compileModelData(compileModelDataHelpers):
 
     def __init__(self, submodel, userInputParams, useTherapyData, accelerator=None):
         super().__init__(submodel, userInputParams, accelerator)
-        # Initialize relevant classes.
-        self.compileModelInfo = compileModelInfo()
+        # Initialize relevant information.
+        self.compileModelInfo = compileModelInfo()  # Initialize the model information class.
 
         # Get the data folder.
         self.trainingFolder = os.path.dirname(__file__) + "/../../../" + self.compileModelInfo.getTrainingDataFolder(useTherapyData=useTherapyData)
@@ -131,23 +131,23 @@ class compileModelData(compileModelDataHelpers):
 
     # -------------------- Machine Learning Preparation -------------------- #
 
-    def compileModelsFull(self, metaDatasetNames, modelName, submodel, testSplitRatio, datasetNames):
+    def compileModelsFull(self, metaDatasetNames, submodel, testSplitRatio, datasetNames):
         # Compile the project data and metadata together
         metaCompiledFeatureIntervalTimes, metaCompiledFeatureIntervals, metaSurveyAnswerTimes, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions, metaSubjectOrder, metaFeatureNames, metaDatasetNames = self.compileMetaAnalyses(metaDatasetNames, loadCompiledData=True)
         allCompiledFeatureIntervalTimes, allCompiledFeatureIntervals, subjectOrder, featureNames, surveyQuestions, surveyAnswerTimes, surveyAnswersList, activityNames, activityLabels, numQuestionOptions = self.compileProjectAnalysis(loadCompiledData=True)
 
         # Compile the meta-learning modules.
         allMetaModels, allMetadataLoaders = self.compileModels(metaCompiledFeatureIntervalTimes, metaCompiledFeatureIntervals, metaSurveyAnswerTimes, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions,
-                                                               metaSubjectOrder, metaFeatureNames, metaDatasetNames, modelName, submodel, testSplitRatio, metaTraining=True, specificInfo=None, random_state=42)
+                                                               metaSubjectOrder, metaFeatureNames, metaDatasetNames, submodel, testSplitRatio, metaTraining=True, specificInfo=None, random_state=42)
         # Compile the final modules.
         allModels, allDataLoaders = self.compileModels(metaCompiledFeatureIntervalTimes=[allCompiledFeatureIntervalTimes], metaCompiledFeatureIntervals=[allCompiledFeatureIntervals], metaSurveyAnswerTimes=[surveyAnswerTimes], metaSurveyAnswersList=[surveyAnswersList],
                                                        metaSurveyQuestions=[surveyQuestions], metaActivityLabels=[activityLabels], metaActivityNames=[activityNames], metaNumQuestionOptions=[numQuestionOptions], metaSubjectOrder=[subjectOrder],
-                                                       metaFeatureNames=[featureNames], metaDatasetNames=datasetNames, modelName=modelName, submodel=submodel, testSplitRatio=testSplitRatio, metaTraining=False, specificInfo=None, random_state=42)
+                                                       metaFeatureNames=[featureNames], metaDatasetNames=datasetNames, submodel=submodel, testSplitRatio=testSplitRatio, metaTraining=False, specificInfo=None, random_state=42)
 
         return allModels, allDataLoaders, allMetaModels, allMetadataLoaders, metaDatasetNames
 
     def compileModels(self, metaCompiledFeatureIntervalTimes, metaCompiledFeatureIntervals, metaSurveyAnswerTimes, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions,
-                      metaSubjectOrder, metaFeatureNames, metaDatasetNames, modelName, submodel, testSplitRatio, metaTraining, specificInfo=None, random_state=42):
+                      metaSubjectOrder, metaFeatureNames, metaDatasetNames, submodel, testSplitRatio, metaTraining, specificInfo=None, random_state=42):
         # Initialize relevant holders.
         allModelPipelines, lossDataHolders, allDataLoaders = [], [], []
 
@@ -235,7 +235,7 @@ class compileModelData(compileModelDataHelpers):
                 stratifyBy = currentFeatureLabels[validLabelMask]  # Dim: numValidLabels
 
                 # You must have at least two labels per class.
-                if testSplitRatio < len(torch.unique(stratifyBy)) / len(stratifyBy):
+                if len(stratifyBy) == 0 or testSplitRatio < len(torch.unique(stratifyBy)) / len(stratifyBy):
                     print(f"\t\tThe labels do not have enough examples for splitting. Not training on {surveyQuestions[labelTypeInd]} labels", flush=True)
                     continue
 
@@ -272,9 +272,9 @@ class compileModelData(compileModelDataHelpers):
             reconstructionIndex = emotionDataInterface.getReconstructionIndex(currentTrainingMask)
 
             # Initialize and train the model class.
-            modelPipeline = emotionPipeline(accelerator=self.accelerator, datasetName=metadatasetName, modelName=modelName, allEmotionClasses=numQuestionOptions,
-                                            numSubjects=numSubjects, userInputParams=self.userInputParams, emotionNames=surveyQuestions, activityNames=activityNames,
-                                            featureNames=featureNames, submodel=submodel, numExperiments=len(allSignalData), reconstructionIndex=reconstructionIndex)
+            modelPipeline = emotionPipeline(accelerator=self.accelerator, datasetName=metadatasetName, allEmotionClasses=numQuestionOptions, numSubjects=numSubjects,
+                                            userInputParams=self.userInputParams, emotionNames=surveyQuestions, activityNames=activityNames, featureNames=featureNames,
+                                            submodel=submodel, numExperiments=len(allSignalData), reconstructionIndex=reconstructionIndex)
 
             # Hugging face integration.
             modelDataLoader = modelPipeline.acceleratorInterface(modelDataLoader)
@@ -308,8 +308,8 @@ class compileModelData(compileModelDataHelpers):
                 datasetName = datasetNames[metadataInd]
 
                 # Initialize and train the model class.
-                dummyModelPipeline = emotionPipeline(accelerator=self.accelerator, datasetName=datasetName, modelName=modelName, allEmotionClasses=[],
-                                                     numSubjects=1, userInputParams=userInputParams, emotionNames=[], activityNames=[], featureNames=[],
+                dummyModelPipeline = emotionPipeline(accelerator=self.accelerator, datasetName=datasetName, allEmotionClasses=[], numSubjects=1,
+                                                     userInputParams=userInputParams, emotionNames=[], activityNames=[], featureNames=[],
                                                      submodel=loadSubmodel, numExperiments=1, reconstructionIndex=1)
                 # Hugging face integration.
                 dummyModelPipeline.acceleratorInterface()

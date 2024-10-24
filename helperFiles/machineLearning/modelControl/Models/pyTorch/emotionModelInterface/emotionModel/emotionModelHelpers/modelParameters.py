@@ -102,11 +102,11 @@ class modelParameters:
         # No model information to load.
         loadSubmodelDate, loadSubmodelEpochs, loadSubmodel = None, None, None
 
-        if submodel == modelConstants.emotionModel:
-            # Model loading information.
-            loadSubmodelDate = f"2024-01-10 Final signalEncoder"  # The date the model was trained.
-            loadSubmodel = modelConstants.signalEncoderModel  # The submodel to load.
-            loadSubmodelEpochs = -1  # The # of epochs to load from the trained model.
+        # if submodel == modelConstants.emotionModel:
+        #     # Model loading information.
+        #     loadSubmodelDate = f"2024-01-10 Final signalEncoder"  # The date the model was trained.
+        #     loadSubmodel = modelConstants.signalEncoderModel  # The submodel to load.
+        #     loadSubmodelEpochs = -1  # The # of epochs to load from the trained model.
 
         return loadSubmodelDate, loadSubmodelEpochs, loadSubmodel
 
@@ -123,7 +123,7 @@ class modelParameters:
         if submodel == modelConstants.signalEncoderModel:
             submodelsSaving = [modelConstants.specificSignalEncoderModel, modelConstants.sharedSignalEncoderModel]
         elif submodel == modelConstants.emotionModel:
-            submodelsSaving = [modelConstants.specificSignalEncoderModel, modelConstants.sharedSignalEncoderModel, modelConstants.specificEmotionModel, modelConstants.sharedEmotionModel]
+            submodelsSaving = [modelConstants.specificSignalEncoderModel, modelConstants.sharedSignalEncoderModel, modelConstants.specificEmotionModel, modelConstants.sharedEmotionModel, modelConstants.specificActivityModel, modelConstants.sharedActivityModel]
         else: assert False, "No model initialized"
 
         return submodelsSaving

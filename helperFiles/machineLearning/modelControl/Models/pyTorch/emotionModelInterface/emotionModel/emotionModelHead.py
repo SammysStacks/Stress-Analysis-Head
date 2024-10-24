@@ -98,6 +98,7 @@ class emotionModelHead(nn.Module):
                 encodedDimension=self.encodedDimension,
                 numBasicEmotions=self.numBasicEmotions,
                 numModelLayers=self.numModelLayers,
+                operatorType=self.operatorType,
                 goldenRatio=self.goldenRatio,
                 numEmotions=self.numEmotions,
                 numSubjects=self.numSubjects,
@@ -110,6 +111,7 @@ class emotionModelHead(nn.Module):
                 encodedDimension=self.encodedDimension,
                 numBasicEmotions=self.numBasicEmotions,
                 numModelLayers=self.numModelLayers,
+                operatorType=self.operatorType,
             )
 
             self.specificActivityModel = specificActivityModel(
@@ -120,6 +122,7 @@ class emotionModelHead(nn.Module):
                 encodedDimension=self.encodedDimension,
                 numModelLayers=self.numModelLayers,
                 numActivities=self.numActivities,
+                operatorType=self.operatorType,
                 goldenRatio=self.goldenRatio,
             )
 
@@ -130,6 +133,7 @@ class emotionModelHead(nn.Module):
                 activationMethod=self.activationMethod,
                 encodedDimension=self.encodedDimension,
                 numModelLayers=self.numModelLayers,
+                operatorType=self.operatorType,
             )
 
     # ------------------------- Full Forward Calls ------------------------- #
@@ -162,7 +166,6 @@ class emotionModelHead(nn.Module):
         basicEmotionProfile = torch.zeros((batchSize, self.numBasicEmotions, self.encodedDimension), device=device)
         emotionProfile = torch.zeros((batchSize, self.numEmotions, self.encodedDimension), device=device)
         activityProfile = torch.zeros((batchSize, self.encodedDimension), device=device)
-        generalEncodingLoss = torch.zeros(batchSize, device=device)
 
         # ------------------- Organize the Incoming Data ------------------- #
 
@@ -219,7 +222,7 @@ class emotionModelHead(nn.Module):
 
         if submodel == modelConstants.emotionModel:
             # Get the subject-specific indices.
-            subjectInds = emotionDataInterface.getMetaDataChannel(metadata, channelName=modelConstants.subjectIndexMD)[:, 0]  # Dim: batchSize
+            subjectInds = emotionDataInterface.getMetaDataChannel(metadata, channelName=modelConstants.subjectIndexMD)  # Dim: batchSize
 
             # Perform the backward pass: physiologically -> emotion data.
             reversibleInterface.changeDirections(forwardDirection=False)
@@ -240,7 +243,7 @@ class emotionModelHead(nn.Module):
 
         # --------------------------------------------------------------- #
 
-        return missingDataMask, reconstructedSignalData, generalEncodingLoss, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile
+        return missingDataMask, reconstructedSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile
 
     @staticmethod
     def coreModelPass(dataMask, metaLearningData, specificModel, sharedModel):
@@ -267,7 +270,6 @@ class emotionModelHead(nn.Module):
             missingDataMask = torch.zeros((numExperiments, numSignals, maxSequenceLength), device=device, dtype=torch.bool)
             physiologicalProfile = torch.zeros((numExperiments, self.encodedDimension), device=device, dtype=torch.float64)
             activityProfile = torch.zeros((numExperiments, self.encodedDimension), device=device, dtype=torch.float64)
-            generalEncodingLoss = torch.zeros(numExperiments, device=device, dtype=torch.float64)
             testingBatchSize = modelParameters.getInferenceBatchSize(submodel, device)
             startBatchInd = 0
 
@@ -275,7 +277,7 @@ class emotionModelHead(nn.Module):
                 endBatchInd = startBatchInd + testingBatchSize
 
                 # Perform a full pass of the model.
-                missingDataMask[startBatchInd:endBatchInd], reconstructedSignalData[startBatchInd:endBatchInd], generalEncodingLoss[startBatchInd:endBatchInd], physiologicalProfile[startBatchInd:endBatchInd], \
+                missingDataMask[startBatchInd:endBatchInd], reconstructedSignalData[startBatchInd:endBatchInd], physiologicalProfile[startBatchInd:endBatchInd], \
                     activityProfile[startBatchInd:endBatchInd], basicEmotionProfile[startBatchInd:endBatchInd], emotionProfile[startBatchInd:endBatchInd] \
                     = self.forward(submodel=submodel, signalData=signalData[startBatchInd:endBatchInd], signalIdentifiers=signalIdentifiers[startBatchInd:endBatchInd],
                                    metadata=metadata[startBatchInd:endBatchInd], device=device, inferenceTraining=inferenceTraining)
@@ -283,7 +285,7 @@ class emotionModelHead(nn.Module):
                 # Update the batch index.
                 startBatchInd = endBatchInd
 
-        return missingDataMask, reconstructedSignalData, generalEncodingLoss, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile
+        return missingDataMask, reconstructedSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile
 
     def visualizeSignalEncoding(self, physiologicalProfile, reconstructedSignalData, timepoints, datapoints, missingDataMask):
         # Optionally, plot the physiological profile for visual comparison

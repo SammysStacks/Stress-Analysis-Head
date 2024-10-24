@@ -17,12 +17,15 @@ class modelConstants:
     # Specify the submodels.
     specificSignalEncoderModel = "specificSignalEncoderModel"
     sharedSignalEncoderModel = "sharedSignalEncoderModel"
+    specificActivityModel = "specificActivityModel"
     specificEmotionModel = "specificEmotionModel"
+    sharedActivityModel = "sharedActivityModel"
     sharedEmotionModel = "sharedEmotionModel"
     inferenceModel = "inferenceModel"
 
     # Specify the models.
     signalEncoderModel = "signalEncoderModel"
+    modelName = "observationModel"
     emotionModel = "emotionModel"
 
     # Specify the subject identifiers.

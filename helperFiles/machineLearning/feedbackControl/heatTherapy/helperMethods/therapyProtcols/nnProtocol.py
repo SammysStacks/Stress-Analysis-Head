@@ -5,6 +5,7 @@ from torch.optim.lr_scheduler import StepLR
 from torch.optim.lr_scheduler import ExponentialLR
 import random
 
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 # Import files.
 from .generalTherapyProtocol import generalTherapyProtocol
 from .nnHelpers.heatTherapyModel import heatTherapyModel
@@ -13,11 +14,11 @@ from .nnHelpers.heatTherapyModelUpdate import heatTherapyModelUpdate
 
 
 class nnTherapyProtocol(generalTherapyProtocol):
-    def __init__(self, temperatureBounds, simulationParameters, modelName, onlineTraining=False):
+    def __init__(self, temperatureBounds, simulationParameters, onlineTraining=False):
         super().__init__(temperatureBounds, simulationParameters)
         # General model parameters.
         self.onlineTraining = onlineTraining  # Whether to train the model live.
-        self.modelName = modelName  # The model's unique identifier.
+        self.modelName = modelConstants.modelName  # The model's unique identifier.
 
         # Model parameters.
         self.optimizer = None  # The optimizer for the model.

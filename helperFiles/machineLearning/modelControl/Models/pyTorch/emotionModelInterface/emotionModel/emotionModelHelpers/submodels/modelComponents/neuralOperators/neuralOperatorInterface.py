@@ -4,13 +4,14 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class neuralOperatorInterface(emotionModelWeights):
 
-    def __init__(self, sequenceLength, numInputSignals, numOutputSignals, learningProtocol, addBiasTerm):
+    def __init__(self, operatorType, sequenceLength, numInputSignals, numOutputSignals, learningProtocol, addBiasTerm):
         super().__init__()
         # General parameters.
         self.learningProtocol = learningProtocol  # The learning protocol for the neural operator.
         self.numOutputSignals = numOutputSignals  # The number of output signals.
         self.numInputSignals = numInputSignals  # The number of input signals.
         self.sequenceLength = sequenceLength  # The length of the input signals.
+        self.operatorType = operatorType  # The type of operator to use.
         self.addBiasTerm = addBiasTerm  # Whether to add a bias term to the neural operator.
 
     def getNeuralOperatorLayer(self, neuralOperatorParameters, reversibleFlag=False):

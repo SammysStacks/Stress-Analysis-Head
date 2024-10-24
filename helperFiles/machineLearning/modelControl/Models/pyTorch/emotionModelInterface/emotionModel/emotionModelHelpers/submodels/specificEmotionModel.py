@@ -6,8 +6,8 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class specificEmotionModel(neuralOperatorInterface):
 
-    def __init__(self, numSubjects, numBasicEmotions, encodedDimension, numEmotions, numModelLayers, goldenRatio, activationMethod, learningProtocol, neuralOperatorParameters):
-        super(specificEmotionModel, self).__init__(sequenceLength=encodedDimension, numInputSignals=numEmotions*numBasicEmotions, numOutputSignals=numEmotions*numBasicEmotions, learningProtocol=learningProtocol, addBiasTerm=False)
+    def __init__(self, numSubjects, numBasicEmotions, encodedDimension, numEmotions, numModelLayers, goldenRatio, operatorType, activationMethod, learningProtocol, neuralOperatorParameters):
+        super(specificEmotionModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numInputSignals=numEmotions*numBasicEmotions, numOutputSignals=numEmotions*numBasicEmotions, learningProtocol=learningProtocol, addBiasTerm=False)
         # General model parameters.
         self.activationFunction = activationFunctions.getActivationMethod(activationMethod=activationMethod)
         self.neuralOperatorParameters = neuralOperatorParameters  # The parameters for the neural operator.
@@ -55,7 +55,7 @@ class specificEmotionModel(neuralOperatorInterface):
     def calculateEmotionProfile(self, basicEmotionProfile, subjectInds):
         # Calculate the subject-specific weights.
         subjectSpecificWeights = self.basicEmotionWeights[subjectInds]
-        subjectSpecificWeights = subjectSpecificWeights / subjectSpecificWeights.sum(dim=-1)
+        subjectSpecificWeights = subjectSpecificWeights / subjectSpecificWeights.sum(dim=-1, keepdim=True)
         subjectSpecificWeights = subjectSpecificWeights.unsqueeze(dim=1).unsqueeze(dim=-1)
         # basicEmotionProfile: batchSize, numEmotions, numBasicEmotions, encodedDimension
         # subjectSpecificWeights: batchSize, 1, numBasicEmotions, 1

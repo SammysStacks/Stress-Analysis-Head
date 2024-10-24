@@ -137,10 +137,9 @@ class emotionDataInterface:
 
     @staticmethod
     def getMetaDataChannel(metaData, channelName):
-        # signalIdentifiers dim: (batchSize, numSignals, numSignalIdentifiers)
         channelInd = modelConstants.metadata.index(channelName)
 
-        return metaData[:, :, channelInd]
+        return metaData[:, channelInd]
     
     def getReconstructionData(self, trainingMask, signalLabels, signalData, reconstructionIndex):
         # Get the current training data mask.

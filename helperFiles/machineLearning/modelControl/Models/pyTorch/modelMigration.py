@@ -2,6 +2,8 @@ import os
 import torch
 import torch.nn as nn
 
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
+
 
 class modelMigration:
 
@@ -252,7 +254,7 @@ class modelMigration:
         # Iterate over each model pipeline and dataset name
         for modelPipeline in allModelPipelines:
             # Save the individual model's information.
-            self._loadModel(modelPipeline.model, modelPipeline.modelName, modelPipeline.datasetName, submodel, trainingDate, numEpochs, metaTraining, loadModelAttributes, loadModelWeights)
+            self._loadModel(modelPipeline.model, modelConstants.modelName, modelPipeline.datasetName, submodel, trainingDate, numEpochs, metaTraining, loadModelAttributes, loadModelWeights)
 
     def _loadModel(self, model, modelName, datasetName, submodel, trainingDate, numEpochs, metaTraining, loadModelAttributes=True, loadModelWeights=True):
         # Construct base names for loading model and attributes

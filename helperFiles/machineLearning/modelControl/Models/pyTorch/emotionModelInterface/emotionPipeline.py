@@ -8,11 +8,11 @@ from .emotionPipelineHelpers import emotionPipelineHelpers
 
 class emotionPipeline(emotionPipelineHelpers):
 
-    def __init__(self, accelerator, datasetName, modelName, allEmotionClasses, numSubjects, userInputParams,
+    def __init__(self, accelerator, datasetName, allEmotionClasses, numSubjects, userInputParams,
                  emotionNames, activityNames, featureNames, submodel, numExperiments, reconstructionIndex):
         # General parameters.
-        super().__init__(accelerator, datasetName, modelName, allEmotionClasses, numSubjects, userInputParams,
-                         emotionNames, activityNames, featureNames, submodel, numExperiments)
+        super().__init__(accelerator=accelerator, datasetName=datasetName, allEmotionClasses=allEmotionClasses, numSubjects=numSubjects, userInputParams=userInputParams,
+                         emotionNames=emotionNames, activityNames=activityNames, featureNames=featureNames, submodel=submodel, numExperiments=numExperiments)
         # General parameters.
         self.reconstructionIndex = reconstructionIndex  # The index of the signal to reconstruct.
         self.augmentData = True
@@ -68,7 +68,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     metaBatchInfo = metaBatchInfo.double()
 
                     # For every new batch.
-                    if not inferenceTraining and self.accelerator.sync_gradients: self.augmentData = random.uniform(a=0, b=1) < 0.25
+                    if not inferenceTraining and self.accelerator.sync_gradients: self.augmentData = random.uniform(a=0, b=1) < 0.5
 
                     if not inferenceTraining and self.augmentData:
                         # Augment the signals to train an arbitrary sequence length and order.
@@ -80,7 +80,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     # ------------ Forward pass through the model  ------------- #
 
                     # Perform the forward pass through the model.
-                    missingDataMask, reconstructedSignalData, generalEncodingLoss, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = self.model.forward(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, inferenceTraining=False)
+                    missingDataMask, reconstructedSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = self.model.forward(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, inferenceTraining=False)
                     # reconstructedSignalData dimension: batchSize, numSignals, encodedDimension
                     # fourierData dimension: batchSize, numEncodedSignals, fourierDimension
                     # missingDataMask dimension: batchSize, numSignals, maxSequenceLength
@@ -88,11 +88,9 @@ class emotionPipeline(emotionPipelineHelpers):
                     # physiologicalProfile dimension: batchSize, encodedDimension
                     # activityProfile: batchSize, numSignals, encodedDimension
                     # emotionProfile: batchSize, numEmotions, encodedDimension
-                    # generalEncodingLoss dimension: batchSize
 
                     # Assert that nothing is wrong with the predictions.
                     self.modelHelpers.assertVariableIntegrity(physiologicalProfile, variableName="physiological profile", assertGradient=False)
-                    self.modelHelpers.assertVariableIntegrity(generalEncodingLoss, variableName="general model loss", assertGradient=False)
                     self.modelHelpers.assertVariableIntegrity(missingDataMask, variableName="missing data mask", assertGradient=False)
                     self.modelHelpers.assertVariableIntegrity(activityProfile, variableName="activity profile", assertGradient=False)
                     self.modelHelpers.assertVariableIntegrity(emotionProfile, variableName="emotion profile", assertGradient=False)

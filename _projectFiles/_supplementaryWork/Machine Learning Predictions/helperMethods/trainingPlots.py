@@ -21,7 +21,6 @@ class trainingPlots(globalPlottingProtocols):
         self.datasetNames = datasetNames  # Specify which datasets to compile
         self.savingFolder = savingBaseFolder  # The folder to save the figures.
         self.accelerator = accelerator  # Hugging face model optimizations.
-        self.modelName = modelName  # The emotion model's unique identifier. Options: emotionModel
 
         # Initialize relevant classes.
         self.modelCompiler = compileModelData(submodel=None, userInputParams={}, accelerator=accelerator)

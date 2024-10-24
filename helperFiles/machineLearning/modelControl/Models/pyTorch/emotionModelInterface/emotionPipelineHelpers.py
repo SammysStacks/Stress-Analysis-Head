@@ -12,12 +12,11 @@ from .emotionModel.emotionModelHelpers.optimizerMethods.optimizerMethods import 
 
 class emotionPipelineHelpers:
 
-    def __init__(self, accelerator, datasetName, modelName, allEmotionClasses, numSubjects, userInputParams,
+    def __init__(self, accelerator, datasetName, allEmotionClasses, numSubjects, userInputParams,
                  emotionNames, activityNames, featureNames, submodel, numExperiments):
         # General parameters.
         self.metadata = modelConstants.metadata  # The subject identifiers to consider. Dim: [numSubjects]
         self.accelerator = accelerator  # Hugging face interface to speed up the training process.
-        self.modelName = modelName  # The unique name of the model to initialize.
 
         # Pre-initialize later parameters.
         self.optimizer = None
@@ -35,8 +34,8 @@ class emotionPipelineHelpers:
         self.datasetName = datasetName  # The name of the specific dataset being used in this model (case, wesad, etc.)
 
         # Initialize the emotion model.
-        if modelName == "emotionModel": self.model = emotionModelHead(submodel, self.metadata, userInputParams, emotionNames, activityNames, featureNames, numSubjects, datasetName, numExperiments)
-        assert hasattr(self, 'model'), f"Unknown Model Type Requested: {modelName}"
+        self.model = emotionModelHead(submodel=submodel, metadata=self.metadata, userInputParams=userInputParams, emotionNames=emotionNames, activityNames=activityNames,
+                                      featureNames=featureNames, numSubjects=numSubjects, datasetName=datasetName, numExperiments=numExperiments)
         # self.model = torch.compile(self.model, backend='eager')
 
         # Initialize helper classes.

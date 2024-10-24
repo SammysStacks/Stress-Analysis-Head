@@ -80,11 +80,11 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def postProcessingLayerRCNN(numSignals=1):
-        return reversibleConvolution(numChannels=numSignals, kernelSize=9, activationMethod=emotionModelWeights.getActivationType(), numLayers=1)
+        return reversibleConvolution(numChannels=numSignals, kernelSize=7, activationMethod=emotionModelWeights.getActivationType(), numLayers=1)
 
     @staticmethod
     def postProcessingLayerRFC(numSignals, sequenceLength):
-        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=9, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
+        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=7, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
 
     # ------------------- Emotion/Activity Encoding Architectures ------------------- #
 
@@ -93,10 +93,10 @@ class emotionModelWeights(convolutionalHelpers):
         return emotionModelWeights.linearModel(numOutputFeatures=sequenceLength, activationMethod=emotionModelWeights.getActivationType(), addBias=False)
 
     def postProcessingLayerCNN(self, numSignals):
-        return self.convolutionalFiltersBlocks(numBlocks=4, numChannels=numSignals, kernel_sizes=3, dilations=1, groups=numSignals, strides=1, convType='conv1D', activationMethod=emotionModelWeights.getActivationType(), numLayers=None, addBias=False)
+        return self.convolutionalFiltersBlocks(numBlocks=4, numChannels=[numSignals, numSignals], kernel_sizes=3, dilations=1, groups=numSignals, strides=1, convType='conv1D', activationMethod=emotionModelWeights.getActivationType(), numLayers=None, addBias=False)
 
     def skipConnectionCNN(self, numSignals):
-        return self.convolutionalFiltersBlocks(numBlocks=4, numChannels=numSignals, kernel_sizes=3, dilations=1, groups=numSignals, strides=1, convType='conv1D', activationMethod=emotionModelWeights.getActivationType(), numLayers=None, addBias=False)
+        return self.convolutionalFiltersBlocks(numBlocks=4, numChannels=[numSignals, numSignals], kernel_sizes=3, dilations=1, groups=numSignals, strides=1, convType='conv1D', activationMethod=emotionModelWeights.getActivationType(), numLayers=None, addBias=False)
 
     @staticmethod
     def skipConnectionFC(sequenceLength):
@@ -105,7 +105,7 @@ class emotionModelWeights(convolutionalHelpers):
     @staticmethod
     def getSubjectSpecificBasicEmotionWeights(numBasicEmotions, numSubjects):
         basicEmotionWeights = torch.randn(numSubjects, numBasicEmotions, dtype=torch.float64)
-        basicEmotionWeights = basicEmotionWeights / basicEmotionWeights.sum(dim=-1)
+        basicEmotionWeights = basicEmotionWeights / basicEmotionWeights.sum(dim=-1, keepdim=True)
 
         return nn.Parameter(basicEmotionWeights)
 

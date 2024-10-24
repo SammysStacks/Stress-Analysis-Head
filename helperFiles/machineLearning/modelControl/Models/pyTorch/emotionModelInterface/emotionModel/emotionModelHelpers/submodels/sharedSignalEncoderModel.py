@@ -14,7 +14,7 @@ from ..optimizerMethods import activationFunctions
 class sharedSignalEncoderModel(neuralOperatorInterface):
 
     def __init__(self, operatorType, encodedDimension, fourierDimension, numModelLayers, goldenRatio, activationMethod, learningProtocol, neuralOperatorParameters):
-        super(sharedSignalEncoderModel, self).__init__(sequenceLength=fourierDimension, numInputSignals=1, numOutputSignals=1, learningProtocol=learningProtocol, addBiasTerm=False)
+        super(sharedSignalEncoderModel, self).__init__(operatorType=operatorType, sequenceLength=fourierDimension, numInputSignals=1, numOutputSignals=1, learningProtocol=learningProtocol, addBiasTerm=False)
         # General model parameters.
         self.neuralOperatorParameters = neuralOperatorParameters  # The parameters for the neural operator.
         self.encodedTimeWindow = modelConstants.timeWindows[-1]  # The time window for the encoded signal.
@@ -22,7 +22,6 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
         self.fourierDimension = fourierDimension  # The dimension of the fourier signal.
         self.numModelLayers = numModelLayers  # The number of model layers to use.
-        self.operatorType = operatorType  # The operator type for the neural operator.
         self.goldenRatio = goldenRatio  # The golden ratio for the model.
 
         # Initialize the pseudo-encoded times for the fourier data.

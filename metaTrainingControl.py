@@ -33,14 +33,13 @@ if __name__ == "__main__":
     accelerator = accelerate.Accelerator(
         dataloader_config=accelerate.DataLoaderConfiguration(split_batches=True),  # Whether to split batches across devices or not.
         cpu=torch.backends.mps.is_available(),  # Whether to use the CPU. MPS is NOT fully compatible yet.
-        step_scheduler_with_optimizer=False,  # Whether to wrap the optimizer in a scheduler.
+        step_scheduler_with_optimizer=True,  # Whether to wrap the optimizer in a scheduler.
         gradient_accumulation_steps=1,  # The number of gradient accumulation steps.
         mixed_precision="no",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"
     )
 
     # General model parameters.
     trainingDate = "2024-10-02 wavelet analysis"  # The current date we are training the model. Unique identifier of this training set.
-    modelName = "emotionModel"  # The emotion model's unique identifier. Options: emotionModel
     testSplitRatio = 0.2  # The percentage of testing points.
 
     # Training flags.
@@ -68,7 +67,8 @@ if __name__ == "__main__":
     parser.add_argument('--encodedDimension', type=int, default=512, help='The dimension of the encoded signal.')
 
     # Add arguments for the emotion prediction.
-    parser.add_argument('--numBasicEmotions', type=int, default=8, help='The number of basic emotions (basis states of emotions).')
+    parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions).')
+    parser.add_argument('--numActivityChannels', type=int, default=4, help='The number of activity channels.')
 
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     trainingDate = modelCompiler.embedInformation(submodel, trainingDate)  # Embed training information into the name.
 
     # Compile the final modules.
-    allModels, allDataLoaders, allMetaModels, allMetadataLoaders, _ = modelCompiler.compileModelsFull(metaDatasetNames, modelName, submodel, testSplitRatio, datasetNames)
+    allModels, allDataLoaders, allMetaModels, allMetadataLoaders, _ = modelCompiler.compileModelsFull(metaDatasetNames, submodel, testSplitRatio, datasetNames)
 
     # Store the initial loss information.
     if storeLoss: trainingProtocols.calculateLossInformation(allMetaModels, allMetadataLoaders, allModels, allDataLoaders, submodel)

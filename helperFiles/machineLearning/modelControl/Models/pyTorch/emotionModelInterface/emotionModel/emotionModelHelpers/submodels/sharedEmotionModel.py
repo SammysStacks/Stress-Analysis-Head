@@ -6,8 +6,8 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class sharedEmotionModel(neuralOperatorInterface):
 
-    def __init__(self, numBasicEmotions, encodedDimension, numModelLayers, activationMethod, learningProtocol, neuralOperatorParameters):
-        super(sharedEmotionModel, self).__init__(sequenceLength=encodedDimension, numInputSignals=numBasicEmotions, numOutputSignals=numBasicEmotions, learningProtocol=learningProtocol, addBiasTerm=False)
+    def __init__(self, numBasicEmotions, encodedDimension, numModelLayers, operatorType, activationMethod, learningProtocol, neuralOperatorParameters):
+        super(sharedEmotionModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numInputSignals=numBasicEmotions, numOutputSignals=numBasicEmotions, learningProtocol=learningProtocol, addBiasTerm=False)
         # General model parameters.
         self.activationFunction = activationFunctions.getActivationMethod(activationMethod=activationMethod)
         self.neuralOperatorParameters = neuralOperatorParameters  # The parameters for the neural operator.
