@@ -30,7 +30,6 @@ class aStarTherapyProtocol(generalTherapyProtocol):
         # resampled bins for the parameter and prediction bins
         self.allParameterBins_resampled, self.allPredictionBins_resampled = self.generalMethods.resampleBins(self.allParameterBins, self.allPredictionBins, eventlySpacedBins=False)
 
-
     def updateTherapyState(self):
         # Get the current user state.
         currentParam = self.paramStatePath[-1] # dim should be torch.Size([1, 1, 1, 1]); actual parameter value
@@ -67,7 +66,6 @@ class aStarTherapyProtocol(generalTherapyProtocol):
         # Normalize the parameter.
         newUserParam = (newUserParam - self.initialParameterBounds[0][0]) / (self.initialParameterBounds[0][1] - self.initialParameterBounds[0][0])
         return newUserParam
-
 
     def findNewTemperature(self, currentUserState, gradientDirection):
         # Unpack the current user state.
