@@ -102,9 +102,12 @@ class emotionModelWeights(convolutionalHelpers):
     def skipConnectionFC(sequenceLength):
         return emotionModelWeights.linearModel(numOutputFeatures=sequenceLength, activationMethod=emotionModelWeights.getActivationType(), addBias=False)
 
-    def liftingLayers(self, numSignals, liftedSignals):
-        return self.convolutionalFilters(numChannels=[numSignals, numSignals*liftedSignals], kernel_sizes=1, dilations=1, groups=numSignals, strides=1,
-                                         convType='conv1D', activationMethod='none', numLayers=None, addBias=False)
+    @staticmethod
+    def getSubjectSpecificBasicEmotionWeights(numBasicEmotions, numSubjects):
+        basicEmotionWeights = torch.randn(numSubjects, numBasicEmotions, dtype=torch.float64)
+        basicEmotionWeights = basicEmotionWeights / basicEmotionWeights.sum(dim=-1)
+
+        return nn.Parameter(basicEmotionWeights)
 
     # ------------------- Universal Architectures ------------------- #
 

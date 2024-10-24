@@ -4,7 +4,6 @@ import pickle
 
 import numpy as np
 import torch
-from matplotlib import pyplot as plt
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.generalMethods.dataAugmentation import dataAugmentation
@@ -117,7 +116,7 @@ class compileModelDataHelpers:
                 # Remove labels belonging to small classes
                 smallClassLabels = unique_classes[smallClassMask]
                 smallClassLabelMask = torch.isin(featureLabels, smallClassLabels)
-                allSingleClassIndices[labelTypeInd] = smallClassLabelMask.cpu().numpy()
+                allSingleClassIndices[labelTypeInd] = smallClassLabelMask.cpu().numpy().tolist()
                 featureLabels[smallClassLabelMask] = self.missingLabelValue
 
                 # Recalculate unique classes.

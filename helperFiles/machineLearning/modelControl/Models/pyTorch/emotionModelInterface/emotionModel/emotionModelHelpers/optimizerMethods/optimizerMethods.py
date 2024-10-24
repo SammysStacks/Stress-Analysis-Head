@@ -17,8 +17,9 @@ class optimizerMethods:
         modelParams = [
             # Specify the model parameters for the signal encoding.
             {'params': model.inferenceModel.parameters(), 'weight_decay': 1e-4, 'lr': 1E-2},
-            {'params': model.specificSignalEncoderModel.parameters(), 'weight_decay': 1e-4, 'lr': 1E-2},  # Empirically: 1E-10 < weight_decay < 1E-6; 5E-5 < lr < 5E-4
-            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': 1e-4, 'lr': 1E-2}]  # Empirically: 1E-10 < weight_decay < 1E-6; 5E-5 < lr < 5E-4
+            {'params': model.specificSignalEncoderModel.parameters(), 'weight_decay': 1e-4, 'lr': 1E-2},
+            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': 1e-4, 'lr': 1E-2},
+        ]
 
         if submodel == modelConstants.emotionModel:
             modelParams.extend([
@@ -69,7 +70,7 @@ class optimizerMethods:
         # Reduce on plateau (need further editing of loop): optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=0.5, patience=10, threshold=1e-4, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08)
         # Defined lambda function: optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda=lambda_function); lambda_function = lambda epoch: (epoch/50) if epoch < -1 else 1
         # torch.optim.lr_scheduler.constrainedLR(optimizer, start_factor=0.3333333333333333, end_factor=1.0, total_iters=5, last_epoch=-1)
-        numWarmUps = 100
+        numWarmUps = 1000
 
         schedulers = [
             transformers.get_constant_schedule_with_warmup(optimizer=optimizer, num_warmup_steps=numWarmUps),

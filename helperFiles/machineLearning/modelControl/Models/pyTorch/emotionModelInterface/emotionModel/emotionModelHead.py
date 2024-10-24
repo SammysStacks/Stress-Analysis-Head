@@ -11,8 +11,10 @@ from .emotionModelHelpers.modelParameters import modelParameters
 from .emotionModelHelpers.submodels.inferenceModel import inferenceModel
 from .emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
 from .emotionModelHelpers.submodels.modelComponents.signalEncoderComponents.emotionModelWeights import emotionModelWeights
+from .emotionModelHelpers.submodels.sharedActivityModel import sharedActivityModel
 from .emotionModelHelpers.submodels.sharedEmotionModel import sharedEmotionModel
 from .emotionModelHelpers.submodels.sharedSignalEncoderModel import sharedSignalEncoderModel
+from .emotionModelHelpers.submodels.specificActivityModel import specificActivityModel
 # Import submodels
 from .emotionModelHelpers.submodels.specificEmotionModel import specificEmotionModel
 from .emotionModelHelpers.submodels.specificSignalEncoderModel import specificSignalEncoderModel
@@ -38,26 +40,18 @@ class emotionModelHead(nn.Module):
         self.activationMethod = emotionModelWeights.getActivationType()  # The activation method to use for the neural operator.
         self.encodedDimension = userInputParams['encodedDimension']  # The dimension of the encoded signal.
         self.fourierDimension = int(self.encodedDimension / 2 + 1)  # The dimension of the fourier signal.
+        self.numModelLayers = userInputParams['numModelLayers']  # The number of layers in the model.
         self.operatorType = userInputParams['operatorType']  # The type of operator to use for the neural operator.
+        self.goldenRatio = userInputParams['goldenRatio']  # The number of shared layers per specific layer.
         self.debugging = True
 
         # Signal encoder parameters.
         self.neuralOperatorParameters = userInputParams['neuralOperatorParameters']  # The parameters for the neural operator.
-        self.numLiftingLayersEmotionActivity = 2  # The number of lifting layers to use.
-        self.numLiftingLayersSignalEncoder = 2  # The number of lifting layers to use.
-        self.numModelLayers = 16  # The number of layers to use in the signal encoder.
-        self.goldenRatio = 4  # The golden ratio for the signal encoder.
+        self.numLiftingLayersSignalEncoder = 2  # The number of lifting layers to use: real, imaginary.
 
         # Emotion parameters.
+        self.numActivityChannels = userInputParams['numActivityChannels']  # The number of activity channels to predict.
         self.numBasicEmotions = userInputParams['numBasicEmotions']  # The number of basic emotions (basis states of emotions).
-
-        # Tunable encoding parameters.
-        self.numEncodedSignals = 1  # The final number of signals to accept, encoding all signal information.
-        self.compressedLength = 64  # The final length of the compressed signal after the autoencoder.
-        # Feature parameters (code changes required if you change these!!!)
-        self.numCommonSignals = 8  # The number of features from considering all the signals.
-        self.numEmotionSignals = 8  # The number of common activity features to extract.
-        self.numActivitySignals = 8  # The number of common activity features to extract.
 
         # Setup holder for the model's training information
         self.reversibleInterface = reversibleInterface()
@@ -94,36 +88,48 @@ class emotionModelHead(nn.Module):
             goldenRatio=self.goldenRatio,
         )
 
-        self.specificEmotionModel = None
-        self.sharedEmotionModel = None
-
         # -------------------- Final Emotion Prediction -------------------- #
 
         if submodel == modelConstants.emotionModel:
             self.specificEmotionModel = specificEmotionModel(
                 neuralOperatorParameters=self.neuralOperatorParameters,
-                numLiftingLayers=self.numLiftingLayersEmotionActivity,
                 learningProtocol=self.irreversibleLearningProtocol,
                 activationMethod=self.activationMethod,
                 encodedDimension=self.encodedDimension,
-                fourierDimension=self.fourierDimension,
+                numBasicEmotions=self.numBasicEmotions,
                 numModelLayers=self.numModelLayers,
-                operatorType=self.operatorType,
                 goldenRatio=self.goldenRatio,
                 numEmotions=self.numEmotions,
+                numSubjects=self.numSubjects,
             )
 
             self.sharedEmotionModel = sharedEmotionModel(
                 neuralOperatorParameters=self.neuralOperatorParameters,
-                numLiftingLayers=self.numLiftingLayersEmotionActivity,
                 learningProtocol=self.irreversibleLearningProtocol,
                 activationMethod=self.activationMethod,
                 encodedDimension=self.encodedDimension,
-                fourierDimension=self.fourierDimension,
+                numBasicEmotions=self.numBasicEmotions,
                 numModelLayers=self.numModelLayers,
-                operatorType=self.operatorType,
+            )
+
+            self.specificActivityModel = specificActivityModel(
+                neuralOperatorParameters=self.neuralOperatorParameters,
+                learningProtocol=self.irreversibleLearningProtocol,
+                numActivityChannels=self.numActivityChannels,
+                activationMethod=self.activationMethod,
+                encodedDimension=self.encodedDimension,
+                numModelLayers=self.numModelLayers,
+                numActivities=self.numActivities,
                 goldenRatio=self.goldenRatio,
-                numEmotions=self.numEmotions,
+            )
+
+            self.sharedActivityModel = sharedActivityModel(
+                neuralOperatorParameters=self.neuralOperatorParameters,
+                learningProtocol=self.irreversibleLearningProtocol,
+                numActivityChannels=self.numActivityChannels,
+                activationMethod=self.activationMethod,
+                encodedDimension=self.encodedDimension,
+                numModelLayers=self.numModelLayers,
             )
 
     # ------------------------- Full Forward Calls ------------------------- #
@@ -180,7 +186,7 @@ class emotionModelHead(nn.Module):
         else: physiologicalProfile = self.specificSignalEncoderModel.getCurrentPhysiologicalProfile(batchInds)
         # physiologicalProfile: batchSize, encodedDimension
 
-        # ------------------- Preprocess Signal Mapping ------------------- #
+        # ------------------- Learned Signal Mapping ------------------- #
 
         # Remap the signal data to the estimated physiological profile.
         realFourierData, imaginaryFourierData = self.sharedSignalEncoderModel.forwardFFT(physiologicalProfile)
@@ -195,20 +201,9 @@ class emotionModelHead(nn.Module):
         # physiologicalFourierData: batchSize, 2*numSignals, fourierDimension
         # validFourierMask: batchSize, 2*numSignals
 
-        # ------------------- Learned Signal Mapping ------------------- #
-
-        # Prepare for the backward pass: physiologically -> signal data.
+        # Perform the backward pass: physiologically -> signal data.
         reversibleInterface.changeDirections(forwardDirection=False)
-        metaLearningData = physiologicalFourierData
-        specificLayerCounter = 0
-
-        # For each layer in the model.
-        for layerInd in range(self.numModelLayers):
-            # Calculate the estimated physiological profile given each signal.
-            if layerInd % self.goldenRatio == 0: metaLearningData = validFourierMask * self.specificSignalEncoderModel.learningInterface(layerInd=specificLayerCounter, signalData=metaLearningData); specificLayerCounter += 1  # Reversible signal-specific layers.
-            metaLearningData = validFourierMask * self.sharedSignalEncoderModel.learningInterface(layerInd=layerInd, signalData=metaLearningData)  # Reversible meta-learning layers.
-        metaLearningData = validFourierMask * self.specificSignalEncoderModel.learningInterface(layerInd=specificLayerCounter, signalData=metaLearningData)  # Reversible signal-specific layers.
-        assert specificLayerCounter + 1 == len(self.specificSignalEncoderModel.neuralLayers), f"The specific layer counter ({specificLayerCounter}) does not match the number of specific layers ({len(self.specificSignalEncoderModel.neuralLayers)})."
+        metaLearningData = self.coreModelPass(validFourierMask, physiologicalFourierData, specificModel=self.specificSignalEncoderModel, sharedModel=self.sharedSignalEncoderModel)
         # metaLearningData: batchSize, numSignals, fourierDimension
 
         # Reconstruct the signal data from the Fourier data.
@@ -223,24 +218,44 @@ class emotionModelHead(nn.Module):
         # ------------------- Learned Emotion Mapping ------------------- #
 
         if submodel == modelConstants.emotionModel:
-            # Prepare for the backward pass: physiologically -> signal data.
-            metaLearningData = physiologicalProfile.unsqueeze(1).repeat(repeats=(1, self.numEmotions, 1))
-            reversibleInterface.changeDirections(forwardDirection=False)
-            # metaLearningData: batchSize, numEmotions, encodedDimension
-            specificLayerCounter = 0
+            # Get the subject-specific indices.
+            subjectInds = emotionDataInterface.getMetaDataChannel(metadata, channelName=modelConstants.subjectIndexMD)[:, 0]  # Dim: batchSize
 
-            # For each layer in the model.
-            for layerInd in range(self.numModelLayers):
-                # Calculate the estimated physiological profile given each signal.
-                if layerInd % self.goldenRatio == 0: metaLearningData = self.specificEmotionModel.learningInterface(layerInd=specificLayerCounter, signalData=metaLearningData); specificLayerCounter += 1  # Reversible signal-specific layers.
-                metaLearningData = self.sharedEmotionModel.learningInterface(layerInd=layerInd, signalData=metaLearningData)  # Reversible meta-learning layers.
-            metaLearningData = self.specificEmotionModel.learningInterface(layerInd=specificLayerCounter, signalData=metaLearningData)  # Reversible signal-specific layers.
-            assert specificLayerCounter + 1 == len(self.specificEmotionModel.neuralLayers), f"The specific layer counter ({specificLayerCounter}) does not match the number of specific layers ({len(self.specificEmotionModel.neuralLayers)})."
-            # metaLearningData: batchSize, numEmotions, fourierDimension
+            # Perform the backward pass: physiologically -> emotion data.
+            reversibleInterface.changeDirections(forwardDirection=False)
+            basicEmotionProfile = physiologicalProfile.unsqueeze(1).repeat(repeats=(1, self.numEmotions*self.numBasicEmotions, 1))
+            basicEmotionProfile = self.coreModelPass(dataMask=1, metaLearningData=basicEmotionProfile, specificModel=self.specificEmotionModel, sharedModel=self.sharedEmotionModel)
+            # metaLearningData: batchSize, numEmotions*numBasicEmotions, encodedDimension
+
+            # Reconstruct the emotion data.
+            basicEmotionProfile = basicEmotionProfile.view(batchSize, self.numEmotions, self.numBasicEmotions, self.encodedDimension)
+            emotionProfile = self.specificEmotionModel.calculateEmotionProfile(basicEmotionProfile, subjectInds)
+
+        # ------------------- Learned Activity Mapping ------------------- #
+
+            # Perform the backward pass: physiologically -> emotion data.
+            reversibleInterface.changeDirections(forwardDirection=False)
+            activityProfile = self.coreModelPass(dataMask=1, metaLearningData=physiologicalProfile, specificModel=self.specificActivityModel, sharedModel=self.sharedActivityModel)
+            # metaLearningData: batchSize, numEmotions*numBasicEmotions, encodedDimension
 
         # --------------------------------------------------------------- #
 
         return missingDataMask, reconstructedSignalData, generalEncodingLoss, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile
+
+    @staticmethod
+    def coreModelPass(dataMask, metaLearningData, specificModel, sharedModel):
+        specificLayerCounter = 0
+
+        # For each layer in the model.
+        for layerInd in range(specificModel.numModelLayers):
+            # Calculate the estimated physiological profile given each signal.
+            if layerInd % specificModel.goldenRatio == 0: metaLearningData = dataMask * specificModel.learningInterface(layerInd=specificLayerCounter, signalData=metaLearningData); specificLayerCounter += 1  # Reversible signal-specific layers.
+            metaLearningData = dataMask * sharedModel.learningInterface(layerInd=layerInd, signalData=metaLearningData)  # Reversible meta-learning layers.
+        metaLearningData = dataMask * specificModel.learningInterface(layerInd=specificLayerCounter, signalData=metaLearningData)  # Reversible signal-specific layers.
+        assert specificLayerCounter + 1 == len(specificModel.neuralLayers), f"The specific layer counter ({specificLayerCounter}) does not match the number of specific layers ({len(specificModel.neuralLayers)})."
+        # metaLearningData: batchSize, numSignals, finalDimension
+
+        return metaLearningData
 
     def fullPass(self, submodel, signalData, signalIdentifiers, metadata, device, inferenceTraining):
         with torch.no_grad():
