@@ -233,7 +233,6 @@ class generalTherapyProtocol(abc.ABC):
 
     def boundNewTemperature(self, newUserParam, bufferZone=0.01):
         # Bound the new temperature.
-        # TODO: current implementation only for heat therapy (1D), so we extract the parameter bounds at the 1st dimension. For music therapy, we need both dimensions
         newUserTemp = max((self.initialParameterBounds[0][0]).numpy() + bufferZone, min((self.initialParameterBounds[0][1]).numpy() - bufferZone, newUserParam))
         newUserTemp = torch.tensor(newUserTemp).view(1, 1, 1, 1)
         return newUserTemp
