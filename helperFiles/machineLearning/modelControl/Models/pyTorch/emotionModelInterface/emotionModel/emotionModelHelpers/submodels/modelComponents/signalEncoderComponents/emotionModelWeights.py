@@ -31,8 +31,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     # ------------------- Physiological Profile ------------------- #
 
-    @staticmethod
-    def getInitialPhysiologicalProfile(numExperiments, encodedDimension):
+    def getInitialPhysiologicalProfile(self, numExperiments, encodedDimension):
         # Initialize the physiological profile in the frequency domain.
         imaginaryFourierData = torch.randn(numExperiments, encodedDimension // 2 + 1, dtype=torch.float64) / 2
         realFourierData = torch.randn(numExperiments, encodedDimension // 2 + 1, dtype=torch.float64) / 2
@@ -40,19 +39,26 @@ class emotionModelWeights(convolutionalHelpers):
 
         # Reconstruct the spatial data.
         physiologicalProfile = torch.fft.irfft(fourierData, n=encodedDimension, dim=-1, norm='ortho')
-        physiologicalProfile = physiologicalProfile - physiologicalProfile.min(dim=-1, keepdim=True)[0]
-        physiologicalProfile = physiologicalProfile / physiologicalProfile.max(dim=-1, keepdim=True)[0]
-        physiologicalProfile = physiologicalProfile * 2 - 1
+        # physiologicalProfile = self.smoothingFilter(physiologicalProfile, kernel=[1, 1, 2, 1, 1], kernelSize=None)
+
+        # Normalize the data.
+        # physiologicalProfile = physiologicalProfile - physiologicalProfile.min(dim=-1, keepdim=True)[0]
+        # physiologicalProfile = physiologicalProfile / physiologicalProfile.max(dim=-1, keepdim=True)[0]
+        # physiologicalProfile = physiologicalProfile * 2 - 1
 
         return nn.Parameter(physiologicalProfile)
 
     @staticmethod
-    def smoothingFilter(data, kernelSize):
+    def smoothingFilter(data, kernel=(), kernelSize=None):
         assert len(data.size()) == 2, "The data must have two dimensions: batch, sequenceDimension."
-        assert kernelSize % 2 == 1, "The kernel size must be odd."
+        if kernelSize is not None: assert kernelSize % 2 == 1, "The kernel size must be odd."
+        if kernel is not None: assert len(kernel) % 2 == 1, "The kernel size must be odd."
+        assert kernel is not None or kernelSize is not None, "The kernel or kernel size must be specified."
+        if kernel is not None: kernel = torch.tensor(kernel)
 
         # Add batch and channel dimensions for conv1d
-        kernel = torch.ones((1, 1, kernelSize), dtype=torch.float64) / kernelSize
+        if kernelSize is not None: kernel = torch.ones((1, 1, kernelSize), dtype=torch.float64) / kernelSize
+        if kernel is not None: kernel = kernel.unsqueeze(0).unsqueeze(0) / kernel.sum()
         data = data.unsqueeze(1)
 
         # Apply the convolution
@@ -65,11 +71,11 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def neuralWeightRFC(numSignals, sequenceLength):
-        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=31, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
+        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=7, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
 
     @staticmethod
     def reversibleNeuralWeightRCNN(inChannel=1):
-        return reversibleConvolution(numChannels=inChannel, kernelSize=31, activationMethod=emotionModelWeights.getActivationType(), numLayers=1)
+        return reversibleConvolution(numChannels=inChannel, kernelSize=7, activationMethod=emotionModelWeights.getActivationType(), numLayers=1)
 
     @staticmethod
     def neuralWeightFC(sequenceLength):
@@ -83,11 +89,11 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def postProcessingLayerRCNN(numSignals=1):
-        return reversibleConvolution(numChannels=numSignals, kernelSize=31, activationMethod=emotionModelWeights.getActivationType(), numLayers=1)
+        return reversibleConvolution(numChannels=numSignals, kernelSize=7, activationMethod=emotionModelWeights.getActivationType(), numLayers=1)
 
     @staticmethod
     def postProcessingLayerRFC(numSignals, sequenceLength):
-        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=31, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
+        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=7, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
 
     # ------------------- Emotion/Activity Encoding Architectures ------------------- #
 

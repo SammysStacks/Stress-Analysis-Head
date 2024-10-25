@@ -57,7 +57,7 @@ if __name__ == "__main__":
     parser.add_argument('--reversibleLearningProtocol', type=str, default='rFC', help='The learning rate for the optimizer.')
     parser.add_argument('--irreversibleLearningProtocol', type=str, default='rFC', help='The learning rate for the optimizer.')
     parser.add_argument('--goldenRatio', type=int, default=8, help='The number of shared layers per specific layer.')
-    parser.add_argument('--numModelLayers', type=int, default=16, help='The number of layers in the model.')
+    parser.add_argument('--numModelLayers', type=int, default=32, help='The number of layers in the model.')
 
     # Add arguments for the neural operator.
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
