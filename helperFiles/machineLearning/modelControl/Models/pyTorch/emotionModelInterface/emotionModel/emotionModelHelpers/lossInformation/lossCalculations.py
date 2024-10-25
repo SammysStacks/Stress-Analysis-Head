@@ -114,7 +114,9 @@ class lossCalculations:
 
         # Mask out the missing data.
         validDataMask = ~missingDataMask & (physiologicalDataUncertainty <= signalReconstructedLoss)
-        signalReconstructedLoss = signalReconstructedLoss[validDataMask].mean()
+        signalReconstructedLoss = signalReconstructedLoss[validDataMask]
+        if signalReconstructedLoss.size(0) == 0: return None
+        signalReconstructedLoss = signalReconstructedLoss.mean()
 
         # Assert that nothing is wrong with the loss calculations.
         self.modelHelpers.assertVariableIntegrity(signalReconstructedLoss, variableName="encoded signal reconstructed loss", assertGradient=False)

@@ -183,15 +183,14 @@ class compileModelData(compileModelDataHelpers):
             surveyAnswerTimes = torch.as_tensor(list(itertools.chain.from_iterable(surveyAnswerTimes)), dtype=torch.float32)
             activityLabels = torch.as_tensor(activityLabels, dtype=torch.float32).reshape(-1, 1)
             surveyAnswersList = torch.as_tensor(surveyAnswersList, dtype=torch.float32)
-            subjectOrder = torch.as_tensor(subjectOrder, dtype=torch.int)
+            allSubjectInds = torch.as_tensor(subjectOrder, dtype=torch.int)
 
             # Add the human activity recognition to the end.
-            surveyAnswersList = torch.hstack((surveyAnswersList, activityLabels))
-            # surveyAnswersList dimension: batchSize, numQuestions + 1
+            allFeatureLabels = torch.hstack((surveyAnswersList, activityLabels))
+            # allFeatureLabels dimension: batchSize, numQuestions + 1
 
             # Remove any experiments and signals that are bad.
             allSignalData, allNumSignalPoints = self._padSignalData(allCompiledFeatureIntervalTimes, allCompiledFeatureIntervals, surveyAnswerTimes)
-            allSignalData, allNumSignalPoints, allFeatureLabels, allSubjectInds = self._removeBadExperiments(allSignalData, allNumSignalPoints, surveyAnswersList, subjectOrder)
             allSignalData, allNumSignalPoints, featureNames = self._preprocessSignals(allSignalData, allNumSignalPoints, featureNames)
             allFeatureLabels, allSmallClassIndices = self.organizeLabels(allFeatureLabels, metaTraining)
             # allSmallClassIndices dimension: numLabels, batchSize*  →  *if there are no small classes, the dimension is empty
@@ -236,7 +235,7 @@ class compileModelData(compileModelDataHelpers):
 
                 # You must have at least two labels per class.
                 if len(stratifyBy) == 0 or testSplitRatio < len(torch.unique(stratifyBy)) / len(stratifyBy):
-                    print(f"\t\tThe labels do not have enough examples for splitting. Not training on {surveyQuestions[labelTypeInd]} labels", flush=True)
+                    print(f"\t\tThe unique label ratio is {len(torch.unique(stratifyBy)) / len(stratifyBy)}. Not training on {surveyQuestions[labelTypeInd]} labels", flush=True)
                     continue
 
                 # Randomly split the data and labels, keeping a balance between testing/training.

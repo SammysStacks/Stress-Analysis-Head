@@ -40,6 +40,9 @@ class emotionModelWeights(convolutionalHelpers):
 
         # Reconstruct the spatial data.
         physiologicalProfile = torch.fft.irfft(fourierData, n=encodedDimension, dim=-1, norm='ortho')
+        physiologicalProfile = physiologicalProfile - physiologicalProfile.min(dim=-1, keepdim=True)[0]
+        physiologicalProfile = physiologicalProfile / physiologicalProfile.max(dim=-1, keepdim=True)[0]
+        physiologicalProfile = physiologicalProfile * 2 - 1
 
         return nn.Parameter(physiologicalProfile)
 
@@ -62,11 +65,11 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def neuralWeightRFC(numSignals, sequenceLength):
-        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=3, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
+        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=31, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
 
     @staticmethod
     def reversibleNeuralWeightRCNN(inChannel=1):
-        return reversibleConvolution(numChannels=inChannel, kernelSize=3, activationMethod=emotionModelWeights.getActivationType(), numLayers=1)
+        return reversibleConvolution(numChannels=inChannel, kernelSize=31, activationMethod=emotionModelWeights.getActivationType(), numLayers=1)
 
     @staticmethod
     def neuralWeightFC(sequenceLength):
@@ -80,11 +83,11 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def postProcessingLayerRCNN(numSignals=1):
-        return reversibleConvolution(numChannels=numSignals, kernelSize=7, activationMethod=emotionModelWeights.getActivationType(), numLayers=1)
+        return reversibleConvolution(numChannels=numSignals, kernelSize=31, activationMethod=emotionModelWeights.getActivationType(), numLayers=1)
 
     @staticmethod
     def postProcessingLayerRFC(numSignals, sequenceLength):
-        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=7, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
+        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=31, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
 
     # ------------------- Emotion/Activity Encoding Architectures ------------------- #
 

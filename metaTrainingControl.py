@@ -64,7 +64,7 @@ if __name__ == "__main__":
     parser.add_argument('--waveletType', type=str, default='bior3.7', help='The wavelet type for the wavelet transform: bior3.7, db3, dmey, etc')
 
     # Add arguments for the signal encoder prediction
-    parser.add_argument('--encodedDimension', type=int, default=512, help='The dimension of the encoded signal.')
+    parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
 
     # Add arguments for the emotion prediction.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions).')

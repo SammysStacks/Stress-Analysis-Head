@@ -34,23 +34,22 @@ class compileModelDataHelpers:
         # Submodel-specific parameters
         self.emotionPredictionModelInfo = None
         self.signalEncoderModelInfo = None
+        self.minSignalPresentCount = None
         self.maxClassPercentage = None
         self.minSequencePoints = None
-        self.maxSequenceGap = None
+        self.maxSequenceDeriv = None
         self.minNumClasses = None
-        self.maxTimeGap = None
         self.minSNR = None
 
         # Set the submodel-specific parameters
         if submodel is not None: self.addSubmodelParameters(submodel, userInputParams)
 
     def addSubmodelParameters(self, submodel, userInputParams):
-        if userInputParams is not None:
-            self.userInputParams = userInputParams
+        if userInputParams is not None: self.userInputParams = userInputParams
 
         # Exclusion criterion.
         self.minNumClasses, self.maxClassPercentage = self.modelParameters.getExclusionClassCriteria(submodel)
-        self.minSequencePoints, self.maxTimeGap, self.maxSequenceGap = self.modelParameters.getExclusionSequenceCriteria(submodel)
+        self.minSequencePoints, self.minSignalPresentCount, self.maxSequenceDeriv = self.modelParameters.getExclusionSequenceCriteria(submodel)
         self.minSNR = self.modelParameters.getExclusionSNRCriteria(submodel)
 
         # Embedded information for each model.
@@ -93,8 +92,6 @@ class compileModelDataHelpers:
     def organizeLabels(self, allFeatureLabels, metaTraining):
         # allFeatureLabels: A torch array or list of size (batchSize, numLabels)
         # metaTraining: Boolean indicating if the data is for training
-        # metaDatasetName: String representing the name of the dataset
-        # numSignals: The number of signals in the dataset
         # Convert to tensor and initialize lists
         batchSize, numLabels = allFeatureLabels.shape
         allSingleClassIndices = [[] for _ in range(numLabels)]
@@ -102,6 +99,7 @@ class compileModelDataHelpers:
         # Iterate over each label type (emotion)
         for labelTypeInd in range(numLabels):
             featureLabels = allFeatureLabels[:, labelTypeInd]
+            # featureLabels dim: batchSize
 
             # Mask out unknown labels
             goodLabelInds = 0 <= featureLabels  # The minimum label should be 0
@@ -236,40 +234,6 @@ class compileModelDataHelpers:
 
         return allSignalData, allNumSignalPoints
 
-    def _removeBadExperiments(self, allSignalData, allNumSignalPoints, allLabels, subjectInds):
-        """
-        Purpose: Remove bad experiments from the data list.
-        --------------------------------------------
-        allSignalData : A torch array of size (batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel])
-        allNumSignalPoints : A torch array of size (batchSize, numSignals)
-        allLabels : A torch array of size (batchSize, numLabels)
-        subjectInds : A torch array of size (batchSize)
-        """
-        # Standardize all signals at once for the entire batch
-        allSignalData = self.normalizeSignals(allSignalData)
-
-        # Calculate the time gap within the longest time window.
-        biomarkerTimes = emotionDataInterface.getChannelData(signalData=allSignalData, channelName=modelConstants.timeChannel)
-
-        # Calculate the longest time gap within the longest time window.
-        deltaTimes = torch.diff(biomarkerTimes, n=1, dim=-1).abs()
-        maxTimeGap = deltaTimes.max(dim=2).values.max(dim=1).values
-
-        # Calculate the smallest time window for each experiment.
-        timeWindows = biomarkerTimes.max(dim=2).values.min(dim=-1).values
-
-        # Calculate the number of points within the smallest time window.
-        numMinWindowPoints = allNumSignalPoints.min(dim=1).values
-
-        # Remove the batch if the gap is large.
-        validExperimentMask = (
-                (maxTimeGap <= self.maxTimeGap) &
-                (numMinWindowPoints >= self.minSequencePoints) &
-                (modelConstants.timeWindows[0] <= timeWindows)
-        )
-
-        return allSignalData[validExperimentMask], allNumSignalPoints[validExperimentMask], allLabels[validExperimentMask], subjectInds[validExperimentMask]
-
     def _preprocessSignals(self, allSignalData, allNumSignalPoints, featureNames):
         # allSignalData: A torch array of size (batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel])
         # allNumSignalPoints: A torch array of size (batchSize, numSignals)
@@ -280,7 +244,6 @@ class compileModelDataHelpers:
 
         # Get the signal data dimensions.
         batchSize, numSignals, maxSequenceLength, numChannels = allSignalData.shape
-        maxSequenceGaps = torch.zeros(numSignals, dtype=torch.float32)
 
         # Standardize all signals at once for the entire batch
         allSignalData = self.normalizeSignals(allSignalData)
@@ -294,17 +257,28 @@ class compileModelDataHelpers:
             for signalInd in range(numSignals):
                 # Get the signal data for the current signal.
                 numPoints = allNumSignalPoints[batchInd, signalInd]
-                signalData = biomarkerData[batchInd, signalInd, 0:numPoints]
+                if numPoints < self.minSequencePoints: allSignalData[batchInd, signalInd, :, :] = 0; continue
+
+                # Get the signal data for the current signal.
                 signalTimes = biomarkerTimes[batchInd, signalInd, 0:numPoints]
+                signalData = biomarkerData[batchInd, signalInd, 0:numPoints]
 
                 # Calculate the derivative of the signal data.
-                firstDeriv = torch.gradient(input=signalData, spacing=(signalTimes,), edge_order=2)[0]
+                firstDeriv = torch.gradient(input=signalData, spacing=(signalTimes,), edge_order=2)[0][5:-5]
 
-                # Calculate the largest signal jump within the time window.
-                maxSequenceGaps[signalInd] = max(maxSequenceGaps[signalInd].item(), firstDeriv.abs().max().item())
+                # Cull any bad signals and their corresponding time points.
+                if 0.99 < signalData[-1].abs(): allSignalData[batchInd, signalInd, :, :] = 0; continue
+                if 0.99 < signalData[0].abs(): allSignalData[batchInd, signalInd, :, :] = 0; continue
+                if len(firstDeriv) == 0: allSignalData[batchInd, signalInd, :, :] = 0; continue
+
+        # Find the missing signals.
+        biomarkerData = emotionDataInterface.getChannelData(signalData=allSignalData, channelName=modelConstants.signalChannel)
+        biomarkerTimes = emotionDataInterface.getChannelData(signalData=allSignalData, channelName=modelConstants.timeChannel)
+        missingDataMask = torch.as_tensor((biomarkerData == 0) & (biomarkerTimes == 0), dtype=torch.bool)
+        signalPresentCount = batchSize - torch.all(missingDataMask, dim=-1).sum(dim=0)
 
         # Generate a valid signal mask across the batch
-        validSignalInds = torch.logical_and(self.minSNR < signalSNRs, maxSequenceGaps < self.maxSequenceGap)
+        validSignalInds = torch.logical_and(self.minSNR < signalSNRs, self.minSignalPresentCount < signalPresentCount)
 
         # Apply the mask to filter valid signals and their corresponding points
         filteredSignalData = allSignalData[:, validSignalInds, :, :]

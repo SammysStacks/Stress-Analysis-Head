@@ -16,20 +16,20 @@ class optimizerMethods:
     def getModelParams(submodel, model):
         modelParams = [
             # Specify the model parameters for the signal encoding.
-            {'params': model.inferenceModel.parameters(), 'weight_decay': 1e-4, 'lr': 1E-2},
-            {'params': model.specificSignalEncoderModel.parameters(), 'weight_decay': 1e-4, 'lr': 1E-2},
-            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': 1e-4, 'lr': 1E-2},
+            {'params': model.inferenceModel.parameters(), 'weight_decay': 1e-5, 'lr': 1E-3},
+            {'params': model.specificSignalEncoderModel.parameters(), 'weight_decay': 1e-5, 'lr': 1E-3},
+            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': 1e-5, 'lr': 1E-3},
         ]
 
         if submodel == modelConstants.emotionModel:
             modelParams.extend([
                 # Specify the model parameters for the emotion prediction.
-                {'params': model.specificEmotionModel.parameters(), 'weight_decay': 1e-4, 'lr': 1E-2},
-                {'params': model.sharedEmotionModel.parameters(), 'weight_decay': 1e-4, 'lr': 1E-2},
+                {'params': model.specificEmotionModel.parameters(), 'weight_decay': 1e-4, 'lr': 1E-3},
+                {'params': model.sharedEmotionModel.parameters(), 'weight_decay': 1e-4, 'lr': 1E-3},
 
                 # Specify the model parameters for the human activity recognition.
-                {'params': model.specificActivityModel.parameters(), 'weight_decay': 1e-4, 'lr': 1E-2},
-                {'params': model.sharedActivityModel.parameters(), 'weight_decay': 1e-4, 'lr': 1E-2},
+                {'params': model.specificActivityModel.parameters(), 'weight_decay': 1e-4, 'lr': 1E-3},
+                {'params': model.sharedActivityModel.parameters(), 'weight_decay': 1e-4, 'lr': 1E-3},
             ])
 
         return modelParams
@@ -67,11 +67,11 @@ class optimizerMethods:
         # Reduce on plateau (need further editing of loop): optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=0.5, patience=10, threshold=1e-4, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08)
         # Defined lambda function: optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda=lambda_function); lambda_function = lambda epoch: (epoch/50) if epoch < -1 else 1
         # torch.optim.lr_scheduler.constrainedLR(optimizer, start_factor=0.3333333333333333, end_factor=1.0, total_iters=5, last_epoch=-1)
-        numWarmUps = 60*5  # 60 counts per epoch, 5 epochs (wesad is 30 counts)
+        numWarmUps = 20*10  # 20 counts per epoch (wesad is 10 counts) for 10 epochs
 
         schedulers = [
             transformers.get_constant_schedule_with_warmup(optimizer=optimizer, num_warmup_steps=numWarmUps),
-            optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=30, eta_min=1e-4, last_epoch=-1),
+            optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=40, eta_min=1e-4, last_epoch=-1),
         ]
 
         # Set the scheduler.

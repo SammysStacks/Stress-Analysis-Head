@@ -16,7 +16,7 @@ class reversibleLinearLayer(reversibleInterface):
         self.kernelSize = kernelSize  # The restricted window for the neural weights.
         self.bounds = 1 / kernelSize  # The bounds for the neural weights.
         self.numLayers = numLayers  # The number of layers in the reversible linear layer.
-        self.gradientScale = 0.25  # The scaling factor for the gradients.
+        self.gradientScale = 0.5  # The scaling factor for the gradients.
 
         # The stability term to add to the diagonal.
         self.stabilityTerm = torch.eye(self.sequenceLength, dtype=torch.float64)
