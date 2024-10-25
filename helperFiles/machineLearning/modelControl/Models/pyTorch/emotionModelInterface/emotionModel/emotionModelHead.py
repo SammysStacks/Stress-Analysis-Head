@@ -47,7 +47,7 @@ class emotionModelHead(nn.Module):
 
         # Signal encoder parameters.
         self.neuralOperatorParameters = userInputParams['neuralOperatorParameters']  # The parameters for the neural operator.
-        self.numLiftingLayersSignalEncoder = 2  # The number of lifting layers to use: real, imaginary.
+        self.numLiftingLayersSignalEncoder = 1  # The number of lifting layers to use: real, imaginary.
 
         # Emotion parameters.
         self.numActivityChannels = userInputParams['numActivityChannels']  # The number of activity channels to predict.
@@ -68,7 +68,7 @@ class emotionModelHead(nn.Module):
             learningProtocol=self.reversibleLearningProtocol,
             activationMethod=self.activationMethod,
             encodedDimension=self.encodedDimension,
-            fourierDimension=self.fourierDimension,
+            fourierDimension=self.encodedDimension,
             numModelLayers=self.numModelLayers,
             operatorType=self.operatorType,
             numExperiments=numExperiments,
@@ -82,7 +82,7 @@ class emotionModelHead(nn.Module):
             learningProtocol=self.reversibleLearningProtocol,
             encodedDimension=self.encodedDimension,
             activationMethod=self.activationMethod,
-            fourierDimension=self.fourierDimension,
+            fourierDimension=self.encodedDimension,
             numModelLayers=self.numModelLayers,
             operatorType=self.operatorType,
             goldenRatio=self.goldenRatio,
@@ -192,28 +192,29 @@ class emotionModelHead(nn.Module):
         # ------------------- Learned Signal Mapping ------------------- #
 
         # Remap the signal data to the estimated physiological profile.
-        realFourierData, imaginaryFourierData = self.sharedSignalEncoderModel.forwardFFT(physiologicalProfile)
-        imaginaryFourierData = validSignalMask * imaginaryFourierData.unsqueeze(1).repeat(1, numSignals, 1)
-        realFourierData = validSignalMask * realFourierData.unsqueeze(1).repeat(1, numSignals, 1)
+        # realFourierData, imaginaryFourierData = self.sharedSignalEncoderModel.forwardFFT(physiologicalProfile)
+        # imaginaryFourierData = validSignalMask * imaginaryFourierData.unsqueeze(1).repeat(1, numSignals, 1)
+        # realFourierData = validSignalMask * realFourierData.unsqueeze(1).repeat(1, numSignals, 1)
         # realFourierData and imaginaryFourierData: batchSize, numSignals, fourierDimension
         # physiologicalFourierData: batchSize, 2*numSignals, fourierDimension
 
-        # Combine the magnitude and phase data.
-        physiologicalFourierData = torch.cat(tensors=(realFourierData, imaginaryFourierData), dim=1)
-        validFourierMask = validSignalMask.repeat(repeats=(1, 2, 1))
-        # physiologicalFourierData: batchSize, 2*numSignals, fourierDimension
-        # validFourierMask: batchSize, 2*numSignals
+        # # Combine the magnitude and phase data.
+        # physiologicalFourierData = torch.cat(tensors=(realFourierData, imaginaryFourierData), dim=1)
+        # validFourierMask = validSignalMask.repeat(repeats=(1, 2, 1))
+        # # physiologicalFourierData: batchSize, 2*numSignals, fourierDimension
+        # # validFourierMask: batchSize, 2*numSignals
 
         # Perform the backward pass: physiologically -> signal data.
         reversibleInterface.changeDirections(forwardDirection=False)
-        metaLearningData = self.coreModelPass(validFourierMask, physiologicalFourierData, specificModel=self.specificSignalEncoderModel, sharedModel=self.sharedSignalEncoderModel)
+        fullPhysiologicalProfile = physiologicalProfile.unsqueeze(1).repeat(1, numSignals, 1)
+        reconstructedSignalData = self.coreModelPass(validSignalMask, fullPhysiologicalProfile, specificModel=self.specificSignalEncoderModel, sharedModel=self.sharedSignalEncoderModel)
         # metaLearningData: batchSize, numSignals, fourierDimension
 
-        # Reconstruct the signal data from the Fourier data.
-        realFourierData, imaginaryFourierData = metaLearningData[:, :numSignals], metaLearningData[:, numSignals:]
-        reconstructedSignalData = validSignalMask * self.sharedSignalEncoderModel.backwardFFT(realFourierData, imaginaryFourierData)
-        # realFourierData and imaginaryFourierData: batchSize, numSignals, fourierDimension
-        # reconstructedSignalData: batchSize, numSignals, encodedDimension
+        # # Reconstruct the signal data from the Fourier data.
+        # realFourierData, imaginaryFourierData = metaLearningData[:, :numSignals], metaLearningData[:, numSignals:]
+        # reconstructedSignalData = validSignalMask * self.sharedSignalEncoderModel.backwardFFT(realFourierData, imaginaryFourierData)
+        # # realFourierData and imaginaryFourierData: batchSize, numSignals, fourierDimension
+        # # reconstructedSignalData: batchSize, numSignals, encodedDimension
 
         # Visualize the data transformations within signal encoding.
         if not inferenceTraining and random.random() < 0.01: self.visualizeSignalEncoding(physiologicalProfile, reconstructedSignalData, timepoints, datapoints, missingDataMask)

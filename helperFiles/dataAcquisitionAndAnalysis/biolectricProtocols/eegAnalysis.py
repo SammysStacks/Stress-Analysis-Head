@@ -124,7 +124,7 @@ class eegProtocol(globalProtocol):
             motionIndices_Broadened = scipy.signal.savgol_filter(motionIndices, max(3, int(self.samplingFreq * 10)), 1, mode='nearest', deriv=0)
             goodIndicesMask = motionIndices_Broadened < 0.01
         else:
-            goodIndicesMask = np.full_like(data, True, dtype=bool)
+            goodIndicesMask = np.full_like(data, fill_value=True, dtype=bool)
 
         # Filtering the whole dataset
         filteredData = self.filteringMethods.bandPassFilter.butterFilter(data, self.cutOffFreq[1], self.samplingFreq, order=3, filterType='low', fastFilt=True)

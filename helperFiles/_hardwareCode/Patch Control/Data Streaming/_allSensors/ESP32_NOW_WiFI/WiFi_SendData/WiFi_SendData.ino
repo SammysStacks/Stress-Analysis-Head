@@ -353,8 +353,8 @@ void loop() {
     //recieverReply = esp_now_send(broadcastAddress, (uint8_t *) &sendingMessage, sizeof(sendingMessage));
     //char buff[13];
     //compileAndSendData(sendingMessage.toCharArray(buf, 16);
-    //Serial.write(sendingMessage, 16);
-    //Serial.println();
+    Serial.write(sendingMessage, 16);
+    Serial.println();
 
     // If Data Sent
     if (recieverReply == ESP_OK) {

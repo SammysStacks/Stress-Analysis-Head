@@ -159,6 +159,7 @@ class streamingProtocolHelpers(featureOrganization):
         # Read in at least one point
         while int(self.mainDevice.in_waiting) > 0 or len(rawReadsList) == 0:
             rawReadsList.append(self.deviceReader.readline(ser=self.mainDevice))
+        # rawReadsList: numPointsInBuffer -> bytes of size 16
 
         # Parse the Data
         timepoints, datapoints = self.deviceReader.parseCompressedRead(rawReadsList, self.numStreamedSignals, maxVolt, adcResolution)
