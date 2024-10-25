@@ -6,10 +6,10 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
 
 
-class reversibleLinearLayer(reversibleInterface):
+class reversibleConvolutionLayer(reversibleInterface):
 
     def __init__(self, numSignals, sequenceLength, kernelSize, numLayers, activationMethod):
-        super(reversibleLinearLayer, self).__init__()
+        super(reversibleConvolutionLayer, self).__init__()
         # General parameters.
         self.activationFunction = activationFunctions.getActivationMethod(activationMethod)  # The activation function to use for the neural operator.
         self.sequenceLength = sequenceLength  # The length of the input signal.
@@ -19,18 +19,23 @@ class reversibleLinearLayer(reversibleInterface):
         self.gradientScale = 0.5  # The scaling factor for the gradients.
 
         # The stability term to add to the diagonal.
-        self.stabilityTerm = torch.eye(self.sequenceLength, dtype=torch.float64)
+        self.stabilityTerm = torch.eye(self.sequenceLength, dtype=torch.float64)*0.9
 
         # The restricted window for the neural weights.
         self.restrictedWindowMask = torch.ones(self.sequenceLength, self.sequenceLength, dtype=torch.float64)
         self.restrictedWindowMask = torch.tril(torch.triu(self.restrictedWindowMask, diagonal=-kernelSize//2 + 1), diagonal=kernelSize//2)
-        self.restrictedWindowMask = self.restrictedWindowMask.unsqueeze(0)  # Dim: 1, sequenceLength, sequenceLength
+        self.restrictedWindowMask = self.restrictedWindowMask.unsqueeze(0).repeat(repeats=(numSignals, 1, 1))  # Dim: 1, sequenceLength, sequenceLength
+
+        # Calculate the offsets to map positions to kernel indices
+        self.signalInds, self.rowInds, self.colInds = self.restrictedWindowMask.nonzero(as_tuple=False).T
+        self.kernelInds = self.colInds - self.rowInds + self.kernelSize // 2  # Adjust for kernel center
 
         # Initialize the neural weights.
         self.linearOperators = nn.ParameterList()
         for layerInd in range(self.numLayers):
-            parameters = nn.Parameter(torch.randn(numSignals, sequenceLength, sequenceLength, dtype=torch.float64))
-            self.linearOperators.append(nn.init.uniform_(parameters, a=-self.bounds, b=self.bounds) * self.restrictedWindowMask)
+            if self.kernelSize != self.sequenceLength: parameters = nn.Parameter(torch.randn(numSignals, kernelSize, dtype=torch.float64))
+            else: parameters = nn.Parameter(torch.randn(numSignals, sequenceLength, sequenceLength, dtype=torch.float64))
+            self.linearOperators.append(nn.init.uniform_(parameters, a=-self.bounds, b=self.bounds))
 
         # Register hooks for each parameter in the list
         for param in self.linearOperators:
@@ -56,13 +61,20 @@ class reversibleLinearLayer(reversibleInterface):
         return inputData
 
     def applyLayer(self, inputData, layerInd):
-        # Apply a mask to the neural weights.
-        neuralWeights = self.linearOperators[layerInd]
+        # Get the current neural weights information.
+        neuralWeights = self.restrictedWindowMask.clone()
+        kernelWeights = self.linearOperators[layerInd]
         # neuralWeight: numSignals, sequenceLength, sequenceLength
+        # kernelWeights: numSignals, (kernelSize) or (sequenceLength, sequenceLength)
 
-        # Add a stability term to the diagonal. TODO: Add sparse matrix support.
-        if self.kernelSize != self.sequenceLength: neuralWeights = self.restrictedWindowMask * neuralWeights + self.stabilityTerm*0.8
-        else: neuralWeights = neuralWeights * (1 - self.stabilityTerm) + self.stabilityTerm
+        if self.kernelSize != self.sequenceLength:
+            # Gather the corresponding kernel values for each position
+            kernel_values = kernelWeights[self.signalInds, self.kernelInds]  # Shape: (numIndices,)
+            neuralWeights[self.signalInds, self.rowInds, self.colInds] = kernel_values
+
+        # Add a stability term to the diagonal.
+        if self.kernelSize != self.sequenceLength: neuralWeights = neuralWeights + self.stabilityTerm
+        else: neuralWeights = kernelWeights * (1 - self.stabilityTerm) + self.stabilityTerm
 
         # Backward direction: invert the neural weights.
         if self.forwardDirection: neuralWeights = torch.linalg.inv(neuralWeights)
@@ -84,7 +96,7 @@ if __name__ == "__main__":
     _numLayers = 1
 
     # Set up the parameters.
-    neuralLayerClass = reversibleLinearLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod)
+    neuralLayerClass = reversibleConvolutionLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod)
     _inputData = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float64)
 
     # Perform the convolution in the fourier and spatial domains.

@@ -5,7 +5,7 @@ from torch.utils.checkpoint import checkpoint
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.modelHelpers.abnormalConvolutions import abnormalConvolutions
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleConvolution import reversibleConvolution
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleConvolutionLayer import reversibleConvolutionLayer
 
 
 class convolutionalHelpers(abnormalConvolutions):
@@ -139,7 +139,7 @@ class convolutionalHelpers(abnormalConvolutions):
                                   padding=paddings[i], dilation=dilations[i], groups=groups[i], padding_mode='reflect', bias=addBias)
 
             elif convType.split("_")[0] == 'reverseConv1D':
-                layer = reversibleConvolution(numChannels=numChannels[i], kernelSize=kernel_sizes[i], activationMethod=activationMethod, numLayers=numLayers)
+                layer = reversibleConvolutionLayer(numChannels=numChannels[i], kernelSize=kernel_sizes[i], activationMethod=activationMethod, numLayers=numLayers)
                 assert groups[i] == numChannels[i], "The number of groups must equal the number of channels for reversibility (depthwise)."
                 assert len(numChannels) == 2, "Reversible convolutions must have two channels."
                 activationMethod = 'none'

@@ -11,7 +11,7 @@ class inferenceModel(nn.Module):
         self.physiologicalProfile = None
 
     def resetInferenceModel(self, numExperiments):
-        self.physiologicalProfile = emotionModelWeights.getInitialPhysiologicalProfile(numExperiments=numExperiments, encodedDimension=self.encodedDimension)
+        self.physiologicalProfile = emotionModelWeights.getInitialPhysiologicalProfile(encodedDimension=self.encodedDimension)
         self.physiologicalProfile.requires_grad = True
 
     def getCurrentPhysiologicalProfile(self, batchInds):

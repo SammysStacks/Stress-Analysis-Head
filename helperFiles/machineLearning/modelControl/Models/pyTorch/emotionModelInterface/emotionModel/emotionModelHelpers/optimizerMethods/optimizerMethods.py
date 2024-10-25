@@ -16,20 +16,20 @@ class optimizerMethods:
     def getModelParams(submodel, model):
         modelParams = [
             # Specify the model parameters for the signal encoding.
-            {'params': model.inferenceModel.parameters(), 'weight_decay': 1e-6, 'lr': 1E-3},
-            {'params': model.specificSignalEncoderModel.parameters(), 'weight_decay': 1e-6, 'lr': 1E-3},
-            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': 1e-6, 'lr': 1E-3},
+            {'params': model.inferenceModel.parameters(), 'weight_decay': 1e-8, 'lr': 1E-3},
+            {'params': model.specificSignalEncoderModel.parameters(), 'weight_decay': 1e-8, 'lr': 1E-3},
+            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': 1e-8, 'lr': 1E-3},
         ]
 
         if submodel == modelConstants.emotionModel:
             modelParams.extend([
                 # Specify the model parameters for the emotion prediction.
-                {'params': model.specificEmotionModel.parameters(), 'weight_decay': 1e-4, 'lr': 1E-3},
-                {'params': model.sharedEmotionModel.parameters(), 'weight_decay': 1e-4, 'lr': 1E-3},
+                {'params': model.specificEmotionModel.parameters(), 'weight_decay': 1e-6, 'lr': 1E-3},
+                {'params': model.sharedEmotionModel.parameters(), 'weight_decay': 1e-6, 'lr': 1E-3},
 
                 # Specify the model parameters for the human activity recognition.
-                {'params': model.specificActivityModel.parameters(), 'weight_decay': 1e-4, 'lr': 1E-3},
-                {'params': model.sharedActivityModel.parameters(), 'weight_decay': 1e-4, 'lr': 1E-3},
+                {'params': model.specificActivityModel.parameters(), 'weight_decay': 1e-6, 'lr': 1E-3},
+                {'params': model.sharedActivityModel.parameters(), 'weight_decay': 1e-6, 'lr': 1E-3},
             ])
 
         return modelParams
@@ -39,7 +39,7 @@ class optimizerMethods:
         modelParams = self.getModelParams(submodel, model)
 
         # Set the optimizer and scheduler.
-        optimizer = self.setOptimizer(modelParams, lr=1E-4, weight_decay=1e-4, optimizerType=self.userInputParams["optimizerType"])
+        optimizer = self.setOptimizer(modelParams, lr=1E-4, weight_decay=1e-8, optimizerType=self.userInputParams["optimizerType"])
         scheduler = self.getLearningRateScheduler(optimizer)
 
         return optimizer, scheduler

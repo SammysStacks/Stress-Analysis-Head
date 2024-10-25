@@ -83,7 +83,7 @@ class lossCalculations:
         timepoints = self.getData(allTimepoints, reconstructionDataMask)  # Dim: numExperiments, numSignals, maxSequenceLength
         batchSize, numSignals, maxSequenceLength = missingDataMask.size()
         encodedDimension = reconstructedSignalData.size(2)
-        if batchSize == 0: return None
+        if batchSize == 0: print("No signal encoding batches"); return None
 
         # Align the timepoints to the physiological times.
         reversedPhysiologicalTimes = torch.flip(physiologicalTimes, dims=[0])
@@ -113,9 +113,9 @@ class lossCalculations:
         # signalReconstructedLoss dimension: batchSize, numSignals, maxSequenceLength
 
         # Mask out the missing data.
-        validDataMask = ~missingDataMask & (physiologicalDataUncertainty*1.1 <= signalReconstructedLoss)
+        validDataMask = ~missingDataMask & (physiologicalDataUncertainty*1.25 <= signalReconstructedLoss)
         signalReconstructedLoss = signalReconstructedLoss[validDataMask]
-        if signalReconstructedLoss.size(0) == 0: return None
+        if signalReconstructedLoss.size(0) == 0: print("No signal encoder loss"); return None
         signalReconstructedLoss = signalReconstructedLoss.mean()
 
         # Assert that nothing is wrong with the loss calculations.

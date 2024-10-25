@@ -3,7 +3,7 @@ from torch import nn
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.modelHelpers.convolutionalHelpers import convolutionalHelpers
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleConvolution import reversibleConvolution
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleConvolutionLayer import reversibleConvolutionLayer
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleLinearLayer import reversibleLinearLayer
 
 
@@ -31,7 +31,8 @@ class emotionModelWeights(convolutionalHelpers):
 
     # ------------------- Physiological Profile ------------------- #
 
-    def getInitialPhysiologicalProfile(self, numExperiments, encodedDimension):
+    @staticmethod
+    def getInitialPhysiologicalProfile(numExperiments, encodedDimension):
         # Initialize the physiological profile in the frequency domain.
         imaginaryFourierData = torch.randn(numExperiments, encodedDimension // 2 + 1, dtype=torch.float64) / 2
         realFourierData = torch.randn(numExperiments, encodedDimension // 2 + 1, dtype=torch.float64) / 2
@@ -41,12 +42,15 @@ class emotionModelWeights(convolutionalHelpers):
         physiologicalProfile = torch.fft.irfft(fourierData, n=encodedDimension, dim=-1, norm='ortho')
         # physiologicalProfile = self.smoothingFilter(physiologicalProfile, kernel=[1, 1, 2, 1, 1], kernelSize=None)
 
-        # Normalize the data.
-        # physiologicalProfile = physiologicalProfile - physiologicalProfile.min(dim=-1, keepdim=True)[0]
-        # physiologicalProfile = physiologicalProfile / physiologicalProfile.max(dim=-1, keepdim=True)[0]
-        # physiologicalProfile = physiologicalProfile * 2 - 1
+        # Initialize the physiological profile as a parameter.
+        physiologicalProfile = nn.Parameter(physiologicalProfile)
+        physiologicalProfile.register_hook(emotionModelWeights.scaleGradients)
 
-        return nn.Parameter(physiologicalProfile)
+        return physiologicalProfile
+
+    @staticmethod
+    def scaleGradients(grad):
+        return grad * 10
 
     @staticmethod
     def smoothingFilter(data, kernel=(), kernelSize=None):
@@ -74,8 +78,8 @@ class emotionModelWeights(convolutionalHelpers):
         return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=7, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
 
     @staticmethod
-    def reversibleNeuralWeightRCNN(inChannel=1):
-        return reversibleConvolution(numChannels=inChannel, kernelSize=7, activationMethod=emotionModelWeights.getActivationType(), numLayers=1)
+    def reversibleNeuralWeightRCNN(numSignals, sequenceLength):
+        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=7, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
 
     @staticmethod
     def neuralWeightFC(sequenceLength):
@@ -88,8 +92,8 @@ class emotionModelWeights(convolutionalHelpers):
     # ------------------- Reversible Signal Encoding Architectures ------------------- #
 
     @staticmethod
-    def postProcessingLayerRCNN(numSignals=1):
-        return reversibleConvolution(numChannels=numSignals, kernelSize=7, activationMethod=emotionModelWeights.getActivationType(), numLayers=1)
+    def postProcessingLayerRCNN(numSignals, sequenceLength):
+        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=7, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
 
     @staticmethod
     def postProcessingLayerRFC(numSignals, sequenceLength):
