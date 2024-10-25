@@ -95,7 +95,6 @@ class aStarTherapyProtocol(generalTherapyProtocol):
         # Convert parameterBinWidths to numpy array or list
         parameterBinWidths = self.parameterBinWidths.numpy() if isinstance(self.parameterBinWidths, torch.Tensor) else self.parameterBinWidths # used to place the temperature at the center of the bin
 
-        #TODO: Note current instrumentation is for heat therapy, which allParameterBins_resampled is a 2D array but only 1st index is used
         return self.allParameterBins_resampled[0][bestTempBinIndex] + parameterBinWidths / 2, expectedRewards
 
         # # Compute the gradient.
@@ -194,3 +193,23 @@ class aStarTherapyProtocol(generalTherapyProtocol):
         else:
             # Initialize a heuristic map.
             return self.simulationProtocols.realSimMapCompiledLoss
+
+    def updateEmotionPredState(self, userName, currentTimePoints, currentParamValues, currentEmotionStates):
+        if currentTimePoints is None or currentParamValues is None or currentEmotionStates is None:
+            return
+        # Track the user state and time delay.
+
+        self.timepoints.append(currentTimePoints) # timepoints: list of tensor: [tensor(0)]
+        self.paramStatePath.append(currentParamValues) # self.paramStatePath: list of tensor: [torch.Size([1, 1, 1, 1])
+        self.userMentalStatePath.append(currentEmotionStates) # emotionstates: list of tensor: torch.Size([1, 3, 1, 1])
+        # Calculate the initial user loss.
+        compiledLoss = self.dataInterface.calculateCompiledLoss(currentEmotionStates[-1])  # compile the loss state for the current emotion state; torch.Size([1, 1, 1, 1])
+        self.userMentalStateCompiledLoss.append(compiledLoss) #  list of tensor torch.Size([1, 1, 1, 1])
+        self.userName.append(userName) # list: username
+        userParamBinIndex = self.dataInterface.getBinIndex(self.allParameterBins, currentParamValues)
+        userParam = self.unNormalizedAllParameterBins[0][userParamBinIndex]  # bound the initial temperature (1D)
+        userParam = self.boundNewTemperature(userParam, bufferZone=0.01)  # bound the initial temperature (1D)
+        self.unNormalizedParameter.append(userParam) # list of tensor torch.Size([1, 1, 1, 1])
+
+
+

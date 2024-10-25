@@ -57,6 +57,9 @@ class heatTherapyControl(heatTherapyHelpers):
             iterationCounter += 1
             print('iterationCounter:', iterationCounter)
 
+    def therapyModelOutputUpdate(self):
+        pass
+
 
 if __name__ == "__main__":
     # User parameters.
@@ -72,7 +75,7 @@ if __name__ == "__main__":
         'simulatedMapType': 'uniformSampling',  # The method for generating the simulated map. Options: 'uniformSampling', 'linearSampling', 'parabolicSampling'
         'numSimulationHeuristicSamples': 50,  # The number of simulation samples to generate.
         'numSimulationTrueSamples': 30,  # The number of simulation samples to generate.
-        'simulateTherapy': False,  # Whether to simulate the therapy.
+        'simulateTherapy': True,  # Whether to simulate the therapy.
     }
 
     # Initialize the therapy protocol

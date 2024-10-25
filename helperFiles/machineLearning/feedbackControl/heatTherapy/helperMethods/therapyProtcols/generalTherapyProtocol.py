@@ -140,6 +140,9 @@ class generalTherapyProtocol(abc.ABC):
         # parameter: tensor of size 1, 1, 1, 1
         # emotionStates: tensor of size 1, 3, 1, 1
         timepoints, parameters, emotionStates = self.getInitialSate()  # dim: numPoints, timePoint: t; emotionStates: (PA, NA, SA); prediction: predict the next state; Note these are actual state values
+        # Check if any of the initial state components are None, and do nothing if they are.
+        if timepoints is None or parameters is None or emotionStates is None:
+            return
         # Track the user state and time delay.
         startTimePoint = timepoints
 
@@ -157,8 +160,6 @@ class generalTherapyProtocol(abc.ABC):
 
 
 
-
-
     def getInitialSate(self):
         if self.simulateTherapy:
             # Simulate a new time point by adding a constant delay factor.
@@ -166,9 +167,9 @@ class generalTherapyProtocol(abc.ABC):
             print('currentTime, currentParam, currentPredictions', currentTime, currentParam, currentPredictions)
             return currentTime, currentParam, currentPredictions
         else:
-            # TODO: !!! Implement a method to get the current user state.
-            # TODO: right now just simulate a random start state, eventually this has to be real time start state
-            currentTime, currentParam, currentPredictions = self.simulationProtocols.getInitialState()  # currentTime: tensor(0); currentParam: torch.Size([1, 1, 1, 1]); currentPredictions: torch.Size([1, 3, 1, 1]) predefined.
+            # for real time running the model
+            # Assume we have a random start state
+            currentTime, currentParam, currentPredictions = None, None, None  # currentTime: tensor(0); currentParam: torch.Size([1, 1, 1, 1]); currentPredictions: torch.Size([1, 3, 1, 1]) predefined.
             print('currentTime, currentParam, currentPredictions', currentTime, currentParam, currentPredictions)
             return currentTime, currentParam, currentPredictions
 
