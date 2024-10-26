@@ -43,8 +43,8 @@ class modelConstants:
     signalIdentifiers = [numSignalPointsSI, signalIndexSI, batchIndexSI]
     metadata = [datasetIndexMD, subjectIndexMD]
 
+    timeWindows = [90, 120]
     # Specify the data interface parameters.
-    timeWindows = [90, 120, 150, 180, 210, 240]
     minMaxScale = 1  # The maximum value for the min-max scaling.
     numBatches = 15  # The number of batches to use in the model.
 

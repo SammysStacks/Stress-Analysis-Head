@@ -54,17 +54,17 @@ if __name__ == "__main__":
     parser.add_argument('--submodel', type=str, default=modelConstants.signalEncoderModel, help='The component of the model we are training. Options: signalEncoderModel, emotionModel')
     parser.add_argument('--optimizerType', type=str, default='AdamW', help='The optimizerType used during training convergence: Options: RMSprop, Adam, AdamW, SGD, etc.')
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are running the platform on')
-    parser.add_argument('--reversibleLearningProtocol', type=str, default='rCNN', help='The learning rate for the optimizer.')
+    parser.add_argument('--reversibleLearningProtocol', type=str, default='rFC', help='The learning rate for the optimizer.')
     parser.add_argument('--irreversibleLearningProtocol', type=str, default='rFC', help='The learning rate for the optimizer.')
-    parser.add_argument('--goldenRatio', type=int, default=8, help='The number of shared layers per specific layer.')
-    parser.add_argument('--numModelLayers', type=int, default=16, help='The number of layers in the model.')
+    parser.add_argument('--goldenRatio', type=int, default=16, help='The number of shared layers per specific layer.')
+    parser.add_argument('--numModelLayers', type=int, default=32, help='The number of layers in the model.')
 
     # Add arguments for the neural operator.
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
-    parser.add_argument('--waveletType', type=str, default='bior3.7', help='The wavelet type for the wavelet transform: bior3.7, db3, dmey, etc')
+    parser.add_argument('--waveletType', type=str, default='bior2.2', help='The wavelet type for the wavelet transform: bior3.7, db3, dmey, etc')
 
     # Add arguments for the signal encoder prediction
-    parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
+    parser.add_argument('--encodedDimension', type=int, default=128, help='The dimension of the encoded signal.')
 
     # Add arguments for the emotion prediction.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions).')
@@ -109,6 +109,7 @@ if __name__ == "__main__":
 
         # Train the model for a single epoch.
         trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels)
+        allModels[0].trainModel(allDataLoaders[0], submodel, inferenceTraining=False, trainSharedLayers=False, numEpochs=1)
 
         # Store the initial loss information and plot.
         if storeLoss: trainingProtocols.calculateLossInformation(allMetaModels, allMetadataLoaders, allModels, allDataLoaders, submodel)

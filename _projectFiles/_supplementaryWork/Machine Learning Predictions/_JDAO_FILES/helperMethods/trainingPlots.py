@@ -16,7 +16,6 @@ class trainingPlots(globalPlottingProtocols):
     def __init__(self, modelName, datasetNames, sharedModelWeights, savingBaseFolder, accelerator=None):
         super(trainingPlots, self).__init__()
         # General parameters
-        modelConstants.timeWindows = [90, 120, 150, 180, 210, 240]  # A list of all time windows to consider for the encoding.
         self.sharedModelWeights = sharedModelWeights  # Possible models: [modelConstants.signalEncoderModel, modelConstants.autoencoderModel, modelConstants.signalMappingModel, modelConstants.specificEmotionModel, modelConstants.sharedEmotionModel]
         self.datasetNames = datasetNames  # Specify which datasets to compile
         self.savingFolder = savingBaseFolder  # The folder to save the figures.
@@ -50,8 +49,6 @@ class trainingPlots(globalPlottingProtocols):
     def getSubmodel(metaModel, submodel):
         if submodel == modelConstants.signalEncoderModel:
             return metaModel.model.specificSignalEncoderModel
-        elif submodel == modelConstants.autoencoderModel:
-            return metaModel.model.autoencoderModel
         elif submodel == modelConstants.emotionModel:
             return metaModel.model.emotionModel
         else:

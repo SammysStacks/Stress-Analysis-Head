@@ -22,9 +22,8 @@ class reversibleLinearLayer(reversibleInterface):
         self.stabilityTerm = torch.eye(self.sequenceLength, dtype=torch.float64)
 
         # The restricted window for the neural weights.
-        self.restrictedWindowMask = torch.ones(self.sequenceLength, self.sequenceLength, dtype=torch.float64)
+        self.restrictedWindowMask = torch.ones(1, self.sequenceLength, self.sequenceLength, dtype=torch.float64)
         self.restrictedWindowMask = torch.tril(torch.triu(self.restrictedWindowMask, diagonal=-kernelSize//2 + 1), diagonal=kernelSize//2)
-        self.restrictedWindowMask = self.restrictedWindowMask.unsqueeze(0)  # Dim: 1, sequenceLength, sequenceLength
 
         # Initialize the neural weights.
         self.linearOperators = nn.ParameterList()
@@ -57,7 +56,7 @@ class reversibleLinearLayer(reversibleInterface):
 
     def applyLayer(self, inputData, layerInd):
         # Apply a mask to the neural weights.
-        neuralWeights = self.linearOperators[layerInd]
+        neuralWeights = self.linearOperators[layerInd].clone()
         # neuralWeight: numSignals, sequenceLength, sequenceLength
 
         # Add a stability term to the diagonal. TODO: Add sparse matrix support.
@@ -71,16 +70,13 @@ class reversibleLinearLayer(reversibleInterface):
         outputData = torch.einsum('bns,nsi->bni', inputData, neuralWeights)
 
         return outputData
-# 6, 13 -> 1.01
-# 3, 7 -> 1.025
-# 1, 3 -> 1.075
 
 
 if __name__ == "__main__":
     # General parameters.
-    _batchSize, _numSignals, _sequenceLength = 2, 3, 512
+    _batchSize, _numSignals, _sequenceLength = 2, 3, 256
     _activationMethod = 'nonLinearAddition'
-    _kernelSize = 3
+    _kernelSize = 64
     _numLayers = 1
 
     # Set up the parameters.

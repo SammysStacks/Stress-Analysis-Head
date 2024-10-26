@@ -257,18 +257,23 @@ class compileModelDataHelpers:
             for signalInd in range(numSignals):
                 # Get the signal data for the current signal.
                 numPoints = allNumSignalPoints[batchInd, signalInd]
+
+                # Cull any bad signals and their corresponding time points.
                 if numPoints < self.minSequencePoints: allSignalData[batchInd, signalInd, :, :] = 0; continue
 
                 # Get the signal data for the current signal.
                 signalTimes = biomarkerTimes[batchInd, signalInd, 0:numPoints]
                 signalData = biomarkerData[batchInd, signalInd, 0:numPoints]
 
+                # Cull any bad signals and their corresponding time points.
+                if 0.99 < signalData[-1].abs(): allSignalData[batchInd, signalInd, :, :] = 0; continue
+                if 0.99 < signalData[0].abs(): allSignalData[batchInd, signalInd, :, :] = 0; continue
+
                 # Calculate the derivative of the signal data.
                 firstDeriv = torch.gradient(input=signalData, spacing=(signalTimes,), edge_order=2)[0][5:-5]
 
                 # Cull any bad signals and their corresponding time points.
-                if 0.99 < signalData[-1].abs(): allSignalData[batchInd, signalInd, :, :] = 0; continue
-                if 0.99 < signalData[0].abs(): allSignalData[batchInd, signalInd, :, :] = 0; continue
+                if self.maxSequenceDeriv < firstDeriv.abs().max(): allSignalData[batchInd, signalInd, :, :] = 0; continue
                 if len(firstDeriv) == 0: allSignalData[batchInd, signalInd, :, :] = 0; continue
 
         # Find the missing signals.

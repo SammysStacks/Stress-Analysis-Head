@@ -21,10 +21,10 @@ class neuralOperatorInterface(emotionModelWeights):
 
     def initializeWaveletLayer(self, neuralOperatorParameters, reversibleFlag):
         # Unpack the neural operator parameters.
-        encodeHighFrequencyProtocol = neuralOperatorParameters['encodeHighFrequencyProtocol']  # The protocol for encoding the high frequency signals.
-        encodeLowFrequencyProtocol = neuralOperatorParameters['encodeLowFrequencyProtocol']  # The protocol for encoding the low frequency signals.
-        skipConnectionProtocol = neuralOperatorParameters['skipConnectionProtocol']  # The protocol for the skip connections.
-        waveletType = neuralOperatorParameters['waveletType']  # The type of wavelet to use for the wavelet transform.
+        encodeHighFrequencyProtocol = neuralOperatorParameters.get('encodeHighFrequencyProtocol', 'highFreq')  # The protocol for encoding the high frequency signals.
+        encodeLowFrequencyProtocol = neuralOperatorParameters.get('encodeLowFrequencyProtocol', 'lowFreq')  # The protocol for encoding the low frequency signals.
+        skipConnectionProtocol = neuralOperatorParameters.get('skipConnectionProtocol', 'none')  # The protocol for the skip connections.
+        waveletType = neuralOperatorParameters.get('waveletType', 'bior3.7')  # The type of wavelet to use for the wavelet transform.
 
         # Hardcoded parameters.
         activationMethod = 'none'  # I am handling this outside the operator right now.

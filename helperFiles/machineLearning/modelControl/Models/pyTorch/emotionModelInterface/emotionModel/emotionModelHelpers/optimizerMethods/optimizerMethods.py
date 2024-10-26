@@ -16,9 +16,9 @@ class optimizerMethods:
     def getModelParams(submodel, model):
         modelParams = [
             # Specify the model parameters for the signal encoding.
-            {'params': model.inferenceModel.parameters(), 'weight_decay': 1e-8, 'lr': 1E-3},
-            {'params': model.specificSignalEncoderModel.parameters(), 'weight_decay': 1e-8, 'lr': 1E-3},
-            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': 1e-8, 'lr': 1E-3},
+            {'params': model.inferenceModel.parameters(), 'weight_decay': 0, 'lr': 1E-3},
+            {'params': model.specificSignalEncoderModel.parameters(), 'weight_decay': 0, 'lr': 1E-3},
+            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': 0, 'lr': 1E-3},
         ]
 
         if submodel == modelConstants.emotionModel:
@@ -39,7 +39,7 @@ class optimizerMethods:
         modelParams = self.getModelParams(submodel, model)
 
         # Set the optimizer and scheduler.
-        optimizer = self.setOptimizer(modelParams, lr=1E-4, weight_decay=1e-8, optimizerType=self.userInputParams["optimizerType"])
+        optimizer = self.setOptimizer(modelParams, lr=1E-4, weight_decay=0, optimizerType=self.userInputParams["optimizerType"])
         scheduler = self.getLearningRateScheduler(optimizer)
 
         return optimizer, scheduler
@@ -67,7 +67,7 @@ class optimizerMethods:
         # Reduce on plateau (need further editing of loop): optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=0.5, patience=10, threshold=1e-4, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08)
         # Defined lambda function: optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda=lambda_function); lambda_function = lambda epoch: (epoch/50) if epoch < -1 else 1
         # torch.optim.lr_scheduler.constrainedLR(optimizer, start_factor=0.3333333333333333, end_factor=1.0, total_iters=5, last_epoch=-1)
-        numWarmUps = 30*10  # 30 counts per epoch (wesad is 8 counts) for 10 epochs
+        numWarmUps = 30*10  # 15*2=30 counts per epoch (wesad is 8*2=16 counts) for 10 epochs
 
         schedulers = [
             transformers.get_constant_schedule_with_warmup(optimizer=optimizer, num_warmup_steps=numWarmUps),

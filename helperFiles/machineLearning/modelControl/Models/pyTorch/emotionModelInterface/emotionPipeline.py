@@ -79,12 +79,13 @@ class emotionPipeline(emotionPipelineHelpers):
                     # ------------ Forward pass through the model  ------------- #
 
                     # Perform the forward pass through the model.
-                    missingDataMask, reconstructedSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = self.model.forward(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, inferenceTraining=False)
-                    # reconstructedSignalData dimension: batchSize, numSignals, encodedDimension
+                    missingDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = self.model.forward(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, inferenceTraining=False)
+                    # reconstructedSignalData dimension: batchSize, numSignals, maxSequenceLength
                     # fourierData dimension: batchSize, numEncodedSignals, fourierDimension
                     # missingDataMask dimension: batchSize, numSignals, maxSequenceLength
                     # basicEmotionProfile: batchSize, numBasicEmotions, encodedDimension
                     # physiologicalProfile dimension: batchSize, encodedDimension
+                    # resampledSignalData dimension: batchSize, encodedDimension
                     # activityProfile: batchSize, numSignals, encodedDimension
                     # emotionProfile: batchSize, numEmotions, encodedDimension
 
@@ -95,8 +96,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     self.modelHelpers.assertVariableIntegrity(emotionProfile, variableName="emotion profile", assertGradient=False)
 
                     # Calculate the error in signal compression (signal encoding loss).
-                    physiologicalTimes = self.model.sharedSignalEncoderModel.pseudoEncodedTimes
-                    signalReconstructedLoss = self.organizeLossInfo.calculateSignalEncodingLoss(augmentedBatchData, reconstructedSignalData, physiologicalTimes, missingDataMask, batchTrainingMask, self.reconstructionIndex)
+                    signalReconstructedLoss = self.organizeLossInfo.calculateSignalEncodingLoss(augmentedBatchData, reconstructedSignalData, missingDataMask, batchTrainingMask, self.reconstructionIndex)
                     if signalReconstructedLoss is None: self.accelerator.print("Not useful loss"); continue
 
                     # Initialize basic core loss value.

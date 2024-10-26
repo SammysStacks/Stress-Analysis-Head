@@ -53,10 +53,12 @@ class specificEmotionModel(neuralOperatorInterface):
         else: raise "The learning protocol is not yet implemented."
 
     def calculateEmotionProfile(self, basicEmotionProfile, subjectInds):
+        batchSize, numEmotions, numBasicEmotions, encodedDimension = basicEmotionProfile.size()
+
         # Calculate the subject-specific weights.
         subjectSpecificWeights = self.basicEmotionWeights[subjectInds]
         subjectSpecificWeights = subjectSpecificWeights / subjectSpecificWeights.sum(dim=-1, keepdim=True)
-        subjectSpecificWeights = subjectSpecificWeights.unsqueeze(dim=1).unsqueeze(dim=-1)
+        subjectSpecificWeights = subjectSpecificWeights.view(batchSize, 1, numBasicEmotions, 1)
         # basicEmotionProfile: batchSize, numEmotions, numBasicEmotions, encodedDimension
         # subjectSpecificWeights: batchSize, 1, numBasicEmotions, 1
         # basicEmotionWeights: numSubjects, numBasicEmotions

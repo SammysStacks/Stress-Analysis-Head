@@ -1,6 +1,7 @@
 # General
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
 
 # Visualization protocols
 from helperFiles.globalPlottingProtocols import globalPlottingProtocols
@@ -22,7 +23,7 @@ class autoencoderVisualizations(globalPlottingProtocols):
     # ---------------------------------------------------------------------- #
     # --------------------- Visualize Model Parameters --------------------- #
 
-    def plotEncoder(self, initialSignal, comparisonTimes, comparisonSignal, epoch, plotTitle="Encoder Prediction", numSignalPlots=1):
+    def plotEncoder(self, validSignalMask, initialSignal, reconstructedSignals, comparisonTimes, comparisonSignal, epoch, plotTitle="Encoder Prediction", numSignalPlots=1):
         # Assert the integrity of the incoming data
         assert initialSignal.shape[0:2] == comparisonSignal.shape[0:2], f"{initialSignal.shape} {comparisonSignal.shape}"
         batchSize, numSignals, numEncodedPoints = comparisonSignal.shape
@@ -36,8 +37,9 @@ class autoencoderVisualizations(globalPlottingProtocols):
         batchInd = 0
         for signalInd in plottingSignals:
             # Plot the signal reconstruction.
-            plt.plot(initialSignal[batchInd, signalInd, :, 0], initialSignal[batchInd, signalInd, :, 1], self.blackColor, linewidth=2, alpha=0.5, label="Initial Signal")
-            plt.plot(comparisonTimes, comparisonSignal[batchInd, signalInd, :], self.lightColors[1], linewidth=2, alpha=0.8, label="Reconstructed Signal")
+            plt.plot(initialSignal[validSignalMask][batchInd, signalInd, :, 0], initialSignal[validSignalMask][batchInd, signalInd, :, 1], 'o', color=self.blackColor, markersize=2, alpha=0.5, label="Initial Signal")
+            plt.plot(initialSignal[validSignalMask][batchInd, signalInd, :, 0], reconstructedSignals[validSignalMask][batchInd, signalInd, :, 1], 'o', color=self.lightColors[0], markersize=2, alpha=0.5, label="Reconstructed Signal")
+            plt.plot(comparisonTimes, comparisonSignal[validSignalMask][batchInd, signalInd, :], self.lightColors[1], linewidth=2, alpha=0.8, label="Resampled Signal")
             plt.xlabel("Points")
             plt.ylabel("Signal (AU)")
             plt.title(f"{plotTitle.split('/')[-1]}; Signal {signalInd + 1}")
