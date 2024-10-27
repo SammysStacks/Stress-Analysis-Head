@@ -47,7 +47,7 @@ class emotionModelHead(nn.Module):
 
         # Signal encoder parameters.
         self.neuralOperatorParameters = userInputParams['neuralOperatorParameters']  # The parameters for the neural operator.
-        self.numLiftingLayersSignalEncoder = 2  # The number of lifting layers to use: real, imaginary.
+        self.numLiftingLayersSignalEncoder = 1  # The number of lifting layers to use in the signal encoder.
 
         # Emotion parameters.
         self.numActivityChannels = userInputParams['numActivityChannels']  # The number of activity channels to predict.
@@ -68,7 +68,6 @@ class emotionModelHead(nn.Module):
             learningProtocol=self.reversibleLearningProtocol,
             activationMethod=self.activationMethod,
             encodedDimension=self.encodedDimension,
-            fourierDimension=self.fourierDimension,
             numModelLayers=self.numModelLayers,
             operatorType=self.operatorType,
             numExperiments=numExperiments,
@@ -82,7 +81,6 @@ class emotionModelHead(nn.Module):
             learningProtocol=self.reversibleLearningProtocol,
             encodedDimension=self.encodedDimension,
             activationMethod=self.activationMethod,
-            fourierDimension=self.fourierDimension,
             numModelLayers=self.numModelLayers,
             operatorType=self.operatorType,
             goldenRatio=self.goldenRatio,
@@ -185,37 +183,23 @@ class emotionModelHead(nn.Module):
         # ------------------- Estimated Physiological Profile ------------------- #
 
         # Get the estimated physiological profiles.
-        if inferenceTraining: physiologicalProfile = self.inferenceModel.getCurrentPhysiologicalProfile(batchSize)
+        if inferenceTraining: physiologicalProfile = self.inferenceModel.getCurrentPhysiologicalProfile(batchInds)
         else: physiologicalProfile = self.specificSignalEncoderModel.getCurrentPhysiologicalProfile(batchInds)
         # physiologicalProfile: batchSize, encodedDimension
+        print(self.datasetName, self.specificSignalEncoderModel.physiologicalProfileAnsatz[0, :5].detach().cpu().numpy())
 
         # ------------------- Learned Signal Mapping ------------------- #
 
-        # Remap the signal data to the estimated physiological profile.
-        realFourierData, imaginaryFourierData = self.sharedSignalEncoderModel.forwardFFT(physiologicalProfile)
-        imaginaryFourierData = imaginaryFourierData.unsqueeze(1).repeat(1, numSignals, 1)
-        realFourierData = realFourierData.unsqueeze(1).repeat(1, numSignals, 1)
-        # realFourierData and imaginaryFourierData: batchSize, numSignals, fourierDimension
-        # physiologicalFourierData: batchSize, 2*numSignals, fourierDimension
-
-        # Combine the magnitude and phase data.
-        physiologicalFourierData = torch.cat(tensors=(realFourierData, imaginaryFourierData), dim=1)
-        validFourierMask = validSignalMask.repeat(repeats=(1, 2, 1))
-        # physiologicalFourierData: batchSize, 2*numSignals, fourierDimension
-        # validFourierMask: batchSize, 2*numSignals
-
         # Perform the backward pass: physiologically -> signal data.
         reversibleInterface.changeDirections(forwardDirection=False)
-        reconstructedFourierData = validFourierMask*self.coreModelPass(physiologicalFourierData, specificModel=self.specificSignalEncoderModel, sharedModel=self.sharedSignalEncoderModel)
-        realFourierData, imaginaryFourierData = reconstructedFourierData[:, :numSignals], reconstructedFourierData[:, numSignals:]
-        # realFourierData and imaginaryFourierData: batchSize, numSignals, fourierDimension
-        # reconstructedFourierData: batchSize, 2*numSignals, fourierDimension
-
-        # Remap the signal data from the Fourier data.
-        reconstructedSignalData = validSignalMask * self.sharedSignalEncoderModel.backwardFFT(realFourierData, imaginaryFourierData, resampledTimes=timepoints)
-        resampledSignalData = validSignalMask * self.sharedSignalEncoderModel.backwardFFT(realFourierData, imaginaryFourierData, resampledTimes=None)
-        # reconstructedSignalData: batchSize, numSignals, maxSequenceLength
+        resampledSignalData = physiologicalProfile.unsqueeze(1).repeat(repeats=(1, numSignals, 1))
+        resampledSignalData = validSignalMask*self.coreModelPass(resampledSignalData, specificModel=self.specificSignalEncoderModel, sharedModel=self.sharedSignalEncoderModel)
         # resampledSignalData: batchSize, numSignals, encodedDimension
+
+        # Resample the signal data.
+        physiologicalTimes = self.sharedSignalEncoderModel.pseudoEncodedTimes
+        reconstructedSignalData = self.interpolateData(physiologicalTimes, timepoints, resampledSignalData)
+        # reconstructedSignalData: batchSize, numSignals, maxSequenceLength
 
         # Visualize the data transformations within signal encoding.
         if not inferenceTraining and random.random() < 0.01: self.visualizeSignalEncoding(physiologicalProfile, resampledSignalData, reconstructedSignalData, timepoints, datapoints, missingDataMask)
@@ -297,9 +281,51 @@ class emotionModelHead(nn.Module):
         plt.legend()
         plt.show()
 
+        # Find the first valid signal.
+        validSignalMask = ~torch.all(missingDataMask, dim=-1)
+        firstBatchInd, firstSignalInd = validSignalMask.nonzero(as_tuple=False)[0, :]
+
+        # Get the first valid signal.
+        validPointMask = ~missingDataMask[firstBatchInd, firstSignalInd].detach().cpu().numpy()
+        validReconstructedPoints = reconstructedSignalData[firstBatchInd, firstSignalInd].detach().cpu().numpy()
+        validTimepoints = timepoints[firstBatchInd, firstSignalInd].detach().cpu().numpy()
+        validDatapoints = datapoints[firstBatchInd, firstSignalInd].detach().cpu().numpy()
+
         # Optionally, plot the original and reconstructed signals for visual comparison
-        plt.plot(timepoints[0, 0, ~missingDataMask[0][0]].detach().cpu().numpy(), datapoints[0, 0, ~missingDataMask[0][0]].detach().cpu().numpy(), 'ok', markersize=3, label='Initial Signal', alpha=0.75)
-        plt.plot(timepoints[0, 0,  ~missingDataMask[0][0]].detach().cpu().numpy(), reconstructedSignalData[0, 0,  ~missingDataMask[0][0]].detach().cpu().numpy(), 'o', color='tab:red', markersize=3, label='Reconstructed Signal', alpha=0.75)
-        plt.plot(physiologicalTimes, resampledSignalData[0, 0, :].detach().cpu().numpy(), 'tab:blue', linewidth=1, label='Resampled Signal', alpha=0.75)
+        plt.plot(validTimepoints[validPointMask], validDatapoints[validPointMask], 'ok', markersize=3, label='Initial Signal', alpha=0.75)
+        plt.plot(validTimepoints[validPointMask], validReconstructedPoints[validPointMask], 'o', color='tab:red', markersize=3, label='Reconstructed Signal', alpha=0.75)
+        plt.plot(physiologicalTimes, resampledSignalData[firstBatchInd, firstSignalInd, :].detach().cpu().numpy(), 'tab:blue', linewidth=1, label='Resampled Signal', alpha=0.75)
+        plt.title(f"{firstBatchInd} {firstSignalInd} {len(validTimepoints[validPointMask])} {validTimepoints[validPointMask][0]} {validTimepoints[validPointMask][-1]} {len(physiologicalTimes)}")
         plt.legend()
         plt.show()
+
+    @staticmethod
+    def interpolateData(physiologicalTimes, timepoints, resampledSignalData):
+        # Extract the dimensions of the data.
+        batchSize, numSignals, encodedDimension = resampledSignalData.size()
+
+        # Align the timepoints to the physiological times.
+        reversedPhysiologicalTimes = torch.flip(physiologicalTimes, dims=[0])
+        mappedPhysiologicalTimedInds = encodedDimension - 1 - torch.searchsorted(sorted_sequence=reversedPhysiologicalTimes, input=timepoints, out=None, out_int32=False, right=False)  # timepoints <= physiologicalTimesExpanded[mappedPhysiologicalTimedInds]
+        # Ensure the indices don't exceed the size of the last dimension of reconstructedSignalData.
+        validIndsRight = torch.clamp(mappedPhysiologicalTimedInds, min=0, max=encodedDimension - 1)  # physiologicalTimesExpanded[validIndsLeft] < timepoints
+        validIndsLeft = torch.clamp(mappedPhysiologicalTimedInds + 1, min=0, max=encodedDimension - 1)  # timepoints <= physiologicalTimesExpanded[validIndsRight]
+        # mappedPhysiologicalTimedInds dimension: batchSize, numSignals, maxSequenceLength
+
+        # Get the closest physiological data to the timepoints.
+        physiologicalTimesExpanded = physiologicalTimes.unsqueeze(0).unsqueeze(0).expand(batchSize, numSignals, encodedDimension)
+        closestPhysiologicalTimesRight = torch.gather(input=physiologicalTimesExpanded, dim=2, index=validIndsRight)  # Initialize the tensor.
+        closestPhysiologicalTimesLeft = torch.gather(input=physiologicalTimesExpanded, dim=2, index=validIndsLeft)  # Initialize the tensor.
+        closestPhysiologicalDataRight = torch.gather(input=resampledSignalData, dim=2, index=validIndsRight)  # Initialize the tensor.
+        closestPhysiologicalDataLeft = torch.gather(input=resampledSignalData, dim=2, index=validIndsLeft)  # Initialize the tensor.
+        assert ((closestPhysiologicalTimesLeft <= timepoints) & (timepoints <= closestPhysiologicalTimesRight)).all(), "The timepoints must be within the range of the closest physiological times."
+        # closestPhysiologicalData dimension: batchSize, numSignals, maxSequenceLength
+
+        # Perform linear interpolation.
+        linearSlopes = (closestPhysiologicalDataRight - closestPhysiologicalDataLeft) / (closestPhysiologicalTimesRight - closestPhysiologicalTimesLeft).clamp(min=1e-8)
+        linearSlopes[closestPhysiologicalTimesLeft == closestPhysiologicalTimesRight] = 0
+
+        # Calculate the error in signal reconstruction (encoding loss).
+        interpolatedData = closestPhysiologicalDataLeft + (timepoints - closestPhysiologicalTimesLeft) * linearSlopes
+
+        return interpolatedData

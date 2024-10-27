@@ -33,14 +33,8 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def getInitialPhysiologicalProfile(numExperiments, encodedDimension):
-        # Initialize the physiological profile in the frequency domain.
-        imaginaryFourierData = torch.randn(numExperiments, encodedDimension // 2 + 1, dtype=torch.float64)
-        realFourierData = torch.randn(numExperiments, encodedDimension // 2 + 1, dtype=torch.float64)
-        fourierData = realFourierData + 1j * imaginaryFourierData
-
-        # Reconstruct the spatial data.
-        physiologicalProfile = torch.fft.irfft(fourierData, n=encodedDimension, dim=-1, norm='ortho')
-        # physiologicalProfile = torch.randn(numExperiments, encodedDimension, dtype=torch.float64)
+        # Initialize the physiological profile.
+        physiologicalProfile = torch.randn(numExperiments, encodedDimension, dtype=torch.float64)
 
         # Initialize the physiological profile as a parameter.
         physiologicalProfile = nn.Parameter(physiologicalProfile)
@@ -50,7 +44,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def scaleGradients(grad):
-        return grad * 10
+        return grad * 1
 
     @staticmethod
     def smoothingFilter(data, kernel=(), kernelSize=None):
@@ -75,11 +69,11 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def neuralWeightRFC(numSignals, sequenceLength):
-        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=32, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
+        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=55, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
 
     @staticmethod
     def reversibleNeuralWeightRCNN(numSignals, sequenceLength):
-        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=3, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
+        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=55, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
 
     @staticmethod
     def neuralWeightFC(sequenceLength):
@@ -93,11 +87,11 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def postProcessingLayerRCNN(numSignals, sequenceLength):
-        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=3, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
+        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=55, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
 
     @staticmethod
     def postProcessingLayerRFC(numSignals, sequenceLength):
-        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=32, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
+        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=55, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
 
     # ------------------- Emotion/Activity Encoding Architectures ------------------- #
 

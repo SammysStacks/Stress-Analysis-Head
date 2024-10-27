@@ -37,6 +37,7 @@ class organizeTrainingLosses(lossCalculations):
             # Calculate the signal encoding loss.
             signalReconstructedTrainingLoss = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, missingDataMask, allTrainingMasks, modelPipeline.reconstructionIndex)
             signalReconstructedTestingLoss = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, missingDataMask, allTestingMasks, modelPipeline.reconstructionIndex)
+            self.accelerator.print("Loss values:", signalReconstructedTrainingLoss.item(), signalReconstructedTestingLoss.item())
 
             # Store the signal encoder loss information.
             self.storeLossInformation(signalReconstructedTrainingLoss, signalReconstructedTestingLoss, model.specificSignalEncoderModel.trainingLosses_signalReconstruction, model.specificSignalEncoderModel.testingLosses_signalReconstruction)

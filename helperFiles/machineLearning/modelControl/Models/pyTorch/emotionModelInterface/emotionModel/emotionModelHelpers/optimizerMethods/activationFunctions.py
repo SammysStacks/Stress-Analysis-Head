@@ -1,5 +1,4 @@
 import math
-import random
 
 import torch
 import torch.nn as nn
@@ -192,21 +191,11 @@ class nonLinearAddition(reversibleInterface):
     def __init__(self):
         super(nonLinearAddition, self).__init__()
         self.sequenceLength = None  # The length of the input signal
-        self.gradientScale = 1  # The scaling factor for the gradients
 
         # Create a learnable parameter, initialized to the given initial value
         self.learnablePhaseShift = nn.Parameter(torch.as_tensor(torch.pi))
         self.learnableFrequency = nn.Parameter(torch.as_tensor(1).exp())
         self.learnableAmplitude = nn.Parameter(torch.as_tensor(0.1))
-
-        # Register a hook to scale gradients
-        self.learnablePhaseShift.register_hook(self.gradientHook)
-        self.learnableFrequency.register_hook(self.gradientHook)
-        self.learnableAmplitude.register_hook(self.gradientHook)
-
-    def gradientHook(self, grad):
-        # Multiply the gradient by the scaling factor
-        return grad * self.gradientScale
 
     def forward(self, x, addingFlag=True):
         # Check if the non-linearity term has been calculated.

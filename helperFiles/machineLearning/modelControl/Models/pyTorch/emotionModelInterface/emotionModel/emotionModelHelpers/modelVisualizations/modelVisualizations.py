@@ -110,12 +110,12 @@ class modelVisualizations(globalPlottingProtocols):
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
             missingDataTrainingMask, reconstructedSignalTrainingData, resampledSignalTrainingData, physiologicalTrainingProfile, activityTrainingProfile, basicEmotionTrainingProfile, emotionTrainingProfile = model.forward(submodel, trainingSignalData, trainingSignalIdentifiers, trainingMetadata, device=self.accelerator.device, inferenceTraining=False)
             missingDataTestingMask, reconstructedSignalTestingData, resampledSignalTestingData, physiologicalTestingProfile, activityTestingProfile, basicEmotionTestingProfile, emotionTestingProfile = model.forward(submodel, testingSignalData, testingSignalIdentifiers, testingMetadata, device=self.accelerator.device, inferenceTraining=False)
+            validSignalTrainingMask = ~torch.all(missingDataTrainingMask, dim=-1).unsqueeze(-1).detach().cpu().numpy()
+            validSignalTestingMask = ~torch.all(missingDataTestingMask, dim=-1).unsqueeze(-1).view(-1, numSignals, 1).detach().cpu().numpy()
 
             # Detach the data from the GPU and tensor format.
             missingDataTrainingMask, reconstructedSignalTrainingData, resampledSignalTrainingData, physiologicalTrainingProfile, activityTrainingProfile, basicEmotionTrainingProfile, emotionTrainingProfile = missingDataTrainingMask.detach().cpu().numpy(), reconstructedSignalTrainingData.detach().cpu().numpy(), resampledSignalTrainingData.detach().cpu().numpy(), physiologicalTrainingProfile.detach().cpu().numpy(), activityTrainingProfile.detach().cpu().numpy(), basicEmotionTrainingProfile.detach().cpu().numpy(), emotionTrainingProfile.detach().cpu().numpy()
             missingDataTestingMask, reconstructedSignalTestingData, resampledSignalTestingData, physiologicalTestingProfile, activityTestingProfile, basicEmotionTestingProfile, emotionTestingProfile = missingDataTestingMask.detach().cpu().numpy(), reconstructedSignalTestingData.detach().cpu().numpy(), resampledSignalTestingData.detach().cpu().numpy(), physiologicalTestingProfile.detach().cpu().numpy(), activityTestingProfile.detach().cpu().numpy(), basicEmotionTestingProfile.detach().cpu().numpy(), emotionTestingProfile.detach().cpu().numpy()
-            validSignalTrainingMask = ~torch.all(missingDataTrainingMask, dim=-1).view(numExperiments, numSignals, 1)
-            validSignalTestingMask = ~torch.all(missingDataTestingMask, dim=-1).view(numExperiments, numSignals, 1)
             physiologicalTimes = model.sharedSignalEncoderModel.pseudoEncodedTimes.detach().cpu().numpy()
 
         # ------------------- Plot the Data on One Device ------------------ # 
@@ -131,8 +131,8 @@ class modelVisualizations(globalPlottingProtocols):
                 self.signalEncoderViz.plotOneSignalEncoding(physiologicalTimes, physiologicalTestingProfile, epoch=currentEpoch, plotTitle="signalEncoding/Training Physiological Profile", numSignalPlots=1)
 
             # Plot the autoencoder results.
-            self.autoencoderViz.plotEncoder(validSignalTrainingMask, trainingSignalData, reconstructedSignalTrainingData, physiologicalTimes, resampledSignalTrainingData, epoch=currentEpoch, plotTitle="signalReconstruction/Signal Encoding Training Reconstruction", numSignalPlots=1)
-            self.autoencoderViz.plotEncoder(validSignalTestingMask, testingSignalData, reconstructedSignalTestingData, physiologicalTimes, resampledSignalTestingData, epoch=currentEpoch, plotTitle="signalReconstruction/Signal Encoding Testing Reconstruction", numSignalPlots=1)
+            self.autoencoderViz.plotEncoder(trainingSignalData, reconstructedSignalTrainingData, physiologicalTimes, resampledSignalTrainingData, epoch=currentEpoch, plotTitle="signalReconstruction/Signal Encoding Training Reconstruction", numSignalPlots=1)
+            self.autoencoderViz.plotEncoder(testingSignalData, reconstructedSignalTestingData, physiologicalTimes, resampledSignalTestingData, epoch=currentEpoch, plotTitle="signalReconstruction/Signal Encoding Testing Reconstruction", numSignalPlots=1)
 
             # Dont keep plotting untrained models.
             if submodel == modelConstants.signalEncoderModel: return None

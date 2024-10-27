@@ -7,14 +7,13 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class specificSignalEncoderModel(neuralOperatorInterface):
 
-    def __init__(self, numExperiments, operatorType, encodedDimension, fourierDimension, numSignals, numLiftingLayers, numModelLayers, goldenRatio, activationMethod, learningProtocol, neuralOperatorParameters):
-        super(specificSignalEncoderModel, self).__init__(operatorType=operatorType, sequenceLength=fourierDimension, numInputSignals=numSignals*numLiftingLayers, numOutputSignals=numSignals*numLiftingLayers, learningProtocol=learningProtocol, addBiasTerm=False)
+    def __init__(self, numExperiments, operatorType, encodedDimension, numSignals, numLiftingLayers, numModelLayers, goldenRatio, activationMethod, learningProtocol, neuralOperatorParameters):
+        super(specificSignalEncoderModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numInputSignals=numSignals*numLiftingLayers, numOutputSignals=numSignals*numLiftingLayers, learningProtocol=learningProtocol, addBiasTerm=False)
         # General model parameters.
         self.activationFunction = activationFunctions.getActivationMethod(activationMethod=activationMethod)
         self.neuralOperatorParameters = neuralOperatorParameters  # The parameters for the neural operator.
         self.learningProtocol = learningProtocol  # The learning protocol for the model.
         self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
-        self.fourierDimension = fourierDimension  # The dimension of the fourier signal.
         self.numLiftingLayers = numLiftingLayers  # The number of lifting layers to use.
         self.numModelLayers = numModelLayers  # The number of model layers to use.
         self.goldenRatio = goldenRatio  # The golden ratio for the model.
@@ -48,8 +47,8 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         # Create the layers.
         self.addingFlags.append(not self.addingFlags[-1] if len(self.addingFlags) != 0 else True)
         self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True))
-        if self.learningProtocol == 'rCNN': self.processingLayers.append(self.postProcessingLayerRCNN(numSignals=self.numSignals*self.numLiftingLayers, sequenceLength=self.fourierDimension))
-        elif self.learningProtocol == 'rFC': self.processingLayers.append(self.postProcessingLayerRFC(numSignals=self.numSignals*self.numLiftingLayers, sequenceLength=self.fourierDimension))
+        if self.learningProtocol == 'rCNN': self.processingLayers.append(self.postProcessingLayerRCNN(numSignals=self.numSignals*self.numLiftingLayers, sequenceLength=self.encodedDimension))
+        elif self.learningProtocol == 'rFC': self.processingLayers.append(self.postProcessingLayerRFC(numSignals=self.numSignals*self.numLiftingLayers, sequenceLength=self.encodedDimension))
         else: raise "The learning protocol is not yet implemented."
 
     def getCurrentPhysiologicalProfile(self, batchInds):

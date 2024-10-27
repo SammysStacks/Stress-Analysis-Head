@@ -90,9 +90,9 @@ class reversibleConvolutionLayer(reversibleInterface):
 
 if __name__ == "__main__":
     # General parameters.
-    _batchSize, _numSignals, _sequenceLength = 2, 3, 256
+    _batchSize, _numSignals, _sequenceLength = 2, 3, 1024
     _activationMethod = 'nonLinearAddition'
-    _kernelSize = 5
+    _kernelSize = 65
     _numLayers = 1
 
     # Set up the parameters.

@@ -81,7 +81,12 @@ class lossCalculations:
 
         # Calculate the error in signal reconstruction (encoding loss).
         signalReconstructedLoss = self.reconstructionLoss(reconstructedSignalData, datapoints)
-        signalReconstructedLoss[signalReconstructedLoss < 0.01] = 0  # Remove small errors.
+        # signalReconstructedLoss dimension: numExperiments, numSignals, maxSequenceLength
+
+        # Adjust the loss based on the missing data.
+        missingDataMask[signalReconstructedLoss < 0.04] = True  # Remove small errors.
+
+        # Calculate the error in signal reconstruction (encoding loss).
         signalReconstructedLoss = signalReconstructedLoss[~missingDataMask].mean()
 
         # Assert that nothing is wrong with the loss calculations.
