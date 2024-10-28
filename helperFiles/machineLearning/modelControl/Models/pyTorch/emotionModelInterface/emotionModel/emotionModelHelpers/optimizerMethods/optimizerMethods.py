@@ -67,7 +67,7 @@ class optimizerMethods:
         # Reduce on plateau (need further editing of loop): optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=0.5, patience=10, threshold=1e-4, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08)
         # Defined lambda function: optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda=lambda_function); lambda_function = lambda epoch: (epoch/50) if epoch < -1 else 1
         # torch.optim.lr_scheduler.constrainedLR(optimizer, start_factor=0.3333333333333333, end_factor=1.0, total_iters=5, last_epoch=-1)
-        numWarmUps = 30*10  # 15*2=30 counts per epoch (wesad is 6*2=12 counts) for 10 epochs
+        numWarmUps = 30*25  # 15*2=30 counts per epoch (wesad is 6*2=12 counts) for 10 epochs
 
         schedulers = [
             transformers.get_constant_schedule_with_warmup(optimizer=optimizer, num_warmup_steps=numWarmUps),

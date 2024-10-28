@@ -48,7 +48,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
     @staticmethod
     def scaleGradients(grad):
-        return grad * 0.01
+        return grad * 0.1
 
     def forward(self, inputData):
         # Cast the stability term to the device.
@@ -78,7 +78,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         neuralWeights[self.signalInds, self.rowInds, self.colInds] = kernel_values
 
         # Add a stability term to the diagonal.
-        neuralWeights = neuralWeights + self.stabilityTerm*(2*self.bounds + 0.75)
+        neuralWeights = neuralWeights + self.stabilityTerm*0.94
 
         # Backward direction: invert the neural weights.
         if self.forwardDirection: neuralWeights = torch.linalg.inv(neuralWeights)
@@ -96,7 +96,7 @@ if __name__ == "__main__":
     # General parameters.
     _batchSize, _numSignals, _sequenceLength = 2, 3, 1024
     _activationMethod = 'nonLinearMultiplication'
-    _kernelSize = 25
+    _kernelSize = 9
     _numLayers = 100
 
     # Set up the parameters.
