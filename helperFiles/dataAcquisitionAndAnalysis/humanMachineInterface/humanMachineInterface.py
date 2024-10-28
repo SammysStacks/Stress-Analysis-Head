@@ -40,7 +40,7 @@ class humanMachineInterface:
         self.resetVariables_HMI()
 
     def therapyInitialization(self):
-        assert self.actionControl in {"heat", "music", "chatGPT"}, f"Invalid actionControl: {self.actionControl}. Must be one of 'heat', 'music', or 'chatGPT'."
+        assert self.actionControl in {"heat", "music", "chatGPT", None}, f"Invalid actionControl: {self.actionControl}. Must be one of 'heat', 'music', or 'chatGPT'."
         if self.actionControl == 'heat' and self.userName != self.therapyInitializedUser:
             protocolParameters = {
                 'heuristicMapType': 'uniformSampling',  # The method for generating the simulated map. Options: 'uniformSampling', 'linearSampling', 'parabolicSampling'

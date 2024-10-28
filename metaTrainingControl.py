@@ -56,8 +56,8 @@ if __name__ == "__main__":
     parser.add_argument('--reversibleLearningProtocol', type=str, default='rCNN', help='The learning protocol for the model: rCNN, rFC')
     parser.add_argument('--irreversibleLearningProtocol', type=str, default='FC', help='The learning protocol for the model: CNN, FC')
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are using: cpu, cuda')
-    parser.add_argument('--goldenRatio', type=int, default=16, help='The number of shared layers per specific layer.')
-    parser.add_argument('--numSignalEncoderLayers', type=int, default=32, help='The number of layers in the model.')
+    parser.add_argument('--goldenRatio', type=int, default=8, help='The number of shared layers per specific layer.')
+    parser.add_argument('--numSignalEncoderLayers', type=int, default=8, help='The number of layers in the model.')
 
     # Add arguments for the neural operator.
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
