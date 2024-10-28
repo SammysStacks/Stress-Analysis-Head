@@ -19,7 +19,7 @@ class reversibleDualLinearLayer(reversibleInterface):
         self.kernelSize = kernelSize  # The restricted window for the neural weights.
         self.numSignals = numSignals  # The number of signals in the input data.
         self.numLayers = numLayers  # The number of layers in the reversible linear layer.
-        self.stabilityFactor = math.sqrt(numLayers) / 2  # The stability factor for the model.
+        self.stabilityFactor = 1  # The stability factor for the model.
 
         # The restricted window for the neural weights.
         self.restrictedWindowMask = torch.ones(1, self.sequenceLength, self.sequenceLength, dtype=torch.float64)
@@ -103,7 +103,7 @@ if __name__ == "__main__":
     _batchSize, _numSignals, _sequenceLength = 2, 3, 128
     _activationMethod = 'nonLinearMultiplication'
     _kernelSize = _sequenceLength
-    _numLayers = 5
+    _numLayers = 3
 
     # Set up the parameters.
     neuralLayerClass = reversibleDualLinearLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod, switchActivationDirection=False)

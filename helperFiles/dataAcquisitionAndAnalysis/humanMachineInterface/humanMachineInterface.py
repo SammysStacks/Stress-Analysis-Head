@@ -121,7 +121,7 @@ class humanMachineInterface:
         newCompiledFeatureTimes = 1  # similar to rawfeatures
         newCompiledFeatures = 1
 
-        startTimePointer =
+        startTimePointer = 1
 
         # 2: Get a last unanalyzed points, and put them into a data structure: numPointUnAnalyzed, numFeatures, maxSequenceLength, [time, compiled feature data]
         # Times go from furtherest away -> 0 (the current time)
