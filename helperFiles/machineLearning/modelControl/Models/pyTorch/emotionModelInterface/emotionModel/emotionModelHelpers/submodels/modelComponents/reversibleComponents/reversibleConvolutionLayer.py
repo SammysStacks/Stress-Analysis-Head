@@ -8,18 +8,17 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class reversibleConvolutionLayer(reversibleInterface):
 
-    def __init__(self, numSignals, sequenceLength, kernelSize, numLayers, activationMethod):
+    def __init__(self, numSignals, sequenceLength, kernelSize, numLayers, activationMethod, switchActivationDirection):
         super(reversibleConvolutionLayer, self).__init__()
         # General parameters.
-        self.activationFunction = activationFunctions.getActivationMethod(activationMethod)  # The activation function to use for the neural operator.
+        self.activationMethod = activationMethod  # The activation method to use.
         self.sequenceLength = sequenceLength  # The length of the input signal.
         self.kernelSize = kernelSize  # The restricted window for the neural weights.
-        self.bounds = 1 / kernelSize  # The bounds for the neural weights.
+        self.bounds = 2 / kernelSize  # The bounds for the neural weights.
         self.numLayers = numLayers  # The number of layers in the reversible linear layer.
-        self.gradientScale = 1  # The scaling factor for the gradients.
 
         # The stability term to add to the diagonal.
-        self.stabilityTerm = torch.eye(self.sequenceLength, dtype=torch.float64)*0.9
+        self.stabilityTerm = torch.eye(self.sequenceLength, dtype=torch.float64)
 
         # The restricted window for the neural weights.
         self.restrictedWindowMask = torch.ones(1, self.sequenceLength, self.sequenceLength, dtype=torch.float64)
@@ -30,19 +29,26 @@ class reversibleConvolutionLayer(reversibleInterface):
         self.signalInds, self.rowInds, self.colInds = self.restrictedWindowMask.nonzero(as_tuple=False).T
         self.kernelInds = self.colInds - self.rowInds + self.kernelSize // 2  # Adjust for kernel center
 
-        # Initialize the neural weights.
-        self.linearOperators = nn.ParameterList()
+        # Initialize the neural layers.
+        self.activationFunctions,  self.linearOperators = nn.ModuleList(), nn.ParameterList()
+
+        # Create the neural layers.
         for layerInd in range(self.numLayers):
-            if self.kernelSize != self.sequenceLength: parameters = nn.Parameter(torch.randn(numSignals, kernelSize, dtype=torch.float64))
-            else: parameters = nn.Parameter(torch.randn(numSignals, sequenceLength, sequenceLength, dtype=torch.float64))
+            parameters = nn.Parameter(torch.randn(numSignals, kernelSize, dtype=torch.float64))
             self.linearOperators.append(nn.init.uniform_(parameters, a=-self.bounds, b=self.bounds))
+
+            # Add the activation function.
+            activationMethod = f"{self.activationMethod}_{switchActivationDirection}"
+            self.activationFunctions.append(activationFunctions.getActivationMethod(activationMethod))
+            switchActivationDirection = not switchActivationDirection
 
         # Register hooks for each parameter in the list
         for param in self.linearOperators:
             param.register_hook(self.scaleGradients)
 
-    def scaleGradients(self, grad):
-        return grad * self.gradientScale
+    @staticmethod
+    def scaleGradients(grad):
+        return grad * 0.01
 
     def forward(self, inputData):
         # Cast the stability term to the device.
@@ -53,9 +59,9 @@ class reversibleConvolutionLayer(reversibleInterface):
             if self.forwardDirection:
                 pseudoLayerInd = self.numLayers - layerInd - 1
                 inputData = self.applyLayer(inputData, pseudoLayerInd)
-                inputData = self.activationFunction(inputData, pseudoLayerInd % 2 == 0)
+                inputData = self.activationFunctions[pseudoLayerInd](inputData)
             else:
-                inputData = self.activationFunction(inputData, layerInd % 2 == 0)
+                inputData = self.activationFunctions[layerInd](inputData)
                 inputData = self.applyLayer(inputData, layerInd)
 
         return inputData
@@ -67,14 +73,12 @@ class reversibleConvolutionLayer(reversibleInterface):
         # neuralWeight: numSignals, sequenceLength, sequenceLength
         # kernelWeights: numSignals, (kernelSize) or (sequenceLength, sequenceLength)
 
-        if self.kernelSize != self.sequenceLength:
-            # Gather the corresponding kernel values for each position
-            kernel_values = kernelWeights[self.signalInds, self.kernelInds]  # Shape: (numIndices,)
-            neuralWeights[self.signalInds, self.rowInds, self.colInds] = kernel_values
+        # Gather the corresponding kernel values for each position
+        kernel_values = kernelWeights[self.signalInds, self.kernelInds]  # Shape: (numIndices,)
+        neuralWeights[self.signalInds, self.rowInds, self.colInds] = kernel_values
 
         # Add a stability term to the diagonal.
-        if self.kernelSize != self.sequenceLength: neuralWeights = neuralWeights + self.stabilityTerm
-        else: neuralWeights = kernelWeights * (1 - self.stabilityTerm) + self.stabilityTerm
+        neuralWeights = neuralWeights + self.stabilityTerm*(2*self.bounds + 0.75)
 
         # Backward direction: invert the neural weights.
         if self.forwardDirection: neuralWeights = torch.linalg.inv(neuralWeights)
@@ -91,12 +95,12 @@ class reversibleConvolutionLayer(reversibleInterface):
 if __name__ == "__main__":
     # General parameters.
     _batchSize, _numSignals, _sequenceLength = 2, 3, 1024
-    _activationMethod = 'nonLinearAddition'
-    _kernelSize = 65
-    _numLayers = 1
+    _activationMethod = 'nonLinearMultiplication'
+    _kernelSize = 25
+    _numLayers = 100
 
     # Set up the parameters.
-    neuralLayerClass = reversibleConvolutionLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod)
+    neuralLayerClass = reversibleConvolutionLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod, switchActivationDirection=False)
     _inputData = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float64)
 
     # Perform the convolution in the fourier and spatial domains.

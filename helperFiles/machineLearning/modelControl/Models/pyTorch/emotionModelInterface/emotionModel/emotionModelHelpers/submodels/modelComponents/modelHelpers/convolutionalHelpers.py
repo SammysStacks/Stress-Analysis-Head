@@ -5,7 +5,6 @@ from torch.utils.checkpoint import checkpoint
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.modelHelpers.abnormalConvolutions import abnormalConvolutions
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleConvolutionLayer import reversibleConvolutionLayer
 
 
 class convolutionalHelpers(abnormalConvolutions):
@@ -138,20 +137,13 @@ class convolutionalHelpers(abnormalConvolutions):
                 layer = nn.Conv1d(in_channels=numChannels[i], out_channels=numChannels[i + 1], kernel_size=kernel_sizes[i], stride=strides[i],
                                   padding=paddings[i], dilation=dilations[i], groups=groups[i], padding_mode='reflect', bias=addBias)
 
-            elif convType.split("_")[0] == 'reverseConv1D':
-                layer = reversibleConvolutionLayer(numChannels=numChannels[i], kernelSize=kernel_sizes[i], activationMethod=activationMethod, numLayers=numLayers)
-                assert groups[i] == numChannels[i], "The number of groups must equal the number of channels for reversibility (depthwise)."
-                assert len(numChannels) == 2, "Reversible convolutions must have two channels."
-                activationMethod = 'none'
-
             # If adding a transposed convolutional layer.
             elif convType.split("_")[0] == 'transConv1D':
                 layer = nn.ConvTranspose1d(in_channels=numChannels[i], out_channels=numChannels[i + 1], kernel_size=kernel_sizes[i], stride=strides[i],
                                            padding=paddings[i], dilation=dilations[i], groups=groups[i], padding_mode='zeros', bias=addBias, output_padding=0)
 
             # If the convolutional type is not recognized.
-            else:
-                raise ValueError("Unknown convolutional type")
+            else: raise ValueError("Unknown convolutional type")
 
             # Initialize the weights of the convolutional layer.
             layer = self.weightInitialization.initialize_weights(layer, activationMethod=activationMethod, layerType=convType)

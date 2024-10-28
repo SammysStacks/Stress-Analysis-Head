@@ -10,18 +10,16 @@ from .emotionModelHelpers.modelConstants import modelConstants
 from .emotionModelHelpers.modelParameters import modelParameters
 from .emotionModelHelpers.submodels.inferenceModel import inferenceModel
 from .emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
-from .emotionModelHelpers.submodels.modelComponents.signalEncoderComponents.emotionModelWeights import emotionModelWeights
 from .emotionModelHelpers.submodels.sharedActivityModel import sharedActivityModel
 from .emotionModelHelpers.submodels.sharedEmotionModel import sharedEmotionModel
 from .emotionModelHelpers.submodels.sharedSignalEncoderModel import sharedSignalEncoderModel
 from .emotionModelHelpers.submodels.specificActivityModel import specificActivityModel
-# Import submodels
 from .emotionModelHelpers.submodels.specificEmotionModel import specificEmotionModel
 from .emotionModelHelpers.submodels.specificSignalEncoderModel import specificSignalEncoderModel
 
 
 class emotionModelHead(nn.Module):
-    def __init__(self, submodel, metadata, userInputParams, emotionNames, activityNames, featureNames, numSubjects, datasetName, numExperiments):
+    def __init__(self, submodel, userInputParams, emotionNames, activityNames, featureNames, numSubjects, datasetName, numExperiments):
         super(emotionModelHead, self).__init__()
         # General model parameters.
         self.numActivities = len(activityNames)  # The number of activities to predict.
@@ -32,24 +30,21 @@ class emotionModelHead(nn.Module):
         self.emotionNames = emotionNames  # The names of each emotion we are predicting. Dim: numEmotions
         self.numSubjects = numSubjects  # The maximum number of subjects the model is training on.
         self.datasetName = datasetName  # The name of the dataset the model is training on.
-        self.metadata = metadata  # The subject identifiers for the model (e.g., subjectIndex, datasetIndex, etc.)
 
         # General parameters.
-        self.irreversibleLearningProtocol = userInputParams['irreversibleLearningProtocol']  # The learning protocol for the model.
-        self.reversibleLearningProtocol = userInputParams['reversibleLearningProtocol']  # The learning protocol for the model.
-        self.activationMethod = emotionModelWeights.getActivationType()  # The activation method to use for the neural operator.
         self.encodedDimension = userInputParams['encodedDimension']  # The dimension of the encoded signal.
-        self.fourierDimension = int(self.encodedDimension / 2 + 1)  # The dimension of the fourier signal.
-        self.numModelLayers = userInputParams['numModelLayers']  # The number of layers in the model.
         self.operatorType = userInputParams['operatorType']  # The type of operator to use for the neural operator.
         self.goldenRatio = userInputParams['goldenRatio']  # The number of shared layers per specific layer.
         self.debugging = True
 
         # Signal encoder parameters.
+        self.reversibleLearningProtocol = userInputParams['reversibleLearningProtocol']  # The learning protocol for the model.
         self.neuralOperatorParameters = userInputParams['neuralOperatorParameters']  # The parameters for the neural operator.
         self.numLiftingLayersSignalEncoder = 1  # The number of lifting layers to use in the signal encoder.
+        self.numSignalEncoderLayers = 0  # The number of layers in the model.
 
-        # Emotion parameters.
+        # Emotion and activity parameters.
+        self.irreversibleLearningProtocol = userInputParams['irreversibleLearningProtocol']  # The learning protocol for the model.
         self.numActivityChannels = userInputParams['numActivityChannels']  # The number of activity channels to predict.
         self.numBasicEmotions = userInputParams['numBasicEmotions']  # The number of basic emotions (basis states of emotions).
 
@@ -66,9 +61,7 @@ class emotionModelHead(nn.Module):
             neuralOperatorParameters=self.neuralOperatorParameters,
             numLiftingLayers=self.numLiftingLayersSignalEncoder,
             learningProtocol=self.reversibleLearningProtocol,
-            activationMethod=self.activationMethod,
             encodedDimension=self.encodedDimension,
-            numModelLayers=self.numModelLayers,
             operatorType=self.operatorType,
             numExperiments=numExperiments,
             goldenRatio=self.goldenRatio,
@@ -78,13 +71,16 @@ class emotionModelHead(nn.Module):
         # The autoencoder model reduces the incoming signal's dimension.
         self.sharedSignalEncoderModel = sharedSignalEncoderModel(
             neuralOperatorParameters=self.neuralOperatorParameters,
+            numLiftingLayers=self.numLiftingLayersSignalEncoder,
             learningProtocol=self.reversibleLearningProtocol,
             encodedDimension=self.encodedDimension,
-            activationMethod=self.activationMethod,
-            numModelLayers=self.numModelLayers,
             operatorType=self.operatorType,
             goldenRatio=self.goldenRatio,
         )
+
+        # Construct the model weights.
+        for _ in range(userInputParams['numSignalEncoderLayers']): self.addNewSignalEncoderLayer()
+        self.specificSignalEncoderModel.addLayer()  # Add the final layer to the specific model.
 
         # -------------------- Final Emotion Prediction -------------------- #
 
@@ -92,10 +88,9 @@ class emotionModelHead(nn.Module):
             self.specificEmotionModel = specificEmotionModel(
                 neuralOperatorParameters=self.neuralOperatorParameters,
                 learningProtocol=self.irreversibleLearningProtocol,
-                activationMethod=self.activationMethod,
                 encodedDimension=self.encodedDimension,
                 numBasicEmotions=self.numBasicEmotions,
-                numModelLayers=self.numModelLayers,
+                numModelLayers=self.numEmotionModelLayers,
                 operatorType=self.operatorType,
                 goldenRatio=self.goldenRatio,
                 numEmotions=self.numEmotions,
@@ -105,10 +100,9 @@ class emotionModelHead(nn.Module):
             self.sharedEmotionModel = sharedEmotionModel(
                 neuralOperatorParameters=self.neuralOperatorParameters,
                 learningProtocol=self.irreversibleLearningProtocol,
-                activationMethod=self.activationMethod,
                 encodedDimension=self.encodedDimension,
                 numBasicEmotions=self.numBasicEmotions,
-                numModelLayers=self.numModelLayers,
+                numModelLayers=self.numEmotionModelLayers,
                 operatorType=self.operatorType,
             )
 
@@ -116,9 +110,8 @@ class emotionModelHead(nn.Module):
                 neuralOperatorParameters=self.neuralOperatorParameters,
                 learningProtocol=self.irreversibleLearningProtocol,
                 numActivityChannels=self.numActivityChannels,
-                activationMethod=self.activationMethod,
                 encodedDimension=self.encodedDimension,
-                numModelLayers=self.numModelLayers,
+                numModelLayers=self.numActivityModelLayers,
                 numActivities=self.numActivities,
                 operatorType=self.operatorType,
                 goldenRatio=self.goldenRatio,
@@ -128,28 +121,26 @@ class emotionModelHead(nn.Module):
                 neuralOperatorParameters=self.neuralOperatorParameters,
                 learningProtocol=self.irreversibleLearningProtocol,
                 numActivityChannels=self.numActivityChannels,
-                activationMethod=self.activationMethod,
                 encodedDimension=self.encodedDimension,
-                numModelLayers=self.numModelLayers,
+                numModelLayers=self.numActivityModelLayers,
                 operatorType=self.operatorType,
             )
 
     # ------------------------- Full Forward Calls ------------------------- #
 
-    def addNewLayer(self):
+    def addNewSignalEncoderLayer(self):
         # Adjust the model architecture.
-        if self.numModelLayers % self.goldenRatio == 0: self.specificSignalEncoderModel.addLayer()
+        if self.numSignalEncoderLayers % self.goldenRatio == 0: self.specificSignalEncoderModel.addLayer()
         self.sharedSignalEncoderModel.addLayer()
-        self.numModelLayers += 1
+        self.numSignalEncoderLayers += 1
 
         # Analyze the new architecture.
         numSpecificLayers = len(self.specificSignalEncoderModel.neuralLayers)
         numSharedLayers = len(self.sharedSignalEncoderModel.neuralLayers)
 
         # Inform the user of the model changes.
-        print(f"numModelLayers: {self.numModelLayers}, Specific Layers: {len(self.specificSignalEncoderModel.neuralLayers)}, Shared Layers: {len(self.sharedSignalEncoderModel.neuralLayers)}")
-        assert self.numModelLayers == numSharedLayers, f"The number of layers in the shared model ({numSharedLayers}) does not match the number of layers in the model ({self.numModelLayers})."
-        if self.numModelLayers % self.goldenRatio == 0 and self.numModelLayers != 0: assert numSpecificLayers == 1 + self.numModelLayers // self.goldenRatio, f"The number of layers in the specific model ({numSpecificLayers}) does not match the number of layers in the model ({self.numModelLayers})."
+        assert self.numSignalEncoderLayers == numSharedLayers, f"The number of layers in the shared model ({numSharedLayers}) does not match the number of layers in the model ({self.numSignalEncoderLayers})."
+        if self.numSignalEncoderLayers % self.goldenRatio == 0 and self.numSignalEncoderLayers != 0: assert numSpecificLayers == self.numSignalEncoderLayers // self.goldenRatio, f"The number of layers in the specific model ({numSpecificLayers}) does not match the number of layers in the model ({self.numSignalEncoderLayers})."
 
     def forward(self, submodel, signalData, signalIdentifiers, metadata, device, inferenceTraining=False):
         # decodeSignals: whether to decode the signals after encoding, which is used for the autoencoder loss.
@@ -193,7 +184,7 @@ class emotionModelHead(nn.Module):
         # Perform the backward pass: physiologically -> signal data.
         reversibleInterface.changeDirections(forwardDirection=False)
         resampledSignalData = physiologicalProfile.unsqueeze(1).repeat(repeats=(1, numSignals, 1))
-        resampledSignalData = validSignalMask*self.coreModelPass(resampledSignalData, specificModel=self.specificSignalEncoderModel, sharedModel=self.sharedSignalEncoderModel)
+        resampledSignalData = validSignalMask*self.coreModelPass(self.numSignalEncoderLayers, resampledSignalData, specificModel=self.specificSignalEncoderModel, sharedModel=self.sharedSignalEncoderModel)
         # resampledSignalData: batchSize, numSignals, encodedDimension
 
         # Resample the signal data.
@@ -202,7 +193,8 @@ class emotionModelHead(nn.Module):
         # reconstructedSignalData: batchSize, numSignals, maxSequenceLength
 
         # Visualize the data transformations within signal encoding.
-        if not inferenceTraining and random.random() < 0.01: self.visualizeSignalEncoding(physiologicalProfile, resampledSignalData, reconstructedSignalData, timepoints, datapoints, missingDataMask)
+        if not inferenceTraining and random.random() < 0.01:
+            with torch.no_grad(): self.visualizeSignalEncoding(physiologicalProfile, resampledSignalData, reconstructedSignalData, timepoints, datapoints, missingDataMask)
 
         # ------------------- Learned Emotion Mapping ------------------- #
 
@@ -232,11 +224,11 @@ class emotionModelHead(nn.Module):
         return missingDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile
 
     @staticmethod
-    def coreModelPass(metaLearningData, specificModel, sharedModel):
+    def coreModelPass(numModelLayers, metaLearningData, specificModel, sharedModel):
         specificLayerCounter = 0
 
         # For each layer in the model.
-        for layerInd in range(specificModel.numModelLayers):
+        for layerInd in range(numModelLayers):
             # Calculate the estimated physiological profile given each signal.
             if layerInd % specificModel.goldenRatio == 0: metaLearningData = specificModel.learningInterface(layerInd=specificLayerCounter, signalData=metaLearningData); specificLayerCounter += 1  # Reversible signal-specific layers.
             metaLearningData = sharedModel.learningInterface(layerInd=layerInd, signalData=metaLearningData)  # Reversible meta-learning layers.
@@ -277,8 +269,7 @@ class emotionModelHead(nn.Module):
     def visualizeSignalEncoding(self, physiologicalProfile, resampledSignalData, reconstructedSignalData, timepoints, datapoints, missingDataMask):
         # Optionally, plot the physiological profile for visual comparison
         physiologicalTimes = self.sharedSignalEncoderModel.pseudoEncodedTimes.detach().cpu().numpy()
-        plt.plot(physiologicalTimes, physiologicalProfile[0].detach().cpu().numpy(), 'tab:blue', linewidth=1, label='Physiological Profile', alpha=0.5)
-        plt.legend()
+        plt.plot(physiologicalTimes, physiologicalProfile[0].detach().cpu().numpy(), 'k', linewidth=1, label='Physiological Profile', alpha=0.75)
         plt.show()
 
         # Find the first valid signal.
@@ -329,3 +320,10 @@ class emotionModelHead(nn.Module):
         interpolatedData = closestPhysiologicalDataLeft + (timepoints - closestPhysiologicalTimesLeft) * linearSlopes
 
         return interpolatedData
+
+    def reconstructPhysiologicalProfile(self, resampledSignalData):
+        reversibleInterface.changeDirections(forwardDirection=True)
+        reconstructedPhysiologicalProfile = self.coreModelPass(self.numSignalEncoderLayers, resampledSignalData, specificModel=self.specificSignalEncoderModel, sharedModel=self.sharedSignalEncoderModel)
+        reversibleInterface.changeDirections(forwardDirection=False)
+
+        return reconstructedPhysiologicalProfile

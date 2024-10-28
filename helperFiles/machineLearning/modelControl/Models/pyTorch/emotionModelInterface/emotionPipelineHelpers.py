@@ -15,7 +15,6 @@ class emotionPipelineHelpers:
     def __init__(self, accelerator, datasetName, allEmotionClasses, numSubjects, userInputParams,
                  emotionNames, activityNames, featureNames, submodel, numExperiments):
         # General parameters.
-        self.metadata = modelConstants.metadata  # The subject identifiers to consider. Dim: [numSubjects]
         self.accelerator = accelerator  # Hugging face interface to speed up the training process.
 
         # Pre-initialize later parameters.
@@ -34,7 +33,7 @@ class emotionPipelineHelpers:
         self.datasetName = datasetName  # The name of the specific dataset being used in this model (case, wesad, etc.)
 
         # Initialize the emotion model.
-        self.model = emotionModelHead(submodel=submodel, metadata=self.metadata, userInputParams=userInputParams, emotionNames=emotionNames, activityNames=activityNames,
+        self.model = emotionModelHead(submodel=submodel, userInputParams=userInputParams, emotionNames=emotionNames, activityNames=activityNames,
                                       featureNames=featureNames, numSubjects=numSubjects, datasetName=datasetName, numExperiments=numExperiments)
         # self.model = torch.compile(self.model, backend='eager')
 

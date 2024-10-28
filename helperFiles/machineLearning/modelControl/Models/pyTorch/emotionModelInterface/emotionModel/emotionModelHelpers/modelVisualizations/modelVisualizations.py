@@ -110,12 +110,18 @@ class modelVisualizations(globalPlottingProtocols):
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
             missingDataTrainingMask, reconstructedSignalTrainingData, resampledSignalTrainingData, physiologicalTrainingProfile, activityTrainingProfile, basicEmotionTrainingProfile, emotionTrainingProfile = model.forward(submodel, trainingSignalData, trainingSignalIdentifiers, trainingMetadata, device=self.accelerator.device, inferenceTraining=False)
             missingDataTestingMask, reconstructedSignalTestingData, resampledSignalTestingData, physiologicalTestingProfile, activityTestingProfile, basicEmotionTestingProfile, emotionTestingProfile = model.forward(submodel, testingSignalData, testingSignalIdentifiers, testingMetadata, device=self.accelerator.device, inferenceTraining=False)
-            validSignalTrainingMask = ~torch.all(missingDataTrainingMask, dim=-1).unsqueeze(-1).detach().cpu().numpy()
-            validSignalTestingMask = ~torch.all(missingDataTestingMask, dim=-1).unsqueeze(-1).view(-1, numSignals, 1).detach().cpu().numpy()
+
+            # Reconstruct the physiological profile.
+            reconstructedPhysiologicalTrainingProfile = model.reconstructPhysiologicalProfile(resampledSignalTrainingData)
+            reconstructedPhysiologicalTestingProfile = model.reconstructPhysiologicalProfile(resampledSignalTestingData)
 
             # Detach the data from the GPU and tensor format.
-            missingDataTrainingMask, reconstructedSignalTrainingData, resampledSignalTrainingData, physiologicalTrainingProfile, activityTrainingProfile, basicEmotionTrainingProfile, emotionTrainingProfile = missingDataTrainingMask.detach().cpu().numpy(), reconstructedSignalTrainingData.detach().cpu().numpy(), resampledSignalTrainingData.detach().cpu().numpy(), physiologicalTrainingProfile.detach().cpu().numpy(), activityTrainingProfile.detach().cpu().numpy(), basicEmotionTrainingProfile.detach().cpu().numpy(), emotionTrainingProfile.detach().cpu().numpy()
-            missingDataTestingMask, reconstructedSignalTestingData, resampledSignalTestingData, physiologicalTestingProfile, activityTestingProfile, basicEmotionTestingProfile, emotionTestingProfile = missingDataTestingMask.detach().cpu().numpy(), reconstructedSignalTestingData.detach().cpu().numpy(), resampledSignalTestingData.detach().cpu().numpy(), physiologicalTestingProfile.detach().cpu().numpy(), activityTestingProfile.detach().cpu().numpy(), basicEmotionTestingProfile.detach().cpu().numpy(), emotionTestingProfile.detach().cpu().numpy()
+            missingDataTrainingMask, reconstructedSignalTrainingData, resampledSignalTrainingData, physiologicalTrainingProfile = missingDataTrainingMask.detach().cpu().numpy(), reconstructedSignalTrainingData.detach().cpu().numpy(), resampledSignalTrainingData.detach().cpu().numpy(), physiologicalTrainingProfile.detach().cpu().numpy()
+            reconstructedPhysiologicalTrainingProfile, activityTrainingProfile, basicEmotionTrainingProfile, emotionTrainingProfile = reconstructedPhysiologicalTrainingProfile.detach().cpu().numpy(), activityTrainingProfile.detach().cpu().numpy(), basicEmotionTrainingProfile.detach().cpu().numpy(), emotionTrainingProfile.detach().cpu().numpy()
+
+            # Detach the data from the GPU and tensor format.
+            missingDataTestingMask, reconstructedSignalTestingData, resampledSignalTestingData, physiologicalTestingProfile = missingDataTestingMask.detach().cpu().numpy(), reconstructedSignalTestingData.detach().cpu().numpy(), resampledSignalTestingData.detach().cpu().numpy(), physiologicalTestingProfile.detach().cpu().numpy()
+            reconstructedPhysiologicalTestingProfile, activityTestingProfile, basicEmotionTestingProfile, emotionTestingProfile = reconstructedPhysiologicalTestingProfile.detach().cpu().numpy(), activityTestingProfile.detach().cpu().numpy(), basicEmotionTestingProfile.detach().cpu().numpy(), emotionTestingProfile.detach().cpu().numpy()
             physiologicalTimes = model.sharedSignalEncoderModel.pseudoEncodedTimes.detach().cpu().numpy()
 
         # ------------------- Plot the Data on One Device ------------------ # 
@@ -127,8 +133,12 @@ class modelVisualizations(globalPlottingProtocols):
 
             if submodel == modelConstants.signalEncoderModel:
                 # Plot the encoding example.
-                self.signalEncoderViz.plotOneSignalEncoding(physiologicalTimes, physiologicalTrainingProfile, epoch=currentEpoch, plotTitle="signalEncoding/Testing Physiological Profile", numSignalPlots=1)
-                self.signalEncoderViz.plotOneSignalEncoding(physiologicalTimes, physiologicalTestingProfile, epoch=currentEpoch, plotTitle="signalEncoding/Training Physiological Profile", numSignalPlots=1)
+                self.signalEncoderViz.plotPhysiologicalProfile(physiologicalTimes, physiologicalTrainingProfile, epoch=currentEpoch, plotTitle="signalEncoding/Testing Physiological Profile")
+                self.signalEncoderViz.plotPhysiologicalProfile(physiologicalTimes, physiologicalTestingProfile, epoch=currentEpoch, plotTitle="signalEncoding/Training Physiological Profile")
+
+                # Plot the encoding example.
+                self.signalEncoderViz.plotPhysiologicalReconstruction(physiologicalTimes, physiologicalTrainingProfile, reconstructedPhysiologicalTrainingProfile, epoch=currentEpoch, plotTitle="signalEncoding/Testing Physiological Reconstruction")
+                self.signalEncoderViz.plotPhysiologicalReconstruction(physiologicalTimes, physiologicalTestingProfile, reconstructedPhysiologicalTestingProfile, epoch=currentEpoch, plotTitle="signalEncoding/Training Physiological Reconstruction")
 
             # Plot the autoencoder results.
             self.autoencoderViz.plotEncoder(trainingSignalData, reconstructedSignalTrainingData, physiologicalTimes, resampledSignalTrainingData, epoch=currentEpoch, plotTitle="signalReconstruction/Signal Encoding Training Reconstruction", numSignalPlots=1)

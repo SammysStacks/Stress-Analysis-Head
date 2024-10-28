@@ -67,7 +67,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     metaBatchInfo = metaBatchInfo.double()
 
                     # For every new batch.
-                    if not inferenceTraining and self.accelerator.sync_gradients: self.augmentData = random.uniform(a=0, b=1) < 0.5
+                    if not inferenceTraining and self.accelerator.sync_gradients: self.augmentData = random.uniform(a=0, b=1) < 0.25
 
                     if not inferenceTraining and self.augmentData:
                         # Augment the signals to train an arbitrary sequence length and order.
@@ -125,7 +125,7 @@ class emotionPipeline(emotionPipelineHelpers):
             self.optimizer.step()  # Adjust the weights.
             self.scheduler.step()  # Update the learning rate.
             self.optimizer.zero_grad()  # Zero your gradients to restart the gradient tracking.
-            self.accelerator.print(f"Backprop {self.model.numModelLayers} layers with LR: {self.scheduler.get_last_lr()}", flush=True)
+            self.accelerator.print(f"Backprop with LR: {self.scheduler.get_last_lr()}", flush=True)
         
     def extractBatchInformation(self, batchData):
         # Extract the data, labels, and testing/training indices.

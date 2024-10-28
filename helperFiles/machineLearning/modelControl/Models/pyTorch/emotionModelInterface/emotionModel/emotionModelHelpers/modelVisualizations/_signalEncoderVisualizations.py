@@ -22,18 +22,32 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     # --------------------- Visualize Model Parameters --------------------- #
 
-    def plotOneSignalEncoding(self, encodedTimes, allEncodedData, epoch=0, plotTitle="Signal Encoding", numSignalPlots=1):
+    def plotPhysiologicalProfile(self, physiologicalTimes, physiologicalProfile, epoch=0, plotTitle="Signal Encoding"):
         # Plot the signal reconstruction.
-        for batchInd in range(numSignalPlots): plt.plot(encodedTimes, allEncodedData[batchInd], c=self.darkColors[batchInd], label=f"Physiological profile: #{batchInd}", linewidth=1, alpha=1)
+        plt.plot(physiologicalTimes, physiologicalProfile[0], c=self.blackColor, label=f"Physiological profile", linewidth=2, alpha=0.8)
 
         # Plotting aesthetics.
-        plt.xlabel("Encoding Dimension (Points)")
+        plt.xlabel("Time (Seconds)")
         plt.title(f"{plotTitle.split("/")[-1]}")
         plt.ylabel("Signal (AU)")
         plt.legend()
 
         # Save the figure.
-        if self.saveDataFolder: self.displayFigure(self.saveDataFolder + f"{plotTitle} epochs{epoch} batchInd{batchInd}.pdf")
+        if self.saveDataFolder: self.displayFigure(self.saveDataFolder + f"{plotTitle} epochs{epoch}.pdf")
+        else: plt.show()
+
+    def plotPhysiologicalReconstruction(self, physiologicalTimes, physiologicalProfile, reconstructedPhysiologicalProfile, epoch=0, plotTitle="Signal Encoding"):
+        # Plot the signal reconstruction.
+        plt.plot(physiologicalTimes, physiologicalProfile[0], c=self.blackColor, label=f"Physiological profile", linewidth=2, alpha=0.8)
+        for signalInd in range(reconstructedPhysiologicalProfile.shape[1]): plt.plot(physiologicalTimes, reconstructedPhysiologicalProfile[0, signalInd], c=self.lightColors[1], label=f"Reconstructed Physiological profile", linewidth=1, alpha=0.1)
+
+        # Plotting aesthetics.
+        plt.xlabel("Time (Seconds)")
+        plt.title(f"{plotTitle.split("/")[-1]}")
+        plt.ylabel("Signal (AU)")
+
+        # Save the figure.
+        if self.saveDataFolder: self.displayFigure(self.saveDataFolder + f"{plotTitle} epochs{epoch}.pdf")
         else: plt.show()
 
     def plotSignalEncodingMap(self, physiologicalTimes, allPhysiologicalProfiles, allSignalData, epoch, plotTitle="Signal Encoding", numBatchPlots=1, numSignalPlots=1):
@@ -41,7 +55,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         timepoints = emotionDataInterface.getChannelData(allSignalData, channelName=modelConstants.timeChannel)
 
         for batchInd in range(allSignalData.size(0)):
-            # Plot the signals.
             for signalInd in range(allSignalData.size(1)):
                 plt.plot(timepoints[batchInd, signalInd], datapoints[batchInd, signalInd], 'k', label="Initial Signal", linewidth=1, alpha=0.5)
                 plt.plot(physiologicalTimes, allPhysiologicalProfiles[batchInd], 'tab:red', linewidth=1, label="Resampled Signal")

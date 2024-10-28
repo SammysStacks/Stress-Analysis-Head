@@ -25,35 +25,6 @@ class trainingProtocolHelpers:
         self.modelMigration = modelMigration(accelerator)
         self.modelHelpers = modelHelpers()
 
-    def adjustModelArchitecture(self, allMetaModels, allModels):
-        # For each meta-training model.
-        for modelInd in range(len(allMetaModels) + len(allModels)):
-            modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]
-
-            # Get the model losses.
-            modelLosses = modelPipeline.model.specificSignalEncoderModel.trainingLosses_signalReconstruction
-            if len(modelLosses) < 2*self.numTrailingLosses: return None
-
-            # Check if we should add a new layer.
-            lossPercent = sum(modelLosses[-self.numTrailingLosses:]) / sum(modelLosses[-self.numTrailingLosses*2:-self.numTrailingLosses])
-            if not (0.95 < lossPercent < 1): return None
-            if modelLosses[-1] < 0.1: return None
-
-        # Add a new layer to the model.
-        self.addModelLayer(allMetaModels, allModels)
-
-    def addModelLayer(self, allMetaModels, allModels):
-        # For each meta-training model.
-        for modelInd in range(len(allMetaModels) + len(allModels)):
-            modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
-
-            # Train the updated model.
-            modelPipeline.model.addNewLayer()
-
-        self.unifiedLayerData = None
-        # Unify all the model weights.
-        self.unifyAllModelWeights(allMetaModels, allModels)
-
     @staticmethod
     def inferenceTraining(modelPipeline, inputData, numEpochs):
         # Prepare the model for inference training.

@@ -42,6 +42,7 @@ class waveletNeuralHelpers(emotionModelWeights):
         self.encodeHighFrequencyProtocol = encodeHighFrequencyProtocol  # The high-frequency encoding protocol to use.
         self.encodeLowFrequencyProtocol = encodeLowFrequencyProtocol  # The low-frequency encoding protocol to use.
         self.skipConnectionProtocol = skipConnectionProtocol  # The skip connection protocol to use.
+        self.expectedSequenceLength = sequenceLength  # The expected length of the input signals.
         self.numDecompositions = numDecompositions  # Maximum number of decompositions to apply.
         self.activationMethod = activationMethod  # The activation method to use.
         self.learningProtocol = learningProtocol  # The learning protocol to use.

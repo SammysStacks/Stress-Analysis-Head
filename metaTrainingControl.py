@@ -53,15 +53,15 @@ if __name__ == "__main__":
     # Add arguments for the general model
     parser.add_argument('--submodel', type=str, default=modelConstants.signalEncoderModel, help='The component of the model we are training. Options: signalEncoderModel, emotionModel')
     parser.add_argument('--optimizerType', type=str, default='AdamW', help='The optimizerType used during training convergence: Options: RMSprop, Adam, AdamW, SGD, etc.')
-    parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are running the platform on')
-    parser.add_argument('--reversibleLearningProtocol', type=str, default='rFC', help='The learning rate for the optimizer.')
-    parser.add_argument('--irreversibleLearningProtocol', type=str, default='rFC', help='The learning rate for the optimizer.')
-    parser.add_argument('--goldenRatio', type=int, default=8, help='The number of shared layers per specific layer.')
-    parser.add_argument('--numModelLayers', type=int, default=32, help='The number of layers in the model.')
+    parser.add_argument('--reversibleLearningProtocol', type=str, default='rCNN', help='The learning protocol for the model: rCNN, rFC')
+    parser.add_argument('--irreversibleLearningProtocol', type=str, default='FC', help='The learning protocol for the model: CNN, FC')
+    parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are using: cpu, cuda')
+    parser.add_argument('--goldenRatio', type=int, default=16, help='The number of shared layers per specific layer.')
+    parser.add_argument('--numSignalEncoderLayers', type=int, default=32, help='The number of layers in the model.')
 
     # Add arguments for the neural operator.
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
-    parser.add_argument('--waveletType', type=str, default='bior2.2', help='The wavelet type for the wavelet transform: bior3.7, db3, dmey, etc')
+    parser.add_argument('--waveletType', type=str, default='bior3.7', help='The wavelet type for the wavelet transform: bior3.7, db3, dmey, etc')
 
     # Add arguments for the signal encoder prediction
     parser.add_argument('--encodedDimension', type=int, default=512, help='The dimension of the encoded signal.')
@@ -77,7 +77,7 @@ if __name__ == "__main__":
 
     # Compile additional input parameters.
     userInputParams = modelParameters.getNeuralParameters(userInputParams)
-    print("Frequency resolution:", modelConstants.timeWindows[-1]/userInputParams['encodedDimension'])
+    print("Frequency resolution:", modelConstants.timeWindows[-1]/userInputParams['encodedDimension'], "\n")
 
     # --------------------------- Setup Training --------------------------- #
 
@@ -119,9 +119,6 @@ if __name__ == "__main__":
         # Save the model sometimes (only on the main device).
         # if saveFullModel and accelerator.is_local_main_process:
         #     trainingProtocols.saveModelState(epoch, allMetaModels, allModels, submodel, modelName, allDatasetNames, trainingDate)
-
-        # Adjust the model architecture if needed.
-        # trainingProtocols.adjustModelArchitecture(allMetaModels, allModels)
 
         # Finalize the epoch parameters.
         accelerator.wait_for_everyone()  # Wait before continuing.

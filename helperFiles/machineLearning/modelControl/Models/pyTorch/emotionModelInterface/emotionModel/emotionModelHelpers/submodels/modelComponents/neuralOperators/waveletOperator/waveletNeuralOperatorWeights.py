@@ -1,8 +1,6 @@
-# General
 from torch import nn
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
-# Import machine learning files
 from .waveletNeuralHelpers import waveletNeuralHelpers
 
 
@@ -13,16 +11,16 @@ class waveletNeuralOperatorWeights(waveletNeuralHelpers):
         super(waveletNeuralOperatorWeights, self).__init__(sequenceLength, numInputSignals, numOutputSignals, numDecompositions, waveletType, mode, addBiasTerm, activationMethod,
                                                            skipConnectionProtocol, encodeLowFrequencyProtocol, encodeHighFrequencyProtocol, learningProtocol)
         # Initialize wavelet neural operator parameters.
+        self.activationFunction = activationFunctions.getActivationMethod(activationMethod=activationMethod)  # Activation function for the Fourier neural operator.
         if self.addBiasTerm: self.operatorBiases = self.neuralBiasParameters(numChannels=numOutputSignals)  # Bias terms for the neural operator.
         self.highFrequenciesWeights = self.getHighFrequencyWeights()  # Learnable parameters for the high-frequency signal.
-        self.lowFrequencyWeights = self.getLowFrequencyWeights()  # Learnable parameters for the low-frequency signal.
-        self.activationFunction = activationFunctions.getActivationMethod(activationMethod=activationMethod)  # Activation function for the Fourier neural operator.
         self.skipConnectionModel = self.getSkipConnectionProtocol(skipConnectionProtocol)  # Skip connection model for the Fourier neural operator.
+        self.lowFrequencyWeights = self.getLowFrequencyWeights()  # Learnable parameters for the low-frequency signal.
 
     def getSkipConnectionProtocol(self, skipConnectionProtocol):
         # Decide on the skip connection protocol.
         if skipConnectionProtocol == 'none':
-            skipConnectionModel = self.zeros
+            skipConnectionModel = None
         elif skipConnectionProtocol == 'identity':
             skipConnectionModel = nn.Identity()
         elif skipConnectionProtocol == 'CNN':
@@ -54,10 +52,7 @@ class waveletNeuralOperatorWeights(waveletNeuralHelpers):
         return lowFrequencyWeights
 
     def getNeuralWeightParameters(self, inChannel, initialFrequencyDim):
-        if self.learningProtocol == 'rFC': return self.neuralWeightRFC(numSignals=inChannel, sequenceLength=initialFrequencyDim)
-        elif self.learningProtocol == 'rCNN': return self.reversibleNeuralWeightRCNN(numSignals=inChannel, sequenceLength=initialFrequencyDim)
+        if self.learningProtocol == 'rFC': return self.neuralWeightRFC(numSignals=inChannel, sequenceLength=initialFrequencyDim, activationMethod=self.activationMethod)
+        elif self.learningProtocol == 'rCNN': return self.reversibleNeuralWeightRCNN(numSignals=inChannel, sequenceLength=initialFrequencyDim, activationMethod=self.activationMethod)
         elif self.learningProtocol == 'FC': return self.neuralWeightFC(sequenceLength=initialFrequencyDim)
         else: raise ValueError(f"The learning protocol ({self.learningProtocol}) must be in ['rFC', 'FCC', 'rCNN', 'CNN'].")
-
-    @staticmethod
-    def zeros(x): return 0

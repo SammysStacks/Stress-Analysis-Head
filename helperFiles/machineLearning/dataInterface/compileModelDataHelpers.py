@@ -53,7 +53,7 @@ class compileModelDataHelpers:
         self.minSNR = self.modelParameters.getExclusionSNRCriteria(submodel)
 
         # Embedded information for each model.
-        self.signalEncoderModelInfo = f"signalEncoder on {userInputParams['deviceListed']} with {userInputParams['waveletType'].replace('.', '')} at {userInputParams['optimizerType']} at encodedDimension {userInputParams['encodedDimension']}"
+        self.signalEncoderModelInfo = f"signalEncoder on {userInputParams['deviceListed']} with {userInputParams['optimizerType']} at encodedDimension {userInputParams['encodedDimension']}"
         self.emotionPredictionModelInfo = f"emotionPrediction on {userInputParams['deviceListed']} with {userInputParams['optimizerType']}"
 
     # ---------------------- Model Specific Parameters --------------------- #

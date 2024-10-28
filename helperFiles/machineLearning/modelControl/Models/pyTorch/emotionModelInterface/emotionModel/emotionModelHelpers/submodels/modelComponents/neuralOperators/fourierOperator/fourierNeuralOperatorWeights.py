@@ -1,105 +1,103 @@
-# General
 from torch import nn
+import torch
+import math
 
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.signalEncoderComponents.emotionModelWeights import emotionModelWeights
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
-# Import machine learning files
-from .waveletNeuralHelpers import waveletNeuralHelpers
 
 
-class waveletNeuralOperatorWeights(waveletNeuralHelpers):
+class fourierNeuralOperatorWeights(emotionModelWeights):
 
-    def __init__(self, numInputSignals, numOutputSignals, sequenceBounds, numDecompositions=2, waveletType='db3', mode='zero', addBiasTerm=False, smoothingKernelSize=0, activationMethod="none",
-                 encodeLowFrequencyProtocol='lowFreq', encodeHighFrequencyProtocol='highFreq', independentChannels=False, skipConnectionProtocol='CNN'):
-        super(waveletNeuralOperatorWeights, self).__init__(numInputSignals, numOutputSignals, sequenceBounds, numDecompositions, waveletType, mode, addBiasTerm, smoothingKernelSize, activationMethod,
-                                                           encodeLowFrequencyProtocol, encodeHighFrequencyProtocol, independentChannels, skipConnectionProtocol)
+    def __init__(self, sequenceLength, numInputSignals, numOutputSignals, addBiasTerm, activationMethod, skipConnectionProtocol, encodeRealFrequencies, encodeImaginaryFrequencies, learningProtocol):
+        super(fourierNeuralOperatorWeights, self).__init__()
+        # Fourier neural operator parameters.
+        self.encodeImaginaryFrequencies = encodeImaginaryFrequencies  # Whether to encode the imaginary frequencies.
+        self.skipConnectionProtocol = skipConnectionProtocol  # The skip connection protocol to use.
+        self.encodeRealFrequencies = encodeRealFrequencies  # Whether to encode the real frequencies.
+        self.expectedSequenceLength = sequenceLength  # The expected sequence length.
+        self.activationMethod = activationMethod  # The activation method to use.
+        self.learningProtocol = learningProtocol  # The learning protocol to use.
+        self.numOutputSignals = numOutputSignals  # The number of output signals.
+        self.numInputSignals = numInputSignals  # The number of input signals.
+        self.addBiasTerm = addBiasTerm  # Whether to add bias terms to the output.
+
+        # Set the sequence length to the next power of 2.
+        self.sequenceLength = 2 ** int(torch.tensor(sequenceLength).log2().ceil())  # The length of the input signals.
+        self.fourierDimension = self.sequenceLength // 2 + 1  # Number of Fourier modes (frequencies) to use.
+        self.sequenceTimeWindow = None  # The time window for the sequence: Not yet implemented.
+
         # Initialize wavelet neural operator parameters.
-        if self.smoothingKernelSize: self.smoothingKernel = self.getSmoothingKernel(kernelSize=self.smoothingKernelSize)  # Smoothing kernel for the Fourier neural operator.
-        if self.addBiasTerm: self.operatorBiases = self.neuralBiasParameters(numChannels=numOutputSignals)  # Bias terms for the Fourier neural operator.
-        self.highFrequenciesWeights, self.fullHighFrequencyWeights = self.getHighFrequencyWeights()  # Learnable parameters for the high-frequency signal.
-        self.lowFrequencyWeights, self.fullLowFrequencyWeights = self.getLowFrequencyWeights()  # Learnable parameters for the low-frequency signal.
+        if self.encodeImaginaryFrequencies: self.imaginaryFourierWeights = self.getNeuralWeightParameters(numInputSignals, self.fourierDimension)  # Learnable parameters for the low-frequency signal.
+        if self.encodeRealFrequencies: self.realFourierWeights = self.getNeuralWeightParameters(numInputSignals, self.fourierDimension)  # Learnable parameters for the high-frequency signal.
         self.activationFunction = activationFunctions.getActivationMethod(activationMethod=activationMethod)  # Activation function for the Fourier neural operator.
+        if self.addBiasTerm: self.operatorBiases = self.neuralBiasParameters(numChannels=numOutputSignals)  # Bias terms for the neural operator.
         self.skipConnectionModel = self.getSkipConnectionProtocol(skipConnectionProtocol)  # Skip connection model for the Fourier neural operator.
+
+        # Assert that the parameters are valid.
+        self.assertValidParams()
+
+    def assertValidParams(self):
+        # Assert that the frequency protocol is valid.
+        assert self.learningProtocol in ['rFC', 'FCC', 'rCNN', 'CNN', 'FC'], "Invalid learning protocol. Must be in ['FC', 'FCC', 'rCNN']."
+        assert self.numInputSignals == self.numOutputSignals, "The number of input signals must equal the output signals for now."
 
     def getSkipConnectionProtocol(self, skipConnectionProtocol):
         # Decide on the skip connection protocol.
         if skipConnectionProtocol == 'none':
-            skipConnectionModel = self.zero
+            skipConnectionModel = None
         elif skipConnectionProtocol == 'identity':
             skipConnectionModel = nn.Identity()
-        elif skipConnectionProtocol == 'singleCNN':
-            skipConnectionModel = self.skipConnectionEncoding(inChannel=self.numInputSignals, outChannel=self.numOutputSignals)
-        elif skipConnectionProtocol == 'independentCNN':
-            skipConnectionModel = self.independentSkipConnectionEncoding(inChannel=self.numInputSignals, outChannel=self.numOutputSignals)
-        else:
-            raise ValueError("The skip connection protocol must be in ['none', 'identity', 'CNN'].")
+        elif skipConnectionProtocol == 'CNN':
+            skipConnectionModel = self.skipConnectionCNN(numSignals=self.numInputSignals)
+        elif skipConnectionProtocol == 'FC':
+            skipConnectionModel = self.skipConnectionFC(sequenceLength=self.sequenceLength)
+        else: raise ValueError("The skip connection protocol must be in ['none', 'identity', 'CNN'].")
 
         return skipConnectionModel
 
-    def getHighFrequencyWeights(self):
-        # Initialize the high-frequency weights.
-        fullHighFrequencyWeights = None
-        highFrequenciesWeights = None
+    def getNeuralWeightParameters(self, inChannel, fourierDimension):
+        if self.learningProtocol == 'rFC': return self.neuralWeightRFC(numSignals=inChannel, sequenceLength=fourierDimension, activationMethod=self.activationMethod)
+        elif self.learningProtocol == 'rCNN': return self.reversibleNeuralWeightRCNN(numSignals=inChannel, sequenceLength=fourierDimension, activationMethod=self.activationMethod)
+        elif self.learningProtocol == 'FC': return self.neuralWeightFC(sequenceLength=fourierDimension)
+        else: raise ValueError(f"The learning protocol ({self.learningProtocol}) must be in ['rFC', 'FCC', 'rCNN', 'CNN'].")
 
-        if self.encodeHighFrequencies:
-            highFrequenciesWeights = nn.ParameterList()
-            for highFrequenciesInd in range(len(self.highFrequenciesShapes)):
-                highFrequencyParam = self.zero
-                if not self.removeHighFrequencies:
-                    highFrequencyParam = self.getNeuralWeightParameters(inChannel=self.numInputSignals, outChannel=self.numOutputSignals, initialFrequencyDim=self.highFrequenciesShapes[highFrequenciesInd],
-                                                                        finalFrequencyDim=self.highFrequenciesShapes[highFrequenciesInd], lowFreqSignal=False)
-                # Store the high-frequency weights.
-                highFrequenciesWeights.append(highFrequencyParam)
+    def forwardFFT(self, inputData):
+        # Perform the forward FFT and extract the magnitude and phase.
+        fourierData = torch.fft.rfft(inputData, n=self.sequenceLength, dim=-1, norm='ortho')
+        imaginaryFourierData = fourierData.imag
+        realFourierData = fourierData.real
 
-        if self.encodeHighFrequencyFull:
-            fullHighFrequencyWeights = nn.ParameterList()
-            for highFrequenciesInd in range(len(self.highFrequenciesShapes)):
-                fullHighFrequencyWeights.append(self.getNeuralWeightParameters(inChannel=self.numOutputSignals, outChannel=self.numOutputSignals, initialFrequencyDim=self.lowFrequencyShape + self.highFrequenciesShapes[highFrequenciesInd],
-                                                                               finalFrequencyDim=self.highFrequenciesShapes[highFrequenciesInd], lowFreqSignal=False))
+        return realFourierData, imaginaryFourierData
 
-        return highFrequenciesWeights, fullHighFrequencyWeights
+    def backwardFFT(self, realFourierData, imaginaryFourierData, resampledTimes=None):
+        # Reconstruct the fourier data from the real and imaginary components.
+        fourierData = realFourierData + 1j * imaginaryFourierData
+        # fourierData: batchSize, numSignals, fourierDimension
 
-    def getLowFrequencyWeights(self):
-        # Initialize the low-frequency weights.
-        fullLowFrequencyWeights = None
-        lowFrequencyWeights = None
+        # Reconstruct the data based on the physiological times.
+        if resampledTimes is None: return torch.fft.irfft(fourierData, n=self.sequenceLength, dim=-1, norm='ortho')
+        print("Resampling the data: Review the code as it will not be perfect interpolation.")
 
-        if self.encodeLowFrequency:
-            lowFrequencyWeights = self.zero
-            if not self.removeLowFrequency:
-                lowFrequencyWeights = self.getNeuralWeightParameters(inChannel=self.numInputSignals, outChannel=self.numOutputSignals, initialFrequencyDim=self.lowFrequencyShape, finalFrequencyDim=self.lowFrequencyShape, lowFreqSignal=True)
+        # Prepare the information for resampling.
+        batchSize, numSignals, maxSequenceLength = resampledTimes.size()
+        imagAngularFrequencies = self.getAngularFrequencies().to(realFourierData.device)
+        fullFourierData = fourierData.view(batchSize, numSignals, 1, self.fourierDimension)
+        # angularFrequencies: 1, 1, 1, fourierDimension
 
-        if self.encodeLowFrequencyFull:
-            fullLowFrequencyWeights = self.getNeuralWeightParameters(inChannel=self.numOutputSignals, outChannel=self.numOutputSignals, initialFrequencyDim=self.lowFrequencyShape + sum(self.highFrequenciesShapes),
-                                                                     finalFrequencyDim=self.lowFrequencyShape, lowFreqSignal=True)
+        # Reconstruct the data based on the new sampled times.
+        basisFunctions = torch.exp(imagAngularFrequencies * resampledTimes.flip(dims=[-1]).view(batchSize, numSignals, maxSequenceLength, 1))
+        reconstructedData = torch.sum(fullFourierData * basisFunctions, dim=-1) * 2 / math.sqrt(self.sequenceLength)
+        # basisFunctions: batchSize, numSignals, maxSequenceLength, fourierDimension
+        # fullFourierData: batchSize, numSignals, 1, fourierDimension
+        # reconstructedData: batchSize, numSignals, maxSequenceLength
 
-        return lowFrequencyWeights, fullLowFrequencyWeights
+        return reconstructedData.real
 
-    def getNeuralWeightParameters(self, inChannel, outChannel, initialFrequencyDim, finalFrequencyDim, lowFreqSignal=False):
-        if 'CNN' in self.learningProtocol:
-            if self.independentChannels:
-                # Initialize the frequency weights to learn how to change.
-                assert inChannel == outChannel, "The number of input and output signals must be equal."
+    # SPECIFIC CASE. USE WITH CAUTION.
+    def getAngularFrequencies(self):
+        # Initialize the frequency indices for the fourier data.
+        imagAngularFrequencies = 2j * torch.pi * torch.fft.rfftfreq(self.sequenceLength, d=self.sequenceTimeWindow / (self.sequenceLength - 1), dtype=torch.float64)
+        print("Calculated frequencies are based on the sequence being evenly spaced from 0 -> sequenceTimeWindow")
+        # angularFrequencies: fourierDimension
 
-                # Initialize the low-frequency weights to learn how to change.
-                return self.independentNeuralWeightCNN(inChannel=inChannel, outChannel=outChannel)
-
-            if lowFreqSignal:
-                # Initialize the low-frequency weights to learn how to change.
-                return self.neuralWeightLowCNN(inChannel=inChannel, outChannel=outChannel)
-            else:
-                # Initialize the high-frequency weights to learn how to change.
-                return self.neuralWeightHighCNN(inChannel=inChannel, outChannel=outChannel)
-
-        else:
-            if self.independentChannels:
-                # Initialize the high-frequency weights to learn how to change.
-                assert inChannel == outChannel, "The number of input and output signals must be equal."
-                return self.neuralWeightIndependentModel(numInputFeatures=initialFrequencyDim, numOutputFeatures=finalFrequencyDim)
-
-            if initialFrequencyDim == finalFrequencyDim:
-                # Initialize the high-frequency weights to learn how to change the channels.
-                return self.neuralWeightParameters(inChannel=inChannel, outChannel=outChannel, finalFrequencyDim=finalFrequencyDim)
-            else:
-                # Initialize the high-frequency weights to learn how to change the channels.
-                assert inChannel == outChannel, "The number of input and output signals must be equal."
-                return self.neuralCombinationWeightParameters(inChannel=outChannel, initialFrequencyDim=initialFrequencyDim, finalFrequencyDim=finalFrequencyDim)
+        return imagAngularFrequencies

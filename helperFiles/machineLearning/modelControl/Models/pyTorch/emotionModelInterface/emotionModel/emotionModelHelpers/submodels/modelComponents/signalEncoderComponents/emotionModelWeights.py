@@ -44,7 +44,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def scaleGradients(grad):
-        return grad * 1
+        return grad * 10
 
     @staticmethod
     def smoothingFilter(data, kernel=(), kernelSize=None):
@@ -68,12 +68,14 @@ class emotionModelWeights(convolutionalHelpers):
     # ------------------- Wavelet Neural Operator Architectures ------------------- #
 
     @staticmethod
-    def neuralWeightRFC(numSignals, sequenceLength):
-        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=55, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
+    def neuralWeightRFC(numSignals, sequenceLength, activationMethod):
+        activationMethod, switchActivationDirection = activationMethod.split('_')
+        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength, numLayers=1, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection == "True")
 
     @staticmethod
-    def reversibleNeuralWeightRCNN(numSignals, sequenceLength):
-        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=55, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
+    def reversibleNeuralWeightRCNN(numSignals, sequenceLength, activationMethod):
+        activationMethod, switchActivationDirection = activationMethod.split('_')
+        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=25, numLayers=1, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection == "True")
 
     @staticmethod
     def neuralWeightFC(sequenceLength):
@@ -86,12 +88,12 @@ class emotionModelWeights(convolutionalHelpers):
     # ------------------- Reversible Signal Encoding Architectures ------------------- #
 
     @staticmethod
-    def postProcessingLayerRCNN(numSignals, sequenceLength):
-        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=55, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
+    def postProcessingLayerRCNN(numSignals, sequenceLength, activationMethod, switchActivationDirection):
+        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=25, numLayers=1, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection)
 
     @staticmethod
-    def postProcessingLayerRFC(numSignals, sequenceLength):
-        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=55, numLayers=1, activationMethod=emotionModelWeights.getActivationType())
+    def postProcessingLayerRFC(numSignals, sequenceLength, activationMethod, switchActivationDirection):
+        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength, numLayers=1, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection)
 
     # ------------------- Emotion/Activity Encoding Architectures ------------------- #
 
@@ -119,7 +121,7 @@ class emotionModelWeights(convolutionalHelpers):
     # ------------------- Universal Architectures ------------------- #
 
     @staticmethod
-    def getActivationType(): return 'nonLinearAddition'
+    def getActivationType(): return 'nonLinearMultiplication'
 
 
 if __name__ == "__main__":

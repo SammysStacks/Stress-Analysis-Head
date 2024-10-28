@@ -19,8 +19,9 @@ def getActivationMethod(activationMethod):
         inversionPoint = float(activationMethod.split('_')[1]) if '_' in activationMethod else 2
         infiniteBound = float(activationMethod.split('_')[2]) if '_' in activationMethod else 1
         activationFunction = reversibleLinearSoftSign(inversionPoint=inversionPoint, infiniteBound=infiniteBound)
-    elif activationMethod.startswith('nonLinearAddition'):
-        activationFunction = nonLinearAddition()
+    elif activationMethod.startswith('nonLinearMultiplication'):
+        invertedActivation = activationMethod.split('_')[1] == "True"
+        activationFunction = nonLinearMultiplication(invertedActivation=invertedActivation)
     elif activationMethod == 'PReLU':
         activationFunction = nn.PReLU()
     elif activationMethod == 'selu':
@@ -187,40 +188,48 @@ class signWrap(reversibleInterface):
         return (self.period/torch.pi) * (x/self.period).asin()
 
 
-class nonLinearAddition(reversibleInterface):
-    def __init__(self):
-        super(nonLinearAddition, self).__init__()
+class nonLinearMultiplication(reversibleInterface):
+    def __init__(self, invertedActivation):
+        super(nonLinearMultiplication, self).__init__()
+        self.invertedActivation = invertedActivation  # Whether the non-linearity term is inverted
         self.sequenceLength = None  # The length of the input signal
+        self.amplitude = 0.5
 
         # Create a learnable parameter, initialized to the given initial value
-        self.learnablePhaseShift = nn.Parameter(torch.as_tensor(torch.pi))
-        self.learnableFrequency = nn.Parameter(torch.as_tensor(1).exp())
-        self.learnableAmplitude = nn.Parameter(torch.as_tensor(0.1))
+        self.learnablePhaseShift = nn.Parameter(torch.as_tensor(torch.pi))  # The phase shift of the non-linearity term.
+        self.learnableFrequency = nn.Parameter(torch.as_tensor(0.5))  # The frequency of the non-linearity term.
 
-    def forward(self, x, addingFlag=True):
+        # Register hooks for each parameter in the list
+        self.learnablePhaseShift.register_hook(self.scaleGradients)
+        self.learnableFrequency.register_hook(self.scaleGradients)
+
+    @staticmethod
+    def scaleGradients(grad):
+        return grad * 0.1
+
+    def forward(self, x):
         # Check if the non-linearity term has been calculated.
         if self.sequenceLength is None: self.sequenceLength = x.size(-1)
         assert x.size(-1) == self.sequenceLength, "The sequence length of the input data must match the sequence length of the non-linearity term."
-        coefficient = 1 if addingFlag else -1
 
         # Get the non-linearity term.
-        nonLinearityTerm = self.getNonLinearity(device=x.device)*coefficient
+        nonLinearityTerm = self.getNonLinearity(device=x.device)
 
-        if self.forwardDirection: return self.forwardPass(x, nonLinearityTerm)
-        else: return self.inversePass(x, nonLinearityTerm)
+        if self.forwardDirection != self.invertedActivation: return self.inversePass(x, nonLinearityTerm)
+        else: return self.forwardPass(x, nonLinearityTerm)
 
     @staticmethod
     def forwardPass(x, nonLinearityTerm):
-        return x + nonLinearityTerm
+        return x * nonLinearityTerm
 
     @staticmethod
     def inversePass(y, nonLinearityTerm):
-        return y - nonLinearityTerm
+        return y / nonLinearityTerm
 
     def getNonLinearity(self, device):
         positions = torch.arange(start=0, end=self.sequenceLength, step=1, dtype=torch.float32, device=device)
 
-        return self.learnableAmplitude*(positions*2*torch.pi*self.learnableFrequency + self.learnablePhaseShift).sin()
+        return self.amplitude*(positions*2*torch.pi*self.learnableFrequency + self.learnablePhaseShift).sin().pow(2) + 1 - self.amplitude/2
 
 
 if __name__ == "__main__":
@@ -231,5 +240,5 @@ if __name__ == "__main__":
     data = 2 * data - 1
 
     # Perform the forward and inverse pass.
-    activationClass = nonLinearAddition()
-    _forwardData, _reconstructedData = activationClass.checkReconstruction(data, atol=1e-6, numLayers=100)
+    activationClass = nonLinearMultiplication(invertedActivation=False)
+    _forwardData, _reconstructedData = activationClass.checkReconstruction(data, atol=1e-6, numLayers=10)

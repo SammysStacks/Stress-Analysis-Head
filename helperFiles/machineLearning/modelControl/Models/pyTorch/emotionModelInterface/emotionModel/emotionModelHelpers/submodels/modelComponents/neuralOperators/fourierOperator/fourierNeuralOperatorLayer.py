@@ -1,87 +1,126 @@
 import torch
 
-# Import machine learning files
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.generalMethods.complexHelperMethods import complexHelperMethods
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.signalEncoderHelpers.customModules.fourierNeuralOperatorWeights import fourierNeuralOperatorWeights
-
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.neuralOperators.fourierOperator.fourierNeuralOperatorWeights import fourierNeuralOperatorWeights
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
 
 
 class fourierNeuralOperatorLayer(fourierNeuralOperatorWeights):
 
-    def __init__(self, numInputChannels, numOutputChannels, maxSequenceLength, maxFreqNodes=None, applyFourierConvolution=True):
-        super(fourierNeuralOperatorLayer, self).__init__()
-        # Fourier neural operator parameters.
-        self.applyFourierConvolution = applyFourierConvolution  # Whether to apply an extra convolution and FNN in the fourier space.
-        self.maxSequenceLength = maxSequenceLength  # The maximum signal length.
-        self.numOutputChannels = numOutputChannels  # Number of channels we want in the end.
-        self.numInputChannels = numInputChannels  # Number of channels in the input data.
-        self.maxFreqNodes = maxFreqNodes  # Maximum number of Fourier nodes to use.
+    def __init__(self, sequenceLength, numInputSignals, numOutputSignals, addBiasTerm, activationMethod, skipConnectionProtocol, encodeRealFrequencies, encodeImaginaryFrequencies, learningProtocol='rFC', extraOperators=()):
+        super(fourierNeuralOperatorLayer, self).__init__(sequenceLength, numInputSignals, numOutputSignals, addBiasTerm, activationMethod, skipConnectionProtocol, encodeRealFrequencies, encodeImaginaryFrequencies, learningProtocol)
+        self.extraOperators = extraOperators  # Extra operators to apply to the Fourier data.
 
-        # Adjust the number of Fourier modes.
-        self.nFreqModes = self.maxSequenceLength // 2 + 1  # Number of Fourier modes (frequencies) to use.
-        if maxFreqNodes is not None: self.nFreqModes = min(self.nFreqModes, maxFreqNodes)
+    def forward(self, inputData, realFrequencyTerms=None, imaginaryFrequencyTerms=None):
+        # Apply the activation function.
+        if reversibleInterface.forwardDirection: inputData = self.activationFunction(inputData)
+        # neuralOperatorOutput dimension: batchSize, numOutputChannels, signalDimension
 
-
-
-        # Initialize Fourier neural operator parameters.
-        self.fourierWeights = self.fourierWeightParameters(inChannel=numInputChannels, outChannel=numOutputChannels, nFreqModes=self.nFreqModes + 1)
-        self.skipConnectionModel = self.skipConnectionEncoding(inChannel=numInputChannels, outChannel=numOutputChannels)
-        self.fourierBiases = self.fourierBiasParameters(numChannels=numOutputChannels)
-
-        if applyFourierConvolution:
-            # Initialize the convolutional parameters.
-            self.convolveFourierSpace = self.fourierConvolution(inChannel=numOutputChannels)
-
-        # Initialize activation method.
-        self.activationFunction = activationFunctions.getActivationMethod(activationMethod='boundedExp_0_2')
-
-        # Import helper classes.
-        self.complexHelperMethods = complexHelperMethods
-
-    def forward(self, inputData):
         # Apply the Fourier neural operator and the skip connection.
-        fourierOperatorOutput = self.fourierNeuralOperator(inputData)
-        fourierLayerData = fourierOperatorOutput + self.skipConnectionModel(inputData)
+        neuralOperatorOutput = self.fourierNeuralOperator(inputData, realFrequencyTerms, imaginaryFrequencyTerms)
+        if self.skipConnectionModel is not None: neuralOperatorOutput = neuralOperatorOutput + self.skipConnectionModel(inputData)
 
         # Apply the activation function.
-        fourierLayerData = self.activationFunction(fourierLayerData)
-        # fourierLayerData dimension: batchSize, numOutputChannels, signalDimension
+        if not reversibleInterface.forwardDirection: neuralOperatorOutput = self.activationFunction(neuralOperatorOutput)
+        # neuralOperatorOutput dimension: batchSize, numOutputChannels, signalDimension
 
-        return fourierLayerData
+        return neuralOperatorOutput
 
-    def fourierNeuralOperator(self, inputData):
-        # Extract the input data dimensions.
-        batchSize, numSignals, sequenceLength = inputData.size()
+    def waveletInterface(self, lowFrequency, highFrequencies):
+        # Assert that the dimensions are correct.
+        assert self.expectedSequenceLength == lowFrequency.size(-1), f"The expected sequence length must equal the wavelet length: {self.expectedSequenceLength}, {lowFrequency.size()}"
+        assert self.numInputSignals == self.numOutputSignals, f"The number of input signals must equal the output signals for now: {self.numInputSignals}, {self.numOutputSignals}"
+        assert len(highFrequencies) == 1, f"The high frequency terms must have only one decomposition: {len(highFrequencies)} {highFrequencies}"
+        assert self.numInputSignals == 2*lowFrequency.size(1), f"The number of input signals must equal twice the incoming signals: {self.numInputSignals}, {lowFrequency.size(1)}"
+        initialNumSignals = lowFrequency.size(1)
+
+        # Combine the real and imaginary Fourier data.
+        frequencyCoeffs = torch.cat(tensors=(lowFrequency, highFrequencies[0]), dim=1)
+        # frequencyCoeffs dimension: batchSize, 2*numInputSignals, waveletDimension
+
+        if not reversibleInterface.forwardDirection:
+            # Apply the neural operator and the activation method.
+            frequencyCoeffs = self.fourierNeuralOperator(frequencyCoeffs, realFrequencyTerms=None, imaginaryFrequencyTerms=None)
+            frequencyCoeffs = self.activationFunction(frequencyCoeffs)  # Apply the activation function.
+            # frequencyCoeffs dimension: batchSize, 2*numOutputSignals, waveletDimension
+        else:
+            # Apply the neural operator and the activation method.
+            frequencyCoeffs = self.activationFunction(frequencyCoeffs)  # Apply the activation function.
+            frequencyCoeffs = self.fourierNeuralOperator(frequencyCoeffs, realFrequencyTerms=None, imaginaryFrequencyTerms=None)
+            # frequencyCoeffs dimension: batchSize, 2*numOutputSignals, waveletDimension
+
+        # Split the real and imaginary Fourier data.
+        lowFrequency, highFrequencies = frequencyCoeffs[:, 0:initialNumSignals], frequencyCoeffs[:, initialNumSignals:]
+        assert lowFrequency.size() == highFrequencies.size(), f"The low and high frequency terms must have the same dimensions: {lowFrequency.size()}, {highFrequencies.size()}"
+
+        return lowFrequency, [highFrequencies]
+
+    def fourierNeuralOperator(self, inputData, realFrequencyTerms=None, imaginaryFrequencyTerms=None):
+        # Extract the input data parameters.
+        batchSize, numInputSignals, sequenceLength = inputData.size()
+        left_pad = (self.sequenceLength - sequenceLength) // 2
+        right_pad = self.sequenceLength - sequenceLength - left_pad
+
+        # Apply padding to the input data
+        inputData = torch.nn.functional.pad(inputData, pad=(left_pad, right_pad), mode='constant', value=0)
+        # inputData dimension: batchSize, numInputSignals, paddedSequenceLength
 
         # Project the data into the Fourier domain.
-        fourierData = torch.fft.rfft(inputData, n=self.maxSequenceLength, dim=-1, norm='ortho')
-        fourierData = fourierData[:, :, 0:self.nFreqModes]  # Extract the relevant Fourier modes.
-        # fourierData dimension: batchSize, numInputChannels, nFreqModes
+        realFourierData, imaginaryFourierData = self.forwardFFT(inputData)
+        # imaginaryFourierData: batchSize, numInputSignals, fourierDimension
+        # realFourierData: batchSize, numInputSignals, fourierDimension
 
-        # Inject information about the sequence length.
-        sequenceInformation = torch.ones((batchSize, self.numInputChannels, 1), dtype=torch.cfloat, device=inputData.mainDevice) * sequenceLength / self.maxSequenceLength
-        fourierData = torch.cat(tensors=(fourierData, sequenceInformation), dim=-1)
-        # fourierData dimension: batchSize, numInputChannels, nFreqModes + 1
+        # Apply the extra operators.
+        if not reversibleInterface.forwardDirection: realFourierData, imaginaryFourierData = self.applyExtraOperators(realFourierData, imaginaryFourierData)
+        # imaginaryFourierData: batchSize, numInputSignals, fourierDimension
+        # realFourierData: batchSize, numInputSignals, fourierDimension
 
         # Multiply relevant Fourier modes (Sampling low-frequency spectrum).
-        fourierTransformData = torch.einsum('oin,bin->bon', self.fourierWeights, fourierData)[:, :, 0:self.nFreqModes]  # Self-attention to all signals
-        fourierTransformData = self.complexHelperMethods.applyComplexTransformation(fourierTransformData, self.activationFunction)  # Apply an activation function.
-        # 'oin,bin->bon' = fourierWeights.size(), fourierData.size() -> fourierTransformData.size()
-        # b = batchSize, i = numInputChannels, o = numInputChannels, n = nFreqModes
-        # fourierTransformData dimension: batchSize, numOutputChannels, nFreqModes
+        if self.encodeImaginaryFrequencies: imaginaryFourierData = self.applyEncoding(equationString='oin,bin->bon', frequencies=imaginaryFourierData, weights=self.imaginaryFourierWeights, frequencyTerms=imaginaryFrequencyTerms)
+        if self.encodeRealFrequencies: realFourierData = self.applyEncoding(equationString='oin,bin->bon', frequencies=realFourierData, weights=self.realFourierWeights, frequencyTerms=realFrequencyTerms)
+        # b = batchSize, i = numInputChannels, o = numInputChannels, n = fourierDimension
+        # imaginaryFourierData: batchSize, numOutputChannels, fourierDimension
+        # realFourierData: batchSize, numOutputChannels, fourierDimension
 
-        if self.applyFourierConvolution:
-            # Convolve the fourier space to ensure spatial significance of the frequency bins.
-            fourierTransformData = self.complexHelperMethods.applyComplexTransformation(fourierTransformData, self.convolveFourierSpace)  # Treat the fourier space as a time series wave.
-            # fourierTransformData dimension: batchSize, numOutputChannels, nFreqModes
+        # Apply the extra operators.
+        if reversibleInterface.forwardDirection: realFourierData, imaginaryFourierData = self.applyExtraOperators(realFourierData, imaginaryFourierData)
+        # imaginaryFourierData: batchSize, numOutputChannels, fourierDimension
+        # realFourierData: batchSize, numOutputChannels, fourierDimension
 
         # Return to physical space
-        outputData = torch.fft.irfft(fourierTransformData, n=self.maxSequenceLength, dim=-1, norm='ortho')[:, :, 0:sequenceLength]
-        # outputData dimension: batchSize, numOutputChannels, signalDimension
+        reconstructedData = self.backwardFFT(realFourierData, imaginaryFourierData, resampledTimes=None)
+        # reconstructedData dimension: batchSize, numOutputChannels, signalDimension
 
-        # Add the bias terms.
-        outputData = outputData + self.fourierBiases
-        # outputData dimension: batchSize, numOutputChannels, signalDimension
+        # Add a bias term if needed.
+        if self.addBiasTerm: reconstructedData = reconstructedData + self.operatorBiases
+        # reconstructedData dimension: batchSize, numOutputChannels, signalDimension
 
-        return outputData
+        return reconstructedData
+
+    def applyEncoding(self, equationString, frequencies, weights, frequencyTerms=None):
+        # Add in the learned wavelet coefficients.
+        if frequencyTerms is not None: frequencies = frequencies + frequencyTerms
+        # frequencies dimension: batchSize, numLiftedChannels, frequencyDimension
+
+        if weights is not None:
+            if self.learningProtocol in ['rFC', 'rCNN']:
+                frequencies = weights(frequencies)  # Learn a new set of wavelet coefficients to transform the data.
+                # frequencies dimension: batchSize, numOutputSignals, frequencyDimension
+            else:
+                # Learn a new set of wavelet coefficients to transform the data.
+                frequencies = torch.einsum(equationString, weights, frequencies)
+                # frequencies dimension: batchSize, numOutputSignals, frequencyDimension
+
+        return frequencies
+
+    def applyExtraOperators(self, realFourierData, imaginaryFourierData):
+        # Apply the extra operators.
+        for extraOperatorInd in range(len(self.extraOperators)):
+            if reversibleInterface.forwardDirection: extraOperatorInd = len(self.extraOperators) - 1 - extraOperatorInd
+            extraOperator = self.extraOperators[extraOperatorInd]
+
+            # Apply the extra operator.
+            realFourierData, imaginaryFourierData = extraOperator.fourierInterface(realFourierData, imaginaryFourierData)
+            # imaginaryFourierData: batchSize, numOutputChannels, fourierDimension
+            # realFourierData: batchSize, numOutputChannels, fourierDimension
+
+        return realFourierData, imaginaryFourierData
