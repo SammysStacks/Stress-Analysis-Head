@@ -44,7 +44,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def scaleGradients(grad):
-        return grad * 10
+        return grad * 1
 
     @staticmethod
     def smoothingFilter(data, kernel=(), kernelSize=None):
