@@ -29,8 +29,8 @@ if __name__ == "__main__":
 
     # Protocol switches: only the first true variably executes.
     readDataFromExcel = False  # For SINGLE FILE analysis. Analyze Data from Excel File called 'currentFilename' on Sheet Number 'testSheetNum'
-    trainModel = True  # Train Model with ALL Data in 'collectedDataFolder'.
-    streamData = False  # Stream in Data from the Board and Analyze.
+    trainModel = False  # Train Model with ALL Data in 'collectedDataFolder'.
+    streamData = True  # Stream in Data from the Board and Analyze.
 
     # User options during the run: any number can be true.
     useModelPredictions = False or trainModel  # Apply the learning algorithm to decode the signals.
@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
     # General program flags.
     reanalyzeData = False  # Reanalyze training files: don't use saved features
-    reverseOrder = True  # Reverse the order of the data for training.
+    reverseOrder = False  # Reverse the order of the data for training.
 
     # Specify the user parameters.
     userName = "Ruixiao".replace(" ", "")

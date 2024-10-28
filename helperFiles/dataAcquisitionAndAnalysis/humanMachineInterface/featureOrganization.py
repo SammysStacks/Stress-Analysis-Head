@@ -2,6 +2,7 @@ from scipy.interpolate import Akima1DInterpolator
 from bisect import bisect_left, bisect_right
 import collections
 import numpy as np
+import torch
 import scipy
 
 # Import files.
@@ -61,7 +62,6 @@ class featureOrganization(humanMachineInterface):
 
         # Holder parameters.
         self.rawFeatureTimesHolder = None  # A list (in biomarkerFeatureOrder) of lists of raw feature's times; Dim: numFeatureSignals, numPoints
-        self.alignmentDataPointers = None  # A list of pointers indicating the last seen aligned feature index for each analysis
         self.rawFeaturePointers = None  # A list of pointers indicating the last seen raw feature index for each analysis and each channel.
         self.rawFeatureHolder = None  # A list (in biomarkerFeatureOrder) of lists of raw features; Dim: numFeatureSignals, numPoints, numBiomarkerFeatures
 
@@ -80,7 +80,6 @@ class featureOrganization(humanMachineInterface):
         self.rawFeatureHolder = [[] for _ in range(len(self.biomarkerFeatureOrder))]  # A list (in biomarkerFeatureOrder) of lists of raw features; Dim: numFeatureSignals, numPoints, numBiomarkerFeatures
 
         # Feature collection parameters
-        self.alignmentDataPointers = np.zeros(len(self.biomarkerFeatureOrder), dtype=int)  # A list of pointers indicating the last seen aligned feature index for each analysis.
         self.rawFeaturePointers = np.zeros(len(self.biomarkerFeatureOrder), dtype=int)  # A list of pointers indicating the last seen raw feature index for each analysis.
 
     def unifyFeatureTimeWindows(self, featureTimeWindow):
@@ -88,7 +87,6 @@ class featureOrganization(humanMachineInterface):
             featureAnalysis.featureTimeWindow = featureTimeWindow
 
     # --------------------- Organize Incoming Features --------------------- #
-
     def organizeRawFeatures(self):
         # For each unique analysis with features.
         for analysis in self.featureAnalysisList:
@@ -111,6 +109,7 @@ class featureOrganization(humanMachineInterface):
                 assert len(self.rawFeatureHolder[biomarkerInd]) == len(analysis.rawFeatures[featureChannelInd]), \
                     f"Found {len(self.rawFeatureHolder[biomarkerInd])} raw features and {len(analysis.rawFeatures[featureChannelInd])} raw features. These must be the same length."
 
+
     def findCommonTimeRange(self):
         # Set up the parameters.
         rightAlignedTime = np.inf
@@ -132,63 +131,6 @@ class featureOrganization(humanMachineInterface):
             return None, None
 
         return leftAlignedTime, rightAlignedTime
-
-    def alignFeatures(self):
-        # Create a time interval for interpolation.
-        leftAlignedTime, rightAlignedTime = self.findCommonTimeRange()
-        if rightAlignedTime is None: return None
-
-        # Do not re-interpolate all the data.
-        if len(self.alignedFeatureTimes) != 0:
-            leftAlignedTime = self.alignedFeatureTimes[-1] + 1 / self.newSamplingFreq
-
-        # Create the new time interval for interpolation.
-        newInterpolatedTimes = np.arange(leftAlignedTime, rightAlignedTime, 1 / self.newSamplingFreq)
-
-        # Store the new time points.
-        self.alignedFeatureTimes.extend(newInterpolatedTimes.tolist())
-
-        # Calculate the number of new points.
-        numNewAlignedPoints = len(newInterpolatedTimes)
-        newInterpolatedFeatureTimes = self.alignedFeatureTimes[-numNewAlignedPoints - self.interpBufferPoints:]
-        numBufferPoints = len(newInterpolatedFeatureTimes) - numNewAlignedPoints
-
-        # For each unique analysis with features.
-        for analysis in self.featureAnalysisList:
-            for featureChannelInd in range(len(analysis.featureChannelIndices)):
-
-                # Extract the feature information.
-                compiledFeatureData = analysis.compiledFeatures[featureChannelInd]  # Dim: numTimePoints, numBiomarkerFeatures
-                biomarkerInd = analysis.featureChannelIndices[featureChannelInd]  # Dim: 1
-                biomarkerFeatureInds = self.biomarkerFeatureInds[biomarkerInd]  # Dim: numBiomarkerFeatures
-                rawFeatureTimes = analysis.rawFeatureTimes[featureChannelInd]  # Dim: numTimePoints
-
-                # Get the feature information.
-                alignmentDataPointer = max(0, self.alignmentDataPointers[biomarkerInd] - self.interpBufferPoints)
-                compiledFeatures = compiledFeatureData[alignmentDataPointer:]  # Dim: numTimePoints, numBiomarkerFeatures
-                compiledFeatureTimes = rawFeatureTimes[alignmentDataPointer:]  # Dim: numCompiledPoints
-
-                # Interpolate the features.
-                print(f"Length of compiledFeatureTimes: {len(compiledFeatureTimes)}")
-                print(f"length of compiledFeatures: {len(compiledFeatures)}")
-
-                makimaInterpFunc = Akima1DInterpolator(compiledFeatureTimes, compiledFeatures, method='makima', axis=0)
-                alignedFeatures = makimaInterpFunc(newInterpolatedFeatureTimes)
-                # alignedFeatures dim: numTimePoints, numBiomarkerFeatures
-
-                # Store the aligned features.
-                for compiledFeatureInd, featureInd in enumerate(biomarkerFeatureInds):
-                    self.alignedFeatures[featureInd][-numBufferPoints:] = alignedFeatures[0:numBufferPoints, compiledFeatureInd].tolist()
-                    self.alignedFeatures[featureInd].extend(alignedFeatures[numBufferPoints:, compiledFeatureInd].tolist())
-
-                # Update the alignment pointers.
-                while rawFeatureTimes[self.alignmentDataPointers[biomarkerInd]] <= self.alignedFeatureTimes[-1]:
-                    self.alignmentDataPointers[biomarkerInd] += 1
-
-                    # Check if the alignment pointer is at the end of the data.
-                    if self.alignmentDataPointers[biomarkerInd] == len(rawFeatureTimes): break
-                # Do not overshoot the final aligned time.
-                self.alignmentDataPointers[biomarkerInd] -= 1
 
     # ---------------------- Compile Incoming Features --------------------- #
 

@@ -144,7 +144,10 @@ class streamingProtocolHelpers(featureOrganization):
 
         # Organize the new features
         self.organizeRawFeatures()
+        print('self.rawFeatureHolder', self.rawFeatureHolder)
+        exit()
         self.predictLabels()
+        exit()
 
         # Plot the Data
         if self.plotStreamedData: self.plottingClass.displayData()
