@@ -196,14 +196,19 @@ class nonLinearMultiplication(reversibleInterface):
         self.amplitude = 0.1  # The amplitude of the non-linearity term
 
         # Create a learnable parameter, initialized to the given initial value
-        self.learnablePhaseShift = nn.Parameter(torch.as_tensor(torch.pi))  # The phase shift of the non-linearity term.
+        self.learnablePhaseShift = nn.Parameter(torch.as_tensor(torch.pi/4))  # The phase shift of the non-linearity term.
         self.learnableFrequency = nn.Parameter(torch.as_tensor(0.5))  # The frequency of the non-linearity term.
 
         # Register hooks for each parameter in the list
-        self.learnableFrequency.register_hook(self.scaleGradients)
+        self.learnablePhaseShift.register_hook(self.scalePhaseShiftGradients)
+        self.learnableFrequency.register_hook(self.scaleFrequencyGradients)
 
     @staticmethod
-    def scaleGradients(grad):
+    def scalePhaseShiftGradients(grad):
+        return grad * 10
+
+    @staticmethod
+    def scaleFrequencyGradients(grad):
         return grad * 0.1
 
     def forward(self, x):

@@ -4,6 +4,8 @@ from torch import nn
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.modelHelpers.convolutionalHelpers import convolutionalHelpers
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleConvolutionLayer import reversibleConvolutionLayer
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleDualConvolutionLayer import reversibleDualConvolutionLayer
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleDualLinearLayer import reversibleDualLinearLayer
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleLinearLayer import reversibleLinearLayer
 
 
@@ -35,6 +37,9 @@ class emotionModelWeights(convolutionalHelpers):
     def getInitialPhysiologicalProfile(numExperiments, encodedDimension):
         # Initialize the physiological profile.
         physiologicalProfile = torch.randn(numExperiments, encodedDimension, dtype=torch.float64)
+        physiologicalProfile = physiologicalProfile - physiologicalProfile.min(dim=-1, keepdim=True).values
+        physiologicalProfile = physiologicalProfile / physiologicalProfile.max(dim=-1, keepdim=True).values
+        physiologicalProfile = 2*physiologicalProfile - 1
 
         # Initialize the physiological profile as a parameter.
         physiologicalProfile = nn.Parameter(physiologicalProfile)
@@ -44,7 +49,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def scaleGradients(grad):
-        return grad * 10
+        return grad * 100
 
     @staticmethod
     def smoothingFilter(data, kernel=(), kernelSize=None):
@@ -70,16 +75,16 @@ class emotionModelWeights(convolutionalHelpers):
     @staticmethod
     def neuralWeightRFC(numSignals, sequenceLength, activationMethod):
         activationMethod, switchActivationDirection = activationMethod.split('_')
-        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength, numLayers=5, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection == "True")
+        return reversibleDualLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength, numLayers=5, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection == "True")
 
     @staticmethod
     def reversibleNeuralWeightRCNN(numSignals, sequenceLength, activationMethod):
         activationMethod, switchActivationDirection = activationMethod.split('_')
-        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=3, numLayers=5, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection == "True")
+        return reversibleDualConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=3, numLayers=5, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection == "True")
 
     @staticmethod
     def neuralWeightFC(sequenceLength):
-        return emotionModelWeights.linearModel(numOutputFeatures=sequenceLength, activationMethod=emotionModelWeights.getActivationType(), addBias=False)
+        return emotionModelWeights.linearModel(numInputFeatures=sequenceLength, numOutputFeatures=sequenceLength, activationMethod=emotionModelWeights.getActivationType(), addBias=False)
 
     @staticmethod
     def neuralBiasParameters(numChannels=2):

@@ -1,3 +1,5 @@
+import math
+
 import torch
 import torch.fft
 import torch.nn as nn
@@ -12,9 +14,9 @@ class reversibleLinearLayer(reversibleInterface):
         super(reversibleLinearLayer, self).__init__()
         # General parameters.
         self.activationMethod = activationMethod  # The activation method to use.
+        self.bounds = 1 / math.sqrt(kernelSize)  # The bounds for the neural weights.
         self.sequenceLength = sequenceLength  # The length of the input signal.
         self.kernelSize = kernelSize  # The restricted window for the neural weights.
-        self.bounds = 1 / kernelSize  # The bounds for the neural weights.
         self.numLayers = numLayers  # The number of layers in the reversible linear layer.
 
         # The stability term to add to the diagonal.
@@ -31,7 +33,8 @@ class reversibleLinearLayer(reversibleInterface):
         for layerInd in range(self.numLayers):
             # Create the neural weights.
             parameters = nn.Parameter(torch.randn(numSignals, sequenceLength, sequenceLength, dtype=torch.float64))
-            self.linearOperators.append(nn.init.uniform_(parameters, a=-self.bounds, b=self.bounds) * self.restrictedWindowMask)
+            parameters = nn.init.uniform_(parameters, a=-self.bounds, b=self.bounds) * self.restrictedWindowMask
+            self.linearOperators.append(parameters)
 
             # Add the activation function.
             activationMethod = f"{self.activationMethod}_{switchActivationDirection}"
@@ -44,7 +47,7 @@ class reversibleLinearLayer(reversibleInterface):
 
     @staticmethod
     def scaleGradients(grad):
-        return grad * 1
+        return grad * 0.1
 
     def forward(self, inputData):
         # Cast the stability term to the device.
@@ -52,7 +55,7 @@ class reversibleLinearLayer(reversibleInterface):
         self.stabilityTerm = self.stabilityTerm.to(inputData.device)
 
         for layerInd in range(self.numLayers):
-            if self.forwardDirection:
+            if not self.forwardDirection:
                 pseudoLayerInd = self.numLayers - layerInd - 1
                 inputData = self.applyLayer(inputData, pseudoLayerInd)
                 inputData = self.activationFunctions[pseudoLayerInd](inputData)
@@ -69,7 +72,7 @@ class reversibleLinearLayer(reversibleInterface):
 
         # Add a stability term to the diagonal. TODO: Add sparse matrix support.
         if self.kernelSize != self.sequenceLength: neuralWeights = self.restrictedWindowMask * neuralWeights + self.stabilityTerm
-        else: neuralWeights = neuralWeights + self.stabilityTerm
+        else: neuralWeights = neuralWeights + self.stabilityTerm*0.75
 
         # Backward direction: invert the neural weights.
         if self.forwardDirection: neuralWeights = torch.linalg.inv(neuralWeights)
@@ -82,10 +85,10 @@ class reversibleLinearLayer(reversibleInterface):
 
 if __name__ == "__main__":
     # General parameters.
-    _batchSize, _numSignals, _sequenceLength = 2, 3, 512
+    _batchSize, _numSignals, _sequenceLength = 2, 3, 128
     _activationMethod = 'nonLinearMultiplication'
     _kernelSize = _sequenceLength
-    _numLayers = 1
+    _numLayers = 5
 
     # Set up the parameters.
     neuralLayerClass = reversibleLinearLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod, switchActivationDirection=False)

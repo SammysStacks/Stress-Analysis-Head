@@ -29,14 +29,14 @@ class modelParameters:
                 'encodeHighFrequencyProtocol': 'highFreq',  # The protocol for encoding the high frequency signals.
                 'encodeLowFrequencyProtocol': 'lowFreq',  # The protocol for encoding the low frequency signals.
                 'skipConnectionProtocol': 'none',  # The protocol for the skip connections.
-                'extraOperators': ['fourier'],  # The extra operators to apply to the wavelet transform.
+                'extraOperators': [],  # The extra operators to apply to the wavelet transform.
                 'learningProtocol': 'rCNN',  # The learning protocol for the neural operator.
             },
             'fourier': {
                 'encodeImaginaryFrequencies': True,  # The protocol for encoding the high frequency signals.
                 'skipConnectionProtocol': 'none',  # The protocol for the skip connections.
                 'encodeRealFrequencies': True,  # The protocol for encoding the low frequency signals.
-                'extraOperators': ['wavelet'],  # The extra operators to apply to the wavelet transform.
+                'extraOperators': [],  # The extra operators to apply to the wavelet transform.
                 'learningProtocol': 'rFC',  # The learning protocol for the neural operator.
             }
         }

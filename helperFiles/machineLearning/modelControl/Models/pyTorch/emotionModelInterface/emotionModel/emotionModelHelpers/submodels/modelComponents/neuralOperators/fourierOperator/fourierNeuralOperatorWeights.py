@@ -27,11 +27,17 @@ class fourierNeuralOperatorWeights(emotionModelWeights):
         self.sequenceTimeWindow = None  # The time window for the sequence: Not yet implemented.
 
         # Initialize wavelet neural operator parameters.
-        if self.encodeImaginaryFrequencies: self.imaginaryFourierWeights = self.getNeuralWeightParameters(numInputSignals, self.fourierDimension)  # Learnable parameters for the low-frequency signal.
-        if self.encodeRealFrequencies: self.realFourierWeights = self.getNeuralWeightParameters(numInputSignals, self.fourierDimension)  # Learnable parameters for the high-frequency signal.
         self.activationFunction = activationFunctions.getActivationMethod(activationMethod=activationMethod)  # Activation function for the Fourier neural operator.
         if self.addBiasTerm: self.operatorBiases = self.neuralBiasParameters(numChannels=numOutputSignals)  # Bias terms for the neural operator.
         self.skipConnectionModel = self.getSkipConnectionProtocol(skipConnectionProtocol)  # Skip connection model for the Fourier neural operator.
+
+        if self.learningProtocol in ['rFC', 'rCNN']:
+            self.dualFrequencyWeights = self.getNeuralWeightParameters(inChannel=self.numInputSignals, fourierDimension=self.fourierDimension)  # Learnable parameters for the dual-frequency signal.
+            assert self.encodeImaginaryFrequencies, "The dual-frequency signal must encode both the real and imaginary frequencies."
+            assert self.encodeRealFrequencies, "The dual-frequency signal must encode both the real and imaginary frequencies."
+        else:
+            if self.encodeImaginaryFrequencies: self.imaginaryFourierWeights = self.getNeuralWeightParameters(numInputSignals, self.fourierDimension)  # Learnable parameters for the low-frequency signal.
+            if self.encodeRealFrequencies: self.realFourierWeights = self.getNeuralWeightParameters(numInputSignals, self.fourierDimension)  # Learnable parameters for the high-frequency signal.
 
         # Assert that the parameters are valid.
         self.assertValidParams()

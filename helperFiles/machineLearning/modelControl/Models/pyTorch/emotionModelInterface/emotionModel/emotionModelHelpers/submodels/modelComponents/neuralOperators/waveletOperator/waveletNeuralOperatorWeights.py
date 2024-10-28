@@ -11,11 +11,16 @@ class waveletNeuralOperatorWeights(waveletNeuralHelpers):
         super(waveletNeuralOperatorWeights, self).__init__(sequenceLength, numInputSignals, numOutputSignals, numDecompositions, waveletType, mode, addBiasTerm, activationMethod,
                                                            skipConnectionProtocol, encodeLowFrequencyProtocol, encodeHighFrequencyProtocol, learningProtocol)
         # Initialize wavelet neural operator parameters.
-        self.activationFunction = activationFunctions.getActivationMethod(activationMethod=activationMethod)  # Activation function for the Fourier neural operator.
+        self.activationFunction = activationFunctions.getActivationMethod(activationMethod=activationMethod)  # Activation function for the neural operator.
         if self.addBiasTerm: self.operatorBiases = self.neuralBiasParameters(numChannels=numOutputSignals)  # Bias terms for the neural operator.
-        self.highFrequenciesWeights = self.getHighFrequencyWeights()  # Learnable parameters for the high-frequency signal.
-        self.skipConnectionModel = self.getSkipConnectionProtocol(skipConnectionProtocol)  # Skip connection model for the Fourier neural operator.
-        self.lowFrequencyWeights = self.getLowFrequencyWeights()  # Learnable parameters for the low-frequency signal.
+        self.skipConnectionModel = self.getSkipConnectionProtocol(skipConnectionProtocol)  # Skip connection model for the neural operator.
+
+        if self.learningProtocol in ['rFC', 'rCNN']:
+            self.dualFrequencyWeights = self.getNeuralWeightParameters(inChannel=self.numInputSignals, initialFrequencyDim=self.lowFrequencyShape)  # Learnable parameters for the dual-frequency signal.
+            assert numDecompositions == 1, f"The number of decompositions must be 1 for the dual-frequency signal: {numDecompositions}"
+        else:
+            self.highFrequenciesWeights = self.getHighFrequencyWeights()  # Learnable parameters for the high-frequency signal.
+            self.lowFrequencyWeights = self.getLowFrequencyWeights()  # Learnable parameters for the low-frequency signal.
 
     def getSkipConnectionProtocol(self, skipConnectionProtocol):
         # Decide on the skip connection protocol.

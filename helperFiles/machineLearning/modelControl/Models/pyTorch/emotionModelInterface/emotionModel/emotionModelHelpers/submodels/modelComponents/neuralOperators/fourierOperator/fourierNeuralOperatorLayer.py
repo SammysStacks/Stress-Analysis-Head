@@ -74,10 +74,14 @@ class fourierNeuralOperatorLayer(fourierNeuralOperatorWeights):
         # imaginaryFourierData: batchSize, numInputSignals, fourierDimension
         # realFourierData: batchSize, numInputSignals, fourierDimension
 
-        # Multiply relevant Fourier modes (Sampling low-frequency spectrum).
-        if self.encodeImaginaryFrequencies: imaginaryFourierData = self.applyEncoding(equationString='oin,bin->bon', frequencies=imaginaryFourierData, weights=self.imaginaryFourierWeights, frequencyTerms=imaginaryFrequencyTerms)
-        if self.encodeRealFrequencies: realFourierData = self.applyEncoding(equationString='oin,bin->bon', frequencies=realFourierData, weights=self.realFourierWeights, frequencyTerms=realFrequencyTerms)
-        # b = batchSize, i = numInputChannels, o = numInputChannels, n = fourierDimension
+        if self.learningProtocol in ['rFC', 'rCNN']:
+            # Learn a new set of wavelet coefficients using both of the frequency data.
+            realFourierData, imaginaryFourierData = self.dualFrequencyWeights(realFourierData + (realFrequencyTerms or 0), imaginaryFourierData + (imaginaryFrequencyTerms or 0))
+        else:
+            # Multiply relevant Fourier modes (Sampling low-frequency spectrum).
+            if self.encodeImaginaryFrequencies: imaginaryFourierData = self.applyEncoding(equationString='oin,bin->bon', frequencies=imaginaryFourierData, weights=self.imaginaryFourierWeights, frequencyTerms=imaginaryFrequencyTerms)
+            if self.encodeRealFrequencies: realFourierData = self.applyEncoding(equationString='oin,bin->bon', frequencies=realFourierData, weights=self.realFourierWeights, frequencyTerms=realFrequencyTerms)
+            # b = batchSize, i = numInputChannels, o = numInputChannels, n = fourierDimension
         # imaginaryFourierData: batchSize, numOutputChannels, fourierDimension
         # realFourierData: batchSize, numOutputChannels, fourierDimension
 
@@ -102,7 +106,7 @@ class fourierNeuralOperatorLayer(fourierNeuralOperatorWeights):
         # frequencies dimension: batchSize, numLiftedChannels, frequencyDimension
 
         if weights is not None:
-            if self.learningProtocol in ['rFC', 'rCNN']:
+            if self.learningProtocol in ['FC', 'CNN']:
                 frequencies = weights(frequencies)  # Learn a new set of wavelet coefficients to transform the data.
                 # frequencies dimension: batchSize, numOutputSignals, frequencyDimension
             else:
