@@ -140,13 +140,13 @@ class compileModelData(compileModelDataHelpers):
         allMetaModels, allMetadataLoaders = self.compileModels(metaRawFeatureIntervalTimes, metaRawFeatureIntervals, metaSurveyAnswerTimes, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions,
                                                                metaSubjectOrder, metaFeatureNames, metaDatasetNames, submodel, testSplitRatio, metaTraining=True, specificInfo=None, random_state=42)
         # Compile the final modules.
-        allModels, allDataLoaders = self.compileModels(metaCompiledFeatureIntervalTimes=[allRawFeatureIntervalTimes], metaCompiledFeatureIntervals=[allRawFeatureIntervals], metaSurveyAnswerTimes=[surveyAnswerTimes], metaSurveyAnswersList=[surveyAnswersList],
+        allModels, allDataLoaders = self.compileModels(metaRawFeatureIntervalTimes=[allRawFeatureIntervalTimes], metaRawFeatureIntervals=[allRawFeatureIntervals], metaSurveyAnswerTimes=[surveyAnswerTimes], metaSurveyAnswersList=[surveyAnswersList],
                                                        metaSurveyQuestions=[surveyQuestions], metaActivityLabels=[activityLabels], metaActivityNames=[activityNames], metaNumQuestionOptions=[numQuestionOptions], metaSubjectOrder=[subjectOrder],
                                                        metaFeatureNames=[featureNames], metaDatasetNames=datasetNames, submodel=submodel, testSplitRatio=testSplitRatio, metaTraining=False, specificInfo=None, random_state=42)
 
         return allModels, allDataLoaders, allMetaModels, allMetadataLoaders, metaDatasetNames
 
-    def compileModels(self, metaCompiledFeatureIntervalTimes, metaCompiledFeatureIntervals, metaSurveyAnswerTimes, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions,
+    def compileModels(self, metaRawFeatureIntervalTimes, metaRawFeatureIntervals, metaSurveyAnswerTimes, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions,
                       metaSubjectOrder, metaFeatureNames, metaDatasetNames, submodel, testSplitRatio, metaTraining, specificInfo=None, random_state=42):
         # Initialize relevant holders.
         allModelPipelines, lossDataHolders, allDataLoaders = [], [], []
@@ -156,9 +156,9 @@ class compileModelData(compileModelDataHelpers):
         print(f"\nSplitting the data into {'meta-' if metaTraining else ''}models:", flush=True)
 
         # For each meta-information collected.
-        for metadataInd in range(len(metaCompiledFeatureIntervalTimes)):
-            allCompiledFeatureIntervalTimes = metaCompiledFeatureIntervalTimes[metadataInd].copy()
-            allCompiledFeatureIntervals = metaCompiledFeatureIntervals[metadataInd].copy()
+        for metadataInd in range(len(metaRawFeatureIntervalTimes)):
+            allRawFeatureIntervalTimes = metaRawFeatureIntervalTimes[metadataInd].copy()
+            allRawFeatureIntervals = metaRawFeatureIntervals[metadataInd].copy()
             numQuestionOptions = metaNumQuestionOptions[metadataInd].copy()
             surveyAnswersList = metaSurveyAnswersList[metadataInd].copy() - 1
             surveyAnswerTimes = metaSurveyAnswerTimes[metadataInd].copy()
@@ -174,7 +174,7 @@ class compileModelData(compileModelDataHelpers):
             assert surveyAnswersList.min().item() >= -2, "All ratings must be greater than 0 (exception for -2, which is reserved for missing)."
             assert -1 not in surveyAnswersList, print("surveyAnswersList should contain ratings from 0 to n", flush=True)
             # Specify the incoming dimensions.
-            # allCompiledFeatureIntervals dimension: batchSize, numBiomarkers, finalDistributionLength*, numBiomarkerFeatures*  ->  *finalDistributionLength, *numBiomarkerFeatures are not constant
+            # allRawFeatureIntervals dimension: batchSize, numBiomarkers, finalDistributionLength*, numBiomarkerFeatures*  ->  *finalDistributionLength, *numBiomarkerFeatures are not constant
             # allRawFeatureTimeIntervals dimension: batchSize, numBiomarkers, finalDistributionLength*  ->  *finalDistributionLength is not constant
 
             # ---------------------- Data Preparation ---------------------- #
@@ -190,7 +190,7 @@ class compileModelData(compileModelDataHelpers):
             # allFeatureLabels dimension: batchSize, numQuestions + 1
 
             # Remove any experiments and signals that are bad.
-            allSignalData, allNumSignalPoints = self._padSignalData(allCompiledFeatureIntervalTimes, allCompiledFeatureIntervals, surveyAnswerTimes)
+            allSignalData, allNumSignalPoints = self._padSignalData(allRawFeatureIntervalTimes, allRawFeatureIntervals, surveyAnswerTimes)
             allSignalData, allNumSignalPoints, featureNames = self._preprocessSignals(allSignalData, allNumSignalPoints, featureNames)
             allFeatureLabels, allSmallClassIndices = self.organizeLabels(allFeatureLabels, metaTraining)
             # allSmallClassIndices dimension: numLabels, batchSize*  →  *if there are no small classes, the dimension is empty

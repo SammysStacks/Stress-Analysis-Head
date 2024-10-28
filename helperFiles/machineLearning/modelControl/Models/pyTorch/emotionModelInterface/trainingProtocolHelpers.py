@@ -45,8 +45,10 @@ class trainingProtocolHelpers:
 
             # Train the updated model.
             self.modelMigration.unifyModelWeights(allModels=[modelPipeline], modelWeights=self.sharedModelWeights, layerInfo=self.unifiedLayerData)
-            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, trainSharedLayers=False, numEpochs=1)
-            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, trainSharedLayers=True, numEpochs=1)
+            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, trainSharedLayers=False, profileTraining=True, numEpochs=1)   # Profile training.
+            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, trainSharedLayers=False, profileTraining=False, numEpochs=1)  # Signal-specific training.
+            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, trainSharedLayers=True, profileTraining=False, numEpochs=1)   # Full model training.
+            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, trainSharedLayers=False, profileTraining=True, numEpochs=1)   # Profile training.
             self.accelerator.wait_for_everyone()
 
             # Store the new model weights.

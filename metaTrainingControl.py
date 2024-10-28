@@ -60,7 +60,7 @@ if __name__ == "__main__":
     parser.add_argument('--numSignalEncoderLayers', type=int, default=16, help='The number of layers in the model.')
 
     # Add arguments for the neural operator.
-    parser.add_argument('--operatorType', type=str, default='fourier', help='The type of operator to use for the neural operator: wavelet')
+    parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
     parser.add_argument('--waveletType', type=str, default='bior3.7', help='The wavelet type for the wavelet transform: bior3.7, db3, dmey, etc')
 
     # Add arguments for the signal encoder prediction
@@ -110,7 +110,9 @@ if __name__ == "__main__":
 
         # Train the model for a single epoch.
         trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels)
-        allModels[0].trainModel(allDataLoaders[0], submodel, inferenceTraining=False, trainSharedLayers=False, numEpochs=1)
+        allModels[0].trainModel(allDataLoaders[0], submodel, inferenceTraining=False, trainSharedLayers=False, profileTraining=True,  numEpochs=1)
+        allModels[0].trainModel(allDataLoaders[0], submodel, inferenceTraining=False, trainSharedLayers=False, profileTraining=False,  numEpochs=1)
+        allModels[0].trainModel(allDataLoaders[0], submodel, inferenceTraining=False, trainSharedLayers=False, profileTraining=True,  numEpochs=1)
 
         # Store the initial loss information and plot.
         if storeLoss: trainingProtocols.calculateLossInformation(allMetaModels, allMetadataLoaders, allModels, allDataLoaders, submodel)

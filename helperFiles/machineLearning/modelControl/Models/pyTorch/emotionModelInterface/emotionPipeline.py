@@ -19,7 +19,7 @@ class emotionPipeline(emotionPipelineHelpers):
         # Finish setting up the model.
         self.compileOptimizer(submodel)  # Initialize the optimizer (for back propagation)
 
-    def trainModel(self, dataLoader, submodel, trainSharedLayers, inferenceTraining, numEpochs):
+    def trainModel(self, dataLoader, submodel, trainSharedLayers, inferenceTraining, profileTraining, numEpochs):
         """
         Stored items in the dataLoader.dataset:
             allData: The standardized testing and training data → Dim: numExperiments, numSignals, totalLength, numChannels
@@ -34,7 +34,7 @@ class emotionPipeline(emotionPipelineHelpers):
         # Load in all the data and labels for final predictions and calculate the activity and emotion class weights.
         # allData, allLabels, allTrainingMasks, allTestingMasks, allSignalData, allSignalIdentifiers, allMetadata, reconstructionIndex = self.prepareInformation(dataLoader)
         # allEmotionClassWeights, activityClassWeights = self.organizeLossInfo.getClassWeights(allLabels, allTrainingMasks, allTestingMasks, self.numActivities)
-        self.setupTraining(submodel, trainSharedLayers=trainSharedLayers, inferenceTraining=inferenceTraining)
+        self.setupTraining(submodel, trainSharedLayers=trainSharedLayers, inferenceTraining=inferenceTraining, profileTraining=profileTraining)
 
         # For each training epoch.
         for epoch in range(numEpochs):
@@ -49,7 +49,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     numPointsAnalyzed += batchSize
 
                     # Get the reconstruction column for auto encoding and activity prediction.
-                    if not inferenceTraining and submodel == modelConstants.signalEncoderModel: batchTrainingMask, batchSignalLabels, batchSignalInfo = self.dataInterface.getReconstructionData(batchTrainingMask, batchSignalLabels, batchSignalInfo, self.reconstructionIndex)
+                    if inferenceTraining or submodel == modelConstants.signalEncoderModel: batchTrainingMask, batchSignalLabels, batchSignalInfo = self.dataInterface.getReconstructionData(batchTrainingMask, batchSignalLabels, batchSignalInfo, self.reconstructionIndex)
 
                     # We can skip this batch, and backpropagation if necessary.
                     if batchSignalInfo.size(0) == 0: self.backpropogateModel(); continue
@@ -106,6 +106,9 @@ class emotionPipeline(emotionPipelineHelpers):
                     self.accelerator.print("Final-Recon", finalLoss.item(), signalReconstructedLoss.item())
 
                     # ------------------- Update the Model  -------------------- #
+
+                    # Increase the learning rate.
+                    if profileTraining: finalLoss = 100*finalLoss
 
                     t1 = time.time()
                     # Calculate the gradients.

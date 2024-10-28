@@ -83,16 +83,24 @@ class emotionPipelineHelpers:
         elif submodel == modelConstants.emotionModel: return max(0, len(self.model.specificEmotionModel.trainingLosses_signalReconstruction) - 1)
         else: raise Exception()
 
-    def setupTraining(self, submodel, trainSharedLayers=False, inferenceTraining=False):
+    def setupTraining(self, submodel, trainSharedLayers=False, inferenceTraining=False, profileTraining=False):
         # Do not train the model at all.
         self.setupTrainingFlags(self.model, trainingFlag=False)
 
         if not inferenceTraining:
-            # Label the model we are training.
-            if submodel == modelConstants.emotionModel:
+            # Profile training.
+            if profileTraining:
+                self.model.specificSignalEncoderModel.physiologicalProfileAnsatz.requires_grad = True
+                assert not trainSharedLayers, "We cannot train layers during profile training."
+                assert not inferenceTraining, "We cannot train layers during profile training."
+
+            # Emotion model training.
+            elif submodel == modelConstants.emotionModel:
                 if trainSharedLayers: self.setupTrainingFlags(self.model.sharedEmotionModel, trainingFlag=True)
                 self.setupTrainingFlags(self.model.specificEmotionModel, trainingFlag=True)
+
             else:
+                # Signal encoder training
                 if trainSharedLayers: self.setupTrainingFlags(self.model.sharedSignalEncoderModel, trainingFlag=True)
                 self.setupTrainingFlags(self.model.specificSignalEncoderModel, trainingFlag=True)
         else:

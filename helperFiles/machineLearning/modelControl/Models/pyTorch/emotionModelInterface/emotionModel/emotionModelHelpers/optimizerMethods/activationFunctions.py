@@ -205,7 +205,7 @@ class nonLinearMultiplication(reversibleInterface):
 
     @staticmethod
     def scalePhaseShiftGradients(grad):
-        return grad * 10
+        return grad * 1
 
     @staticmethod
     def scaleFrequencyGradients(grad):

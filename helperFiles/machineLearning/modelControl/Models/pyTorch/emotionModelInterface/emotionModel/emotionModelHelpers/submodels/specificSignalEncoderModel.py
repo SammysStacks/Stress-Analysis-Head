@@ -59,14 +59,14 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         if reversibleInterface.forwardDirection:
             # Apply the neural operator layer with activation.
             signalData = self.neuralLayers[layerInd](signalData)
-            signalData = self.processingLayers[layerInd](signalData)
+            # signalData = self.processingLayers[layerInd](signalData)
         else:
             # Get the reverse layer index.
             pseudoLayerInd = len(self.neuralLayers) - layerInd - 1
             assert 0 <= pseudoLayerInd < len(self.neuralLayers), f"The pseudo layer index is out of bounds: {pseudoLayerInd}, {len(self.neuralLayers)}, {layerInd}"
 
             # Apply the neural operator layer with activation.
-            signalData = self.processingLayers[pseudoLayerInd](signalData)
+            # signalData = self.processingLayers[pseudoLayerInd](signalData)
             signalData = self.neuralLayers[pseudoLayerInd](signalData)
 
         return signalData.contiguous()
