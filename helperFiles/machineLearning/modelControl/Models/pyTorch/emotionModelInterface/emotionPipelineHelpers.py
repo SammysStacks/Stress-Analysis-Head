@@ -87,26 +87,27 @@ class emotionPipelineHelpers:
         # Do not train the model at all.
         self.setupTrainingFlags(self.model, trainingFlag=False)
 
-        if not inferenceTraining:
-            # Profile training.
-            if profileTraining:
-                self.model.specificSignalEncoderModel.physiologicalProfileAnsatz.requires_grad = True
-                assert not trainSharedLayers, "We cannot train layers during profile training."
-                assert not inferenceTraining, "We cannot train layers during profile training."
+        # Profile training.
+        if profileTraining:
+            self.model.specificSignalEncoderModel.physiologicalProfileAnsatz.requires_grad = True
+            assert not trainSharedLayers, "We cannot train layers during profile training."
+            assert not inferenceTraining, "We cannot train layers during profile training."
+            return None
 
-            # Emotion model training.
-            elif submodel == modelConstants.emotionModel:
-                if trainSharedLayers: self.setupTrainingFlags(self.model.sharedEmotionModel, trainingFlag=True)
-                self.setupTrainingFlags(self.model.specificEmotionModel, trainingFlag=True)
-
-            else:
-                # Signal encoder training
-                if trainSharedLayers: self.setupTrainingFlags(self.model.sharedSignalEncoderModel, trainingFlag=True)
-                self.setupTrainingFlags(self.model.specificSignalEncoderModel, trainingFlag=True)
-        else:
+        if inferenceTraining:
             # Label the model we are training.
             self.setupTrainingFlags(self.model.inferenceModel, trainingFlag=True)
             assert not trainSharedLayers, "We cannot train layers during inference."
+            assert not profileTraining, "We cannot train layers during inference."
+
+        # Emotion model training.
+        if submodel == modelConstants.emotionModel:
+            if trainSharedLayers: self.setupTrainingFlags(self.model.sharedEmotionModel, trainingFlag=True)
+            self.setupTrainingFlags(self.model.specificEmotionModel, trainingFlag=True)
+        else:
+            # Signal encoder training
+            if trainSharedLayers: self.setupTrainingFlags(self.model.sharedSignalEncoderModel, trainingFlag=True)
+            self.setupTrainingFlags(self.model.specificSignalEncoderModel, trainingFlag=True)
 
     @staticmethod
     def setupTrainingFlags(model, trainingFlag):

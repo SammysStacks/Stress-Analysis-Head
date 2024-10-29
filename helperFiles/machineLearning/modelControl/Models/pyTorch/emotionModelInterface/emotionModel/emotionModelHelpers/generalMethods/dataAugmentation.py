@@ -67,6 +67,7 @@ class dataAugmentation:
     def changeNumSignals(signalData, dropoutPercent):
         # signalData: [batchSize, numSignals, maxSequenceLength, numChannels]
         batchSize, numSignals, maxSequenceLength, numChannels = signalData.size()
+        if dropoutPercent == 0: return signalData
 
         # Create a mask to drop p% of the signals
         dropoutMask = dropoutPercent < torch.rand(batchSize, numSignals, 1, 1, device=signalData.device)  # Randomly keep (1-p)% of the signals

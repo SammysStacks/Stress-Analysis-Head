@@ -1,5 +1,4 @@
 import random
-import time
 
 import torch
 from matplotlib import pyplot as plt
@@ -182,7 +181,6 @@ class emotionModelHead(nn.Module):
 
         # ------------------- Learned Signal Mapping ------------------- #
 
-        t1 = time.time()
         reversibleInterface.changeDirections(forwardDirection=False)
         resampledSignalData = physiologicalProfile.unsqueeze(1).repeat(repeats=(1, numSignals, 1))
         resampledSignalData = validSignalMask*self.coreModelPass(self.numSignalEncoderLayers, resampledSignalData, specificModel=self.specificSignalEncoderModel, sharedModel=self.sharedSignalEncoderModel)
@@ -230,11 +228,9 @@ class emotionModelHead(nn.Module):
 
         # For each layer in the model.
         for layerInd in range(numModelLayers):
-            t1 = time.time()
             # Calculate the estimated physiological profile given each signal.
             if layerInd % specificModel.goldenRatio == 0: metaLearningData = specificModel.learningInterface(layerInd=specificLayerCounter, signalData=metaLearningData); specificLayerCounter += 1  # Reversible signal-specific layers.
             metaLearningData = sharedModel.learningInterface(layerInd=layerInd, signalData=metaLearningData)  # Reversible meta-learning layers.
-            t2 = time.time(); print("layerInd:", layerInd, t2 - t1);
         metaLearningData = specificModel.learningInterface(layerInd=specificLayerCounter, signalData=metaLearningData)  # Reversible signal-specific layers.
         assert specificLayerCounter + 1 == len(specificModel.neuralLayers), f"The specific layer counter ({specificLayerCounter}) does not match the number of specific layers ({len(specificModel.neuralLayers)})."
         # metaLearningData: batchSize, numSignals, finalDimension

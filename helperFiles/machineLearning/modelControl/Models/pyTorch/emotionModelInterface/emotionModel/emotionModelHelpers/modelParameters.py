@@ -29,8 +29,8 @@ class modelParameters:
                 'encodeHighFrequencyProtocol': 'highFreq',  # The protocol for encoding the high frequency signals.
                 'encodeLowFrequencyProtocol': 'lowFreq',  # The protocol for encoding the low frequency signals.
                 'skipConnectionProtocol': 'none',  # The protocol for the skip connections.
-                'extraOperators': ['fourier'],  # The extra operators to apply to the wavelet transform.
-                'learningProtocol': 'rCNN',  # The learning protocol for the neural operator.
+                'extraOperators': [],  # The extra operators to apply to the wavelet transform.
+                'learningProtocol': 'rFC',  # The learning protocol for the neural operator.
             },
             'fourier': {
                 'encodeImaginaryFrequencies': True,  # The protocol for encoding the high frequency signals.
@@ -93,8 +93,8 @@ class modelParameters:
 
     @staticmethod
     def getExclusionSequenceCriteria(submodel):
-        if submodel == modelConstants.signalEncoderModel: return 25, 25, 1, 0.5  # minSequencePoints, minSignalPresentCount, maxSequenceDeriv, maxSequenceJump
-        elif submodel == modelConstants.emotionModel: return 25, 25, 1, 0.5  # minSequencePoints, minSignalPresentCount, maxSequenceDeriv, maxSequenceJump
+        if submodel == modelConstants.signalEncoderModel: return 25, 25, 1  # minSequencePoints, minSignalPresentCount, maxSequenceJump
+        elif submodel == modelConstants.emotionModel: return 25, 25, 1  # minSequencePoints, minSignalPresentCount, maxSequenceJump
         else: raise Exception()
 
     @staticmethod

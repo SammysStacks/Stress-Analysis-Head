@@ -48,8 +48,8 @@ class emotionPipeline(emotionPipelineHelpers):
                     batchSize, numSignals, maxSequenceLength, numChannels = batchSignalInfo.size()
                     numPointsAnalyzed += batchSize
 
-                    # Get the reconstruction column for auto encoding and activity prediction.
-                    if not profileTraining and submodel == modelConstants.signalEncoderModel: batchTrainingMask, batchSignalLabels, batchSignalInfo = self.dataInterface.getReconstructionData(batchTrainingMask, batchSignalLabels, batchSignalInfo, self.reconstructionIndex)
+                    # Only look at the training information (for signal reconstruction).
+                    if not profileTraining and not inferenceTraining and submodel == modelConstants.signalEncoderModel: batchTrainingMask, batchSignalLabels, batchSignalInfo = self.dataInterface.getReconstructionData(batchTrainingMask, batchSignalLabels, batchSignalInfo, self.reconstructionIndex)
 
                     # We can skip this batch, and backpropagation if necessary.
                     if batchSignalInfo.size(0) == 0: self.backpropogateModel(); continue
@@ -71,8 +71,8 @@ class emotionPipeline(emotionPipelineHelpers):
 
                     if not inferenceTraining and self.augmentData:
                         # Augment the signals to train an arbitrary sequence length and order.
-                        augmentedBatchData = self.dataAugmentation.changeNumSignals(signalBatchData, dropoutPercent=0.1)
-                        augmentedBatchData = self.dataAugmentation.signalDropout(augmentedBatchData, dropoutPercent=0.1)
+                        augmentedBatchData = self.dataAugmentation.changeNumSignals(signalBatchData, dropoutPercent=0.05)
+                        augmentedBatchData = self.dataAugmentation.signalDropout(augmentedBatchData, dropoutPercent=0.05)
                         # augmentedBatchData: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
                     else: augmentedBatchData = signalBatchData
 
@@ -112,7 +112,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     elif not trainSharedLayers: finalLoss = 10*finalLoss  # Inference or signal-specific training.
 
                     # Prevent exploding loss values.
-                    while 1000 < finalLoss.item(): finalLoss = finalLoss / 10
+                    while 100 < finalLoss.item(): finalLoss = finalLoss / 10
 
                     t1 = time.time()
                     # Calculate the gradients.
