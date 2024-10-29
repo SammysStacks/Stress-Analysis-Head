@@ -83,12 +83,6 @@ class lossCalculations:
         signalReconstructedLoss = self.reconstructionLoss(reconstructedSignalData, datapoints)
         # signalReconstructedLoss dimension: numExperiments, numSignals, maxSequenceLength
 
-
-
-
-
-
-
         # Adjust the loss based on the missing data.
         smoothenedData = self.smoothingFilter(datapoints, kernelSize=3)  # smoothenedData: numExperiments, numSignals, maxSequenceLength
         dataUncertainty = smoothenedData.diff(dim=-1).pow(2)

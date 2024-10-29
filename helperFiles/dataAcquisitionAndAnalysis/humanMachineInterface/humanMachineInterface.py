@@ -11,8 +11,6 @@ from helperFiles.machineLearning.feedbackControl.heatTherapy.heatTherapyMain imp
 from helperFiles.dataAcquisitionAndAnalysis.humanMachineInterface import featureOrganization
 
 
-
-
 class humanMachineInterface:
     
     def __init__(self, modelClasses, actionControl, extractFeaturesFrom):
@@ -40,16 +38,16 @@ class humanMachineInterface:
         # Initialize mutable variables.
         self.resetVariables_HMI()
 
-        self.timeEmoAnalysisWindow = modelConstants.timeWindows[-1]
         # Holder parameters.
         self.rawFeatureTimesHolder = None  # A list (in biomarkerFeatureOrder) of lists of raw feature's times; Dim: numFeatureSignals, numPoints
         self.rawFeaturePointers = None  # A list of pointers indicating the last seen raw feature index for each analysis and each channel.
         self.rawFeatureHolder = None  # A list (in biomarkerFeatureOrder) of lists of raw features; Dim: numFeatureSignals, numPoints, numBiomarkerFeatures
 
         # predefined model time
-        self.startModelTime = self.timeEmoAnalysisWindow
-        self.moveDataFinger = 20
-
+        self.modelTimeWindow = modelConstants.timeWindows[-1]
+        self.startModelTime = self.modelTimeWindow
+        self.modelTimeBuffer = 1
+        self.modelTimeGap = 20
 
     def therapyInitialization(self):
         assert self.actionControl in {"heat", "music", "chatGPT", None}, f"Invalid actionControl: {self.actionControl}. Must be one of 'heat', 'music', or 'chatGPT'."

@@ -61,7 +61,7 @@ class featureOrganization(humanMachineInterface):
             startBiomarkerInd = endBiomarkerInd
         assert endBiomarkerInd == len(self.featureNames), f"Found {endBiomarkerInd} biomarker features and {len(self.featureNames)} features. These must be the same length."
 
-
+        self.therapyPointers = None
         # Initialize mutable variables.
         self.resetFeatureInformation()
 
@@ -73,6 +73,7 @@ class featureOrganization(humanMachineInterface):
             featureAnalysis.resetGlobalVariables()
 
         # Raw feature data structure
+        self.therapyPointers = [0 for _ in range(len(self.analysisProtocols))]  # A list of pointers indicating the last seen raw feature index for each analysis and each channel.
         self.rawFeatureTimesHolder = [[] for _ in range(len(self.biomarkerFeatureOrder))]  # A list (in biomarkerFeatureOrder) of lists of raw feature's times; Dim: numFeatureSignals, numPoints
         self.rawFeatureHolder = [[] for _ in range(len(self.biomarkerFeatureOrder))]  # A list (in biomarkerFeatureOrder) of lists of raw features; Dim: numFeatureSignals, numPoints, numBiomarkerFeatures
 
@@ -84,47 +85,54 @@ class featureOrganization(humanMachineInterface):
             featureAnalysis.featureTimeWindow = featureTimeWindow
 
     # --------------------- Organize Incoming Features --------------------- #
-    def compileIntervalFeatures(self, startTime, timeEmoAnalysisWindow, featureTimes, features):
-        endTime = startTime - timeEmoAnalysisWindow
-        compiledFeatureTimes = []
-        compiledFeatures = []  # To hold compiled features for each biomarker
 
-        for biomarkerInd in range(len(self.biomarkerFeatureNames)):
-            biomarkerTimes = featureTimes[biomarkerInd]
-            biomarkerFeatures = features[biomarkerInd]
+    def compileIntervalFeatures(self, maxSequenceLength):
+        # Find the number of new points.
+        lastRecordedTime = self.featureAnalysisList[0].timepoints[-1]
+        numNewPoints = 1 + (lastRecordedTime - self.startModelTime - self.modelTimeBuffer) // self.modelTimeGap
 
-            # Define startTimePointer and endTimePointer for the current biomarker
-            startTimePointer = 0
+        # Preallocate the feature times and features.
+        inputModelData = torch.zeros((numNewPoints, len(self.featureNames), maxSequenceLength, len(modelConstants.signalChannelNames)), dtype=torch.float64)
+        # inputModelData dim: numNewTimePoints, numBiomarkerFeatures, maxSequenceLength, numChannels
 
-            # Find the start index for the interval closest to startTime
-            while startTimePointer < len(biomarkerTimes) and biomarkerTimes[startTimePointer] < startTime:
-                startTimePointer += 1
+        # For each new point.
+        for numNewPoint in range(numNewPoints):
+            endModelTime = self.startModelTime - self.modelTimeWindow
 
-            endTimePointer = startTimePointer
-            while endTimePointer < len(biomarkerTimes) and biomarkerTimes[endTimePointer] < endTime:
-                endTimePointer += 1
+            # For each unique analysis with features.
+            for biomarkerInd in range(len(self.featureAnalysisList)):
+                oldEndPointer = self.therapyPointers[biomarkerInd]
+                analysis = self.featureAnalysisList[biomarkerInd]
 
-            intervalFeatureTimes = biomarkerTimes[startTimePointer:endTimePointer + 1]
-            intervalFeatures = biomarkerFeatures[startTimePointer:endTimePointer + 1]
+                # Locate the experiment indices within the data
+                newStartTimePointer = oldEndPointer + np.searchsorted(self.rawFeatureTimesHolder[0][oldEndPointer:], self.startModelTime, side='right') + 1
+                newEndTimePointer = oldEndPointer + np.searchsorted(self.rawFeatureTimesHolder[0][oldEndPointer:], endModelTime, side='left')
+                numBiomarkerPoints = newEndTimePointer - newStartTimePointer
 
-            compiledFeatureTimes.append(intervalFeatureTimes)
-            compiledFeatures.append(intervalFeatures)
+                # For each channel in the analysis.
+                for featureChannelInd in range(len(analysis.featureChannelIndices)):
+                    # Add the new model data to the input model data.
+                    inputModelData[numNewPoint, featureChannelInd, 0:numBiomarkerPoints, 0] = self.rawFeatureTimesHolder[featureChannelInd][newEndTimePointer:newStartTimePointer]
+                    inputModelData[numNewPoint, featureChannelInd, 0:numBiomarkerPoints, 1] = self.rawFeatureHolder[featureChannelInd][newEndTimePointer:newStartTimePointer]
 
-        return compiledFeatureTimes, compiledFeatures
+                # Update the pointers.
+                self.therapyPointers[biomarkerInd] = newEndTimePointer
 
-    # Padding
-    def compileAllFeatureWPadding(self, startTime, timeEmoAnalysisWindow, featureTimes, features):
+            # Update the model time.
+            self.startModelTime += self.modelTimeGap
 
-        compiledFeatureTimes, compiledFeatures = self.compileIntervalFeatures(startTime, timeEmoAnalysisWindow, featureTimes, features)
+        return inputModelData
+
+    def compileAllFeatureWPadding(self):
+
         # --------------- Get the max feature length for padding ----------------#
+
         # Find the maximum length for padding feature times
-        maxSequenceLength = max(max(len(featureChannelTimes) for featureChannelTimes in biomarkerTimes)
-                                for biomarkerTimes in compiledFeatureTimes)
+        maxSequenceLength = max(len(analysis.timepoints) for analysis in self.featureAnalysisList)
 
         # Calculate the total number of features (sum of all feature channels across biomarkers)
         numFeatures = sum(len(biomarkerFeatures) for biomarkerFeatures in features)
 
-        numNewPoints = timeEmoAnalysisWindow
         # compiling features
         compiledAllFeatures = torch.zeros((numNewPoints, numFeatures, maxSequenceLength, len(modelConstants.signalChannelNames)), dtype=torch.float32)
 
@@ -144,7 +152,6 @@ class featureOrganization(humanMachineInterface):
                 featureIdx += 1
 
         return compiledAllFeatures
-
 
     def organizeRawFeatures(self):
         # For each unique analysis with features.
@@ -167,7 +174,6 @@ class featureOrganization(humanMachineInterface):
                     f"Found {len(self.rawFeatureTimesHolder[biomarkerInd])} raw times and {len(self.rawFeatureHolder[biomarkerInd])} raw features. These must be the same length."
                 assert len(self.rawFeatureHolder[biomarkerInd]) == len(analysis.rawFeatures[featureChannelInd]), \
                     f"Found {len(self.rawFeatureHolder[biomarkerInd])} raw features and {len(analysis.rawFeatures[featureChannelInd])} raw features. These must be the same length."
-
 
     def findCommonTimeRange(self):
         # Set up the parameters.
