@@ -138,7 +138,7 @@ class emotionModelHead(nn.Module):
         numSpecificLayers = len(self.specificSignalEncoderModel.neuralLayers)
         numSharedLayers = len(self.sharedSignalEncoderModel.neuralLayers)
 
-        # Inform the user of the model changes.
+        # Assert the validity of the model architecture.
         assert self.numSignalEncoderLayers == numSharedLayers, f"The number of layers in the shared model ({numSharedLayers}) does not match the number of layers in the model ({self.numSignalEncoderLayers})."
         if self.numSignalEncoderLayers % self.goldenRatio == 0 and self.numSignalEncoderLayers != 0: assert numSpecificLayers == self.numSignalEncoderLayers // self.goldenRatio, f"The number of layers in the specific model ({numSpecificLayers}) does not match the number of layers in the model ({self.numSignalEncoderLayers})."
 
@@ -147,7 +147,7 @@ class emotionModelHead(nn.Module):
         # trainingFlag: whether the model is training or testing.
         # Preprocess the data to ensure integrity.
         signalData, signalIdentifiers, metadata = (tensor.to(device) for tensor in (signalData, signalIdentifiers, metadata))
-        signalIdentifiers, signalData, metadata = signalIdentifiers.int(), signalData.double(), metadata.double()
+        signalIdentifiers, signalData, metadata = signalIdentifiers.int(), signalData.double(), metadata.int()
         batchSize, numSignals, maxSequenceLength, numChannels = signalData.size()
         assert numChannels == len(modelConstants.signalChannelNames)
 
@@ -177,7 +177,7 @@ class emotionModelHead(nn.Module):
         if inferenceTraining: physiologicalProfile = self.inferenceModel.getCurrentPhysiologicalProfile(batchInds)
         else: physiologicalProfile = self.specificSignalEncoderModel.getCurrentPhysiologicalProfile(batchInds)
         # physiologicalProfile: batchSize, encodedDimension
-        print(self.datasetName, self.specificSignalEncoderModel.physiologicalProfileAnsatz[0, :5].detach().cpu().numpy())
+        print(self.datasetName, self.specificSignalEncoderModel.physiologicalProfileAnsatz[0, :4].detach().cpu().numpy())
 
         # ------------------- Learned Signal Mapping ------------------- #
 

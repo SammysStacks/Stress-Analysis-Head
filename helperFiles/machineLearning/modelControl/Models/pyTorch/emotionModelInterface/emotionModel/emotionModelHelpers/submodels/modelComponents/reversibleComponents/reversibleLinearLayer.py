@@ -67,11 +67,11 @@ class reversibleLinearLayer(reversibleInterface):
 
     def applyLayer(self, inputData, layerInd):
         # Apply a mask to the neural weights.
-        neuralWeights = self.linearOperators[layerInd].clone()
+        neuralWeights = self.linearOperators[layerInd]
         # neuralWeight: numSignals, sequenceLength, sequenceLength
 
         # Add a stability term to the diagonal. TODO: Add sparse matrix support.
-        if self.kernelSize != self.sequenceLength: neuralWeights = self.restrictedWindowMask * neuralWeights + self.stabilityTerm
+        if self.kernelSize != self.sequenceLength: neuralWeights = self.restrictedWindowMask * neuralWeights + self.stabilityTerm*0.75
         else: neuralWeights = neuralWeights + self.stabilityTerm*0.75
 
         # Backward direction: invert the neural weights.

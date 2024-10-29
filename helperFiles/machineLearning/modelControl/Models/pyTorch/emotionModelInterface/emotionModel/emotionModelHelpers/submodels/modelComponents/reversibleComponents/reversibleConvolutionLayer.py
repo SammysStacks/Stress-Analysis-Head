@@ -1,5 +1,3 @@
-import math
-
 import torch
 import torch.fft
 import torch.nn as nn
@@ -16,16 +14,15 @@ class reversibleConvolutionLayer(reversibleInterface):
         self.activationMethod = activationMethod  # The activation method to use.
         self.sequenceLength = sequenceLength  # The length of the input signal.
         self.kernelSize = kernelSize  # The restricted window for the neural weights.
-        self.numLayers = numLayers  # The number of layers in the reversible linear layer.
         self.bounds = 1 / kernelSize  # The bounds for the neural weights.
+        self.numLayers = numLayers  # The number of layers in the reversible linear layer.
 
         # The stability term to add to the diagonal.
         self.stabilityTerm = torch.eye(self.sequenceLength, dtype=torch.float64)
 
         # The restricted window for the neural weights.
-        self.restrictedWindowMask = torch.ones(1, self.sequenceLength, self.sequenceLength, dtype=torch.float64)
+        self.restrictedWindowMask = torch.ones(numSignals, self.sequenceLength, self.sequenceLength, dtype=torch.float64)
         self.restrictedWindowMask = torch.tril(torch.triu(self.restrictedWindowMask, diagonal=-kernelSize//2 + 1), diagonal=kernelSize//2)
-        self.restrictedWindowMask = self.restrictedWindowMask.repeat(repeats=(numSignals, 1, 1))  # Dim: 1, sequenceLength, sequenceLength
         assert kernelSize <= sequenceLength, f"The kernel size is larger than the sequence length: {kernelSize}, {sequenceLength}"
 
         # Calculate the offsets to map positions to kernel indices
@@ -55,7 +52,6 @@ class reversibleConvolutionLayer(reversibleInterface):
 
     def forward(self, inputData):
         # Cast the stability term to the device.
-        self.restrictedWindowMask = self.restrictedWindowMask.to(inputData.device)
         self.stabilityTerm = self.stabilityTerm.to(inputData.device)
 
         for layerInd in range(self.numLayers):
@@ -70,17 +66,18 @@ class reversibleConvolutionLayer(reversibleInterface):
         return inputData
 
     def applyLayer(self, inputData, layerInd):
+        # Unpack the dimensions.
+        batchSize, numSignals, sequenceLength = inputData.size()
+
         # Get the current neural weights information.
-        neuralWeights = self.restrictedWindowMask.clone()
         kernelWeights = self.linearOperators[layerInd]
+        neuralWeights = torch.zeros(numSignals, sequenceLength, sequenceLength, dtype=torch.float64, device=inputData.device)
         # neuralWeight: numSignals, sequenceLength, sequenceLength
         # kernelWeights: numSignals, (kernelSize) or (sequenceLength, sequenceLength)
 
         # Gather the corresponding kernel values for each position
         neuralWeights[self.signalInds, self.rowInds, self.colInds] = kernelWeights[self.signalInds, self.kernelInds]
-
-        # Add a stability term to the diagonal.
-        neuralWeights = neuralWeights + self.stabilityTerm*0.975
+        neuralWeights = neuralWeights + self.stabilityTerm*0.975  # Add a stability term to the diagonal.
 
         # Backward direction: invert the neural weights.
         if self.forwardDirection: neuralWeights = torch.linalg.inv(neuralWeights)
@@ -99,7 +96,7 @@ if __name__ == "__main__":
     _batchSize, _numSignals, _sequenceLength = 2, 3, 256
     _activationMethod = 'nonLinearMultiplication'
     _kernelSize = 3
-    _numLayers = 5
+    _numLayers = 3
 
     # Set up the parameters.
     neuralLayerClass = reversibleConvolutionLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod, switchActivationDirection=False)

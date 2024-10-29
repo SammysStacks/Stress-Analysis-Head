@@ -74,11 +74,9 @@ class fourierNeuralOperatorLayer(fourierNeuralOperatorWeights):
         # imaginaryFourierData: batchSize, numInputSignals, fourierDimension
         # realFourierData: batchSize, numInputSignals, fourierDimension
 
-        if self.learningProtocol in ['rFC', 'rCNN']:
-            # Learn a new set of wavelet coefficients using both of the frequency data.
-            realFourierData, imaginaryFourierData = self.dualFrequencyWeights(realFourierData + (realFrequencyTerms or 0), imaginaryFourierData + (imaginaryFrequencyTerms or 0))
-        else:
-            # Multiply relevant Fourier modes (Sampling low-frequency spectrum).
+        # Learn a new set of wavelet coefficients using both of the frequency data.
+        if self.learningProtocol in ['rFC', 'rCNN']: realFourierData, imaginaryFourierData = self.dualFrequencyWeights(realFourierData, imaginaryFourierData)
+        else:  # Multiply relevant Fourier modes (Sampling low-frequency spectrum).
             if self.encodeImaginaryFrequencies: imaginaryFourierData = self.applyEncoding(equationString='oin,bin->bon', frequencies=imaginaryFourierData, weights=self.imaginaryFourierWeights, frequencyTerms=imaginaryFrequencyTerms)
             if self.encodeRealFrequencies: realFourierData = self.applyEncoding(equationString='oin,bin->bon', frequencies=realFourierData, weights=self.realFourierWeights, frequencyTerms=realFrequencyTerms)
             # b = batchSize, i = numInputChannels, o = numInputChannels, n = fourierDimension
@@ -91,7 +89,7 @@ class fourierNeuralOperatorLayer(fourierNeuralOperatorWeights):
         # realFourierData: batchSize, numOutputChannels, fourierDimension
 
         # Return to physical space
-        reconstructedData = self.backwardFFT(realFourierData, imaginaryFourierData, resampledTimes=None)
+        reconstructedData = self.backwardFFT(realFourierData, imaginaryFourierData, resampledTimes=None)[:, :, left_pad:left_pad + sequenceLength]
         # reconstructedData dimension: batchSize, numOutputChannels, signalDimension
 
         # Add a bias term if needed.

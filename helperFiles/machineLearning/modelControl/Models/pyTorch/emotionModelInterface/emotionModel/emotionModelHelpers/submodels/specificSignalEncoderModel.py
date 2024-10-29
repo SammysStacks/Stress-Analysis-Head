@@ -24,6 +24,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         self.physiologicalProfileAnsatz = self.getInitialPhysiologicalProfile(numExperiments=numExperiments, encodedDimension=encodedDimension)
 
         # Assert the validity of the input parameters.
+        assert self.encodedDimension % goldenRatio == 0, "The encoded dimension must be divisible the goldenRatio."
         assert self.encodedDimension % 2 == 0, "The encoded dimension must be divisible by 2."
         assert 0 < self.encodedDimension, "The encoded dimension must be greater than 0."
 

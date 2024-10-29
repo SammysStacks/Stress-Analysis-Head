@@ -1,7 +1,5 @@
-# General
 import torch
 
-# Import machine learning files
 from .waveletNeuralOperatorWeights import waveletNeuralOperatorWeights
 from ...reversibleComponents.reversibleInterface import reversibleInterface
 
@@ -86,11 +84,7 @@ class waveletNeuralOperatorLayer(waveletNeuralOperatorWeights):
         if reversibleInterface.forwardDirection: lowFrequency, highFrequencies = self.applyExtraOperators(lowFrequency, highFrequencies)
 
         # Perform wavelet reconstruction.
-        reconstructedData = self.idwt((lowFrequency, highFrequencies))
-        # reconstructedData dimension: batchSize, numOutputSignals, paddedSequenceLength
-
-        # Remove the padding from the reconstructed data.
-        reconstructedData = reconstructedData[:, :, left_pad:-right_pad if right_pad > 0 else None]
+        reconstructedData = self.idwt((lowFrequency, highFrequencies))[:, :, left_pad:left_pad + sequenceLength]
         # reconstructedData dimension: batchSize, numOutputSignals, sequenceLength
 
         # Add a bias term if needed.

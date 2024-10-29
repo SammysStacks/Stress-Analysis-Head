@@ -62,9 +62,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     # metaBatchInfo dimension: batchSize, numMetadata
 
                     # Adjust the data precision.
-                    batchSignalIdentifiers = batchSignalIdentifiers.int()
                     signalBatchData = signalBatchData.double()
-                    metaBatchInfo = metaBatchInfo.double()
 
                     # For every new batch.
                     if not inferenceTraining and self.accelerator.sync_gradients: self.augmentData = random.uniform(a=0, b=1) < 0.5
@@ -96,7 +94,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     self.modelHelpers.assertVariableIntegrity(emotionProfile, variableName="emotion profile", assertGradient=False)
 
                     # Calculate the error in signal compression (signal encoding loss).
-                    signalReconstructedLoss = self.organizeLossInfo.calculateSignalEncodingLoss(augmentedBatchData, reconstructedSignalData, missingDataMask, batchTrainingMask if not profileTraining else None, self.reconstructionIndex)
+                    signalReconstructedLoss = self.organizeLossInfo.calculateSignalEncodingLoss(augmentedBatchData, reconstructedSignalData, missingDataMask, batchTrainingMask if not profileTraining or inferenceTraining else None, self.reconstructionIndex)
                     if signalReconstructedLoss is None: self.accelerator.print("Not useful loss"); continue
 
                     # Initialize basic core loss value.
@@ -108,8 +106,8 @@ class emotionPipeline(emotionPipelineHelpers):
                     # ------------------- Update the Model  -------------------- #
 
                     # Increase the learning rate.
-                    if profileTraining: finalLoss = 100*finalLoss  # Profile training.
-                    elif not trainSharedLayers: finalLoss = 10*finalLoss  # Inference or signal-specific training.
+                    if profileTraining: finalLoss = 10*finalLoss  # Profile training.
+                    elif not trainSharedLayers: finalLoss = finalLoss  # Inference or signal-specific training.
 
                     # Prevent exploding loss values.
                     while 100 < finalLoss.item(): finalLoss = finalLoss / 10
