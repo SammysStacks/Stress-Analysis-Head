@@ -86,29 +86,58 @@ class featureOrganization(humanMachineInterface):
 
     # --------------------- Organize Incoming Features --------------------- #
 
-    def compileIntervalFeatures(self, maxSequenceLength):
+    def compileIntervalFeaturesWithPadding(self):
         # Find the number of new points.
         lastRecordedTime = self.featureAnalysisList[0].timepoints[-1]
         numNewPoints = 1 + (lastRecordedTime - self.startModelTime - self.modelTimeBuffer) // self.modelTimeGap
         modelTimes = []
 
-        # Preallocate the feature times and features.
-        inputModelData = torch.zeros((numNewPoints, len(self.featureNames), maxSequenceLength, len(modelConstants.signalChannelNames)), dtype=torch.float64)
-        # inputModelData dim: numNewTimePoints, numBiomarkerFeatures, maxSequenceLength, numChannels
+        # for resetting the start time later
+        initialStartModelTime = self.startModelTime
 
-        # For each new point.
+        # list for getting the max length during this two pass method
+        maxSequenceLengthList = []
+
+        # For each new point, 1st pass
         for numNewPoint in range(numNewPoints):
             endModelTime = self.startModelTime - self.modelTimeWindow
+            maxSequenceLengthPoint = 0
 
             # For each unique analysis with features.
             for biomarkerInd in range(len(self.featureAnalysisList)):
                 oldEndPointer = self.therapyPointers[biomarkerInd]
-                analysis = self.featureAnalysisList[biomarkerInd]
 
                 # Locate the experiment indices within the data
                 newStartTimePointer = oldEndPointer + np.searchsorted(self.rawFeatureTimesHolder[0][oldEndPointer:], self.startModelTime, side='right') + 1
                 newEndTimePointer = oldEndPointer + np.searchsorted(self.rawFeatureTimesHolder[0][oldEndPointer:], endModelTime, side='left')
-                numBiomarkerPoints = newEndTimePointer - newStartTimePointer
+                numBiomarkerPoints = newStartTimePointer - newEndTimePointer
+
+                # update the max sequence length for this new point particulary
+                maxSequenceLengthPoint = max(maxSequenceLengthPoint, numBiomarkerPoints)
+
+            maxSequenceLengthList.append(maxSequenceLengthPoint)
+            self.startModelTime += self.modelTimeGap
+
+        # reset the start model time
+        self.startModelTime = initialStartModelTime
+
+        maxSequenceLength = max(maxSequenceLengthList)
+
+        # Preallocate the feature times and features.
+        inputModelData = torch.zeros((numNewPoints, len(self.featureNames), maxSequenceLength, len(modelConstants.signalChannelNames)), dtype=torch.float64)
+        # inputModelData dim: numNewTimePoints, numBiomarkerFeatures, maxSequenceLength, numChannels
+
+        # 2nd pass
+        for numNewPoint in range(numNewPoints):
+            endModelTime = self.startModelTime - self.modelTimeWindow
+
+            for biomarkerInd in range(len(self.featureAnalysisList)):
+                oldEndPointer = self.therapyPointers[biomarkerInd]
+                analysis = self.featureAnalysisList[biomarkerInd]
+
+                newStartTimePointer = oldEndPointer + np.searchsorted(self.rawFeatureTimesHolder[0][oldEndPointer:], self.startModelTime, side='right') + 1
+                newEndTimePointer = oldEndPointer + np.searchsorted(self.rawFeatureTimesHolder[0][oldEndPointer:], endModelTime, side='left')
+                numBiomarkerPoints = newStartTimePointer - newEndTimePointer
 
                 # For each channel in the analysis.
                 for featureChannelInd in range(len(analysis.featureChannelIndices)):
@@ -121,38 +150,9 @@ class featureOrganization(humanMachineInterface):
 
             # Update the model time.
             self.startModelTime += self.modelTimeGap
+            modelTimes.append(self.startModelTime)
 
         return modelTimes, inputModelData
-
-    def compileAllFeatureWPadding(self):
-
-        # --------------- Get the max feature length for padding ----------------#
-
-        # Find the maximum length for padding feature times
-        maxSequenceLength = max(len(analysis.timepoints) for analysis in self.featureAnalysisList)
-
-        # Calculate the total number of features (sum of all feature channels across biomarkers)
-        numFeatures = sum(len(biomarkerFeatures) for biomarkerFeatures in features)
-
-        # compiling features
-        compiledAllFeatures = torch.zeros((numNewPoints, numFeatures, maxSequenceLength, len(modelConstants.signalChannelNames)), dtype=torch.float32)
-
-        # --------------- Pad feature times and features ----------------#
-        featureIdx = 0
-        for biomarkerTimes, biomarkerFeatures in zip(compiledFeatureTimes, compiledFeatures):
-            for featureChannelTimes, featureChannel in zip(biomarkerTimes, biomarkerFeatures):
-
-                # get the length index for filling in the values
-                length = min(len(featureChannelTimes), len(featureChannel), maxSequenceLength)
-
-                # Fill the time data
-                compiledAllFeatures[:, featureIdx, :length, 0] = torch.tensor(featureChannelTimes[:length])
-
-                # Fill the feature data
-                compiledAllFeatures[:, featureIdx, :length, 1] = torch.tensor(featureChannel[:length])
-                featureIdx += 1
-
-        return compiledAllFeatures
 
     def organizeRawFeatures(self):
         # For each unique analysis with features.

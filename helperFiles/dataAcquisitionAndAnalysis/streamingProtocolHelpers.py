@@ -144,8 +144,8 @@ class streamingProtocolHelpers(featureOrganization):
 
         # Organize the new features
         self.organizeRawFeatures()
-        self.compileAllFeatureWPadding()
-        self.predictLabels(compiledAllFeatures)
+        modelTimes, paddedInputModelDataFeature = self.compileIntervalFeaturesWithPadding()
+        self.predictLabels(modelTimes, paddedInputModelDataFeature)
         exit()
 
         # Plot the Data

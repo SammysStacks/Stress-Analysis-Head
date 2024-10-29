@@ -80,7 +80,7 @@ class humanMachineInterface:
         fileName = os.path.basename(filePath).split(".")[0]
         self.userName = fileName.split(" ")[-1].lower()
 
-    def predictLabels(self, compiledAllFeatures, modelTimes):
+    def predictLabels(self, modelTimes, compiledAllFeatures):
 
         _, _, _, _, _, _, emotionProfile = self.modelClasses[0].model.forward(compiledAllFeatures)
         # emotionProfile dim: numNewPoints, numEmotions=30, encodedDimension=256
