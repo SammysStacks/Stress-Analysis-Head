@@ -39,6 +39,7 @@ class compileModelDataHelpers:
         self.maxClassPercentage = None
         self.minSequencePoints = None
         self.maxSequenceDeriv = None
+        self.maxSequenceJump = None
         self.minNumClasses = None
         self.minSNR = None
 
@@ -50,7 +51,7 @@ class compileModelDataHelpers:
 
         # Exclusion criterion.
         self.minNumClasses, self.maxClassPercentage = self.modelParameters.getExclusionClassCriteria(submodel)
-        self.minSequencePoints, self.minSignalPresentCount, self.maxSequenceDeriv = self.modelParameters.getExclusionSequenceCriteria(submodel)
+        self.minSequencePoints, self.minSignalPresentCount, self.maxSequenceDeriv, self.maxSequenceJump = self.modelParameters.getExclusionSequenceCriteria(submodel)
         self.minSNR = self.modelParameters.getExclusionSNRCriteria(submodel)
 
         # Embedded information for each model.
@@ -267,7 +268,7 @@ class compileModelDataHelpers:
                 signalData = biomarkerData[batchInd, signalInd, 0:numPoints]
 
                 # Cull any bad signals and their corresponding time points.
-                if 0.5 < signalData.diff().abs().max(): allSignalData[batchInd, signalInd, :, :] = 0; continue
+                if self.maxSequenceJump < signalData.diff().abs().max(): allSignalData[batchInd, signalInd, :, :] = 0; continue
                 if 0.9 < signalData[-1].abs(): allSignalData[batchInd, signalInd, :, :] = 0; continue
                 if 0.9 < signalData[0].abs(): allSignalData[batchInd, signalInd, :, :] = 0; continue
 

@@ -1,8 +1,6 @@
 import random
 import time
 
-import torch
-
 from .emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from .emotionPipelineHelpers import emotionPipelineHelpers
 
@@ -112,6 +110,9 @@ class emotionPipeline(emotionPipelineHelpers):
                     # Increase the learning rate.
                     if profileTraining: finalLoss = 100*finalLoss  # Profile training.
                     elif not trainSharedLayers: finalLoss = 10*finalLoss  # Inference or signal-specific training.
+
+                    # Prevent exploding loss values.
+                    while 1000 < finalLoss.item(): finalLoss = finalLoss / 10
 
                     t1 = time.time()
                     # Calculate the gradients.

@@ -40,7 +40,7 @@ class reversibleDualLinearLayer(reversibleInterface):
 
     @staticmethod
     def scaleGradients(grad):
-        return grad * 0.1
+        return grad * 0.2
 
     def createArchitecture(self, linearOperators, _activationFunctions, switchActivationDirection):
         # Create the neural layers.
@@ -74,8 +74,7 @@ class reversibleDualLinearLayer(reversibleInterface):
 
     def applyLayer(self, x1, x2, layerInd):
         # Apply a mask to the neural weights.
-        A1 = self.linearOperators1[layerInd]
-        A2 = self.linearOperators2[layerInd]
+        A1, A2 = self.linearOperators1[layerInd], self.linearOperators2[layerInd]
         # A: numSignals, sequenceLength, sequenceLength
 
         # Mask the weights to match the kernel size.

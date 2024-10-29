@@ -47,7 +47,7 @@ class reversibleLinearLayer(reversibleInterface):
 
     @staticmethod
     def scaleGradients(grad):
-        return grad * 0.1
+        return grad * 0.2
 
     def forward(self, inputData):
         # Cast the stability term to the device.

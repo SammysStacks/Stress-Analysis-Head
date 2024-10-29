@@ -45,7 +45,7 @@ class reversibleDualConvolutionLayer(reversibleInterface):
 
     @staticmethod
     def scaleGradients(grad):
-        return grad * 0.1
+        return grad * 0.2
 
     def createArchitecture(self, linearOperators, _activationFunctions, switchActivationDirection):
         # Create the neural layers.

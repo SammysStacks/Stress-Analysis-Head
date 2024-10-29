@@ -209,7 +209,7 @@ class nonLinearMultiplication(reversibleInterface):
 
     @staticmethod
     def scaleFrequencyGradients(grad):
-        return grad * 0.1
+        return grad * 0.2
 
     def forward(self, x):
         # Check if the non-linearity term has been calculated.

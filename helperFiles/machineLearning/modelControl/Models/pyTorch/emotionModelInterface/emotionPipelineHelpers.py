@@ -1,4 +1,5 @@
 # Import files for machine learning
+import torch
 
 from .emotionModel.emotionModelHead import emotionModelHead
 from .emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
@@ -33,7 +34,8 @@ class emotionPipelineHelpers:
         # Initialize the emotion model.
         self.model = emotionModelHead(submodel=submodel, userInputParams=userInputParams, emotionNames=emotionNames, activityNames=activityNames,
                                       featureNames=featureNames, numSubjects=numSubjects, datasetName=datasetName, numExperiments=numExperiments)
-        # self.model = torch.compile(self.model, backend='eager')
+        # self.model = torch.compile(self.model, backend='inductor')  # ['cudagraphs', 'inductor', 'onnxrt', 'openxla', 'tvm']
+        # self.model = torch.jit.script(self.model)
 
         # Initialize helper classes.
         self.organizeLossInfo = organizeTrainingLosses(accelerator, allEmotionClasses, self.activityLabelInd)
