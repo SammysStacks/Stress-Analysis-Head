@@ -90,6 +90,7 @@ class featureOrganization(humanMachineInterface):
         # Find the number of new points.
         lastRecordedTime = self.featureAnalysisList[0].timepoints[-1]
         numNewPoints = 1 + (lastRecordedTime - self.startModelTime - self.modelTimeBuffer) // self.modelTimeGap
+        modelTimes = []
 
         # Preallocate the feature times and features.
         inputModelData = torch.zeros((numNewPoints, len(self.featureNames), maxSequenceLength, len(modelConstants.signalChannelNames)), dtype=torch.float64)
@@ -121,7 +122,7 @@ class featureOrganization(humanMachineInterface):
             # Update the model time.
             self.startModelTime += self.modelTimeGap
 
-        return inputModelData
+        return modelTimes, inputModelData
 
     def compileAllFeatureWPadding(self):
 
