@@ -23,9 +23,13 @@ class humanMachineInterface:
         self.compileModelInfo = compileModelInfo()  # Initialize the Model Information
 
         # Therapy parameters
+        self.timePointEvolution = []
         self.therapyControl = None
         self.therapyInitializedUser = False
         self.plottingTherapyIndicator = False
+        self.therapyParam = 37
+        self.therapyStartTime = torch.tensor(0)
+        self.initialPredictions = torch.full((1, 3, 1, 1), 0.5)
         self.therapyInitialization()
 
         # Compile the feature information.
@@ -63,7 +67,10 @@ class humanMachineInterface:
             parameterBounds = self.compileModelInfo.parameterBounds
             parameterBinWdith = self.compileModelInfo.parameterBinWidth
             self.therapyControl = heatTherapyControl(self.userName, parameterBounds, parameterBinWdith, protocolParameters, therapyMethod=self.compileModelInfo.userTherapyMethod, plotResults=self.plottingTherapyIndicator)
-            self.therapyControl.therapyProtocol.initializeUserState(self.userName)
+            initialTime = self.therapyStartTime
+            initialParam = self.therapyControl.therapyProtocol.boundNewTemperature(self.therapyParam, bufferZone=0.01)
+            initialPredictions = self.initialPredictions
+            self.therapyControl.therapyProtocol.initializeUserState(self.userName, initialTime, initialParam, initialPredictions)
             self.therapyInitializedUser = self.userName
         elif self.actionControl == 'music' and self.userName != self.therapyInitializedUser:
             pass
@@ -80,31 +87,62 @@ class humanMachineInterface:
         fileName = os.path.basename(filePath).split(".")[0]
         self.userName = fileName.split(" ")[-1].lower()
 
-    def predictLabels(self, modelTimes, compiledAllFeatures):
+    def minMaxScale(self, compiledAllFeatures):
+        # inputModelData = torch.zeros((numNewPoints, len(self.featureNames), maxSequenceLength, len(modelConstants.signalChannelNames)), dtype=torch.float64)
+        # inputModelData dim: numNewTimePoints, numBiomarkerFeatures, maxSequenceLength, numChannels
+        featureMin = compiledAllFeatures.min(dim=(0, 2, 3), keepdim=True) # get the feature min except at the feature dimension ?
+        featureMax = compiledAllFeatures.max(dim=(0, 2, 3), keepdim=True)
+
+        pass
+
+    def emotionConversion(self, emotionScores):
+        emotionFirstTenMin = emotionScores[:10].min()
+        emotionFirstTenMax = emotionScores[:10].max()
+        emotionSecondTwentyMin = emotionScores[10:].min()
+        emotionSecondTwentyMax = emotionScores[10:].max()
+        emotionScores[:10] = 0.5 + (emotionScores[:10] - emotionFirstTenMin) * (5.5 - 0.5) / (emotionFirstTenMax - emotionFirstTenMin)
+        emotionScores[10:] = 0.5 + (emotionScores[10:] - emotionSecondTwentyMin) * (4.5 - 0.5) / (emotionSecondTwentyMax - emotionSecondTwentyMin)
+        return emotionScores
+
+
+    def predictLabels(self, modelTimes, compiledAllFeatures, therapyParam):
 
         _, _, _, _, _, _, emotionProfile = self.modelClasses[0].model.forward(compiledAllFeatures)
         # emotionProfile dim: numNewPoints, numEmotions=30, encodedDimension=256
 
         # Get the emotion scores.
-        emotionScores = emotionProfile.argmax(dim=-1)
-        # Convert the index to a score. First ten are 0.5-5.5 and next 20 are 0.5-4.5
-        # Handle PANAS and STAI EMOTIONS score conversion seperately
+        emotionScores = emotionProfile.argmax(dim=-1) # dim: numNewPoints, numEmotions
+        newMentalState = []
+        therapyState = []
+        for newPoints in range(len(emotionScores)):
+            # Convert the index to a score. First ten are 0.5-5.5 and next 20 are 0.5-4.5
+            emotionScores[newPoints] = self.emotionConversion(emotionScores[newPoints])
 
-        # Now convert to PANAS and STAI
-        newMentalStates = 1
+            # Handle PANAS and STAI EMOTIONS score conversion seperately
+            positiveAffectivity, negativeAffectivity = self.compileModelInfo.scorePANAS(emotionScores[:10])
+            stateAnxiety = self.compileModelInfo.scoreSTAI(emotionScores[10:])
+
+            mental_state_tensor = torch.tensor([positiveAffectivity, negativeAffectivity, stateAnxiety]).view(1, 3, 1, 1)
+            newMentalState.append(mental_state_tensor)
+            therapyState.append(therapyParam)
+
         # newMentalStates: numNewPoints, numMentalStates=3
         # therapyStates: numNewPoints, numTherapyInfo
 
-        # 4: put the output into the therapy
 
-        currentTimePoint = None
-        currentParam = None
-        currentPrediction = None
+        # Pass the output to the therapy model
+
+        currentTimePoint = modelTimes[-1] # make sure it is: timepoints: list of tensor: [tensor(0)]
+        currentParam = therapyParam[-1] # make sure it is: list of tensor: [torch.Size([1, 1, 1, 1])
+        currentPrediction = newMentalState[-1] # make sure it is: list of tensor: torch.Size([1, 3, 1, 1])
         self.therapyControl.therapyProtocol.updateEmotionPredState(self.userName, currentTimePoint, currentParam, currentPrediction)
         therapyState, allMaps = self.therapyControl.therapyProtocol.updateTherapyState()
+        self.therapyStates.append(therapyState)
+        
+        # all the time points
+        self.timePointEvolution = self.therapyControl.therapyProtocol.timepoints
 
-
-        return therapyState
+        return therapyState, allMaps
 
 
 

@@ -10,7 +10,7 @@ class heatTherapyControl(heatTherapyHelpers):
     def runTherapyProtocol(self, maxIterations=None):
         # Initialize holder parameters such as the user maps.
         self.therapyProtocol.initializeUserState(userName=self.userName)
-        print('passed initialize UserState')
+        print('Finished initialize UserState')
         iterationCounter = 0
         if self.therapyMethod == 'hmmTherapyProtocol':
             self.therapyProtocol.trainHMM()

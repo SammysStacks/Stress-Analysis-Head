@@ -134,12 +134,12 @@ class generalTherapyProtocol(abc.ABC):
             # say that state anxiety has a slightly higher weight
             self.simulationProtocols.realSimMapCompiledLoss = 0.3 * self.simulationProtocols.realSimMapPA + 0.3 * self.simulationProtocols.realSimMapNA + 0.4 * self.simulationProtocols.realSimMapSA
 
-    def initializeUserState(self, userName):
+    def initializeUserState(self, userName, initialTime, initialParam, initialPredicitons):
         # Get the user information.
         # timePints: a tensor
         # parameter: tensor of size 1, 1, 1, 1
         # emotionStates: tensor of size 1, 3, 1, 1
-        timepoints, parameters, emotionStates = self.getInitialSate()  # dim: numPoints, timePoint: t; emotionStates: (PA, NA, SA); prediction: predict the next state; Note these are actual state values
+        timepoints, parameters, emotionStates = self.getInitialSate(initialTime, initialParam, initialPredicitons)  # dim: numPoints, timePoint: t; emotionStates: (PA, NA, SA); prediction: predict the next state; Note these are actual state values
         # Check if any of the initial state components are None, and do nothing if they are.
         if timepoints is None or parameters is None or emotionStates is None:
             return
@@ -160,7 +160,7 @@ class generalTherapyProtocol(abc.ABC):
 
 
 
-    def getInitialSate(self):
+    def getInitialSate(self, initialTime, initialParam, initialPredicitons):
         if self.simulateTherapy:
             # Simulate a new time point by adding a constant delay factor.
             currentTime, currentParam, currentPredictions = self.simulationProtocols.getInitialState() # currentTime: tensor(0); currentParam: torch.Size([1, 1, 1, 1]); currentPredictions: torch.Size([1, 3, 1, 1]) predefined.
@@ -169,7 +169,7 @@ class generalTherapyProtocol(abc.ABC):
         else:
             # for real time running the model
             # Assume we have a random start state
-            currentTime, currentParam, currentPredictions = None, None, None  # currentTime: tensor(0); currentParam: torch.Size([1, 1, 1, 1]); currentPredictions: torch.Size([1, 3, 1, 1]) predefined.
+            currentTime, currentParam, currentPredictions = initialTime, initialParam, initialPredicitons  # currentTime: tensor(0); currentParam: torch.Size([1, 1, 1, 1]); currentPredictions: torch.Size([1, 3, 1, 1]) predefined.
             print('currentTime, currentParam, currentPredictions', currentTime, currentParam, currentPredictions)
             return currentTime, currentParam, currentPredictions
 
