@@ -1,6 +1,8 @@
 import random
 import time
 
+import torch
+
 from .emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from .emotionPipelineHelpers import emotionPipelineHelpers
 
@@ -49,7 +51,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     numPointsAnalyzed += batchSize
 
                     # Get the reconstruction column for auto encoding and activity prediction.
-                    if inferenceTraining or submodel == modelConstants.signalEncoderModel: batchTrainingMask, batchSignalLabels, batchSignalInfo = self.dataInterface.getReconstructionData(batchTrainingMask, batchSignalLabels, batchSignalInfo, self.reconstructionIndex)
+                    if not profileTraining and submodel == modelConstants.signalEncoderModel: batchTrainingMask, batchSignalLabels, batchSignalInfo = self.dataInterface.getReconstructionData(batchTrainingMask, batchSignalLabels, batchSignalInfo, self.reconstructionIndex)
 
                     # We can skip this batch, and backpropagation if necessary.
                     if batchSignalInfo.size(0) == 0: self.backpropogateModel(); continue
@@ -67,7 +69,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     metaBatchInfo = metaBatchInfo.double()
 
                     # For every new batch.
-                    if not inferenceTraining and self.accelerator.sync_gradients: self.augmentData = random.uniform(a=0, b=1) < 0.25
+                    if not inferenceTraining and self.accelerator.sync_gradients: self.augmentData = random.uniform(a=0, b=1) < 0.5
 
                     if not inferenceTraining and self.augmentData:
                         # Augment the signals to train an arbitrary sequence length and order.
@@ -96,7 +98,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     self.modelHelpers.assertVariableIntegrity(emotionProfile, variableName="emotion profile", assertGradient=False)
 
                     # Calculate the error in signal compression (signal encoding loss).
-                    signalReconstructedLoss = self.organizeLossInfo.calculateSignalEncodingLoss(augmentedBatchData, reconstructedSignalData, missingDataMask, batchTrainingMask, self.reconstructionIndex)
+                    signalReconstructedLoss = self.organizeLossInfo.calculateSignalEncodingLoss(augmentedBatchData, reconstructedSignalData, missingDataMask, batchTrainingMask if not profileTraining else None, self.reconstructionIndex)
                     if signalReconstructedLoss is None: self.accelerator.print("Not useful loss"); continue
 
                     # Initialize basic core loss value.
@@ -108,7 +110,8 @@ class emotionPipeline(emotionPipelineHelpers):
                     # ------------------- Update the Model  -------------------- #
 
                     # Increase the learning rate.
-                    if profileTraining: finalLoss = 100*finalLoss
+                    if profileTraining: finalLoss = 100*finalLoss  # Profile training.
+                    elif not trainSharedLayers: finalLoss = 10*finalLoss  # Inference or signal-specific training.
 
                     t1 = time.time()
                     # Calculate the gradients.

@@ -53,6 +53,7 @@ class lossCalculations:
         # Find the boolean flags for the data involved in the loss calculation.
         if allLabelsMask is not None and reconstructionIndex is not None:
             return self.dataInterface.getEmotionColumn(allLabelsMask, reconstructionIndex)  # Dim: numExperiments
+        return None
 
     def getOptimalLoss(self, method, allInputData, allLabelsMask, reconstructionIndex):
         # Isolate the signals for this loss (For example, training vs. testing).

@@ -36,7 +36,7 @@ class modelParameters:
                 'encodeImaginaryFrequencies': True,  # The protocol for encoding the high frequency signals.
                 'skipConnectionProtocol': 'none',  # The protocol for the skip connections.
                 'encodeRealFrequencies': True,  # The protocol for encoding the low frequency signals.
-                'extraOperators': ['wavelet'],  # The extra operators to apply to the wavelet transform.
+                'extraOperators': [],  # The extra operators to apply to the wavelet transform.
                 'learningProtocol': 'rFC',  # The learning protocol for the neural operator.
             }
         }
