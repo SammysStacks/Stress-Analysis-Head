@@ -144,9 +144,8 @@ class streamingProtocolHelpers(featureOrganization):
 
         # Organize the new features
         self.organizeRawFeatures()
-        print('self.rawFeatureHolder', self.rawFeatureHolder)
-        exit()
-        self.predictLabels()
+        compiledAllFeatures = self.compileAllFeatureWPadding(self.startModelTime, self.timeEmoAnalysisWindow, self.rawFeatureTimesHolder, self.rawFeatureHolder)
+        self.predictLabels(compiledAllFeatures)
         exit()
 
         # Plot the Data

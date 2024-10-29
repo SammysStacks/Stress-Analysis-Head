@@ -7,6 +7,7 @@ import scipy
 
 # Import files.
 from .humanMachineInterface import humanMachineInterface
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
 # Parameters for the streamingProtocolHelpers class:
 #     Biomarker information:
@@ -34,7 +35,7 @@ class featureOrganization(humanMachineInterface):
         self.featureAnalysisList = []  # A list of unique analyses that will have features, keeping the order they are streamed in.
         self.interpBufferPoints = 8  # The buffer for the edge of the feature interpolation.
         self.trimMeanCut = 0.25  # The proportion to cut for the trimmed mean.
-
+        self.analysisProtocols = analysisProtocols
         # Assert the integrity of feature organization.
         assert len(featureAverageWindows) == len(self.biomarkerFeatureOrder), f"Found {featureAverageWindows} windows for {self.biomarkerFeatureOrder} biomarkers. These must to be the same length."
 
@@ -60,10 +61,6 @@ class featureOrganization(humanMachineInterface):
             startBiomarkerInd = endBiomarkerInd
         assert endBiomarkerInd == len(self.featureNames), f"Found {endBiomarkerInd} biomarker features and {len(self.featureNames)} features. These must be the same length."
 
-        # Holder parameters.
-        self.rawFeatureTimesHolder = None  # A list (in biomarkerFeatureOrder) of lists of raw feature's times; Dim: numFeatureSignals, numPoints
-        self.rawFeaturePointers = None  # A list of pointers indicating the last seen raw feature index for each analysis and each channel.
-        self.rawFeatureHolder = None  # A list (in biomarkerFeatureOrder) of lists of raw features; Dim: numFeatureSignals, numPoints, numBiomarkerFeatures
 
         # Initialize mutable variables.
         self.resetFeatureInformation()
@@ -87,6 +84,68 @@ class featureOrganization(humanMachineInterface):
             featureAnalysis.featureTimeWindow = featureTimeWindow
 
     # --------------------- Organize Incoming Features --------------------- #
+    def compileIntervalFeatures(self, startTime, timeEmoAnalysisWindow, featureTimes, features):
+        endTime = startTime - timeEmoAnalysisWindow
+        compiledFeatureTimes = []
+        compiledFeatures = []  # To hold compiled features for each biomarker
+
+        for biomarkerInd in range(len(self.biomarkerFeatureNames)):
+            biomarkerTimes = featureTimes[biomarkerInd]
+            biomarkerFeatures = features[biomarkerInd]
+
+            # Define startTimePointer and endTimePointer for the current biomarker
+            startTimePointer = 0
+
+            # Find the start index for the interval closest to startTime
+            while startTimePointer < len(biomarkerTimes) and biomarkerTimes[startTimePointer] < startTime:
+                startTimePointer += 1
+
+            endTimePointer = startTimePointer
+            while endTimePointer < len(biomarkerTimes) and biomarkerTimes[endTimePointer] < endTime:
+                endTimePointer += 1
+
+            intervalFeatureTimes = biomarkerTimes[startTimePointer:endTimePointer + 1]
+            intervalFeatures = biomarkerFeatures[startTimePointer:endTimePointer + 1]
+
+            compiledFeatureTimes.append(intervalFeatureTimes)
+            compiledFeatures.append(intervalFeatures)
+
+        return compiledFeatureTimes, compiledFeatures
+
+    # Padding
+    def compileAllFeatureWPadding(self, startTime, timeEmoAnalysisWindow, featureTimes, features):
+
+        compiledFeatureTimes, compiledFeatures = self.compileIntervalFeatures(startTime, timeEmoAnalysisWindow, featureTimes, features)
+        # --------------- Get the max feature length for padding ----------------#
+        # Find the maximum length for padding feature times
+        maxSequenceLength = max(max(len(featureChannelTimes) for featureChannelTimes in biomarkerTimes)
+                                for biomarkerTimes in compiledFeatureTimes)
+
+        # Calculate the total number of features (sum of all feature channels across biomarkers)
+        numFeatures = sum(len(biomarkerFeatures) for biomarkerFeatures in features)
+
+        numNewPoints = timeEmoAnalysisWindow
+        # compiling features
+        compiledAllFeatures = torch.zeros((numNewPoints, numFeatures, maxSequenceLength, len(modelConstants.signalChannelNames)), dtype=torch.float32)
+
+        # --------------- Pad feature times and features ----------------#
+        featureIdx = 0
+        for biomarkerTimes, biomarkerFeatures in zip(compiledFeatureTimes, compiledFeatures):
+            for featureChannelTimes, featureChannel in zip(biomarkerTimes, biomarkerFeatures):
+
+                # get the length index for filling in the values
+                length = min(len(featureChannelTimes), len(featureChannel), maxSequenceLength)
+
+                # Fill the time data
+                compiledAllFeatures[:, featureIdx, :length, 0] = torch.tensor(featureChannelTimes[:length])
+
+                # Fill the feature data
+                compiledAllFeatures[:, featureIdx, :length, 1] = torch.tensor(featureChannel[:length])
+                featureIdx += 1
+
+        return compiledAllFeatures
+
+
     def organizeRawFeatures(self):
         # For each unique analysis with features.
         for analysis in self.featureAnalysisList:

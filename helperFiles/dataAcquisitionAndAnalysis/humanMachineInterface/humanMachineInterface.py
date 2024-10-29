@@ -41,7 +41,14 @@ class humanMachineInterface:
         self.resetVariables_HMI()
 
         self.timeEmoAnalysisWindow = modelConstants.timeWindows[-1]
+        # Holder parameters.
+        self.rawFeatureTimesHolder = None  # A list (in biomarkerFeatureOrder) of lists of raw feature's times; Dim: numFeatureSignals, numPoints
+        self.rawFeaturePointers = None  # A list of pointers indicating the last seen raw feature index for each analysis and each channel.
+        self.rawFeatureHolder = None  # A list (in biomarkerFeatureOrder) of lists of raw features; Dim: numFeatureSignals, numPoints, numBiomarkerFeatures
 
+        # predefined model time
+        self.startModelTime = self.timeEmoAnalysisWindow
+        self.moveDataFinger = 20
 
 
     def therapyInitialization(self):
@@ -75,59 +82,11 @@ class humanMachineInterface:
         fileName = os.path.basename(filePath).split(".")[0]
         self.userName = fileName.split(" ")[-1].lower()
 
-    def compileAllFeatureWPadding(self, startTimePointer, timeEmoAnalysisWindow, featureTimes, features):
-        # --------------- Get the max feature length for padding ----------------#
-        # Find the maximum length for padding feature times
-        maxSequenceLength = max(
-            max(len(featureChannelTimes) for featureChannelTimes in biomarkerTimes)
-            for biomarkerTimes in featureTimes
-        )
 
-        # Find the maximum length for padding features should be the same as maxSequenceLength
-        maxFeatureLength = max(
-            max(len(featureChannel) for featureChannel in biomarkerFeatures)
-            for biomarkerFeatures in features
-        )
+    def predictLabels(self, compiledAllFeatures):
 
-        # Padding to have data structure: numNewPoints, numFeatures, maxSequenceLength, [time, compiled feature data]
-        numNewPoints = startTimePointer - timeEmoAnalysisWindow
-
-        # Calculate the total number of features (sum of all feature channels across biomarkers)
-        numFeatures = sum(len(biomarkerFeatures) for biomarkerFeatures in features)
-
-        # compiling features
-        compiledAllFeatures = torch.zeros((numNewPoints, numFeatures, maxSequenceLength, len(modelConstants.signalChannelNames)), dtype=torch.float32)
-
-        # --------------- Pad feature times and features ----------------#
-        featureIdx = 0
-        for biomarkerTimes, biomarkerFeatures in zip(featureTimes, features):
-            for featureChannelTimes, featureChannel in zip(biomarkerTimes, biomarkerFeatures):
-                # get the length index for filling in the values
-                length = min(len(featureChannelTimes), len(featureChannel), maxSequenceLength)
-
-                # Fill the time data
-                compiledAllFeatures[:, featureIdx, :length, 0] = torch.tensor(featureChannelTimes[:length])
-
-                # Fill the feature data
-                compiledAllFeatures[:, featureIdx, :length, 1] = torch.tensor(featureChannel[:length])
-                featureIdx += 1
-
-        return compiledAllFeatures
-
-
-    def predictLabels(self, featureTimes, features):
-
-        # 1: Organize compile features like the raw features (average back)
-        newCompiledFeatureTimes = 1  # similar to rawfeatures
-        newCompiledFeatures = 1
-
-        startTimePointer = 1
-
-        # 2: Get a last unanalyzed points, and put them into a data structure: numPointUnAnalyzed, numFeatures, maxSequenceLength, [time, compiled feature data]
-        # Times go from furtherest away -> 0 (the current time)
-
-        # 3: train the inferewnce model
-        _, _, _, _, _, emotionProfile = self.modelClasses[0].model.forward(allNewFeatures)
+        _, _, _, _, _, emotionProfile = self.modelClasses[0].model.forward(compiledAllFeatures)
+        self.startModelTime += self.moveDataFinger
         # emotionProfile dim: numNewPoints, numEmotions=30, encodedDimension=256
 
         # Get the emotion scores.
