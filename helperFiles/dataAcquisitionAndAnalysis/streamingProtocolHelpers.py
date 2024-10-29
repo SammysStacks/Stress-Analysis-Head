@@ -144,8 +144,8 @@ class streamingProtocolHelpers(featureOrganization):
 
         # Organize the new features
         self.organizeRawFeatures()
-        modelTimes, paddedInputModelDataFeature = self.compileIntervalFeaturesWithPadding()
-        therapyState, _ = self.predictLabels(modelTimes, paddedInputModelDataFeature, therapyParam=self.therapyParam)
+        modelTimes, inputModelData = self.compileIntervalFeaturesWithPadding()
+        therapyState, _ = self.predictLabels(modelTimes, inputModelData, therapyParam=self.therapyParam)
         # interface with hardware
 
         # Plot the Data

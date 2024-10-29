@@ -27,9 +27,9 @@ class humanMachineInterface:
         self.therapyControl = None
         self.therapyInitializedUser = False
         self.plottingTherapyIndicator = False
-        self.therapyParam = 37
+        self.therapyParam = 37  # TODO: this wont work with other therapies.
         self.therapyStartTime = torch.tensor(0)
-        self.initialPredictions = torch.full((1, 3, 1, 1), 0.5)
+        self.initialPredictions = torch.full(size=(1, 3, 1, 1), fill_value=0.5)
         self.therapyInitialization()
 
         # Compile the feature information.
@@ -58,7 +58,6 @@ class humanMachineInterface:
         if self.actionControl == 'heat' and self.userName != self.therapyInitializedUser:
             protocolParameters = {
                 'heuristicMapType': 'uniformSampling',  # The method for generating the simulated map. Options: 'uniformSampling', 'linearSampling', 'parabolicSampling'
-                'simulatedMapType': 'uniformSampling',  # The method for generating the simulated map. Options: 'uniformSampling', 'linearSampling', 'parabolicSampling'
                 'numSimulationHeuristicSamples': 50,  # The number of simulation samples to generate.
                 'numSimulationTrueSamples': 30,  # The number of simulation samples to generate.
                 'simulateTherapy': False,  # Whether to simulate the therapy.
@@ -96,22 +95,20 @@ class humanMachineInterface:
         pass
 
     def emotionConversion(self, emotionScores):
-        emotionFirstTenMin = emotionScores[:10].min()
-        emotionFirstTenMax = emotionScores[:10].max()
-        emotionSecondTwentyMin = emotionScores[10:].min()
-        emotionSecondTwentyMax = emotionScores[10:].max()
+
         emotionScores[:10] = 0.5 + (emotionScores[:10] - emotionFirstTenMin) * (5.5 - 0.5) / (emotionFirstTenMax - emotionFirstTenMin)
         emotionScores[10:] = 0.5 + (emotionScores[10:] - emotionSecondTwentyMin) * (4.5 - 0.5) / (emotionSecondTwentyMax - emotionSecondTwentyMin)
         return emotionScores
 
+    def predictLabels(self, modelTimes, inputModelData, therapyParam):
+        # Add in contextual information to the data.
 
-    def predictLabels(self, modelTimes, compiledAllFeatures, therapyParam):
-
-        _, _, _, _, _, _, emotionProfile = self.modelClasses[0].model.forward(compiledAllFeatures)
+        _, _, _, _, _, _, emotionProfile = self.modelClasses[0].model.forward(inputModelData)
         # emotionProfile dim: numNewPoints, numEmotions=30, encodedDimension=256
+        emotionProfile = emotionProfile.detach().cpu().numpy()
 
         # Get the emotion scores.
-        emotionScores = emotionProfile.argmax(dim=-1) # dim: numNewPoints, numEmotions
+        emotionScores = emotionProfile.argmax(axis=-1)  # dim: numNewPoints, numEmotions
         newMentalState = []
         therapyState = []
         for newPoints in range(len(emotionScores)):
@@ -119,8 +116,8 @@ class humanMachineInterface:
             emotionScores[newPoints] = self.emotionConversion(emotionScores[newPoints])
 
             # Handle PANAS and STAI EMOTIONS score conversion seperately
-            positiveAffectivity, negativeAffectivity = self.compileModelInfo.scorePANAS(emotionScores[:10])
-            stateAnxiety = self.compileModelInfo.scoreSTAI(emotionScores[10:])
+            positiveAffectivity, negativeAffectivity = self.compileModelInfo.scorePANAS(emotionScores)
+            stateAnxiety = self.compileModelInfo.scoreSTAI(emotionScores)
 
             mental_state_tensor = torch.tensor([positiveAffectivity, negativeAffectivity, stateAnxiety]).view(1, 3, 1, 1)
             newMentalState.append(mental_state_tensor)

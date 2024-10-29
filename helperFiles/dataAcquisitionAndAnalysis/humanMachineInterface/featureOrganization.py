@@ -95,7 +95,7 @@ class featureOrganization(humanMachineInterface):
         # for resetting the start time later
         initialStartModelTime = self.startModelTime
 
-        # list for getting the max length during this two pass method
+        # list for getting the max length during these two pass methods
         maxSequenceLengthList = []
 
         # For each new point, 1st pass
@@ -112,7 +112,7 @@ class featureOrganization(humanMachineInterface):
                 newEndTimePointer = oldEndPointer + np.searchsorted(self.rawFeatureTimesHolder[0][oldEndPointer:], endModelTime, side='left')
                 numBiomarkerPoints = newStartTimePointer - newEndTimePointer
 
-                # update the max sequence length for this new point particulary
+                # update the max sequence length for this new point particular
                 maxSequenceLengthPoint = max(maxSequenceLengthPoint, numBiomarkerPoints)
 
             maxSequenceLengthList.append(maxSequenceLengthPoint)
@@ -120,7 +120,6 @@ class featureOrganization(humanMachineInterface):
 
         # reset the start model time
         self.startModelTime = initialStartModelTime
-
         maxSequenceLength = max(maxSequenceLengthList)
 
         # Preallocate the feature times and features.
