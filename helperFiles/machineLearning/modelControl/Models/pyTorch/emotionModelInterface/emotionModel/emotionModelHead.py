@@ -193,7 +193,7 @@ class emotionModelHead(nn.Module):
         # reconstructedSignalData: batchSize, numSignals, maxSequenceLength
 
         # Visualize the data transformations within signal encoding.
-        if not inferenceTraining and random.random() < 0.01:
+        if not inferenceTraining and random.random() < 0.02:
             with torch.no_grad(): self.visualizeSignalEncoding(physiologicalProfile, resampledSignalData, reconstructedSignalData, timepoints, datapoints, missingDataMask)
 
         # ------------------- Learned Emotion Mapping ------------------- #

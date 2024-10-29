@@ -83,8 +83,21 @@ class lossCalculations:
         signalReconstructedLoss = self.reconstructionLoss(reconstructedSignalData, datapoints)
         # signalReconstructedLoss dimension: numExperiments, numSignals, maxSequenceLength
 
+
+
+
+
+
+
         # Adjust the loss based on the missing data.
-        missingDataMask[signalReconstructedLoss < 0.05] = True  # Remove small errors.
+        smoothenedData = self.smoothingFilter(datapoints, kernelSize=3)  # smoothenedData: numExperiments, numSignals, maxSequenceLength
+        dataUncertainty = smoothenedData.diff(dim=-1).pow(2)
+        # dataUncertainty: numExperiments, numSignals, maxSequenceLength - 1
+
+        # Adjust the loss based on the missing data.
+        missingDataMask[:, :, :-1][signalReconstructedLoss[:, :, :-1] < dataUncertainty] = True  # Remove small errors.
+        missingDataMask[:, :, 1:][signalReconstructedLoss[:, :, 1:] < dataUncertainty] = True  # Remove small errors.
+        # missingDataMask: numExperiments, numSignals, maxSequenceLength
 
         # Calculate the error in signal reconstruction (encoding loss).
         signalReconstructedLoss = signalReconstructedLoss[~missingDataMask].mean()
@@ -93,6 +106,27 @@ class lossCalculations:
         self.modelHelpers.assertVariableIntegrity(signalReconstructedLoss, variableName="encoded signal reconstructed loss", assertGradient=False)
 
         return signalReconstructedLoss
+
+    @staticmethod
+    def smoothingFilter(data, kernel=(), kernelSize=None):
+        assert len(kernel) != 0 or kernelSize is not None, "The kernel or kernel size must be specified."
+        if kernelSize is not None: assert kernelSize % 2 == 1, "The kernel size must be odd."
+        if len(kernel) != 0: assert len(kernel) % 2 == 1, "The kernel size must be odd."
+
+        # Add batch and channel dimensions for conv1d
+        if kernelSize is not None: kernel = torch.ones((1, 1, kernelSize), dtype=torch.float64) / kernelSize
+        else: kernel = torch.as_tensor(kernel).unsqueeze(0).unsqueeze(0) / kernel.sum()
+
+        # Add in the channel dimension.
+        kernel = kernel.expand(data.size(1), data.size(1), kernel.size(-1))
+        kernel = kernel.to(data.device)
+        kernel = kernel.to(data.dtype)
+
+        # Apply the convolution
+        filtered_data = torch.nn.functional.conv1d(data, kernel, padding=kernel.size(-1) // 2)
+
+        # Remove batch and channel dimensions
+        return filtered_data
 
     def calculateActivityLoss(self, predictedActivityLabels, allLabels, allLabelsMask, activityClassWeights):
         # Find the boolean flags for the data involved in the loss calculation.

@@ -4,6 +4,7 @@ import pickle
 
 import numpy as np
 import torch
+from matplotlib import pyplot as plt
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.generalMethods.dataAugmentation import dataAugmentation
@@ -266,8 +267,9 @@ class compileModelDataHelpers:
                 signalData = biomarkerData[batchInd, signalInd, 0:numPoints]
 
                 # Cull any bad signals and their corresponding time points.
-                if 0.99 < signalData[-1].abs(): allSignalData[batchInd, signalInd, :, :] = 0; continue
-                if 0.99 < signalData[0].abs(): allSignalData[batchInd, signalInd, :, :] = 0; continue
+                if 0.5 < signalData.diff().abs().max(): allSignalData[batchInd, signalInd, :, :] = 0; continue
+                if 0.9 < signalData[-1].abs(): allSignalData[batchInd, signalInd, :, :] = 0; continue
+                if 0.9 < signalData[0].abs(): allSignalData[batchInd, signalInd, :, :] = 0; continue
 
                 # Calculate the derivative of the signal data.
                 firstDeriv = torch.gradient(input=signalData, spacing=(signalTimes,), edge_order=2)[0][5:-5]

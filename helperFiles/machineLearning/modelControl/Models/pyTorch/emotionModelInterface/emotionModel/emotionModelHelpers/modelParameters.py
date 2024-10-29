@@ -29,14 +29,14 @@ class modelParameters:
                 'encodeHighFrequencyProtocol': 'highFreq',  # The protocol for encoding the high frequency signals.
                 'encodeLowFrequencyProtocol': 'lowFreq',  # The protocol for encoding the low frequency signals.
                 'skipConnectionProtocol': 'none',  # The protocol for the skip connections.
-                'extraOperators': [],  # The extra operators to apply to the wavelet transform.
+                'extraOperators': ['fourier'],  # The extra operators to apply to the wavelet transform.
                 'learningProtocol': 'rCNN',  # The learning protocol for the neural operator.
             },
             'fourier': {
                 'encodeImaginaryFrequencies': True,  # The protocol for encoding the high frequency signals.
                 'skipConnectionProtocol': 'none',  # The protocol for the skip connections.
                 'encodeRealFrequencies': True,  # The protocol for encoding the low frequency signals.
-                'extraOperators': [],  # The extra operators to apply to the wavelet transform.
+                'extraOperators': ['wavelet'],  # The extra operators to apply to the wavelet transform.
                 'learningProtocol': 'rFC',  # The learning protocol for the neural operator.
             }
         }
@@ -47,11 +47,11 @@ class modelParameters:
         return userInputParams
 
     def getTrainingBatchSize(self, submodel, numExperiments):
-        # Wesad: Found 32 (out of 32) well-labeled emotions across 63 experiments with 25 signals.
-        # Emognition: Found 12 (out of 12) well-labeled emotions across 407 experiments with 36 signals.
-        # Amigos: Found 12 (out of 12) well-labeled emotions across 673 experiments with 89 signals.
-        # Dapper: Found 12 (out of 12) well-labeled emotions across 364 experiments with 15 signals.
-        # Case: Found 2 (out of 2) well-labeled emotions across 1578 experiments with 35 signals.
+        # Wesad: Found 32 (out of 32) well-labeled emotions across 60 experiments with 15 signals.
+        # Emognition: Found 12 (out of 12) well-labeled emotions across 407 experiments with 37 signals.
+        # Amigos: Found 12 (out of 12) well-labeled emotions across 673 experiments with 111 signals.
+        # Dapper: Found 12 (out of 12) well-labeled emotions across 364 experiments with 13 signals.
+        # Case: Found 2 (out of 2) well-labeled emotions across 1578 experiments with 29 signals.
         # Collected: Found 30 (out of 30) well-labeled emotions across 187 experiments with 39 signals.
         if submodel == modelConstants.signalEncoderModel: effectiveMinBatchSize, effectiveMaxBatchSize = 12, 128
         elif submodel == modelConstants.emotionModel: effectiveMinBatchSize, effectiveMaxBatchSize = 12, 128
@@ -93,8 +93,8 @@ class modelParameters:
 
     @staticmethod
     def getExclusionSequenceCriteria(submodel):
-        if submodel == modelConstants.signalEncoderModel: return 30, 30, 0.5  # minSequencePoints, minSignalPresentCount, maxSequenceDeriv
-        elif submodel == modelConstants.emotionModel: return 30, 30, 0.5  # minSequencePoints, minSignalPresentCount, maxSequenceDeriv
+        if submodel == modelConstants.signalEncoderModel: return 25, 25, 1  # minSequencePoints, minSignalPresentCount, maxSequenceDeriv
+        elif submodel == modelConstants.emotionModel: return 25, 25, 1  # minSequencePoints, minSignalPresentCount, maxSequenceDeriv
         else: raise Exception()
 
     @staticmethod

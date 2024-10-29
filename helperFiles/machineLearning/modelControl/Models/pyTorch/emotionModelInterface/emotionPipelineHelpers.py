@@ -16,11 +16,9 @@ class emotionPipelineHelpers:
                  emotionNames, activityNames, featureNames, submodel, numExperiments):
         # General parameters.
         self.accelerator = accelerator  # Hugging face interface to speed up the training process.
-
-        # Pre-initialize later parameters.
-        self.optimizer = None
-        self.scheduler = None
-        self.model = None
+        self.optimizer = None  # The optimizer for the model.
+        self.scheduler = None  # The learning rate scheduler for the model.
+        self.model = None  # The model being used for the training process.
 
         # Dataset-specific parameters.
         self.allEmotionClasses = allEmotionClasses  # The number of classes (intensity levels) within each emotion to predict. Dim: [numEmotions]
