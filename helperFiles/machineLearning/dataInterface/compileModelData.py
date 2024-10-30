@@ -283,7 +283,7 @@ class compileModelData(compileModelDataHelpers):
             allDataLoaders.append(modelDataLoader)
 
             # Gather the number of bits of information per second.
-            numGoodEmotions = torch.sum(~torch.all(torch.isnan(allFeatureLabels), dim=0)).item()
+            numGoodEmotions = torch.any(currentTestingMask, dim=0).sum().item()
             print(f"\t{metadatasetName.capitalize()}: Found {numGoodEmotions - 1} (out of {numLabels - 1}) emotions across {numExperiments} experiments "
                   f"for {numSignals} signals with {round(numExperiments/batch_size, 3)} batches of {batch_size} experiments", flush=True)
 

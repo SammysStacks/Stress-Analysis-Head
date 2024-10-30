@@ -84,16 +84,22 @@ class waveletNeuralOperatorLayer(waveletNeuralOperatorWeights):
         # highFrequencies[decompositionLayer] dimension: batchSize, numLiftedChannels, highFrequenciesShapes[decompositionLayer]
         # lowFrequency dimension: batchSize, numLiftedChannels, lowFrequencyShape
 
-        # Apply the extra operators.
-        if not reversibleInterface.forwardDirection: lowFrequency, highFrequencies = self.applyExtraOperators(lowFrequency, highFrequencies)
+        if not reversibleInterface.forwardDirection:
+            # Apply the extra operators.
+            lowFrequency, highFrequencies = self.applyExtraOperators(lowFrequency, highFrequencies)
 
-        # Encode each frequency decomposition, separating high and low frequencies.
-        lowFrequency, highFrequencies = self.independentFrequencyAnalysis(lowFrequency, highFrequencies, residualLowFrequencyTerms, residualHighFrequencyTerms)
-        # highFrequencies[highFrequencyInd] dimension: batchSize, numOutputSignals, highFrequenciesShapes[decompositionLayer]
-        # lowFrequency dimension: batchSize, numOutputSignals, lowFrequencyShape
+            # Encode each frequency decomposition, separating high and low frequencies.
+            lowFrequency, highFrequencies = self.independentFrequencyAnalysis(lowFrequency, highFrequencies, residualLowFrequencyTerms, residualHighFrequencyTerms)
+            # highFrequencies[highFrequencyInd] dimension: batchSize, numOutputSignals, highFrequenciesShapes[decompositionLayer]
+            # lowFrequency dimension: batchSize, numOutputSignals, lowFrequencyShape
+        else:
+            # Encode each frequency decomposition, separating high and low frequencies.
+            lowFrequency, highFrequencies = self.independentFrequencyAnalysis(lowFrequency, highFrequencies, residualLowFrequencyTerms, residualHighFrequencyTerms)
+            # highFrequencies[highFrequencyInd] dimension: batchSize, numOutputSignals, highFrequenciesShapes[decompositionLayer]
+            # lowFrequency dimension: batchSize, numOutputSignals, lowFrequencyShape
 
-        # Apply the extra operators.
-        if reversibleInterface.forwardDirection: lowFrequency, highFrequencies = self.applyExtraOperators(lowFrequency, highFrequencies)
+            # Apply the extra operators.
+            lowFrequency, highFrequencies = self.applyExtraOperators(lowFrequency, highFrequencies)
 
         # Perform wavelet reconstruction.
         reconstructedData = self.idwt((lowFrequency, highFrequencies))
@@ -114,7 +120,7 @@ class waveletNeuralOperatorLayer(waveletNeuralOperatorWeights):
 
         if self.learningProtocol in ['rFC', 'rCNN']:
             # Learn a new set of wavelet coefficients using both of the frequency data.
-            lowFrequency, highFrequencies[0] = self.dualFrequencyWeights(lowFrequency + (residualLowFrequencyTerms or 0), highFrequencies[0] + (residualHighFrequencyTerms or 0))
+            lowFrequency, highFrequencies[0] = self.dualFrequencyWeights(lowFrequency, highFrequencies[0])
             return lowFrequency, highFrequencies
 
         # For each set of high-frequency coefficients.

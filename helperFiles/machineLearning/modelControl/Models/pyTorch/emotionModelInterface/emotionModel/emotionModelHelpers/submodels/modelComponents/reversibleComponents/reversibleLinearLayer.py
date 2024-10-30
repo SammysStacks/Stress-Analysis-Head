@@ -1,5 +1,3 @@
-import math
-
 import torch
 import torch.fft
 import torch.nn as nn
@@ -14,9 +12,9 @@ class reversibleLinearLayer(reversibleInterface):
         super(reversibleLinearLayer, self).__init__()
         # General parameters.
         self.activationMethod = activationMethod  # The activation method to use.
-        self.bounds = 1 / math.sqrt(kernelSize)  # The bounds for the neural weights.
         self.sequenceLength = sequenceLength  # The length of the input signal.
         self.kernelSize = kernelSize  # The restricted window for the neural weights.
+        self.bounds = 1 / kernelSize  # The bounds for the neural weights.
         self.numLayers = numLayers  # The number of layers in the reversible linear layer.
 
         # The stability term to add to the diagonal.
@@ -63,8 +61,8 @@ class reversibleLinearLayer(reversibleInterface):
         # neuralWeight: numSignals, sequenceLength, sequenceLength
 
         # Add a stability term to the diagonal. TODO: Add sparse matrix support.
-        if self.kernelSize != self.sequenceLength: neuralWeights = self.restrictedWindowMask * neuralWeights + self.stabilityTerm*0.75
-        else: neuralWeights = neuralWeights + self.stabilityTerm*0.75
+        if self.kernelSize != self.sequenceLength: neuralWeights = self.restrictedWindowMask * neuralWeights + self.stabilityTerm*0.975
+        else: neuralWeights = neuralWeights + self.stabilityTerm*0.975
 
         # Backward direction: invert the neural weights.
         if self.forwardDirection: neuralWeights = torch.linalg.inv(neuralWeights)
@@ -77,10 +75,10 @@ class reversibleLinearLayer(reversibleInterface):
 
 if __name__ == "__main__":
     # General parameters.
-    _batchSize, _numSignals, _sequenceLength = 2, 3, 128
+    _batchSize, _numSignals, _sequenceLength = 2, 3, 256
     _activationMethod = 'nonLinearMultiplication'
-    _kernelSize = _sequenceLength
-    _numLayers = 3
+    _kernelSize = 21
+    _numLayers = 5
 
     # Set up the parameters.
     neuralLayerClass = reversibleLinearLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod, switchActivationDirection=False)
