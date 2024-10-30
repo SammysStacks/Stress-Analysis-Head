@@ -9,18 +9,15 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 from helperFiles.machineLearning.modelControl.modelSpecifications.compileModelInfo import compileModelInfo
 from helperFiles.machineLearning.feedbackControl.heatTherapy.heatTherapyMain import heatTherapyControl
 from helperFiles.dataAcquisitionAndAnalysis.humanMachineInterface import featureOrganization
-from helperFiles.machineLearning.dataInterface.compileModelData import compileModelData  # Methods to organize model data.
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
-
+from helperFiles.machineLearning.dataInterface.compileModelDataHelpers import compileModelDataHelpers
 
 class humanMachineInterface:
     
     def __init__(self, modelClasses, actionControl, extractFeaturesFrom):
         # Accelerator configuration steps
-        self.accelerator = None
-        self.submodel = None
-        self.userInputParams = None
-        self.modelCompiler = compileModelData(self.submodel, self.userInputParams, useTherapyData=False, accelerator=self.accelerator)
+        submodel, userInputParams, accelerator = None, None, None
+        self.compileModelHelpers = compileModelDataHelpers(submodel, userInputParams, accelerator)
 
         #TODO: not sure
         self.allSubjectInds = []
@@ -146,7 +143,7 @@ class humanMachineInterface:
 
     def predictLabels(self, modelTimes, inputModelData, therapyParam):
         # Add in contextual information to the data.
-        normalizedInputModelData = self.modelCompiler.normalizeSignals(inputModelData)
+        normalizedInputModelData = self.compileModelHelpers.normalizeSignals(inputModelData)
         allNumSignalPoints = torch.empty(size=(len(inputModelData[0]), len(self.featureNames)), dtype=torch.int)
         compiledNormalizedInputData = self.inputModelDataWithContextualInfo(normalizedInputModelData, allNumSignalPoints, dataInd=0)
         exit()
