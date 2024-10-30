@@ -125,30 +125,14 @@ class featureOrganization(humanMachineInterface):
 
             allRawFeatureTimeInterval.append(pointFeatureTimes)
             allRawFeatureInterval.append(pointFeatures)
-        print('allRawFeatureTimeInterval', allRawFeatureTimeInterval)
-        # print('allRawFeatureTimeInterval', len(allRawFeatureTimeInterval[0]))
-        # print('allRawFeatureTimeInterval', len(allRawFeatureTimeInterval[1]))
-        # print('allRawFeatureTimeInterval', len(allRawFeatureTimeInterval[2]))
-        # print('allRawFeatureTimeInterval', len(allRawFeatureTimeInterval[3]))
 
-        print('Features -----------------------------------')
-        # print('allFeatures', allRawFeatureInterval)
-        # print('allFeatures', len(allRawFeatureInterval[0]))
-        # print('allFeatures', len(allRawFeatureInterval[1]))
-        # print('allFeatures', len(allRawFeatureInterval[2]))
-        # print('allFeatures', len(allRawFeatureInterval[3]))
-
-
-        print('allRawFeatureInterval', len(allRawFeatureInterval))
-        print('self.startModelTime', self.startModelTime)
-        startModelTimePerBiomarker = [[torch.tensor(self.startModelTime, dtype=torch.float32)] for _ in range(len(self.biomarkerFeatureOrder))]
-
+        startModelTimePerBiomarker = [[self.startModelTime] for _ in range(numNewPoints)]
+        startModelTimePerBiomarker = torch.tensor(startModelTimePerBiomarker, dtype=torch.float32)
         allSignalData, allNumSignalPoints = self.compileModelHelpers._padSignalData(allRawFeatureTimeInterval, allRawFeatureInterval, startModelTimePerBiomarker)
         # Update the model time.
         self.startModelTime += self.modelTimeGap
         modelTimes.append(self.startModelTime)
         # Update the pointers.
-
         return modelTimes, allSignalData, allNumSignalPoints
 
     def organizeRawFeatures(self):

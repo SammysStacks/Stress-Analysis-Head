@@ -142,10 +142,9 @@ class humanMachineInterface:
 
     def predictLabels(self, modelTimes, inputModelData, therapyParam):
         # Add in contextual information to the data.
-        normalizedInputModelData = self.compileModelHelpers.normalizeSignals(inputModelData)
         allNumSignalPoints = torch.empty(size=(len(inputModelData[0]), len(self.featureNames)), dtype=torch.int)
-        compiledNormalizedInputData = self.inputModelDataWithContextualInfo(normalizedInputModelData, allNumSignalPoints, dataInd=0)
-        exit()
+        compiledNormalizedInputData = self.inputModelDataWithContextualInfo(inputModelData, allNumSignalPoints, dataInd=0)
+        
         _, _, _, _, _, _, emotionProfile = self.modelClasses[0].model.forward(compiledNormalizedInputData)
         # emotionProfile dim: numNewPoints, numEmotions=30, encodedDimension=256
         emotionProfile = emotionProfile.detach().cpu().numpy()

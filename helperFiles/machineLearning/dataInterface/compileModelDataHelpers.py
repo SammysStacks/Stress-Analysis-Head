@@ -200,7 +200,7 @@ class compileModelDataHelpers:
             batchData = allRawFeatureIntervals[experimentalInd]
             batchTimes = allRawFeatureIntervalTimes[experimentalInd]
             surveyAnswerTime = surveyAnswerTimes[experimentalInd]
-
+            
             currentSignalInd = 0
             # For each biomarker in the batch.
             for (biomarkerData, biomarkerTimes) in zip(batchData, batchTimes):
