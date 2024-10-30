@@ -59,7 +59,7 @@ if __name__ == "__main__":
 
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--goldenRatio', type=int, default=16, help='The number of shared layers per specific layer.')
-    parser.add_argument('--numSignalEncoderLayers', type=int, default=16, help='The number of layers in the model.')
+    parser.add_argument('--numSignalEncoderLayers', type=int, default=32, help='The number of layers in the model.')
     parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
 
     # Add arguments for the neural operator.
