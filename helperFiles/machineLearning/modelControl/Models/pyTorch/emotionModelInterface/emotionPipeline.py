@@ -44,12 +44,12 @@ class emotionPipeline(emotionPipelineHelpers):
             for batchDataInd, batchData in enumerate(dataLoader):
                 with self.accelerator.accumulate(self.model):  # Accumulate gradients.
                     # Extract the data, labels, and testing/training indices.
-                    batchSignalInfo, batchSignalLabels, batchTrainingMask, batchTestingMask = self.extractBatchInformation(batchData)
-                    batchSize, numSignals, maxSequenceLength, numChannels = batchSignalInfo.size()
-                    numPointsAnalyzed += batchSize
+                    if not inferenceTraining: batchSignalInfo, batchSignalLabels, batchTrainingMask, batchTestingMask = self.extractBatchInformation(batchData)
+                    else: batchSignalInfo = batchData
 
                     # Only look at the training information (for signal reconstruction).
                     if not profileTraining and not inferenceTraining and submodel == modelConstants.signalEncoderModel: batchTrainingMask, batchSignalLabels, batchSignalInfo = self.dataInterface.getReconstructionData(batchTrainingMask, batchSignalLabels, batchSignalInfo, self.reconstructionIndex)
+                    numPointsAnalyzed += batchData.size(0)
 
                     # We can skip this batch, and backpropagation if necessary.
                     if batchSignalInfo.size(0) == 0: self.backpropogateModel(); continue
@@ -77,9 +77,8 @@ class emotionPipeline(emotionPipelineHelpers):
                     # ------------ Forward pass through the model  ------------- #
 
                     # Perform the forward pass through the model.
-                    missingDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = self.model.forward(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, inferenceTraining=False)
+                    missingDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = self.model.forward(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, inferenceTraining=inferenceTraining)
                     # reconstructedSignalData dimension: batchSize, numSignals, maxSequenceLength
-                    # fourierData dimension: batchSize, numEncodedSignals, fourierDimension
                     # missingDataMask dimension: batchSize, numSignals, maxSequenceLength
                     # basicEmotionProfile: batchSize, numBasicEmotions, encodedDimension
                     # physiologicalProfile dimension: batchSize, encodedDimension

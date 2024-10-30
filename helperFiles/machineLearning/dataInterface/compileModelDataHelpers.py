@@ -249,7 +249,7 @@ class compileModelDataHelpers:
         # Standardize all signals at once for the entire batch
         allSignalData = self.normalizeSignals(allSignalData)
 
-        # Calculate SNRs for all signals in the batch
+        # Calcul ate SNRs for all signals in the batch
         biomarkerData = emotionDataInterface.getChannelData(signalData=allSignalData, channelName=modelConstants.signalChannel)
         biomarkerTimes = emotionDataInterface.getChannelData(signalData=allSignalData, channelName=modelConstants.timeChannel)
         signalSNRs = self.calculate_snr(biomarkerData)
