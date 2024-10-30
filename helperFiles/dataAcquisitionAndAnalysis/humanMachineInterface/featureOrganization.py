@@ -158,8 +158,7 @@ class featureOrganization(humanMachineInterface):
                     print('inputMOdel', inputModelData[numNewPoint, featureChannelInd, 0:numBiomarkerPoints, 1])
                     print('replaced features values', len(self.rawFeatureHolder[featureChannelInd][newEndTimePointer:newStartTimePointer]))
                     print('time', self.rawFeatureTimesHolder[featureChannelInd][newEndTimePointer:newStartTimePointer])
-                    print('? features values', len(self.rawFeatureHolder[biomarkerInd][newEndTimePointer:newStartTimePointer][0]))
-                    # TODO: why the dimension like this
+                    print('? features values', len(self.rawFeatureHolder[biomarkerInd][newEndTimePointer:newStartTimePointer]))
                     inputModelData[numNewPoint, featureChannelInd, 0:numBiomarkerPoints, 0] = torch.tensor(self.rawFeatureTimesHolder[featureChannelInd][newEndTimePointer:newStartTimePointer], dtype=torch.float64)
                     inputModelData[numNewPoint, featureChannelInd, 0:numBiomarkerPoints, 1] = torch.tensor(self.rawFeatureHolder[featureChannelInd][newEndTimePointer:newStartTimePointer], dtype=torch.float64)
 
