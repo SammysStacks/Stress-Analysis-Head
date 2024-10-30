@@ -37,7 +37,7 @@ class generalVisualizations(globalPlottingProtocols):
                  color='tab:blue', markersize=6, alpha=0.6, label="Testing Points")
         plt.xlabel("Predicted Emotion Rating")
         plt.ylabel("Emotion Rating")
-        plt.title(f"{plotTitle.split("/")[-1]}")
+        plt.title(f"{plotTitle.split('/')[-1]}")
         plt.legend(loc="best")
         plt.xlim((-0.1, numClasses-0.9))
         plt.ylim((-0.1, numClasses-0.9))
@@ -56,7 +56,7 @@ class generalVisualizations(globalPlottingProtocols):
                  linewidth=2, alpha=0.6, label="Predicted Emotion Distribution")
         plt.ylabel("Probability (AU)")
         plt.xlabel("Emotion Rating")
-        plt.title(f"{plotTitle.split("/")[-1]}")
+        plt.title(f"{plotTitle.split('/')[-1]}")
         plt.legend(loc="best")
         plt.show()
 
@@ -120,7 +120,7 @@ class generalVisualizations(globalPlottingProtocols):
         plt.legend(loc="upper right")
         plt.xlabel("Training Epoch")
         plt.ylabel("Path Values")
-        plt.title(f"{plotTitle.split("/")[-1]}")
+        plt.title(f"{plotTitle.split('/')[-1]}")
 
         # Save the figure if desired.
         if self.saveDataFolder: self.displayFigure(self.saveDataFolder + f"{plotTitle} at epoch {len(pathParameters[0])}.pdf")
@@ -143,7 +143,7 @@ class generalVisualizations(globalPlottingProtocols):
         # Label the plot.
         plt.xlabel("Training Epoch")
         plt.ylabel("Loss Values")
-        plt.title(f"{plotTitle.split("/")[-1]}")
+        plt.title(f"{plotTitle.split('/')[-1]}")
         plt.legend(loc="upper right", bbox_to_anchor=(1.35, 1))  # Move legend off to the right, level with the top
 
         # Save the figure if desired.
@@ -159,7 +159,7 @@ class generalVisualizations(globalPlottingProtocols):
         plt.legend(loc="upper right")
         plt.xlabel("Training Epoch")
         plt.ylabel("Data Values")
-        plt.title(f"{plotTitle.split("/")[-1]}")
+        plt.title(f"{plotTitle.split('/')[-1]}")
 
         # Save the figure if desired.
         if self.saveDataFolder: self.displayFigure(self.saveDataFolder + f"{plotTitle} at epoch {len(plottingData[0])}.pdf")

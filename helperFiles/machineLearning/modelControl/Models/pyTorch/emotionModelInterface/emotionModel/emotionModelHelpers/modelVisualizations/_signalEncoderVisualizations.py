@@ -28,7 +28,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Plotting aesthetics.
         plt.xlabel("Time (Seconds)")
-        plt.title(f"{plotTitle.split("/")[-1]}")
+        plt.title(f"{plotTitle.split('/')[-1]}")
         plt.ylabel("Signal (AU)")
         plt.legend()
 
@@ -43,7 +43,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Plotting aesthetics.
         plt.xlabel("Time (Seconds)")
-        plt.title(f"{plotTitle.split("/")[-1]}")
+        plt.title(f"{plotTitle.split('/')[-1]}")
         plt.ylabel("Signal (AU)")
 
         # Save the figure.
@@ -60,7 +60,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
                 plt.plot(physiologicalTimes, allPhysiologicalProfiles[batchInd], 'tab:red', linewidth=1, label="Resampled Signal")
 
                 # Plotting aesthetics.
-                plt.title(f"batchInd-{batchInd}_signalInd-{signalInd}_{plotTitle.split("/")[-1]}")
+                plt.title(f"batchInd-{batchInd}_signalInd-{signalInd}_{plotTitle.split('/')[-1]}")
                 plt.xlabel("Signal Dimension (Points)")
                 plt.ylabel("Signal (AU)")
                 plt.legend()
