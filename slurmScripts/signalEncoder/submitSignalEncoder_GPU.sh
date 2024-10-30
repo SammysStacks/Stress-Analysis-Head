@@ -18,8 +18,6 @@
 #SBATCH --mail-type=BEGIN,END,FAIL
 
 # Load in your modules
-module load python/3.10.12-gcc-11.3.1-ldokp3f  # Load the Python module
-module load cuda/12.1.1-gcc-13.2.0-vjpligh      # Load the CUDA module
 nvcc --version
 
 # Set the PyTorch CUDA allocation configuration
