@@ -55,7 +55,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         # For the forward/harder direction.
         if reversibleInterface.forwardDirection:
             # Apply the neural operator layer with activation.
-            signalData = self.neuralLayers[layerInd](signalData)
+            signalData = self.neuralLayers[layerInd].reversibleInterface(signalData)
             signalData = self.processingLayers[layerInd](signalData)
         else:
             # Get the reverse layer index.
@@ -64,7 +64,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
 
             # Apply the neural operator layer with activation.
             signalData = self.processingLayers[pseudoLayerInd](signalData)
-            signalData = self.neuralLayers[pseudoLayerInd](signalData)
+            signalData = self.neuralLayers[pseudoLayerInd].reversibleInterface(signalData)
 
         # Reshape the signal data.
         signalData = signalData.view(batchSize, numSignals*self.numLiftingLayers, signalLength)

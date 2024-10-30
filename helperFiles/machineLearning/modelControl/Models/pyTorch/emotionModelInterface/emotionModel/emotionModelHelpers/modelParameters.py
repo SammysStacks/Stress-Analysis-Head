@@ -30,7 +30,7 @@ class modelParameters:
                 'encodeLowFrequencyProtocol': 'lowFreq',  # The protocol for encoding the low frequency signals.
                 'skipConnectionProtocol': 'none',  # The protocol for the skip connections.
                 'extraOperators': [],  # The extra operators to apply to the wavelet transform.
-                'learningProtocol': 'rFC',  # The learning protocol for the neural operator.
+                'learningProtocol': 'rCNN',  # The learning protocol for the neural operator.
             },
             'fourier': {
                 'encodeImaginaryFrequencies': True,  # The protocol for encoding the high frequency signals.

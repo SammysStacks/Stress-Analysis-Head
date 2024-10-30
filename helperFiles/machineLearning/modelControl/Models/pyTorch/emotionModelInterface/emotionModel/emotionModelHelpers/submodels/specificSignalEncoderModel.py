@@ -59,7 +59,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         # For the forward/harder direction.
         if reversibleInterface.forwardDirection:
             # Apply the neural operator layer with activation.
-            signalData = self.neuralLayers[layerInd](signalData)
+            signalData = self.neuralLayers[layerInd].reversibleInterface(signalData)
             signalData = self.processingLayers[layerInd](signalData)
         else:
             # Get the reverse layer index.
@@ -68,6 +68,6 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
             # Apply the neural operator layer with activation.
             signalData = self.processingLayers[pseudoLayerInd](signalData)
-            signalData = self.neuralLayers[pseudoLayerInd](signalData)
+            signalData = self.neuralLayers[pseudoLayerInd].reversibleInterface(signalData)
 
         return signalData.contiguous()
