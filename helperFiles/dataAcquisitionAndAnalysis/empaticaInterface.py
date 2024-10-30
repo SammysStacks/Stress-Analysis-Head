@@ -69,15 +69,15 @@ class empaticaInterface:
             if self.firstTimePoint is None: self.firstTimePoint = rawTimeSeconds
             normalized_timestamp = rawTimeSeconds - self.firstTimePoint
 
-            # match sensorType:
-            #     case "E4_Acc": analysis = self.analysisProtocols['acc']
-            #     case "E4_Bvp": analysis = self.analysisProtocols['bvp']
-            #     case "E4_Gsr": analysis = self.analysisProtocols['eda']
-            #     case "E4_Temperature": analysis = self.analysisProtocols['temp']
-            #     case _: raise ValueError(f"Unknown stream type: {sensorType} {sensorReading}")
-            #
-            # # Organize the data.
-            # self.organizeData(analysis=analysis, timepoint=normalized_timestamp, datapoint=dataChannels)
+            match sensorType:
+                case "E4_Acc": analysis = self.analysisProtocols['acc']
+                case "E4_Bvp": analysis = self.analysisProtocols['bvp']
+                case "E4_Gsr": analysis = self.analysisProtocols['eda']
+                case "E4_Temperature": analysis = self.analysisProtocols['temp']
+                case _: raise ValueError(f"Unknown stream type: {sensorType} {sensorReading}")
+
+            # Organize the data.
+            self.organizeData(analysis=analysis, timepoint=normalized_timestamp, datapoint=dataChannels)
 
         return False
 
