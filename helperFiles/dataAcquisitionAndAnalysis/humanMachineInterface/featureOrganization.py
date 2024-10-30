@@ -89,7 +89,6 @@ class featureOrganization(humanMachineInterface):
 
     def compileIntervalFeaturesWithPadding(self):
         # Find the number of new points.
-        print('self.featureAnalysisList', self.featureAnalysisList)
         lastRecordedTime = self.featureAnalysisList[0].timepoints[-1]
         numNewPoints = int(1 + (lastRecordedTime - self.startModelTime - self.modelTimeBuffer) // self.modelTimeGap)
         modelTimes = []
@@ -143,8 +142,26 @@ class featureOrganization(humanMachineInterface):
                 # For each channel in the analysis.
                 for featureChannelInd in range(len(analysis.featureChannelIndices)):
                     # Add the new model data to the input model data.
-                    inputModelData[numNewPoint, featureChannelInd, 0:numBiomarkerPoints, 0] = self.rawFeatureTimesHolder[featureChannelInd][newEndTimePointer:newStartTimePointer]
-                    inputModelData[numNewPoint, featureChannelInd, 0:numBiomarkerPoints, 1] = self.rawFeatureHolder[featureChannelInd][newEndTimePointer:newStartTimePointer]
+
+                    print('self.rawFeatureTimesHolder', len(self.rawFeatureTimesHolder))
+                    print('self.rawFeatureHolder', len(self.rawFeatureHolder))
+                    print('1', len(self.rawFeatureTimesHolder[0]))
+                    print('2', len(self.rawFeatureTimesHolder[1]))
+                    print('3', len(self.rawFeatureTimesHolder[2]))
+                    print('4', len(self.rawFeatureTimesHolder[3]))
+                    print('__________Features___________')
+                    print('1', len(self.rawFeatureHolder[0]))
+                    print('2', len(self.rawFeatureHolder[1]))
+                    print('3', len(self.rawFeatureHolder[2]))
+                    print('4', len(self.rawFeatureHolder[3]))
+
+                    print('inputMOdel', inputModelData[numNewPoint, featureChannelInd, 0:numBiomarkerPoints, 1])
+                    print('replaced features values', len(self.rawFeatureHolder[featureChannelInd][newEndTimePointer:newStartTimePointer]))
+                    print('time', self.rawFeatureTimesHolder[featureChannelInd][newEndTimePointer:newStartTimePointer])
+                    print('? features values', len(self.rawFeatureHolder[biomarkerInd][newEndTimePointer:newStartTimePointer][0]))
+                    # TODO: why the dimension like this
+                    inputModelData[numNewPoint, featureChannelInd, 0:numBiomarkerPoints, 0] = torch.tensor(self.rawFeatureTimesHolder[featureChannelInd][newEndTimePointer:newStartTimePointer], dtype=torch.float64)
+                    inputModelData[numNewPoint, featureChannelInd, 0:numBiomarkerPoints, 1] = torch.tensor(self.rawFeatureHolder[featureChannelInd][newEndTimePointer:newStartTimePointer], dtype=torch.float64)
 
                 # Update the pointers.
                 self.therapyPointers[biomarkerInd] = newEndTimePointer
