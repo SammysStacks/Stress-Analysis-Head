@@ -41,7 +41,6 @@ class humanMachineInterface:
 
         # Compile the feature information.
         self.featureNames, self.biomarkerFeatureNames, self.biomarkerFeatureOrder = self.compileFeatureNames.extractFeatureNames(extractFeaturesFrom)
-        print('biomarkerFeatureOrder', self.biomarkerFeatureOrder)
 
         # Holder parameters.
         self.therapyStates = None

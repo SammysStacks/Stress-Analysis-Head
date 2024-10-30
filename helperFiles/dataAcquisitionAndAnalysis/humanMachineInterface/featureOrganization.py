@@ -40,7 +40,7 @@ class featureOrganization(humanMachineInterface):
         assert len(featureAverageWindows) == len(self.biomarkerFeatureOrder), f"Found {featureAverageWindows} windows for {self.biomarkerFeatureOrder} biomarkers. These must to be the same length."
 
         # Loop through each analysis requiring collecting features.
-        print('self.featureAnalysisOrder', self.featureAnalysisOrder)
+
         for biomarkerInd in range(len(self.featureAnalysisOrder)):
             biomarkerType = self.featureAnalysisOrder[biomarkerInd]
 
@@ -49,7 +49,6 @@ class featureOrganization(humanMachineInterface):
 
             # Specify the parameters to collect features.
             analysisProtocols[biomarkerType].setFeatureCollectionParams(featureAverageWindows[biomarkerInd], featureChannelIndices)
-            print('featureAnalysisList initializatoin finished')
             self.featureAnalysisList.append(analysisProtocols[biomarkerType])
 
         startBiomarkerInd = 0; endBiomarkerInd = 0
@@ -92,7 +91,7 @@ class featureOrganization(humanMachineInterface):
         # Find the number of new points.
         print('self.featureAnalysisList', self.featureAnalysisList)
         lastRecordedTime = self.featureAnalysisList[0].timepoints[-1]
-        numNewPoints = 1 + (lastRecordedTime - self.startModelTime - self.modelTimeBuffer) // self.modelTimeGap
+        numNewPoints = int(1 + (lastRecordedTime - self.startModelTime - self.modelTimeBuffer) // self.modelTimeGap)
         modelTimes = []
 
         # for resetting the start time later
