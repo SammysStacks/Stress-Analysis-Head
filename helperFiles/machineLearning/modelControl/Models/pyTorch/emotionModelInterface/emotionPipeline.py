@@ -49,7 +49,7 @@ class emotionPipeline(emotionPipelineHelpers):
 
                     # Only look at the training information (for signal reconstruction).
                     if not profileTraining and not inferenceTraining and submodel == modelConstants.signalEncoderModel: batchTrainingMask, batchSignalLabels, batchSignalInfo = self.dataInterface.getReconstructionData(batchTrainingMask, batchSignalLabels, batchSignalInfo, self.reconstructionIndex)
-                    numPointsAnalyzed += batchData.size(0)
+                    numPointsAnalyzed += batchSignalInfo.size(0)
 
                     # We can skip this batch, and backpropagation if necessary.
                     if batchSignalInfo.size(0) == 0: self.backpropogateModel(); continue
