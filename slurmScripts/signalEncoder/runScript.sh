@@ -1,7 +1,7 @@
 #!/bin/bash
 
-encodedDimensions=(128 256 512)
-# Total: 3
+encodedDimensions=(64 128 256 512)
+# Total: 4
 
 goldenRatios=(4 8 16)
 # Total: 3
