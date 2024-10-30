@@ -42,14 +42,6 @@ class reversibleConvolutionLayer(reversibleInterface):
             self.activationFunctions.append(activationFunctions.getActivationMethod(activationMethod))
             switchActivationDirection = not switchActivationDirection
 
-        # Register hooks for each parameter in the list
-        for param in self.linearOperators:
-            param.register_hook(self.scaleGradients)
-
-    @staticmethod
-    def scaleGradients(grad):
-        return grad * 0.2
-
     def forward(self, inputData):
         # Cast the stability term to the device.
         self.stabilityTerm = self.stabilityTerm.to(inputData.device)

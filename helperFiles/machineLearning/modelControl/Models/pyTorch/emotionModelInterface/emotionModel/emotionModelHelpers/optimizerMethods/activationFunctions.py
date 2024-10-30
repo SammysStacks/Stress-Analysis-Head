@@ -204,10 +204,6 @@ class nonLinearMultiplication(reversibleInterface):
         self.learnableFrequency.register_hook(self.scaleFrequencyGradients)
 
     @staticmethod
-    def scalePhaseShiftGradients(grad):
-        return grad * 1
-
-    @staticmethod
     def scaleFrequencyGradients(grad):
         return grad * 0.2
 

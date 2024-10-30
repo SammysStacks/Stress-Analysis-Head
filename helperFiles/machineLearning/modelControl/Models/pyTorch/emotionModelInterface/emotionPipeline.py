@@ -106,8 +106,8 @@ class emotionPipeline(emotionPipelineHelpers):
                     # ------------------- Update the Model  -------------------- #
 
                     # Increase the learning rate.
-                    if profileTraining: finalLoss = 10*finalLoss  # Profile training.
-                    elif not trainSharedLayers: finalLoss = finalLoss  # Inference or signal-specific training.
+                    if profileTraining: finalLoss = 100*finalLoss  # Profile training.
+                    elif not trainSharedLayers: finalLoss = 10*finalLoss  # Inference or signal-specific training.
 
                     # Prevent exploding loss values.
                     while 100 < finalLoss.item(): finalLoss = finalLoss / 10
