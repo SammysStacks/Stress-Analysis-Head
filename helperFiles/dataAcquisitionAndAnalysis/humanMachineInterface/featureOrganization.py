@@ -91,85 +91,65 @@ class featureOrganization(humanMachineInterface):
         # Find the number of new points.
         lastRecordedTime = self.featureAnalysisList[0].timepoints[-1]
         numNewPoints = int(1 + (lastRecordedTime - self.startModelTime - self.modelTimeBuffer) // self.modelTimeGap)
+
         modelTimes = []
+        allRawFeatureTimeInterval = []
+        allRawFeatureInterval = []
 
-        # for resetting the start time later
-        initialStartModelTime = self.startModelTime
-
-        # list for getting the max length during these two pass methods
-        maxSequenceLengthList = []
-
-        # For each new point, 1st pass
+        # for each new point
         for numNewPoint in range(numNewPoints):
             endModelTime = self.startModelTime - self.modelTimeWindow
-            maxSequenceLengthPoint = 0
+
+            pointFeatureTimes = []
+            pointFeatures = []
 
             # For each unique analysis with features.
             for biomarkerInd in range(len(self.featureAnalysisList)):
                 oldEndPointer = self.therapyPointers[biomarkerInd]
 
+                biomarkerTimes = self.rawFeatureTimesHolder[biomarkerInd]
+                biomarkerFeatures = self.rawFeatureHolder[biomarkerInd]
+
                 # Locate the experiment indices within the data
                 newStartTimePointer = oldEndPointer + np.searchsorted(self.rawFeatureTimesHolder[0][oldEndPointer:], self.startModelTime, side='right') + 1
                 newEndTimePointer = oldEndPointer + np.searchsorted(self.rawFeatureTimesHolder[0][oldEndPointer:], endModelTime, side='left')
                 numBiomarkerPoints = newStartTimePointer - newEndTimePointer
-
-                # update the max sequence length for this new point particular
-                maxSequenceLengthPoint = max(maxSequenceLengthPoint, numBiomarkerPoints)
-
-            maxSequenceLengthList.append(maxSequenceLengthPoint)
-            self.startModelTime += self.modelTimeGap
-
-        # reset the start model time
-        self.startModelTime = initialStartModelTime
-        maxSequenceLength = max(maxSequenceLengthList)
-
-        # Preallocate the feature times and features.
-        inputModelData = torch.zeros((numNewPoints, len(self.featureNames), maxSequenceLength, len(modelConstants.signalChannelNames)), dtype=torch.float64)
-        # inputModelData dim: numNewTimePoints, numBiomarkerFeatures, maxSequenceLength, numChannels
-
-        # 2nd pass
-        for numNewPoint in range(numNewPoints):
-            endModelTime = self.startModelTime - self.modelTimeWindow
-
-            for biomarkerInd in range(len(self.featureAnalysisList)):
-                oldEndPointer = self.therapyPointers[biomarkerInd]
-                analysis = self.featureAnalysisList[biomarkerInd]
-
-                newStartTimePointer = oldEndPointer + np.searchsorted(self.rawFeatureTimesHolder[0][oldEndPointer:], self.startModelTime, side='right') + 1
-                newEndTimePointer = oldEndPointer + np.searchsorted(self.rawFeatureTimesHolder[0][oldEndPointer:], endModelTime, side='left')
-                numBiomarkerPoints = newStartTimePointer - newEndTimePointer
-
-                # For each channel in the analysis.
-                for featureChannelInd in range(len(analysis.featureChannelIndices)):
-                    # Add the new model data to the input model data.
-
-                    print('self.rawFeatureTimesHolder', len(self.rawFeatureTimesHolder))
-                    print('self.rawFeatureHolder', len(self.rawFeatureHolder))
-                    print('1', len(self.rawFeatureTimesHolder[0]))
-                    print('2', len(self.rawFeatureTimesHolder[1]))
-                    print('3', len(self.rawFeatureTimesHolder[2]))
-                    print('4', len(self.rawFeatureTimesHolder[3]))
-                    print('__________Features___________')
-                    print('1', len(self.rawFeatureHolder[0]))
-                    print('2', len(self.rawFeatureHolder[1]))
-                    print('3', len(self.rawFeatureHolder[2]))
-                    print('4', len(self.rawFeatureHolder[3]))
-
-                    print('inputMOdel', inputModelData[numNewPoint, featureChannelInd, 0:numBiomarkerPoints, 1])
-                    print('replaced features values', len(self.rawFeatureHolder[featureChannelInd][newEndTimePointer:newStartTimePointer]))
-                    print('time', self.rawFeatureTimesHolder[featureChannelInd][newEndTimePointer:newStartTimePointer])
-                    print('? features values', len(self.rawFeatureHolder[biomarkerInd][newEndTimePointer:newStartTimePointer]))
-                    inputModelData[numNewPoint, featureChannelInd, 0:numBiomarkerPoints, 0] = torch.tensor(self.rawFeatureTimesHolder[featureChannelInd][newEndTimePointer:newStartTimePointer], dtype=torch.float64)
-                    inputModelData[numNewPoint, featureChannelInd, 0:numBiomarkerPoints, 1] = torch.tensor(self.rawFeatureHolder[featureChannelInd][newEndTimePointer:newStartTimePointer], dtype=torch.float64)
-
-                # Update the pointers.
                 self.therapyPointers[biomarkerInd] = newEndTimePointer
 
-            # Update the model time.
-            self.startModelTime += self.modelTimeGap
-            modelTimes.append(self.startModelTime)
+                # Extract the time and feature intervals
+                biomarkerTimeInterval = biomarkerTimes[newEndTimePointer:newStartTimePointer]
+                biomarkerFeaturesInterval = biomarkerFeatures[newEndTimePointer:newStartTimePointer]
 
-        return modelTimes, inputModelData
+                pointFeatureTimes.append(biomarkerTimeInterval)
+                pointFeatures.append(biomarkerFeaturesInterval)
+
+            allRawFeatureTimeInterval.append(pointFeatureTimes)
+            allRawFeatureInterval.append(pointFeatures)
+        print('allRawFeatureTimeInterval', allRawFeatureTimeInterval)
+        # print('allRawFeatureTimeInterval', len(allRawFeatureTimeInterval[0]))
+        # print('allRawFeatureTimeInterval', len(allRawFeatureTimeInterval[1]))
+        # print('allRawFeatureTimeInterval', len(allRawFeatureTimeInterval[2]))
+        # print('allRawFeatureTimeInterval', len(allRawFeatureTimeInterval[3]))
+
+        print('Features -----------------------------------')
+        # print('allFeatures', allRawFeatureInterval)
+        # print('allFeatures', len(allRawFeatureInterval[0]))
+        # print('allFeatures', len(allRawFeatureInterval[1]))
+        # print('allFeatures', len(allRawFeatureInterval[2]))
+        # print('allFeatures', len(allRawFeatureInterval[3]))
+
+
+        print('allRawFeatureInterval', len(allRawFeatureInterval))
+        print('self.startModelTime', self.startModelTime)
+        startModelTimePerBiomarker = [[torch.tensor(self.startModelTime, dtype=torch.float32)] for _ in range(len(self.biomarkerFeatureOrder))]
+
+        allSignalData, allNumSignalPoints = self.compileModelHelpers._padSignalData(allRawFeatureTimeInterval, allRawFeatureInterval, startModelTimePerBiomarker)
+        # Update the model time.
+        self.startModelTime += self.modelTimeGap
+        modelTimes.append(self.startModelTime)
+        # Update the pointers.
+
+        return modelTimes, allSignalData, allNumSignalPoints
 
     def organizeRawFeatures(self):
         # For each unique analysis with features.

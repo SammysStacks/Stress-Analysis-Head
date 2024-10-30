@@ -174,16 +174,16 @@ class compileModelDataHelpers:
     # ---------------------------- Data Cleaning --------------------------- #
 
     @staticmethod
-    def _padSignalData(allRawFeatureIntervalTimes, allRawFeatureTimeIntervals, surveyAnswerTimes):
-        # allRawFeatureIntervalTimes : batchSize, numBiomarkers, finalDistributionLength*, numBiomarkerFeatures*  ->  *finalDistributionLength, *numBiomarkerFeatures are not constant
-        # allRawFeatureTimeIntervals : batchSize, numBiomarkers, finalDistributionLength*  ->  *finalDistributionLength is not constant
+    def _padSignalData(allRawFeatureIntervalTimes, allRawFeatureInterval, surveyAnswerTimes):
+        # allRawFeatureInterval : batchSize, numBiomarkers, finalDistributionLength*, numBiomarkerFeatures*  ->  *finalDistributionLength, *numBiomarkerFeatures are not constant
+        # allRawFeatureIntervalsTimes : batchSize, numBiomarkers, finalDistributionLength*  ->  *finalDistributionLength is not constant
         # allSignalData : A list of size (batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel])
         # allNumSignalPoints : A list of size (batchSize, numSignals)
         # surveyAnswerTimes : A list of size (batchSize)
         # Determine the final dimensions of the padded array.
         maxSequenceLength = max(max(len(biomarkerTimes) for biomarkerTimes in experimentalTimes) for experimentalTimes in allRawFeatureIntervalTimes)
-        numSignals = sum(len(biomarkerData[0]) for biomarkerData in allRawFeatureTimeIntervals[0])
-        numExperiments = len(allRawFeatureTimeIntervals)
+        numSignals = sum(len(biomarkerData[0]) for biomarkerData in allRawFeatureInterval[0])
+        numExperiments = len(allRawFeatureInterval)
 
         # Initialize the padded array and end signal indices list
         allSignalData = torch.zeros(size=(numExperiments, numSignals, maxSequenceLength, len(modelConstants.signalChannelNames)), dtype=torch.float32)  # +1 for the time data
@@ -196,15 +196,19 @@ class compileModelDataHelpers:
 
         # For each batch of biomarkers.
         for experimentalInd in range(numExperiments):
-            batchData = allRawFeatureTimeIntervals[experimentalInd]
+            batchData = allRawFeatureInterval[experimentalInd]
             batchTimes = allRawFeatureIntervalTimes[experimentalInd]
             surveyAnswerTime = surveyAnswerTimes[experimentalInd]
+            print('batachData', batchData)
+            print('batchTimes', batchTimes)
+            print('surveyAnswerTime', surveyAnswerTime)
 
             currentSignalInd = 0
             # For each biomarker in the batch.
             for (biomarkerData, biomarkerTimes) in zip(batchData, batchTimes):
                 biomarkerData = torch.tensor(biomarkerData, dtype=torch.float32).T  # Dim: numBiomarkerFeatures, batchSpecificFeatureLength
                 biomarkerTimes = torch.tensor(biomarkerTimes, dtype=torch.float32)  # Dim: batchSpecificFeatureLength
+
                 biomarkerTimes = surveyAnswerTime - biomarkerTimes
 
                 # Remove data outside the time window.
