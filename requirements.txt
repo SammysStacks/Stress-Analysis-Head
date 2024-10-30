@@ -11,6 +11,7 @@ oculus
 openai
 openpyxl
 pandas
+playsound
 plotapi
 pyexcel
 pyFirmata2
@@ -30,6 +31,7 @@ sounddevice
 soundfile
 SpeechRecognition
 sympy
+tensorflow
 tensorly
 torchsummary
 torchviz
@@ -42,6 +44,7 @@ mpmath
 ipython
 torch --index-url https://download.pytorch.org/whl/cu124
 torchvision --index-url https://download.pytorch.org/whl/cu124
+torchaudio --index-url https://download.pytorch.org/whl/cu124
 BaselineRemoval
 ptyprocess
 pexpect

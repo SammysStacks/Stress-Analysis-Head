@@ -1,6 +1,4 @@
-# General
 import torch.optim as optim
-import transformers
 from torch.optim.lr_scheduler import SequentialLR
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
@@ -70,7 +68,7 @@ class optimizerMethods:
         numWarmUps = 15*4*10  # 15 counts per epoch session (wesad is 5 counts) for 5 epochs
 
         schedulerOrder = [
-            transformers.get_constant_schedule_with_warmup(optimizer=optimizer, num_warmup_steps=numWarmUps),
+            optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda epoch: min(1.0, epoch / numWarmUps)),
             optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=15*4*2, eta_min=1e-5, last_epoch=-1),
         ]
 
