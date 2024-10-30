@@ -93,8 +93,8 @@ class modelParameters:
 
     @staticmethod
     def getExclusionSequenceCriteria(submodel):
-        if submodel == modelConstants.signalEncoderModel: return 25, 20, 0.25  # minSequencePoints, minSignalPresentCount, maxAverageDiff
-        elif submodel == modelConstants.emotionModel: return 25, 20, 0.25  # minSequencePoints, minSignalPresentCount, maxAverageDiff
+        if submodel == modelConstants.signalEncoderModel: return 25, 20, 1, 0.25  # minSequencePoints, minSignalPresentCount, maxDiff, maxAverageDiff
+        elif submodel == modelConstants.emotionModel: return 25, 20, 1, 0.25  # minSequencePoints, minSignalPresentCount, maxDiff, maxAverageDiff
         else: raise Exception()
 
     # -------------------------- Saving/Loading Parameters ------------------------- #

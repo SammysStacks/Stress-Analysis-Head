@@ -40,6 +40,7 @@ class compileModelDataHelpers:
         self.minSequencePoints = None
         self.maxAverageDiff = None
         self.minNumClasses = None
+        self.maxDiff = None
 
         # Set the submodel-specific parameters
         if submodel is not None: self.addSubmodelParameters(submodel, userInputParams)
@@ -49,7 +50,7 @@ class compileModelDataHelpers:
 
         # Exclusion criterion.
         self.minNumClasses, self.maxClassPercentage = self.modelParameters.getExclusionClassCriteria(submodel)
-        self.minSequencePoints, self.minSignalPresentCount, self.maxAverageDiff = self.modelParameters.getExclusionSequenceCriteria(submodel)
+        self.minSequencePoints, self.minSignalPresentCount, self.maxDiff, self.maxAverageDiff = self.modelParameters.getExclusionSequenceCriteria(submodel)
 
         # Embedded information for each model.
         self.signalEncoderModelInfo = f"signalEncoder on {userInputParams['deviceListed']} with {userInputParams['optimizerType']} at encodedDimension {userInputParams['encodedDimension']}"
@@ -174,16 +175,16 @@ class compileModelDataHelpers:
     # ---------------------------- Data Cleaning --------------------------- #
 
     @staticmethod
-    def _padSignalData(allRawFeatureIntervalTimes, allRawFeatureInterval, surveyAnswerTimes):
-        # allRawFeatureInterval : batchSize, numBiomarkers, finalDistributionLength*, numBiomarkerFeatures*  ->  *finalDistributionLength, *numBiomarkerFeatures are not constant
-        # allRawFeatureIntervalsTimes : batchSize, numBiomarkers, finalDistributionLength*  ->  *finalDistributionLength is not constant
+    def _padSignalData(allRawFeatureIntervalTimes, allRawFeatureIntervals, surveyAnswerTimes):
+        # allRawFeatureIntervals : batchSize, numBiomarkers, finalDistributionLength*, numBiomarkerFeatures*  ->  *finalDistributionLength, *numBiomarkerFeatures are not constant
+        # allRawFeatureIntervalTimes : batchSize, numBiomarkers, finalDistributionLength*  ->  *finalDistributionLength is not constant
         # allSignalData : A list of size (batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel])
         # allNumSignalPoints : A list of size (batchSize, numSignals)
         # surveyAnswerTimes : A list of size (batchSize)
         # Determine the final dimensions of the padded array.
         maxSequenceLength = max(max(len(biomarkerTimes) for biomarkerTimes in experimentalTimes) for experimentalTimes in allRawFeatureIntervalTimes)
-        numSignals = sum(len(biomarkerData[0]) for biomarkerData in allRawFeatureInterval[0])
-        numExperiments = len(allRawFeatureInterval)
+        numSignals = sum(len(biomarkerData[0]) for biomarkerData in allRawFeatureIntervals[0])
+        numExperiments = len(allRawFeatureIntervals)
 
         # Initialize the padded array and end signal indices list
         allSignalData = torch.zeros(size=(numExperiments, numSignals, maxSequenceLength, len(modelConstants.signalChannelNames)), dtype=torch.float32)  # +1 for the time data
@@ -196,19 +197,15 @@ class compileModelDataHelpers:
 
         # For each batch of biomarkers.
         for experimentalInd in range(numExperiments):
-            batchData = allRawFeatureInterval[experimentalInd]
+            batchData = allRawFeatureIntervals[experimentalInd]
             batchTimes = allRawFeatureIntervalTimes[experimentalInd]
             surveyAnswerTime = surveyAnswerTimes[experimentalInd]
-            print('batachData', batchData)
-            print('batchTimes', batchTimes)
-            print('surveyAnswerTime', surveyAnswerTime)
 
             currentSignalInd = 0
             # For each biomarker in the batch.
             for (biomarkerData, biomarkerTimes) in zip(batchData, batchTimes):
                 biomarkerData = torch.tensor(biomarkerData, dtype=torch.float32).T  # Dim: numBiomarkerFeatures, batchSpecificFeatureLength
                 biomarkerTimes = torch.tensor(biomarkerTimes, dtype=torch.float32)  # Dim: batchSpecificFeatureLength
-
                 biomarkerTimes = surveyAnswerTime - biomarkerTimes
 
                 # Remove data outside the time window.
@@ -257,11 +254,12 @@ class compileModelDataHelpers:
         averageDiff = biomarkerData.diff(dim=-1).abs().mean(dim=-1) < self.maxAverageDiff  # Average difference between consecutive points: batchSize, numSignals
         startValueMask = (biomarkerData[:, :, 0:5].abs() <= modelConstants.minMaxScale - 0.05).any(dim=-1)  # Start value: batchSize, numSignals
         endValueMask = (biomarkerData[:, :, -5:].abs() <= modelConstants.minMaxScale - 0.05).any(dim=-1)  # End value: batchSize, numSignals
+        maxDiff = biomarkerData.diff(dim=-1).abs().max(dim=-1).values < self.maxDiff  # Maximum difference between consecutive points: batchSize, numSignals
         minPointsMask = self.minSequencePoints <= allNumSignalPoints  # Minimum number of points: batchSize, numSignals
         validSignalMask = validDataMask.any(dim=-1)  # Missing data: batchSize, numSignals
 
         # Combine all masks into a single mask and expand to match dimensions.
-        validSignalMask = minPointsMask & endValueMask & startValueMask & minLowerBoundaryMask & minUpperBoundaryMask & averageDiff & validSignalMask
+        validSignalMask = minPointsMask & endValueMask & startValueMask & minLowerBoundaryMask & minUpperBoundaryMask & averageDiff & validSignalMask & maxDiff
         validSignalInds = self.minSignalPresentCount < validSignalMask.sum(dim=0)
 
         # Filter out the invalid signals
