@@ -177,16 +177,16 @@ class compileModelDataHelpers:
     # ---------------------------- Data Cleaning --------------------------- #
 
     @staticmethod
-    def _padSignalData(allCompiledFeatureIntervalTimes, allCompiledFeatureIntervals, surveyAnswerTimes):
-        # allCompiledFeatureIntervals : batchSize, numBiomarkers, finalDistributionLength*, numBiomarkerFeatures*  ->  *finalDistributionLength, *numBiomarkerFeatures are not constant
+    def _padSignalData(allRawFeatureIntervalTimes, allRawFeatureTimeIntervals, surveyAnswerTimes):
+        # allRawFeatureIntervalTimes : batchSize, numBiomarkers, finalDistributionLength*, numBiomarkerFeatures*  ->  *finalDistributionLength, *numBiomarkerFeatures are not constant
         # allRawFeatureTimeIntervals : batchSize, numBiomarkers, finalDistributionLength*  ->  *finalDistributionLength is not constant
         # allSignalData : A list of size (batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel])
         # allNumSignalPoints : A list of size (batchSize, numSignals)
         # surveyAnswerTimes : A list of size (batchSize)
         # Determine the final dimensions of the padded array.
-        maxSequenceLength = max(max(len(biomarkerTimes) for biomarkerTimes in experimentalTimes) for experimentalTimes in allCompiledFeatureIntervalTimes)
-        numSignals = sum(len(biomarkerData[0]) for biomarkerData in allCompiledFeatureIntervals[0])
-        numExperiments = len(allCompiledFeatureIntervals)
+        maxSequenceLength = max(max(len(biomarkerTimes) for biomarkerTimes in experimentalTimes) for experimentalTimes in allRawFeatureIntervalTimes)
+        numSignals = sum(len(biomarkerData[0]) for biomarkerData in allRawFeatureTimeIntervals[0])
+        numExperiments = len(allRawFeatureTimeIntervals)
 
         # Initialize the padded array and end signal indices list
         allSignalData = torch.zeros(size=(numExperiments, numSignals, maxSequenceLength, len(modelConstants.signalChannelNames)), dtype=torch.float32)  # +1 for the time data
@@ -199,8 +199,8 @@ class compileModelDataHelpers:
 
         # For each batch of biomarkers.
         for experimentalInd in range(numExperiments):
-            batchData = allCompiledFeatureIntervals[experimentalInd]
-            batchTimes = allCompiledFeatureIntervalTimes[experimentalInd]
+            batchData = allRawFeatureTimeIntervals[experimentalInd]
+            batchTimes = allRawFeatureIntervalTimes[experimentalInd]
             surveyAnswerTime = surveyAnswerTimes[experimentalInd]
 
             currentSignalInd = 0
