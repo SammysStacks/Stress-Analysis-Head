@@ -77,6 +77,3 @@ _experimentalData/_metadatasets/CASE/data/interpolated/physiological/savedFeatur
 # Plots in metadatasets
 _experimentalData/_metadatasets/**/*.png
 _experimentalData/_metadatasets/**/*.pdf
-
-_experimentalData/_metadatasets/AMIGOS/Saved Features/_*
-_experimentalData/_metadatasets/AMIGOS/Saved Features/.*

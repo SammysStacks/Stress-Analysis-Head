@@ -68,7 +68,7 @@ class optimizerMethods:
         numWarmUps = 15*4*10  # 15 counts per epoch session (wesad is 5 counts) for 5 epochs
 
         schedulerOrder = [
-            optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda epoch: min(1.0, epoch / numWarmUps)),
+            optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda epoch: min(1.0, epoch / numWarmUps / 2)),
             optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=15*4*2, eta_min=1e-5, last_epoch=-1),
         ]
 
