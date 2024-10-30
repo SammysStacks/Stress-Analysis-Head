@@ -96,8 +96,8 @@ class humanMachineInterface:
 
     def emotionConversion(self, emotionScores):
 
-        emotionScores[:10] = 0.5 + (emotionScores[:10] - emotionFirstTenMin) * (5.5 - 0.5) / (emotionFirstTenMax - emotionFirstTenMin)
-        emotionScores[10:] = 0.5 + (emotionScores[10:] - emotionSecondTwentyMin) * (4.5 - 0.5) / (emotionSecondTwentyMax - emotionSecondTwentyMin)
+        emotionScores[:10] = 0.5 + emotionScores[:10] / (5.5 - 0.5)
+        emotionScores[10:] = 0.5 + emotionScores[10:] / (4.5 - 0.5)
         return emotionScores
 
     def predictLabels(self, modelTimes, inputModelData, therapyParam):

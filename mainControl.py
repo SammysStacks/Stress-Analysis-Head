@@ -28,9 +28,9 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------- #
 
     # Protocol switches: only the first true variably executes.
-    readDataFromExcel = False  # For SINGLE FILE analysis. Analyze Data from Excel File called 'currentFilename' on Sheet Number 'testSheetNum'
+    readDataFromExcel = True  # For SINGLE FILE analysis. Analyze Data from Excel File called 'currentFilename' on Sheet Number 'testSheetNum'
     trainModel = False  # Train Model with ALL Data in 'collectedDataFolder'.
-    streamData = True  # Stream in Data from the Board and Analyze.
+    streamData = False  # Stream in Data from the Board and Analyze.
 
     # User options during the run: any number can be true.
     useModelPredictions = False or trainModel  # Apply the learning algorithm to decode the signals.
@@ -42,9 +42,9 @@ if __name__ == "__main__":
     reverseOrder = False  # Reverse the order of the data for training.
 
     # Specify the user parameters.
-    userName = "Ruixiao".replace(" ", "")
-    trialName = "del"  # Experiment Type: Music ....
-    date = "2024-10-24"
+    userName = "Chihyeong".replace(" ", "")
+    trialName = "HeatingPad"  # Experiment Type: Music ....
+    date = "2024-09-17"
 
     # Specify experimental parameters.
     deviceAddress = '12ba4cb61c85ec11bc01fc2b19c2d21c'  # Board's Serial Number (port.serial_number). Only used if streaming data, else it gets reset to None.

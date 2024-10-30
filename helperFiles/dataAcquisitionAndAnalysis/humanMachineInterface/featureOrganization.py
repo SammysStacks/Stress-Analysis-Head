@@ -48,6 +48,7 @@ class featureOrganization(humanMachineInterface):
 
             # Specify the parameters to collect features.
             analysisProtocols[biomarkerType].setFeatureCollectionParams(featureAverageWindows[biomarkerInd], featureChannelIndices)
+            print('featureAnalysisList initializatoin finished')
             self.featureAnalysisList.append(analysisProtocols[biomarkerType])
 
         startBiomarkerInd = 0; endBiomarkerInd = 0
@@ -88,6 +89,7 @@ class featureOrganization(humanMachineInterface):
 
     def compileIntervalFeaturesWithPadding(self):
         # Find the number of new points.
+        print('self.featureAnalysisList', self.featureAnalysisList)
         lastRecordedTime = self.featureAnalysisList[0].timepoints[-1]
         numNewPoints = 1 + (lastRecordedTime - self.startModelTime - self.modelTimeBuffer) // self.modelTimeGap
         modelTimes = []
