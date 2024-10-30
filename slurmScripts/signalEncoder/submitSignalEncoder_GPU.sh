@@ -19,6 +19,7 @@
 
 # Load in your modules
 module load intel-oneapi-mkl/2023.2.0-gcc-11.3.1-6dhawvh
+module load python/3.10.12-gcc-11.3.1-n4zmj3v  # Load the Python module
 module load openmpi/4.1.5-gcc-13.2.0-24q3ap2    # Load in openMPI for cross-node talk
 module load cuda/12.1.1-gcc-13.2.0-vjpligh      # Load the CUDA module
 module load nvhpc/23.7-gcc-11.3.1-gifa6ml
