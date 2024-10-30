@@ -143,9 +143,12 @@ class emotionModelHead(nn.Module):
         if self.numSignalEncoderLayers % self.goldenRatio == 0 and self.numSignalEncoderLayers != 0: assert numSpecificLayers == self.numSignalEncoderLayers // self.goldenRatio, f"The number of layers in the specific model ({numSpecificLayers}) does not match the number of layers in the model ({self.numSignalEncoderLayers})."
 
     def forward(self, submodel, signalData, signalIdentifiers, metadata, device, inferenceTraining=False):
-        # decodeSignals: whether to decode the signals after encoding, which is used for the autoencoder loss.
-        # trainingFlag: whether the model is training or testing.
-        # Preprocess the data to ensure integrity.
+        # timepoints: [further away from survey (300) -> closest to survey (0)]
+        # signalData: [batchSize, numSignals, maxSequenceLength, numChannels]
+        # signalIdentifiers: [batchSize, numSignals, numSignalIdentifiers]
+        # metadata: [batchSize, numMetadata]
+
+        # Prepare the data for the model.
         signalData, signalIdentifiers, metadata = (tensor.to(device) for tensor in (signalData, signalIdentifiers, metadata))
         signalIdentifiers, signalData, metadata = signalIdentifiers.int(), signalData.double(), metadata.int()
         batchSize, numSignals, maxSequenceLength, numChannels = signalData.size()
@@ -158,42 +161,34 @@ class emotionModelHead(nn.Module):
 
         # ------------------- Organize the Incoming Data ------------------- #
 
-        # Unpack the incoming data.
-        batchInds = emotionDataInterface.getSignalIdentifierData(signalIdentifiers, channelName=modelConstants.batchIndexSI)[:, 0]  # Dim: batchSize
-        datapoints = emotionDataInterface.getChannelData(signalData, channelName=modelConstants.signalChannel)
-        timepoints = emotionDataInterface.getChannelData(signalData, channelName=modelConstants.timeChannel)
-        # datapoints and timepoints: [batchSize, numSignals, maxSequenceLength)
-        # timepoints: [further away from survey (300) -> closest to survey (0)]
-
         # Check which points were missing in the data.
-        missingDataMask = torch.as_tensor((datapoints == 0) & (timepoints == 0), device=device, dtype=torch.bool)
-        validSignalMask = ~torch.all(missingDataMask, dim=-1).view(batchSize, numSignals, 1)
+        numSignalPoints = emotionDataInterface.getSignalIdentifierData(signalIdentifiers, channelName=modelConstants.numSignalPointsSI)  # Dim: batchSize, numSignals
+        validDataMask = emotionDataInterface.getValidDataMask(signalData, numSignalPoints)
         # missingDataMask: batchSize, numSignals, maxSequenceLength
-        # validSignalMask: batchSize, numSignals, 1
 
         # ------------------- Estimated Physiological Profile ------------------- #
 
         # Get the estimated physiological profiles.
+        batchInds = emotionDataInterface.getSignalIdentifierData(signalIdentifiers, channelName=modelConstants.batchIndexSI)[:, 0]  # Dim: batchSize
         if inferenceTraining: physiologicalProfile = self.inferenceModel.getCurrentPhysiologicalProfile(batchInds)
         else: physiologicalProfile = self.specificSignalEncoderModel.getCurrentPhysiologicalProfile(batchInds)
         # physiologicalProfile: batchSize, encodedDimension
-        print(self.datasetName, self.specificSignalEncoderModel.physiologicalProfileAnsatz[0, :4].detach().cpu().numpy())
 
         # ------------------- Learned Signal Mapping ------------------- #
 
         reversibleInterface.changeDirections(forwardDirection=False)
         resampledSignalData = physiologicalProfile.unsqueeze(1).repeat(repeats=(1, numSignals, 1))
-        resampledSignalData = validSignalMask*self.coreModelPass(self.numSignalEncoderLayers, resampledSignalData, specificModel=self.specificSignalEncoderModel, sharedModel=self.sharedSignalEncoderModel)
+        resampledSignalData = self.coreModelPass(self.numSignalEncoderLayers, resampledSignalData, specificModel=self.specificSignalEncoderModel, sharedModel=self.sharedSignalEncoderModel)
         # resampledSignalData: batchSize, numSignals, encodedDimension
 
         # Resample the signal data.
         physiologicalTimes = self.sharedSignalEncoderModel.pseudoEncodedTimes
-        reconstructedSignalData = self.interpolateData(physiologicalTimes, timepoints, resampledSignalData)
+        reconstructedSignalData = self.interpolateData(physiologicalTimes, signalData, resampledSignalData)
         # reconstructedSignalData: batchSize, numSignals, maxSequenceLength
 
         # Visualize the data transformations within signal encoding.
         if not inferenceTraining and random.random() < 0.02:
-            with torch.no_grad(): self.visualizeSignalEncoding(physiologicalProfile, resampledSignalData, reconstructedSignalData, timepoints, datapoints, missingDataMask)
+            with torch.no_grad(): self.visualizeSignalEncoding(physiologicalProfile, resampledSignalData, reconstructedSignalData, signalData, validDataMask)
 
         # ------------------- Learned Emotion Mapping ------------------- #
 
@@ -220,7 +215,7 @@ class emotionModelHead(nn.Module):
 
         # --------------------------------------------------------------- #
 
-        return missingDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile
+        return validDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile
 
     @staticmethod
     def coreModelPass(numModelLayers, metaLearningData, specificModel, sharedModel):
@@ -245,7 +240,7 @@ class emotionModelHead(nn.Module):
             emotionProfile = torch.zeros((numExperiments, self.numEmotions, self.encodedDimension), device=device, dtype=torch.float64)
             reconstructedSignalData = torch.zeros((numExperiments, numSignals, maxSequenceLength), device=device, dtype=torch.float64)
             resampledSignalData = torch.zeros((numExperiments, numSignals, self.encodedDimension), device=device, dtype=torch.float64)
-            missingDataMask = torch.zeros((numExperiments, numSignals, maxSequenceLength), device=device, dtype=torch.bool)
+            validDataMask = torch.zeros((numExperiments, numSignals, maxSequenceLength), device=device, dtype=torch.bool)
             physiologicalProfile = torch.zeros((numExperiments, self.encodedDimension), device=device, dtype=torch.float64)
             activityProfile = torch.zeros((numExperiments, self.encodedDimension), device=device, dtype=torch.float64)
             testingBatchSize = modelParameters.getInferenceBatchSize(submodel, device)
@@ -255,7 +250,7 @@ class emotionModelHead(nn.Module):
                 endBatchInd = startBatchInd + testingBatchSize
 
                 # Perform a full pass of the model.
-                missingDataMask[startBatchInd:endBatchInd], reconstructedSignalData[startBatchInd:endBatchInd], resampledSignalData[startBatchInd:endBatchInd], physiologicalProfile[startBatchInd:endBatchInd], \
+                validDataMask[startBatchInd:endBatchInd], reconstructedSignalData[startBatchInd:endBatchInd], resampledSignalData[startBatchInd:endBatchInd], physiologicalProfile[startBatchInd:endBatchInd], \
                     activityProfile[startBatchInd:endBatchInd], basicEmotionProfile[startBatchInd:endBatchInd], emotionProfile[startBatchInd:endBatchInd] \
                     = self.forward(submodel=submodel, signalData=signalData[startBatchInd:endBatchInd], signalIdentifiers=signalIdentifiers[startBatchInd:endBatchInd],
                                    metadata=metadata[startBatchInd:endBatchInd], device=device, inferenceTraining=inferenceTraining)
@@ -263,35 +258,38 @@ class emotionModelHead(nn.Module):
                 # Update the batch index.
                 startBatchInd = endBatchInd
 
-        return missingDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile
+        return validDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile
 
-    def visualizeSignalEncoding(self, physiologicalProfile, resampledSignalData, reconstructedSignalData, timepoints, datapoints, missingDataMask):
+    def visualizeSignalEncoding(self, physiologicalProfile, resampledSignalData, reconstructedSignalData, signalData, validDataMask):
+        # Find the first valid signal.
+        validSignalMask = torch.any(validDataMask, dim=-1)
+        firstBatchInd, firstSignalInd = validSignalMask.nonzero(as_tuple=False)[0, :]
+        validPointMask = validDataMask[firstBatchInd, firstSignalInd]
+
         # Optionally, plot the physiological profile for visual comparison
         physiologicalTimes = self.sharedSignalEncoderModel.pseudoEncodedTimes.detach().cpu().numpy()
         plt.plot(physiologicalTimes, physiologicalProfile[0].detach().cpu().numpy(), 'k', linewidth=1, label='Physiological Profile', alpha=0.75)
         plt.show()
 
-        # Find the first valid signal.
-        validSignalMask = ~torch.all(missingDataMask, dim=-1)
-        firstBatchInd, firstSignalInd = validSignalMask.nonzero(as_tuple=False)[0, :]
-
-        # Get the first valid signal.
-        validPointMask = ~missingDataMask[firstBatchInd, firstSignalInd].detach().cpu().numpy()
-        validReconstructedPoints = reconstructedSignalData[firstBatchInd, firstSignalInd].detach().cpu().numpy()
-        validTimepoints = timepoints[firstBatchInd, firstSignalInd].detach().cpu().numpy()
-        validDatapoints = datapoints[firstBatchInd, firstSignalInd].detach().cpu().numpy()
+        # Get the first valid signal points.
+        validReconstructedPoints = reconstructedSignalData[firstBatchInd, firstSignalInd, validPointMask].detach().cpu().numpy()
+        datapoints = emotionDataInterface.getChannelData(signalData, channelName=modelConstants.signalChannel)
+        timepoints = emotionDataInterface.getChannelData(signalData, channelName=modelConstants.timeChannel)
+        validTimepoints = timepoints[firstBatchInd, firstSignalInd, validPointMask].detach().cpu().numpy()
+        validDatapoints = datapoints[firstBatchInd, firstSignalInd, validPointMask].detach().cpu().numpy()
 
         # Optionally, plot the original and reconstructed signals for visual comparison
-        plt.plot(validTimepoints[validPointMask], validDatapoints[validPointMask], 'ok', markersize=3, label='Initial Signal', alpha=0.75)
-        plt.plot(validTimepoints[validPointMask], validReconstructedPoints[validPointMask], 'o', color='tab:red', markersize=3, label='Reconstructed Signal', alpha=0.75)
+        plt.plot(validTimepoints, validDatapoints, 'ok', markersize=3, label='Initial Signal', alpha=0.75)
+        plt.plot(validTimepoints, validReconstructedPoints, 'o', color='tab:red', markersize=3, label='Reconstructed Signal', alpha=0.75)
         plt.plot(physiologicalTimes, resampledSignalData[firstBatchInd, firstSignalInd, :].detach().cpu().numpy(), 'tab:blue', linewidth=1, label='Resampled Signal', alpha=0.75)
-        plt.title(f"{firstBatchInd} {firstSignalInd} {len(validTimepoints[validPointMask])} {validTimepoints[validPointMask][0]} {validTimepoints[validPointMask][-1]} {len(physiologicalTimes)}")
+        plt.title(f"{firstBatchInd} {firstSignalInd} {len(validTimepoints)} {validTimepoints[0]} {validTimepoints[-1]} {len(physiologicalTimes)}")
         plt.legend()
         plt.show()
 
     @staticmethod
-    def interpolateData(physiologicalTimes, timepoints, resampledSignalData):
+    def interpolateData(physiologicalTimes, signalData, resampledSignalData):
         # Extract the dimensions of the data.
+        timepoints = emotionDataInterface.getChannelData(signalData, channelName=modelConstants.timeChannel)
         batchSize, numSignals, encodedDimension = resampledSignalData.size()
 
         # Align the timepoints to the physiological times.

@@ -6,34 +6,32 @@ import random
 class generalMethods:
 
     @staticmethod
-    def minMaxScale_noInverse(inputData, scale=1, buffer=None, min_val=None, max_val=None):
-        # Find the NaN values.
-        nanMask = torch.isnan(inputData)
-        clonedData = inputData.clone()
+    def minMaxScale_noInverse(inputData, scale=1, minDataValues=None, maxDataValues=None, missingDataMask=None):
+        # Assert the validity of the input.
+        if missingDataMask is not None: assert missingDataMask.size() == inputData.size(), "The missing data mask must have the same size as the input data."
 
-        # Use nanmin and nanmax to ignore NaNs in inputData
-        if min_val is None:
-            clonedData = clonedData.masked_fill(nanMask, float('inf'))
-            min_val = torch.min(clonedData, dim=-1, keepdim=True).values
-        if max_val is None:
-            clonedData = clonedData.masked_fill(nanMask, -float('inf'))
-            max_val = torch.max(clonedData, dim=-1, keepdim=True).values
-
-        if buffer is not None:
-            # Check if it is within the buffer range of the scale
-            min_val[(min_val + scale).abs() < buffer] = -scale
-            max_val[(max_val - scale).abs() < buffer] = scale
+        if minDataValues is None:
+            # Find the minimum value across the last dimension.
+            modifiedInputData = inputData.masked_fill(missingDataMask, float('inf')) if missingDataMask is not None else inputData
+            minDataValues = torch.min(modifiedInputData, dim=-1, keepdim=True).values
+        if maxDataValues is None:
+            # Find the maximum value across the last dimension.
+            modifiedInputData = inputData.masked_fill(missingDataMask, -float('inf')) if missingDataMask is not None else inputData
+            maxDataValues = torch.max(modifiedInputData, dim=-1, keepdim=True).values
 
         # Handle the case when max_val == min_val (avoid division by zero)
-        range_val = max_val - min_val
+        range_val = maxDataValues - minDataValues
         range_val[range_val == 0] = 1  # Prevent division by zero
 
         # Normalize the data.
-        normalized = (inputData - min_val) / range_val  # Normalize to [0, 1]
-        scaled = 2 * normalized - 1  # Then scale to [-1, 1]
-        scaled = scale * scaled  # Apply additional scaling if needed
+        normalized = (inputData - minDataValues) / range_val  # Normalize to [0, 1]
+        scaledData = 2 * normalized - 1  # Then scale to [-1, 1]
+        scaledData = scale * scaledData  # Apply additional scaling if needed
 
-        return scaled
+        # Reset the missing data values.
+        scaledData[missingDataMask] = 0
+
+        return scaledData
 
     @staticmethod
     def pcaCompression(signals, numComponents, standardizeSignals=True):

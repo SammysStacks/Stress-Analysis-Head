@@ -31,12 +31,12 @@ class organizeTrainingLosses(lossCalculations):
 
             t1 = time.time()
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
-            missingDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = model.fullPass(submodel, allSignalData, allSignalIdentifiers, allMetadata, device=self.accelerator.device, inferenceTraining=False)
+            validDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = model.fullPass(submodel, allSignalData, allSignalIdentifiers, allMetadata, device=self.accelerator.device, inferenceTraining=False)
             t2 = time.time(); self.accelerator.print("Full Pass", t2 - t1)
 
             # Calculate the signal encoding loss.
-            signalReconstructedTrainingLoss = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, missingDataMask, allTrainingMasks, modelPipeline.reconstructionIndex)
-            signalReconstructedTestingLoss = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, missingDataMask, allTestingMasks, modelPipeline.reconstructionIndex)
+            signalReconstructedTrainingLoss = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, validDataMask, allTrainingMasks, modelPipeline.reconstructionIndex)
+            signalReconstructedTestingLoss = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, validDataMask, allTestingMasks, modelPipeline.reconstructionIndex)
             self.accelerator.print("Loss values:", signalReconstructedTrainingLoss.item(), signalReconstructedTestingLoss.item())
 
             # Store the signal encoder loss information.

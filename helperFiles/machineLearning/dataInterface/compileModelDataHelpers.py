@@ -38,10 +38,8 @@ class compileModelDataHelpers:
         self.minSignalPresentCount = None
         self.maxClassPercentage = None
         self.minSequencePoints = None
-        self.maxSequenceJump = None
         self.maxAverageDiff = None
         self.minNumClasses = None
-        self.minSNR = None
 
         # Set the submodel-specific parameters
         if submodel is not None: self.addSubmodelParameters(submodel, userInputParams)
@@ -51,8 +49,7 @@ class compileModelDataHelpers:
 
         # Exclusion criterion.
         self.minNumClasses, self.maxClassPercentage = self.modelParameters.getExclusionClassCriteria(submodel)
-        self.minSequencePoints, self.minSignalPresentCount, self.maxSequenceJump, self.maxAverageDiff = self.modelParameters.getExclusionSequenceCriteria(submodel)
-        self.minSNR = self.modelParameters.getExclusionSNRCriteria(submodel)
+        self.minSequencePoints, self.minSignalPresentCount, self.maxAverageDiff = self.modelParameters.getExclusionSequenceCriteria(submodel)
 
         # Embedded information for each model.
         self.signalEncoderModelInfo = f"signalEncoder on {userInputParams['deviceListed']} with {userInputParams['optimizerType']} at encodedDimension {userInputParams['encodedDimension']}"
@@ -224,9 +221,6 @@ class compileModelDataHelpers:
                 allSignalData[experimentalInd, currentSignalInd:finalSignalInd, 0:batchSpecificFeatureLength, dataChannelInd] = biomarkerData
                 allNumSignalPoints[experimentalInd, currentSignalInd:finalSignalInd] = batchSpecificFeatureLength
 
-                # Make sure the padded data does not change the signal range.
-                allSignalData[experimentalInd, currentSignalInd:finalSignalInd, batchSpecificFeatureLength:, dataChannelInd] = torch.nan
-
                 # Update the current signal index
                 maxSequenceLength = max(maxSequenceLength, batchSpecificFeatureLength)
                 currentSignalInd = finalSignalInd
@@ -243,28 +237,27 @@ class compileModelDataHelpers:
         # Ensure the feature names match the number of signals
         assert len(allSignalData) == 0 or len(featureNames) == allSignalData.shape[1], \
             f"Feature names do not match data dimensions. {len(featureNames)} != {allSignalData.shape[1]}"
-
-        # Get the signal data dimensions.
         batchSize, numSignals, maxSequenceLength, numChannels = allSignalData.shape
 
         # Standardize all signals at once for the entire batch
-        allSignalData = self.normalizeSignals(allSignalData)
-
-        # Find the missing signals.
+        validDataMask = emotionDataInterface.getValidDataMask(allSignalData, allNumSignalPoints)
+        allSignalData = self.normalizeSignals(allSignalData=allSignalData, missingDataMask=~validDataMask)
         biomarkerData = emotionDataInterface.getChannelData(signalData=allSignalData, channelName=modelConstants.signalChannel)
-        # missingDataMask, biomarkerTimes, biomarkerData dim: batchSize, numSignals, maxSequenceLength
+        # allSignalData dim: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
+        # missingDataMask dim: batchSize, numSignals, maxSequenceLength
+        # biomarkerData: batchSize, numSignals, maxSequenceLength
 
         # Create boolean masks for signals that don’t meet the requirements
-        minLowerBoundaryMask = 1 < (biomarkerData < -modelConstants.minMaxScale + 0.3).sum(dim=-1)  # Number of points below -0.95: batchSize, numSignals
-        minUpperBoundaryMask = 1 < (modelConstants.minMaxScale - 0.3 < biomarkerData).sum(dim=-1)  # Number of points above 0.95: batchSize, numSignals
+        minLowerBoundaryMask = 1 < (biomarkerData < -modelConstants.minMaxScale + 0.25).sum(dim=-1)  # Number of points below -0.95: batchSize, numSignals
+        minUpperBoundaryMask = 1 < (modelConstants.minMaxScale - 0.25 < biomarkerData).sum(dim=-1)  # Number of points above 0.95: batchSize, numSignals
         averageDiff = biomarkerData.diff(dim=-1).abs().mean(dim=-1) < self.maxAverageDiff  # Average difference between consecutive points: batchSize, numSignals
-        startValueMask = biomarkerData[:, :, 0].abs() <= modelConstants.minMaxScale - 0.1  # Start value: batchSize, numSignals
-        endValueMask = biomarkerData[:, :, -1].abs() <= modelConstants.minMaxScale - 0.1  # End value: batchSize, numSignals
+        startValueMask = (biomarkerData[:, :, 0:5].abs() <= modelConstants.minMaxScale - 0.05).any(dim=-1)  # Start value: batchSize, numSignals
+        endValueMask = (biomarkerData[:, :, -5:].abs() <= modelConstants.minMaxScale - 0.05).any(dim=-1)  # End value: batchSize, numSignals
         minPointsMask = self.minSequencePoints <= allNumSignalPoints  # Minimum number of points: batchSize, numSignals
-        snrMask = self.minSNR < self.calculate_snr(biomarkerData)  # Signal-to-noise ratio: batchSize, numSignals
+        validSignalMask = validDataMask.any(dim=-1)  # Missing data: batchSize, numSignals
 
         # Combine all masks into a single mask and expand to match dimensions.
-        validSignalMask = minPointsMask & endValueMask & startValueMask & minLowerBoundaryMask & minUpperBoundaryMask & averageDiff & snrMask
+        validSignalMask = minPointsMask & endValueMask & startValueMask & minLowerBoundaryMask & minUpperBoundaryMask & averageDiff & validSignalMask
         validSignalInds = self.minSignalPresentCount < validSignalMask.sum(dim=0)
 
         # Filter out the invalid signals
@@ -312,17 +305,11 @@ class compileModelDataHelpers:
 
         return snr_values
 
-    def normalizeSignals(self, signalBatchData):
+    def normalizeSignals(self, allSignalData, missingDataMask):
         # signalBatchData dimension: numExperiments, numSignals, maxSequenceLength, [timeChannel, signalChannel]
-        # allNumSignalPoints dimension: numExperiments, numSignals
+        # missingDataMask dimension: numExperiments, numSignals, maxSequenceLength
         signalChannelInd = emotionDataInterface.getChannelInd(channelName=modelConstants.signalChannel)
+        allSignalData[:, :, :, signalChannelInd] = self.generalMethods.minMaxScale_noInverse(allSignalData[:, :, :, signalChannelInd], scale=modelConstants.minMaxScale, missingDataMask=missingDataMask)
 
-        for signalInd in range(len(signalBatchData[0])):
-            # Standardize the signals (min-max scaling).
-            signalBatchData[:, signalInd, :, signalChannelInd] = self.generalMethods.minMaxScale_noInverse(signalBatchData[:, signalInd, :, signalChannelInd], scale=modelConstants.minMaxScale)
-
-        # Reset the signal data to zero at the ends.
-        signalBatchData[torch.isnan(signalBatchData)] = 0
-
-        return signalBatchData
+        return allSignalData
     

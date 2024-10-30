@@ -1,4 +1,6 @@
 # Helper classes
+import torch
+
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.generalMethods.classWeightHelpers import classWeightHelpers
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
@@ -110,6 +112,19 @@ class emotionDataInterface:
         return signalData, signalIdentifiers, metadata
 
     # ---------------------- Signal Data Getters ---------------------- #
+
+    @staticmethod
+    def getValidDataMask(allSignalData, allNumSignalPoints):
+        # Extract the incoming data's dimension.
+        batchSize, numSignals, maxSequenceLength = allSignalData.size()[0:3]
+
+        # This creates a range tensor for the sequence dimension
+        positionTensor = torch.arange(start=0, end=maxSequenceLength, step=1,  device=allSignalData.device).expand(batchSize, numSignals, maxSequenceLength)
+
+        # Compare `range_tensor` with `allNumSignalPoints` (broadcast)
+        validDataMask = positionTensor < allNumSignalPoints.unsqueeze(-1)
+
+        return validDataMask
 
     @staticmethod
     def getChannelInd(channelName):

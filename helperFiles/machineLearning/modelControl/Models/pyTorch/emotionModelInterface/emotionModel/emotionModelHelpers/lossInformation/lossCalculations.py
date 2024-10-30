@@ -64,7 +64,7 @@ class lossCalculations:
         finalLoss = method(signalData).mean()
         return finalLoss
 
-    def calculateSignalEncodingLoss(self, allInitialSignalData, allReconstructedSignalData, allMissingDataMask, allLabelsMask, reconstructionIndex):
+    def calculateSignalEncodingLoss(self, allInitialSignalData, allReconstructedSignalData, allValidDataMask, allLabelsMask, reconstructionIndex):
         # Find the boolean flags for the data involved in the loss calculation.
         reconstructionDataMask = self.getReconstructionDataMask(allLabelsMask, reconstructionIndex)
         # reconstructionDataMask dimension: numExperiments
@@ -72,8 +72,8 @@ class lossCalculations:
         # Isolate the signals for this loss (For example, training vs. testing).
         reconstructedSignalData = self.getData(allReconstructedSignalData, reconstructionDataMask)  # Dim: numExperiments, numSignals, maxSequenceLength
         initialSignalData = self.getData(allInitialSignalData, reconstructionDataMask)  # Dim: numExperiments, numSignals, maxSequenceLength, numChannels
-        missingDataMask = self.getData(allMissingDataMask, reconstructionDataMask)  # Dim: numExperiments, numSignals, maxSequenceLength
-        batchSize, numSignals, maxSequenceLength = missingDataMask.size()
+        validDataMask = self.getData(allValidDataMask, reconstructionDataMask)  # Dim: numExperiments, numSignals, maxSequenceLength
+        batchSize, numSignals, maxSequenceLength = allValidDataMask.size()
         if batchSize == 0: print("No signal encoding batches"); return None
 
         # Unpack the signal data.
@@ -81,21 +81,18 @@ class lossCalculations:
         # allDatapoints and allTimepoints: numExperiments, numSignals, maxSequenceLength
 
         # Calculate the error in signal reconstruction (encoding loss).
+        dataUncertainty = self.smoothingFilter(datapoints, kernelSize=3).diff(dim=-1).pow(2)
         signalReconstructedLoss = self.reconstructionLoss(reconstructedSignalData, datapoints)
         # signalReconstructedLoss dimension: numExperiments, numSignals, maxSequenceLength
-
-        # Adjust the loss based on the missing data.
-        smoothenedData = self.smoothingFilter(datapoints, kernelSize=3)  # smoothenedData: numExperiments, numSignals, maxSequenceLength
-        dataUncertainty = smoothenedData.diff(dim=-1).pow(2)
         # dataUncertainty: numExperiments, numSignals, maxSequenceLength - 1
 
         # Adjust the loss based on the missing data.
-        missingDataMask[:, :, :-1][signalReconstructedLoss[:, :, :-1] < dataUncertainty] = True  # Remove small errors.
-        missingDataMask[:, :, 1:][signalReconstructedLoss[:, :, 1:] < dataUncertainty] = True  # Remove small errors.
+        validDataMask[:, :, :-1][signalReconstructedLoss[:, :, :-1] < dataUncertainty] = False  # Remove small errors.
+        validDataMask[:, :, 1:][signalReconstructedLoss[:, :, 1:] < dataUncertainty] = False  # Remove small errors.
         # missingDataMask: numExperiments, numSignals, maxSequenceLength
 
         # Calculate the error in signal reconstruction (encoding loss).
-        signalReconstructedLoss = signalReconstructedLoss[~missingDataMask].mean()
+        signalReconstructedLoss = signalReconstructedLoss[validDataMask].mean()
 
         # Assert that nothing is wrong with the loss calculations.
         self.modelHelpers.assertVariableIntegrity(signalReconstructedLoss, variableName="encoded signal reconstructed loss", assertGradient=False)
@@ -272,17 +269,6 @@ class lossCalculations:
         gradients_norm = gradients_norm / math.sqrt(elemA*elemB)
 
         return gradients_norm
-
-    def calculateMinMaxLoss(self, inputData, expectedMean=0, expectedMinMax=1, dim=-1, minMaxBuffer=0.0):
-        # Calculate the min-max loss.
-        minMaxData = self.generalMethods.minMaxScale_noInverse(inputData, scale=expectedMinMax, buffer=minMaxBuffer)
-        minMaxLoss = (minMaxData - expectedMean).pow(2)
-
-        # Calculate the mean error.
-        meanData = inputData.mean(dim=dim)
-        meanError = (meanData - expectedMean).pow(2)
-
-        return meanError, minMaxLoss
 
     @staticmethod
     def calculateStandardizationLoss(inputData, expectedMean=0, expectedStandardDeviation=1, dim=-1):

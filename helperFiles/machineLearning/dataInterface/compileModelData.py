@@ -207,9 +207,9 @@ class compileModelData(compileModelDataHelpers):
             numLabels = allFeatureLabels.size(1)
 
             # Check the validity of the data before proceeding.
-            assert len(featureNames) == numSignals, "The number of feature names must match the number of signals."
-            if numExperiments == 0: continue
-            if numSignals == 0: continue
+            assert len(featureNames) == numSignals, f"The number of feature names must match the number of signals in {metadatasetName}."
+            if numExperiments == 0: print(f"No experiments worthwhile of my time and energy in {metadatasetName}"); continue
+            if numSignals == 0: print(f"No signals worthwhile of my time and energy in {metadatasetName}"); continue
 
             # ---------------------- Test/Train Split ---------------------- #
 
