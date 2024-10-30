@@ -19,7 +19,7 @@ class reversibleDualConvolutionLayer(reversibleInterface):
         self.kernelSize = kernelSize  # The restricted window for the neural weights.
         self.numSignals = numSignals  # The number of signals in the input data.
         self.numLayers = numLayers  # The number of layers in the reversible linear layer.
-        self.stabilityFactor = 1.15  # The stability factor: increase to reduce backward magnitude.
+        self.stabilityFactor = 1.1  # The stability factor: increase to reduce backward magnitude.
 
         # The restricted window for the neural weights.
         self.restrictedWindowMask = torch.ones(1, self.sequenceLength, self.sequenceLength, dtype=torch.float64)

@@ -21,4 +21,4 @@ module load intel-oneapi-mkl/2023.2.0-gcc-13.2.0-ohvyk7g
 module load openmpi/4.1.5-gcc-13.2.0-24q3ap2    # Load in openMPI for cross-node talk
 
 # RUN FILE
-sh signalencoderGroupAnalysis.sh "$1" "$2" "$3" "$4" "$5" "$6"
+sh signalEncoderAnalysis.sh "$1" "$2" "$3" "$4" "$5" "$6"

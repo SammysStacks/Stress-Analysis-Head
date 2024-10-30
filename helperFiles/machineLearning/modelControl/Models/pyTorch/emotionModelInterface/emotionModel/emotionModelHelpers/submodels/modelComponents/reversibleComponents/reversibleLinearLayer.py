@@ -80,7 +80,7 @@ if __name__ == "__main__":
     _batchSize, _numSignals, _sequenceLength = 2, 3, 128
     _activationMethod = 'nonLinearMultiplication'
     _kernelSize = _sequenceLength
-    _numLayers = 5
+    _numLayers = 3
 
     # Set up the parameters.
     neuralLayerClass = reversibleLinearLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod, switchActivationDirection=False)

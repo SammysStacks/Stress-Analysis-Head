@@ -19,12 +19,13 @@ class reversibleDualLinearLayer(reversibleInterface):
         self.kernelSize = kernelSize  # The restricted window for the neural weights.
         self.numSignals = numSignals  # The number of signals in the input data.
         self.numLayers = numLayers  # The number of layers in the reversible linear layer.
-        self.stabilityFactor = 1.15  # The stability factor: increase to reduce backward magnitude.
+        self.stabilityFactor = 1.1  # The stability factor: increase to reduce backward magnitude.
 
         # The restricted window for the neural weights.
         self.restrictedWindowMask = torch.ones(1, self.sequenceLength, self.sequenceLength, dtype=torch.float64)
         if sequenceLength != kernelSize: self.restrictedWindowMask = torch.tril(torch.triu(self.restrictedWindowMask, diagonal=-kernelSize//2 + 1), diagonal=kernelSize//2)
         assert kernelSize <= sequenceLength, f"The kernel size is larger than the sequence length: {kernelSize}, {sequenceLength}"
+        if sequenceLength != kernelSize: self.stabilityFactor = 1.15
 
         # Initialize the neural layers.
         self.activationFunctions1,  self.linearOperators1 = nn.ModuleList(), nn.ParameterList()

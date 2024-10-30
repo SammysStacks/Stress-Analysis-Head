@@ -3,12 +3,12 @@ start=$(date +%s)
 
 # Pass the parameters to the Python script
 srun accelerate launch ./../../metaTrainingControl.py \
-    --numSigLiftedChannels "$1" \
-    --numSigEncodingLayers "$2" \
-    --encodedSamplingFreq "$3" \
+    --numSignalEncoderLayers "$1" \
+    --goldenRatio "$2" \
+    --encodedDimension "$3" \
     --deviceListed "HPC-$4" \
     --submodel modelConstants.signalEncoderModel \
-    --signalEncoderWaveletType "$5" \
+    --waveletType "$5" \
     --optimizerType "$6" \
 
 end=$(date +%s)
