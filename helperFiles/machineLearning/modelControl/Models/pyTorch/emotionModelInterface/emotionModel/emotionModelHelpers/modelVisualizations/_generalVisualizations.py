@@ -148,7 +148,7 @@ class generalVisualizations(globalPlottingProtocols):
 
         # Save the figure if desired.
         if self.saveDataFolder: self.displayFigure(self.saveDataFolder + f"{plotTitle} at epoch {len(trainingLosses[0])}.pdf")
-        else: plt.show(); plt.close('all')
+        else: plt.show()
 
     def generalDataPlotting(self, plottingData, plottingLabels, plotTitle="Model Convergence Loss"):
         # Plot the training path.

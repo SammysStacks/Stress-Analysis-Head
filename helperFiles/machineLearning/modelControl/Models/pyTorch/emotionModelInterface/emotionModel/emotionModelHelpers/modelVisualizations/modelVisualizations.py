@@ -90,7 +90,6 @@ class modelVisualizations(globalPlottingProtocols):
 
         # General plotting parameters.
         numTrainingInstances, numTestingInstances = 6, 6
-        numExperiments, numSignals, maxSequenceLength, numChannels = allSignalData.size()
 
         # Get the reconstruction data mask
         reconstructionDataTrainingMask = self.dataInterface.getEmotionColumn(allTrainingMasks, reconstructionIndex)  # Dim: numExperiments

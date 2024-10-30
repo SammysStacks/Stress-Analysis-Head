@@ -96,7 +96,6 @@ if __name__ == "__main__":
     allModels, allDataLoaders, allMetaModels, allMetadataLoaders, _ = modelCompiler.compileModelsFull(metaDatasetNames, submodel, testSplitRatio, datasetNames)
 
     # Store the initial loss information.
-    trainingProtocols.plotModelState(allMetaModels, allMetadataLoaders, allModels, allDataLoaders, submodel, trainingDate)
     if storeLoss: trainingProtocols.calculateLossInformation(allMetaModels, allMetadataLoaders, allModels, allDataLoaders, submodel)
 
     # -------------------------- Meta-model Training ------------------------- #
