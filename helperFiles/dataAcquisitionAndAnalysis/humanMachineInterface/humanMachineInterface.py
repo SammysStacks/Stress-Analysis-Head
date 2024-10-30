@@ -9,11 +9,22 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 from helperFiles.machineLearning.modelControl.modelSpecifications.compileModelInfo import compileModelInfo
 from helperFiles.machineLearning.feedbackControl.heatTherapy.heatTherapyMain import heatTherapyControl
 from helperFiles.dataAcquisitionAndAnalysis.humanMachineInterface import featureOrganization
+from helperFiles.machineLearning.dataInterface.compileModelData import compileModelData  # Methods to organize model data.
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
 
 
 class humanMachineInterface:
     
     def __init__(self, modelClasses, actionControl, extractFeaturesFrom):
+        # Accelerator configuration steps
+        self.accelerator = None
+        self.submodel = None
+        self.userInputParams = None
+        self.modelCompiler = compileModelData(self.submodel, self.userInputParams, useTherapyData=False, accelerator=self.accelerator)
+
+        #TODO: not sure
+        self.allSubjectInds = []
+
         # General parameters.
         self.actionControl = actionControl
         self.modelClasses = modelClasses        # A list of machine learning models.
@@ -86,24 +97,60 @@ class humanMachineInterface:
         fileName = os.path.basename(filePath).split(".")[0]
         self.userName = fileName.split(" ")[-1].lower()
 
-    def minMaxScale(self, compiledAllFeatures):
-        # inputModelData = torch.zeros((numNewPoints, len(self.featureNames), maxSequenceLength, len(modelConstants.signalChannelNames)), dtype=torch.float64)
-        # inputModelData dim: numNewTimePoints, numBiomarkerFeatures, maxSequenceLength, numChannels
-        featureMin = compiledAllFeatures.min(dim=(0, 2, 3), keepdim=True) # get the feature min except at the feature dimension ?
-        featureMax = compiledAllFeatures.max(dim=(0, 2, 3), keepdim=True)
-
-        pass
-
     def emotionConversion(self, emotionScores):
 
         emotionScores[:10] = 0.5 + emotionScores[:10] / (5.5 - 0.5)
         emotionScores[10:] = 0.5 + emotionScores[10:] / (4.5 - 0.5)
         return emotionScores
 
+    def inputModelDataWithContextualInfo(self, inputModelData, allNumSignalPoints, dataInd):
+        numExperiments, numSignals, maxSequenceLength, numChannels = inputModelData.shape
+        for experimentInd in range(numExperiments):
+            self.allSubjectInds.append(0)
+
+        numSignalIdentifiers = len(modelConstants.signalIdentifiers)
+        numMetadata = len(modelConstants.metadata)
+
+        # Create lists to store the new augmented data.
+        compiledSignalData = torch.zeros((numExperiments, numSignals, maxSequenceLength + numSignalIdentifiers + numMetadata, numChannels))
+        assert len(modelConstants.signalChannelNames) == numChannels
+
+        # For each recorded experiment.
+        for experimentInd in range(numExperiments):
+            # Compile all the metadata information: dataset specific.
+            subjectInds = torch.full(size=(numSignals, 1, numChannels), fill_value=self.allSubjectInds[experimentInd])
+            datasetInds = torch.full(size=(numSignals, 1, numChannels), fill_value=dataInd)
+            metadata = torch.hstack((datasetInds, subjectInds))
+            # metadata dim: numSignals, numMetadata, numChannels
+
+            # Compile all the signal information: signal specific.
+            eachSignal_numPoints = allNumSignalPoints[experimentInd].unsqueeze(-1).unsqueeze(-1).repeat(1, 1, numChannels)
+            signalInds = torch.arange(numSignals).unsqueeze(-1).unsqueeze(-1).repeat(1, 1, numChannels)
+            batchInds = torch.full(size=(numSignals, 1, numChannels), fill_value=experimentInd)
+            signalIdentifiers = torch.hstack((eachSignal_numPoints, signalInds, batchInds))
+            # signalIdentifiers dim: numSignals, numSignalIdentifiers, numChannels
+
+            # Assert the correct hardcoded dimensions.
+            assert emotionDataInterface.getSignalIdentifierIndex(identifierName=modelConstants.numSignalPointsSI) == 0, "Asserting I am self-consistent. Hardcoded assertion"
+            assert emotionDataInterface.getSignalIdentifierIndex(identifierName=modelConstants.signalIndexSI) == 1, "Asserting I am self-consistent. Hardcoded assertion"
+            assert emotionDataInterface.getMetadataIndex(metadataName=modelConstants.datasetIndexMD) == 0, "Asserting I am self-consistent. Hardcoded assertion"
+            assert emotionDataInterface.getMetadataIndex(metadataName=modelConstants.subjectIndexMD) == 1, "Asserting I am self-consistent. Hardcoded assertion"
+            assert numSignalIdentifiers == 3, "Asserting I am self-consistent. Hardcoded assertion"
+            assert numMetadata == 2, "Asserting I am self-consistent. Hardcoded assertion"
+
+            # Add the demographic data to the feature array.
+            compiledSignalData[experimentInd] = torch.hstack((inputModelData[experimentInd], signalIdentifiers, metadata))
+
+        return compiledSignalData
+
+
     def predictLabels(self, modelTimes, inputModelData, therapyParam):
         # Add in contextual information to the data.
-
-        _, _, _, _, _, _, emotionProfile = self.modelClasses[0].model.forward(inputModelData)
+        normalizedInputModelData = self.modelCompiler.normalizeSignals(inputModelData)
+        allNumSignalPoints = torch.empty(size=(len(inputModelData[0]), len(self.featureNames)), dtype=torch.int)
+        compiledNormalizedInputData = self.inputModelDataWithContextualInfo(normalizedInputModelData, allNumSignalPoints, dataInd=0)
+        exit()
+        _, _, _, _, _, _, emotionProfile = self.modelClasses[0].model.forward(compiledNormalizedInputData)
         # emotionProfile dim: numNewPoints, numEmotions=30, encodedDimension=256
         emotionProfile = emotionProfile.detach().cpu().numpy()
 
