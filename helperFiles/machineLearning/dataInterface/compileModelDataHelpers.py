@@ -255,9 +255,8 @@ class compileModelDataHelpers:
         # missingDataMask, biomarkerTimes, biomarkerData dim: batchSize, numSignals, maxSequenceLength
 
         # Create boolean masks for signals that don’t meet the requirements
-        diffMask = biomarkerData.diff(dim=-1).abs().max(dim=-1).values <= self.maxSequenceJump  # Maximum difference between consecutive points: batchSize, numSignals
-        minLowerBoundaryMask = 2 < (biomarkerData < -modelConstants.minMaxScale + 0.1).sum(dim=-1)  # Number of points below -0.95: batchSize, numSignals
-        minUpperBoundaryMask = 2 < (modelConstants.minMaxScale - 0.1 < biomarkerData).sum(dim=-1)  # Number of points above 0.95: batchSize, numSignals
+        minLowerBoundaryMask = 1 < (biomarkerData < -modelConstants.minMaxScale + 0.3).sum(dim=-1)  # Number of points below -0.95: batchSize, numSignals
+        minUpperBoundaryMask = 1 < (modelConstants.minMaxScale - 0.3 < biomarkerData).sum(dim=-1)  # Number of points above 0.95: batchSize, numSignals
         averageDiff = biomarkerData.diff(dim=-1).abs().mean(dim=-1) < self.maxAverageDiff  # Average difference between consecutive points: batchSize, numSignals
         startValueMask = biomarkerData[:, :, 0].abs() <= modelConstants.minMaxScale - 0.1  # Start value: batchSize, numSignals
         endValueMask = biomarkerData[:, :, -1].abs() <= modelConstants.minMaxScale - 0.1  # End value: batchSize, numSignals
@@ -265,15 +264,12 @@ class compileModelDataHelpers:
         snrMask = self.minSNR < self.calculate_snr(biomarkerData)  # Signal-to-noise ratio: batchSize, numSignals
 
         # Combine all masks into a single mask and expand to match dimensions.
-        validSignalMask = minPointsMask & diffMask & endValueMask & startValueMask & snrMask & minLowerBoundaryMask & minUpperBoundaryMask & averageDiff
+        validSignalMask = minPointsMask & endValueMask & startValueMask & minLowerBoundaryMask & minUpperBoundaryMask & averageDiff & snrMask
+        validSignalInds = self.minSignalPresentCount < validSignalMask.sum(dim=0)
 
         # Filter out the invalid signals
-        allSignalData[validSignalMask.unsqueeze(-1).unsqueeze(-1).expand(batchSize, numSignals, maxSequenceLength, numChannels)] = 0
-        allNumSignalPoints[validSignalMask] = 0
-
-        # Ensure that the minimum number of signals is present
-        signalPresentCount = batchSize - validSignalMask.sum(dim=0)
-        validSignalInds = self.minSignalPresentCount < signalPresentCount
+        allSignalData[~validSignalMask.unsqueeze(-1).unsqueeze(-1).expand(batchSize, numSignals, maxSequenceLength, numChannels)] = 0
+        allNumSignalPoints[~validSignalMask] = 0
 
         return allSignalData[:, validSignalInds, :, :], allNumSignalPoints[:, validSignalInds], featureNames[validSignalInds]
 
