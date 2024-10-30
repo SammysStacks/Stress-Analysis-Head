@@ -249,41 +249,29 @@ class compileModelDataHelpers:
         # Standardize all signals at once for the entire batch
         allSignalData = self.normalizeSignals(allSignalData)
 
-        # Calcul ate SNRs for all signals in the batch
-        biomarkerData = emotionDataInterface.getChannelData(signalData=allSignalData, channelName=modelConstants.signalChannel)
-        biomarkerTimes = emotionDataInterface.getChannelData(signalData=allSignalData, channelName=modelConstants.timeChannel)
-        signalSNRs = self.calculate_snr(biomarkerData)
-
-        for batchInd in range(batchSize):
-            for signalInd in range(numSignals):
-                # Get the signal data for the current signal.
-                numPoints = allNumSignalPoints[batchInd, signalInd]
-
-                # Cull any bad signals and their corresponding time points.
-                if numPoints < self.minSequencePoints: allSignalData[batchInd, signalInd, :, :] = 0; continue
-
-                # Get the signal data for the current signal.
-                signalData = biomarkerData[batchInd, signalInd, 0:numPoints]
-
-                # Cull any bad signals and their corresponding time points.
-                if self.maxSequenceJump < signalData.diff().abs().max(): allSignalData[batchInd, signalInd, :, :] = 0; continue
-                if 0.9 < signalData[-1].abs(): allSignalData[batchInd, signalInd, :, :] = 0; continue
-                if 0.9 < signalData[0].abs(): allSignalData[batchInd, signalInd, :, :] = 0; continue
-
         # Find the missing signals.
         biomarkerData = emotionDataInterface.getChannelData(signalData=allSignalData, channelName=modelConstants.signalChannel)
-        biomarkerTimes = emotionDataInterface.getChannelData(signalData=allSignalData, channelName=modelConstants.timeChannel)
-        missingDataMask = torch.as_tensor((biomarkerData == 0) & (biomarkerTimes == 0), dtype=torch.bool)
-        signalPresentCount = batchSize - torch.all(missingDataMask, dim=-1).sum(dim=0)
+        # missingDataMask, biomarkerTimes, biomarkerData dim: batchSize, numSignals, maxSequenceLength
 
-        # Generate a valid signal mask across the batch
-        validSignalInds = torch.logical_and(self.minSNR < signalSNRs, self.minSignalPresentCount < signalPresentCount)
+        # Create boolean masks for signals that don’t meet the requirements
+        diffMask = biomarkerData.diff(dim=-1).abs().max(dim=-1).values <= self.maxSequenceJump  # Maximum difference between consecutive points: batchSize, numSignals
+        minPointsMask = self.minSequencePoints <= allNumSignalPoints  # Minimum number of points: batchSize, numSignals
+        snrMask = self.minSNR < self.calculate_snr(biomarkerData)  # Signal-to-noise ratio: batchSize, numSignals
+        startValueMask = biomarkerData[:, :, 0].abs() <= 0.9  # Start value: batchSize, numSignals
+        endValueMask = biomarkerData[:, :, -1].abs() <= 0.9  # End value: batchSize, numSignals
 
-        # Apply the mask to filter valid signals and their corresponding points
-        filteredSignalData = allSignalData[:, validSignalInds, :, :]
-        filteredNumSignalPoints = allNumSignalPoints[:, validSignalInds]
+        # Combine all masks into a single mask and expand to match dimensions.
+        validSignalMask = minPointsMask & diffMask & endValueMask & startValueMask & snrMask
 
-        return filteredSignalData, filteredNumSignalPoints, featureNames[validSignalInds]
+        # Filter out the invalid signals
+        allSignalData[validSignalMask.unsqueeze(-1).unsqueeze(-1).expand(batchSize, numSignals, maxSequenceLength, numChannels)] = 0
+        allNumSignalPoints[validSignalMask] = 0
+
+        # Ensure that the minimum number of signals is present
+        signalPresentCount = batchSize - validSignalMask.sum(dim=0)
+        validSignalInds = self.minSignalPresentCount < signalPresentCount
+
+        return allSignalData[:, validSignalInds, :, :], allNumSignalPoints[:, validSignalInds], featureNames[validSignalInds]
 
     def getSignalIntervals(self, experimentalData, eachSignal_numPoints, timeWindow, channelInds):
         # signalChannel: A torch array of size (numSignals, maxSequenceLength, [timeChannel, signalChannel])
@@ -313,21 +301,14 @@ class compileModelDataHelpers:
 
     @staticmethod
     def calculate_snr(biomarkerData, epsilon=1e-10):
-        # signalBatchData dimension: numExperiments, numSignals, maxSequenceLength
-        snr_values = torch.zeros(len(biomarkerData[0]))
+        # biomarkerData dimension: numExperiments, numSignals, maxSequenceLength
+        # Calculate the signal power and noise power for the current signal.
+        signal_power = torch.mean(biomarkerData.pow(2), dim=-1)  # Signal power
+        noise_power = torch.var(biomarkerData, dim=-1)  # Noise power (variance)
 
-        # For each signal in the batch.
-        for signalInd in range(len(biomarkerData[0])):
-            # Get the signal data for the current signal.
-            signalData = biomarkerData[:, signalInd, :]  # Dim: numExperiments x numPoints
-            signalData = signalData[signalData != 0]  # Ignore zero-padding or zero segments
-
-            # Calculate the signal power and noise power for the current signal.
-            signal_power = torch.mean(signalData ** 2, dim=-1)  # Signal power
-            noise_power = torch.var(signalData, dim=-1)  # Noise power (variance)
-
-            # Calculate the SNR (adding epsilon to avoid log(0))
-            snr_values[signalInd] = 10 * torch.log10((signal_power + epsilon) / (noise_power + epsilon)).mean()
+        # Calculate the SNR (adding epsilon to avoid log(0))
+        snr_values = 10 * torch.log10((signal_power + epsilon) / (noise_power + epsilon))
+        # snr_values dimension: numExperiments, numSignals
 
         return snr_values
 
