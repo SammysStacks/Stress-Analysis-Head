@@ -115,7 +115,8 @@ class emotionPipeline(emotionPipelineHelpers):
                     # Calculate the gradients.
                     self.accelerator.backward(finalLoss)  # Calculate the gradients.
                     self.backpropogateModel()  # Backpropagation.
-                    t2 = time.time(); self.accelerator.print(f"{'Shared' if trainSharedLayers else 'Specific'} layer training {self.datasetName} {numPointsAnalyzed}: {t2 - t1}\n")
+                    t2 = time.time(); self.accelerator.print(f"{'Shared' if trainSharedLayers else 'Specific'} layer training {self.datasetName} {numPointsAnalyzed}: {t2 - t1}")
+                    print("")
 
         # Prepare the model/data for evaluation.
         self.accelerator.wait_for_everyone()  # Wait before continuing.
