@@ -15,7 +15,7 @@ class emognitionInterface(globalMetaAnalysis):
 
     def __init__(self):
         # Specify the metadata file locations.
-        self.subjectFolders = os.path.dirname(__file__) + "/../../../_experimentalData/_metadatasets/EMOGNITION/"
+        self.subjectFolders = os.path.dirname(__file__) + "/../../../_experimentalData/_metaDatasets/EMOGNITION/"
 
         # Initialize EMOGNITION survey information.
         self.emotionQuestions = ['AWE', 'DISGUST', 'SURPRISE', 'ANGER', 'ENTHUSIASM', 'LIKING', 'FEAR', 'AMUSEMENT', 'SADNESS']  # Rated 1 to 5

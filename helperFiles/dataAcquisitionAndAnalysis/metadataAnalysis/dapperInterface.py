@@ -15,7 +15,7 @@ class dapperInterface(globalMetaAnalysis):
     def __init__(self):
         # Specify the metadata file locations.
         self.debug = False
-        self.subjectFolders = os.path.dirname(__file__) + "/../../../_experimentalData/_metadatasets/DAPPER/"
+        self.subjectFolders = os.path.dirname(__file__) + "/../../../_experimentalData/_metaDatasets/DAPPER/"
         # Specify the current dataset.
         self.datasetName = modelConstants.dapperDatasetName
 

@@ -15,7 +15,7 @@ class amigosInterface(globalMetaAnalysis):
 
     def __init__(self):
         # Specify the metadata file locations.
-        self.subjectFolders = os.path.normpath(os.path.dirname(__file__) + "/../../../_experimentalData/_metadatasets/AMIGOS/") + "/"
+        self.subjectFolders = os.path.normpath(os.path.dirname(__file__) + "/../../../_experimentalData/_metaDatasets/AMIGOS/") + "/"
 
         # Initialize AMIGOS survey information.
         self.dimQuestions = ['arousal', 'valence', 'dominance', 'liking', 'familiarity']  # Rated 1 to 9

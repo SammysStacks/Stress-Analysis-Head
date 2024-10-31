@@ -41,39 +41,39 @@ _projectFiles/_figurePlans/
 _experimentalData/_compiledData/_*
 
 # Unused Metadatasets
-_experimentalData/_metadatasets/_notUsing/
+_experimentalData/_metaDatasets/_notUsing/
 
 # WESAD Dataset
-_experimentalData/_metadatasets/WESAD/S*
-_experimentalData/_metadatasets/WESAD/dataAnalysis/
-!_experimentalData/_metadatasets/WESAD/savedFeatures/
+_experimentalData/_metaDatasets/WESAD/S*
+_experimentalData/_metaDatasets/WESAD/dataAnalysis/
+!_experimentalData/_metaDatasets/WESAD/savedFeatures/
 
 # Dapper Dataset
-_experimentalData/_metadatasets/DAPPER/*
-!_experimentalData/_metadatasets/DAPPER/savedFeatures/
+_experimentalData/_metaDatasets/DAPPER/*
+!_experimentalData/_metaDatasets/DAPPER/savedFeatures/
 
 # Emognition Dataset
-_experimentalData/_metadatasets/EMOGNITION/*
-!_experimentalData/_metadatasets/EMOGNITION/savedFeatures/
-_experimentalData/_metadatasets/EMOGNITION/savedFeatures/Old/
-_experimentalData/_metadatasets/EMOGNITION/savedFeatures/_oldFiles/
+_experimentalData/_metaDatasets/EMOGNITION/*
+!_experimentalData/_metaDatasets/EMOGNITION/savedFeatures/
+_experimentalData/_metaDatasets/EMOGNITION/savedFeatures/Old/
+_experimentalData/_metaDatasets/EMOGNITION/savedFeatures/_oldFiles/
 
 # AMIGOS Dataset
-_experimentalData/_metadatasets/AMIGOS/dataAnalysis/
-_experimentalData/_metadatasets/AMIGOS/allOriginalData/
-_experimentalData/_metadatasets/AMIGOS/allProcessedData/
-_experimentalData/_metadatasets/AMIGOS/savedFeatures/_*
-!_experimentalData/_metadatasets/AMIGOS/savedFeatures/
+_experimentalData/_metaDatasets/AMIGOS/dataAnalysis/
+_experimentalData/_metaDatasets/AMIGOS/allOriginalData/
+_experimentalData/_metaDatasets/AMIGOS/allProcessedData/
+_experimentalData/_metaDatasets/AMIGOS/savedFeatures/_*
+!_experimentalData/_metaDatasets/AMIGOS/savedFeatures/
 
 # CASE Dataset
-_experimentalData/_metadatasets/CASE/data/raw/
-_experimentalData/_metadatasets/CASE/data/initial/
-_experimentalData/_metadatasets/CASE/data/non-interpolated/
-_experimentalData/_metadatasets/CASE/data/interpolated/annotations/
-_experimentalData/_metadatasets/CASE/data/interpolated/dataAnalysis/
-_experimentalData/_metadatasets/CASE/data/interpolated/physiological/*.csv
-_experimentalData/_metadatasets/CASE/data/interpolated/physiological/savedFeatures/_*
+_experimentalData/_metaDatasets/CASE/data/raw/
+_experimentalData/_metaDatasets/CASE/data/initial/
+_experimentalData/_metaDatasets/CASE/data/non-interpolated/
+_experimentalData/_metaDatasets/CASE/data/interpolated/annotations/
+_experimentalData/_metaDatasets/CASE/data/interpolated/dataAnalysis/
+_experimentalData/_metaDatasets/CASE/data/interpolated/physiological/*.csv
+_experimentalData/_metaDatasets/CASE/data/interpolated/physiological/savedFeatures/_*
 
 # Plots in metadatasets
-_experimentalData/_metadatasets/**/*.png
-_experimentalData/_metadatasets/**/*.pdf
+_experimentalData/_metaDatasets/**/*.png
+_experimentalData/_metaDatasets/**/*.pdf

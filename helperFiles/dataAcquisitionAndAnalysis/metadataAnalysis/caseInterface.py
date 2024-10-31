@@ -15,9 +15,9 @@ class caseInterface(globalMetaAnalysis):
     def __init__(self):
         self.debug = False
         # Specify the metadata file locations.
-        self.subjectFolders = os.path.dirname(__file__) + "/../../../_experimentalData/_metadatasets/CASE/data/interpolated/physiological/"
-        self.subjectFoldersAnnotations = os.path.dirname(__file__) + "/../../../_experimentalData/_metadatasets/CASE/data/interpolated/annotations/"
-        self.subjectFoldersMetadata = os.path.dirname(__file__) + "/../../../_experimentalData/_metadatasets/CASE/metadata/"
+        self.subjectFolders = os.path.dirname(__file__) + "/../../../_experimentalData/_metaDatasets/CASE/data/interpolated/physiological/"
+        self.subjectFoldersAnnotations = os.path.dirname(__file__) + "/../../../_experimentalData/_metaDatasets/CASE/data/interpolated/annotations/"
+        self.subjectFoldersMetadata = os.path.dirname(__file__) + "/../../../_experimentalData/_metaDatasets/CASE/metadata/"
         # Initialize CASE survey information.
         self.surveyQuestions = ["valence", "arousal"]
         self.demographicsQuestions = ['Age', 'Gender']

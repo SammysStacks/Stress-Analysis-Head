@@ -14,7 +14,7 @@ class wesadInterface(globalMetaAnalysis):
 
     def __init__(self):
         # Specify the metadata file locations.
-        self.subjectFolders = os.path.dirname(__file__) + "/../../../_experimentalData/_metadatasets/WESAD/"
+        self.subjectFolders = os.path.dirname(__file__) + "/../../../_experimentalData/_metaDatasets/WESAD/"
 
         # Initialize WESAD survey information.
         self.panasQuestions = ["Active", "Distressed", "Interested", "Inspired", "Annoyed", "Strong", "Guilty", "Scared",
