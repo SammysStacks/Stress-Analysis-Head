@@ -3,8 +3,8 @@
 encodedDimensions=(64 128 256 512)
 # Total: 4
 
-goldenRatios=(4 8 16)
-# Total: 3
+goldenRatios=(8 16)
+# Total: 2
 
 signalEncoderLayers=(16 32)
 # Total: 2

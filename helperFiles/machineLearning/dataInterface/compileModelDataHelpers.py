@@ -39,7 +39,7 @@ class compileModelDataHelpers:
         self.minSequencePoints = None
         self.maxAverageDiff = None
         self.minNumClasses = None
-        self.maxDiff = None
+        self.maxSinglePointDiff = None
 
         # Set the submodel-specific parameters
         if submodel is not None: self.addSubmodelParameters(submodel, userInputParams)
@@ -49,7 +49,7 @@ class compileModelDataHelpers:
 
         # Exclusion criterion.
         self.minNumClasses, self.maxClassPercentage = self.modelParameters.getExclusionClassCriteria(submodel)
-        self.minSequencePoints, self.minSignalPresentCount, self.maxDiff, self.maxAverageDiff = self.modelParameters.getExclusionSequenceCriteria(submodel)
+        self.minSequencePoints, self.minSignalPresentCount, self.maxSinglePointDiff, self.maxAverageDiff = self.modelParameters.getExclusionSequenceCriteria(submodel)
 
         # Embedded information for each model.
         self.signalEncoderModelInfo = f"signalEncoder on {userInputParams['deviceListed']} with {userInputParams['optimizerType']} at encodedDimension {userInputParams['encodedDimension']}"
@@ -249,7 +249,7 @@ class compileModelDataHelpers:
 
         biomarkerDiff = biomarkerData.diff(dim=-1).abs()
         # Create boolean masks for signals that don’t meet the requirements
-        singlePointMaxDiff = ((biomarkerDiff[:, :, :-1] < self.maxDiff) | (biomarkerDiff[:, :, 1:] < self.maxDiff)).all(dim=-1)  # Maximum difference between consecutive points: batchSize, numSignals
+        singlePointMaxDiff = ((biomarkerDiff[:, :, :-1] < self.maxSinglePointDiff) | (biomarkerDiff[:, :, 1:] < self.maxSinglePointDiff)).all(dim=-1)  # Maximum difference between consecutive points: batchSize, numSignals
         minLowerBoundaryMask = 1 < (biomarkerData < -modelConstants.minMaxScale + 0.25).sum(dim=-1)  # Number of points below -0.95: batchSize, numSignals
         minUpperBoundaryMask = 1 < (modelConstants.minMaxScale - 0.25 < biomarkerData).sum(dim=-1)  # Number of points above 0.95: batchSize, numSignals
         averageDiff = biomarkerDiff.mean(dim=-1) < self.maxAverageDiff  # Average difference between consecutive points: batchSize, numSignals
