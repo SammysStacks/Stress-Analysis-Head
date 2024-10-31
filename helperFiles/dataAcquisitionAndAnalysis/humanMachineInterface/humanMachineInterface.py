@@ -11,19 +11,19 @@ from helperFiles.machineLearning.feedbackControl.heatTherapy.heatTherapyMain imp
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
 from helperFiles.machineLearning.dataInterface.compileModelDataHelpers import compileModelDataHelpers
 
+
 class humanMachineInterface:
-    
+
     def __init__(self, modelClasses, actionControl, extractFeaturesFrom):
         # Accelerator configuration steps
         submodel, userInputParams, accelerator = None, None, None
         self.compileModelHelpers = compileModelDataHelpers(submodel, userInputParams, accelerator)
 
-        #TODO: not sure
         self.allSubjectInds = []
 
         # General parameters.
         self.actionControl = actionControl
-        self.modelClasses = modelClasses        # A list of machine learning models.
+        self.modelClasses = modelClasses  # A list of machine learning models.
 
         # Initialize helper classes.
         self.compileFeatureNames = compileFeatureNames()  # Initialize the Feature Information
@@ -45,7 +45,7 @@ class humanMachineInterface:
         # Holder parameters.
         self.therapyStates = None
         self.userName = None
-                
+
         # Initialize mutable variables.
         self.resetVariables_HMI()
 
@@ -87,7 +87,7 @@ class humanMachineInterface:
         # Subject information
         self.therapyStates = []
         self.userName = None
-        
+
     def setUserName(self, filePath):
         # Get user information
         fileName = os.path.basename(filePath).split(".")[0]
@@ -139,13 +139,12 @@ class humanMachineInterface:
 
         return compiledSignalData
 
-
     def predictLabels(self, modelTimes, inputModelData, therapyParam):
         # Add in contextual information to the data.
         allNumSignalPoints = torch.empty(size=(len(inputModelData[0]), len(self.featureNames)), dtype=torch.int)
-        compiledNormalizedInputData = self.inputModelDataWithContextualInfo(inputModelData, allNumSignalPoints, dataInd=0)
-        
-        _, _, _, _, _, _, emotionProfile = self.modelClasses[0].model.forward(compiledNormalizedInputData)
+        compiledInputData = self.inputModelDataWithContextualInfo(inputModelData, allNumSignalPoints, dataInd=0)
+
+        _, _, _, _, _, _, emotionProfile = self.modelClasses[0].model.forward(compiledInputData)
         # emotionProfile dim: numNewPoints, numEmotions=30, encodedDimension=256
         emotionProfile = emotionProfile.detach().cpu().numpy()
 
@@ -168,20 +167,16 @@ class humanMachineInterface:
         # newMentalStates: numNewPoints, numMentalStates=3
         # therapyStates: numNewPoints, numTherapyInfo
 
-
         # Pass the output to the therapy model
 
-        currentTimePoint = modelTimes[-1] # make sure it is: timepoints: list of tensor: [tensor(0)]
-        currentParam = therapyParam[-1] # make sure it is: list of tensor: [torch.Size([1, 1, 1, 1])
-        currentPrediction = newMentalState[-1] # make sure it is: list of tensor: torch.Size([1, 3, 1, 1])
+        currentTimePoint = modelTimes[-1]  # make sure it is: timepoints: list of tensor: [tensor(0)]
+        currentParam = therapyParam[-1]  # make sure it is: list of tensor: [torch.Size([1, 1, 1, 1])
+        currentPrediction = newMentalState[-1]  # make sure it is: list of tensor: torch.Size([1, 3, 1, 1])
         self.therapyControl.therapyProtocol.updateEmotionPredState(self.userName, currentTimePoint, currentParam, currentPrediction)
         therapyState, allMaps = self.therapyControl.therapyProtocol.updateTherapyState()
         self.therapyStates.append(therapyState)
-        
+
         # all the time points
         self.timePointEvolution = self.therapyControl.therapyProtocol.timepoints
 
         return therapyState, allMaps
-
-
-

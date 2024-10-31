@@ -50,7 +50,7 @@ class plottingProtocolsMain:
         for i, (map_to_plot, title) in enumerate(zip(maps, titles)):
             ax = axs[i % 2, i // 2]  # Correct indexing for subplot
 
-            plottingImage = ax.imshow(map_to_plot.T, cmap='cividis', extent=[self.initialParameterBounds[0].item(), self.initialParameterBounds[1].item(), 0, 1], aspect='auto', origin='lower')
+            plottingImage = ax.imshow(map_to_plot.T, cmap='viridis', extent=[self.initialParameterBounds[0].item(), self.initialParameterBounds[1].item(), 0, 1], aspect='auto', origin='lower')
 
             # Plot past user states with fading red line
             for j in range(num_steps - 1):

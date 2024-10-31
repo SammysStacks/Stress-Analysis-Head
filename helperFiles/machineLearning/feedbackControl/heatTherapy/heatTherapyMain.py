@@ -9,7 +9,7 @@ class heatTherapyControl(heatTherapyHelpers):
 
     def runTherapyProtocol(self, maxIterations=None):
         # Initialize holder parameters such as the user maps.
-        self.therapyProtocol.initializeUserState(userName=self.userName)
+        self.therapyProtocol.initializeUserState(userName=self.userName,  initialTime=None, initialParam=None, initialPredicitons=None)
         print('Finished initialize UserState')
         iterationCounter = 0
         if self.therapyMethod == 'hmmTherapyProtocol':
@@ -75,7 +75,7 @@ if __name__ == "__main__":
         'simulatedMapType': 'uniformSampling',  # The method for generating the simulated map. Options: 'uniformSampling', 'linearSampling', 'parabolicSampling'
         'numSimulationHeuristicSamples': 50,  # The number of simulation samples to generate.
         'numSimulationTrueSamples': 30,  # The number of simulation samples to generate.
-        'simulateTherapy': True,  # Whether to simulate the therapy.
+        'simulateTherapy': False,  # Whether to simulate the therapy.
     }
 
     # Initialize the therapy protocol

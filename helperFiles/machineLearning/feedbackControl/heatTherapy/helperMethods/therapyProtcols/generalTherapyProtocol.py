@@ -169,6 +169,7 @@ class generalTherapyProtocol(abc.ABC):
         else:
             # for real time running the model
             # Assume we have a random start state
+            #currentTime, currentParam, currentPredictions = self.simulationProtocols.getInitialState()
             currentTime, currentParam, currentPredictions = initialTime, initialParam, initialPredicitons  # currentTime: tensor(0); currentParam: torch.Size([1, 1, 1, 1]); currentPredictions: torch.Size([1, 3, 1, 1]) predefined.
             print('currentTime, currentParam, currentPredictions', currentTime, currentParam, currentPredictions)
             return currentTime, currentParam, currentPredictions

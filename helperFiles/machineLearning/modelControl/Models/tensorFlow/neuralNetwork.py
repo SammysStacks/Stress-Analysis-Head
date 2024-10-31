@@ -14,7 +14,7 @@ from tensorflow.python.keras.utils import losses_utils
 
 # Import files
 from .._globalModel import globalModel  # Global model class
-from ..generalModels.modelHelpers.Metrics.evaluationMetrics import evaluationMetrics
+#from ..generalModels.modelHelpers.Metrics.evaluationMetrics import evaluationMetrics
 
 
 # ----------------------------------------------------------------------------#
