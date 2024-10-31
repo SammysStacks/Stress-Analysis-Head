@@ -63,7 +63,7 @@ if __name__ == "__main__":
     parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
 
     # Add arguments for the neural operator.
-    parser.add_argument('--operatorType', type=str, default='fourier', help='The type of operator to use for the neural operator: wavelet')
+    parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
     parser.add_argument('--waveletType', type=str, default='bior2.2', help='The wavelet type for the wavelet transform: bior3.7, db3, dmey, etc')
 
     # Add arguments for the emotion and activity architecture.

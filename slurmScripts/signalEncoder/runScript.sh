@@ -9,9 +9,8 @@ goldenRatios=(8 16)
 signalEncoderLayers=(16 32)
 # Total: 2
 
-# Define waveletTypeCleaned and optimizer if they are needed
-waveletTypeCleaned="defaultWaveletType"  # Replace with actual value
-optimizer="defaultOptimizer"              # Replace with actual value
+waveletType="bior3.7"
+optimizer="AdamW"     # Replace with actual value
 
 for encodedDimension in "${encodedDimensions[@]}"
 do
@@ -22,9 +21,9 @@ do
       echo "Submitting job with $numSignalEncoderLayers numSignalEncoderLayers, $goldenRatio goldenRatio, $encodedDimension encodedDimension on $1"
 
       if [ "$1" == "CPU" ]; then
-          sbatch -J "signalEncoder_numSignalEncoderLayers_${numSignalEncoderLayers}_goldenRatio_${goldenRatio}_encodedDimension_${encodedDimension}_${waveletTypeCleaned}_${optimizer}_$1" submitSignalEncoder_CPU.sh "$numSignalEncoderLayers" "$goldenRatio" "$encodedDimension" "$1"
+          sbatch -J "signalEncoder_numSignalEncoderLayers_${numSignalEncoderLayers}_goldenRatio_${goldenRatio}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_CPU.sh "$numSignalEncoderLayers" "$goldenRatio" "$encodedDimension" "$1" "$waveletType"
       elif [ "$1" == "GPU" ]; then
-          sbatch -J "signalEncoder_numSignalEncoderLayers_${numSignalEncoderLayers}_goldenRatio_${goldenRatio}_encodedDimension_${encodedDimension}_${waveletTypeCleaned}_${optimizer}_$1" submitSignalEncoder_GPU.sh "$numSignalEncoderLayers" "$goldenRatio" "$encodedDimension" "$1"
+          sbatch -J "signalEncoder_numSignalEncoderLayers_${numSignalEncoderLayers}_goldenRatio_${goldenRatio}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_GPU.sh "$numSignalEncoderLayers" "$goldenRatio" "$encodedDimension" "$1" "$waveletType"
       else
           echo "No known device listed: $1"
       fi
