@@ -39,6 +39,9 @@ class reversibleLinearLayer(reversibleInterface):
             self.activationFunctions.append(activationFunctions.getActivationMethod(activationMethod))
             switchActivationDirection = not switchActivationDirection
 
+        # Scale the gradients.
+        for layerInd in range(self.numLayers): self.linearOperators[layerInd].register_hook(self.scaleNeuralWeights)
+
     def forward(self, inputData):
         # Cast the stability term to the device.
         self.restrictedWindowMask = self.restrictedWindowMask.to(inputData.device)

@@ -23,6 +23,9 @@ class reversibleInterface(nn.Module):
     def getStabilityTerm(kernelSize, scalingFactor, device):
         return torch.eye(kernelSize, device=device)*scalingFactor
 
+    @staticmethod
+    def scaleNeuralWeights(grad): return grad * 0.2
+
     def checkDualReconstruction(self, x1, x2, atol=1e-8, numLayers=10):
         t1 = time.time()
         # Initialize the forward data.

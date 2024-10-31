@@ -40,12 +40,8 @@ class reversibleDualConvolutionLayer(reversibleInterface):
         self.createArchitecture(self.linearOperators2, self.activationFunctions2, switchActivationDirection)
 
         # Register hooks for each parameter in the list
-        for param in self.linearOperators1: param.register_hook(self.scaleGradients)
-        for param in self.linearOperators2: param.register_hook(self.scaleGradients)
-
-    @staticmethod
-    def scaleGradients(grad):
-        return grad * 0.2
+        for param in self.linearOperators1: param.register_hook(self.scaleNeuralWeights)
+        for param in self.linearOperators2: param.register_hook(self.scaleNeuralWeights)
 
     def createArchitecture(self, linearOperators, _activationFunctions, switchActivationDirection):
         # Create the neural layers.

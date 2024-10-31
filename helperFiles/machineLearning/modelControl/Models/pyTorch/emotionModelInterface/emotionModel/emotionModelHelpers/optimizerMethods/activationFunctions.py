@@ -200,11 +200,8 @@ class nonLinearMultiplication(reversibleInterface):
         self.learnableFrequency = nn.Parameter(torch.as_tensor(0.5))  # The frequency of the non-linearity term.
 
         # Register hooks for each parameter in the list
-        self.learnableFrequency.register_hook(self.scaleFrequencyGradients)
-
-    @staticmethod
-    def scaleFrequencyGradients(grad):
-        return grad * 0.2
+        self.learnablePhaseShift.register_hook(self.scaleNeuralWeights)
+        self.learnableFrequency.register_hook(self.scaleNeuralWeights)
 
     def forward(self, x):
         # Check if the non-linearity term has been calculated.
