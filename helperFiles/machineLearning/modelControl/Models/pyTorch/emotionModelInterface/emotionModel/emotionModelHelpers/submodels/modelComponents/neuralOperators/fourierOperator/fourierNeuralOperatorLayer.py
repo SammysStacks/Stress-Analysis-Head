@@ -10,20 +10,33 @@ class fourierNeuralOperatorLayer(fourierNeuralOperatorWeights):
         super(fourierNeuralOperatorLayer, self).__init__(sequenceLength, numInputSignals, numOutputSignals, addBiasTerm, activationMethod, skipConnectionProtocol, encodeRealFrequencies, encodeImaginaryFrequencies, learningProtocol)
         self.extraOperators = extraOperators  # Extra operators to apply to the Fourier data.
 
-    def forward(self, inputData, realFrequencyTerms=None, imaginaryFrequencyTerms=None):
-        # Apply the activation function.
-        if reversibleInterface.forwardDirection: inputData = self.activationFunction(inputData)
-        # neuralOperatorOutput dimension: batchSize, numOutputChannels, signalDimension
-
-        # Apply the Fourier neural operator and the skip connection.
-        neuralOperatorOutput = self.fourierNeuralOperator(inputData, realFrequencyTerms, imaginaryFrequencyTerms)
-        if self.skipConnectionModel is not None: neuralOperatorOutput = neuralOperatorOutput + self.skipConnectionModel(inputData)
+    def forward(self, neuralOperatorData, realFrequencyTerms=None, imaginaryFrequencyTerms=None):
+        # Apply the wavelet neural operator and the skip connection.
+        neuralOperatorData = self.fourierNeuralOperator(neuralOperatorData, realFrequencyTerms, imaginaryFrequencyTerms)
+        if self.skipConnectionModel is not None: neuralOperatorData = neuralOperatorData + self.skipConnectionModel(neuralOperatorData)  # Not reversible.
+        # neuralOperatorData dimension: batchSize, numOutputSignals, finalLength
 
         # Apply the activation function.
-        if not reversibleInterface.forwardDirection: neuralOperatorOutput = self.activationFunction(neuralOperatorOutput)
-        # neuralOperatorOutput dimension: batchSize, numOutputChannels, signalDimension
+        neuralOperatorData = self.activationFunction(neuralOperatorData)
+        # neuralOperatorData dimension: batchSize, numOutputSignals, finalLength
 
-        return neuralOperatorOutput
+        return neuralOperatorData
+
+    def backwardPass(self, neuralOperatorData, realFrequencyTerms=None, imaginaryFrequencyTerms=None):
+        # Assert that the skip connection model is None.
+        assert self.skipConnectionModel is None, "The skip connection model must be None for the reversible interface."
+
+        # Apply the activation function and the wavelet neural operator.
+        neuralOperatorData = self.activationFunction(neuralOperatorData)
+        neuralOperatorData = self.fourierNeuralOperator(neuralOperatorData, realFrequencyTerms, imaginaryFrequencyTerms)
+        # neuralOperatorData dimension: batchSize, numOutputSignals, finalLength
+
+        return neuralOperatorData
+
+    def reversibleInterface(self, neuralOperatorData):
+        assert self.skipConnectionModel is None, "The skip connection model must be None for the reversible interface."
+        if not reversibleInterface.forwardDirection: return self.forward(neuralOperatorData, realFrequencyTerms=None, imaginaryFrequencyTerms=None)
+        else: return self.backwardPass(neuralOperatorData, realFrequencyTerms=None, imaginaryFrequencyTerms=None)
 
     def waveletInterface(self, lowFrequency, highFrequencies):
         # Assert that the dimensions are correct.
