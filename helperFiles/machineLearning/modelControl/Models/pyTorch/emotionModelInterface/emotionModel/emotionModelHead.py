@@ -79,7 +79,7 @@ class emotionModelHead(nn.Module):
         )
 
         # Construct the model weights.
-        for _ in range(userInputParams['numSignalEncoderLayers']): self.addNewSignalEncoderLayer()
+        for _ in range(userInputParams.userInputParams.get('numSignalEncoderLayers', 16)): self.addNewSignalEncoderLayer()
         self.specificSignalEncoderModel.addLayer()  # Add the final layer to the specific model.
 
         # -------------------- Final Emotion Prediction -------------------- #
