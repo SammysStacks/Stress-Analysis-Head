@@ -18,7 +18,7 @@ class specificEmotionModel(neuralOperatorInterface):
         self.numSubjects = numSubjects  # The number of subjects to encode.
 
         # The neural layers for the signal encoder.
-        self.processingLayers, self.neuralLayers, self.addingFlags = nn.ModuleList(), nn.ModuleList(), []
+        self.processingLayers, self.neuralLayers = nn.ModuleList(), nn.ModuleList()
         for layerInd in range(1 + self.numModelLayers // self.goldenRatio): self.addLayer()
 
         # Initialize the basic emotion weight.
@@ -44,10 +44,9 @@ class specificEmotionModel(neuralOperatorInterface):
 
     def addLayer(self):
         # Create the layers.
-        self.addingFlags.append(not self.addingFlags[-1] if len(self.addingFlags) != 0 else True)
         self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=False, switchActivationDirection=False))
-        if self.learningProtocol == 'rCNN': self.processingLayers.append(self.postProcessingLayerCNN(numSignals=self.numEmotions * self.numBasicEmotions))
-        elif self.learningProtocol == 'rFC': self.processingLayers.append(self.postProcessingLayerFC(sequenceLength=self.encodedDimension))
+        if self.learningProtocol == 'CNN': self.processingLayers.append(self.postProcessingLayerCNN(numSignals=self.numEmotions * self.numBasicEmotions))
+        elif self.learningProtocol == 'FC': self.processingLayers.append(self.postProcessingLayerFC(sequenceLength=self.encodedDimension))
         else: raise "The learning protocol is not yet implemented."
 
     def calculateEmotionProfile(self, basicEmotionProfile, subjectInds):
