@@ -27,6 +27,9 @@ class compileModelInfo:
         self.newSamplingFreq = 1  # The new sampling frequency for the data.
 
         self.surveyInfoLocation = os.path.dirname(__file__) + "/../../../../helperFiles/surveyInformation/"
+        # Specify the survey information.
+        self.numQuestionOptions = [5] * 10  # PANAS Survey
+        self.numQuestionOptions.extend([4] * 20)  # STAI Survey
         # Specify what each model is predicting
         self.predictionBounds = ((5, 25), (5, 25), (20, 80))
         self.predictionWeights = [0.1, 0.1, 0.8]

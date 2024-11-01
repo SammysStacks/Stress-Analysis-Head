@@ -90,7 +90,7 @@ if __name__ == "__main__":
     # General parameters.
     _batchSize, _numSignals, _sequenceLength = 2, 3, 256
     _activationMethod = 'nonLinearMultiplication'
-    _kernelSize = 3
+    _kernelSize = 15
     _numLayers = 3
 
     # Set up the parameters.

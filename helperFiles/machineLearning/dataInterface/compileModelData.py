@@ -53,8 +53,7 @@ class compileModelData(compileModelDataHelpers):
         featureAverageWindows = self.compileModelInfo.featureAverageWindows  # EOG: 120-180; EEG: 60-90; EDA: ?; Temp: 30 - 60
 
         # Survey information.
-        numQuestionOptions = [5] * 10  # PANAS Survey
-        numQuestionOptions.extend([4] * 20)  # STAI Survey
+        numQuestionOptions = self.compileModelInfo.numQuestionOptions
 
         # Compile feature names
         featureNames, biomarkerFeatureNames, biomarkerFeatureOrder = compileFeatureNames().extractFeatureNames(extractFeaturesFrom)
