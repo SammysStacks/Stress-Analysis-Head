@@ -8,10 +8,10 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
 
 
-class reversibleDualConvolutionLayer(reversibleInterface):
+class reversibleDualConvolutionLinearLayer(reversibleInterface):
 
     def __init__(self, numSignals, sequenceLength, kernelSize, numLayers, activationMethod, switchActivationDirection):
-        super(reversibleDualConvolutionLayer, self).__init__()
+        super(reversibleDualConvolutionLinearLayer, self).__init__()
         # General parameters.
         self.activationMethod = activationMethod  # The activation method to use.
         self.bounds = 1 / math.sqrt(kernelSize)  # The bounds for the neural weights.
@@ -24,7 +24,6 @@ class reversibleDualConvolutionLayer(reversibleInterface):
         # The restricted window for the neural weights.
         self.restrictedWindowMask = torch.ones(1, self.sequenceLength, self.sequenceLength, dtype=torch.float64)
         self.restrictedWindowMask = torch.tril(torch.triu(self.restrictedWindowMask, diagonal=-kernelSize//2 + 1), diagonal=kernelSize//2)
-        self.restrictedWindowMask = self.restrictedWindowMask.repeat(repeats=(numSignals, 1, 1))  # Dim: 1, sequenceLength, sequenceLength
         assert kernelSize <= sequenceLength, f"The kernel size is larger than the sequence length: {kernelSize}, {sequenceLength}"
 
         # Calculate the offsets to map positions to kernel indices
@@ -36,19 +35,20 @@ class reversibleDualConvolutionLayer(reversibleInterface):
         self.activationFunctions2,  self.linearOperators2 = nn.ModuleList(), nn.ParameterList()
 
         # Create the neural layers.
-        self.createArchitecture(self.linearOperators1, self.activationFunctions1, switchActivationDirection)
-        self.createArchitecture(self.linearOperators2, self.activationFunctions2, switchActivationDirection)
+        self.createArchitecture(self.linearOperators1, self.activationFunctions1, switchActivationDirection, linearLayer=False)
+        self.createArchitecture(self.linearOperators2, self.activationFunctions2, switchActivationDirection, linearLayer=True)
 
         # Register hooks for each parameter in the list
         for param in self.linearOperators1: param.register_hook(self.scaleNeuralWeights)
         for param in self.linearOperators2: param.register_hook(self.scaleNeuralWeights)
 
-    def createArchitecture(self, linearOperators, _activationFunctions, switchActivationDirection):
+    def createArchitecture(self, linearOperators, _activationFunctions, switchActivationDirection, linearLayer):
         # Create the neural layers.
         for layerInd in range(self.numLayers):
             # Create the neural weights.
-            parameters = nn.Parameter(torch.randn(self.numSignals, self.kernelSize, dtype=torch.float64))
-            parameters = nn.init.uniform_(parameters, a=-self.bounds, b=self.bounds)
+            if not linearLayer: parameters = nn.Parameter(torch.randn(self.numSignals, self.kernelSize, dtype=torch.float64))
+            else: parameters = nn.Parameter(torch.randn(self.numSignals, self.sequenceLength, self.sequenceLength, dtype=torch.float64))
+            parameters = nn.init.uniform_(parameters, a=-self.bounds, b=self.bounds) * (self.restrictedWindowMask if linearLayer else 1)
             linearOperators.append(parameters)
 
             # Add the activation function.
@@ -75,14 +75,13 @@ class reversibleDualConvolutionLayer(reversibleInterface):
 
     def applyLayer(self, x1, x2, layerInd):
         # Get the current neural weights information.
-        A1, A2 = self.restrictedWindowMask.clone(), self.restrictedWindowMask.clone()
-        K1, K2 = self.linearOperators1[layerInd], self.linearOperators2[layerInd]
-        # neuralWeight: numSignals, sequenceLength, sequenceLength
+        K1, A2 = self.linearOperators1[layerInd], self.linearOperators2[layerInd]
         # kernelWeights: numSignals, (kernelSize) or (sequenceLength, sequenceLength)
+        # neuralWeight: numSignals, sequenceLength, sequenceLength
 
+        A1 = self.restrictedWindowMask.clone()
         # Gather the corresponding kernel values for each position
         A1[self.signalInds, self.rowInds, self.colInds] = K1[self.signalInds, self.kernelInds]
-        A2[self.signalInds, self.rowInds, self.colInds] = K2[self.signalInds, self.kernelInds]
 
         # Mask the weights to match the kernel size.
         if self.kernelSize != self.sequenceLength: A1, A2 = self.restrictedWindowMask * A1, self.restrictedWindowMask * A2
@@ -106,7 +105,7 @@ if __name__ == "__main__":
     _numLayers = 1
 
     # Set up the parameters.
-    neuralLayerClass = reversibleDualConvolutionLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod, switchActivationDirection=False)
+    neuralLayerClass = reversibleDualConvolutionLinearLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod, switchActivationDirection=False)
     _inputData1 = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float64)
     _inputData2 = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float64)
 

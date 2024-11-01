@@ -193,7 +193,7 @@ class nonLinearMultiplication(reversibleInterface):
         super(nonLinearMultiplication, self).__init__()
         self.invertedActivation = invertedActivation  # Whether the non-linearity term is inverted
         self.sequenceLength = None  # The length of the input signal
-        self.amplitude = 0.1  # The amplitude of the non-linearity term
+        self.amplitude = 0.2  # The amplitude of the non-linearity term
 
         # Create a learnable parameter, initialized to the given initial value
         self.learnablePhaseShift = nn.Parameter(torch.as_tensor(torch.pi/4))  # The phase shift of the non-linearity term.

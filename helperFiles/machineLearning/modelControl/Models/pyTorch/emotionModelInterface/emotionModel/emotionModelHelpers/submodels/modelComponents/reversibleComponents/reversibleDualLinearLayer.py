@@ -19,13 +19,12 @@ class reversibleDualLinearLayer(reversibleInterface):
         self.kernelSize = kernelSize  # The restricted window for the neural weights.
         self.numSignals = numSignals  # The number of signals in the input data.
         self.numLayers = numLayers  # The number of layers in the reversible linear layer.
-        self.stabilityFactor = 1.1  # The stability factor: increase to reduce backward magnitude.
+        self.stabilityFactor1, self.stabilityFactor2 = 0.25, 0.25
 
         # The restricted window for the neural weights.
         self.restrictedWindowMask = torch.ones(1, self.sequenceLength, self.sequenceLength, dtype=torch.float64)
         if sequenceLength != kernelSize: self.restrictedWindowMask = torch.tril(torch.triu(self.restrictedWindowMask, diagonal=-kernelSize//2 + 1), diagonal=kernelSize//2)
         assert kernelSize <= sequenceLength, f"The kernel size is larger than the sequence length: {kernelSize}, {sequenceLength}"
-        if sequenceLength != kernelSize: self.stabilityFactor = 1.15
 
         # Initialize the neural layers.
         self.activationFunctions1,  self.linearOperators1 = nn.ModuleList(), nn.ParameterList()
@@ -78,18 +77,12 @@ class reversibleDualLinearLayer(reversibleInterface):
         if self.kernelSize != self.sequenceLength: A1, A2 = self.restrictedWindowMask * A1, self.restrictedWindowMask * A2
         # A: numSignals, sequenceLength, sequenceLength
 
-        # Swap the signals.
-        if layerInd % 2 == 0: x1, x2 = x2, x1
-
-        if self.forwardDirection:
-            y1 = x1 * self.stabilityFactor + torch.einsum('bns,nsi->bni', x2, A1)
-            y2 = x2 * self.stabilityFactor + torch.einsum('bns,nsi->bni', y1, A2)
+        if not self.forwardDirection:
+            y1 = x1 + torch.einsum('bns,nsi->bni', x2, A1) * self.stabilityFactor1
+            y2 = x2 + torch.einsum('bns,nsi->bni', y1, A2) * self.stabilityFactor2
         else:
-            y2 = (x2 - torch.einsum('bns,nsi->bni', x1, A2)) / self.stabilityFactor
-            y1 = (x1 - torch.einsum('bns,nsi->bni', y2, A1)) / self.stabilityFactor
-
-        # Swap the signals back.
-        if layerInd % 2 == 0: y1, y2 = y2, y1
+            y2 = x2 - torch.einsum('bns,nsi->bni', x1, A2) * self.stabilityFactor2
+            y1 = x1 - torch.einsum('bns,nsi->bni', y2, A1) * self.stabilityFactor1
 
         return y1, y2
 
@@ -98,8 +91,8 @@ if __name__ == "__main__":
     # General parameters.
     _batchSize, _numSignals, _sequenceLength = 2, 3, 129
     _activationMethod = 'nonLinearMultiplication'
-    _kernelSize = 21
-    _numLayers = 3
+    _kernelSize = 11
+    _numLayers = 10
 
     # Set up the parameters.
     neuralLayerClass = reversibleDualLinearLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod, switchActivationDirection=False)

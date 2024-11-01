@@ -170,12 +170,12 @@ class modelMigration:
 
         return newModelAttributes
 
-    def _compileModelBaseName(self, modelName, submodel, datasetName, trainingDate, numEpochs, metaTraining=True):
+    def _compileModelBaseName(self, submodel, datasetName, trainingDate, numEpochs, metaTraining=True):
         # Organize information about the model.
         trainingType = "metaTrainingModels" if metaTraining else "trainingModels"
 
         # Compile the location to save/load the model.
-        modelFolderPath = self.saveModelFolder + f"{modelName}/{trainingType}/{submodel}/{trainingDate}/{datasetName}/"
+        modelFolderPath = self.saveModelFolder + f"{trainingType}/{submodel}/{trainingDate}/{datasetName}/"
 
         if numEpochs == -1 and os.path.exists(modelFolderPath):
             # List all folders in the model folder path.
@@ -200,7 +200,7 @@ class modelMigration:
 
     # ------------------------ Saving Model Methods ------------------------ #
 
-    def saveModels(self, modelPipelines, modelName, datasetNames, sharedModelWeights, submodelsSaving,
+    def saveModels(self, modelPipelines, datasetNames, sharedModelWeights, submodelsSaving,
                    submodel, trainingDate, numEpochs, metaTraining, saveModelAttributes=True, storeOptimizer=False):
         # Assert the integrity of the input variables.
         assert len(modelPipelines) == len(datasetNames), f"You provided {len(modelPipelines)} models to save, but only {len(datasetNames)} datasetNames."
@@ -209,14 +209,14 @@ class modelMigration:
 
         # For each model, save the shared and specific weights
         for datasetInd, (modelPipeline, datasetName) in enumerate(zip(modelPipelines, datasetNames)):
-            self._saveModel(modelPipeline.model, modelName, datasetName, sharedModelWeights, submodelsSaving, subAttributesSaving,
+            self._saveModel(modelPipeline.model, datasetName, sharedModelWeights, submodelsSaving, subAttributesSaving,
                             submodel, trainingDate, numEpochs, metaTraining, saveModelAttributes, datasetInd)
 
-    def _saveModel(self, model, modelName, datasetName, sharedModelWeights, submodelsSaving, subAttributesSaving,
+    def _saveModel(self, model, datasetName, sharedModelWeights, submodelsSaving, subAttributesSaving,
                    submodel, trainingDate, numEpochs, metaTraining, saveModelAttributes=True, datasetInd=0):
         # Create a path to where we want to save the model.
-        modelBaseName = self._compileModelBaseName(modelName, submodel, datasetName, trainingDate, numEpochs, metaTraining)
-        sharedModelBaseName = self._compileModelBaseName(modelName, submodel, self.sharedWeightsName, trainingDate, numEpochs, metaTraining)
+        modelBaseName = self._compileModelBaseName(submodel, datasetName, trainingDate, numEpochs, metaTraining)
+        sharedModelBaseName = self._compileModelBaseName(submodel, self.sharedWeightsName, trainingDate, numEpochs, metaTraining)
 
         # Filter the state_dict based on sharedModelWeights
         shared_params, specific_params = self._filterStateDict(model, sharedModelWeights, submodelsSaving)
@@ -254,12 +254,12 @@ class modelMigration:
         # Iterate over each model pipeline and dataset name
         for modelPipeline in allModelPipelines:
             # Save the individual model's information.
-            self._loadModel(modelPipeline.model, modelConstants.modelName, modelPipeline.datasetName, submodel, trainingDate, numEpochs, metaTraining, loadModelAttributes, loadModelWeights)
+            self._loadModel(modelPipeline.model, modelPipeline.datasetName, submodel, trainingDate, numEpochs, metaTraining, loadModelAttributes, loadModelWeights)
 
-    def _loadModel(self, model, modelName, datasetName, submodel, trainingDate, numEpochs, metaTraining, loadModelAttributes=True, loadModelWeights=True):
+    def _loadModel(self, model, datasetName, submodel, trainingDate, numEpochs, metaTraining, loadModelAttributes=True, loadModelWeights=True):
         # Construct base names for loading model and attributes
-        modelBaseName = self._compileModelBaseName(modelName, submodel, datasetName, trainingDate, numEpochs, metaTraining)
-        sharedModelBaseName = self._compileModelBaseName(modelName, submodel, self.sharedWeightsName, trainingDate, numEpochs, metaTraining)
+        modelBaseName = self._compileModelBaseName(submodel, datasetName, trainingDate, numEpochs, metaTraining)
+        sharedModelBaseName = self._compileModelBaseName(submodel, self.sharedWeightsName, trainingDate, numEpochs, metaTraining)
 
         # Load in the pytorch models.
         self._loadPyTorchModel(model, modelBaseName, loadModelAttributes, loadModelWeights, submodel)  # Load dataset-specific parameters

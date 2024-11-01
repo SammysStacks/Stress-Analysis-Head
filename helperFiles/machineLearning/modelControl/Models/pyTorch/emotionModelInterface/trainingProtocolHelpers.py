@@ -45,7 +45,6 @@ class trainingProtocolHelpers:
 
             # Train the updated model.
             self.modelMigration.unifyModelWeights(allModels=[modelPipeline], modelWeights=self.sharedModelWeights, layerInfo=self.unifiedLayerData)
-            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, trainSharedLayers=False, profileTraining=True, numEpochs=1)   # Profile training.
             modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, trainSharedLayers=False, profileTraining=False, numEpochs=1)  # Signal-specific training.
             modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, trainSharedLayers=True, profileTraining=False, numEpochs=1)   # Full model training.
             self.accelerator.wait_for_everyone()
@@ -54,6 +53,7 @@ class trainingProtocolHelpers:
             self.unifiedLayerData = self.modelMigration.copyModelWeights(modelPipeline, self.sharedModelWeights)
 
         # Unify all the model weights.
+        self.trainSpecificLayers(submodel, allMetadataLoaders, allMetaModels, allModels)
         self.unifyAllModelWeights(allMetaModels, allModels)
 
     def trainSpecificLayers(self, submodel, allMetadataLoaders, allMetaModels, allModels):
@@ -66,7 +66,7 @@ class trainingProtocolHelpers:
             modelPipeline = allMetaModels[modelInd]
 
             # Train the updated model.
-            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, trainSharedLayers=False, numEpochs=1)
+            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, trainSharedLayers=False, profileTraining=True, numEpochs=1)   # Profile training.
             self.accelerator.wait_for_everyone()
 
     def calculateLossInformation(self, allMetaModels, allMetadataLoaders, allModels, allDataLoaders, submodel):
@@ -98,14 +98,14 @@ class trainingProtocolHelpers:
         t2 = time.time()
         self.accelerator.print("Total plotting time:", t2 - t1)
 
-    def saveModelState(self, epoch, allMetaModels, allModels, submodel, modelName, allDatasetNames, trainingDate):
+    def saveModelState(self, epoch, allMetaModels, allModels, submodel, allDatasetNames, trainingDate):
         # Prepare to save the model.
         numEpochs = allMetaModels[-1].getTrainingEpoch(submodel) or epoch
         self.unifyAllModelWeights(allMetaModels, allModels)
         allPipelines = allMetaModels + allModels
 
         # Save the current version of the model.
-        self.modelMigration.saveModels(modelPipelines=allPipelines, modelName=modelName, datasetNames=allDatasetNames, sharedModelWeights=self.sharedModelWeights, submodelsSaving=self.submodelsSaving,
+        self.modelMigration.saveModels(modelPipelines=allPipelines, datasetNames=allDatasetNames, sharedModelWeights=self.sharedModelWeights, submodelsSaving=self.submodelsSaving,
                                        submodel=submodel, trainingDate=trainingDate, numEpochs=numEpochs, metaTraining=True, saveModelAttributes=True, storeOptimizer=False)
 
     def unifyAllModelWeights(self, allMetaModels=None, allModels=None):

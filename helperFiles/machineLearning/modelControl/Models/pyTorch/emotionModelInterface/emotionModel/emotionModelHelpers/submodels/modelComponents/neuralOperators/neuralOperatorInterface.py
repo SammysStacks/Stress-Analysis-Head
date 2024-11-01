@@ -43,8 +43,10 @@ class neuralOperatorInterface(emotionModelWeights):
         numDecompositions = 1  # Number of decompositions for the waveletType transform.
         mode = 'periodization'  # Mode for the waveletType transform.
 
-        # Hardcoded non-reversible parameters.
-        if not reversibleFlag: skipConnectionProtocol = 'CNN'  # The protocol for the skip connections.
+        if not reversibleFlag:
+            # Hardcoded non-reversible parameters.
+            skipConnectionProtocol = 'CNN'  # The protocol for the skip connections.
+            learningProtocol = 'FC'  # The protocol for learning the wavelet data.
 
         # Specify the default parameters.
         if numDecompositions is None: numDecompositions = min(5, waveletNeuralOperatorLayer.max_decompositions(signal_length=sequenceLength, wavelet_name=waveletType))  # Number of decompositions for the waveletType transform.
@@ -68,8 +70,10 @@ class neuralOperatorInterface(emotionModelWeights):
         # Hardcoded parameters.
         activationMethod = f"{emotionModelWeights.getActivationType()}_{switchActivationDirection}"
 
-        # Hardcoded non-reversible parameters.
-        if not reversibleFlag: skipConnectionProtocol = 'CNN'  # The protocol for the skip connections.
+        if not reversibleFlag:
+            # Hardcoded non-reversible parameters.
+            skipConnectionProtocol = 'CNN'  # The protocol for the skip connections.
+            learningProtocol = 'FC'  # The protocol for learning the wavelet data.
 
         return fourierNeuralOperatorLayer(sequenceLength=sequenceLength, numInputSignals=self.numInputSignals*layerMultiple, numOutputSignals=self.numOutputSignals*layerMultiple, addBiasTerm=self.addBiasTerm, activationMethod=activationMethod,
                                           skipConnectionProtocol=skipConnectionProtocol, encodeRealFrequencies=encodeRealFrequencies, encodeImaginaryFrequencies=encodeImaginaryFrequencies, learningProtocol=learningProtocol, extraOperators=compiledOperators)
