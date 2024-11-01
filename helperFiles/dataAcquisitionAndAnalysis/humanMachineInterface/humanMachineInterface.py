@@ -54,7 +54,7 @@ class humanMachineInterface:
             gradient_accumulation_steps=1,  # The number of gradient accumulation steps.
             mixed_precision="no",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"
         )
-        self.emoPipeline = emotionPipeline(accelerator, datasetName=None, allEmotionClasses=None, numSubjects=None, userInputParams={},
+        self.emoPipeline = emotionPipeline(accelerator, datasetName=None, allEmotionClasses=None, numSubjects=None, userInputParams=self.compileModelInfo.getUserInputParameters(),
                                            emotionNames=self.surveyQuestions, activityNames=self.compileModelInfo.activityNames, featureNames=self.featureNames, submodel=self.submodel, numExperiments=6, reconstructionIndex=None)
         self.experimentalInds = torch.arange(0, 6, dtype=torch.int64)
 
