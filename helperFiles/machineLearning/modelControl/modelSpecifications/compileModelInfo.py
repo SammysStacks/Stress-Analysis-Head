@@ -5,6 +5,7 @@ import torch
 import math
 import os
 
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
 
 class compileModelInfo:
 
@@ -115,6 +116,13 @@ class compileModelInfo:
 
     def getVoiceTherapyNames(self):
         return self.therapyNames[3]
+
+    def getUserInputParameters(self):
+        userInputParams = {'submodel': 'signalEncoderModel', 'optimizerType': 'AdamW', 'reversibleLearningProtocol': 'rCNN', 'irreversibleLearningProtocol': 'FC', 'deviceListed': 'cpu', 'goldenRatio': 16, 'numSignalEncoderLayers': 16,
+                    'encodedDimension': 256, 'operatorType': 'wavelet', 'waveletType': 'bior3.7', 'numBasicEmotions': 6, 'numActivityChannels': 4}
+
+        userInputParams = modelParameters.getNeuralParameters(userInputParams)
+        return userInputParams
 
     @staticmethod
     def getTrainingDataFolder(useTherapyData):
