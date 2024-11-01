@@ -26,7 +26,7 @@ class compileModelDataHelpers:
         os.makedirs(self.compiledInfoLocation, exist_ok=True)
 
         # Initialize relevant classes.
-        self.modelParameters = modelParameters(userInputParams,  accelerator)
+        self.modelParameters = modelParameters(accelerator)
         self.modelMigration = modelMigration(accelerator, debugFlag=False)
         self.dataAugmentation = dataAugmentation()
         self.generalMethods = generalMethods()
@@ -41,27 +41,22 @@ class compileModelDataHelpers:
         self.minNumClasses = None
         self.maxSinglePointDiff = None
 
-        # Set the submodel-specific parameters
-        if submodel is not None: self.addSubmodelParameters(submodel, userInputParams)
-
-    def addSubmodelParameters(self, submodel, userInputParams):
-        if userInputParams is not None: self.userInputParams = userInputParams
-
         # Exclusion criterion.
         self.minNumClasses, self.maxClassPercentage = self.modelParameters.getExclusionClassCriteria(submodel)
         self.minSequencePoints, self.minSignalPresentCount, self.maxSinglePointDiff, self.maxAverageDiff = self.modelParameters.getExclusionSequenceCriteria(submodel)
 
-        # Embedded information for each model.
-        self.signalEncoderModelInfo = f"signalEncoder on {userInputParams['deviceListed']} with {userInputParams['optimizerType']} at encodedDimension {userInputParams['encodedDimension']}"
-        self.emotionPredictionModelInfo = f"emotionPrediction on {userInputParams['deviceListed']} with {userInputParams['optimizerType']}"
-
     # ---------------------- Model Specific Parameters --------------------- #
 
-    def embedInformation(self, submodel, trainingDate):
+    @staticmethod
+    def embedInformation(submodel, userInputParams, trainingDate):
+        # Embedded information for each model.
+        signalEncoderModelInfo = f"signalEncoder on {userInputParams['deviceListed']} with {userInputParams['optimizerType']} at encodedDimension {userInputParams['encodedDimension']}"
+        emotionPredictionModelInfo = f"emotionPrediction on {userInputParams['deviceListed']} with {userInputParams['optimizerType']}"
+
         if submodel == modelConstants.signalEncoderModel:
-            return f"{trainingDate} {self.signalEncoderModelInfo}"
+            return f"{trainingDate} {signalEncoderModelInfo}"
         elif submodel == modelConstants.emotionModel:
-            return f"{trainingDate} {self.emotionPredictionModelInfo}"
+            return f"{trainingDate} {emotionPredictionModelInfo}"
         else: raise Exception()
 
     # ---------------------- Saving/Loading Model Data --------------------- #

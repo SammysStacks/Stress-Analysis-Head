@@ -7,14 +7,9 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class modelParameters:
 
-    def __init__(self, userInputParams, accelerator=None):
+    def __init__(self, accelerator=None):
         # General parameters
-        self.userInputParams = userInputParams  # The user input parameters.
         self.accelerator = accelerator  # The single-instance accelerator for the model.
-
-        # Run-specific parameters.
-        self.hpcTrialRun = userInputParams['deviceListed'].startswith("HPC") if userInputParams else False  # The HPC trial run flag.
-        self.gpuFlag = accelerator.device.type == 'cuda' if accelerator else False  # The GPU flag.
 
         # Helper classes.
         self.generalMethods = generalMethods()

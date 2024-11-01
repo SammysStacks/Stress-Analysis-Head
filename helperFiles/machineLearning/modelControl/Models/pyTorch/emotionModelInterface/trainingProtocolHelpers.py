@@ -53,10 +53,10 @@ class trainingProtocolHelpers:
             self.unifiedLayerData = self.modelMigration.copyModelWeights(modelPipeline, self.sharedModelWeights)
 
         # Unify all the model weights.
-        self.trainSpecificLayers(submodel, allMetadataLoaders, allMetaModels, allModels)
+        self.trainPhysiologicalProfile(submodel, allMetadataLoaders, allMetaModels, allModels)
         self.unifyAllModelWeights(allMetaModels, allModels)
 
-    def trainSpecificLayers(self, submodel, allMetadataLoaders, allMetaModels, allModels):
+    def trainPhysiologicalProfile(self, submodel, allMetadataLoaders, allMetaModels, allModels):
         # Unify all the model weights.
         self.unifyAllModelWeights(allMetaModels, allModels)
 

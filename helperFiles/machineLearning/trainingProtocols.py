@@ -35,7 +35,7 @@ class trainingProtocols(extractData):
 
         # Initialize important classes
         self.analyzeFeatures = featurePlotting(self.trainingFolder + "dataAnalysis/", overwrite=False)
-        self.modelParameters = modelParameters(userInputParams=None, accelerator=None)
+        self.modelParameters = modelParameters(accelerator=None)
         self.compileModelInfo = compileModelInfo()
         self.saveInputs = saveExcelData()
 
