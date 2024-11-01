@@ -45,7 +45,10 @@ class humanMachineInterface:
 
         # ------------------------------ pipeline preparation for training ------------------------------
         featureNames = self.featureNames
-        datasetName, allEmotionClasses, numSubjects, emotionNames, activityNames, numExperiments, reconstructionIndex = None, None, None, None, None, None, None
+        datasetName, allEmotionClasses, numSubjects, reconstructionIndex = None, None, None, None
+        numExperiments = 6
+        emotionNames = ['happy']
+        activityNames = ['Heat']
         self.emoPipeline = emotionPipeline(accelerator, datasetName, allEmotionClasses, numSubjects, userInputParams,
                                            emotionNames, activityNames, featureNames, self.submodel, numExperiments, reconstructionIndex)
         self.experimentalInds = torch.arange(0, 6, dtype=torch.int64)
