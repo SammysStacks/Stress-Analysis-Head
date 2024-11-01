@@ -66,7 +66,7 @@ class trainingProtocolHelpers:
             modelPipeline = allMetaModels[modelInd]
 
             # Train the updated model.
-            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, trainSharedLayers=False, profileTraining=True, numEpochs=1)   # Profile training.
+            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, trainSharedLayers=False, profileTraining=False, numEpochs=1)  # Signal-specific training.
             self.accelerator.wait_for_everyone()
 
     def calculateLossInformation(self, allMetaModels, allMetadataLoaders, allModels, allDataLoaders, submodel):

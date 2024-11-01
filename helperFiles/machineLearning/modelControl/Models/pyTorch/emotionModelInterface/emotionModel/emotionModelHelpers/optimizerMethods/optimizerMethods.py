@@ -15,8 +15,9 @@ class optimizerMethods:
         modelParams = [
             # Specify the model parameters for the signal encoding.
             {'params': model.inferenceModel.parameters(), 'weight_decay': 0, 'lr': 1E-2},
-            {'params': model.specificSignalEncoderModel.parameters(), 'weight_decay': 0, 'lr': 1E-3},
-            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': 0, 'lr': 1E-3},
+            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': 0, 'lr': 1E-2},
+            {'params': model.specificSignalEncoderModel.parameters(), 'weight_decay': 0, 'lr': 1E-2},
+            {'params': model.specificSignalEncoderModel.physiologicalProfileAnsatz.parameters(), 'weight_decay': 0, 'lr': 1E-1},
         ]
 
         if submodel == modelConstants.emotionModel:

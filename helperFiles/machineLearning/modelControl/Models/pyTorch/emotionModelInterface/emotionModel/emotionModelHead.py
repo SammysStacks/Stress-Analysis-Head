@@ -44,6 +44,8 @@ class emotionModelHead(nn.Module):
 
         # Emotion and activity parameters.
         self.irreversibleLearningProtocol = userInputParams['irreversibleLearningProtocol']  # The learning protocol for the model.
+        self.numActivityModelLayers = userInputParams['numActivityModelLayers']  # The number of basic emotions (basis states of emotions).
+        self.numEmotionModelLayers = userInputParams['numEmotionModelLayers']  # The number of basic emotions (basis states of emotions).
         self.numActivityChannels = userInputParams['numActivityChannels']  # The number of activity channels to predict.
         self.numBasicEmotions = userInputParams['numBasicEmotions']  # The number of basic emotions (basis states of emotions).
 

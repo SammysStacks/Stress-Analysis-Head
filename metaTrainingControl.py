@@ -39,7 +39,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2024-10-29 signal encoder parameters"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2024-11-01 signal encoder parameters"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.2  # The percentage of testing points.
 
     # Training flags.
@@ -111,7 +111,6 @@ if __name__ == "__main__":
         # Train the model for a single epoch.
         trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels)
         allModels[0].trainModel(allDataLoaders[0], submodel, inferenceTraining=False, trainSharedLayers=False, profileTraining=False,  numEpochs=1)  # Signal-specific training.
-        allModels[0].trainModel(allDataLoaders[0], submodel, inferenceTraining=False, trainSharedLayers=False, profileTraining=True,  numEpochs=1)  # Profile training.
 
         # Store the initial loss information and plot.
         if storeLoss: trainingProtocols.calculateLossInformation(allMetaModels, allMetadataLoaders, allModels, allDataLoaders, submodel)
