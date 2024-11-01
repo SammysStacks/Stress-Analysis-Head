@@ -31,7 +31,7 @@ class fourierNeuralOperatorWeights(emotionModelWeights):
         if self.addBiasTerm: self.operatorBiases = self.neuralBiasParameters(numChannels=numOutputSignals)  # Bias terms for the neural operator.
         self.skipConnectionModel = self.getSkipConnectionProtocol(skipConnectionProtocol)  # Skip connection model for the Fourier neural operator.
 
-        if self.learningProtocol in ['rFC', 'rCNN']:
+        if self.learningProtocol in ['drFC', 'drCNN']:
             self.dualFrequencyWeights = self.getNeuralWeightParameters(inChannel=self.numInputSignals, fourierDimension=self.fourierDimension)  # Learnable parameters for the dual-frequency signal.
             assert self.encodeImaginaryFrequencies, "The dual-frequency signal must encode both the real and imaginary frequencies."
             assert self.encodeRealFrequencies, "The dual-frequency signal must encode both the real and imaginary frequencies."

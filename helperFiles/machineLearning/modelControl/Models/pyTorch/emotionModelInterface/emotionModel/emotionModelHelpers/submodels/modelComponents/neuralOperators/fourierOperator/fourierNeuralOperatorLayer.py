@@ -88,7 +88,7 @@ class fourierNeuralOperatorLayer(fourierNeuralOperatorWeights):
         # realFourierData: batchSize, numInputSignals, fourierDimension
 
         # Learn a new set of wavelet coefficients using both of the frequency data.
-        if self.learningProtocol in ['rFC', 'rCNN']: realFourierData, imaginaryFourierData = self.dualFrequencyWeights(realFourierData, imaginaryFourierData)
+        if self.learningProtocol in ['drFC', 'drCNN']: realFourierData, imaginaryFourierData = self.dualFrequencyWeights(realFourierData, imaginaryFourierData)
         else:  # Multiply relevant Fourier modes (Sampling low-frequency spectrum).
             if self.encodeImaginaryFrequencies: imaginaryFourierData = self.applyEncoding(equationString='oin,bin->bon', frequencies=imaginaryFourierData, weights=self.imaginaryFourierWeights, frequencyTerms=imaginaryFrequencyTerms)
             if self.encodeRealFrequencies: realFourierData = self.applyEncoding(equationString='oin,bin->bon', frequencies=realFourierData, weights=self.realFourierWeights, frequencyTerms=realFrequencyTerms)
@@ -117,7 +117,7 @@ class fourierNeuralOperatorLayer(fourierNeuralOperatorWeights):
         # frequencies dimension: batchSize, numLiftedChannels, frequencyDimension
 
         if weights is not None:
-            if self.learningProtocol in ['FC', 'CNN']:
+            if 'FC' in self.learningProtocol or 'CNN' in self.learningProtocol:
                 frequencies = weights(frequencies)  # Learn a new set of wavelet coefficients to transform the data.
                 # frequencies dimension: batchSize, numOutputSignals, frequencyDimension
             else:

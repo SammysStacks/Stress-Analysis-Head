@@ -201,7 +201,7 @@ class emotionModelHead(nn.Module):
             # Perform the backward pass: physiologically -> emotion data.
             reversibleInterface.changeDirections(forwardDirection=False)
             basicEmotionProfile = physiologicalProfile.unsqueeze(1).repeat(repeats=(1, self.numEmotions*self.numBasicEmotions, 1))
-            basicEmotionProfile = self.coreModelPass(metaLearningData=basicEmotionProfile, specificModel=self.specificEmotionModel, sharedModel=self.sharedEmotionModel)
+            basicEmotionProfile = self.coreModelPass(self.numEmotionModelLayers, metaLearningData=basicEmotionProfile, specificModel=self.specificEmotionModel, sharedModel=self.sharedEmotionModel)
             # metaLearningData: batchSize, numEmotions*numBasicEmotions, encodedDimension
 
             # Reconstruct the emotion data.
@@ -212,7 +212,7 @@ class emotionModelHead(nn.Module):
 
             # Perform the backward pass: physiologically -> emotion data.
             reversibleInterface.changeDirections(forwardDirection=False)
-            activityProfile = self.coreModelPass(metaLearningData=physiologicalProfile, specificModel=self.specificActivityModel, sharedModel=self.sharedActivityModel)
+            activityProfile = self.coreModelPass(self.numActivityModelLayers, metaLearningData=physiologicalProfile, specificModel=self.specificActivityModel, sharedModel=self.sharedActivityModel)
             # metaLearningData: batchSize, numEmotions*numBasicEmotions, encodedDimension
 
         # --------------------------------------------------------------- #

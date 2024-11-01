@@ -1,15 +1,13 @@
 from torch import nn
 
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.neuralOperators.neuralOperatorInterface import neuralOperatorInterface
 
 
 class sharedActivityModel(neuralOperatorInterface):
 
-    def __init__(self, encodedDimension, numModelLayers, numActivityChannels, operatorType, activationMethod, learningProtocol, neuralOperatorParameters):
-        super(sharedActivityModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numInputSignals=numActivityChannels, numOutputSignals=numActivityChannels, learningProtocol=learningProtocol, addBiasTerm=False)
+    def __init__(self, encodedDimension, numModelLayers, numActivityChannels, operatorType, learningProtocol, neuralOperatorParameters):
+        super(sharedActivityModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numInputSignals=numActivityChannels, numOutputSignals=numActivityChannels, addBiasTerm=False)
         # General model parameters.
-        self.activationFunction = activationFunctions.getActivationMethod(activationMethod=activationMethod)
         self.neuralOperatorParameters = neuralOperatorParameters  # The parameters for the neural operator.
         self.numActivityChannels = numActivityChannels  # The number of activity channels to encode.
         self.learningProtocol = learningProtocol  # The learning protocol for the model.
@@ -30,7 +28,7 @@ class sharedActivityModel(neuralOperatorInterface):
     def addLayer(self):
         # Create the layers.
         self.addingFlags.append(not self.addingFlags[-1] if len(self.addingFlags) != 0 else True)
-        self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=False))
+        self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=False, switchActivationDirection=True))
         if self.learningProtocol == 'rCNN': self.processingLayers.append(self.postProcessingLayerCNN(numSignals=self.numActivityChannels))
         elif self.learningProtocol == 'rFC': self.processingLayers.append(self.postProcessingLayerFC(sequenceLength=self.encodedDimension))
         else: raise "The learning protocol is not yet implemented."
@@ -38,9 +36,6 @@ class sharedActivityModel(neuralOperatorInterface):
     def learningInterface(self, layerInd, signalData):
         # Apply the neural operator layer with activation.
         signalData = self.neuralLayers[layerInd](signalData)
-        signalData = self.activationFunction(signalData, addingFlag=self.addingFlags[layerInd])
-
-        # Apply the post-processing layer.
         signalData = self.processingLayers[layerInd](signalData)
 
         return signalData

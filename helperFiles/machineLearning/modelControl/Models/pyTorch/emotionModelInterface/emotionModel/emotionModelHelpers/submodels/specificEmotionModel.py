@@ -1,15 +1,13 @@
 from torch import nn
 
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.neuralOperators.neuralOperatorInterface import neuralOperatorInterface
 
 
 class specificEmotionModel(neuralOperatorInterface):
 
-    def __init__(self, numSubjects, numBasicEmotions, encodedDimension, numEmotions, numModelLayers, goldenRatio, operatorType, activationMethod, learningProtocol, neuralOperatorParameters):
-        super(specificEmotionModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numInputSignals=numEmotions*numBasicEmotions, numOutputSignals=numEmotions*numBasicEmotions, learningProtocol=learningProtocol, addBiasTerm=False)
+    def __init__(self, numSubjects, numBasicEmotions, encodedDimension, numEmotions, numModelLayers, goldenRatio, operatorType, learningProtocol, neuralOperatorParameters):
+        super(specificEmotionModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numInputSignals=numEmotions*numBasicEmotions, numOutputSignals=numEmotions*numBasicEmotions, addBiasTerm=False)
         # General model parameters.
-        self.activationFunction = activationFunctions.getActivationMethod(activationMethod=activationMethod)
         self.neuralOperatorParameters = neuralOperatorParameters  # The parameters for the neural operator.
         self.learningProtocol = learningProtocol  # The learning protocol for the model.
         self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
@@ -47,7 +45,7 @@ class specificEmotionModel(neuralOperatorInterface):
     def addLayer(self):
         # Create the layers.
         self.addingFlags.append(not self.addingFlags[-1] if len(self.addingFlags) != 0 else True)
-        self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=False))
+        self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=False, switchActivationDirection=False))
         if self.learningProtocol == 'rCNN': self.processingLayers.append(self.postProcessingLayerCNN(numSignals=self.numEmotions * self.numBasicEmotions))
         elif self.learningProtocol == 'rFC': self.processingLayers.append(self.postProcessingLayerFC(sequenceLength=self.encodedDimension))
         else: raise "The learning protocol is not yet implemented."
@@ -73,9 +71,6 @@ class specificEmotionModel(neuralOperatorInterface):
     def learningInterface(self, layerInd, signalData):
         # Apply the neural operator layer with activation.
         signalData = self.neuralLayers[layerInd](signalData)
-        signalData = self.activationFunction(signalData, addingFlag=self.addingFlags[layerInd])
-
-        # Apply the post-processing layer.
         signalData = self.processingLayers[layerInd](signalData)
 
         return signalData
