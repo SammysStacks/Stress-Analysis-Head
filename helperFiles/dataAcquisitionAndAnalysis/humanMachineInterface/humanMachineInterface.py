@@ -52,7 +52,7 @@ class humanMachineInterface:
         numExperiments = 6
         emotionNames = ['happy']
         activityNames = ['Heat']
-        self.emoPipeline = emotionPipeline(accelerator, datasetName, allEmotionClasses, numSubjects, userInputParams,
+        self.emoPipeline = emotionPipeline(accelerator, datasetName, allEmotionClasses, numSubjects, userInputParams={},
                                            emotionNames, activityNames, featureNames, self.submodel, numExperiments, reconstructionIndex)
         self.experimentalInds = torch.arange(0, 6, dtype=torch.int64)
 
