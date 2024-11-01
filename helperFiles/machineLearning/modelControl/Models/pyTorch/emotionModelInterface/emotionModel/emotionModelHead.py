@@ -5,7 +5,6 @@ from matplotlib import pyplot as plt
 from torch import nn
 
 from .emotionModelHelpers.emotionDataInterface import emotionDataInterface
-# Import helper modules
 from .emotionModelHelpers.modelConstants import modelConstants
 from .emotionModelHelpers.modelParameters import modelParameters
 from .emotionModelHelpers.submodels.inferenceModel import inferenceModel
@@ -32,21 +31,21 @@ class emotionModelHead(nn.Module):
         self.datasetName = datasetName  # The name of the dataset the model is training on.
 
         # General parameters.
-        self.encodedDimension = userInputParams.get('encodedDimension', 256)  # The dimension of the encoded signal.
-        self.operatorType = userInputParams.get('operatorType', None)  # The type of operator to use for the neural operator.
-        self.goldenRatio = userInputParams.get('goldenRatio', 16)  # The number of shared layers per specific layer.
+        self.encodedDimension = userInputParams['encodedDimension']  # The dimension of the encoded signal.
+        self.operatorType = userInputParams['operatorType']  # The type of operator to use for the neural operator.
+        self.goldenRatio = userInputParams['goldenRatio']  # The number of shared layers per specific layer.
         self.debugging = True
 
         # Signal encoder parameters.
-        self.reversibleLearningProtocol = userInputParams.get('reversibleLearningProtocol', None)   # The learning protocol for the model.
-        self.neuralOperatorParameters = userInputParams.get('neuralOperatorParameters', None)   # The parameters for the neural operator.
+        self.reversibleLearningProtocol = userInputParams['reversibleLearningProtocol']   # The learning protocol for the model.
+        self.neuralOperatorParameters = userInputParams['neuralOperatorParameters']   # The parameters for the neural operator.
         self.numLiftingLayersSignalEncoder = 1  # The number of lifting layers to use in the signal encoder.
         self.numSignalEncoderLayers = 0  # The number of layers in the model.
 
         # Emotion and activity parameters.
-        self.irreversibleLearningProtocol = userInputParams.get('irreversibleLearningProtocol', None)  # The learning protocol for the model.
-        self.numActivityChannels = userInputParams.get('numActivityChannels', None)  # The number of activity channels to predict.
-        self.numBasicEmotions = userInputParams.get('numBasicEmotions', 6)  # The number of basic emotions (basis states of emotions).
+        self.irreversibleLearningProtocol = userInputParams['irreversibleLearningProtocol']  # The learning protocol for the model.
+        self.numActivityChannels = userInputParams['numActivityChannels']  # The number of activity channels to predict.
+        self.numBasicEmotions = userInputParams['numBasicEmotions']  # The number of basic emotions (basis states of emotions).
 
         # Setup holder for the model's training information
         self.reversibleInterface = reversibleInterface()
@@ -79,7 +78,7 @@ class emotionModelHead(nn.Module):
         )
 
         # Construct the model weights.
-        for _ in range(userInputParams.get('numSignalEncoderLayers', 16)): self.addNewSignalEncoderLayer()
+        for _ in range(userInputParams['numSignalEncoderLayers']): self.addNewSignalEncoderLayer()
         self.specificSignalEncoderModel.addLayer()  # Add the final layer to the specific model.
 
         # -------------------- Final Emotion Prediction -------------------- #
