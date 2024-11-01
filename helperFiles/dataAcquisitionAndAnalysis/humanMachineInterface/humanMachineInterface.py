@@ -1,5 +1,5 @@
 import os
-
+import accelerate
 import torch
 
 from helperFiles.machineLearning.dataInterface.compileModelDataHelpers import compileModelDataHelpers
@@ -47,13 +47,15 @@ class humanMachineInterface:
         self.featureNames, self.biomarkerFeatureNames, self.biomarkerFeatureOrder = self.compileFeatureNames.extractFeatureNames(extractFeaturesFrom)
 
         # ------------------------------ pipeline preparation for training ------------------------------
-        featureNames = self.featureNames
-        datasetName, allEmotionClasses, numSubjects, reconstructionIndex = None, None, None, None
-        numExperiments = 6
-        emotionNames = ['happy']
-        activityNames = ['Heat']
-        self.emoPipeline = emotionPipeline(accelerator, datasetName, allEmotionClasses, numSubjects, userInputParams={},
-                                           emotionNames, activityNames, featureNames, self.submodel, numExperiments, reconstructionIndex)
+        accelerator = accelerate.Accelerator(
+            dataloader_config=accelerate.DataLoaderConfiguration(split_batches=True),  # Whether to split batches across devices or not.
+            cpu=torch.backends.mps.is_available(),  # Whether to use the CPU. MPS is NOT fully compatible yet.
+            step_scheduler_with_optimizer=True,  # Whether to wrap the optimizer in a scheduler.
+            gradient_accumulation_steps=1,  # The number of gradient accumulation steps.
+            mixed_precision="no",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"
+        )
+        self.emoPipeline = emotionPipeline(accelerator, datasetName=None, allEmotionClasses=None, numSubjects=None, userInputParams={},
+                                           emotionNames=self.surveyQuestions, activityNames=self.compileModelInfo.activityNames, featureNames=self.featureNames, submodel=self.submodel, numExperiments=6, reconstructionIndex=None)
         self.experimentalInds = torch.arange(0, 6, dtype=torch.int64)
 
         # Holder parameters.
