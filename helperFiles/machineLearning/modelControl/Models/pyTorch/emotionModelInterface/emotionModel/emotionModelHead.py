@@ -96,6 +96,7 @@ class emotionModelHead(nn.Module):
                 goldenRatio=self.goldenRatio,
                 numEmotions=self.numEmotions,
                 numSubjects=self.numSubjects,
+
             )
 
             self.sharedEmotionModel = sharedEmotionModel(
