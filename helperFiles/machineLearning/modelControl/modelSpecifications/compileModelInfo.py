@@ -1,3 +1,5 @@
+import json
+
 import numpy as np
 import torch
 import math
@@ -23,6 +25,7 @@ class compileModelInfo:
         self.featureAverageWindows_e4 = [30, 60, 30, 30]  # Acc, Bvp, EDA, Temp
         self.newSamplingFreq = 1  # The new sampling frequency for the data.
 
+        self.surveyInfoLocation = os.path.dirname(__file__) + "/../../../../helperFiles/surveyInformation/"
         # Specify what each model is predicting
         self.predictionBounds = ((5, 25), (5, 25), (20, 80))
         self.predictionWeights = [0.1, 0.1, 0.8]
@@ -75,6 +78,28 @@ class compileModelInfo:
         self.userTherapyMethod = "aStarTherapyProtocol"
         self.parameterBounds = (30, 50)
         self.parameterBinWidth = 1.5
+
+    def compileSurveyInformation(self):
+        # Get the data from the json file
+        with open(self.surveyInfoLocation + "PANAS Questions.json") as questionnaireFile:
+            panasInfo = json.load(questionnaireFile)
+
+        with open(self.surveyInfoLocation + "I-STAI-Y1 Questions.json") as questionnaireFile:
+            staiInfo = json.load(questionnaireFile)
+
+        surveyTitles = ["PANAS"]
+        # Extract the questions, answerChoices, and surveyInstructions
+        surveyQuestions = [panasInfo['questions']]
+        surveyAnswerChoices = [panasInfo['answerChoices']]
+        surveyInstructions = [panasInfo['surveyInstructions'][0]]
+
+        surveyTitles.append("STAI")
+        # Extract the questions, answerChoices, and surveyInstructions
+        surveyQuestions.append(staiInfo['questions'])
+        surveyAnswerChoices.append(staiInfo['answerChoices'])
+        surveyInstructions.append(staiInfo['surveyInstructions'][0])
+
+        return surveyTitles, surveyQuestions, surveyAnswerChoices, surveyInstructions
 
     def assertValidTherapyMethod(self, therapyMethod):
         assert therapyMethod in self.therapyNames, f"Invalid therapy method: {therapyMethod}"

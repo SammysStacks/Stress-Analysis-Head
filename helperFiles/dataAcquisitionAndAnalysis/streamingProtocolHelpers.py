@@ -101,11 +101,6 @@ class streamingProtocolHelpers(featureOrganization):
         # Holder parameters.
         self.subjectInformationQuestions = None  # A list of subject background questions
         self.subjectInformationAnswers = None  # A list of subject background answers, where each element represents an answer to subjectInformationQuestions.
-        self.surveyAnswersList = None  # A list of lists of survey answers, where each element represents an answer to surveyQuestions.
-        self.surveyAnswerTimes = None  # A list of times when each survey was collected, where the len(surveyAnswerTimes) == len(surveyAnswersList).
-        self.surveyQuestions = None  # A list of survey questions, where each element in surveyAnswersList corresponds to this question order.
-        self.experimentTimes = None  # A list of lists of [start, stop] times of each experiment, where each element represents the times for one experiment. None means no time recorded.
-        self.experimentNames = None  # A list of names for each experiment, where len(experimentNames) == len(experimentTimes).
 
         # Finish setting up the class.
         assert deviceType in ['empatica', 'serial'], "The device type must be either 'empatica' or 'serial'."
@@ -121,15 +116,6 @@ class streamingProtocolHelpers(featureOrganization):
         # Subject Information
         self.subjectInformationQuestions = []  # A list of subject background questions, such as race, age, and gender.
         self.subjectInformationAnswers = []  # A list of subject background answers, where each element represents an answer to subjectInformationQuestions.
-
-        # Survey Information
-        self.surveyAnswersList = []  # A list of lists of survey answers, where each element represents a list of answers to surveyQuestions.
-        self.surveyAnswerTimes = []  # A list of times when each survey was collected, where the len(surveyAnswerTimes) == len(surveyAnswersList).
-        self.surveyQuestions = []  # A list of survey questions, where each element in surveyAnswersList corresponds to this question order.
-
-        # Experimental information
-        self.experimentTimes = []  # A list of lists of [start, stop] times of each experiment, where each element represents the times for one experiment. None means no time recorded.
-        self.experimentNames = []  # A list of names for each experiment, where len(experimentNames) == len(experimentTimes).
 
     def analyzeBatchData(self, streamingDataFingers):
         # Analyze the current data

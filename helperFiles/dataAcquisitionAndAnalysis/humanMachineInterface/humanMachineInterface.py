@@ -15,11 +15,9 @@ from helperFiles.machineLearning.modelControl.modelSpecifications.compileModelIn
 class humanMachineInterface:
 
     def __init__(self, modelClasses, actionControl, extractFeaturesFrom):
-
         # Accelerator configuration steps
         self.submodel, userInputParams, accelerator = modelConstants.emotionModel, {}, None
         self.compileModelHelpers = compileModelDataHelpers(self.submodel, userInputParams, accelerator)
-
         self.allSubjectInds = []
 
         # General parameters.
@@ -41,6 +39,7 @@ class humanMachineInterface:
         self.therapyInitialization()
 
         # Compile the feature information.
+        self.surveyTitles, self.surveyQuestions, self.surveyAnswerChoices, self.surveyInstructions = self.compileModelInfo.compileSurveyInformation()
         self.featureNames, self.biomarkerFeatureNames, self.biomarkerFeatureOrder = self.compileFeatureNames.extractFeatureNames(extractFeaturesFrom)
 
         # ------------------------------ pipeline preparation for training ------------------------------
@@ -61,9 +60,11 @@ class humanMachineInterface:
         self.resetVariables_HMI()
 
         # Holder parameters.
-        self.rawFeatureTimesHolder = None  # A list (in biomarkerFeatureOrder) of lists of raw feature's times; Dim: numFeatureSignals, numPoints
-        self.rawFeaturePointers = None  # A list of pointers indicating the last seen raw feature index for each analysis and each channel.
-        self.rawFeatureHolder = None  # A list (in biomarkerFeatureOrder) of lists of raw features; Dim: numFeatureSignals, numPoints, numBiomarkerFeatures
+        self.surveyAnswersList = None  # A list of lists of survey answers, where each element represents an answer to surveyQuestions.
+        self.surveyAnswerTimes = None  # A list of times when each survey was collected, where the len(surveyAnswerTimes) == len(surveyAnswersList).
+        self.surveyQuestions = None  # A list of survey questions, where each element in surveyAnswersList corresponds to this question order.
+        self.experimentTimes = None  # A list of lists of [start, stop] times of each experiment, where each element represents the times for one experiment. None means no time recorded.
+        self.experimentNames = None  # A list of names for each experiment, where len(experimentNames) == len(experimentTimes).
 
         # predefined model time
         self.modelTimeWindow = modelConstants.timeWindows[-1]
@@ -98,6 +99,16 @@ class humanMachineInterface:
         # Subject information
         self.therapyStates = []
         self.userName = None
+
+        # Survey Information
+        self.surveyAnswersList = []  # A list of lists of survey answers, where each element represents a list of answers to surveyQuestions.
+        self.surveyAnswerTimes = []  # A list of times when each survey was collected, where the len(surveyAnswerTimes) == len(surveyAnswersList).
+        self.surveyQuestions = []  # A list of survey questions, where each element in surveyAnswersList corresponds to this question order.
+
+        # Experimental information
+        self.experimentTimes = []  # A list of lists of [start, stop] times of each experiment, where each element represents the times for one experiment. None means no time recorded.
+        self.experimentNames = []  # A list of names for each experiment, where len(experimentNames) == len(experimentTimes).
+
 
     def setUserName(self, filePath):
         # Get user information

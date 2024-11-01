@@ -8,6 +8,8 @@ from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt, QSize
 
+from helperFiles.machineLearning.modelControl.modelSpecifications.compileModelInfo import compileModelInfo
+
 
 # Colors
 # Yellow: #fece53
@@ -19,6 +21,9 @@ from PyQt5.QtCore import Qt, QSize
 class stressQuestionnaireGUI(QtWidgets.QMainWindow):
 
     def __init__(self, readData=None, folderPath="./"):
+        # Helper classes.
+        self.compileModelInfo = compileModelInfo()
+
         # Initialize the GUI application
         self.subjectInformationAnswerChoices = None
         self.subjectInformationAnswerFormats = None
@@ -84,28 +89,11 @@ class stressQuestionnaireGUI(QtWidgets.QMainWindow):
         # Display the start screen
         self.displayHomeScreen()
 
-    def readQuestionnaireData(self, panasQuestionnaireFile, staiQuestionnaireFile):
-        # Get the data from the json file
-        with open(panasQuestionnaireFile) as questionnaireFile:
-            panasInfo = json.load(questionnaireFile)
-        with open(staiQuestionnaireFile) as questionnaireFile:
-            staiInfo = json.load(questionnaireFile)
-
-        self.surveyTitles.append("PANAS")
-        # Extract the questions, answerChoices, and surveyInstructions
-        self.surveyQuestions.append(panasInfo['questions'])
-        self.surveyAnswerChoices.append(panasInfo['answerChoices'])
-        self.surveyInstructions.append(panasInfo['surveyInstructions'][0])
-
-        self.surveyTitles.append("STAI")
-        # Extract the questions, answerChoices, and surveyInstructions
-        self.surveyQuestions.append(staiInfo['questions'])
-        self.surveyAnswerChoices.append(staiInfo['answerChoices'])
-        self.surveyInstructions.append(staiInfo['surveyInstructions'][0])
+    def readQuestionnaireData(self):
+        self.surveyTitles, self.surveyQuestions, self.surveyAnswerChoices, self.surveyInstructions = self.compileModelInfo.compileSurveyInformation()
 
         # Save the questions asked during this survey if streaming in data
-        if self.readData is not None:
-            self.readData.surveyQuestions = list(itertools.chain.from_iterable(self.surveyQuestions))
+        if self.readData is not None: self.readData.surveyQuestions = list(itertools.chain.from_iterable(self.surveyQuestions))
 
     def surveyDemographicOptions(self, subjectInfoFile):
         # Get the data from the json file

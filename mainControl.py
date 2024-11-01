@@ -154,11 +154,6 @@ if __name__ == "__main__":
         edaReadings = np.asarray(readData.analysisProtocols['eda'].channelData if readData.analysisProtocols['eda'] is not None else [])
         timepoints = np.array(readData.analysisList[0].timepoints)  # Assuming each analysis has the same time points.
 
-        # Extract the features
-        alignedFeatureLabels = np.asarray(readData.alignedFeatureLabels)
-        alignedFeatureTimes = np.asarray(readData.alignedFeatureTimes)
-        alignedFeatures = np.asarray(readData.alignedFeatures)
-
         # Extract the feature labels.
         surveyAnswersList = np.asarray(readData.surveyAnswersList)  # A list of feature labels at each instance.
         surveyAnswerTimes = np.asarray(readData.surveyAnswerTimes)  # A list of times associated with each feature label.

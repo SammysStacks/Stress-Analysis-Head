@@ -1,13 +1,13 @@
-from scipy.interpolate import Akima1DInterpolator
-from bisect import bisect_left, bisect_right
 import collections
+from bisect import bisect_left, bisect_right
+
 import numpy as np
-import torch
 import scipy
+import torch
 
 # Import files.
 from .humanMachineInterface import humanMachineInterface
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
+
 
 # Parameters for the streamingProtocolHelpers class:
 #     Biomarker information:
@@ -62,7 +62,12 @@ class featureOrganization(humanMachineInterface):
             startBiomarkerInd = endBiomarkerInd
         assert endBiomarkerInd == len(self.featureNames), f"Found {endBiomarkerInd} biomarker features and {len(self.featureNames)} features. These must be the same length."
 
-        self.therapyPointers = None
+        # Initialize the feature information.
+        self.rawFeatureTimesHolder = None  # A list (in biomarkerFeatureOrder) of lists of raw feature's times; Dim: numFeatureSignals, numPoints
+        self.rawFeaturePointers = None  # A list of pointers indicating the last seen raw feature index for each analysis and each channel.
+        self.rawFeatureHolder = None  # A list (in biomarkerFeatureOrder) of lists of raw features; Dim: numFeatureSignals, numPoints, numBiomarkerFeatures
+        self.therapyPointers = None  # A list of pointers indicating the last seen raw feature index for each analysis and each channel.
+
         # Initialize mutable variables.
         self.resetFeatureInformation()
 
@@ -73,13 +78,11 @@ class featureOrganization(humanMachineInterface):
             featureAnalysis.resetAnalysisVariables()
             featureAnalysis.resetGlobalVariables()
 
-        # Raw feature data structure
-        self.therapyPointers = [0 for _ in range(len(self.analysisProtocols))]  # A list of pointers indicating the last seen raw feature index for each analysis and each channel.
-        self.rawFeatureTimesHolder = [[] for _ in range(len(self.biomarkerFeatureOrder))]  # A list (in biomarkerFeatureOrder) of lists of raw feature's times; Dim: numFeatureSignals, numPoints
-        self.rawFeatureHolder = [[] for _ in range(len(self.biomarkerFeatureOrder))]  # A list (in biomarkerFeatureOrder) of lists of raw features; Dim: numFeatureSignals, numPoints, numBiomarkerFeatures
-
         # Feature collection parameters
+        self.rawFeatureTimesHolder = [[] for _ in range(len(self.biomarkerFeatureOrder))]  # A list (in biomarkerFeatureOrder) of lists of raw feature's times; Dim: numFeatureSignals, numPoints
         self.rawFeaturePointers = np.zeros(len(self.biomarkerFeatureOrder), dtype=int)  # A list of pointers indicating the last seen raw feature index for each analysis.
+        self.rawFeatureHolder = [[] for _ in range(len(self.biomarkerFeatureOrder))]  # A list (in biomarkerFeatureOrder) of lists of raw features; Dim: numFeatureSignals, numPoints, numBiomarkerFeatures
+        self.therapyPointers = [0 for _ in range(len(self.analysisProtocols))]  # A list of pointers indicating the last seen raw feature index for each analysis and each channel.
 
     def unifyFeatureTimeWindows(self, featureTimeWindow):
         for featureAnalysis in self.featureAnalysisList:
