@@ -2,6 +2,7 @@ import os
 import collections
 import torch
 import numpy as np
+import argparse
 
 # Import Files
 from helperFiles.machineLearning.featureAnalysis.compiledFeatureNames.compileFeatureNames import compileFeatureNames
@@ -10,14 +11,17 @@ from helperFiles.machineLearning.modelControl.modelSpecifications.compileModelIn
 from helperFiles.machineLearning.feedbackControl.heatTherapy.heatTherapyMain import heatTherapyControl
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
 from helperFiles.machineLearning.dataInterface.compileModelDataHelpers import compileModelDataHelpers
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionPipeline import emotionPipeline
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
 
 
 class humanMachineInterface:
 
     def __init__(self, modelClasses, actionControl, extractFeaturesFrom):
+
         # Accelerator configuration steps
-        submodel, userInputParams, accelerator = None, None, None
-        self.compileModelHelpers = compileModelDataHelpers(submodel, userInputParams, accelerator)
+        self.submodel, userInputParams, accelerator = modelConstants.emotionModel, {}, None
+        self.compileModelHelpers = compileModelDataHelpers(self.submodel, userInputParams, accelerator)
 
         self.allSubjectInds = []
 
@@ -41,6 +45,13 @@ class humanMachineInterface:
 
         # Compile the feature information.
         self.featureNames, self.biomarkerFeatureNames, self.biomarkerFeatureOrder = self.compileFeatureNames.extractFeatureNames(extractFeaturesFrom)
+
+        # ------------------------------ pipeline preparation for training ------------------------------
+        featureNames = self.featureNames
+        datasetName, allEmotionClasses, numSubjects, emotionNames, activityNames, numExperiments, reconstructionIndex = None, None, None, None, None, None, None
+        self.emoPipeline = emotionPipeline(accelerator, datasetName, allEmotionClasses, numSubjects, userInputParams,
+                                           emotionNames, activityNames, featureNames, self.submodel, numExperiments, reconstructionIndex)
+        self.experimentalInds = torch.arange(0, 6, dtype=torch.int64)
 
         # Holder parameters.
         self.therapyStates = None
@@ -143,7 +154,10 @@ class humanMachineInterface:
         # Add in contextual information to the data.
         allNumSignalPoints = torch.empty(size=(len(inputModelData[0]), len(self.featureNames)), dtype=torch.int)
         compiledInputData = self.inputModelDataWithContextualInfo(inputModelData, allNumSignalPoints, dataInd=0)
+        dataLoader = zip(self.experimentalInds, compiledInputData)
 
+        self.emoPipeline.trainModel(dataLoader, self.submodel, trainSharedLayers=False, inferenceTraining=True, profileTraining=False, numEpochs=10)
+        exit()
         _, _, _, _, _, _, emotionProfile = self.modelClasses[0].model.forward(compiledInputData)
         # emotionProfile dim: numNewPoints, numEmotions=30, encodedDimension=256
         emotionProfile = emotionProfile.detach().cpu().numpy()
