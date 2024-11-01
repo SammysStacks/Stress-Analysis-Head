@@ -56,7 +56,7 @@ class emotionModelWeights(convolutionalHelpers):
     @staticmethod
     def reversibleNeuralWeightRCNN(numSignals, sequenceLength, activationMethod):
         activationMethod, switchActivationDirection = activationMethod.split('_')
-        return reversibleDualConvolutionLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=11, numLayers=1, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection == "True")
+        return reversibleDualLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=11, numLayers=1, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection == "True")
 
     @staticmethod
     def neuralWeightFC(sequenceLength):

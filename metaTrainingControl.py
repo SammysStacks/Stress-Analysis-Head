@@ -68,6 +68,8 @@ if __name__ == "__main__":
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions).')
+    parser.add_argument('--numActivityModelLayers', type=int, default=4, help='The number of layers in the activity model.')
+    parser.add_argument('--numEmotionModelLayers', type=int, default=4, help='The number of layers in the emotion model.')
     parser.add_argument('--numActivityChannels', type=int, default=4, help='The number of activity channels.')
 
     # Parse the arguments.
