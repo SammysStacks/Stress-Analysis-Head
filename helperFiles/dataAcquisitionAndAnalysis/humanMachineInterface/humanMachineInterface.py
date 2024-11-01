@@ -15,18 +15,13 @@ from helperFiles.machineLearning.modelControl.modelSpecifications.compileModelIn
 class humanMachineInterface:
 
     def __init__(self, modelClasses, actionControl, extractFeaturesFrom):
-        # Accelerator configuration steps
-        self.submodel, userInputParams, accelerator = modelConstants.emotionModel, {}, None
-        self.compileModelHelpers = compileModelDataHelpers(self.submodel, userInputParams, accelerator)
-        self.allSubjectInds = []
-
         # General parameters.
+        self.modelTimeWindow = modelConstants.timeWindows[-1]
+        self.submodel = modelConstants.emotionModel
+        self.startModelTime = self.modelTimeWindow
         self.actionControl = actionControl
         self.modelClasses = modelClasses  # A list of machine learning models.
-
-        # Initialize helper classes.
-        self.compileFeatureNames = compileFeatureNames()  # Initialize the Feature Information
-        self.compileModelInfo = compileModelInfo()  # Initialize the Model Information
+        self.allSubjectInds = []
 
         # Therapy parameters
         self.timePointEvolution = []
@@ -38,8 +33,17 @@ class humanMachineInterface:
         self.initialPredictions = torch.full(size=(1, 3, 1, 1), fill_value=0.5)
         self.therapyInitialization()
 
+        # Hardcoded parameters.
+        self.modelTimeBuffer = 1
+        self.modelTimeGap = 20
+
+        # Initialize helper classes.
+        self.compileModelHelpers = compileModelDataHelpers(self.submodel, userInputParams={}, accelerator=None)
+        self.compileFeatureNames = compileFeatureNames()  # Initialize the Feature Information
+        self.compileModelInfo = compileModelInfo()  # Initialize the Model Information
+
         # Compile the feature information.
-        self.surveyTitles, self.surveyQuestions, self.surveyAnswerChoices, self.surveyInstructions = self.compileModelInfo.compileSurveyInformation()
+        _, self.surveyQuestions, _, _ = self.compileModelInfo.compileSurveyInformation()
         self.featureNames, self.biomarkerFeatureNames, self.biomarkerFeatureOrder = self.compileFeatureNames.extractFeatureNames(extractFeaturesFrom)
 
         # ------------------------------ pipeline preparation for training ------------------------------
@@ -53,24 +57,15 @@ class humanMachineInterface:
         self.experimentalInds = torch.arange(0, 6, dtype=torch.int64)
 
         # Holder parameters.
+        self.surveyAnswersList = None  # A list of lists of survey answers, where each element represents an answer to surveyQuestions.
+        self.surveyAnswerTimes = None  # A list of times when each survey was collected, where the len(surveyAnswerTimes) == len(surveyAnswersList).
+        self.experimentTimes = None  # A list of lists of [start, stop] times of each experiment, where each element represents the times for one experiment. None means no time recorded.
+        self.experimentNames = None  # A list of names for each experiment, where len(experimentNames) == len(experimentTimes).
         self.therapyStates = None
         self.userName = None
 
         # Initialize mutable variables.
         self.resetVariables_HMI()
-
-        # Holder parameters.
-        self.surveyAnswersList = None  # A list of lists of survey answers, where each element represents an answer to surveyQuestions.
-        self.surveyAnswerTimes = None  # A list of times when each survey was collected, where the len(surveyAnswerTimes) == len(surveyAnswersList).
-        self.surveyQuestions = None  # A list of survey questions, where each element in surveyAnswersList corresponds to this question order.
-        self.experimentTimes = None  # A list of lists of [start, stop] times of each experiment, where each element represents the times for one experiment. None means no time recorded.
-        self.experimentNames = None  # A list of names for each experiment, where len(experimentNames) == len(experimentTimes).
-
-        # predefined model time
-        self.modelTimeWindow = modelConstants.timeWindows[-1]
-        self.startModelTime = self.modelTimeWindow
-        self.modelTimeBuffer = 1
-        self.modelTimeGap = 20
 
     def therapyInitialization(self):
         assert self.actionControl in {"heat", "music", "chatGPT", None}, f"Invalid actionControl: {self.actionControl}. Must be one of 'heat', 'music', or 'chatGPT'."
