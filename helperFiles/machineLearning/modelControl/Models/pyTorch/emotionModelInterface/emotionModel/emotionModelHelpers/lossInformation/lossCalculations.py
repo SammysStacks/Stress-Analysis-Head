@@ -80,8 +80,11 @@ class lossCalculations:
         datapoints = emotionDataInterface.getChannelData(initialSignalData, channelName=modelConstants.signalChannel)
         # allDatapoints and allTimepoints: numExperiments, numSignals, maxSequenceLength
 
-        # Calculate the error in signal reconstruction (encoding loss).
+        # Calculate the uncertainty in the data.
         dataUncertainty = self.smoothingFilter(datapoints, kernelSize=3).diff(dim=-1).pow(2)
+        dataUncertainty[0.5 < dataUncertainty] = modelConstants.minMaxScale
+
+        # Calculate the error in signal reconstruction (encoding loss).
         signalReconstructedLoss = self.reconstructionLoss(reconstructedSignalData, datapoints)
         # signalReconstructedLoss dimension: numExperiments, numSignals, maxSequenceLength
         # dataUncertainty: numExperiments, numSignals, maxSequenceLength - 1
