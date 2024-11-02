@@ -14,9 +14,9 @@ class optimizerMethods:
     def getModelParams(submodel, model):
         modelParams = [
             # Specify the model parameters for the signal encoding.
-            {'params': model.inferenceModel.parameters(), 'weight_decay': 0, 'lr': 1E-2},
-            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': 0, 'lr': 1E-3},
-            {'params': model.specificSignalEncoderModel.parameters(), 'weight_decay': 0, 'lr': 1E-2},
+            {'params': model.inferenceModel.parameters(), 'weight_decay': 1e-4, 'lr': 1E-2},
+            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': 1e-4, 'lr': 1E-3},
+            {'params': model.specificSignalEncoderModel.parameters(), 'weight_decay': 1e-4, 'lr': 1E-2},
         ]
 
         if submodel == modelConstants.emotionModel:
@@ -37,7 +37,7 @@ class optimizerMethods:
         modelParams = self.getModelParams(submodel, model)
 
         # Set the optimizer and scheduler.
-        optimizer = self.setOptimizer(modelParams, lr=1E-2, weight_decay=0, optimizerType=self.userInputParams["optimizerType"])
+        optimizer = self.setOptimizer(modelParams, lr=1E-2, weight_decay=1e-4, optimizerType=self.userInputParams["optimizerType"])
         scheduler = self.getLearningRateScheduler(optimizer)
 
         return optimizer, scheduler

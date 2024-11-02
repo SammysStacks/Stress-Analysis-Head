@@ -1,13 +1,13 @@
 #!/bin/bash
 
-encodedDimensions=(128 256 512)
+encodedDimensions=(128 256)
+# Total: 2
+
+goldenRatios=(4 8 16)
 # Total: 3
 
-goldenRatios=(4 8 16 32)
-# Total: 4
-
-signalEncoderLayers=(8 16 32)
-# Total: 3
+signalEncoderLayers=(8 16)
+# Total: 2
 
 waveletType="bior3.7"
 optimizer="AdamW"     # Replace with actual value
