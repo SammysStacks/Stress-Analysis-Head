@@ -14,7 +14,6 @@ class trainingProtocolHelpers:
     def __init__(self, submodel, accelerator):
         # General parameters.
         self.submodelsSaving = modelParameters.getSubmodelsSaving(submodel)  # The submodels to save.
-        self.specificModelWeights = modelConstants.specificModelWeights  # The dataset-specific model weights.
         self.sharedModelWeights = modelConstants.sharedModelWeights  # The shared model weights.
         self.minEpochs_modelAdjustment = 1  # The minimum number of epochs before adjusting the model architecture.
         self.accelerator = accelerator
@@ -37,7 +36,7 @@ class trainingProtocolHelpers:
         # Train the inference model.
         modelPipeline.trainModel(dataLoader, submodel=modelConstants.signalEncoderModel, inferenceTraining=True, trainSharedLayers=False, numEpochs=numEpochs)
 
-    def trainEpoch(self, submodel, allMetadataLoaders, allMetaModels, allModels):
+    def trainEpoch(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders):
         # For each meta-training model.
         for modelInd in range(len(allMetadataLoaders)):
             dataLoader = allMetadataLoaders[modelInd]
@@ -45,7 +44,6 @@ class trainingProtocolHelpers:
 
             # Train the updated model.
             self.modelMigration.unifyModelWeights(allModels=[modelPipeline], modelWeights=self.sharedModelWeights, layerInfo=self.unifiedLayerData)
-            # modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, trainSharedLayers=False, profileTraining=False, numEpochs=1)  # Signal-specific training.
             modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, trainSharedLayers=True, profileTraining=False, numEpochs=1)   # Full model training.
             self.accelerator.wait_for_everyone()
 
@@ -53,9 +51,9 @@ class trainingProtocolHelpers:
             self.unifiedLayerData = self.modelMigration.copyModelWeights(modelPipeline, self.sharedModelWeights)
 
         # Unify all the model weights and retrain the specific models.
-        self.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels)
+        self.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders)
 
-    def datasetSpecificTraining(self, submodel, allMetaModels, allMetadataLoaders, allModels, allDataLoaders):
+    def datasetSpecificTraining(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders):
         # Unify all the model weights.
         self.unifyAllModelWeights(allMetaModels, allModels)
 
@@ -68,7 +66,7 @@ class trainingProtocolHelpers:
             modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, trainSharedLayers=False, profileTraining=False, numEpochs=1)  # Signal-specific training.
             self.accelerator.wait_for_everyone()
 
-    def calculateLossInformation(self, allMetaModels, allMetadataLoaders, allModels, allDataLoaders, submodel):
+    def calculateLossInformation(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel):
         self.unifyAllModelWeights(allMetaModels, allModels)  # Unify all the model weights.
 
         t1 = time.time()
@@ -81,7 +79,7 @@ class trainingProtocolHelpers:
             with torch.no_grad(): modelPipeline.organizeLossInfo.storeTrainingLosses(submodel, modelPipeline, lossDataLoader)
         t2 = time.time(); self.accelerator.print("Total loss calculation time:", t2 - t1)
 
-    def plotModelState(self, allMetaModels, allMetadataLoaders, allModels, allDataLoaders, submodel, trainingDate):
+    def plotModelState(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate):
         self.unifyAllModelWeights(allMetaModels, allModels)  # Unify all the model weights.
 
         t1 = time.time()

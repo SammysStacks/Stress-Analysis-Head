@@ -49,12 +49,12 @@ class emotionModelWeights(convolutionalHelpers):
     @staticmethod
     def reversibleNeuralWeightRFC(numSignals, sequenceLength, activationMethod):
         activationMethod, switchActivationDirection = activationMethod.split('_')
-        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength, numLayers=3, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection == "True")
+        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength, numLayers=1, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection == "True")
 
     @staticmethod
     def reversibleNeuralWeightRCNN(numSignals, sequenceLength, activationMethod):
         activationMethod, switchActivationDirection = activationMethod.split('_')
-        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=15, numLayers=3, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection == "True")
+        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=7, numLayers=1, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection == "True")
 
     @staticmethod
     def neuralWeightFC(sequenceLength):
@@ -68,11 +68,11 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def postProcessingLayerRCNN(numSignals, sequenceLength, activationMethod, switchActivationDirection):
-        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=15, numLayers=3, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection)
+        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=7, numLayers=1, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection)
 
     @staticmethod
     def postProcessingLayerRFC(numSignals, sequenceLength, activationMethod, switchActivationDirection):
-        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength, numLayers=3, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection)
+        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength, numLayers=1, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection)
 
     # ------------------- Emotion/Activity Encoding Architectures ------------------- #
 

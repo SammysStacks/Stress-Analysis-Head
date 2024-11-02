@@ -90,8 +90,8 @@ if __name__ == "__main__":
     # General parameters.
     _batchSize, _numSignals, _sequenceLength = 2, 3, 256
     _activationMethod = 'reversibleLinearSoftSign'
-    _kernelSize = 15
-    _numLayers = 30
+    _kernelSize = 7
+    _numLayers = 1
 
     # Set up the parameters.
     neuralLayerClass = reversibleConvolutionLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod, switchActivationDirection=False)

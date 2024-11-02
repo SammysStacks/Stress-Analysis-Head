@@ -58,8 +58,8 @@ if __name__ == "__main__":
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are using: cpu, cuda')
 
     # Add arguments for the signal encoder architecture.
-    parser.add_argument('--goldenRatio', type=int, default=4, help='The number of shared layers per specific layer.')
-    parser.add_argument('--numSignalEncoderLayers', type=int, default=4, help='The number of layers in the model.')
+    parser.add_argument('--goldenRatio', type=int, default=8, help='The number of shared layers per specific layer.')
+    parser.add_argument('--numSignalEncoderLayers', type=int, default=16, help='The number of layers in the model.')
     parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
 
     # Add arguments for the neural operator.
@@ -98,7 +98,7 @@ if __name__ == "__main__":
     allModels, allDataLoaders, allMetaModels, allMetadataLoaders, _ = modelCompiler.compileModelsFull(metaDatasetNames, submodel, testSplitRatio, datasetNames)
 
     # Store the initial loss information.
-    if storeLoss: trainingProtocols.calculateLossInformation(allMetaModels, allMetadataLoaders, allModels, allDataLoaders, submodel)
+    if storeLoss: trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)
 
     # -------------------------- Meta-model Training ------------------------- #
 
@@ -111,11 +111,11 @@ if __name__ == "__main__":
         saveFullModel, plotSteps = modelParameters.getSavingInformation(epoch, numEpoch_toSaveFull, numEpoch_toPlot)
 
         # Train the model for a single epoch.
-        trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels)
+        trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders)
 
         # Store the initial loss information and plot.
-        if storeLoss: trainingProtocols.calculateLossInformation(allMetaModels, allMetadataLoaders, allModels, allDataLoaders, submodel)
-        if plotSteps: trainingProtocols.plotModelState(allMetaModels, allMetadataLoaders, allModels, allDataLoaders, submodel, trainingDate)
+        if storeLoss: trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)
+        if plotSteps: trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate)
 
         # Save the model sometimes (only on the main device).
         # if saveFullModel and accelerator.is_local_main_process:

@@ -52,8 +52,8 @@ class modelConstants:
     signalChannelNames = [timeChannel, signalChannel]
 
     # Specify the saving parameters.
-    specificModelWeights = [specificSignalEncoderModel, specificEmotionModel]
-    sharedModelWeights = [sharedSignalEncoderModel, sharedEmotionModel]
+    specificModelWeights = [specificSignalEncoderModel, specificEmotionModel, specificActivityModel]
+    sharedModelWeights = [sharedSignalEncoderModel, sharedEmotionModel, sharedActivityModel]
     inferenceModelWeights = [inferenceModel]
 
     # -------------------------------------------------------------------- #
