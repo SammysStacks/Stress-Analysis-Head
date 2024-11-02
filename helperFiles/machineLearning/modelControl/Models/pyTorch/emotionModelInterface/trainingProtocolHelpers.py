@@ -45,25 +45,24 @@ class trainingProtocolHelpers:
 
             # Train the updated model.
             self.modelMigration.unifyModelWeights(allModels=[modelPipeline], modelWeights=self.sharedModelWeights, layerInfo=self.unifiedLayerData)
-            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, trainSharedLayers=False, profileTraining=False, numEpochs=1)  # Signal-specific training.
+            # modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, trainSharedLayers=False, profileTraining=False, numEpochs=1)  # Signal-specific training.
             modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, trainSharedLayers=True, profileTraining=False, numEpochs=1)   # Full model training.
             self.accelerator.wait_for_everyone()
 
             # Store the new model weights.
             self.unifiedLayerData = self.modelMigration.copyModelWeights(modelPipeline, self.sharedModelWeights)
 
-        # Unify all the model weights.
-        self.trainPhysiologicalProfile(submodel, allMetadataLoaders, allMetaModels, allModels)
-        self.unifyAllModelWeights(allMetaModels, allModels)
+        # Unify all the model weights and retrain the specific models.
+        self.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels)
 
-    def trainPhysiologicalProfile(self, submodel, allMetadataLoaders, allMetaModels, allModels):
+    def datasetSpecificTraining(self, submodel, allMetaModels, allMetadataLoaders, allModels, allDataLoaders):
         # Unify all the model weights.
         self.unifyAllModelWeights(allMetaModels, allModels)
 
         # For each meta-training model.
-        for modelInd in range(len(allMetadataLoaders)):
-            dataLoader = allMetadataLoaders[modelInd]
-            modelPipeline = allMetaModels[modelInd]
+        for modelInd in range(len(allMetaModels) + len(allModels)):
+            dataLoader = allMetadataLoaders[modelInd] if modelInd < len(allMetadataLoaders) else allDataLoaders[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
+            modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
 
             # Train the updated model.
             modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, trainSharedLayers=False, profileTraining=False, numEpochs=1)  # Signal-specific training.
