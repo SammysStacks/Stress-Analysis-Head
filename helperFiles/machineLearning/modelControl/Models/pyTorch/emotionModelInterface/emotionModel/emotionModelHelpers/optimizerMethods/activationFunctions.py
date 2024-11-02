@@ -16,9 +16,8 @@ def getActivationMethod(activationMethod):
         topExponent = int(activationMethod.split('_')[1]) if '_' in activationMethod else 0
         activationFunction = boundedExp(decayConstant=topExponent, nonLinearityRegion=nonLinearityRegion)
     elif activationMethod.startswith('reversibleLinearSoftSign'):
-        inversionPoint = float(activationMethod.split('_')[1]) if '_' in activationMethod else 2
-        infiniteBound = float(activationMethod.split('_')[2]) if '_' in activationMethod else 1
-        activationFunction = reversibleLinearSoftSign(inversionPoint=inversionPoint, infiniteBound=infiniteBound)
+        invertedActivation = activationMethod.split('_')[1] == "True"
+        activationFunction = reversibleLinearSoftSign(invertedActivation=invertedActivation)
     elif activationMethod.startswith('nonLinearMultiplication'):
         invertedActivation = activationMethod.split('_')[1] == "True"
         activationFunction = nonLinearMultiplication(invertedActivation=invertedActivation)
@@ -50,8 +49,9 @@ class switchActivation(nn.Module):
 
 
 class reversibleLinearSoftSign(reversibleInterface):
-    def __init__(self, inversionPoint=1, infiniteBound=0.75):
+    def __init__(self, invertedActivation=False, inversionPoint=2, infiniteBound=1):
         super(reversibleLinearSoftSign, self).__init__()
+        self.invertedActivation = invertedActivation  # Whether the non-linearity term is inverted
         self.inversionPoint = inversionPoint  # Corresponds to `r` in the equation
         self.infiniteBound = infiniteBound  # Corresponds to `a` in the equation
 
@@ -60,12 +60,12 @@ class reversibleLinearSoftSign(reversibleInterface):
         assert 0 < self.inversionPoint, "The inversion point must be positive to ensure a stable convergence."
 
     def forward(self, x):
-        if self.forwardDirection: return self.forwardPass(x)
+        if self.forwardDirection != self.invertedActivation: return self.forwardPass(x)
         else: return self.inversePass(x)
 
     def forwardPass(self, x):
         # f(x) = ax + x / (1 + (a / (1 - a)) * (|x| / r))
-        absX = x.abs()
+        absX = x.abs()  # Not ideal for backpropagation, but necessary for the non-linearity term
 
         # Calculate the non-linearity term
         if self.infiniteBound != 1: nonLinearityTerm = 1 + (self.infiniteBound / (1 - self.infiniteBound)) * (absX / self.inversionPoint)
@@ -77,10 +77,10 @@ class reversibleLinearSoftSign(reversibleInterface):
         return y
 
     def inversePass(self, y):
-        # Inverse function described in the problem
-        absY = y.abs()
+        signY = torch.nn.Tanh()(y * 1e3)
 
         if self.infiniteBound != 1:
+            absY = y*signY
             # Calculate the non-linearity term
             squareRootTerm = ((self.infiniteBound ** 2 - 1) ** 2 * self.inversionPoint ** 2
                               - 2 * self.infiniteBound * self.inversionPoint * (self.infiniteBound - 1) ** 2 * absY
@@ -91,7 +91,6 @@ class reversibleLinearSoftSign(reversibleInterface):
             # Combine terms, applying sign(x) for the final output
             x = signDependentTerm + y / (2 * self.infiniteBound)
         else:
-            signY = torch.nn.Tanh()(y*1e5)
             # Calculate the non-linearity term
             x = signY*((4*self.inversionPoint**2 + y.pow(2)).sqrt() - 2*self.inversionPoint)/2 + y/2
 
@@ -189,7 +188,7 @@ class signWrap(reversibleInterface):
 
 
 class nonLinearMultiplication(reversibleInterface):
-    def __init__(self, invertedActivation):
+    def __init__(self, invertedActivation=False):
         super(nonLinearMultiplication, self).__init__()
         self.invertedActivation = invertedActivation  # Whether the non-linearity term is inverted
         self.sequenceLength = None  # The length of the input signal
@@ -236,5 +235,5 @@ if __name__ == "__main__":
     data = 2 * data - 1
 
     # Perform the forward and inverse pass.
-    activationClass = nonLinearMultiplication(invertedActivation=False)
+    activationClass = reversibleLinearSoftSign()
     _forwardData, _reconstructedData = activationClass.checkReconstruction(data, atol=1e-6, numLayers=10)

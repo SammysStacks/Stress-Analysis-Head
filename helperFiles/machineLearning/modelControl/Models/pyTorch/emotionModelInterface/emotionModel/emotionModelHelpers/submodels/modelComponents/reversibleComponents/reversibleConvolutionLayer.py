@@ -18,7 +18,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         self.numLayers = numLayers  # The number of layers in the reversible linear layer.
 
         # The stability term to add to the diagonal.
-        self.stabilityTerm = torch.eye(self.sequenceLength, dtype=torch.float64)
+        self.stabilityTerm = torch.eye(self.sequenceLength, dtype=torch.float64)*0.99
 
         # The restricted window for the neural weights.
         self.restrictedWindowMask = torch.ones(numSignals, self.sequenceLength, self.sequenceLength, dtype=torch.float64)
@@ -72,7 +72,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
         # Gather the corresponding kernel values for each position
         neuralWeights[self.signalInds, self.rowInds, self.colInds] = kernelWeights[self.signalInds, self.kernelInds]
-        neuralWeights = neuralWeights + self.stabilityTerm*0.975  # Add a stability term to the diagonal.
+        neuralWeights = neuralWeights + self.stabilityTerm  # Add a stability term to the diagonal.
 
         # Backward direction: invert the neural weights.
         if self.forwardDirection: neuralWeights = torch.linalg.inv(neuralWeights)
@@ -89,9 +89,9 @@ class reversibleConvolutionLayer(reversibleInterface):
 if __name__ == "__main__":
     # General parameters.
     _batchSize, _numSignals, _sequenceLength = 2, 3, 256
-    _activationMethod = 'nonLinearMultiplication'
+    _activationMethod = 'reversibleLinearSoftSign'
     _kernelSize = 15
-    _numLayers = 3
+    _numLayers = 30
 
     # Set up the parameters.
     neuralLayerClass = reversibleConvolutionLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod, switchActivationDirection=False)

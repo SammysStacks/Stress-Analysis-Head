@@ -119,8 +119,8 @@ if __name__ == "__main__":
         if plotSteps: trainingProtocols.plotModelState(allMetaModels, allMetadataLoaders, allModels, allDataLoaders, submodel, trainingDate)
 
         # Save the model sometimes (only on the main device).
-        if saveFullModel and accelerator.is_local_main_process:
-            trainingProtocols.saveModelState(epoch, allMetaModels, allModels, submodel, allDatasetNames, trainingDate)
+        # if saveFullModel and accelerator.is_local_main_process:
+        #     trainingProtocols.saveModelState(epoch, allMetaModels, allModels, submodel, allDatasetNames, trainingDate)
 
         # Finalize the epoch parameters.
         accelerator.wait_for_everyone()  # Wait before continuing.

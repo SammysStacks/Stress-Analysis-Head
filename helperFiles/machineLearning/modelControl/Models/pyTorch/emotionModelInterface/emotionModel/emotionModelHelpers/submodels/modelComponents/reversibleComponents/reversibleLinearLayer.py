@@ -18,7 +18,7 @@ class reversibleLinearLayer(reversibleInterface):
         self.numLayers = numLayers  # The number of layers in the reversible linear layer.
 
         # The stability term to add to the diagonal.
-        self.stabilityTerm = torch.eye(self.sequenceLength, dtype=torch.float64)
+        self.stabilityTerm = torch.eye(self.sequenceLength, dtype=torch.float64)*0.99
 
         # The restricted window for the neural weights.
         self.restrictedWindowMask = torch.ones(1, self.sequenceLength, self.sequenceLength, dtype=torch.float64)
@@ -64,8 +64,8 @@ class reversibleLinearLayer(reversibleInterface):
         # neuralWeight: numSignals, sequenceLength, sequenceLength
 
         # Add a stability term to the diagonal. TODO: Add sparse matrix support.
-        if self.kernelSize != self.sequenceLength: neuralWeights = self.restrictedWindowMask * neuralWeights + self.stabilityTerm*0.975
-        else: neuralWeights = neuralWeights + self.stabilityTerm*0.975
+        if self.kernelSize != self.sequenceLength: neuralWeights = self.restrictedWindowMask * neuralWeights + self.stabilityTerm
+        else: neuralWeights = neuralWeights + self.stabilityTerm
 
         # Backward direction: invert the neural weights.
         if self.forwardDirection: neuralWeights = torch.linalg.inv(neuralWeights)
@@ -79,7 +79,7 @@ class reversibleLinearLayer(reversibleInterface):
 if __name__ == "__main__":
     # General parameters.
     _batchSize, _numSignals, _sequenceLength = 2, 3, 256
-    _activationMethod = 'nonLinearMultiplication'
+    _activationMethod = 'reversibleLinearSoftSign'
     _kernelSize = 21
     _numLayers = 5
 

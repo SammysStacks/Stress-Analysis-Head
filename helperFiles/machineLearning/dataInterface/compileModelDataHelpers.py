@@ -126,7 +126,7 @@ class compileModelDataHelpers:
 
     @staticmethod
     def addContextualInfo(allSignalData, allNumSignalPoints, allSubjectInds, datasetInd):
-        # allSignalData: A torch array of size (batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel])
+        # allSignalData: A torch tensor of size (batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel])
         # allNumSignalPoints: A torch array of size (batchSize, numSignals)
         # allSubjectInds: A torch array of size batchSize
         numExperiments, numSignals, maxSequenceLength, numChannels = allSignalData.shape
