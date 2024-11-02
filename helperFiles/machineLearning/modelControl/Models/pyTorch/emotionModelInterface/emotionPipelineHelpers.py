@@ -34,9 +34,9 @@ class emotionPipelineHelpers:
         # Initialize the emotion model.
         self.model = emotionModelHead(submodel=submodel, userInputParams=userInputParams, emotionNames=emotionNames, activityNames=activityNames,
                                       featureNames=featureNames, numSubjects=numSubjects, datasetName=datasetName, numExperiments=numExperiments)
-        try: self.model = torch.compile(self.model, backend='inductor')  # ['cudagraphs', 'inductor', 'onnxrt', 'openxla', 'tvm']
-        # self.model = torch.jit.script(self.model)
-        except Exception as e: print(f"\t\tCannot use torch compilation yet: {e}")
+        # try: self.model = torch.compile(self.model, backend='inductor')  # ['cudagraphs', 'inductor', 'onnxrt', 'openxla', 'tvm']
+        # # self.model = torch.jit.script(self.model)
+        # except Exception as e: print(f"\t\tCannot use torch compilation yet: {e}")
 
         # Initialize helper classes.
         self.organizeLossInfo = organizeTrainingLosses(accelerator, allEmotionClasses, self.activityLabelInd)
