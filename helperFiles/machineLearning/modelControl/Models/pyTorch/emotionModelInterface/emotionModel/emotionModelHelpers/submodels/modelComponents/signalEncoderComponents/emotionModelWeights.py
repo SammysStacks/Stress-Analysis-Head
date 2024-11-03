@@ -101,12 +101,3 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def getActivationType(): return 'reversibleLinearSoftSign'
-
-
-if __name__ == "__main__":
-    # General parameters.
-    _batchSize, _numSignals, _sequenceLength = 2, 3, 256
-
-    # Initialize the model weights.
-    modelWeights = emotionModelWeights()
-    modelWeights.getInitialPhysiologicalProfile(numExperiments=_batchSize, encodedDimension=_sequenceLength)
