@@ -242,9 +242,20 @@ class compileModelDataHelpers:
         # missingDataMask dim: batchSize, numSignals, maxSequenceLength
         # biomarkerData: batchSize, numSignals, maxSequenceLength
 
+        # Find single point differences
         biomarkerDiff = biomarkerData.diff(dim=-1).abs()
+        singlePointMaxDiff = ((biomarkerDiff[:, :, :-1] < self.maxSinglePointDiff) & (biomarkerDiff[:, :, 1:] < self.maxSinglePointDiff))  # Maximum difference between consecutive points: batchSize, numSignals, maxSequenceLength-1
+
+        # Remove any bad data points.
+        validDataMask[:, :, :-1][singlePointMaxDiff] = False  # Remove small errors.
+        validDataMask[:, :, 1:][singlePointMaxDiff] = False  # Remove small errors.
+        allSignalData[~validDataMask.unsqueeze(-1)] = 0
+
+        # Re-normalize the data after removing bad points.
+        allSignalData = self.normalizeSignals(allSignalData=allSignalData, missingDataMask=~validDataMask)
+        biomarkerData = emotionDataInterface.getChannelData(signalData=allSignalData, channelName=modelConstants.signalChannel)
+
         # Create boolean masks for signals that don’t meet the requirements
-        singlePointMaxDiff = ((biomarkerDiff[:, :, :-1] < self.maxSinglePointDiff) & (biomarkerDiff[:, :, 1:] < self.maxSinglePointDiff)).all(dim=-1)  # Maximum difference between consecutive points: batchSize, numSignals
         minLowerBoundaryMask = 2 < (biomarkerData < -modelConstants.minMaxScale + 0.3).sum(dim=-1)  # Number of points below -0.95: batchSize, numSignals
         minUpperBoundaryMask = 2 < (modelConstants.minMaxScale - 0.3 < biomarkerData).sum(dim=-1)  # Number of points above 0.95: batchSize, numSignals
         averageDiff = biomarkerDiff.mean(dim=-1) < self.maxAverageDiff  # Average difference between consecutive points: batchSize, numSignals

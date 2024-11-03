@@ -124,6 +124,10 @@ class emotionDataInterface:
         # Compare `range_tensor` with `allNumSignalPoints` (broadcast)
         validDataMask = positionTensor < allNumSignalPoints.unsqueeze(-1)
 
+        # Assert the validity of the data mask.
+        potentialDataMask = allSignalData[:, :, :, 0] == 0 & allSignalData[:, :, :, 1] == 0
+        assert (validDataMask == potentialDataMask).all(), "The data mask is not correct."
+
         return validDataMask
 
     @staticmethod
