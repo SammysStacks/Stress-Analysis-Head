@@ -102,14 +102,13 @@ class emotionPipeline(emotionPipelineHelpers):
 
                     # ------------------- Update the Model  -------------------- #
 
-                    if profileTraining: finalLoss = 10000000000ppp0 * finalLoss
-
                     # Prevent exploding loss values.
                     # while 100 < finalLoss.item(): finalLoss = finalLoss / 10
 
                     t1 = time.time()
                     # Calculate the gradients.
                     self.accelerator.backward(finalLoss)  # Calculate the gradients.
+                    self.modelHelpers.scaleGradients(self.model)
                     self.backpropogateModel()  # Backpropagation.
                     t2 = time.time(); self.accelerator.print(f"{'Shared' if trainSharedLayers else '\tSpecific'} layer training {self.datasetName} {numPointsAnalyzed}: {t2 - t1}\n")
 

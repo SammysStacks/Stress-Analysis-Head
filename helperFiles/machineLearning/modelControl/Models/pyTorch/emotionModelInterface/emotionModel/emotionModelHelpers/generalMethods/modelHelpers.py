@@ -112,6 +112,13 @@ class modelHelpers:
     # -------------------------- Model Updates -------------------------- #
 
     @staticmethod
+    def scaleGradients(model):
+        for param in model.parameters():
+            if param.grad is not None:
+                grad_norm = param.grad.norm().item()
+                if grad_norm != 0: param.grad /= grad_norm
+
+    @staticmethod
     def power_iteration(W, num_iterations: int = 50, eps: float = 1e-10):
         """
         Approximates the largest singular value (spectral norm) of weight matrix W using power iteration.
