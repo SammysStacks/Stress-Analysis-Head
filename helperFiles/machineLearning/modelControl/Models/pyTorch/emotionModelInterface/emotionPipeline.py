@@ -102,10 +102,10 @@ class emotionPipeline(emotionPipelineHelpers):
 
                     # ------------------- Update the Model  -------------------- #
 
-                    if profileTraining: finalLoss = 100 * finalLoss
+                    if profileTraining: finalLoss = 10000000000ppp0 * finalLoss
 
                     # Prevent exploding loss values.
-                    while 100 < finalLoss.item(): finalLoss = finalLoss / 10
+                    # while 100 < finalLoss.item(): finalLoss = finalLoss / 10
 
                     t1 = time.time()
                     # Calculate the gradients.

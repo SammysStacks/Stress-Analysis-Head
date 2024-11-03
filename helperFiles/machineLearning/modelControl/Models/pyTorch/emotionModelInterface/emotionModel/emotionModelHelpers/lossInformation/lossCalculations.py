@@ -111,8 +111,8 @@ class lossCalculations:
         # physiologicalSmoothLoss dimension: numExperiments, maxSequenceLength
 
         # Only use large loss values.
-        resampledSmoothLoss = resampledSmoothLoss[0.25 < resampledSmoothLoss].mean()
-        physiologicalSmoothLoss = physiologicalSmoothLoss[0.25 < physiologicalSmoothLoss].mean()
+        resampledSmoothLoss = resampledSmoothLoss[0.25 < resampledSmoothLoss].mean() or torch.zeroes(1, device=resampledSmoothLoss.mainDevice)
+        physiologicalSmoothLoss = physiologicalSmoothLoss[0.25 < physiologicalSmoothLoss].mean() or torch.zeroes(1, device=physiologicalSmoothLoss.mainDevice)
 
         # Assert that nothing is wrong with the loss calculations.
         self.modelHelpers.assertVariableIntegrity(physiologicalSmoothLoss, variableName="physiological smooth loss", assertGradient=False)
