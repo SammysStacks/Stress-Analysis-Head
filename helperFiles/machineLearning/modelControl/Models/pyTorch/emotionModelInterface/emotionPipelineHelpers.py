@@ -108,7 +108,8 @@ class emotionPipelineHelpers:
         else:
             # Signal encoder training
             if trainSharedLayers: self.setupTrainingFlags(self.model.sharedSignalEncoderModel, trainingFlag=True)
-            self.setupTrainingFlags(self.model.specificSignalEncoderModel, trainingFlag=True)
+            else: self.setupTrainingFlags(self.model.specificSignalEncoderModel, trainingFlag=True)
+            self.setupTrainingFlags(self.model.specificSignalEncoderModel.profileModel, trainingFlag=False)
 
     @staticmethod
     def setupTrainingFlags(model, trainingFlag):

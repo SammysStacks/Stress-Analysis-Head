@@ -108,7 +108,6 @@ class emotionPipeline(emotionPipelineHelpers):
 
                     # Prevent exploding loss values.
                     while 2 < finalLoss.item(): finalLoss = finalLoss / 10
-                    if not inferenceTraining and not profileTraining and not trainSharedLayers: finalLoss = finalLoss / 5
 
                     t1 = time.time()
                     # Calculate the gradients.
