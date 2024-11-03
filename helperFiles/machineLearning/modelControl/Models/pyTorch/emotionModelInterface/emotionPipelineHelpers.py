@@ -90,7 +90,7 @@ class emotionPipelineHelpers:
 
         # Profile training.
         if profileTraining:
-            self.model.specificSignalEncoderModel.physiologicalProfileAnsatz.requires_grad = True
+            self.setupTrainingFlags(self.model.specificSignalEncoderModel, trainingFlag=True)
             assert not trainSharedLayers, "We cannot train layers during profile training."
             assert not inferenceTraining, "We cannot train layers during profile training."
             return None
