@@ -244,11 +244,11 @@ class compileModelDataHelpers:
 
         # Find single point differences
         biomarkerDiff = biomarkerData.diff(dim=-1).abs()
-        singlePointMaxDiff = biomarkerDiff < self.maxSinglePointDiff  # Maximum difference between consecutive points: batchSize, numSignals, maxSequenceLength-1
+        badSinglePointMaxDiff = self.maxSinglePointDiff < biomarkerDiff  # Maximum difference between consecutive points: batchSize, numSignals, maxSequenceLength-1
 
         # Remove any bad data points.
-        validDataMask[:, :, :-1][singlePointMaxDiff] = False  # Remove small errors.
-        validDataMask[:, :, 1:][singlePointMaxDiff] = False  # Remove small errors.
+        validDataMask[:, :, :-1][badSinglePointMaxDiff] = False  # Remove small errors.
+        validDataMask[:, :, 1:][badSinglePointMaxDiff] = False  # Remove small errors.
         allSignalData[~validDataMask.unsqueeze(-1).expand(batchSize, numSignals, maxSequenceLength, numChannels)] = 0
 
         # Re-normalize the data after removing bad points.
