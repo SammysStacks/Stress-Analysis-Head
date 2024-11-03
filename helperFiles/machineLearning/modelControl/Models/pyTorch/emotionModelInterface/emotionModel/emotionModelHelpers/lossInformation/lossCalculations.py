@@ -105,10 +105,14 @@ class lossCalculations:
         validSignalMask = torch.any(validDataMask, dim=-1)
 
         # Calculate the smooth loss.
-        resampledSmoothLoss = resampledSignalData[validSignalMask].diff(n=2, dim=-1).pow(2).mean()
-        physiologicalSmoothLoss = physiologicalProfile.diff(n=2, dim=-1).pow(2).mean()
+        resampledSmoothLoss = resampledSignalData[validSignalMask].diff(n=2, dim=-1).pow(2)
+        physiologicalSmoothLoss = physiologicalProfile.diff(n=2, dim=-1).pow(2)
         # resampledSmoothLoss dimension: numExperiments, numSignals, encodedDimension
         # physiologicalSmoothLoss dimension: numExperiments, maxSequenceLength
+
+        # Only use large loss values.
+        resampledSmoothLoss = resampledSmoothLoss[0.5 < resampledSmoothLoss].mean()
+        physiologicalSmoothLoss = physiologicalSmoothLoss[0.5 < physiologicalSmoothLoss].mean()
 
         # Assert that nothing is wrong with the loss calculations.
         self.modelHelpers.assertVariableIntegrity(physiologicalSmoothLoss, variableName="physiological smooth loss", assertGradient=False)

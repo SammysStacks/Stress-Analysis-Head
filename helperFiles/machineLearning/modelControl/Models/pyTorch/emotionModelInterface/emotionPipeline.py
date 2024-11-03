@@ -95,12 +95,14 @@ class emotionPipeline(emotionPipelineHelpers):
                     if signalReconstructedLoss is None: self.accelerator.print("Not useful loss"); continue
 
                     # Initialize basic core loss value.
-                    finalLoss = signalReconstructedLoss + 0.1*(physiologicalSmoothLoss + resampledSmoothLoss)
+                    finalLoss = signalReconstructedLoss + 0.01*(physiologicalSmoothLoss + resampledSmoothLoss)
 
                     # Update the user.
                     self.accelerator.print("Final-Recon-Phys-Resamp", finalLoss.item(), signalReconstructedLoss.item(), physiologicalSmoothLoss.item(), resampledSmoothLoss.item(), flush=True)
 
                     # ------------------- Update the Model  -------------------- #
+
+                    if profileTraining: finalLoss = 100 * finalLoss
 
                     # Prevent exploding loss values.
                     while 100 < finalLoss.item(): finalLoss = finalLoss / 10
