@@ -106,7 +106,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     # ------------------- Update the Model  -------------------- #
 
                     # Prevent exploding loss values.
-                    while 10 < finalLoss.item(): finalLoss = finalLoss / 10
+                    while 2 < finalLoss.item(): finalLoss = finalLoss / 10
 
                     t1 = time.time()
                     # Calculate the gradients.
