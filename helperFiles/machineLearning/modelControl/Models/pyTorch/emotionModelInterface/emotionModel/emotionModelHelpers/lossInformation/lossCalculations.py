@@ -111,11 +111,15 @@ class lossCalculations:
         # physiologicalSmoothLoss dimension: numExperiments, maxSequenceLength
 
         # Only use large loss values.
-        resampledSmoothLoss = resampledSmoothLoss[0.5 < resampledSmoothLoss].mean()
-        physiologicalSmoothLoss = physiologicalSmoothLoss[0.5 < physiologicalSmoothLoss].mean()
-        if resampledSmoothLoss.isnan().any().item(): resampledSmoothLoss = torch.zeros(1, device=resampledSmoothLoss.device).mean()
+        resampledSmoothLoss[resampledSmoothLoss < 0.25] = 0
+        physiologicalSmoothLoss[physiologicalSmoothLoss < 0.25] = 0
+
+        # Calculate the error in signal reconstruction (encoding loss).
+        resampledSmoothLoss = resampledSmoothLoss.mean()
+        physiologicalSmoothLoss = physiologicalSmoothLoss.mean()
 
         # Assert that nothing is wrong with the loss calculations.
+        if resampledSmoothLoss.isnan().any().item(): resampledSmoothLoss = torch.zeros(1, device=resampledSmoothLoss.device).mean()
         self.modelHelpers.assertVariableIntegrity(physiologicalSmoothLoss, variableName="physiological smooth loss", assertGradient=False)
         self.modelHelpers.assertVariableIntegrity(resampledSmoothLoss, variableName="resampled smooth loss", assertGradient=False)
 

@@ -14,9 +14,9 @@ class optimizerMethods:
     def getModelParams(submodel, model):
         modelParams = [
             # Specify the model parameters for the signal encoding.
-            {'params': model.inferenceModel.parameters(), 'weight_decay': 1e-3, 'lr': 0.1},
+            {'params': model.inferenceModel.parameters(), 'weight_decay': 1e-3, 'lr': 0.25},
             {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': 1e-3, 'lr': 0.1},
-            {'params': model.specificSignalEncoderModel.parameters(), 'weight_decay': 1e-3, 'lr': 0.1},
+            {'params': model.specificSignalEncoderModel.parameters(), 'weight_decay': 1e-3, 'lr': 0.5},
         ]
 
         if submodel == modelConstants.emotionModel:

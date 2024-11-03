@@ -40,7 +40,7 @@ class modelParameters:
         return userInputParams
 
     def getTrainingBatchSize(self, submodel, numExperiments):
-        # Wesad: Found 32 (out of 32) well-labeled emotions across 60 experiments with 64 signals.
+        # Wesad: Found 32 (out of 32) well-labeled emotions across 60 experiments with 62 signals.
         # Emognition: Found 12 (out of 12) well-labeled emotions across 407 experiments with 55 signals.
         # Amigos: Found 10 (out of 12) well-labeled emotions across 673 experiments with 127 signals.
         # Dapper: Found 12 (out of 12) well-labeled emotions across 364 experiments with 21 signals.
@@ -86,8 +86,8 @@ class modelParameters:
 
     @staticmethod
     def getExclusionSequenceCriteria(submodel):
-        if submodel == modelConstants.signalEncoderModel: return 25, 20, 0.75, 0.3  # minSequencePoints, minSignalPresentCount, maxSinglePointDiff, maxAverageDiff
-        elif submodel == modelConstants.emotionModel: return 25, 20, 0.75, 0.3  # minSequencePoints, minSignalPresentCount, maxSinglePointDiff, maxAverageDiff
+        if submodel == modelConstants.signalEncoderModel: return 25, 25, 1, 0.3  # minSequencePoints, minSignalPresentCount, maxSinglePointDiff, maxAverageDiff
+        elif submodel == modelConstants.emotionModel: return 25, 25, 1, 0.3  # minSequencePoints, minSignalPresentCount, maxSinglePointDiff, maxAverageDiff
         else: raise Exception()
 
     # -------------------------- Saving/Loading Parameters ------------------------- #
