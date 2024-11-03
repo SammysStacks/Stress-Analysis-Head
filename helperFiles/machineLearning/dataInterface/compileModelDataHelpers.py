@@ -267,7 +267,7 @@ class compileModelDataHelpers:
         validSignalInds = self.minSignalPresentCount < validSignalMask.sum(dim=0)
 
         # Filter out the invalid signals
-        allSignalData[~validSignalMask.unsqueeze(-1).unsqueeze(-1)] = 0
+        allSignalData[~validSignalMask.unsqueeze(-1).unsqueeze(-1).expand(batchSize, numSignals, maxSequenceLength, numChannels)] = 0
         allNumSignalPoints[~validSignalMask] = 0
 
         return allSignalData[:, validSignalInds, :, :], allNumSignalPoints[:, validSignalInds], featureNames[validSignalInds]
