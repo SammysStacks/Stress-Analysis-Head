@@ -70,11 +70,11 @@ class optimizerMethods:
 
         schedulerOrder = [
             optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda epoch: min(1.0, epoch / numWarmUps)),
-            optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=15*3, eta_min=1e-3, last_epoch=-1),
+            optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=numEpochCounts, eta_min=1e-4, last_epoch=-1),
         ]
 
         # Set the scheduler.
-        scheduler = SequentialLR(optimizer=optimizer, last_epoch=-1, milestones=[numEpochCounts*2], schedulers=schedulerOrder)
+        scheduler = SequentialLR(optimizer=optimizer, last_epoch=-1, milestones=[numEpochCounts*3], schedulers=schedulerOrder)
         scheduler.step()
 
         return scheduler

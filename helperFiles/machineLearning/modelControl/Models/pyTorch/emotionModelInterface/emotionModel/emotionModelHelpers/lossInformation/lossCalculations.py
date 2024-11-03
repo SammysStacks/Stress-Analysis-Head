@@ -111,7 +111,7 @@ class lossCalculations:
         # physiologicalSmoothLoss dimension: numExperiments, maxSequenceLength
 
         # Only use large loss values.
-        resampledSmoothLoss = resampledSmoothLoss[0.25 < resampledSmoothLoss].mean()
+        resampledSmoothLoss = resampledSmoothLoss[0.5 < resampledSmoothLoss].mean()
         physiologicalSmoothLoss = physiologicalSmoothLoss[0.25 < physiologicalSmoothLoss].mean()
         if resampledSmoothLoss.isnan().any().item(): resampledSmoothLoss = torch.zeros(1, device=resampledSmoothLoss.device)
 
