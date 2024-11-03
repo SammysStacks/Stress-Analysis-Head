@@ -14,9 +14,9 @@ class optimizerMethods:
     def getModelParams(submodel, model):
         modelParams = [
             # Specify the model parameters for the signal encoding.
-            {'params': model.inferenceModel.parameters(), 'weight_decay': 1e-3, 'lr': 0.1},
-            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': 1e-3, 'lr': 0.1},
-            {'params': model.specificSignalEncoderModel.parameters(), 'weight_decay': 1e-3, 'lr': 0.1},
+            {'params': model.inferenceModel.parameters(), 'weight_decay': 1e-2, 'lr': 0.1},
+            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': 1e-2, 'lr': 0.1},
+            {'params': model.specificSignalEncoderModel.parameters(), 'weight_decay': 1e-2, 'lr': 0.1},
         ]
 
         if submodel == modelConstants.emotionModel:
@@ -37,7 +37,7 @@ class optimizerMethods:
         modelParams = self.getModelParams(submodel, model)
 
         # Set the optimizer and scheduler.
-        optimizer = self.setOptimizer(modelParams, lr=1, weight_decay=1e-6, optimizerType=self.userInputParams["optimizerType"])
+        optimizer = self.setOptimizer(modelParams, lr=1e-3, weight_decay=1e-6, optimizerType=self.userInputParams["optimizerType"])
         scheduler = self.getLearningRateScheduler(optimizer)
 
         return optimizer, scheduler
@@ -66,7 +66,7 @@ class optimizerMethods:
         # Defined lambda function: optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda=lambda_function); lambda_function = lambda epoch: (epoch/50) if epoch < -1 else 1
         # torch.optim.lr_scheduler.constrainedLR(optimizer, start_factor=0.3333333333333333, end_factor=1.0, total_iters=5, last_epoch=-1)
         numEpochCounts = 15*3  # 15 counts per epoch session (wesad is 5 counts) for 5 epochs
-        numWarmUps = 1*numEpochCounts  # Warm-up epochs
+        numWarmUps = 5*numEpochCounts  # Warm-up epochs
 
         schedulerOrder = [
             optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda epoch: min(1.0, epoch / numWarmUps)),
@@ -74,7 +74,7 @@ class optimizerMethods:
         ]
 
         # Set the scheduler.
-        scheduler = SequentialLR(optimizer=optimizer, last_epoch=-1, milestones=[numEpochCounts*1], schedulers=schedulerOrder)
+        scheduler = SequentialLR(optimizer=optimizer, last_epoch=-1, milestones=[numEpochCounts*2], schedulers=schedulerOrder)
         scheduler.step()
 
         return scheduler
