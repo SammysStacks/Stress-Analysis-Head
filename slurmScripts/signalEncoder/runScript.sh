@@ -3,11 +3,11 @@
 encodedDimensions=(128 256)
 # Total: 2
 
-goldenRatios=(4 8 16 32)
-# Total: 3
+goldenRatios=(2 4 8 16 32)
+# Total: 5
 
-signalEncoderLayers=(4 8 16 32)
-# Total: 3
+signalEncoderLayers=(2 4 8 16 32)
+# Total: 5
 
 waveletType="bior3.7"
 optimizer="AdamW"     # Replace with actual value
