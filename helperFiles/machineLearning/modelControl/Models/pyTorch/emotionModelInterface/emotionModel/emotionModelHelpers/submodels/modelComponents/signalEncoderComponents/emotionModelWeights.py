@@ -41,6 +41,7 @@ class emotionModelWeights(convolutionalHelpers):
 
         # Initialize the physiological profile as a parameter.
         physiologicalProfile = nn.Parameter(physiologicalProfile)
+        physiologicalProfile.register_hook(reversibleInterface.scaleNeuralWeights)
 
         return physiologicalProfile
 
