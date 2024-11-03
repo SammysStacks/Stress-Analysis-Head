@@ -41,7 +41,6 @@ class lossCalculations:
         self.positionalEncoderLoss = pytorchLossMethods(lossType="MeanSquaredError", class_weights=None).loss_fn
         self.reconstructionLoss = pytorchLossMethods(lossType="MeanSquaredError", class_weights=None).loss_fn
 
-    # ---------------------------------------------------------------------- #
     # -------------------------- Loss Calculations ------------------------- #
 
     @staticmethod
@@ -54,15 +53,6 @@ class lossCalculations:
         if allLabelsMask is not None and reconstructionIndex is not None:
             return self.dataInterface.getEmotionColumn(allLabelsMask, reconstructionIndex)  # Dim: numExperiments
         return None
-
-    def getOptimalLoss(self, method, allInputData, allLabelsMask, reconstructionIndex):
-        # Isolate the signals for this loss (For example, training vs. testing).
-        reconstructionDataMask = self.getReconstructionDataMask(allLabelsMask, reconstructionIndex)
-        signalData = self.getData(allInputData, reconstructionDataMask)  # Dim: numExperiments, numSignals, signalLength
-
-        # Calculate the final losses.
-        finalLoss = method(signalData).mean()
-        return finalLoss
 
     def calculateSignalEncodingLoss(self, allInitialSignalData, allReconstructedSignalData, allValidDataMask, allLabelsMask, reconstructionIndex):
         # Find the boolean flags for the data involved in the loss calculation.
@@ -100,6 +90,31 @@ class lossCalculations:
         self.modelHelpers.assertVariableIntegrity(signalReconstructedLoss, variableName="encoded signal reconstructed loss", assertGradient=False)
 
         return signalReconstructedLoss
+
+    def calculateSmoothLoss(self, allPhysiologicalProfile, allResampledSignalData, allValidDataMask, allLabelsMask, reconstructionIndex):
+        # Find the boolean flags for the data involved in the loss calculation.
+        reconstructionDataMask = self.getReconstructionDataMask(allLabelsMask, reconstructionIndex)
+        # reconstructionDataMask dimension: numExperiments
+
+        # Isolate the signals for this loss (For example, training vs. testing).
+        resampledSignalData = self.getData(allResampledSignalData, reconstructionDataMask)  # Dim: numExperiments, numSignals, encodedDimension
+        physiologicalProfile = self.getData(allPhysiologicalProfile, reconstructionDataMask)  # Dim: numExperiments, maxSequenceLength
+        validDataMask = self.getData(allValidDataMask, reconstructionDataMask)  # Dim: numExperiments, numSignals, maxSequenceLength
+        batchSize, numSignals, maxSequenceLength = allValidDataMask.size()
+        if batchSize == 0: print("No signal encoding batches"); return None
+        validSignalMask = torch.any(validDataMask, dim=-1)
+
+        # Calculate the smooth loss.
+        resampledSmoothLoss = resampledSignalData[validSignalMask].diff(n=2, dim=-1).pow(2).mean()
+        physiologicalSmoothLoss = physiologicalProfile.diff(n=2, dim=-1).pow(2).mean()
+        # resampledSmoothLoss dimension: numExperiments, numSignals, encodedDimension
+        # physiologicalSmoothLoss dimension: numExperiments, maxSequenceLength
+
+        # Assert that nothing is wrong with the loss calculations.
+        self.modelHelpers.assertVariableIntegrity(physiologicalSmoothLoss, variableName="physiological smooth loss", assertGradient=False)
+        self.modelHelpers.assertVariableIntegrity(resampledSmoothLoss, variableName="resampled smooth loss", assertGradient=False)
+
+        return physiologicalSmoothLoss, resampledSmoothLoss
 
     @staticmethod
     def smoothingFilter(data, kernel=(), kernelSize=None):

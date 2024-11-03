@@ -1,7 +1,6 @@
 import random
 import time
 
-from .emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from .emotionPipelineHelpers import emotionPipelineHelpers
 
 
@@ -45,16 +44,14 @@ class emotionPipeline(emotionPipelineHelpers):
                 with self.accelerator.accumulate(self.model):  # Accumulate gradients.
                     # Extract the data, labels, and testing/training indices.
                     if not inferenceTraining: batchSignalInfo, batchSignalLabels, batchTrainingMask, batchTestingMask = self.extractBatchInformation(batchData)
-                    else: batchSignalInfo = batchData
-
-                    # Only look at the training information (for signal reconstruction).
-                    if not profileTraining and not inferenceTraining and submodel == modelConstants.signalEncoderModel: batchTrainingMask, batchSignalLabels, batchSignalInfo = self.dataInterface.getReconstructionData(batchTrainingMask, batchSignalLabels, batchSignalInfo, self.reconstructionIndex)
-                    numPointsAnalyzed += batchSignalInfo.size(0)
+                    else: batchSignalInfo = batchData; batchTrainingMask, batchTestingMask = None, None
 
                     # We can skip this batch, and backpropagation if necessary.
                     if batchSignalInfo.size(0) == 0: self.backpropogateModel(); continue
+                    numPointsAnalyzed += batchSignalInfo.size(0)
 
                     # Separate the data into signal and metadata information.
+                    currentTrainingMask = batchTrainingMask if not profileTraining or not inferenceTraining else None
                     signalBatchData, batchSignalIdentifiers, metaBatchInfo = self.dataInterface.separateData(batchSignalInfo)
                     # signalBatchData[:, :, :, 0] = timepoints: [further away from survey (300) -> closest to survey (0)]
                     # signalBatchData dimension: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
@@ -93,14 +90,15 @@ class emotionPipeline(emotionPipelineHelpers):
                     self.modelHelpers.assertVariableIntegrity(validDataMask, variableName="valid data mask", assertGradient=False)
 
                     # Calculate the error in signal compression (signal encoding loss).
-                    signalReconstructedLoss = self.organizeLossInfo.calculateSignalEncodingLoss(augmentedBatchData, reconstructedSignalData, validDataMask, batchTrainingMask if not profileTraining or inferenceTraining else None, self.reconstructionIndex)
+                    physiologicalSmoothLoss, resampledSmoothLoss = self.organizeLossInfo.calculateSmoothLoss(physiologicalProfile, resampledSignalData, validDataMask, currentTrainingMask, self.reconstructionIndex)
+                    signalReconstructedLoss = self.organizeLossInfo.calculateSignalEncodingLoss(augmentedBatchData, reconstructedSignalData, validDataMask, currentTrainingMask, self.reconstructionIndex)
                     if signalReconstructedLoss is None: self.accelerator.print("Not useful loss"); continue
 
                     # Initialize basic core loss value.
-                    finalLoss = signalReconstructedLoss
+                    finalLoss = signalReconstructedLoss + 0.1*(physiologicalSmoothLoss + resampledSmoothLoss)
 
                     # Update the user.
-                    self.accelerator.print("Final-Recon", finalLoss.item(), signalReconstructedLoss.item())
+                    self.accelerator.print("Final-Recon", finalLoss.item(), signalReconstructedLoss.item(), physiologicalSmoothLoss.item(), resampledSmoothLoss.item(), flush=True)
 
                     # ------------------- Update the Model  -------------------- #
 

@@ -65,6 +65,18 @@ class modelVisualizations(globalPlottingProtocols):
                                                lossLabels=[f"{datasetName} Signal Encoding Reconstruction Loss" for datasetName in datasetNames],
                                                plotTitle="trainingLosses/Signal Encoder Convergence Losses")
 
+            # Plot physiological profile loss.
+            self.generalViz.plotTrainingLosses([sharedModel.trainingLosses_smoothPhysiology for sharedModel in specificModels],
+                                               [sharedModel.testingLosses_smoothPhysiology for sharedModel in specificModels],
+                                               lossLabels=[f"{datasetName} Physiological Profile Loss" for datasetName in datasetNames],
+                                               plotTitle="trainingLosses/Physiological Profile Convergence Losses")
+
+            # Plot resampled signal loss.
+            self.generalViz.plotTrainingLosses([sharedModel.trainingLosses_smoothResampled for sharedModel in specificModels],
+                                               [sharedModel.testingLosses_smoothResampled for sharedModel in specificModels],
+                                               lossLabels=[f"{datasetName} Resampled Signal Loss" for datasetName in datasetNames],
+                                               plotTitle="trainingLosses/Resampled Signal Convergence Losses")
+
     def plotAllTrainingEvents(self, submodel, modelPipeline, lossDataLoader, trainingDate, currentEpoch):
         self.accelerator.print(f"\nPlotting results for the {modelPipeline.model.datasetName} model", flush=True)
 
@@ -107,8 +119,13 @@ class modelVisualizations(globalPlottingProtocols):
 
         with torch.no_grad():  # Stop gradient tracking
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
-            validDataTrainingMask, reconstructedSignalTrainingData, resampledSignalTrainingData, physiologicalTrainingProfile, activityTrainingProfile, basicEmotionTrainingProfile, emotionTrainingProfile = model.forward(submodel, trainingSignalData, trainingSignalIdentifiers, trainingMetadata, device=self.accelerator.device, inferenceTraining=False)
-            validDataTestingMask, reconstructedSignalTestingData, resampledSignalTestingData, physiologicalTestingProfile, activityTestingProfile, basicEmotionTestingProfile, emotionTestingProfile = model.forward(submodel, testingSignalData, testingSignalIdentifiers, testingMetadata, device=self.accelerator.device, inferenceTraining=False)
+            validDataTrainingMask, reconstructedSignalTrainingData, resampledSignalTrainingData, physiologicalTrainingProfile, activityTrainingProfile, basicEmotionTrainingProfile, emotionTrainingProfile = model.forward(submodel, trainingSignalData,
+                                                                                                                                                                                                                            trainingSignalIdentifiers, trainingMetadata,
+                                                                                                                                                                                                                            device=self.accelerator.device,
+                                                                                                                                                                                                                            inferenceTraining=False)
+            validDataTestingMask, reconstructedSignalTestingData, resampledSignalTestingData, physiologicalTestingProfile, activityTestingProfile, basicEmotionTestingProfile, emotionTestingProfile = model.forward(submodel, testingSignalData, testingSignalIdentifiers,
+                                                                                                                                                                                                                     testingMetadata, device=self.accelerator.device,
+                                                                                                                                                                                                                     inferenceTraining=False)
 
             # Reconstruct the physiological profile.
             reconstructedPhysiologicalTrainingProfile = model.reconstructPhysiologicalProfile(resampledSignalTrainingData)

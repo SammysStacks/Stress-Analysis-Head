@@ -1,4 +1,6 @@
 # General
+import random
+
 import torch
 import time
 
@@ -37,8 +39,12 @@ class trainingProtocolHelpers:
         modelPipeline.trainModel(dataLoader, submodel=modelConstants.signalEncoderModel, inferenceTraining=True, trainSharedLayers=False, numEpochs=numEpochs)
 
     def trainEpoch(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders):
+        # Set random order to loop through the models.
+        modelIndices = list(range(len(allMetaModels)))
+        random.shuffle(modelIndices)
+
         # For each meta-training model.
-        for modelInd in range(len(allMetadataLoaders)):
+        for modelInd in modelIndices:
             dataLoader = allMetadataLoaders[modelInd]
             modelPipeline = allMetaModels[modelInd]
 
@@ -63,7 +69,8 @@ class trainingProtocolHelpers:
             modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
 
             # Train the updated model.
-            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, trainSharedLayers=False, profileTraining=False, numEpochs=1)  # Signal-specific training.
+            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, trainSharedLayers=False, profileTraining=False, numEpochs=1)  # Signal-specific training: training only.
+            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, trainSharedLayers=False, profileTraining=True, numEpochs=1)  # Profile training: testing and training.
             self.accelerator.wait_for_everyone()
 
     def calculateLossInformation(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel):

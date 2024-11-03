@@ -270,7 +270,7 @@ class emotionModelHead(nn.Module):
 
         # Optionally, plot the physiological profile for visual comparison
         physiologicalTimes = self.sharedSignalEncoderModel.pseudoEncodedTimes.detach().cpu().numpy()
-        plt.plot(physiologicalTimes, physiologicalProfile[0].detach().cpu().numpy(), 'k', linewidth=1, label='Physiological Profile', alpha=0.75)
+        plt.plot(physiologicalTimes, physiologicalProfile[firstBatchInd].detach().cpu().numpy(), 'k', linewidth=1, label='Physiological Profile', alpha=0.75)
         plt.show()
 
         # Get the first valid signal points.

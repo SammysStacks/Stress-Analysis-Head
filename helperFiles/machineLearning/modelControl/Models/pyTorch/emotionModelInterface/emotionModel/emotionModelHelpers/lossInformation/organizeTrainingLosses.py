@@ -37,10 +37,17 @@ class organizeTrainingLosses(lossCalculations):
             # Calculate the signal encoding loss.
             signalReconstructedTrainingLoss = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, validDataMask, allTrainingMasks, modelPipeline.reconstructionIndex)
             signalReconstructedTestingLoss = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, validDataMask, allTestingMasks, modelPipeline.reconstructionIndex)
-            self.accelerator.print("Loss values:", signalReconstructedTrainingLoss.item(), signalReconstructedTestingLoss.item())
+            self.accelerator.print("Reconstruction loss values:", signalReconstructedTrainingLoss.item(), signalReconstructedTestingLoss.item())
+
+            # Calculate the smoothness loss.
+            physiologicalSmoothTrainingLoss, resampledSmoothTrainingLoss = self.calculateSmoothLoss(physiologicalProfile, resampledSignalData, validDataMask, allTrainingMasks, modelPipeline.reconstructionIndex)
+            physiologicalSmoothTestingLoss, resampledSmoothTestingLoss = self.calculateSmoothLoss(physiologicalProfile, resampledSignalData, validDataMask, allTestingMasks, modelPipeline.reconstructionIndex)
+            self.accelerator.print("Smoothness loss values:", physiologicalSmoothTrainingLoss.item(), resampledSmoothTrainingLoss.item())
 
             # Store the signal encoder loss information.
             self.storeLossInformation(signalReconstructedTrainingLoss, signalReconstructedTestingLoss, model.specificSignalEncoderModel.trainingLosses_signalReconstruction, model.specificSignalEncoderModel.testingLosses_signalReconstruction)
+            self.storeLossInformation(physiologicalSmoothTrainingLoss, physiologicalSmoothTestingLoss, model.specificSignalEncoderModel.trainingLosses_smoothPhysiology, model.specificSignalEncoderModel.testingLosses_smoothPhysiology)
+            self.storeLossInformation(resampledSmoothTrainingLoss, resampledSmoothTestingLoss, model.specificSignalEncoderModel.trainingLosses_smoothResampled, model.specificSignalEncoderModel.testingLosses_smoothResampled)
 
             # if submodel == modelConstants.emotionModel:
             # Segment the data into its time window.
