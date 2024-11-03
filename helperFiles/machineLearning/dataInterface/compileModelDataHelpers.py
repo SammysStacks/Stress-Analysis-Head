@@ -249,14 +249,14 @@ class compileModelDataHelpers:
         # Remove any bad data points.
         validDataMask[:, :, :-1][singlePointMaxDiff] = False  # Remove small errors.
         validDataMask[:, :, 1:][singlePointMaxDiff] = False  # Remove small errors.
-        allSignalData[~validDataMask.unsqueeze(-1)] = 0
+        allSignalData[~validDataMask.unsqueeze(-1).expand(batchSize, numSignals, maxSequenceLength, numChannels)] = 0
 
         # Re-normalize the data after removing bad points.
         allSignalData = self.normalizeSignals(allSignalData=allSignalData, missingDataMask=~validDataMask)
         biomarkerData = emotionDataInterface.getChannelData(signalData=allSignalData, channelName=modelConstants.signalChannel)
 
         # Create boolean masks for signals that don’t meet the requirements
-        minLowerBoundaryMask = 2 < (biomarkerData < -modelConstants.minMaxScale + 0.3).sum(dim=-1)  # Number of points below -0.95: batchSize, numSignals
+        minLowerBoundaryMask = 2 < (biomarkerData < -modelConstants.minMaxScale + 0.3).sum(dim=-1)  # Numb.expand(batchSize, numSignals, maxSequenceLength, numChannels)er of points below -0.95: batchSize, numSignals
         minUpperBoundaryMask = 2 < (modelConstants.minMaxScale - 0.3 < biomarkerData).sum(dim=-1)  # Number of points above 0.95: batchSize, numSignals
         averageDiff = biomarkerDiff.mean(dim=-1) < self.maxAverageDiff  # Average difference between consecutive points: batchSize, numSignals
         minPointsMask = self.minSequencePoints <= allNumSignalPoints  # Minimum number of points: batchSize, numSignals
@@ -267,7 +267,7 @@ class compileModelDataHelpers:
         validSignalInds = self.minSignalPresentCount < validSignalMask.sum(dim=0)
 
         # Filter out the invalid signals
-        allSignalData[~validSignalMask.unsqueeze(-1).unsqueeze(-1).expand(batchSize, numSignals, maxSequenceLength, numChannels)] = 0
+        allSignalData[~validSignalMask.unsqueeze(-1).unsqueeze(-1)] = 0
         allNumSignalPoints[~validSignalMask] = 0
 
         return allSignalData[:, validSignalInds, :, :], allNumSignalPoints[:, validSignalInds], featureNames[validSignalInds]
