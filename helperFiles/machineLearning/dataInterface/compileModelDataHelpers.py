@@ -263,7 +263,7 @@ class compileModelDataHelpers:
         validSignalMask = validDataMask.any(dim=-1)  # Missing data: batchSize, numSignals
 
         # Combine all masks into a single mask and expand to match dimensions.
-        validSignalMask = minPointsMask & minLowerBoundaryMask & minUpperBoundaryMask & averageDiff & validSignalMask & singlePointMaxDiff
+        validSignalMask = minPointsMask & minLowerBoundaryMask & minUpperBoundaryMask & averageDiff & validSignalMask
         validSignalInds = self.minSignalPresentCount < validSignalMask.sum(dim=0)
 
         # Filter out the invalid signals
