@@ -125,8 +125,7 @@ class emotionDataInterface:
         validDataMask = positionTensor < allNumSignalPoints.unsqueeze(-1)
 
         # Assert the validity of the data mask.
-        # Ensure each condition is wrapped in parentheses to avoid precedence issues.
-        potentialDataMask = (allSignalData == 0).all(dim=-1)
+        potentialDataMask = allSignalData[:, :, :, 0] != 0 & allSignalData[:, :, :, 1] != 0
         assert (validDataMask == potentialDataMask).all(), "The data mask is not correct."
 
         return validDataMask
