@@ -244,7 +244,7 @@ class compileModelDataHelpers:
 
         # Find single point differences
         biomarkerDiff = biomarkerData.diff(dim=-1).abs()
-        singlePointMaxDiff = ((biomarkerDiff[:, :, :-1] < self.maxSinglePointDiff) & (biomarkerDiff[:, :, 1:] < self.maxSinglePointDiff))  # Maximum difference between consecutive points: batchSize, numSignals, maxSequenceLength-1
+        singlePointMaxDiff = biomarkerDiff < self.maxSinglePointDiff  # Maximum difference between consecutive points: batchSize, numSignals, maxSequenceLength-1
 
         # Remove any bad data points.
         validDataMask[:, :, :-1][singlePointMaxDiff] = False  # Remove small errors.
