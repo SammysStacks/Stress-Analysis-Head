@@ -2,6 +2,7 @@ from torch import nn
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.neuralOperators.neuralOperatorInterface import neuralOperatorInterface
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.trainingProfileInformation import trainingProfileInformation
 
 
 class specificSignalEncoderModel(neuralOperatorInterface):
@@ -19,9 +20,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
         # The neural layers for the signal encoder.
         self.processingLayers, self.neuralLayers = nn.ModuleList(), nn.ModuleList()
-
-        # Initialize the blank signal profile.
-        self.physiologicalProfileAnsatz = self.getInitialPhysiologicalProfile(numExperiments=numExperiments, encodedDimension=encodedDimension)
+        self.profileModel = trainingProfileInformation(numExperiments, encodedDimension)
 
         # Assert the validity of the input parameters.
         assert self.encodedDimension % goldenRatio == 0, "The encoded dimension must be divisible the goldenRatio."
@@ -62,10 +61,6 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         if self.learningProtocol == 'rCNN': self.processingLayers.append(self.postProcessingLayerRCNN(numSignals=self.numSignals*self.numLiftingLayers, sequenceLength=self.encodedDimension, activationMethod=self.activationMethod, switchActivationDirection=switchActivationDirection))
         elif self.learningProtocol == 'rFC': self.processingLayers.append(self.postProcessingLayerRFC(numSignals=self.numSignals*self.numLiftingLayers, sequenceLength=self.encodedDimension, activationMethod=self.activationMethod, switchActivationDirection=switchActivationDirection))
         else: raise "The learning protocol is not yet implemented."
-
-    def getCurrentPhysiologicalProfile(self, batchInds):
-        # batchInds: The indices of the signals to estimate. Dims: batchSize
-        return self.physiologicalProfileAnsatz[batchInds]
 
     def learningInterface(self, layerInd, signalData):
         # For the forward/harder direction.

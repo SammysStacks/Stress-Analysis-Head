@@ -1,5 +1,4 @@
 # Import files for machine learning
-import torch
 
 from .emotionModel.emotionModelHead import emotionModelHead
 from .emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
@@ -90,7 +89,7 @@ class emotionPipelineHelpers:
 
         # Profile training.
         if profileTraining:
-            self.setupTrainingFlags(self.model.specificSignalEncoderModel, trainingFlag=True)
+            self.setupTrainingFlags(self.model.specificSignalEncoderModel.profileModel, trainingFlag=True)
             assert not trainSharedLayers, "We cannot train layers during profile training."
             assert not inferenceTraining, "We cannot train layers during profile training."
             return None
@@ -100,6 +99,7 @@ class emotionPipelineHelpers:
             self.setupTrainingFlags(self.model.inferenceModel, trainingFlag=True)
             assert not trainSharedLayers, "We cannot train layers during inference."
             assert not profileTraining, "We cannot train layers during inference."
+            return None
 
         # Emotion model training.
         if submodel == modelConstants.emotionModel:
