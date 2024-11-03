@@ -121,6 +121,7 @@ class boundedExp(nn.Module):
 
         return linearTerm * exponentialTerm
 
+
 class boundedS(reversibleInterface):
     def __init__(self, nonLinearity):
         super(boundedS, self).__init__()
