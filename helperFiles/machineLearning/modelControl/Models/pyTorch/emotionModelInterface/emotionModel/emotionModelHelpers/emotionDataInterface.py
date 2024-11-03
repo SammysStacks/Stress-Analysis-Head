@@ -118,14 +118,15 @@ class emotionDataInterface:
         # Extract the incoming data's dimension.
         batchSize, numSignals, maxSequenceLength = allSignalData.size()[0:3]
 
-        # This creates a range tensor for the sequence dimension
-        positionTensor = torch.arange(start=0, end=maxSequenceLength, step=1,  device=allSignalData.device).expand(batchSize, numSignals, maxSequenceLength)
+        # This creates a range tensor for the sequence dimension.
+        positionTensor = torch.arange(start=0, end=maxSequenceLength, step=1, device=allSignalData.device).expand(batchSize, numSignals, maxSequenceLength)
 
-        # Compare `range_tensor` with `allNumSignalPoints` (broadcast)
+        # Compare `positionTensor` with `allNumSignalPoints` (broadcast).
         validDataMask = positionTensor < allNumSignalPoints.unsqueeze(-1)
 
         # Assert the validity of the data mask.
-        potentialDataMask = allSignalData[:, :, :, 0] == 0 & allSignalData[:, :, :, 1] == 0
+        # Ensure each condition is wrapped in parentheses to avoid precedence issues.
+        potentialDataMask = (allSignalData == 0).all(dim=-1)
         assert (validDataMask == potentialDataMask).all(), "The data mask is not correct."
 
         return validDataMask
