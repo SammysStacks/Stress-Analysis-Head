@@ -70,7 +70,7 @@ class optimizerMethods:
 
         schedulerOrder = [
             optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda epoch: min(1.0, epoch / numWarmUps)),
-            optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=15*3, eta_min=1e-4, last_epoch=-1),
+            optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=15*3, eta_min=1e-5, last_epoch=-1),
         ]
 
         # Set the scheduler.

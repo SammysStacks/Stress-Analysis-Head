@@ -98,7 +98,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     finalLoss = signalReconstructedLoss + 0.1*(physiologicalSmoothLoss + resampledSmoothLoss)
 
                     # Update the user.
-                    self.accelerator.print("Final-Recon", finalLoss.item(), signalReconstructedLoss.item(), physiologicalSmoothLoss.item(), resampledSmoothLoss.item(), flush=True)
+                    self.accelerator.print("Final-Recon-Phys-Resamp", finalLoss.item(), signalReconstructedLoss.item(), physiologicalSmoothLoss.item(), resampledSmoothLoss.item(), flush=True)
 
                     # ------------------- Update the Model  -------------------- #
 
