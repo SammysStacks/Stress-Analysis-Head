@@ -1,6 +1,7 @@
 import random
 import time
 
+from .emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from .emotionPipelineHelpers import emotionPipelineHelpers
 
 
@@ -47,7 +48,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     else: batchSignalInfo = batchData; batchTrainingMask, batchTestingMask = None, None
 
                     # We can skip this batch, and backpropagation if necessary.
-                    if batchSignalInfo.size(0) == 0: self.backpropogateModel(); continue
+                    if batchSignalInfo.size(0) == 0: self.backpropogateModel(submodel); continue
                     numPointsAnalyzed += batchSignalInfo.size(0)
 
                     # Separate the data into signal and metadata information.
@@ -66,8 +67,8 @@ class emotionPipeline(emotionPipelineHelpers):
 
                     if not inferenceTraining and self.augmentData:
                         # Augment the signals to train an arbitrary sequence length and order.
-                        augmentedBatchData = self.dataAugmentation.changeNumSignals(signalBatchData, dropoutPercent=0.1)
-                        augmentedBatchData = self.dataAugmentation.signalDropout(augmentedBatchData, dropoutPercent=0.1)
+                        augmentedBatchData = self.dataAugmentation.changeNumSignals(signalBatchData, dropoutPercent=0.25)
+                        augmentedBatchData = self.dataAugmentation.signalDropout(augmentedBatchData, dropoutPercent=0.25)
                         # augmentedBatchData: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
                     else: augmentedBatchData = signalBatchData
 
@@ -107,20 +108,21 @@ class emotionPipeline(emotionPipelineHelpers):
 
                     # Prevent exploding loss values.
                     while 2 < finalLoss.item(): finalLoss = finalLoss / 10
+                    if not inferenceTraining and not profileTraining and not trainSharedLayers: finalLoss = finalLoss / 5
 
                     t1 = time.time()
                     # Calculate the gradients.
                     self.accelerator.backward(finalLoss)  # Calculate the gradients.
-                    self.backpropogateModel()  # Backpropagation.
+                    self.backpropogateModel(submodel)  # Backpropagation.
                     t2 = time.time(); self.accelerator.print(f"{'Shared' if trainSharedLayers else '\tSpecific'} layer training {self.datasetName} {numPointsAnalyzed}: {t2 - t1}\n")
 
         # Prepare the model/data for evaluation.
         self.accelerator.wait_for_everyone()  # Wait before continuing.
 
-    def backpropogateModel(self):
+    def backpropogateModel(self, submodel):
         # Clip the gradients if they are too large.
         if self.accelerator.sync_gradients:
-            self.modelHelpers.scaleGradients(self.model)
+            if submodel == modelConstants.signalEncoderModel: self.modelHelpers.scaleGradients(self.model)
             # self.accelerator.clip_grad_norm_(self.model.parameters(), 20)  # Apply gradient clipping: Small: <1; Medium: 5-10; Large: >20
 
             # Backpropagation the gradient.
