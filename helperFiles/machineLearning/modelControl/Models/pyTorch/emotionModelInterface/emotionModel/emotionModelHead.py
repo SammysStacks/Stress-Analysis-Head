@@ -173,7 +173,7 @@ class emotionModelHead(nn.Module):
         # Get the estimated physiological profiles.
         batchInds = emotionDataInterface.getSignalIdentifierData(signalIdentifiers, channelName=modelConstants.batchIndexSI)[:, 0]  # Dim: batchSize
         if inferenceTraining: physiologicalProfile = self.inferenceModel.getCurrentPhysiologicalProfile(batchInds)
-        else: physiologicalProfile = self.specificSignalEncoderModel.getCurrentPhysiologicalProfile(batchInds)
+        else: physiologicalProfile = self.specificSignalEncoderModel.profileModel.getCurrentPhysiologicalProfile(batchInds)
         # physiologicalProfile: batchSize, encodedDimension
 
         # ------------------- Learned Signal Mapping ------------------- #
