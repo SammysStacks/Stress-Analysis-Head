@@ -125,7 +125,7 @@ class emotionDataInterface:
         validDataMask = positionTensor < allNumSignalPoints.unsqueeze(-1)
 
         # Assert the validity of the data mask.
-        potentialDataMask = allSignalData[:, :, :, 0] != 0 & allSignalData[:, :, :, 1] != 0
+        potentialDataMask = torch.as_tensor((allSignalData[:, :, :, 0] != 0) & (allSignalData[:, :, :, 1] != 0), device=allSignalData.device)
         assert (validDataMask == potentialDataMask).all(), "The data mask is not correct."
 
         return validDataMask
