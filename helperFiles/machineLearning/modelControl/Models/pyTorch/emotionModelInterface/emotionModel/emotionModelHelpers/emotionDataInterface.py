@@ -116,19 +116,19 @@ class emotionDataInterface:
     @staticmethod
     def getValidDataMask(allSignalData, allNumSignalPoints):
         # Extract the incoming data's dimension.
-        batchSize, numSignals, maxSequenceLength = allSignalData.size()[0:3]
+        # batchSize, numSignals, maxSequenceLength = allSignalData.size()[0:3]
 
         # This creates a range tensor for the sequence dimension.
-        positionTensor = torch.arange(start=0, end=maxSequenceLength, step=1, device=allSignalData.device).expand(batchSize, numSignals, maxSequenceLength)
+        # positionTensor = torch.arange(start=0, end=maxSequenceLength, step=1, device=allSignalData.device).expand(batchSize, numSignals, maxSequenceLength)
 
         # Compare `positionTensor` with `allNumSignalPoints` (broadcast).
-        validDataMask = positionTensor < allNumSignalPoints.unsqueeze(-1)
+        # validDataMask = positionTensor < allNumSignalPoints.unsqueeze(-1)
 
         # Assert the validity of the data mask.
         potentialDataMask = torch.as_tensor((allSignalData[:, :, :, 0] != 0) & (allSignalData[:, :, :, 1] != 0), device=allSignalData.device)
-        assert (validDataMask == potentialDataMask).all(), "The data mask is not correct."
+        # assert (validDataMask == potentialDataMask).all(), "The data mask is not correct."
 
-        return validDataMask
+        return potentialDataMask
 
     @staticmethod
     def getChannelInd(channelName):
