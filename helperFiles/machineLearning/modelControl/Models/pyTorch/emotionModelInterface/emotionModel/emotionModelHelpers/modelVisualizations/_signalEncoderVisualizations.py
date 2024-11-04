@@ -38,13 +38,14 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     def plotPhysiologicalReconstruction(self, physiologicalTimes, physiologicalProfile, reconstructedPhysiologicalProfile, epoch=0, plotTitle="Signal Encoding"):
         # Extract the signal dimensions.
-        reconstructedPhysiologicalProfile[reconstructedPhysiologicalProfile.isnan()] = 0
         batchSize, numSignals, sequenceLength = reconstructedPhysiologicalProfile.shape
         batchInd = 0
 
-        # Plot the signal reconstruction.
-        plt.plot(physiologicalTimes, physiologicalProfile[batchInd], c=self.blackColor, label=f"Physiological profile", linewidth=2, alpha=0.8)
-        for signalInd in range(numSignals): plt.plot(physiologicalTimes, reconstructedPhysiologicalProfile[batchInd, signalInd], c=self.lightColors[1], label=f"Reconstructed Physiological profile", linewidth=1, alpha=0.1)
+        try:
+            # Plot the signal reconstruction.
+            plt.plot(physiologicalTimes, physiologicalProfile[batchInd], c=self.blackColor, label=f"Physiological profile", linewidth=2, alpha=0.8)
+            for signalInd in range(numSignals): plt.plot(physiologicalTimes, reconstructedPhysiologicalProfile[batchInd, signalInd], c=self.lightColors[1], label=f"Reconstructed Physiological profile", linewidth=1, alpha=0.1)
+        except Exception as e: print(f"Error: {e}")
 
         # Plotting aesthetics.
         plt.xlabel("Time (Seconds)")
