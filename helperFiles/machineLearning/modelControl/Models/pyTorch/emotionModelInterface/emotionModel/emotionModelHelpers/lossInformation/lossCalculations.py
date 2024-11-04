@@ -84,6 +84,7 @@ class lossCalculations:
         # missingDataMask: numExperiments, numSignals, maxSequenceLength
 
         # Calculate the error in signal reconstruction (encoding loss).
+        signalReconstructedLoss[signalReconstructedLoss < 0.01] = 0  # Only use large loss values.
         signalReconstructedLoss = signalReconstructedLoss[validDataMask].mean()
 
         # Assert that nothing is wrong with the loss calculations.
