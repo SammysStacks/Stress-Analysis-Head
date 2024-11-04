@@ -2,10 +2,10 @@
 
 optimizers=('Adadelta' 'Adam' 'AdamW' 'NAdam' 'RAdam' 'Adamax' 'ASGD' 'RMSprop' 'Rprop' 'SGD')
 
-numSignalEncoderLayers=8
+numSignalEncoderLayers=16
 waveletType='bior3.7'
 encodedDimension=256
-goldenRatio=8
+goldenRatio=16
 
 for optimizer in "${optimizers[@]}"
 do
