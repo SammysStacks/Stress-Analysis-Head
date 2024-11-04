@@ -52,7 +52,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     numPointsAnalyzed += batchSignalInfo.size(0)
 
                     # Separate the data into signal and metadata information.
-                    currentTrainingMask = batchTrainingMask if not profileTraining or not inferenceTraining else None
+                    currentTrainingMask = None if profileTraining or inferenceTraining else batchTrainingMask
                     signalBatchData, batchSignalIdentifiers, metaBatchInfo = self.dataInterface.separateData(batchSignalInfo)
                     # signalBatchData[:, :, :, 0] = timepoints: [further away from survey (300) -> closest to survey (0)]
                     # signalBatchData dimension: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
@@ -67,8 +67,8 @@ class emotionPipeline(emotionPipelineHelpers):
 
                     if not inferenceTraining and self.augmentData:
                         # Augment the signals to train an arbitrary sequence length and order.
-                        augmentedBatchData = self.dataAugmentation.changeNumSignals(signalBatchData, dropoutPercent=0.25)
-                        augmentedBatchData = self.dataAugmentation.signalDropout(augmentedBatchData, dropoutPercent=0.25)
+                        augmentedBatchData = self.dataAugmentation.changeNumSignals(signalBatchData, dropoutPercent=0.1)
+                        augmentedBatchData = self.dataAugmentation.signalDropout(augmentedBatchData, dropoutPercent=0.1)
                         # augmentedBatchData: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
                     else: augmentedBatchData = signalBatchData
 

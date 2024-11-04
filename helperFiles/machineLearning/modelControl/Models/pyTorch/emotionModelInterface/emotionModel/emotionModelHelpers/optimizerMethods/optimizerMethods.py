@@ -14,9 +14,9 @@ class optimizerMethods:
     def getModelParams(submodel, model):
         modelParams = [
             # Specify the model parameters for the signal encoding.
-            {'params': model.inferenceModel.parameters(), 'weight_decay': 1e-3, 'lr': 0.25},
-            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': 1e-3, 'lr': 0.1},
-            {'params': model.specificSignalEncoderModel.parameters(), 'weight_decay': 1e-3, 'lr': 0.5},
+            {'params': model.inferenceModel.parameters(), 'weight_decay': 1e-2, 'lr': 0.25},
+            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': 1e-4, 'lr': 0.1},
+            {'params': model.specificSignalEncoderModel.parameters(), 'weight_decay': 1e-4, 'lr': 0.1},
         ]
 
         if submodel == modelConstants.emotionModel:
@@ -74,7 +74,7 @@ class optimizerMethods:
         ]
 
         # Set the scheduler.
-        scheduler = SequentialLR(optimizer=optimizer, last_epoch=-1, milestones=[numEpochCounts*3], schedulers=schedulerOrder)
+        scheduler = SequentialLR(optimizer=optimizer, last_epoch=-1, milestones=[numEpochCounts*2], schedulers=schedulerOrder)
         scheduler.step()
 
         return scheduler

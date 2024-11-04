@@ -111,8 +111,8 @@ class lossCalculations:
         # physiologicalSmoothLoss dimension: numExperiments, maxSequenceLength
 
         # Only use large loss values.
-        resampledSmoothLoss[resampledSmoothLoss < 0.25] = 0
-        physiologicalSmoothLoss[physiologicalSmoothLoss < 0.25] = 0
+        resampledSmoothLoss[resampledSmoothLoss < 0.5] = 0
+        physiologicalSmoothLoss[physiologicalSmoothLoss < 0.5] = 0
 
         # Calculate the error in signal reconstruction (encoding loss).
         resampledSmoothLoss = resampledSmoothLoss.mean()
