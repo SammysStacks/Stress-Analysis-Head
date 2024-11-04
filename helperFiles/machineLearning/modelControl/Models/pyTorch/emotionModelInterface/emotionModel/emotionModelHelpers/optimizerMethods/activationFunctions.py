@@ -18,9 +18,6 @@ def getActivationMethod(activationMethod):
     elif activationMethod.startswith('reversibleLinearSoftSign'):
         invertedActivation = activationMethod.split('_')[1] == "True"
         activationFunction = reversibleLinearSoftSign(invertedActivation=invertedActivation)
-    elif activationMethod.startswith('nonLinearMultiplication'):
-        invertedActivation = activationMethod.split('_')[1] == "True"
-        activationFunction = nonLinearMultiplication(invertedActivation=invertedActivation)
     elif activationMethod == 'PReLU':
         activationFunction = nn.PReLU()
     elif activationMethod == 'selu':
@@ -161,71 +158,6 @@ class boundedS(reversibleInterface):
         x = (1 / 6) * ((2**(2 / 3) * term1) / r + term2 / term3 + 2 * yAbs)
 
         return x*ySign
-
-
-class signWrap(reversibleInterface):
-    def __init__(self, period=1):
-        super(reversibleInterface, self).__init__()
-        self.period = torch.as_tensor(period)  # Assign r as nonLinearity
-        assert period != 0, "The period parameter must be non-zero."
-
-    def forward(self, x):
-        wrappedData = self.arcsin(self.sin(x))
-
-        if self.forwardDirection: return self.forwardPass(wrappedData)
-        else: return self.inversePass(wrappedData)
-
-    def forwardPass(self, x):
-        return self.sin(x)
-
-    def inversePass(self, y):
-        return self.arcsin(y)
-
-    def sin(self, x):
-        return self.period*(x*torch.pi/self.period).sin()
-
-    def arcsin(self, x):
-        return (self.period/torch.pi) * (x/self.period).asin()
-
-
-class nonLinearMultiplication(reversibleInterface):
-    def __init__(self, invertedActivation=False):
-        super(nonLinearMultiplication, self).__init__()
-        self.invertedActivation = invertedActivation  # Whether the non-linearity term is inverted
-        self.sequenceLength = None  # The length of the input signal
-        self.amplitude = 0.2  # The amplitude of the non-linearity term
-
-        # Create a learnable parameter, initialized to the given initial value
-        self.learnablePhaseShift = nn.Parameter(torch.as_tensor(torch.pi/4))  # The phase shift of the non-linearity term.
-        self.learnableFrequency = nn.Parameter(torch.as_tensor(0.5))  # The frequency of the non-linearity term.
-
-        # Register hooks for each parameter in the list
-        self.learnablePhaseShift.register_hook(self.scaleNeuralWeights)
-        self.learnableFrequency.register_hook(self.scaleNeuralWeights)
-
-    def forward(self, x):
-        # Check if the non-linearity term has been calculated.
-        if self.sequenceLength is None: self.sequenceLength = x.size(-1)
-        assert x.size(-1) == self.sequenceLength, "The sequence length of the input data must match the sequence length of the non-linearity term."
-
-        # Get the non-linearity term.
-        nonLinearityTerm = self.getNonLinearity(device=x.device)
-
-        if self.forwardDirection != self.invertedActivation: return self.inversePass(x, nonLinearityTerm)
-        else: return self.forwardPass(x, nonLinearityTerm)
-
-    @staticmethod
-    def forwardPass(x, nonLinearityTerm):
-        return x * nonLinearityTerm
-
-    @staticmethod
-    def inversePass(y, nonLinearityTerm):
-        return y / nonLinearityTerm
-
-    def getNonLinearity(self, device):
-        positions = torch.arange(start=0, end=self.sequenceLength, step=1, dtype=torch.float32, device=device)
-
-        return self.amplitude*(positions*2*torch.pi*self.learnableFrequency + self.learnablePhaseShift).sin().pow(2) + 1 - self.amplitude/2
 
 
 if __name__ == "__main__":

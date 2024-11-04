@@ -115,7 +115,7 @@ class modelHelpers:
     def scaleGradients(model):
         for param in model.parameters():
             if param.grad is not None:
-                grad_norm = param.grad.norm().item()
+                grad_norm = param.grad.norm() + 1e-8
                 if grad_norm != 0: param.grad /= grad_norm
 
     @staticmethod

@@ -72,7 +72,7 @@ class reversibleLinearLayer(reversibleInterface):
         else: neuralWeights = neuralWeights + self.stabilityTerm
 
         # Backward direction: invert the neural weights.
-        if self.forwardDirection: neuralWeights = torch.linalg.inv(neuralWeights)
+        if not self.forwardDirection: neuralWeights = torch.linalg.inv(neuralWeights)
 
         # Apply the neural weights to the input data.
         outputData = torch.einsum('bns,nsi->bni', inputData, neuralWeights)

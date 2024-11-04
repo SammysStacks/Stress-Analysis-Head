@@ -81,7 +81,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     # validDataMask dimension: batchSize, numSignals, maxSequenceLength
                     # physiologicalProfile dimension: batchSize, encodedDimension
                     # resampledSignalData dimension: batchSize, encodedDimension
-                    # activityProfile: batchSize, numSignals, encodedDimension
+                    # activityProfile: batchSize, numActivities, encodedDimension
                     # emotionProfile: batchSize, numEmotions, encodedDimension
 
                     # Assert that nothing is wrong with the predictions.
@@ -121,9 +121,6 @@ class emotionPipeline(emotionPipelineHelpers):
     def backpropogateModel(self, submodel):
         # Clip the gradients if they are too large.
         if self.accelerator.sync_gradients:
-            if submodel == modelConstants.signalEncoderModel: self.modelHelpers.scaleGradients(self.model)
-            # self.accelerator.clip_grad_norm_(self.model.parameters(), 20)  # Apply gradient clipping: Small: <1; Medium: 5-10; Large: >20
-
             # Backpropagation the gradient.
             self.optimizer.step()  # Adjust the weights.
             self.scheduler.step()  # Update the learning rate.

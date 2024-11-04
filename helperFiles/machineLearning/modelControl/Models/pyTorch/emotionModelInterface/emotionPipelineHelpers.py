@@ -94,7 +94,7 @@ class emotionPipelineHelpers:
             assert not inferenceTraining, "We cannot train layers during profile training."
             return None
 
-        if inferenceTraining:
+        elif inferenceTraining:
             # Label the model we are training.
             self.setupTrainingFlags(self.model.inferenceModel, trainingFlag=True)
             assert not trainSharedLayers, "We cannot train layers during inference."
@@ -102,9 +102,9 @@ class emotionPipelineHelpers:
             return None
 
         # Emotion model training.
-        if submodel == modelConstants.emotionModel:
+        elif submodel == modelConstants.emotionModel:
             if trainSharedLayers: self.setupTrainingFlags(self.model.sharedEmotionModel, trainingFlag=True)
-            self.setupTrainingFlags(self.model.specificEmotionModel, trainingFlag=True)
+            else: self.setupTrainingFlags(self.model.specificEmotionModel, trainingFlag=True)
         else:
             # Signal encoder training
             if trainSharedLayers: self.setupTrainingFlags(self.model.sharedSignalEncoderModel, trainingFlag=True)

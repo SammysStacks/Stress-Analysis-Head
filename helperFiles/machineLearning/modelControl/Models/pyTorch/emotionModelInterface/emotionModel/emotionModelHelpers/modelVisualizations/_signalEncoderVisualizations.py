@@ -38,6 +38,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     def plotPhysiologicalReconstruction(self, physiologicalTimes, physiologicalProfile, reconstructedPhysiologicalProfile, epoch=0, plotTitle="Signal Encoding"):
         # Extract the signal dimensions.
+        reconstructedPhysiologicalProfile[reconstructedPhysiologicalProfile.isnan()] = 0
         batchSize, numSignals, sequenceLength = reconstructedPhysiologicalProfile.shape
         batchInd = 0
 

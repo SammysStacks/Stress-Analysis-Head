@@ -256,8 +256,8 @@ class compileModelDataHelpers:
         biomarkerData = emotionDataInterface.getChannelData(signalData=allSignalData, channelName=modelConstants.signalChannel)
 
         # Create boolean masks for signals that don’t meet the requirements
-        minLowerBoundaryMask = self.minBoundaryPoints <= (biomarkerData < -modelConstants.minMaxScale + 0.2).sum(dim=-1)  # Numb.expand(batchSize, numSignals, maxSequenceLength, numChannels)er of points below -0.95: batchSize, numSignals
-        minUpperBoundaryMask = self.minBoundaryPoints <= (modelConstants.minMaxScale - 0.2 < biomarkerData).sum(dim=-1)  # Number of points above 0.95: batchSize, numSignals
+        minLowerBoundaryMask = self.minBoundaryPoints <= (biomarkerData < -modelConstants.minMaxScale + 0.25).sum(dim=-1)  # Numb.expand(batchSize, numSignals, maxSequenceLength, numChannels)er of points below -0.95: batchSize, numSignals
+        minUpperBoundaryMask = self.minBoundaryPoints <= (modelConstants.minMaxScale - 0.25 < biomarkerData).sum(dim=-1)  # Number of points above 0.95: batchSize, numSignals
         averageDiff = biomarkerData.diff(dim=-1).abs().mean(dim=-1) < self.maxAverageDiff  # Average difference between consecutive points: batchSize, numSignals
         minPointsMask = self.minSequencePoints <= validDataMask.sum(dim=-1)  # Minimum number of points: batchSize, numSignals
         validSignalMask = validDataMask.any(dim=-1)  # Missing data: batchSize, numSignals
@@ -271,19 +271,6 @@ class compileModelDataHelpers:
         allNumSignalPoints[~validSignalMask] = 0
 
         return allSignalData[:, validSignalInds, :, :], allNumSignalPoints[:, validSignalInds], featureNames[validSignalInds]
-
-    @staticmethod
-    def calculate_snr(biomarkerData, epsilon=1e-10):
-        # biomarkerData dimension: numExperiments, numSignals, maxSequenceLength
-        # Calculate the signal power and noise power for the current signal.
-        signal_power = torch.mean(biomarkerData.pow(2), dim=-1)  # Signal power
-        noise_power = torch.var(biomarkerData, dim=-1)  # Noise power (variance)
-
-        # Calculate the SNR (adding epsilon to avoid log(0))
-        snr_values = 10 * torch.log10((signal_power + epsilon) / (noise_power + epsilon))
-        # snr_values dimension: numExperiments, numSignals
-
-        return snr_values
 
     def normalizeSignals(self, allSignalData, missingDataMask):
         # signalBatchData dimension: numExperiments, numSignals, maxSequenceLength, [timeChannel, signalChannel]

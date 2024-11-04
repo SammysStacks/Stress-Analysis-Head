@@ -24,7 +24,7 @@ class reversibleInterface(nn.Module):
         return torch.eye(kernelSize, device=device)*scalingFactor
 
     @staticmethod
-    def scaleNeuralWeights(grad): return grad * 1
+    def scaleNeuralWeights(grad): return grad
 
     def checkDualReconstruction(self, x1, x2, atol=1e-8, numLayers=10):
         t1 = time.time()
