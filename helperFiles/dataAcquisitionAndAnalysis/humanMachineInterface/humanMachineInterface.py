@@ -10,6 +10,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionPipeline import emotionPipeline
 from helperFiles.machineLearning.modelControl.modelSpecifications.compileModelInfo import compileModelInfo
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.trainingProtocolHelpers import trainingProtocolHelpers
 
 
 class humanMachineInterface:
@@ -59,6 +60,7 @@ class humanMachineInterface:
         self.emoPipeline = emotionPipeline(accelerator, datasetName=None, allEmotionClasses=self.compileModelInfo.numQuestionOptions, numSubjects=1, userInputParams=self.compileModelInfo.getUserInputParameters(),
                                            emotionNames=self.compileModelInfo.numQuestionOptions, activityNames=self.compileModelInfo.activityNames, featureNames=self.featureNames, submodel=self.submodel, numExperiments=6, reconstructionIndex=None)
         self.experimentalInds = torch.arange(0, 6, dtype=torch.int64)
+        self.trainingProtocols = trainingProtocolHelpers(submodel=self.submodel, accelerator=accelerator)  # Initialize the training protocols.
 
         # Holder parameters.
         self.surveyAnswersList = None  # A list of lists of survey answers, where each element represents an answer to surveyQuestions.
@@ -163,12 +165,15 @@ class humanMachineInterface:
     def predictLabels(self, modelTimes, inputModelData, therapyParam):
 
         # Add in contextual information to the data.
-        allSubjectInds = torch.tensor([0, 1, 2, 3, 4])
+        allSubjectInds = allSubjectInds = torch.arange(inputModelData.shape[0])
         datasetInd = 1
         allNumSignalPoints = torch.empty(size=(len(inputModelData[0]), len(self.featureNames)), dtype=torch.int)
+        # Debugging
+        numExperiments, numSignals, maxSequenceLength, numChannels = inputModelData.shape
         compiledInputData = self.compileModelHelpers.addContextualInfo(inputModelData, allNumSignalPoints, allSubjectInds, datasetInd)
         #compiledInputData = self.inputModelDataWithContextualInfo(inputModelData, allNumSignalPoints, dataInd=0)
-
+        self.trainingProtocols.inferenceTraining([compiledInputData], self.emoPipeline, self.submodel, compiledInputData, 256, numEpochs=10)
+        exit()
         self.emoPipeline.trainModel(dataLoader=[compiledInputData], submodel=self.submodel, trainSharedLayers=False, inferenceTraining=True, profileTraining=False, numEpochs=10)
         exit()
         _, _, _, _, _, _, emotionProfile = self.modelClasses[0].model.forward(compiledInputData)

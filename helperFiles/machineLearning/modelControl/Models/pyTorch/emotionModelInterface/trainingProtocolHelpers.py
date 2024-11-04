@@ -27,16 +27,16 @@ class trainingProtocolHelpers:
         self.modelHelpers = modelHelpers()
 
     @staticmethod
-    def inferenceTraining(modelPipeline, inputData, numEpochs):
+    def inferenceTraining(dataLoader, modelPipeline, submodel, inputData, encodedDimension, numEpochs):
         # Prepare the model for inference training.
         inputData = torch.as_tensor(inputData, dtype=torch.float64)
         numExperiments, numSignals, sequenceLength, numChannels = inputData.size()
-        modelPipeline.model.inferenceModel.resetInferenceModel(numExperiments)
+        modelPipeline.model.inferenceModel.resetInferenceModel(numExperiments, encodedDimension)
         experimentalInds = torch.arange(0, numExperiments, dtype=torch.int64)
-        dataLoader = zip(experimentalInds, inputData)
+        #dataLoader = zip(experimentalInds, inputData)
 
         # Train the inference model.
-        modelPipeline.trainModel(dataLoader, submodel=modelConstants.signalEncoderModel, inferenceTraining=True, trainSharedLayers=False, numEpochs=numEpochs)
+        modelPipeline.trainModel(dataLoader, submodel=submodel, trainSharedLayers=False, inferenceTraining=True, profileTraining=False, numEpochs=numEpochs)
 
     def trainEpoch(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders):
         # Set random order to loop through the models.
