@@ -132,11 +132,13 @@ class featureOrganization(humanMachineInterface):
         startModelTimePerBiomarker = [[self.startModelTime] for _ in range(numNewPoints)]
         startModelTimePerBiomarker = torch.tensor(startModelTimePerBiomarker, dtype=torch.float32)
         allSignalData, allNumSignalPoints = self.compileModelHelpers._padSignalData(allRawFeatureTimeInterval, allRawFeatureInterval, startModelTimePerBiomarker)
+
         # Update the model time.
         self.startModelTime += self.modelTimeGap
         modelTimes.append(self.startModelTime)
         # Update the pointers.
         return modelTimes, allSignalData, allNumSignalPoints
+
 
     def organizeRawFeatures(self):
         # For each unique analysis with features.

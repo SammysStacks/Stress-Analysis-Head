@@ -38,15 +38,6 @@ class humanMachineInterface:
         self.modelTimeGap = 20
 
         # Initialize helper classes.
-        self.compileModelHelpers = compileModelDataHelpers(self.submodel, userInputParams={}, accelerator=None)
-        self.compileFeatureNames = compileFeatureNames()  # Initialize the Feature Information
-        self.compileModelInfo = compileModelInfo()  # Initialize the Model Information
-
-        # Compile the feature information.
-        _, self.surveyQuestions, _, _ = self.compileModelInfo.compileSurveyInformation()
-        self.featureNames, self.biomarkerFeatureNames, self.biomarkerFeatureOrder = self.compileFeatureNames.extractFeatureNames(extractFeaturesFrom)
-
-        # ------------------------------ pipeline preparation for training ------------------------------
         accelerator = accelerate.Accelerator(
             dataloader_config=accelerate.DataLoaderConfiguration(split_batches=True),  # Whether to split batches across devices or not.
             cpu=torch.backends.mps.is_available(),  # Whether to use the CPU. MPS is NOT fully compatible yet.
@@ -54,8 +45,19 @@ class humanMachineInterface:
             gradient_accumulation_steps=1,  # The number of gradient accumulation steps.
             mixed_precision="no",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"
         )
-        self.emoPipeline = emotionPipeline(accelerator, datasetName=None, allEmotionClasses=None, numSubjects=1, userInputParams=self.compileModelInfo.getUserInputParameters(),
-                                           emotionNames=self.surveyQuestions, activityNames=self.compileModelInfo.activityNames, featureNames=self.featureNames, submodel=self.submodel, numExperiments=6, reconstructionIndex=None)
+
+        self.compileModelInfo = compileModelInfo()  # Initialize the Model Information
+        self.compileModelHelpers = compileModelDataHelpers(self.submodel, userInputParams=self.compileModelInfo.getUserInputParameters(), accelerator=accelerator)
+        self.compileFeatureNames = compileFeatureNames()  # Initialize the Feature Information
+
+        # Compile the feature information.
+        _, self.surveyQuestions, _, _ = self.compileModelInfo.compileSurveyInformation()
+        self.featureNames, self.biomarkerFeatureNames, self.biomarkerFeatureOrder = self.compileFeatureNames.extractFeatureNames(extractFeaturesFrom)
+
+        # ------------------------------ pipeline preparation for training ------------------------------
+
+        self.emoPipeline = emotionPipeline(accelerator, datasetName=None, allEmotionClasses=self.compileModelInfo.numQuestionOptions, numSubjects=1, userInputParams=self.compileModelInfo.getUserInputParameters(),
+                                           emotionNames=self.compileModelInfo.numQuestionOptions, activityNames=self.compileModelInfo.activityNames, featureNames=self.featureNames, submodel=self.submodel, numExperiments=6, reconstructionIndex=None)
         self.experimentalInds = torch.arange(0, 6, dtype=torch.int64)
 
         # Holder parameters.
@@ -159,12 +161,15 @@ class humanMachineInterface:
         return compiledSignalData
 
     def predictLabels(self, modelTimes, inputModelData, therapyParam):
-        # Add in contextual information to the data.
-        allNumSignalPoints = torch.empty(size=(len(inputModelData[0]), len(self.featureNames)), dtype=torch.int)
-        compiledInputData = self.inputModelDataWithContextualInfo(inputModelData, allNumSignalPoints, dataInd=0)
-        dataLoader = zip(self.experimentalInds, compiledInputData)
 
-        self.emoPipeline.trainModel(dataLoader, self.submodel, trainSharedLayers=False, inferenceTraining=True, profileTraining=False, numEpochs=10)
+        # Add in contextual information to the data.
+        allSubjectInds = torch.tensor([0, 1, 2, 3, 4])
+        datasetInd = 1
+        allNumSignalPoints = torch.empty(size=(len(inputModelData[0]), len(self.featureNames)), dtype=torch.int)
+        compiledInputData = self.compileModelHelpers.addContextualInfo(inputModelData, allNumSignalPoints, allSubjectInds, datasetInd)
+        #compiledInputData = self.inputModelDataWithContextualInfo(inputModelData, allNumSignalPoints, dataInd=0)
+
+        self.emoPipeline.trainModel(dataLoader=[compiledInputData], submodel=self.submodel, trainSharedLayers=False, inferenceTraining=True, profileTraining=False, numEpochs=10)
         exit()
         _, _, _, _, _, _, emotionProfile = self.modelClasses[0].model.forward(compiledInputData)
         # emotionProfile dim: numNewPoints, numEmotions=30, encodedDimension=256
