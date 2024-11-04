@@ -25,7 +25,7 @@ from helperFiles.machineLearning.dataInterface.compileModelData import compileMo
 # Configure cuDNN and PyTorch's global settings.
 torch.backends.cudnn.deterministic = True  # If False: allow non-deterministic algorithms in cuDNN, which can enhance performance but reduce reproducibility.
 torch.autograd.set_detect_anomaly(True)  # If True: detect NaN values in the output of autograd.
-torch.set_default_dtype(torch.float64)  # Set the default data type to float32, which is typical for neural network computations.
+torch.set_default_dtype(torch.float64)  # Set the default data type. Float32 is typical for neural network computations.
 torch.backends.cudnn.benchmark = False  # If True: Enable cuDNN's auto-tuner to find the most efficient algorithm for the current configuration, potentially improving performance if fixed input size.
 
 if __name__ == "__main__":
