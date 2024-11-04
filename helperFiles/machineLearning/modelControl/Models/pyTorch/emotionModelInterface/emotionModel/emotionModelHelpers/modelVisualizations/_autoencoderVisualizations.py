@@ -50,7 +50,7 @@ class autoencoderVisualizations(globalPlottingProtocols):
             plt.title(f"{plotTitle.split('/')[-1]}; Signal {signalInd + 1}")
             plt.legend(loc="best")
             if self.saveDataFolder: self.displayFigure(self.saveDataFolder + f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf")
-            else: plt.show()
+            else: self.clearFigure()
 
     def plotSignalComparison(self, originalSignal, comparisonSignal, epoch, plotTitle, numSignalPlots=1):
         """ originalSignal dimension: batchSize, numSignals, numTotalPoints """
@@ -77,7 +77,7 @@ class autoencoderVisualizations(globalPlottingProtocols):
 
             # Save the plot
             if self.saveDataFolder: self.displayFigure(self.saveDataFolder + f"{plotTitle} epochs = {epoch} signalInd = {signalInd}.pdf")
-            else: plt.show()
+            else: self.clearFigure()
 
             # There are too many signals to plot.
             if signalInd + 1 == numSignalPlots: break
@@ -98,7 +98,7 @@ class autoencoderVisualizations(globalPlottingProtocols):
         plt.legend(['Noisy Signal', 'True Signal', 'Reconstructed Signal'], loc='best')
         # Save the plot
         if self.saveDataFolder: self.displayFigure(self.saveDataFolder + f"{plotTitle} epochs = {epoch} signalInd{signalInd}.pdf")
-        else: plt.show()
+        else: self.clearFigure()
 
     def plotSignalComparisonHeatmap(self, originalSignal, comparisonSignal):
         # Assert the integrity of the incoming data

@@ -36,14 +36,15 @@ class compileModelDataHelpers:
         self.signalEncoderModelInfo = None
         self.minSignalPresentCount = None
         self.maxClassPercentage = None
+        self.maxSinglePointDiff = None
         self.minSequencePoints = None
+        self.minBoundaryPoints = None
         self.maxAverageDiff = None
         self.minNumClasses = None
-        self.maxSinglePointDiff = None
 
         # Exclusion criterion.
         self.minNumClasses, self.maxClassPercentage = self.modelParameters.getExclusionClassCriteria(submodel)
-        self.minSequencePoints, self.minSignalPresentCount, self.maxSinglePointDiff, self.maxAverageDiff = self.modelParameters.getExclusionSequenceCriteria(submodel)
+        self.minSequencePoints, self.minSignalPresentCount, self.minBoundaryPoints, self.maxSinglePointDiff, self.maxAverageDiff = self.modelParameters.getExclusionSequenceCriteria(submodel)
 
     # ---------------------- Model Specific Parameters --------------------- #
 
@@ -243,8 +244,7 @@ class compileModelDataHelpers:
         # biomarkerData: batchSize, numSignals, maxSequenceLength
 
         # Find single point differences
-        biomarkerDiff = biomarkerData.diff(dim=-1).abs()
-        badSinglePointMaxDiff = self.maxSinglePointDiff < biomarkerDiff  # Maximum difference between consecutive points: batchSize, numSignals, maxSequenceLength-1
+        badSinglePointMaxDiff = self.maxSinglePointDiff < biomarkerData.diff(dim=-1).abs()  # Maximum difference between consecutive points: batchSize, numSignals, maxSequenceLength-1
 
         # Remove any bad data points.
         allSignalData[:, :, :-1][badSinglePointMaxDiff] = 0  # Remove small errors.
@@ -256,10 +256,10 @@ class compileModelDataHelpers:
         biomarkerData = emotionDataInterface.getChannelData(signalData=allSignalData, channelName=modelConstants.signalChannel)
 
         # Create boolean masks for signals that don’t meet the requirements
-        minLowerBoundaryMask = 2 < (biomarkerData < -modelConstants.minMaxScale + 0.3).sum(dim=-1)  # Numb.expand(batchSize, numSignals, maxSequenceLength, numChannels)er of points below -0.95: batchSize, numSignals
-        minUpperBoundaryMask = 2 < (modelConstants.minMaxScale - 0.3 < biomarkerData).sum(dim=-1)  # Number of points above 0.95: batchSize, numSignals
+        minLowerBoundaryMask = self.minBoundaryPoints <= (biomarkerData < -modelConstants.minMaxScale + 0.2).sum(dim=-1)  # Numb.expand(batchSize, numSignals, maxSequenceLength, numChannels)er of points below -0.95: batchSize, numSignals
+        minUpperBoundaryMask = self.minBoundaryPoints <= (modelConstants.minMaxScale - 0.2 < biomarkerData).sum(dim=-1)  # Number of points above 0.95: batchSize, numSignals
+        averageDiff = biomarkerData.diff(dim=-1).abs().mean(dim=-1) < self.maxAverageDiff  # Average difference between consecutive points: batchSize, numSignals
         minPointsMask = self.minSequencePoints <= validDataMask.sum(dim=-1)  # Minimum number of points: batchSize, numSignals
-        averageDiff = biomarkerDiff.mean(dim=-1) < self.maxAverageDiff  # Average difference between consecutive points: batchSize, numSignals
         validSignalMask = validDataMask.any(dim=-1)  # Missing data: batchSize, numSignals
 
         # Combine all masks into a single mask and expand to match dimensions.

@@ -59,6 +59,10 @@ class reversibleLinearLayer(reversibleInterface):
         return inputData
 
     def applyLayer(self, inputData, layerInd):
+        # Unpack the dimensions.
+        batchSize, numSignals, sequenceLength = inputData.size()
+        assert sequenceLength == self.sequenceLength, f"The sequence length is not correct: {sequenceLength}, {self.sequenceLength}"
+
         # Apply a mask to the neural weights.
         neuralWeights = self.linearOperators[layerInd]
         # neuralWeight: numSignals, sequenceLength, sequenceLength

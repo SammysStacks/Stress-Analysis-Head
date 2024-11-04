@@ -34,12 +34,16 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Save the figure.
         if self.saveDataFolder: self.displayFigure(self.saveDataFolder + f"{plotTitle} epochs{epoch}.pdf")
-        else: plt.show()
+        else: self.clearFigure()
 
     def plotPhysiologicalReconstruction(self, physiologicalTimes, physiologicalProfile, reconstructedPhysiologicalProfile, epoch=0, plotTitle="Signal Encoding"):
+        # Extract the signal dimensions.
+        batchSize, numSignals, sequenceLength = reconstructedPhysiologicalProfile.shape
+        batchInd = 0
+
         # Plot the signal reconstruction.
-        plt.plot(physiologicalTimes, physiologicalProfile[0], c=self.blackColor, label=f"Physiological profile", linewidth=2, alpha=0.8)
-        for signalInd in range(reconstructedPhysiologicalProfile.shape[1]): plt.plot(physiologicalTimes, reconstructedPhysiologicalProfile[0, signalInd], c=self.lightColors[1], label=f"Reconstructed Physiological profile", linewidth=1, alpha=0.1)
+        plt.plot(physiologicalTimes, physiologicalProfile[batchInd], c=self.blackColor, label=f"Physiological profile", linewidth=2, alpha=0.8)
+        for signalInd in range(numSignals): plt.plot(physiologicalTimes, reconstructedPhysiologicalProfile[batchInd, signalInd], c=self.lightColors[1], label=f"Reconstructed Physiological profile", linewidth=1, alpha=0.1)
 
         # Plotting aesthetics.
         plt.xlabel("Time (Seconds)")
@@ -48,7 +52,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Save the figure.
         if self.saveDataFolder: self.displayFigure(self.saveDataFolder + f"{plotTitle} epochs{epoch}.pdf")
-        else: plt.show()
+        else: self.clearFigure()
 
     def plotSignalEncodingMap(self, physiologicalTimes, allPhysiologicalProfiles, allSignalData, epoch, plotTitle="Signal Encoding", numBatchPlots=1, numSignalPlots=1):
         datapoints = emotionDataInterface.getChannelData(allSignalData, channelName=modelConstants.signalChannel)
@@ -67,7 +71,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
                 # Save the figure.
                 if self.saveDataFolder: self.displayFigure(self.saveDataFolder + f"{plotTitle} epochs{epoch} batchInd{batchInd}.pdf")
-                else: plt.show(); plt.close('all')
+                else: self.clearFigure()
 
                 # There are too many signals to plot.
                 if signalInd + 1 == numSignalPlots: break

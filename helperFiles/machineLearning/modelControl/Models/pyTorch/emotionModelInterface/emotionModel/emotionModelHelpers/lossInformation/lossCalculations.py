@@ -79,6 +79,7 @@ class lossCalculations:
         # dataUncertainty: numExperiments, numSignals, maxSequenceLength - 1
 
         # Adjust the loss based on the missing data.
+        signalReconstructedLoss[signalReconstructedLoss < 0.01] = 0  # Remove small errors.
         validDataMask[:, :, :-1][signalReconstructedLoss[:, :, :-1] < dataUncertainty] = False  # Remove small errors.
         validDataMask[:, :, 1:][signalReconstructedLoss[:, :, 1:] < dataUncertainty] = False  # Remove small errors.
         # missingDataMask: numExperiments, numSignals, maxSequenceLength
@@ -112,12 +113,12 @@ class lossCalculations:
         # physiologicalSmoothLoss dimension: numExperiments, maxSequenceLength
 
         # Only use large loss values.
-        resampledSmoothLoss[resampledSmoothLoss < 0.5] = 0
-        physiologicalSmoothLoss[physiologicalSmoothLoss < 0.5] = 0
+        physiologicalSmoothLoss[physiologicalSmoothLoss < 0.75] = 0
+        resampledSmoothLoss[resampledSmoothLoss < 0.75] = 0
 
         # Calculate the error in signal reconstruction (encoding loss).
-        resampledSmoothLoss = resampledSmoothLoss.mean()
         physiologicalSmoothLoss = physiologicalSmoothLoss.mean()
+        resampledSmoothLoss = resampledSmoothLoss.mean()
 
         # Assert that nothing is wrong with the loss calculations.
         if resampledSmoothLoss.isnan().any().item(): resampledSmoothLoss = torch.zeros(1, device=resampledSmoothLoss.device).mean()

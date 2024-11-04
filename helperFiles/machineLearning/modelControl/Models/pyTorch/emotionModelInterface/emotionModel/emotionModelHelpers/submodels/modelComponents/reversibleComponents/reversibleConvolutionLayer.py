@@ -63,6 +63,7 @@ class reversibleConvolutionLayer(reversibleInterface):
     def applyLayer(self, inputData, layerInd):
         # Unpack the dimensions.
         batchSize, numSignals, sequenceLength = inputData.size()
+        assert sequenceLength == self.sequenceLength, f"The sequence length is not correct: {sequenceLength}, {self.sequenceLength}"
 
         # Get the current neural weights information.
         kernelWeights = self.linearOperators[layerInd]
@@ -75,22 +76,19 @@ class reversibleConvolutionLayer(reversibleInterface):
         neuralWeights = neuralWeights + self.stabilityTerm  # Add a stability term to the diagonal.
 
         # Backward direction: invert the neural weights.
-        if self.forwardDirection: neuralWeights = torch.linalg.inv(neuralWeights)
+        if not self.forwardDirection: neuralWeights = torch.linalg.inv(neuralWeights)
 
         # Apply the neural weights to the input data.
         outputData = torch.einsum('bns,nsi->bni', inputData, neuralWeights)
 
         return outputData
-# 6, 13 -> 1.01
-# 3, 7 -> 1.025
-# 1, 3 -> 1.075
 
 
 if __name__ == "__main__":
     # General parameters.
     _batchSize, _numSignals, _sequenceLength = 2, 3, 256
     _activationMethod = 'reversibleLinearSoftSign'
-    _kernelSize = 7
+    _kernelSize = 3
     _numLayers = 1
 
     # Set up the parameters.

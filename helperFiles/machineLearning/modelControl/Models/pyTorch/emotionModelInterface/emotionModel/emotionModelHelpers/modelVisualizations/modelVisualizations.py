@@ -119,13 +119,8 @@ class modelVisualizations(globalPlottingProtocols):
 
         with torch.no_grad():  # Stop gradient tracking
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
-            validDataTrainingMask, reconstructedSignalTrainingData, resampledSignalTrainingData, physiologicalTrainingProfile, activityTrainingProfile, basicEmotionTrainingProfile, emotionTrainingProfile = model.forward(submodel, trainingSignalData,
-                                                                                                                                                                                                                            trainingSignalIdentifiers, trainingMetadata,
-                                                                                                                                                                                                                            device=self.accelerator.device,
-                                                                                                                                                                                                                            inferenceTraining=False)
-            validDataTestingMask, reconstructedSignalTestingData, resampledSignalTestingData, physiologicalTestingProfile, activityTestingProfile, basicEmotionTestingProfile, emotionTestingProfile = model.forward(submodel, testingSignalData, testingSignalIdentifiers,
-                                                                                                                                                                                                                     testingMetadata, device=self.accelerator.device,
-                                                                                                                                                                                                                     inferenceTraining=False)
+            validDataTrainingMask, reconstructedSignalTrainingData, resampledSignalTrainingData, physiologicalTrainingProfile, activityTrainingProfile, basicEmotionTrainingProfile, emotionTrainingProfile = model.forward(submodel, trainingSignalData, trainingSignalIdentifiers, trainingMetadata, device=self.accelerator.device, inferenceTraining=False)
+            validDataTestingMask, reconstructedSignalTestingData, resampledSignalTestingData, physiologicalTestingProfile, activityTestingProfile, basicEmotionTestingProfile, emotionTestingProfile = model.forward(submodel, testingSignalData, testingSignalIdentifiers, testingMetadata, device=self.accelerator.device, inferenceTraining=False)
 
             # Reconstruct the physiological profile.
             reconstructedPhysiologicalTrainingProfile = model.reconstructPhysiologicalProfile(resampledSignalTrainingData)
