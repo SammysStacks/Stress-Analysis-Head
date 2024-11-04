@@ -51,6 +51,7 @@ class neuralOperatorInterface(emotionModelWeights):
         # Specify the default parameters.
         if numDecompositions is None or learningProtocol not in ['drCNN', 'drFC']: numDecompositions = waveletNeuralOperatorLayer.max_decompositions(signal_length=sequenceLength, wavelet_name=waveletType)  # Number of decompositions for the waveletType transform.
         numDecompositions = 2
+
         return waveletNeuralOperatorLayer(sequenceLength=sequenceLength, numInputSignals=self.numInputSignals*layerMultiple, numOutputSignals=self.numOutputSignals*layerMultiple, numDecompositions=numDecompositions,
                                           waveletType=waveletType, mode=mode, addBiasTerm=self.addBiasTerm, activationMethod=activationMethod, skipConnectionProtocol=skipConnectionProtocol,
                                           encodeLowFrequencyProtocol=encodeLowFrequencyProtocol, encodeHighFrequencyProtocol=encodeHighFrequencyProtocol, learningProtocol=learningProtocol, extraOperators=compiledOperators)

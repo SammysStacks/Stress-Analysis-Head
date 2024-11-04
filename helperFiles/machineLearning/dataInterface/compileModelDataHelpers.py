@@ -247,19 +247,19 @@ class compileModelDataHelpers:
         badSinglePointMaxDiff = self.maxSinglePointDiff < biomarkerDiff  # Maximum difference between consecutive points: batchSize, numSignals, maxSequenceLength-1
 
         # Remove any bad data points.
-        validDataMask[:, :, :-1][badSinglePointMaxDiff] = False  # Remove small errors.
-        validDataMask[:, :, 1:][badSinglePointMaxDiff] = False  # Remove small errors.
-        allSignalData[~validDataMask.unsqueeze(-1).expand(batchSize, numSignals, maxSequenceLength, numChannels)] = 0
+        allSignalData[:, :, :-1][badSinglePointMaxDiff] = 0  # Remove small errors.
+        allSignalData[:, :, 1:][badSinglePointMaxDiff] = 0  # Remove small errors.
 
         # Re-normalize the data after removing bad points.
+        validDataMask = emotionDataInterface.getValidDataMask(allSignalData, allNumSignalPoints)
         allSignalData = self.normalizeSignals(allSignalData=allSignalData, missingDataMask=~validDataMask)
         biomarkerData = emotionDataInterface.getChannelData(signalData=allSignalData, channelName=modelConstants.signalChannel)
 
         # Create boolean masks for signals that don’t meet the requirements
         minLowerBoundaryMask = 2 < (biomarkerData < -modelConstants.minMaxScale + 0.3).sum(dim=-1)  # Numb.expand(batchSize, numSignals, maxSequenceLength, numChannels)er of points below -0.95: batchSize, numSignals
         minUpperBoundaryMask = 2 < (modelConstants.minMaxScale - 0.3 < biomarkerData).sum(dim=-1)  # Number of points above 0.95: batchSize, numSignals
+        minPointsMask = self.minSequencePoints <= validDataMask.sum(dim=-1)  # Minimum number of points: batchSize, numSignals
         averageDiff = biomarkerDiff.mean(dim=-1) < self.maxAverageDiff  # Average difference between consecutive points: batchSize, numSignals
-        minPointsMask = self.minSequencePoints <= allNumSignalPoints  # Minimum number of points: batchSize, numSignals
         validSignalMask = validDataMask.any(dim=-1)  # Missing data: batchSize, numSignals
 
         # Combine all masks into a single mask and expand to match dimensions.
