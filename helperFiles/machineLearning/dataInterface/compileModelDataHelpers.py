@@ -272,32 +272,6 @@ class compileModelDataHelpers:
 
         return allSignalData[:, validSignalInds, :, :], allNumSignalPoints[:, validSignalInds], featureNames[validSignalInds]
 
-    def getSignalIntervals(self, experimentalData, eachSignal_numPoints, timeWindow, channelInds):
-        # signalChannel: A torch array of size (numSignals, maxSequenceLength, [timeChannel, signalChannel])
-        # eachSignal_numPoints: A torch array of size (numSignals)
-        assert isinstance(channelInds, list), f"Expected a list of channel indices, but got {type(channelInds)}"
-
-        experimentalIntervalData = []
-        # For each signal in the batch.
-        for signalInd in range(len(experimentalData)):
-            signalData = experimentalData[signalInd]  # Dim: maxSequenceLength, [timeChannel, signalChannel]
-            numSignalPoints = eachSignal_numPoints[signalInd]
-
-            # Get the channel data.
-            channelData = signalData[0:numSignalPoints, channelInds]
-            channelTimes = signalData[0:numSignalPoints, -1]
-            # channelData dim: maxSequenceLength, numChannels
-            # channelTimes dim: maxSequenceLength
-
-            # Get the signal interval.
-            startSignalInd = self.dataAugmentation.getTimeIntervalInd(channelTimes, timeWindow, mustIncludeTimePoint=False)
-            timeInterval = channelData[startSignalInd:numSignalPoints, :]
-
-            # Store the interval information.
-            experimentalIntervalData.append(timeInterval)
-
-        return experimentalIntervalData
-
     @staticmethod
     def calculate_snr(biomarkerData, epsilon=1e-10):
         # biomarkerData dimension: numExperiments, numSignals, maxSequenceLength
