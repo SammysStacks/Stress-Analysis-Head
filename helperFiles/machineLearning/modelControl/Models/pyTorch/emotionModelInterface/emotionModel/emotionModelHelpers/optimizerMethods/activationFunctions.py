@@ -97,11 +97,12 @@ class reversibleLinearSoftSign(reversibleInterface):
         return x
 
 class reversibleActivation(reversibleInterface):
-    def __init__(self, invertedActivation=False, inversionPoint=1, infiniteBound=1):
+    def __init__(self, invertedActivation=False, inversionPoint=0.1, infiniteBound=1):
         super(reversibleActivation, self).__init__()
         self.invertedActivation = invertedActivation  # Whether the non-linearity term is inverted
         self.inversionPoint = inversionPoint  # Corresponds to `r` in the equation
         self.infiniteBound = infiniteBound  # Corresponds to `a` in the equation
+        self.tolerance = 1e-25
 
         # Assert the validity of the inputs.
         assert 0 < self.infiniteBound <= 1, "The magnitude of the inf bound has a domain of (0, 1] to ensure a stable convergence."
@@ -118,37 +119,25 @@ class reversibleActivation(reversibleInterface):
 
     def inversePass(self, y):
         r = self.inversionPoint
-        r_squared = r ** 2
-
-        # Compute the discriminant inside the square root
-        D = 96 * r ** 6 - 39 * r ** 4 * y ** 2 + 12 * r ** 2 * y ** 4
-        # D = 96 r^6 - 39 r^4 y^2 + 12 r^2 y^4
-
-        # Ensure D is non-negative to avoid complex numbers
-        D = torch.clamp(D, min=0.0)
 
         # Compute the square root term
-        sqrt_term = torch.sqrt(D)
+        sqrt_term = torch.sqrt(96 * r ** 6 - 39 * r ** 4 * y ** 2 + 12 * r ** 2 * y ** 4)
+        # torch.sqrt(96 r^6 - 39 r^4 y^2 + 12 r^2 y^4)
 
         # Compute the numerator inside the cube root
-        N = 9 * r_squared * y + 3 * sqrt_term + 2 * y ** 3
+        N = 9 * (r ** 2) * y + 3 * sqrt_term + 2 * y ** 3
+        signN = torch.nn.functional.hardtanh(N, min_val=-self.tolerance, max_val=self.tolerance) / self.tolerance
         # N = 9 r^2 y + 3 sqrt_term + 2 y^3
 
         # Compute the cube root term, handling negative values
-        cube_root_term = torch.sign(N) * torch.abs(N).pow(1/3)
+        cube_root_term = signN * torch.abs(N).pow(1/3)
 
-        # Compute constants
-        two_pow_1_over_3 = 2 ** (1/3)
-        two_pow_2_over_3 = 2 ** (2/3)
-
-        epsilon = 1e-8
         # Compute numerator1 and numerator2, adding epsilon to avoid division by zero
-        numerator1 = two_pow_2_over_3 * cube_root_term
-        numerator2 = 2 * two_pow_1_over_3 * (6 * r_squared - y ** 2) / (cube_root_term + epsilon)
+        numerator2 = (2 ** (4/3)) * (6 * r ** 2 - y ** 2) / cube_root_term
+        numerator1 = (2 ** (2/3)) * cube_root_term
 
         # Compute x
         x = (numerator1 - numerator2 + 2 * y) / 6
-        print(x.max().item(), x.min().item(), y.max().item(), y.min().item())
 
         return x
 
