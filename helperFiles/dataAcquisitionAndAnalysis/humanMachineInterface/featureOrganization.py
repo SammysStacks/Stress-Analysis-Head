@@ -110,7 +110,7 @@ class featureOrganization(humanMachineInterface):
                 oldEndPointer = self.therapyPointers[biomarkerInd]
 
                 # Locate the experiment indices within the data
-                newStartTimePointer = oldEndPointer + np.searchsorted(self.rawFeatureTimesHolder[0][oldEndPointer:], self.startModelTime, side='right') + 1
+                newStartTimePointer = oldEndPointer + np.searchsorted(self.rawFeatureTimesHolder[0][oldEndPointer:], self.startModelTime, side='right')
                 newEndTimePointer = oldEndPointer + np.searchsorted(self.rawFeatureTimesHolder[0][oldEndPointer:], endModelTime, side='left')
                 self.therapyPointers[biomarkerInd] = newEndTimePointer
 
