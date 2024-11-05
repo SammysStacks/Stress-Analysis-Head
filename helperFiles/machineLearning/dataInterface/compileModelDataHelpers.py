@@ -170,10 +170,10 @@ class compileModelDataHelpers:
     # ---------------------------- Data Cleaning --------------------------- #
 
     @staticmethod
-    def _padSignalData(allRawFeatureIntervalTimes, allRawFeatureIntervals, surveyAnswerTimes):
+    def _padSignalData(allRawFeatureIntervalTimes, allRawFeatureIntervals, referenceTimes):
         # allRawFeatureIntervals: batchSize, numBiomarkers, finalDistributionLength*, numBiomarkerFeatures*  ->  *finalDistributionLength, *numBiomarkerFeatures are not constant
         # allRawFeatureIntervalTimes: batchSize, numBiomarkers, finalDistributionLength*  ->  *finalDistributionLength is not constant
-        # surveyAnswerTimes: A list of size (batchSize)
+        # referenceTimes: A list of size (batchSize)
         # Determine the final dimensions of the padded array.
         maxSequenceLength = max(max(len(biomarkerTimes) for biomarkerTimes in experimentalTimes) for experimentalTimes in allRawFeatureIntervalTimes)
         numSignals = sum(len(biomarkerData[0]) for biomarkerData in allRawFeatureIntervals[0])
@@ -192,7 +192,7 @@ class compileModelDataHelpers:
         for experimentalInd in range(numExperiments):
             batchData = allRawFeatureIntervals[experimentalInd]
             batchTimes = allRawFeatureIntervalTimes[experimentalInd]
-            surveyAnswerTime = surveyAnswerTimes[experimentalInd]
+            surveyAnswerTime = referenceTimes[experimentalInd]
 
             currentSignalInd = 0
             # For each biomarker in the batch.

@@ -90,7 +90,7 @@ class featureOrganization(humanMachineInterface):
 
     # --------------------- Organize Incoming Features --------------------- #
 
-    def compileIntervalFeaturesWithPadding(self):
+    def compileIntervalFeaturesWithPadding(self, surveyAnswerTime):
         # Find the number of new points.
         lastRecordedTime = self.featureAnalysisList[0].timepoints[-1]  # The last time we streamed data.
         numNewPoints = int(1 + (lastRecordedTime - self.startModelTime - self.modelTimeBuffer) // self.modelTimeGap)
@@ -101,7 +101,7 @@ class featureOrganization(humanMachineInterface):
 
         # for each new point
         for numNewPoint in range(numNewPoints):
-            endModelTime = self.startModelTime - self.modelTimeWindow  # TODO: THIS NEVER SHIFTS!
+            endModelTime = self.startModelTime - self.modelTimeWindow
             allRawFeatureTimeInterval.append([])
             allRawFeatureInterval.append([])
 
@@ -117,14 +117,13 @@ class featureOrganization(humanMachineInterface):
                 # Extract the time and feature intervals
                 biomarkerTimeInterval = self.rawFeatureTimesHolder[biomarkerInd][newEndTimePointer:newStartTimePointer]
                 biomarkerFeaturesInterval = self.rawFeatureHolder[biomarkerInd][newEndTimePointer:newStartTimePointer]
-                print(biomarkerTimeInterval[0], biomarkerTimeInterval[-1], self.startModelTime, endModelTime)
+                #print(biomarkerTimeInterval[0], biomarkerTimeInterval[-1], self.startModelTime, endModelTime)
 
                 allRawFeatureTimeInterval[-1].append(biomarkerTimeInterval)
                 allRawFeatureInterval[-1].append(biomarkerFeaturesInterval)
             
             # Update the model time.
             self.startModelTime += self.modelTimeGap
-        exit()
 
         allSignalData, allNumSignalPoints = self.compileModelHelpers._padSignalData(allRawFeatureTimeInterval, allRawFeatureInterval, startModelTimePerBiomarker)
 
