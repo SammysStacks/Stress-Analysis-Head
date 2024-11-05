@@ -83,9 +83,9 @@ class reversibleLinearLayer(reversibleInterface):
 if __name__ == "__main__":
     # General parameters.
     _batchSize, _numSignals, _sequenceLength = 2, 3, 256
-    _activationMethod = 'reversibleLinearSoftSign'
+    _activationMethod = 'reversibleActivation'
     _kernelSize = 21
-    _numLayers = 5
+    _numLayers = 100
 
     # Set up the parameters.
     neuralLayerClass = reversibleLinearLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod, switchActivationDirection=False)

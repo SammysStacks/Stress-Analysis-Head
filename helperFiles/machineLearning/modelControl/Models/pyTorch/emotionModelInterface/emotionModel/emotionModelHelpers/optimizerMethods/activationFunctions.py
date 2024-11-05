@@ -9,7 +9,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 def getActivationMethod(activationMethod):
     if activationMethod == 'Tanhshrink':
         activationFunction = nn.Tanhshrink()
-    elif activationMethod == 'none':
+    elif activationMethod.startswith('none'):
         activationFunction = nn.Identity()
     elif activationMethod.startswith('boundedExp'):
         nonLinearityRegion = int(activationMethod.split('_')[2]) if '_' in activationMethod else 2
@@ -18,6 +18,9 @@ def getActivationMethod(activationMethod):
     elif activationMethod.startswith('reversibleLinearSoftSign'):
         invertedActivation = activationMethod.split('_')[1] == "True"
         activationFunction = reversibleLinearSoftSign(invertedActivation=invertedActivation)
+    elif activationMethod.startswith('reversibleActivation'):
+        invertedActivation = activationMethod.split('_')[1] == "True"
+        activationFunction = reversibleActivation(invertedActivation=invertedActivation)
     elif activationMethod == 'PReLU':
         activationFunction = nn.PReLU()
     elif activationMethod == 'selu':
@@ -93,6 +96,63 @@ class reversibleLinearSoftSign(reversibleInterface):
 
         return x
 
+class reversibleActivation(reversibleInterface):
+    def __init__(self, invertedActivation=False, inversionPoint=1, infiniteBound=1):
+        super(reversibleActivation, self).__init__()
+        self.invertedActivation = invertedActivation  # Whether the non-linearity term is inverted
+        self.inversionPoint = inversionPoint  # Corresponds to `r` in the equation
+        self.infiniteBound = infiniteBound  # Corresponds to `a` in the equation
+
+        # Assert the validity of the inputs.
+        assert 0 < self.infiniteBound <= 1, "The magnitude of the inf bound has a domain of (0, 1] to ensure a stable convergence."
+        assert 0 < self.inversionPoint, "The inversion point must be positive to ensure a stable convergence."
+        assert infiniteBound == 1, "The infinite bound must be 1 for the activation to be stable."
+
+    def forward(self, x):
+        if self.forwardDirection != self.invertedActivation: return self.forwardPass(x)
+        else: return self.inversePass(x)
+
+    def forwardPass(self, x):
+        # f(x) = ax + x / (1 + (a / (1 - a)) * (xx / rr))
+        return x + x / (1 + (x / self.inversionPoint).pow(2))
+
+    def inversePass(self, y):
+        r = self.inversionPoint
+        r_squared = r ** 2
+
+        # Compute the discriminant inside the square root
+        D = 96 * r ** 6 - 39 * r ** 4 * y ** 2 + 12 * r ** 2 * y ** 4
+        # D = 96 r^6 - 39 r^4 y^2 + 12 r^2 y^4
+
+        # Ensure D is non-negative to avoid complex numbers
+        D = torch.clamp(D, min=0.0)
+
+        # Compute the square root term
+        sqrt_term = torch.sqrt(D)
+
+        # Compute the numerator inside the cube root
+        N = 9 * r_squared * y + 3 * sqrt_term + 2 * y ** 3
+        # N = 9 r^2 y + 3 sqrt_term + 2 y^3
+
+        # Compute the cube root term, handling negative values
+        cube_root_term = torch.sign(N) * torch.abs(N).pow(1/3)
+
+        # Compute constants
+        two_pow_1_over_3 = 2 ** (1/3)
+        two_pow_2_over_3 = 2 ** (2/3)
+
+        epsilon = 1e-8
+        # Compute numerator1 and numerator2, adding epsilon to avoid division by zero
+        numerator1 = two_pow_2_over_3 * cube_root_term
+        numerator2 = 2 * two_pow_1_over_3 * (6 * r_squared - y ** 2) / (cube_root_term + epsilon)
+
+        # Compute x
+        x = (numerator1 - numerator2 + 2 * y) / 6
+        print(x.max().item(), x.min().item(), y.max().item(), y.min().item())
+
+        return x
+
+
 class boundedExp(nn.Module):
     def __init__(self, decayConstant=0, nonLinearityRegion=2, infiniteBound=math.exp(-0.5)):
         super(boundedExp, self).__init__()
@@ -165,8 +225,8 @@ if __name__ == "__main__":
     data = torch.randn(2, 10, 100, dtype=torch.float64)
     data = data - data.min()
     data = data / data.max()
-    data = 2 * data - 1
+    data = 4 * data - 2
 
     # Perform the forward and inverse pass.
-    activationClass = reversibleLinearSoftSign()
-    _forwardData, _reconstructedData = activationClass.checkReconstruction(data, atol=1e-6, numLayers=10)
+    activationClass = reversibleActivation(invertedActivation=True)
+    _forwardData, _reconstructedData = activationClass.checkReconstruction(data, atol=1e-6, numLayers=2)

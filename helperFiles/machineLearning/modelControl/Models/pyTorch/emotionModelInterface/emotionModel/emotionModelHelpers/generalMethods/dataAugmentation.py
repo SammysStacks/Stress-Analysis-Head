@@ -73,7 +73,7 @@ class dataAugmentation:
         dropoutMask = dropoutPercent < torch.rand(batchSize, numSignals, 1, 1, device=signalData.device)  # Randomly keep (1-p)% of the signals
 
         # Expand the mask to cover all timestamps and channels
-        dropoutMask = dropoutMask.expand(batchSize, numSignals, maxSequenceLength, 2)
+        dropoutMask = dropoutMask.expand_as(signalData)
 
         # Apply the mask to the data
         augmentedData = signalData * dropoutMask

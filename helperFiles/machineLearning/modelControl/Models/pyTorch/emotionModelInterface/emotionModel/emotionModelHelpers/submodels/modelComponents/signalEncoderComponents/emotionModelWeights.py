@@ -41,24 +41,23 @@ class emotionModelWeights(convolutionalHelpers):
 
         # Initialize the physiological profile as a parameter.
         physiologicalProfile = nn.Parameter(physiologicalProfile)
-        physiologicalProfile.register_hook(emotionModelWeights().physiologicalHook)
 
         return physiologicalProfile
 
     @staticmethod
-    def physiologicalHook(grad): return 1000 * grad / (grad.norm() + 1e-8)
+    def physiologicalHook(grad): return grad
 
     # ------------------- Neural Operator Architectures ------------------- #
 
     @staticmethod
     def reversibleNeuralWeightRFC(numSignals, sequenceLength, activationMethod):
         activationMethod, switchActivationDirection = activationMethod.split('_')
-        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength, numLayers=1, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection == "True")
+        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength, numLayers=1, activationMethod='none', switchActivationDirection=switchActivationDirection == "True")
 
     @staticmethod
     def reversibleNeuralWeightRCNN(numSignals, sequenceLength, activationMethod):
         activationMethod, switchActivationDirection = activationMethod.split('_')
-        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=7, numLayers=1, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection == "True")
+        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=7, numLayers=1, activationMethod='none', switchActivationDirection=switchActivationDirection == "True")
 
     @staticmethod
     def neuralWeightFC(sequenceLength):
@@ -104,4 +103,4 @@ class emotionModelWeights(convolutionalHelpers):
     # ------------------- Universal Architectures ------------------- #
 
     @staticmethod
-    def getActivationType(): return 'reversibleLinearSoftSign'
+    def getActivationType(): return 'reversibleActivation'

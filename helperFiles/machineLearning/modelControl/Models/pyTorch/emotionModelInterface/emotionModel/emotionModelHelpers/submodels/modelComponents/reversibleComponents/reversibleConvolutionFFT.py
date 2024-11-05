@@ -78,7 +78,7 @@ class reversibleConvolutionFFT(reversibleInterface):
 if __name__ == "__main__":
     # General parameters.
     _batchSize, _numSignals, _sequenceLength = 4, 128, 512
-    _activationMethod = 'reversibleLinearSoftSign'
+    _activationMethod = 'reversibleActivation'
     _numLayers = 100
     _kernelSize = 3
 

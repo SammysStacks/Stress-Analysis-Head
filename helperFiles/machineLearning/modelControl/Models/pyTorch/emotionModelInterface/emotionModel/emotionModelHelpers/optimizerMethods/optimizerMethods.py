@@ -14,9 +14,9 @@ class optimizerMethods:
     def getModelParams(submodel, model):
         modelParams = [
             # Specify the model parameters for the signal encoding.
-            {'params': model.inferenceModel.parameters(), 'weight_decay': 0, 'lr': 0.01},
-            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': 0, 'lr': 0.01},
-            {'params': model.specificSignalEncoderModel.parameters(), 'weight_decay': 0, 'lr': 0.01},
+            {'params': model.inferenceModel.parameters(), 'weight_decay': 0, 'lr': 0.0001},
+            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': 0, 'lr': 0.0001},
+            {'params': model.specificSignalEncoderModel.parameters(), 'weight_decay': 0, 'lr': 0.0001},
         ]
 
         if submodel == modelConstants.emotionModel:
@@ -69,12 +69,13 @@ class optimizerMethods:
         numWarmUps = 5*numEpochCounts  # Warm-up epochs
 
         schedulerOrder = [
-            optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda epoch: min(1.0, epoch / numWarmUps)),
+            # optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda epoch: min(1.0, epoch / numWarmUps)),
             optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=numEpochCounts*2, eta_min=1e-3, last_epoch=-1),
         ]
 
         # Set the scheduler.
-        scheduler = SequentialLR(optimizer=optimizer, last_epoch=-1, milestones=[numWarmUps], schedulers=schedulerOrder)
+        # scheduler = SequentialLR(optimizer=optimizer, last_epoch=-1, milestones=[numWarmUps], schedulers=schedulerOrder)
+        scheduler = SequentialLR(optimizer=optimizer, last_epoch=-1, milestones=[], schedulers=schedulerOrder)
         scheduler.step()
 
         return scheduler

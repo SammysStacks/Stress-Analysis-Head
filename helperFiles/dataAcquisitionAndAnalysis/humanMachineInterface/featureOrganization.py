@@ -92,7 +92,7 @@ class featureOrganization(humanMachineInterface):
 
     def compileIntervalFeaturesWithPadding(self):
         # Find the number of new points.
-        lastRecordedTime = self.featureAnalysisList[0].timepoints[-1]
+        lastRecordedTime = self.featureAnalysisList[0].timepoints[-1]  # The last time we streamed data.
         numNewPoints = int(1 + (lastRecordedTime - self.startModelTime - self.modelTimeBuffer) // self.modelTimeGap)
 
         modelTimes = []
@@ -101,36 +101,31 @@ class featureOrganization(humanMachineInterface):
 
         # for each new point
         for numNewPoint in range(numNewPoints):
-            endModelTime = self.startModelTime - self.modelTimeWindow
-
-            pointFeatureTimes = []
-            pointFeatures = []
+            endModelTime = self.startModelTime - self.modelTimeWindow  # TODO: THIS NEVER SHIFTS!
+            allRawFeatureTimeInterval.append([])
+            allRawFeatureInterval.append([])
 
             # For each unique analysis with features.
             for biomarkerInd in range(len(self.featureAnalysisList)):
                 oldEndPointer = self.therapyPointers[biomarkerInd]
 
-                biomarkerTimes = self.rawFeatureTimesHolder[biomarkerInd]
-                biomarkerFeatures = self.rawFeatureHolder[biomarkerInd]
-
                 # Locate the experiment indices within the data
                 newStartTimePointer = oldEndPointer + np.searchsorted(self.rawFeatureTimesHolder[0][oldEndPointer:], self.startModelTime, side='right') + 1
                 newEndTimePointer = oldEndPointer + np.searchsorted(self.rawFeatureTimesHolder[0][oldEndPointer:], endModelTime, side='left')
-                numBiomarkerPoints = newStartTimePointer - newEndTimePointer
                 self.therapyPointers[biomarkerInd] = newEndTimePointer
 
                 # Extract the time and feature intervals
-                biomarkerTimeInterval = biomarkerTimes[newEndTimePointer:newStartTimePointer]
-                biomarkerFeaturesInterval = biomarkerFeatures[newEndTimePointer:newStartTimePointer]
+                biomarkerTimeInterval = self.rawFeatureTimesHolder[biomarkerInd][newEndTimePointer:newStartTimePointer]
+                biomarkerFeaturesInterval = self.rawFeatureHolder[biomarkerInd][newEndTimePointer:newStartTimePointer]
+                print(biomarkerTimeInterval[0], biomarkerTimeInterval[-1], self.startModelTime, endModelTime)
 
-                pointFeatureTimes.append(biomarkerTimeInterval)
-                pointFeatures.append(biomarkerFeaturesInterval)
+                allRawFeatureTimeInterval[-1].append(biomarkerTimeInterval)
+                allRawFeatureInterval[-1].append(biomarkerFeaturesInterval)
+            
+            # Update the model time.
+            self.startModelTime += self.modelTimeGap
+        exit()
 
-            allRawFeatureTimeInterval.append(pointFeatureTimes)
-            allRawFeatureInterval.append(pointFeatures)
-
-        startModelTimePerBiomarker = [[self.startModelTime] for _ in range(numNewPoints)]
-        startModelTimePerBiomarker = torch.tensor(startModelTimePerBiomarker, dtype=torch.float32)
         allSignalData, allNumSignalPoints = self.compileModelHelpers._padSignalData(allRawFeatureTimeInterval, allRawFeatureInterval, startModelTimePerBiomarker)
 
         # Update the model time.

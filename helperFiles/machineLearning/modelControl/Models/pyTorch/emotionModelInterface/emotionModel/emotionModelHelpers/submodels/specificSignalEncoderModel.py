@@ -63,7 +63,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
     def learningInterface(self, layerInd, signalData):
         # For the forward/harder direction.
-        if reversibleInterface.forwardDirection:
+        if not reversibleInterface.forwardDirection:
             # Apply the neural operator layer with activation.
             signalData = self.neuralLayers[layerInd].reversibleInterface(signalData)
             signalData = self.processingLayers[layerInd](signalData)

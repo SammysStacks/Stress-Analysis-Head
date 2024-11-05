@@ -193,7 +193,7 @@ class emotionModelHead(nn.Module):
         # reconstructedSignalData: batchSize, numSignals, maxSequenceLength
 
         # Visualize the data transformations within signal encoding.
-        if not inferenceTraining and random.random() < 0.02:
+        if not inferenceTraining and random.random() < 0.05:
             with torch.no_grad(): self.visualizeSignalEncoding(physiologicalProfile, resampledSignalData, reconstructedSignalData, signalData, validDataMask)
 
         # ------------------- Learned Emotion Mapping ------------------- #
@@ -308,7 +308,7 @@ class emotionModelHead(nn.Module):
         # mappedPhysiologicalTimedInds dimension: batchSize, numSignals, maxSequenceLength
 
         # Get the closest physiological data to the timepoints.
-        physiologicalTimesExpanded = physiologicalTimes.unsqueeze(0).unsqueeze(0).expand(batchSize, numSignals, encodedDimension)
+        physiologicalTimesExpanded = physiologicalTimes.unsqueeze(0).unsqueeze(0).expand_as(resampledSignalData)
         closestPhysiologicalTimesRight = torch.gather(input=physiologicalTimesExpanded, dim=2, index=validIndsRight)  # Initialize the tensor.
         closestPhysiologicalTimesLeft = torch.gather(input=physiologicalTimesExpanded, dim=2, index=validIndsLeft)  # Initialize the tensor.
         closestPhysiologicalDataRight = torch.gather(input=resampledSignalData, dim=2, index=validIndsRight)  # Initialize the tensor.

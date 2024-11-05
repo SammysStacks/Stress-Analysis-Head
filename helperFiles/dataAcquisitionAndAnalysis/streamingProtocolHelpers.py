@@ -127,9 +127,10 @@ class streamingProtocolHelpers(featureOrganization):
             while self.numPointsPerBatch <= len(analysis.timepoints) - streamingDataFingers[analysisInd]:
                 streamingDataFingers[analysisInd] += self.moveDataFinger
                 analysis.analyzeData(streamingDataFinger)
+        # All features and data are currently in their respective analysis protocols.
 
         # Organize the new features
-        self.organizeRawFeatures()
+        self.organizeRawFeatures()  # Features are now stored in rawFeatureHolder in feature organization.
         modelTimes, inputModelData, allNumSignalPoints = self.compileIntervalFeaturesWithPadding()
         therapyState, _ = self.predictLabels(modelTimes, inputModelData, therapyParam=self.therapyParam)
         # interface with hardware

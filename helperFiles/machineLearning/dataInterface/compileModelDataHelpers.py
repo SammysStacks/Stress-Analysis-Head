@@ -171,11 +171,9 @@ class compileModelDataHelpers:
 
     @staticmethod
     def _padSignalData(allRawFeatureIntervalTimes, allRawFeatureIntervals, surveyAnswerTimes):
-        # allRawFeatureIntervals : batchSize, numBiomarkers, finalDistributionLength*, numBiomarkerFeatures*  ->  *finalDistributionLength, *numBiomarkerFeatures are not constant
-        # allRawFeatureIntervalTimes : batchSize, numBiomarkers, finalDistributionLength*  ->  *finalDistributionLength is not constant
-        # allSignalData : A list of size (batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel])
-        # allNumSignalPoints : A list of size (batchSize, numSignals)
-        # surveyAnswerTimes : A list of size (batchSize)
+        # allRawFeatureIntervals: batchSize, numBiomarkers, finalDistributionLength*, numBiomarkerFeatures*  ->  *finalDistributionLength, *numBiomarkerFeatures are not constant
+        # allRawFeatureIntervalTimes: batchSize, numBiomarkers, finalDistributionLength*  ->  *finalDistributionLength is not constant
+        # surveyAnswerTimes: A list of size (batchSize)
         # Determine the final dimensions of the padded array.
         maxSequenceLength = max(max(len(biomarkerTimes) for biomarkerTimes in experimentalTimes) for experimentalTimes in allRawFeatureIntervalTimes)
         numSignals = sum(len(biomarkerData[0]) for biomarkerData in allRawFeatureIntervals[0])
@@ -258,7 +256,7 @@ class compileModelDataHelpers:
         biomarkerData = emotionDataInterface.getChannelData(signalData=allSignalData, channelName=modelConstants.signalChannel)
 
         # Create boolean masks for signals that don’t meet the requirements
-        minLowerBoundaryMask = self.minBoundaryPoints <= (biomarkerData < -modelConstants.minMaxScale + 0.25).sum(dim=-1)  # Numb.expand(batchSize, numSignals, maxSequenceLength, numChannels)er of points below -0.95: batchSize, numSignals
+        minLowerBoundaryMask = self.minBoundaryPoints <= (biomarkerData < -modelConstants.minMaxScale + 0.25).sum(dim=-1)  # Number of points below -0.95: batchSize, numSignals
         minUpperBoundaryMask = self.minBoundaryPoints <= (modelConstants.minMaxScale - 0.25 < biomarkerData).sum(dim=-1)  # Number of points above 0.95: batchSize, numSignals
         averageDiff = biomarkerData.diff(dim=-1).abs().mean(dim=-1) < self.maxAverageDiff  # Average difference between consecutive points: batchSize, numSignals
         minPointsMask = self.minSequencePoints <= validDataMask.sum(dim=-1)  # Minimum number of points: batchSize, numSignals
@@ -269,7 +267,7 @@ class compileModelDataHelpers:
         validSignalInds = self.minSignalPresentCount < validSignalMask.sum(dim=0)
 
         # Filter out the invalid signals
-        allSignalData[~validSignalMask.unsqueeze(-1).unsqueeze(-1).expand(batchSize, numSignals, maxSequenceLength, numChannels)] = 0
+        allSignalData[~validSignalMask.unsqueeze(-1).unsqueeze(-1).expand_as(allSignalData)] = 0
         allNumSignalPoints[~validSignalMask] = 0
 
         return allSignalData[:, validSignalInds, :, :], allNumSignalPoints[:, validSignalInds], featureNames[validSignalInds]

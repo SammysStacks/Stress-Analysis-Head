@@ -47,7 +47,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     else: batchSignalInfo = batchData; batchTrainingMask, batchTestingMask = None, None
 
                     # We can skip this batch, and backpropagation if necessary.
-                    if batchSignalInfo.size(0) == 0: self.backpropogateModel(submodel); continue
+                    if batchSignalInfo.size(0) == 0: self.backpropogateModel(); continue
                     numPointsAnalyzed += batchSignalInfo.size(0)
 
                     # Separate the data into signal and metadata information.
@@ -111,13 +111,13 @@ class emotionPipeline(emotionPipelineHelpers):
                     t1 = time.time()
                     # Calculate the gradients.
                     self.accelerator.backward(finalLoss)  # Calculate the gradients.
-                    self.backpropogateModel(submodel)  # Backpropagation.
+                    self.backpropogateModel()  # Backpropagation.
                     t2 = time.time(); self.accelerator.print(f"{'Shared' if trainSharedLayers else '\tSpecific'} layer training {self.datasetName} {numPointsAnalyzed}: {t2 - t1}\n")
 
         # Prepare the model/data for evaluation.
         self.accelerator.wait_for_everyone()  # Wait before continuing.
 
-    def backpropogateModel(self, submodel):
+    def backpropogateModel(self):
         # Clip the gradients if they are too large.
         if self.accelerator.sync_gradients:
             # Backpropagation the gradient.
