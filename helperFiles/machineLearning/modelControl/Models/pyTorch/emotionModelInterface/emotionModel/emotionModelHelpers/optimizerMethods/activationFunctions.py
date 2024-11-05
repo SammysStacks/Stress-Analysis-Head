@@ -102,7 +102,7 @@ class reversibleActivation(reversibleInterface):
         self.invertedActivation = invertedActivation  # Whether the non-linearity term is inverted
         self.inversionPoint = inversionPoint  # Corresponds to `r` in the equation
         self.infiniteBound = infiniteBound  # Corresponds to `a` in the equation
-        self.tolerance = 1e-25
+        self.tolerance = 1e-20  # Tolerance for numerical stability
 
         # Assert the validity of the inputs.
         assert 0 < self.infiniteBound <= 1, "The magnitude of the inf bound has a domain of (0, 1] to ensure a stable convergence."
@@ -110,8 +110,10 @@ class reversibleActivation(reversibleInterface):
         assert infiniteBound == 1, "The infinite bound must be 1 for the activation to be stable."
 
     def forward(self, x):
-        if self.forwardDirection != self.invertedActivation: return self.forwardPass(x)
+        if not self.forwardDirection: return self.forwardPass(x)
         else: return self.inversePass(x)
+        # if self.forwardDirection != self.invertedActivation: return self.forwardPass(x)
+        # else: return self.inversePass(x)
 
     def forwardPass(self, x):
         # f(x) = ax + x / (1 + (a / (1 - a)) * (xx / rr))

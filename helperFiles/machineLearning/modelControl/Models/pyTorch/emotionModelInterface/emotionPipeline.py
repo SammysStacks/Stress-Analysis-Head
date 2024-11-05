@@ -120,6 +120,11 @@ class emotionPipeline(emotionPipelineHelpers):
     def backpropogateModel(self):
         # Clip the gradients if they are too large.
         if self.accelerator.sync_gradients:
+            #
+            # for param in self.model.parameters():
+            #     if param.grad is not None:
+            #         print(param.grad.abs().min(), param.grad.abs().max())
+
             # Backpropagation the gradient.
             self.optimizer.step()  # Adjust the weights.
             self.scheduler.step()  # Update the learning rate.
