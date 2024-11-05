@@ -66,11 +66,11 @@ class optimizerMethods:
         # Defined lambda function: optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda=lambda_function); lambda_function = lambda epoch: (epoch/50) if epoch < -1 else 1
         # torch.optim.lr_scheduler.constrainedLR(optimizer, start_factor=0.3333333333333333, end_factor=1.0, total_iters=5, last_epoch=-1)
         numEpochCounts = 15*3  # 15 counts per epoch session (wesad is 5 counts) for 5 epochs
-        numWarmUps = 5*numEpochCounts  # Warm-up epochs
+        numWarmUps = 4*numEpochCounts  # Warm-up epochs
 
         schedulerOrder = [
             optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda epoch: min(1.0, epoch / numWarmUps)),
-            optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=numEpochCounts*2, eta_min=1e-3, last_epoch=-1),
+            optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=numEpochCounts, eta_min=1e-3, last_epoch=-1),
         ]
 
         # Set the scheduler.
