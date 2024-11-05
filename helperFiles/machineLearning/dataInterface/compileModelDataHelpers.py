@@ -201,6 +201,7 @@ class compileModelDataHelpers:
             for (biomarkerData, biomarkerTimes) in zip(batchData, batchTimes):
                 biomarkerData = torch.tensor(biomarkerData, dtype=torch.float32).T  # Dim: numBiomarkerFeatures, batchSpecificFeatureLength
                 biomarkerTimes = torch.tensor(biomarkerTimes, dtype=torch.float32)  # Dim: batchSpecificFeatureLength
+                print('max biomarkerTimes', max(biomarkerTimes))
                 biomarkerTimes = surveyAnswerTime - biomarkerTimes
 
                 # Remove data outside the time window.
@@ -213,6 +214,7 @@ class compileModelDataHelpers:
                 finalSignalInd = currentSignalInd + numBiomarkerFeatures
 
                 # Fill the padded array with the signal data
+
                 allSignalData[experimentalInd, currentSignalInd:finalSignalInd, 0:batchSpecificFeatureLength, timeChannelInd] = biomarkerTimes
                 allSignalData[experimentalInd, currentSignalInd:finalSignalInd, 0:batchSpecificFeatureLength, dataChannelInd] = biomarkerData
                 allNumSignalPoints[experimentalInd, currentSignalInd:finalSignalInd] = batchSpecificFeatureLength

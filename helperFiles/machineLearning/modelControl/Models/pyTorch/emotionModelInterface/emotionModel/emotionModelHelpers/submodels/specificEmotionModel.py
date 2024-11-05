@@ -70,6 +70,8 @@ class specificEmotionModel(neuralOperatorInterface):
     def learningInterface(self, layerInd, signalData):
         # Apply the neural operator layer with activation.
         signalData = self.neuralLayers[layerInd](signalData)
+        print(f"Layer {layerInd} - signalData shape1: {signalData.shape}")
         signalData = self.processingLayers[layerInd](signalData)
+        print(f"Layer {layerInd} - signalData shape2: {signalData.shape}")
 
         return signalData

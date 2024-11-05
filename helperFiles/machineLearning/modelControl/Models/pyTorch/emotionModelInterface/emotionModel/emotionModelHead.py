@@ -179,13 +179,17 @@ class emotionModelHead(nn.Module):
         # ------------------- Learned Signal Mapping ------------------- #
 
         reversibleInterface.changeDirections(forwardDirection=False)
+        print('physiologicalProfile size', physiologicalProfile.size())
         resampledSignalData = physiologicalProfile.unsqueeze(1).repeat(repeats=(1, numSignals, 1))
+        print('resampledSignalData size', resampledSignalData.size())
         resampledSignalData = self.coreModelPass(self.numSignalEncoderLayers, resampledSignalData, specificModel=self.specificSignalEncoderModel, sharedModel=self.sharedSignalEncoderModel)
         # resampledSignalData: batchSize, numSignals, encodedDimension
 
         # Resample the signal data.
         physiologicalTimes = self.sharedSignalEncoderModel.pseudoEncodedTimes
+        print('signalData size', signalData.size())
         reconstructedSignalData = self.interpolateData(physiologicalTimes, signalData, resampledSignalData)
+        print('reconstructedSignalData size', reconstructedSignalData.size())
         # reconstructedSignalData: batchSize, numSignals, maxSequenceLength
 
         # Visualize the data transformations within signal encoding.
@@ -201,6 +205,7 @@ class emotionModelHead(nn.Module):
             # Perform the backward pass: physiologically -> emotion data.
             reversibleInterface.changeDirections(forwardDirection=False)
             basicEmotionProfile = physiologicalProfile.unsqueeze(1).repeat(repeats=(1, self.numEmotions*self.numBasicEmotions, 1))
+            print('basicEmotionProfile size', basicEmotionProfile.size())
             basicEmotionProfile = self.coreModelPass(self.numEmotionModelLayers, metaLearningData=basicEmotionProfile, specificModel=self.specificEmotionModel, sharedModel=self.sharedEmotionModel)
             # metaLearningData: batchSize, numEmotions*numBasicEmotions, encodedDimension
 
@@ -308,6 +313,10 @@ class emotionModelHead(nn.Module):
         closestPhysiologicalTimesLeft = torch.gather(input=physiologicalTimesExpanded, dim=2, index=validIndsLeft)  # Initialize the tensor.
         closestPhysiologicalDataRight = torch.gather(input=resampledSignalData, dim=2, index=validIndsRight)  # Initialize the tensor.
         closestPhysiologicalDataLeft = torch.gather(input=resampledSignalData, dim=2, index=validIndsLeft)  # Initialize the tensor.
+        print("Min timepoints:", timepoints.min().item(), "Max timepoints:", timepoints.max().item())
+        print("Min closestPhysiologicalTimesLeft:", closestPhysiologicalTimesLeft.min().item(), "Max closestPhysiologicalTimesRight:", closestPhysiologicalTimesRight.max().item())
+        # clamp the time points ensure there's no negative points
+        # timepoints = torch.clamp(timepoints, min=0, max=closestPhysiologicalTimesRight.max().item())
         assert ((closestPhysiologicalTimesLeft <= timepoints) & (timepoints <= closestPhysiologicalTimesRight)).all(), "The timepoints must be within the range of the closest physiological times."
         # closestPhysiologicalData dimension: batchSize, numSignals, maxSequenceLength
 
