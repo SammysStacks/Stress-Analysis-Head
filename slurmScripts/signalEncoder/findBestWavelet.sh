@@ -16,10 +16,10 @@ waveletTypes=( \
     'dmey' \
 )
 
-numSignalEncoderLayers=8
+numSignalEncoderLayers=16
 encodedDimension=256
 optimizer='AdamW'
-goldenRatio=8
+goldenRatio=16
 
 for waveletType in "${waveletTypes[@]}"
 do
