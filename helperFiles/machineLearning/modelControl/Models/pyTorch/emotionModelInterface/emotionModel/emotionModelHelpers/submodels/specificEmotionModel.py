@@ -51,9 +51,10 @@ class specificEmotionModel(neuralOperatorInterface):
 
     def calculateEmotionProfile(self, basicEmotionProfile, subjectInds):
         batchSize, numEmotions, numBasicEmotions, encodedDimension = basicEmotionProfile.size()
-
         # Calculate the subject-specific weights.
-        subjectSpecificWeights = self.basicEmotionWeights[subjectInds]
+        print('self.basicEmotionWeigthts', self.basicEmotionWeights)
+        print('subjectInds', subjectInds)
+        subjectSpecificWeights = self.basicEmotionWeights[subjectInds]  # batchSize, numBasicEmotions
         subjectSpecificWeights = subjectSpecificWeights / subjectSpecificWeights.sum(dim=-1, keepdim=True)
         subjectSpecificWeights = subjectSpecificWeights.view(batchSize, 1, numBasicEmotions, 1)
         # basicEmotionProfile: batchSize, numEmotions, numBasicEmotions, encodedDimension
@@ -69,9 +70,10 @@ class specificEmotionModel(neuralOperatorInterface):
 
     def learningInterface(self, layerInd, signalData):
         # Apply the neural operator layer with activation.
+        print(signalData.size())
         signalData = self.neuralLayers[layerInd](signalData)
-        print(f"Layer {layerInd} - signalData shape1: {signalData.shape}")
+        print(signalData.size())
         signalData = self.processingLayers[layerInd](signalData)
-        print(f"Layer {layerInd} - signalData shape2: {signalData.shape}")
+        print(signalData.size())
 
         return signalData

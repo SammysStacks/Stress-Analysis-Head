@@ -162,15 +162,13 @@ class humanMachineInterface:
 
         return compiledSignalData
 
-    def predictLabels(self, modelTimes, inputModelData, therapyParam):
+    def predictLabels(self, modelTimes, inputModelData, allNumSignalPoints, therapyParam):
 
         # Add in contextual information to the data.
-        allSubjectInds = allSubjectInds = torch.arange(inputModelData.shape[0])
+        allSubjectInds = torch.zeros(inputModelData.shape[0])  # torch.Size([75, 81, 72, 2]) batchSize, numSignals, maxLength, [time, features]
         datasetInd = 1
-        allNumSignalPoints = torch.empty(size=(len(inputModelData[0]), len(self.featureNames)), dtype=torch.int)
-        # Debugging
-        numExperiments, numSignals, maxSequenceLength, numChannels = inputModelData.shape
         compiledInputData = self.compileModelHelpers.addContextualInfo(inputModelData, allNumSignalPoints, allSubjectInds, datasetInd)
+        print('compiledInputData', compiledInputData.shape)
         #compiledInputData = self.inputModelDataWithContextualInfo(inputModelData, allNumSignalPoints, dataInd=0)
         self.trainingProtocols.inferenceTraining([compiledInputData], self.emoPipeline, self.submodel, compiledInputData, 256, numEpochs=10)
         exit()

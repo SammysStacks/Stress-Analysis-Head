@@ -5,7 +5,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class sharedEmotionModel(neuralOperatorInterface):
 
-    def __init__(self, numBasicEmotions, encodedDimension, numModelLayers, operatorType, learningProtocol, neuralOperatorParameters):
+    def __init__(self, numEmotions, numBasicEmotions, encodedDimension, numModelLayers, operatorType, learningProtocol, neuralOperatorParameters):
         super(sharedEmotionModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numInputSignals=numBasicEmotions, numOutputSignals=numBasicEmotions, addBiasTerm=False)
         # General model parameters.
         self.neuralOperatorParameters = neuralOperatorParameters  # The parameters for the neural operator.
@@ -13,6 +13,7 @@ class sharedEmotionModel(neuralOperatorInterface):
         self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
         self.numBasicEmotions = numBasicEmotions  # The number of basic emotions to encode.
         self.numModelLayers = numModelLayers  # The number of model layers to use.
+        self.numEmotions = numEmotions
 
         # The neural layers for the signal encoder.
         self.processingLayers, self.neuralLayers = nn.ModuleList(), nn.ModuleList()
@@ -34,14 +35,14 @@ class sharedEmotionModel(neuralOperatorInterface):
 
     def learningInterface(self, layerInd, signalData):
         # Reshape the signal data.
-        batchSize, numEmotions, signalLength = signalData.shape
-        signalData = signalData.view(batchSize*numEmotions, 1, signalLength)
+        batchSize, numCombinedEmotions, signalLength = signalData.shape
+        signalData = signalData.view(batchSize*self.numEmotions, self.numBasicEmotions, signalLength)
 
         # Apply the neural operator layer with activation.
         signalData = self.neuralLayers[layerInd](signalData)
         signalData = self.processingLayers[layerInd](signalData)
 
         # Reshape the signal data.
-        signalData = signalData.view(batchSize, numEmotions, signalLength)
+        signalData = signalData.view(batchSize, numCombinedEmotions, signalLength)
 
         return signalData

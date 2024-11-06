@@ -187,7 +187,6 @@ class compileModelDataHelpers:
         dataChannelInd = emotionDataInterface.getChannelInd(channelName=modelConstants.signalChannel)
         timeChannelInd = emotionDataInterface.getChannelInd(channelName=modelConstants.timeChannel)
         maxSequenceLength = 0
-
         # For each batch of biomarkers.
         for experimentalInd in range(numExperiments):
             batchData = allRawFeatureIntervals[experimentalInd]

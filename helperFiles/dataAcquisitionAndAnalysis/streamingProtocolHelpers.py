@@ -132,7 +132,8 @@ class streamingProtocolHelpers(featureOrganization):
         # Organize the new features
         self.organizeRawFeatures()  # Features are now stored in rawFeatureHolder in feature organization.
         modelTimes, inputModelData, allNumSignalPoints = self.compileIntervalFeaturesWithPadding()
-        therapyState, _ = self.predictLabels(modelTimes, inputModelData, therapyParam=self.therapyParam)
+        print('inputModeldata', inputModelData.shape)
+        therapyState, _ = self.predictLabels(modelTimes, inputModelData, allNumSignalPoints, therapyParam=self.therapyParam)
         # interface with hardware
 
         # Plot the Data

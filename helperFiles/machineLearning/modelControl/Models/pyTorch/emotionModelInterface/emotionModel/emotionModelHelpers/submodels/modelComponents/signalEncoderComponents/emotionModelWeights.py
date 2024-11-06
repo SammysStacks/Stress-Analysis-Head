@@ -80,7 +80,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def postProcessingLayerFC(sequenceLength):
-        return emotionModelWeights.linearModel(numOutputFeatures=sequenceLength, activationMethod="boundedExp", addBias=False)
+        return emotionModelWeights.linearModel(numInputFeatures=256, numOutputFeatures=sequenceLength, activationMethod="boundedExp", addBias=False)
 
     def postProcessingLayerCNN(self, numSignals):
         return self.convolutionalFiltersBlocks(numBlocks=4, numChannels=[numSignals, numSignals], kernel_sizes=3, dilations=1, groups=numSignals, strides=1, convType='conv1D', activationMethod="boundedExp", numLayers=None, addBias=False)

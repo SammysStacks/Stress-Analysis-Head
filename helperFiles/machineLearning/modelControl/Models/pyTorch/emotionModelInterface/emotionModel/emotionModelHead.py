@@ -106,6 +106,7 @@ class emotionModelHead(nn.Module):
                 numBasicEmotions=self.numBasicEmotions,
                 numModelLayers=self.numEmotionModelLayers,
                 operatorType=self.operatorType,
+                numEmotions=self.numEmotions,
             )
 
             self.specificActivityModel = specificActivityModel(
@@ -118,6 +119,7 @@ class emotionModelHead(nn.Module):
                 operatorType=self.operatorType,
                 goldenRatio=self.goldenRatio,
             )
+
 
             self.sharedActivityModel = sharedActivityModel(
                 neuralOperatorParameters=self.neuralOperatorParameters,
@@ -149,6 +151,7 @@ class emotionModelHead(nn.Module):
         # signalData: [batchSize, numSignals, maxSequenceLength, numChannels]
         # signalIdentifiers: [batchSize, numSignals, numSignalIdentifiers]
         # metadata: [batchSize, numMetadata]
+
 
         # Prepare the data for the model.
         signalData, signalIdentifiers, metadata = (tensor.to(device) for tensor in (signalData, signalIdentifiers, metadata))
@@ -187,6 +190,7 @@ class emotionModelHead(nn.Module):
         # Resample the signal data.
         physiologicalTimes = self.sharedSignalEncoderModel.pseudoEncodedTimes
         reconstructedSignalData = self.interpolateData(physiologicalTimes, signalData, resampledSignalData)
+
         # reconstructedSignalData: batchSize, numSignals, maxSequenceLength
 
         # Visualize the data transformations within signal encoding.
@@ -207,13 +211,15 @@ class emotionModelHead(nn.Module):
 
             # Reconstruct the emotion data.
             basicEmotionProfile = basicEmotionProfile.view(batchSize, self.numEmotions, self.numBasicEmotions, self.encodedDimension)
+            print('shape of the basicEmotionProfile', basicEmotionProfile.shape)
             emotionProfile = self.specificEmotionModel.calculateEmotionProfile(basicEmotionProfile, subjectInds)
 
         # ------------------- Learned Activity Mapping ------------------- #
 
             # Perform the backward pass: physiologically -> emotion data.
             reversibleInterface.changeDirections(forwardDirection=False)
-            activityProfile = self.coreModelPass(self.numActivityModelLayers, metaLearningData=physiologicalProfile, specificModel=self.specificActivityModel, sharedModel=self.sharedActivityModel)
+            resampledActivityData = physiologicalProfile.unsqueeze(1).repeat(repeats=(1, self.numActivityChannels, 1))
+            activityProfile = self.coreModelPass(self.numActivityModelLayers, metaLearningData=resampledActivityData, specificModel=self.specificActivityModel, sharedModel=self.sharedActivityModel)
             # metaLearningData: batchSize, numEmotions*numBasicEmotions, encodedDimension
 
         # --------------------------------------------------------------- #
@@ -227,9 +233,10 @@ class emotionModelHead(nn.Module):
         # For each layer in the model.
         for layerInd in range(numModelLayers):
             # Calculate the estimated physiological profile given each signal.
-            if layerInd % specificModel.goldenRatio == 0: metaLearningData = specificModel.learningInterface(layerInd=specificLayerCounter, signalData=metaLearningData); specificLayerCounter += 1  # Reversible signal-specific layers.
-            metaLearningData = sharedModel.learningInterface(layerInd=layerInd, signalData=metaLearningData)  # Reversible meta-learning layers.
-        metaLearningData = specificModel.learningInterface(layerInd=specificLayerCounter, signalData=metaLearningData)  # Reversible signal-specific layers.
+            if layerInd % specificModel.goldenRatio == 0: metaLearningData = specificModel.learningInterface(layerInd=specificLayerCounter, signalData=metaLearningData); specificLayerCounter += 1
+            metaLearningData = sharedModel.learningInterface(layerInd=layerInd, signalData=metaLearningData)
+        metaLearningData = specificModel.learningInterface(layerInd=specificLayerCounter, signalData=metaLearningData)
+
         assert specificLayerCounter + 1 == len(specificModel.neuralLayers), f"The specific layer counter ({specificLayerCounter}) does not match the number of specific layers ({len(specificModel.neuralLayers)})."
         # metaLearningData: batchSize, numSignals, finalDimension
 

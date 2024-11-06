@@ -41,6 +41,7 @@ class emotionPipeline(emotionPipelineHelpers):
 
             # For each data batch in the epoch.
             for batchDataInd, batchData in enumerate(dataLoader):
+
                 with self.accelerator.accumulate(self.model):  # Accumulate gradients.
                     # Extract the data, labels, and testing/training indices.
                     if not inferenceTraining: batchSignalInfo, batchSignalLabels, batchTrainingMask, batchTestingMask = self.extractBatchInformation(batchData)

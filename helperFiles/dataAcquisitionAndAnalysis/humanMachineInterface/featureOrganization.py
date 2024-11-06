@@ -90,7 +90,7 @@ class featureOrganization(humanMachineInterface):
 
     # --------------------- Organize Incoming Features --------------------- #
 
-    def compileIntervalFeaturesWithPadding(self, surveyAnswerTime):
+    def compileIntervalFeaturesWithPadding(self):
         # Find the number of new points.
         lastRecordedTime = self.featureAnalysisList[0].timepoints[-1]  # The last time we streamed data.
         numNewPoints = int(1 + (lastRecordedTime - self.startModelTime - self.modelTimeBuffer) // self.modelTimeGap)
@@ -98,12 +98,13 @@ class featureOrganization(humanMachineInterface):
         modelTimes = []
         allRawFeatureTimeInterval = []
         allRawFeatureInterval = []
-
+        refereneStartTime = []
         # for each new point
         for numNewPoint in range(numNewPoints):
             endModelTime = self.startModelTime - self.modelTimeWindow
             allRawFeatureTimeInterval.append([])
             allRawFeatureInterval.append([])
+            refereneStartTime.append([])
 
             # For each unique analysis with features.
             for biomarkerInd in range(len(self.featureAnalysisList)):
@@ -121,11 +122,14 @@ class featureOrganization(humanMachineInterface):
 
                 allRawFeatureTimeInterval[-1].append(biomarkerTimeInterval)
                 allRawFeatureInterval[-1].append(biomarkerFeaturesInterval)
-            
+
             # Update the model time.
             self.startModelTime += self.modelTimeGap
+            refereneStartTime[-1].append(self.startModelTime)
+        refereneStartTime = torch.as_tensor(refereneStartTime, dtype=torch.float64)
 
-        allSignalData, allNumSignalPoints = self.compileModelHelpers._padSignalData(allRawFeatureTimeInterval, allRawFeatureInterval, startModelTimePerBiomarker)
+        allSignalData, allNumSignalPoints = self.compileModelHelpers._padSignalData(allRawFeatureTimeInterval, allRawFeatureInterval, refereneStartTime)
+        # allSignalData example size: torch.Size([75, 81, 72, 2])
 
         # Update the model time.
         self.startModelTime += self.modelTimeGap

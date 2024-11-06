@@ -47,6 +47,7 @@ class specificActivityModel(neuralOperatorInterface):
         else: raise "The learning protocol is not yet implemented."
 
     def learningInterface(self, layerInd, signalData):
+        print('signalData', signalData.shape)
         # Apply the neural operator layer with activation.
         signalData = self.neuralLayers[layerInd](signalData)
         signalData = self.processingLayers[layerInd](signalData)
