@@ -34,8 +34,6 @@ class trainingProtocolHelpers:
         inputData = torch.as_tensor(inputData, dtype=torch.float64)
         numExperiments, numSignals, sequenceLength, numChannels = inputData.size()
         modelPipeline.model.inferenceModel.resetInferenceModel(numExperiments, encodedDimension)
-        experimentalInds = torch.arange(0, numExperiments, dtype=torch.int64)
-        # dataLoader = zip(experimentalInds, inputData)
 
         # Train the inference model.
         modelPipeline.trainModel(dataLoader, submodel=submodel, trainSharedLayers=False, inferenceTraining=True, profileTraining=False, numEpochs=numEpochs)

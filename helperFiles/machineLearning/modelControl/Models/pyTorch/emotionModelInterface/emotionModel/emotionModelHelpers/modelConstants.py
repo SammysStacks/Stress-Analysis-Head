@@ -1,3 +1,4 @@
+import torch
 
 class modelConstants:
 
@@ -57,3 +58,12 @@ class modelConstants:
     inferenceModelWeights = [inferenceModel]
 
     # -------------------------------------------------------------------- #
+
+    # ---------------- Hard-coded therapy parameters --------------------- #
+    therapyParams = {
+        'heat': 37,
+        'music': [440, 410],
+        'Vr': None
+    }
+
+

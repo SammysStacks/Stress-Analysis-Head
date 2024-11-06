@@ -211,7 +211,6 @@ class emotionModelHead(nn.Module):
 
             # Reconstruct the emotion data.
             basicEmotionProfile = basicEmotionProfile.view(batchSize, self.numEmotions, self.numBasicEmotions, self.encodedDimension)
-            print('shape of the basicEmotionProfile', basicEmotionProfile.shape)
             emotionProfile = self.specificEmotionModel.calculateEmotionProfile(basicEmotionProfile, subjectInds)
 
         # ------------------- Learned Activity Mapping ------------------- #

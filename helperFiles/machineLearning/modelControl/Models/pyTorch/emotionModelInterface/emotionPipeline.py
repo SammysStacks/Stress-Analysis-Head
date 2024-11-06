@@ -2,6 +2,7 @@ import random
 import time
 
 from .emotionPipelineHelpers import emotionPipelineHelpers
+import matplotlib.pyplot as plt
 
 
 class emotionPipeline(emotionPipelineHelpers):
@@ -17,6 +18,9 @@ class emotionPipeline(emotionPipelineHelpers):
 
         # Finish setting up the model.
         self.compileOptimizer(submodel)  # Initialize the optimizer (for back propagation)
+
+        # quick visualization
+        self.physiologicalSmoothLoss, self.resampledSmoothLoss, self.signalReconstructedLoss, self.finalLoss = [], [], [], []
 
     def trainModel(self, dataLoader, submodel, trainSharedLayers, inferenceTraining, profileTraining, numEpochs):
         """
@@ -101,6 +105,12 @@ class emotionPipeline(emotionPipelineHelpers):
                     # Initialize basic core loss value.
                     finalLoss = signalReconstructedLoss + 0.01*(physiologicalSmoothLoss + resampledSmoothLoss)
 
+                    # append the losses
+                    self.physiologicalSmoothLoss.append(physiologicalSmoothLoss.item())
+                    self.resampledSmoothLoss.append(resampledSmoothLoss.item())
+                    self.signalReconstructedLoss.append(signalReconstructedLoss.item())
+                    self.finalLoss.append(finalLoss.item())
+
                     # Update the user.
                     self.accelerator.print("Final-Recon-Phys-Resamp", finalLoss.item(), signalReconstructedLoss.item(), physiologicalSmoothLoss.item(), resampledSmoothLoss.item(), flush=True)
 
@@ -117,6 +127,7 @@ class emotionPipeline(emotionPipelineHelpers):
 
         # Prepare the model/data for evaluation.
         self.accelerator.wait_for_everyone()  # Wait before continuing.
+        #self.plotLosses()
 
     def backpropogateModel(self):
         # Clip the gradients if they are too large.
@@ -135,3 +146,20 @@ class emotionPipeline(emotionPipelineHelpers):
         batchSignalInfo, batchSignalLabels = batchSignalInfo.to(self.accelerator.device), batchSignalLabels.to(self.accelerator.device)
         
         return batchSignalInfo, batchSignalLabels, batchTrainingMask, batchTestingMask
+
+    def plotLosses(self):
+        """Plot the training losses over epochs."""
+        epochs = range(1, len(self.finalLoss) + 1)
+
+        plt.figure(figsize=(12, 8))
+
+        plt.plot(epochs, self.signalReconstructedLoss, label="Signal Reconstruction Loss")
+        plt.plot(epochs, self.physiologicalSmoothLoss, label="Physiological Smooth Loss")
+        plt.plot(epochs, self.resampledSmoothLoss, label="Resampled Smooth Loss")
+        plt.plot(epochs, self.finalLoss, label="Final Loss", linestyle='--')
+
+        plt.xlabel("Epochs")
+        plt.ylabel("Loss")
+        plt.title("Training Losses Over Epochs")
+        plt.legend()
+        plt.show()
