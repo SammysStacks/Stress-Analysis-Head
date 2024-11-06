@@ -41,7 +41,6 @@ class emotionPipelineHelpers:
         self.organizeLossInfo = organizeTrainingLosses(accelerator, allEmotionClasses, self.activityLabelInd)
         self.modelVisualization = modelVisualizations(accelerator, modelSubfolder="trainingFigures/")
         self.optimizerMethods = optimizerMethods(userInputParams)
-        self.dataInterface = emotionDataInterface()
         self.dataAugmentation = dataAugmentation()
         self.modelHelpers = modelHelpers()
 
@@ -54,6 +53,8 @@ class emotionPipelineHelpers:
         assert len(self.emotionNames) == len(self.allEmotionClasses), f"Found {len(self.emotionNames)} emotions with {len(self.allEmotionClasses)} classes specified."
         assert len(self.activityNames) == self.numActivities, f"Found {len(self.activityNames)} activities with {self.numActivities} classes specified."
 
+    # ------------------------------------------------------------------ #
+
     def compileOptimizer(self, submodel):
         # Initialize the optimizer and scheduler.
         self.optimizer, self.scheduler = self.optimizerMethods.addOptimizer(submodel, self.model)
@@ -63,6 +64,47 @@ class emotionPipelineHelpers:
         else: self.optimizer, self.scheduler, self.model, dataLoader = self.accelerator.prepare(self.optimizer, self.scheduler, self.model, dataLoader)
 
         return dataLoader
+
+    # ------------------------------------------------------------------ #
+
+    def getTrainingEpoch(self, submodel):
+        if submodel == modelConstants.signalEncoderModel: return max(0, len(self.model.specificSignalEncoderModel.trainingLosses_signalReconstruction) - 1)
+        elif submodel == modelConstants.emotionModel: return max(0, len(self.model.specificEmotionModel.trainingLosses_signalReconstruction) - 1)
+        else: raise Exception()
+
+    def setupTraining(self, submodel, inferenceTraining, profileTraining, specificTraining, trainSharedLayers):
+        # Do not train the model at all.
+        self.setupTrainingFlags(self.model, trainingFlag=False)
+
+        if inferenceTraining:
+            # Prepare the model for inference training.
+            self.setupTrainingFlags(self.model.inferenceModel, trainingFlag=True)
+            assert not trainSharedLayers, "We cannot train layers during inference."
+            assert not specificTraining, "We cannot train layers during inference."
+            assert not profileTraining, "We cannot train layers during inference."
+            return None
+
+        # Emotion model training.
+        elif submodel == modelConstants.emotionModel:
+            if trainSharedLayers: self.setupTrainingFlags(self.model.sharedEmotionModel, trainingFlag=True)
+            if specificTraining: self.setupTrainingFlags(self.model.specificEmotionModel, trainingFlag=True)
+
+        # Signal encoder training
+        if trainSharedLayers: self.setupTrainingFlags(self.model.sharedSignalEncoderModel, trainingFlag=True)
+        if specificTraining: self.setupTrainingFlags(self.model.specificSignalEncoderModel, trainingFlag=True)
+        self.setupTrainingFlags(self.model.specificSignalEncoderModel.profileModel, trainingFlag=profileTraining)
+
+    @staticmethod
+    def setupTrainingFlags(model, trainingFlag):
+        # Set the model's training mode.
+        if trainingFlag: model.train()
+        else: model.eval()
+
+        # Update requires_grad for all parameters
+        for param in model.parameters():
+            param.requires_grad = trainingFlag
+
+    # ------------------------------------------------------------------ #
 
     @staticmethod
     def prepareInformation(dataLoader):
@@ -76,47 +118,11 @@ class emotionPipelineHelpers:
 
         return allData, allLabels, allTrainingMasks, allTestingMasks, allSignalData, allSignalIdentifiers, allMetadata
 
-    # ------------------------------------------------------------------ #
+    def extractBatchInformation(self, batchData):
+        # Extract the data, labels, and testing/training indices.
+        batchSignalInfo, batchSignalLabels, batchTrainingMask, batchTestingMask = batchData
+        # Add the data, labels, and training/testing indices to the device (GPU/CPU)
+        batchTrainingMask, batchTestingMask = batchTrainingMask.to(self.accelerator.device), batchTestingMask.to(self.accelerator.device)
+        batchSignalInfo, batchSignalLabels = batchSignalInfo.to(self.accelerator.device), batchSignalLabels.to(self.accelerator.device)
 
-    def getTrainingEpoch(self, submodel):
-        if submodel == modelConstants.signalEncoderModel: return max(0, len(self.model.specificSignalEncoderModel.trainingLosses_signalReconstruction) - 1)
-        elif submodel == modelConstants.emotionModel: return max(0, len(self.model.specificEmotionModel.trainingLosses_signalReconstruction) - 1)
-        else: raise Exception()
-
-    def setupTraining(self, submodel, trainSharedLayers=False, inferenceTraining=False, profileTraining=False):
-        # Do not train the model at all.
-        self.setupTrainingFlags(self.model, trainingFlag=False)
-
-        # Profile training.
-        if profileTraining:
-            self.setupTrainingFlags(self.model.specificSignalEncoderModel.profileModel, trainingFlag=True)
-            assert not trainSharedLayers, "We cannot train layers during profile training."
-            assert not inferenceTraining, "We cannot train layers during profile training."
-            return None
-
-        elif inferenceTraining:
-            # Label the model we are training.
-            self.setupTrainingFlags(self.model.inferenceModel, trainingFlag=True)
-            assert not trainSharedLayers, "We cannot train layers during inference."
-            assert not profileTraining, "We cannot train layers during inference."
-            return None
-
-        # Emotion model training.
-        elif submodel == modelConstants.emotionModel:
-            if trainSharedLayers: self.setupTrainingFlags(self.model.sharedEmotionModel, trainingFlag=True)
-            else: self.setupTrainingFlags(self.model.specificEmotionModel, trainingFlag=True)
-        else:
-            # Signal encoder training
-            if trainSharedLayers: self.setupTrainingFlags(self.model.sharedSignalEncoderModel, trainingFlag=True)
-            else: self.setupTrainingFlags(self.model.specificSignalEncoderModel, trainingFlag=True)
-            self.setupTrainingFlags(self.model.specificSignalEncoderModel.profileModel, trainingFlag=True)
-
-    @staticmethod
-    def setupTrainingFlags(model, trainingFlag):
-        # Set the model's training mode.
-        if trainingFlag: model.train()
-        else: model.eval()
-
-        # Update requires_grad for all parameters
-        for param in model.parameters():
-            param.requires_grad = trainingFlag
+        return batchSignalInfo, batchSignalLabels, batchTrainingMask, batchTestingMask

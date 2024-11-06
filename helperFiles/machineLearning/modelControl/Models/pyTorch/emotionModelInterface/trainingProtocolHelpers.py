@@ -36,10 +36,11 @@ class trainingProtocolHelpers:
         modelPipeline.model.inferenceModel.resetInferenceModel(numExperiments, encodedDimension)
 
         # Train the inference model.
-        modelPipeline.trainModel(dataLoader, submodel=submodel, trainSharedLayers=False, inferenceTraining=True, profileTraining=False, numEpochs=numEpochs)
+        modelPipeline.trainModel(dataLoader, submodel=submodel,  inferenceTraining=True, profileTraining=False, specificTraining=False, trainSharedLayers=False, numEpochs=numEpochs)
 
     def trainEpoch(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders):
         # Set random order to loop through the models.
+        self.unifyAllModelWeights(allMetaModels, allModels)
         modelIndices = list(range(len(allMetaModels)))
         random.shuffle(modelIndices)
 
@@ -50,7 +51,7 @@ class trainingProtocolHelpers:
 
             # Train the updated model.
             self.modelMigration.unifyModelWeights(allModels=[modelPipeline], modelWeights=self.sharedModelWeights, layerInfo=self.unifiedLayerData)
-            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, trainSharedLayers=True, profileTraining=False, numEpochs=1)   # Full model training.
+            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=False, specificTraining=True, trainSharedLayers=True, numEpochs=1)   # Full model training.
             self.accelerator.wait_for_everyone()
 
             # Store the new model weights.
@@ -58,6 +59,7 @@ class trainingProtocolHelpers:
 
         # Unify all the model weights and retrain the specific models.
         self.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders)
+        self.unifyAllModelWeights(allMetaModels, allModels)
 
     def datasetSpecificTraining(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders):
         # Unify all the model weights.
@@ -69,8 +71,7 @@ class trainingProtocolHelpers:
             modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
 
             # Train the updated model.
-            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, trainSharedLayers=False, profileTraining=False, numEpochs=1)  # Signal-specific training: training only.
-            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, trainSharedLayers=False, profileTraining=True, numEpochs=1)  # Profile training: testing and training.
+            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=True, specificTraining=False, trainSharedLayers=False, numEpochs=1)  # Signal-specific training: training only.
             self.accelerator.wait_for_everyone()
 
     def calculateLossInformation(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel):

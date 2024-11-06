@@ -24,32 +24,23 @@ class neuralOperatorInterface(emotionModelWeights):
 
     def initializeWaveletLayer(self, sequenceLength, neuralOperatorParameters, reversibleFlag, switchActivationDirection, layerMultiple, useCompiledOperators=False):
         # Unpack the neural operator parameters.
-        waveletParameters = neuralOperatorParameters['wavelet']
-
-        # Unpack the neural operator parameters.
-        encodeHighFrequencyProtocol = waveletParameters.get('encodeHighFrequencyProtocol', 'highFreq')  # The protocol for encoding the high frequency signals.
-        encodeLowFrequencyProtocol = waveletParameters.get('encodeLowFrequencyProtocol', 'lowFreq')  # The protocol for encoding the low frequency signals.
-        skipConnectionProtocol = waveletParameters.get('skipConnectionProtocol', 'none')  # The protocol for the skip connections.
-        learningProtocol = waveletParameters.get('learningProtocol', 'rCNN')  # The protocol for learning the wavelet data.
-        waveletType = waveletParameters.get('waveletType', 'bior3.7')  # The type of wavelet to use for the wavelet transform.
-
-        # Compile the extra operators.
+        encodeHighFrequencyProtocol = neuralOperatorParameters['wavelet'].get('encodeHighFrequencyProtocol', 'highFreq')  # The protocol for encoding the high frequency signals.
+        extraOperators = neuralOperatorParameters['wavelet'].get('extraOperators', ()) if useCompiledOperators else ()  # The extra operators to apply to the wavelet transform.
+        encodeLowFrequencyProtocol = neuralOperatorParameters['wavelet'].get('encodeLowFrequencyProtocol', 'lowFreq')  # The protocol for encoding the low frequency signals.
+        waveletType = neuralOperatorParameters['wavelet'].get('waveletType', 'bior3.7')  # The type of wavelet to use for the wavelet transform.
         finalSequenceLength = sequenceLength//2
-        extraOperators = waveletParameters.get('extraOperators', ()) if useCompiledOperators else ()
-        compiledOperators = self.compileExtraOperators(finalSequenceLength, extraOperators, neuralOperatorParameters, reversibleFlag, switchActivationDirection, layerMultiple=2)
 
         # Hardcoded parameters.
         activationMethod = f"{emotionModelWeights.getActivationType()}_{switchActivationDirection}"
-        numDecompositions = 1  # Number of decompositions for the waveletType transform.
         mode = 'periodization'  # Mode for the waveletType transform.
 
-        if not reversibleFlag:
-            # Hardcoded non-reversible parameters.
-            skipConnectionProtocol = 'CNN'  # The protocol for the skip connections.
-            learningProtocol = 'FC'  # The protocol for learning the wavelet data.
+        # Hardcoded parameters.
+        learningProtocol = 'rFC' if reversibleFlag else 'FC'  # The protocol for learning the wavelet data.
+        skipConnectionProtocol = 'none' if reversibleFlag else 'CNN'  # The protocol for the skip connections.
+        numDecompositions = waveletNeuralOperatorLayer.max_decompositions(signal_length=sequenceLength, wavelet_name=waveletType) if learningProtocol not in ['drCNN', 'drFC'] else 1  # Number of decompositions for the waveletType transform.
 
-        # Specify the default parameters.
-        if numDecompositions is None or learningProtocol not in ['drCNN', 'drFC']: numDecompositions = waveletNeuralOperatorLayer.max_decompositions(signal_length=sequenceLength, wavelet_name=waveletType)  # Number of decompositions for the waveletType transform.
+        # Compile the extra operators.
+        compiledOperators = self.compileExtraOperators(finalSequenceLength, extraOperators, neuralOperatorParameters, reversibleFlag, switchActivationDirection, layerMultiple=2)
 
         return waveletNeuralOperatorLayer(sequenceLength=sequenceLength, numInputSignals=self.numInputSignals*layerMultiple, numOutputSignals=self.numOutputSignals*layerMultiple, numDecompositions=numDecompositions,
                                           waveletType=waveletType, mode=mode, addBiasTerm=self.addBiasTerm, activationMethod=activationMethod, skipConnectionProtocol=skipConnectionProtocol,
@@ -57,23 +48,18 @@ class neuralOperatorInterface(emotionModelWeights):
 
     def initializeFourierLayer(self, sequenceLength, neuralOperatorParameters, reversibleFlag, switchActivationDirection, layerMultiple, useCompiledOperators=False):
         # Unpack the neural operator parameters.
+        extraOperators = neuralOperatorParameters.get('extraOperators', ()) if useCompiledOperators else ()
         encodeImaginaryFrequencies = neuralOperatorParameters.get('encodeImaginaryFrequencies', True)
-        skipConnectionProtocol = neuralOperatorParameters.get('skipConnectionProtocol', 'none')
         encodeRealFrequencies = neuralOperatorParameters.get('encodeRealFrequencies', True)
-        learningProtocol = neuralOperatorParameters.get('learningProtocol', 'rFC')
+        finalSequenceLength = sequenceLength//2 + 1
 
         # Compile the extra operators.
-        finalSequenceLength = sequenceLength//2 + 1
-        extraOperators = neuralOperatorParameters.get('extraOperators', ()) if useCompiledOperators else ()
         compiledOperators = self.compileExtraOperators(finalSequenceLength, extraOperators, neuralOperatorParameters, reversibleFlag, switchActivationDirection, layerMultiple=2)
 
         # Hardcoded parameters.
-        activationMethod = f"{emotionModelWeights.getActivationType()}_{switchActivationDirection}"
-
-        if not reversibleFlag:
-            # Hardcoded non-reversible parameters.
-            skipConnectionProtocol = 'CNN'  # The protocol for the skip connections.
-            learningProtocol = 'FC'  # The protocol for learning the wavelet data.
+        learningProtocol = 'rFC' if reversibleFlag else 'FC'  # The protocol for learning the wavelet data.
+        skipConnectionProtocol = 'none' if reversibleFlag else 'CNN'  # The protocol for the skip connections.
+        activationMethod = f"{emotionModelWeights.getActivationType()}_{switchActivationDirection}"  # The activation method to use.
 
         return fourierNeuralOperatorLayer(sequenceLength=sequenceLength, numInputSignals=self.numInputSignals*layerMultiple, numOutputSignals=self.numOutputSignals*layerMultiple, addBiasTerm=self.addBiasTerm, activationMethod=activationMethod,
                                           skipConnectionProtocol=skipConnectionProtocol, encodeRealFrequencies=encodeRealFrequencies, encodeImaginaryFrequencies=encodeImaginaryFrequencies, learningProtocol=learningProtocol, extraOperators=compiledOperators)

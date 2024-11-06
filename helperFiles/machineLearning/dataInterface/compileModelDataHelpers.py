@@ -44,7 +44,7 @@ class compileModelDataHelpers:
 
         # Exclusion criterion.
         self.minNumClasses, self.maxClassPercentage = self.modelParameters.getExclusionClassCriteria(submodel)
-        self.minSequencePoints, self.minSignalPresentCount, self.minBoundaryPoints, self.maxSinglePointDiff, self.maxAverageDiff = self.modelParameters.getExclusionSequenceCriteria(submodel)
+        self.minSequencePoints, self.minSignalPresentCount, self.minBoundaryPoints, self.maxSinglePointDiff, self.maxAverageDiff = self.modelParameters.getExclusionSequenceCriteria()
 
     # ---------------------- Model Specific Parameters --------------------- #
 
@@ -231,10 +231,9 @@ class compileModelDataHelpers:
         # Ensure the feature names match the number of signals
         assert len(allSignalData) == 0 or len(featureNames) == allSignalData.shape[1], \
             f"Feature names do not match data dimensions. {len(featureNames)} != {allSignalData.shape[1]}"
-        batchSize, numSignals, maxSequenceLength, numChannels = allSignalData.shape
 
         # Standardize all signals at once for the entire batch
-        validDataMask = emotionDataInterface.getValidDataMask(allSignalData, allNumSignalPoints)
+        validDataMask = emotionDataInterface.getValidDataMask(allSignalData)
         allSignalData = self.normalizeSignals(allSignalData=allSignalData, missingDataMask=~validDataMask)
         biomarkerData = emotionDataInterface.getChannelData(signalData=allSignalData, channelName=modelConstants.signalChannel)
         # allSignalData dim: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
@@ -249,7 +248,7 @@ class compileModelDataHelpers:
         allSignalData[:, :, 1:][badSinglePointMaxDiff] = 0  # Remove small errors.
 
         # Re-normalize the data after removing bad points.
-        validDataMask = emotionDataInterface.getValidDataMask(allSignalData, allNumSignalPoints)
+        validDataMask = emotionDataInterface.getValidDataMask(allSignalData)
         allSignalData = self.normalizeSignals(allSignalData=allSignalData, missingDataMask=~validDataMask)
         biomarkerData = emotionDataInterface.getChannelData(signalData=allSignalData, channelName=modelConstants.signalChannel)
 

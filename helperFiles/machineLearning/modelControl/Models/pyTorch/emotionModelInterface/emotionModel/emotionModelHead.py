@@ -1,8 +1,7 @@
-import random
-
-import torch
 from matplotlib import pyplot as plt
 from torch import nn
+import random
+import torch
 
 from .emotionModelHelpers.emotionDataInterface import emotionDataInterface
 from .emotionModelHelpers.modelConstants import modelConstants
@@ -120,7 +119,6 @@ class emotionModelHead(nn.Module):
                 goldenRatio=self.goldenRatio,
             )
 
-
             self.sharedActivityModel = sharedActivityModel(
                 neuralOperatorParameters=self.neuralOperatorParameters,
                 learningProtocol=self.irreversibleLearningProtocol,
@@ -152,7 +150,6 @@ class emotionModelHead(nn.Module):
         # signalIdentifiers: [batchSize, numSignals, numSignalIdentifiers]
         # metadata: [batchSize, numMetadata]
 
-
         # Prepare the data for the model.
         signalData, signalIdentifiers, metadata = (tensor.to(device) for tensor in (signalData, signalIdentifiers, metadata))
         signalIdentifiers, signalData, metadata = signalIdentifiers.int(), signalData.double(), metadata.int()
@@ -167,14 +164,13 @@ class emotionModelHead(nn.Module):
         # ------------------- Organize the Incoming Data ------------------- #
 
         # Check which points were missing in the data.
-        numSignalPoints = emotionDataInterface.getSignalIdentifierData(signalIdentifiers, channelName=modelConstants.numSignalPointsSI)  # Dim: batchSize, numSignals
-        validDataMask = emotionDataInterface.getValidDataMask(signalData, numSignalPoints)
+        batchInds = emotionDataInterface.getSignalIdentifierData(signalIdentifiers, channelName=modelConstants.batchIndexSI)[:, 0]  # Dim: batchSize
+        validDataMask = emotionDataInterface.getValidDataMask(signalData)
         # missingDataMask: batchSize, numSignals, maxSequenceLength
 
         # ------------------- Estimated Physiological Profile ------------------- #
 
         # Get the estimated physiological profiles.
-        batchInds = emotionDataInterface.getSignalIdentifierData(signalIdentifiers, channelName=modelConstants.batchIndexSI)[:, 0]  # Dim: batchSize
         if inferenceTraining: physiologicalProfile = self.inferenceModel.getCurrentPhysiologicalProfile(batchInds)
         else: physiologicalProfile = self.specificSignalEncoderModel.profileModel.getCurrentPhysiologicalProfile(batchInds)
         # physiologicalProfile: batchSize, encodedDimension
@@ -188,13 +184,11 @@ class emotionModelHead(nn.Module):
         # resampledSignalData: batchSize, numSignals, encodedDimension
 
         # Resample the signal data.
-        physiologicalTimes = self.sharedSignalEncoderModel.pseudoEncodedTimes
-        reconstructedSignalData = self.interpolateData(physiologicalTimes, signalData, resampledSignalData)
-
+        reconstructedSignalData = self.interpolateData(signalData, resampledSignalData)
         # reconstructedSignalData: batchSize, numSignals, maxSequenceLength
 
         # Visualize the data transformations within signal encoding.
-        if not inferenceTraining and random.random() < 0.01:
+        if submodel == modelConstants.signalEncoderModel and not inferenceTraining and random.random() < 0.1:
             with torch.no_grad(): self.visualizeSignalEncoding(physiologicalProfile, resampledSignalData, reconstructedSignalData, signalData, validDataMask)
 
         # ------------------- Learned Emotion Mapping ------------------- #
@@ -235,7 +229,6 @@ class emotionModelHead(nn.Module):
             if layerInd % specificModel.goldenRatio == 0: metaLearningData = specificModel.learningInterface(layerInd=specificLayerCounter, signalData=metaLearningData); specificLayerCounter += 1
             metaLearningData = sharedModel.learningInterface(layerInd=layerInd, signalData=metaLearningData)
         metaLearningData = specificModel.learningInterface(layerInd=specificLayerCounter, signalData=metaLearningData)
-
         assert specificLayerCounter + 1 == len(specificModel.neuralLayers), f"The specific layer counter ({specificLayerCounter}) does not match the number of specific layers ({len(specificModel.neuralLayers)})."
         # metaLearningData: batchSize, numSignals, finalDimension
 
@@ -295,14 +288,13 @@ class emotionModelHead(nn.Module):
         plt.legend()
         plt.show()
 
-    @staticmethod
-    def interpolateData(physiologicalTimes, signalData, resampledSignalData):
+    def interpolateData(self, signalData, resampledSignalData):
         # Extract the dimensions of the data.
         timepoints = emotionDataInterface.getChannelData(signalData, channelName=modelConstants.timeChannel)
         batchSize, numSignals, encodedDimension = resampledSignalData.size()
 
         # Align the timepoints to the physiological times.
-        reversedPhysiologicalTimes = torch.flip(physiologicalTimes, dims=[0])
+        reversedPhysiologicalTimes = torch.flip(self.sharedSignalEncoderModel.pseudoEncodedTimes, dims=[0])
         mappedPhysiologicalTimedInds = encodedDimension - 1 - torch.searchsorted(sorted_sequence=reversedPhysiologicalTimes, input=timepoints, out=None, out_int32=False, right=False)  # timepoints <= physiologicalTimesExpanded[mappedPhysiologicalTimedInds]
         # Ensure the indices don't exceed the size of the last dimension of reconstructedSignalData.
         validIndsRight = torch.clamp(mappedPhysiologicalTimedInds, min=0, max=encodedDimension - 1)  # physiologicalTimesExpanded[validIndsLeft] < timepoints
@@ -310,7 +302,7 @@ class emotionModelHead(nn.Module):
         # mappedPhysiologicalTimedInds dimension: batchSize, numSignals, maxSequenceLength
 
         # Get the closest physiological data to the timepoints. c
-        physiologicalTimesExpanded = physiologicalTimes.unsqueeze(0).unsqueeze(0).expand_as(resampledSignalData)
+        physiologicalTimesExpanded = self.sharedSignalEncoderModel.pseudoEncodedTimes.unsqueeze(0).unsqueeze(0).expand_as(resampledSignalData)
         closestPhysiologicalTimesRight = torch.gather(input=physiologicalTimesExpanded, dim=2, index=validIndsRight)  # Initialize the tensor.
         closestPhysiologicalTimesLeft = torch.gather(input=physiologicalTimesExpanded, dim=2, index=validIndsLeft)  # Initialize the tensor.
         closestPhysiologicalDataRight = torch.gather(input=resampledSignalData, dim=2, index=validIndsRight)  # Initialize the tensor.

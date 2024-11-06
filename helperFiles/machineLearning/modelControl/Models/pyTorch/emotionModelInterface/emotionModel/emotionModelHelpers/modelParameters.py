@@ -23,12 +23,10 @@ class modelParameters:
                 'waveletType': userInputParams['waveletType'],  # The type of wavelet to use for the wavelet transform.
                 'encodeHighFrequencyProtocol': 'highFreq',  # The protocol for encoding the high frequency signals.
                 'encodeLowFrequencyProtocol': 'lowFreq',  # The protocol for encoding the low frequency signals.
-                'skipConnectionProtocol': 'none',  # The protocol for the skip connections.
                 'extraOperators': [],  # The extra operators to apply to the wavelet transform.
             },
             'fourier': {
                 'encodeImaginaryFrequencies': True,  # The protocol for encoding the high frequency signals.
-                'skipConnectionProtocol': 'none',  # The protocol for the skip connections.
                 'encodeRealFrequencies': True,  # The protocol for encoding the low frequency signals.
                 'extraOperators': [],  # The extra operators to apply to the wavelet transform.
             }
@@ -85,10 +83,8 @@ class modelParameters:
         else: raise Exception()
 
     @staticmethod
-    def getExclusionSequenceCriteria(submodel):
-        if submodel == modelConstants.signalEncoderModel: return 20, 20, 2, 0.5, 0.25  # minSequencePoints, minSignalPresentCount, minBoundaryPoints, maxSinglePointDiff, maxAverageDiff
-        elif submodel == modelConstants.emotionModel: return -1, -1, -1, modelConstants.minMaxScale*3, modelConstants.minMaxScale*3  # minSequencePoints, minSignalPresentCount, minBoundaryPoints, maxSinglePointDiff, maxAverageDiff
-        else: raise Exception()
+    def getExclusionSequenceCriteria():
+        return 20, 20, 2, 0.5, 0.25  # minSequencePoints, minSignalPresentCount, minBoundaryPoints, maxSinglePointDiff, maxAverageDiff
 
     # -------------------------- Saving/Loading Parameters ------------------------- #
 

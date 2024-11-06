@@ -29,14 +29,13 @@ def getActivationMethod(activationMethod):
         activationFunction = nn.GELU()
     elif activationMethod == 'relu':
         activationFunction = nn.ReLU()
-    else:
-        raise ValueError("Activation type must be in ['Tanhshrink', 'none', 'boundedExp', 'boundedS' 'PReLU', 'selu', 'gelu', 'relu', 'sinh']")
+    else: raise ValueError("Activation type must be in ['Tanhshrink', 'none', 'boundedExp', 'reversibleLinearSoftSign', 'boundedS', 'PReLU', 'selu', 'gelu', 'relu']")
 
     return activationFunction
 
 
 class reversibleLinearSoftSign(reversibleInterface):
-    def __init__(self, invertedActivation=False, nonLinearRegion=0.5, infiniteBound=1):
+    def __init__(self, invertedActivation=False, nonLinearRegion=2, infiniteBound=1):
         super(reversibleLinearSoftSign, self).__init__()
         self.invertedActivation = invertedActivation  # Whether the non-linearity term is inverted
         self.nonLinearRegion = nonLinearRegion  # Corresponds to `r` in the equation
@@ -107,7 +106,7 @@ class boundedS(reversibleInterface):
         y3 = y ** 3  # Precompute y cubed
         y4 = y ** 4  # Precompute y quad
 
-        if self.inversionPoint != 0:
+        if self.inversionPoint != 1:
             # Precompute r and r squared.
             r, r2 = self.inversionPoint, self.inversionPoint ** 2
 
@@ -161,8 +160,8 @@ if __name__ == "__main__":
     data = torch.randn(2, 10, 100, dtype=torch.float64)
     data = data - data.min()
     data = data / data.max()
-    data = 4 * data - 2
+    data = 2 * data - 1
 
     # Perform the forward and inverse pass.
-    activationClass = reversibleLinearSoftSign(invertedActivation=True)
-    _forwardData, _reconstructedData = activationClass.checkReconstruction(data, atol=1e-6, numLayers=100)
+    activationClass = boundedS(invertedActivation=True)
+    _forwardData, _reconstructedData = activationClass.checkReconstruction(data, atol=1e-6, numLayers=10)

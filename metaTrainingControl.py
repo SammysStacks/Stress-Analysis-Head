@@ -2,8 +2,6 @@
 
 import os
 
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
-
 # Set specific environmental parameters.
 os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
@@ -18,9 +16,10 @@ import time
 
 # Import files for machine learning
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.trainingProtocolHelpers import trainingProtocolHelpers
 from helperFiles.machineLearning.modelControl.Models.pyTorch.modelMigration import modelMigration
-from helperFiles.machineLearning.dataInterface.compileModelData import compileModelData  # Methods to organize model data.
+from helperFiles.machineLearning.dataInterface.compileModelData import compileModelData
 
 # Configure cuDNN and PyTorch's global settings.
 torch.backends.cudnn.deterministic = False  # If False: allow non-deterministic algorithms in cuDNN, which can enhance performance but reduce reproducibility.

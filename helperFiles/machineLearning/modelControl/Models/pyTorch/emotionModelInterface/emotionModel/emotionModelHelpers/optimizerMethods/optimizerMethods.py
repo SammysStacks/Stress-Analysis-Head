@@ -15,9 +15,9 @@ class optimizerMethods:
         modelParams = [
             # Specify the model parameters for the signal encoding.
             {'params': model.inferenceModel.parameters(), 'weight_decay': 0, 'lr': 1},
-            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': 0, 'lr': 0.01},
-            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "profileModel" not in name), 'weight_decay': 0, 'lr': 0.01},
-            {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': 0, 'lr': 1},
+            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': 0, 'lr': 1e-3},
+            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "profileModel" not in name), 'weight_decay': 0, 'lr': 1e-3},
+            {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': 0, 'lr': 0.001},
         ]
 
         if submodel == modelConstants.emotionModel:
@@ -66,12 +66,12 @@ class optimizerMethods:
         # Reduce on plateau (need further editing of loop): optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=0.5, patience=10, threshold=1e-4, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08)
         # Defined lambda function: optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda=lambda_function); lambda_function = lambda epoch: (epoch/50) if epoch < -1 else 1
         # torch.optim.lr_scheduler.constrainedLR(optimizer, start_factor=0.3333333333333333, end_factor=1.0, total_iters=5, last_epoch=-1)
-        numEpochCounts = 15*3  # 15 counts per epoch session (wesad is 5 counts) for 5 epochs
-        numWarmUps = 10*numEpochCounts  # Warm-up epochs
+        numEpochCounts = 15*2  # 15 counts per epoch session (wesad is 5 counts) for 5 epochs
+        numWarmUps = 1*numEpochCounts  # Warm-up epochs
 
         schedulerOrder = [
-            optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda epoch: min(1.0, epoch / numWarmUps / 10)),
-            optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=numEpochCounts, eta_min=1e-3, last_epoch=-1),
+            optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda epoch: min(1.0, epoch / numWarmUps)),
+            optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=2*numEpochCounts, eta_min=1e4, last_epoch=-1),
         ]
 
         # Set the scheduler.

@@ -1,6 +1,7 @@
 import random
 import time
 
+from .emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
 from .emotionPipelineHelpers import emotionPipelineHelpers
 import matplotlib.pyplot as plt
 
@@ -19,10 +20,7 @@ class emotionPipeline(emotionPipelineHelpers):
         # Finish setting up the model.
         self.compileOptimizer(submodel)  # Initialize the optimizer (for back propagation)
 
-        # quick visualization
-        self.physiologicalSmoothLoss, self.resampledSmoothLoss, self.signalReconstructedLoss, self.finalLoss = [], [], [], []
-
-    def trainModel(self, dataLoader, submodel, trainSharedLayers, inferenceTraining, profileTraining, numEpochs):
+    def trainModel(self, dataLoader, submodel, inferenceTraining, profileTraining, specificTraining, trainSharedLayers, numEpochs):
         """
         Stored items in the dataLoader.dataset:
             allData: The standardized testing and training data → Dim: numExperiments, numSignals, totalLength, numChannels
@@ -37,7 +35,7 @@ class emotionPipeline(emotionPipelineHelpers):
         # Load in all the data and labels for final predictions and calculate the activity and emotion class weights.
         # allData, allLabels, allTrainingMasks, allTestingMasks, allSignalData, allSignalIdentifiers, allMetadata, reconstructionIndex = self.prepareInformation(dataLoader)
         # allEmotionClassWeights, activityClassWeights = self.organizeLossInfo.getClassWeights(allLabels, allTrainingMasks, allTestingMasks, self.numActivities)
-        self.setupTraining(submodel, trainSharedLayers=trainSharedLayers, inferenceTraining=inferenceTraining, profileTraining=profileTraining)
+        self.setupTraining(submodel, inferenceTraining=inferenceTraining, profileTraining=profileTraining, specificTraining=specificTraining, trainSharedLayers=trainSharedLayers)
 
         # For each training epoch.
         for epoch in range(numEpochs):
@@ -45,7 +43,6 @@ class emotionPipeline(emotionPipelineHelpers):
 
             # For each data batch in the epoch.
             for batchDataInd, batchData in enumerate(dataLoader):
-
                 with self.accelerator.accumulate(self.model):  # Accumulate gradients.
                     # Extract the data, labels, and testing/training indices.
                     if not inferenceTraining: batchSignalInfo, batchSignalLabels, batchTrainingMask, batchTestingMask = self.extractBatchInformation(batchData)
@@ -55,24 +52,22 @@ class emotionPipeline(emotionPipelineHelpers):
                     if batchSignalInfo.size(0) == 0: self.backpropogateModel(); continue
                     numPointsAnalyzed += batchSignalInfo.size(0)
 
-                    # Separate the data into signal and metadata information.
-                    currentTrainingMask = None if profileTraining or inferenceTraining else batchTrainingMask
-                    signalBatchData, batchSignalIdentifiers, metaBatchInfo = self.dataInterface.separateData(batchSignalInfo)
+                    # Unpack the batch data information.
+                    currentTrainingMask = None if (profileTraining and not specificTraining and not trainSharedLayers) or inferenceTraining else batchTrainingMask
+                    signalBatchData, batchSignalIdentifiers, metaBatchInfo = emotionDataInterface.separateData(batchSignalInfo)
                     # signalBatchData[:, :, :, 0] = timepoints: [further away from survey (300) -> closest to survey (0)]
                     # signalBatchData dimension: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
                     # batchSignalIdentifiers dimension: batchSize, numSignals, numSignalIdentifiers
                     # metaBatchInfo dimension: batchSize, numMetadata
 
-                    # Adjust the data precision.
-                    signalBatchData = signalBatchData.double()
-
                     # For every new batch.
-                    if not inferenceTraining and self.accelerator.sync_gradients: self.augmentData = random.uniform(a=0, b=1) < 0.5
+                    if not inferenceTraining and self.accelerator.sync_gradients: self.augmentData = random.uniform(a=0, b=1) < 0.25
+                    signalBatchData = signalBatchData.double()  # Convert the data to double precision.
 
                     if not inferenceTraining and self.augmentData:
                         # Augment the signals to train an arbitrary sequence length and order.
-                        augmentedBatchData = self.dataAugmentation.changeNumSignals(signalBatchData, dropoutPercent=0.1)
-                        augmentedBatchData = self.dataAugmentation.signalDropout(augmentedBatchData, dropoutPercent=0.1)
+                        augmentedBatchData = self.dataAugmentation.changeNumSignals(signalBatchData, dropoutPercent=0.2)
+                        augmentedBatchData = self.dataAugmentation.signalDropout(augmentedBatchData, dropoutPercent=0.2)
                         # augmentedBatchData: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
                     else: augmentedBatchData = signalBatchData
 
@@ -137,6 +132,7 @@ class emotionPipeline(emotionPipelineHelpers):
             self.scheduler.step()  # Update the learning rate.
             self.optimizer.zero_grad()  # Zero your gradients to restart the gradient tracking.
             self.accelerator.print(f"Backprop with LR: {self.scheduler.get_last_lr()}", flush=True)
+<<<<<<< HEAD
         
     def extractBatchInformation(self, batchData):
         # Extract the data, labels, and testing/training indices.
@@ -163,3 +159,5 @@ class emotionPipeline(emotionPipelineHelpers):
         plt.title("Training Losses Over Epochs")
         plt.legend()
         plt.show()
+=======
+>>>>>>> 940c1369f (U)
