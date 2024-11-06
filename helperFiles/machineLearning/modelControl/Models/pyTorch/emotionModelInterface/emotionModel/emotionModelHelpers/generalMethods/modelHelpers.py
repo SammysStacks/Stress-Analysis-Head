@@ -2,9 +2,6 @@ import torch
 import torch.nn as nn
 from torch.nn import utils
 
-# Import helper classes.
-from ..optimizerMethods.activationFunctions import switchActivation
-
 
 class modelHelpers:
 
@@ -47,27 +44,6 @@ class modelHelpers:
                 params_variance[name] = variance.mean().item()
 
         return params_variance
-
-    @staticmethod
-    def getCurrentSwitchActivationLayers(model):
-        # Set the initial switch state to None.
-        switchState = None
-
-        for name, module in model.named_modules():
-            if isinstance(module, switchActivation):
-                if switchState is None:
-                    switchState = module.switchState
-                assert switchState == module.switchState, "Switch state is not consistent across the model."
-        if switchState is None:
-            switchState = False
-
-        return switchState
-
-    @staticmethod
-    def switchActivationLayers(model, switchState=True):
-        for name, module in model.named_modules():
-            if isinstance(module, switchActivation):
-                module.switchState = switchState
 
     @staticmethod
     def getAutoencoderWeights(model):

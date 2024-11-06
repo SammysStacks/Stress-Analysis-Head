@@ -13,29 +13,34 @@ class reversibleConvolutionLayer(reversibleInterface):
         # General parameters.
         self.activationMethod = activationMethod  # The activation method to use.
         self.sequenceLength = sequenceLength  # The length of the input signal.
+        self.numSignals = numSignals  # The number of signals in the input data.
         self.kernelSize = kernelSize  # The restricted window for the neural weights.
-        self.bounds = 1 / kernelSize  # The bounds for the neural weights.
         self.numLayers = numLayers  # The number of layers in the reversible linear layer.
-
-        # The stability term to add to the diagonal.
-        self.stabilityTerm = torch.eye(self.sequenceLength, dtype=torch.float64)*0.99
+        self.bounds = kernelSize  # The bounds for the neural weights.
 
         # The restricted window for the neural weights.
-        self.restrictedWindowMask = torch.ones(numSignals, self.sequenceLength, self.sequenceLength, dtype=torch.float64)
-        self.restrictedWindowMask = torch.tril(torch.triu(self.restrictedWindowMask, diagonal=-kernelSize//2 + 1), diagonal=kernelSize//2)
-        assert kernelSize <= sequenceLength, f"The kernel size is larger than the sequence length: {kernelSize}, {sequenceLength}"
+        upperWindowMask = torch.ones(self.sequenceLength, self.sequenceLength, dtype=torch.float64)
+        if self.sequenceLength != self.kernelSize: upperWindowMask = torch.tril(upperWindowMask, diagonal=kernelSize//2)
+        upperWindowMask = torch.triu(upperWindowMask, diagonal=1)
 
         # Calculate the offsets to map positions to kernel indices
-        self.signalInds, self.rowInds, self.colInds = self.restrictedWindowMask.nonzero(as_tuple=False).T
-        self.kernelInds = self.colInds - self.rowInds + self.kernelSize // 2  # Adjust for kernel center
+        self.rowInds, self.colInds = upperWindowMask.nonzero(as_tuple=False).T
+        self.kernelInds = self.rowInds - self.colInds + self.kernelSize // 2  # Adjust for kernel center
+
+        # Assert the validity of the input parameters.
+        assert 1 < kernelSize <= sequenceLength, f"The kernel size is larger than the sequence length: {kernelSize}, {sequenceLength}"
+        assert self.kernelInds.max() == self.kernelSize//2 - 1, f"The kernel indices are not valid: {self.kernelInds.max()}"
+        assert self.kernelInds.min() == 0, f"The kernel indices are not valid: {self.kernelInds.min()}"
 
         # Initialize the neural layers.
         self.activationFunctions,  self.linearOperators = nn.ModuleList(), nn.ParameterList()
 
         # Create the neural layers.
         for layerInd in range(self.numLayers):
-            parameters = nn.Parameter(torch.randn(numSignals, kernelSize, dtype=torch.float64))
-            self.linearOperators.append(nn.init.uniform_(parameters, a=-self.bounds, b=self.bounds))
+            # Create the neural weights.
+            parameters = nn.Parameter(torch.randn(numSignals, kernelSize//2, dtype=torch.float64))
+            parameters = nn.init.uniform_(parameters, a=-self.bounds, b=self.bounds)
+            self.linearOperators.append(parameters)
 
             # Add the activation function.
             activationMethod = f"{self.activationMethod}_{switchActivationDirection}"
@@ -46,9 +51,6 @@ class reversibleConvolutionLayer(reversibleInterface):
         for layerInd in range(self.numLayers): self.linearOperators[layerInd].register_hook(self.scaleNeuralWeights)
 
     def forward(self, inputData):
-        # Cast the stability term to the device.
-        self.stabilityTerm = self.stabilityTerm.to(inputData.device)
-
         for layerInd in range(self.numLayers):
             if not self.forwardDirection:
                 pseudoLayerInd = self.numLayers - layerInd - 1
@@ -64,19 +66,21 @@ class reversibleConvolutionLayer(reversibleInterface):
         # Unpack the dimensions.
         batchSize, numSignals, sequenceLength = inputData.size()
         assert sequenceLength == self.sequenceLength, f"The sequence length is not correct: {sequenceLength}, {self.sequenceLength}"
+        assert numSignals == self.numSignals, f"The number of signals is not correct: {numSignals}, {self.numSignals}"
 
-        # Get the current neural weights information.
+        # Apply a mask to the neural weights.
         kernelWeights = self.linearOperators[layerInd]
         neuralWeights = torch.zeros(numSignals, sequenceLength, sequenceLength, dtype=torch.float64, device=inputData.device)
         # neuralWeight: numSignals, sequenceLength, sequenceLength
-        # kernelWeights: numSignals, (kernelSize) or (sequenceLength, sequenceLength)
 
-        # Gather the corresponding kernel values for each position
-        neuralWeights[self.signalInds, self.rowInds, self.colInds] = kernelWeights[self.signalInds, self.kernelInds]
-        neuralWeights = neuralWeights + self.stabilityTerm  # Add a stability term to the diagonal.
+        # Gather the corresponding kernel values for each position for a skewed symmetric matrix.
+        neuralWeights[:, self.rowInds, self.colInds] = kernelWeights[:, self.kernelInds]
+        neuralWeights = neuralWeights - neuralWeights.transpose(-2, -1)  # Ensure the neural weights are symmetric.
 
-        # Backward direction: invert the neural weights.
-        if not self.forwardDirection: neuralWeights = torch.linalg.inv(neuralWeights)
+        # Create an orthogonal matrix.
+        neuralWeights = torch.matrix_exp(neuralWeights)
+        if not self.forwardDirection: neuralWeights = neuralWeights.transpose(-2, -1)  # Ensure the neural weights are symmetric.
+        # For orthogonal matrices: A.exp().inverse() = A.exp().transpose() = (-A).exp()
 
         # Apply the neural weights to the input data.
         outputData = torch.einsum('bns,nsi->bni', inputData, neuralWeights)
@@ -87,8 +91,8 @@ class reversibleConvolutionLayer(reversibleInterface):
 if __name__ == "__main__":
     # General parameters.
     _batchSize, _numSignals, _sequenceLength = 2, 3, 256
-    _activationMethod = 'reversibleActivation'
-    _kernelSize = 3
+    _activationMethod = 'reversibleLinearSoftSign'
+    _kernelSize = 5
     _numLayers = 1
 
     # Set up the parameters.

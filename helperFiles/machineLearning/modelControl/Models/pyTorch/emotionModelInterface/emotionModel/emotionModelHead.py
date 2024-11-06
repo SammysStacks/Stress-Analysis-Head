@@ -178,6 +178,7 @@ class emotionModelHead(nn.Module):
 
         # ------------------- Learned Signal Mapping ------------------- #
 
+        # Perform the backward pass: physiologically -> signal data.
         reversibleInterface.changeDirections(forwardDirection=False)
         resampledSignalData = physiologicalProfile.unsqueeze(1).repeat(repeats=(1, numSignals, 1))
         resampledSignalData = self.coreModelPass(self.numSignalEncoderLayers, resampledSignalData, specificModel=self.specificSignalEncoderModel, sharedModel=self.sharedSignalEncoderModel)
@@ -302,7 +303,7 @@ class emotionModelHead(nn.Module):
         validIndsLeft = torch.clamp(mappedPhysiologicalTimedInds + 1, min=0, max=encodedDimension - 1)  # timepoints <= physiologicalTimesExpanded[validIndsRight]
         # mappedPhysiologicalTimedInds dimension: batchSize, numSignals, maxSequenceLength
 
-        # Get the closest physiological data to the timepoints.
+        # Get the closest physiological data to the timepoints. c
         physiologicalTimesExpanded = physiologicalTimes.unsqueeze(0).unsqueeze(0).expand_as(resampledSignalData)
         closestPhysiologicalTimesRight = torch.gather(input=physiologicalTimesExpanded, dim=2, index=validIndsRight)  # Initialize the tensor.
         closestPhysiologicalTimesLeft = torch.gather(input=physiologicalTimesExpanded, dim=2, index=validIndsLeft)  # Initialize the tensor.
@@ -312,7 +313,7 @@ class emotionModelHead(nn.Module):
         # closestPhysiologicalData dimension: batchSize, numSignals, maxSequenceLength
 
         # Perform linear interpolation.
-        linearSlopes = (closestPhysiologicalDataRight - closestPhysiologicalDataLeft) / (closestPhysiologicalTimesRight - closestPhysiologicalTimesLeft).clamp(min=1e-8)
+        linearSlopes = (closestPhysiologicalDataRight - closestPhysiologicalDataLeft) / (closestPhysiologicalTimesRight - closestPhysiologicalTimesLeft).clamp(min=1e-20)
         linearSlopes[closestPhysiologicalTimesLeft == closestPhysiologicalTimesRight] = 0
 
         # Calculate the error in signal reconstruction (encoding loss).

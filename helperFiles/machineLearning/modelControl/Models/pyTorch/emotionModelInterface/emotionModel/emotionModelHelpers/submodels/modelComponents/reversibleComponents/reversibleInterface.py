@@ -20,10 +20,6 @@ class reversibleInterface(nn.Module):
         cls.forwardDirection = forwardDirection  # Modify class attribute
 
     @staticmethod
-    def getStabilityTerm(kernelSize, scalingFactor, device):
-        return torch.eye(kernelSize, device=device)*scalingFactor
-
-    @staticmethod
     def scaleNeuralWeights(grad): return grad
 
     def checkDualReconstruction(self, x1, x2, atol=1e-8, numLayers=10):
