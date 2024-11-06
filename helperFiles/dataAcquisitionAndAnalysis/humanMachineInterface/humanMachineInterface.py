@@ -3,7 +3,6 @@ import accelerate
 import torch
 
 # Import Files
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.trainingProtocolHelpers import trainingProtocolHelpers
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionPipeline import emotionPipeline
@@ -21,8 +20,8 @@ class humanMachineInterface:
             dataloader_config=accelerate.DataLoaderConfiguration(split_batches=True),  # Whether to split batches across devices or not.
             cpu=torch.backends.mps.is_available(),  # Whether to use the CPU. MPS is NOT fully compatible yet.
             step_scheduler_with_optimizer=True,  # Whether to wrap the optimizer in a scheduler.
-            gradient_accumulation_steps=4,  # The number of gradient accumulation steps.
-            mixed_precision="fp16",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"
+            gradient_accumulation_steps=1,  # The number of gradient accumulation steps.
+            mixed_precision="no",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"
         )
 
         # General parameters.
@@ -128,7 +127,7 @@ class humanMachineInterface:
         allSubjectInds = torch.zeros(inputModelData.shape[0])  # torch.Size([75, 81, 72, 2]) batchSize, numSignals, maxLength, [time, features]
         datasetInd = 1
         compiledInputData = self.compileModelHelpers.addContextualInfo(inputModelData, allNumSignalPoints, allSubjectInds, datasetInd)
-        self.trainingProtocols.inferenceTraining([compiledInputData], self.emoPipeline, self.submodel, compiledInputData, 256, numEpochs=10)
+        self.trainingProtocols.inferenceTraining([compiledInputData], self.emoPipeline, self.submodel, compiledInputData, 256, numEpochs=20)
         exit()
         _, _, _, _, _, _, emotionProfile = self.modelClasses[0].model.forward(compiledInputData)
         # emotionProfile dim: numNewPoints, numEmotions=30, encodedDimension=256

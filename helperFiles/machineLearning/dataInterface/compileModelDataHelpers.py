@@ -276,4 +276,7 @@ class compileModelDataHelpers:
         allSignalData[:, :, :, signalChannelInd] = self.generalMethods.minMaxScale_noInverse(allSignalData[:, :, :, signalChannelInd], scale=modelConstants.minMaxScale, missingDataMask=missingDataMask)
 
         return allSignalData
+
+    def preprocessingSignals(self, allSignalData, allNumSignalPoints, featureNames):
+        pass
     
