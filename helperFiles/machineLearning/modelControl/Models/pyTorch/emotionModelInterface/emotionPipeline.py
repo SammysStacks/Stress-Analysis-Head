@@ -21,21 +21,11 @@ class emotionPipeline(emotionPipelineHelpers):
         self.compileOptimizer(submodel)  # Initialize the optimizer (for back propagation)
 
     def trainModel(self, dataLoader, submodel, inferenceTraining, profileTraining, specificTraining, trainSharedLayers, numEpochs):
-        """
-        Stored items in the dataLoader.dataset:
-            allData: The standardized testing and training data → Dim: numExperiments, numSignals, totalLength, numChannels
-            allLabels: Integer labels representing class indices. Dim: numExperiments, numLabels (where numLabels = numEmotions + 1)
-            allTestingMasks: Boolean flags representing if the label is a testing label. Dim: numExperiments, numLabels (where numLabels = numEmotions + 1)
-            allTrainingMasks: Boolean flags representing if the label is a training label. Dim: numExperiments, numLabels (where numLabels = numEmotions + 1)
-                Note: totalLength = finalDistributionLength + 1 + demographicLength (The extra +1 is for the subject index)
-                Note: the last dimension in allLabels is for human activity recognition.
-        """
-        self.accelerator.print(f"\nTraining {self.datasetName} model", flush=True)
-
         # Load in all the data and labels for final predictions and calculate the activity and emotion class weights.
         # allData, allLabels, allTrainingMasks, allTestingMasks, allSignalData, allSignalIdentifiers, allMetadata, reconstructionIndex = self.prepareInformation(dataLoader)
         # allEmotionClassWeights, activityClassWeights = self.organizeLossInfo.getClassWeights(allLabels, allTrainingMasks, allTestingMasks, self.numActivities)
         self.setupTraining(submodel, inferenceTraining=inferenceTraining, profileTraining=profileTraining, specificTraining=specificTraining, trainSharedLayers=trainSharedLayers)
+        self.accelerator.print(f"\nTraining {self.datasetName} model", flush=True)
 
         # For each training epoch.
         for epoch in range(numEpochs):
@@ -99,14 +89,6 @@ class emotionPipeline(emotionPipelineHelpers):
 
                     # Initialize basic core loss value.
                     finalLoss = signalReconstructedLoss + 0.01*(physiologicalSmoothLoss + resampledSmoothLoss)
-
-                    # append the losses
-                    self.physiologicalSmoothLoss.append(physiologicalSmoothLoss.item())
-                    self.resampledSmoothLoss.append(resampledSmoothLoss.item())
-                    self.signalReconstructedLoss.append(signalReconstructedLoss.item())
-                    self.finalLoss.append(finalLoss.item())
-
-                    # Update the user.
                     self.accelerator.print("Final-Recon-Phys-Resamp", finalLoss.item(), signalReconstructedLoss.item(), physiologicalSmoothLoss.item(), resampledSmoothLoss.item(), flush=True)
 
                     # ------------------- Update the Model  -------------------- #
@@ -122,7 +104,6 @@ class emotionPipeline(emotionPipelineHelpers):
 
         # Prepare the model/data for evaluation.
         self.accelerator.wait_for_everyone()  # Wait before continuing.
-        #self.plotLosses()
 
     def backpropogateModel(self):
         # Clip the gradients if they are too large.
@@ -132,32 +113,3 @@ class emotionPipeline(emotionPipelineHelpers):
             self.scheduler.step()  # Update the learning rate.
             self.optimizer.zero_grad()  # Zero your gradients to restart the gradient tracking.
             self.accelerator.print(f"Backprop with LR: {self.scheduler.get_last_lr()}", flush=True)
-<<<<<<< HEAD
-        
-    def extractBatchInformation(self, batchData):
-        # Extract the data, labels, and testing/training indices.
-        batchSignalInfo, batchSignalLabels, batchTrainingMask, batchTestingMask = batchData
-        # Add the data, labels, and training/testing indices to the device (GPU/CPU)
-        batchTrainingMask, batchTestingMask = batchTrainingMask.to(self.accelerator.device), batchTestingMask.to(self.accelerator.device)
-        batchSignalInfo, batchSignalLabels = batchSignalInfo.to(self.accelerator.device), batchSignalLabels.to(self.accelerator.device)
-        
-        return batchSignalInfo, batchSignalLabels, batchTrainingMask, batchTestingMask
-
-    def plotLosses(self):
-        """Plot the training losses over epochs."""
-        epochs = range(1, len(self.finalLoss) + 1)
-
-        plt.figure(figsize=(12, 8))
-
-        plt.plot(epochs, self.signalReconstructedLoss, label="Signal Reconstruction Loss")
-        plt.plot(epochs, self.physiologicalSmoothLoss, label="Physiological Smooth Loss")
-        plt.plot(epochs, self.resampledSmoothLoss, label="Resampled Smooth Loss")
-        plt.plot(epochs, self.finalLoss, label="Final Loss", linestyle='--')
-
-        plt.xlabel("Epochs")
-        plt.ylabel("Loss")
-        plt.title("Training Losses Over Epochs")
-        plt.legend()
-        plt.show()
-=======
->>>>>>> 940c1369f (U)
