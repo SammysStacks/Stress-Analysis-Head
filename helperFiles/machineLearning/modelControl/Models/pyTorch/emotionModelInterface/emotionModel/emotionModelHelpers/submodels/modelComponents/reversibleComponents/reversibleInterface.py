@@ -8,7 +8,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 
 class reversibleInterface(nn.Module):
-    switchActivationDirection = False
+    switchActivationDirection = True
     forwardDirection = True
 
     def __init__(self):
