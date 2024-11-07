@@ -135,15 +135,13 @@ class humanMachineInterface:
         emotionProfile = self.trainingProtocols.inferenceTraining([compiledInputData], self.emoPipeline, self.submodel, compiledInputData, 256, numEpochs=5)
         # emotionProfile dim: numNewPoints, numEmotions=30, encodedDimension=256
 
-
         # Get the emotion scores.
         emotionScoresInd = emotionProfile.argmax(axis=-1)  # dim: numNewPoints, numEmotions
-        emotionScores = emotionProfile.gather(-1, emotionScoresInd.unsqueeze(-1)).squeeze(-1).detach().cpu().numpy()
 
+        emotionScores = emotionProfile.gather(-1, emotionScoresInd.unsqueeze(-1)).squeeze(-1).detach().cpu().numpy()
         newMentalState = []
         therapyState = []
 
-        exit()
         for newPoints in range(len(emotionScores[0])):
             # Convert the index to a score. First ten are 0.5-5.5 and next 20 are 0.5-4.5
             emotionScores[newPoints] = self.emotionConversion(emotionScores[newPoints])
@@ -153,10 +151,10 @@ class humanMachineInterface:
             stateAnxiety = self.compileModelInfo.scoreSTAI(emotionScores)
 
 
-            for batchInd in range(len(stateAnxiety)):
-                PA = positiveAffectivity[batchInd]
-                NA = negativeAffectivity[batchInd]
-                SA = stateAnxiety[batchInd]
+            for emotionInd in range(len(stateAnxiety)):
+                PA = positiveAffectivity[emotionInd]
+                NA = negativeAffectivity[emotionInd]
+                SA = stateAnxiety[emotionInd]
                 mental_state_tensor = torch.tensor([PA, NA, SA]).view(1, 3, 1, 1)
                 newMentalState.append(mental_state_tensor)
                 # newMentalStates: numNewPoints, numMentalStates=3
