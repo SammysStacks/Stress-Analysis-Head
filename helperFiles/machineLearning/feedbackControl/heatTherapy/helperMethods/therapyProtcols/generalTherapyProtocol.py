@@ -189,16 +189,13 @@ class generalTherapyProtocol(abc.ABC):
             # Sample the new loss form a pre-simulated map.
             newUserLoss, PA, NA, SA = self.simulationProtocols.getSimulatedCompiledLoss(currentParam, currentEmotionStates, newParamValues, therapyMethod)
             # combined mentalstate
-            print('newUserLoss, PA, NA, SA', newUserLoss, PA, NA, SA)
             combinedMentalState = torch.cat((PA, NA, SA), dim=1)
-            print(f'newuSerparam,newuserLoss {newParamValues, newUserLoss}')
             # unbound temperature:
             param_state_index = self.dataInterface.getBinIndex(self.allParameterBins[0], newParamValues)
             param_state_unbound = self.unNormalizedAllParameterBins[0][param_state_index]
             param_state_unbound = self.boundNewTemperature(param_state_unbound, bufferZone=0.01)  # newUserParam = torch.Size([1, 1, 1, 1])
-            print('param_state_unbound', param_state_unbound)
-            # User state update
 
+            # User state update
             self.timepoints.append(newTimePoint)
             self.paramStatePath.append(newParamValues)
             self.userMentalStatePath.append(combinedMentalState)
@@ -217,16 +214,13 @@ class generalTherapyProtocol(abc.ABC):
             # Sample the new loss form a pre-simulated map.
             newUserLoss, PA, NA, SA = self.simulationProtocols.getSimulatedCompiledLoss_empatch(currentParam, currentEmotionStates, newParamValues, therapyMethod)
             # combined mentalstate
-            print('newUserLoss, PA, NA, SA', newUserLoss, PA, NA, SA)
             combinedMentalState = torch.cat((PA, NA, SA), dim=1)
-            print(f'newuSerparam,newuserLoss {newParamValues, newUserLoss}')
             # unbound temperature:
             param_state_index = self.dataInterface.getBinIndex(self.allParameterBins[0], newParamValues)
             param_state_unbound = self.unNormalizedAllParameterBins[0][param_state_index]
             param_state_unbound = self.boundNewTemperature(param_state_unbound, bufferZone=0.01)  # newUserParam = torch.Size([1, 1, 1, 1])
-            print('param_state_unbound', param_state_unbound)
-            # User state update
 
+            # User state update
             self.timepoints.append(newTimePoint)
             self.paramStatePath.append(newParamValues)
             self.userMentalStatePath.append(combinedMentalState)
@@ -244,6 +238,7 @@ class generalTherapyProtocol(abc.ABC):
         if maxIterations is not None:
             if len(self.userMentalStatePath) >= maxIterations:
                 self.finishedTherapy = True
+                print(f'Therapy converged at iterations: {maxIterations}')
         else:
             currentParam = self.paramStatePath[-1].item()
             currentCompiledLoss = self.userMentalStateCompiledLoss[-1].item()
@@ -268,6 +263,7 @@ class generalTherapyProtocol(abc.ABC):
             if currentCompiledLoss < 0.2:
                 if currentProbability > param_quantile and currentProbability > loss_quantile:
                     self.finishedTherapy = True
+                    print(f'Therapy converged at currentProbability {currentProbability}')
 
     def checkConvergence_hmm(self, maxIterations):
         # Check if the therapy has converged.

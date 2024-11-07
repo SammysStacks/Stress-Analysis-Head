@@ -150,7 +150,6 @@ class humanMachineInterface:
             positiveAffectivity, negativeAffectivity = self.compileModelInfo.scorePANAS(emotionScores)
             stateAnxiety = self.compileModelInfo.scoreSTAI(emotionScores)
 
-
             for emotionInd in range(len(stateAnxiety)):
                 PA = positiveAffectivity[emotionInd]
                 NA = negativeAffectivity[emotionInd]
@@ -169,5 +168,44 @@ class humanMachineInterface:
 
         # all the time points
         self.timePointEvolution = self.therapyControl.therapyProtocol.timepoints
+        self.plot_therapy_states()
         return therapyState, allMaps
 
+    def plot_therapy_states(self):
+        import matplotlib.pyplot as plt
+
+        # Convert therapy_states to a list of floats for plotting
+        therapy_values = [state.item() for state in self.therapyStates]
+
+        # Generate x-axis as arbitrary numbers
+        x_axis = range(1, len(therapy_values) + 1)
+
+        # Set DPI and figure size
+        plt.figure(figsize=(14, 7), dpi=300)
+
+        # Plot the original line with a slightly faded color and solid dots
+        plt.plot(x_axis, therapy_values, marker='o', linestyle='--', color='lightblue', markerfacecolor='blue', markeredgewidth=0)
+
+        plt.title('Therapy States Plot')
+        plt.xlabel('Arbitrary Number')
+        plt.ylabel('Therapy State Value')
+        plt.grid(True)
+
+        # Show the first plot
+        plt.show()
+
+        # Generate a second plot showing every 10th point
+        plt.figure(figsize=(14, 7), dpi=300)
+        sampled_x_axis = x_axis[::10]
+        sampled_therapy_values = therapy_values[::10]
+
+        # Plot every 10th point
+        plt.plot(sampled_x_axis, sampled_therapy_values, marker='o', linestyle='--', color='lightblue', markerfacecolor='orange', markeredgewidth=0)
+
+        plt.title('Therapy States Plot (sparsely sampled)')
+        plt.xlabel('Arbitrary Number')
+        plt.ylabel('Therapy State Value')
+        plt.grid(True)
+
+        # Show the second plot
+        plt.show()
