@@ -3,7 +3,6 @@ import time
 
 from .emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
 from .emotionPipelineHelpers import emotionPipelineHelpers
-import matplotlib.pyplot as plt
 
 
 class emotionPipeline(emotionPipelineHelpers):

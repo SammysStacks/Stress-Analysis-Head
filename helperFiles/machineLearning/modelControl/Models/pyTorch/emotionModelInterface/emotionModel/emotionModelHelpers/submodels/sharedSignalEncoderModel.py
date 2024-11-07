@@ -34,14 +34,9 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         raise "You cannot call the dataset-specific signal encoder module."
 
     def addLayer(self):
-        # Adjust the addingFlag to account for the specific layers.
-        reversibleInterface.switchActivationDirection = not reversibleInterface.switchActivationDirection
-        switchActivationDirection = reversibleInterface.switchActivationDirection
-
-        # Create the layers.
-        self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True, switchActivationDirection=switchActivationDirection))
-        if self.learningProtocol == 'rCNN': self.processingLayers.append(self.postProcessingLayerRCNN(numSignals=self.numLiftingLayers, sequenceLength=self.encodedDimension, activationMethod=self.activationMethod, switchActivationDirection=switchActivationDirection))
-        elif self.learningProtocol == 'rFC': self.processingLayers.append(self.postProcessingLayerRFC(numSignals=self.numLiftingLayers, sequenceLength=self.encodedDimension, activationMethod=self.activationMethod, switchActivationDirection=switchActivationDirection))
+        self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True, switchActivationDirection=True))
+        if self.learningProtocol == 'rCNN': self.processingLayers.append(self.postProcessingLayerRCNN(numSignals=self.numLiftingLayers, sequenceLength=self.encodedDimension, activationMethod=self.activationMethod, switchActivationDirection=False))
+        elif self.learningProtocol == 'rFC': self.processingLayers.append(self.postProcessingLayerRFC(numSignals=self.numLiftingLayers, sequenceLength=self.encodedDimension, activationMethod=self.activationMethod, switchActivationDirection=False))
         else: raise "The learning protocol is not yet implemented."
 
     def learningInterface(self, layerInd, signalData):

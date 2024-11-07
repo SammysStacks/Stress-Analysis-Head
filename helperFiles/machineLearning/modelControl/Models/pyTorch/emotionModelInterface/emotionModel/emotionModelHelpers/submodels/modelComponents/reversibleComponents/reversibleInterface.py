@@ -85,11 +85,11 @@ class reversibleInterface(nn.Module):
             plt.legend()
             plt.show()
 
-            plt.plot((inputData - reconstructedData)[0][signalInd].detach().numpy(), 'k', linewidth=2, label='Signal Error')
+            plt.plot((inputData - reconstructedData)[0][signalInd].detach().numpy(), 'ko', linewidth=2, label='Signal Error')
             plt.legend()
             plt.show()
 
-            plt.plot((inputData - forwardData)[0][signalInd].detach().numpy(), 'k', linewidth=2, label='Signal Change')
+            plt.plot((inputData - forwardData)[0][signalInd].detach().numpy(), 'ko', linewidth=2, label='Signal Change')
             plt.legend()
             plt.show()
 

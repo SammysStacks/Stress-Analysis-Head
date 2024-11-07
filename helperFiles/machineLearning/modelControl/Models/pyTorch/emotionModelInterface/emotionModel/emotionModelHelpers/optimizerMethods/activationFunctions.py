@@ -35,96 +35,69 @@ def getActivationMethod(activationMethod):
 
 
 class reversibleLinearSoftSign(reversibleInterface):
-    def __init__(self, invertedActivation=False, nonLinearRegion=2, infiniteBound=1):
+    def __init__(self, invertedActivation=False, linearity=1, infiniteBound=0.5, scalarAdjustment=1):
         super(reversibleLinearSoftSign, self).__init__()
         self.invertedActivation = invertedActivation  # Whether the non-linearity term is inverted
-        self.nonLinearRegion = nonLinearRegion  # Corresponds to `r` in the equation
-        self.infiniteBound = infiniteBound  # Corresponds to `a` in the equation
+        self.scalarAdjustment = scalarAdjustment  # Scalar adjustment for numerical stability
+        self.infiniteBound = infiniteBound  # This controls how the activation converges at +/- infinity.
+        self.linearity = linearity  # Corresponds to `r` in the equation
         self.tolerance = 1e-20  # Tolerance for numerical stability
 
         # Assert the validity of the inputs.
-        assert 0 < self.infiniteBound <= 1, "The magnitude of the inf bound has a domain of (0, 1] to ensure a stable convergence."
-        assert 0 < self.nonLinearRegion, "The inversion point must be positive to ensure a stable convergence."
+        assert 0 < self.linearity, "The inversion point must be positive to ensure a stable convergence."
 
     def forward(self, x):
         if self.forwardDirection != self.invertedActivation: return self.forwardPass(x)
         else: return self.inversePass(x)
 
     def forwardPass(self, x):
-        # f(x) = ax + x / (1 + (a / (1 - a)) * (|x| / r))
-        absX = x.abs()  # Not ideal for backpropagation, but necessary for the non-linearity term
-
-        # Calculate the non-linearity term
-        if self.infiniteBound != 1: nonLinearityTerm = 1 + (self.infiniteBound / (1 - self.infiniteBound)) * (absX / self.nonLinearRegion)
-        else: nonLinearityTerm = 1 + (absX / self.nonLinearRegion)
-
-        # Calculate the output.
-        y = self.infiniteBound * x + x / nonLinearityTerm
-
-        return y
+        x = x * self.scalarAdjustment  # Adjust the scalar for numerical stability
+        return (self.infiniteBound*x + x / (1 + x.abs()) / self.linearity) / self.scalarAdjustment  # f(x) = x + x / (1 + |x|) / r
 
     def inversePass(self, y):
+        # Prepare the terms for the inverse pass.
         signY = torch.nn.functional.hardtanh(y, min_val=-self.tolerance, max_val=self.tolerance) / self.tolerance
+        r, a = self.linearity, self.infiniteBound  # The linearity and infinite bound terms
+        y = y * self.scalarAdjustment  # Adjust the scalar for numerical stability
 
-        if self.infiniteBound != 1:
-            absY = y*signY
-            # Calculate the non-linearity term
-            squareRootTerm = ((self.infiniteBound ** 2 - 1) ** 2 * self.nonLinearRegion ** 2
-                              - 2 * self.infiniteBound * self.nonLinearRegion * (self.infiniteBound - 1) ** 2 * absY
-                              + self.infiniteBound ** 2 * y ** 2).sqrt()
-            signDependentTerm = (squareRootTerm + (self.infiniteBound ** 2 - 1) * self.nonLinearRegion) / (2 * self.infiniteBound ** 2)
-            signDependentTerm = signDependentTerm * signY
+        sqrtTerm = ((r*a)**2 + 2*a*r*(1 + signY*y*r) + (r*y - signY).pow(2)) / (r*a)**2
+        x = signY*(sqrtTerm.sqrt() - 1)/2 - signY / (2*a*r) + y / (2*a)
 
-            # Combine terms, applying sign(x) for the final output
-            x = signDependentTerm + y / (2 * self.infiniteBound)
-        else:
-            # Calculate the non-linearity term
-            x = signY * ((4 * self.nonLinearRegion ** 2 + y.pow(2)).sqrt() - 2 * self.nonLinearRegion) / 2 + y / 2
-
-        return x
+        return x / self.scalarAdjustment
 
 class boundedS(reversibleInterface):
-    def __init__(self, invertedActivation=False, inversionPoint=1):
+    def __init__(self, invertedActivation=False, linearity=2):
         super(boundedS, self).__init__()
         self.invertedActivation = invertedActivation  # Whether the non-linearity term is inverted
-        self.inversionPoint = inversionPoint  # Corresponds to `r` in the equation
-        self.tolerance = 1e-10  # Tolerance for numerical stability
+        self.linearity = linearity  # Corresponds to `r` in the equation
+        self.tolerance = 1e-100  # Tolerance for numerical stability
 
         # Assert the validity of the inputs.
-        assert 0 < self.inversionPoint, "The inversion point must be positive to ensure a stable convergence."
+        assert 0 < self.linearity, "The linearity term must be positive."
 
     def forward(self, x):
         if self.forwardDirection != self.invertedActivation: return self.forwardPass(x)
         else: return self.inversePass(x)
 
     def forwardPass(self, x):
-        # f(x) = ax + x / (1 + (a / (1 - a)) * (xx / rr))
-        return x + x / (1 + (x / self.inversionPoint).pow(2))
+        return x + x / (1 + x.pow(2)) / self.linearity
 
+    # TODO: unstable, diverges to infinity
     def inversePass(self, y):
-        y2 = y ** 2  # Precompute y squared
-        y3 = y ** 3  # Precompute y cubed
-        y4 = y ** 4  # Precompute y quad
+        b, b2, b3 = self.linearity, self.linearity ** 2, self.linearity ** 3
+        y2, y3, y4 = y.pow(2), y.pow(3), y.pow(4)
 
-        if self.inversionPoint != 1:
-            # Precompute r and r squared.
-            r, r2 = self.inversionPoint, self.inversionPoint ** 2
+        # Compute components.
+        term2 = 3 * b * (b + 1) - b2 * y2
+        term1 = 2 * b3 * y3 + 18 * b3 * y - 9 * b2 * y
+        N = term1 + torch.sqrt(torch.abs(4 * term2.pow(3) + term1.pow(2)))
 
-            # Compute the cube root term
-            N = 9 * r2 * y + 3 * torch.sqrt(96 * r ** 6 - 39 * r2 ** 2 * y2 + 12 * r2 * y4) + 2 * y3
-            signN = torch.nn.functional.hardtanh(N, min_val=-self.tolerance, max_val=self.tolerance) / self.tolerance
-            cube_root_term = signN * torch.abs(N).pow(1 / 3)
+        # Compute the cube root term
+        signN = torch.nn.functional.hardtanh(N, min_val=-self.tolerance, max_val=self.tolerance) / self.tolerance
+        cube_root_term = signN * (N.abs() + self.tolerance).pow(1 / 3)
 
-            # Compute the x value
-            x = (2 ** (2 / 3) * cube_root_term - 2 ** (4 / 3) * (6 * r2 - y2) / cube_root_term + 2 * y) / 6
-        else:
-            # Compute N
-            N = 9 * y + 2 * y3 + 3 * (3*(32 - 13 * y2 + 4 * y4)).sqrt()
-            signN = torch.nn.functional.hardtanh(N, min_val=-self.tolerance, max_val=self.tolerance) / self.tolerance
-            cube_root_term = signN * torch.abs(N).pow(1 / 3)
-
-            # Compute x
-            x = y / 3 - (2 ** (1 / 3) * (6 - y2)) / (3 * cube_root_term) + cube_root_term / (3 * (2 ** (1 / 3)))
+        # Compute x using the given equation
+        x = (cube_root_term / (3 * (2 ** (1 / 3)) * b)) - ((2 ** (1 / 3)) * term2) / (3 * b * cube_root_term + self.tolerance) + y / 3
 
         return x
 
@@ -158,10 +131,10 @@ class boundedExp(nn.Module):
 if __name__ == "__main__":
     # Test the activation functions
     data = torch.randn(2, 10, 100, dtype=torch.float64)
-    data = data - data.min()
-    data = data / data.max()
+    data = data - data.min(dim=-1, keepdim=True).values
+    data = data / data.max(dim=-1, keepdim=True).values
     data = 2 * data - 1
 
     # Perform the forward and inverse pass.
-    activationClass = boundedS(invertedActivation=True)
-    _forwardData, _reconstructedData = activationClass.checkReconstruction(data, atol=1e-6, numLayers=10)
+    activationClass = reversibleLinearSoftSign(invertedActivation=True)
+    _forwardData, _reconstructedData = activationClass.checkReconstruction(data, atol=1e-6, numLayers=100)
