@@ -41,8 +41,12 @@ class emotionPipeline(emotionPipelineHelpers):
                     if batchSignalInfo.size(0) == 0: self.backpropogateModel(); continue
                     numPointsAnalyzed += batchSignalInfo.size(0)
 
+                    # Set the training parameters.
+                    if profileTraining and not specificTraining and not trainSharedLayers: currentTrainingMask = None
+                    elif inferenceTraining: currentTrainingMask = None
+                    else: currentTrainingMask = batchTrainingMask
+
                     # Unpack the batch data information.
-                    currentTrainingMask = None if (profileTraining and not specificTraining and not trainSharedLayers) or inferenceTraining else batchTrainingMask
                     signalBatchData, batchSignalIdentifiers, metaBatchInfo = emotionDataInterface.separateData(batchSignalInfo)
                     # signalBatchData[:, :, :, 0] = timepoints: [further away from survey (300) -> closest to survey (0)]
                     # signalBatchData dimension: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
