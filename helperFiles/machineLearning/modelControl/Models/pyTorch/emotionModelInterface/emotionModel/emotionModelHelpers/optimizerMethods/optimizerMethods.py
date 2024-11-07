@@ -44,18 +44,6 @@ class optimizerMethods:
         return optimizer, scheduler
 
     def setOptimizer(self, params, lr, weight_decay, optimizerType):
-        # Observations on properties:
-        #     Momentum is not good (Used value of 0.9)
-        # Observations on encoding:
-        #     No encoding structure: SGD, Rprop, ASGD, Adadelta
-        #     No-Noisy encoding structure: Adam, Adamax, AdamW, NAdam, RAdam, RMSprop
-        #     Noisy encoding structure:
-        #     Okay encoding structure:
-        # Observations on reconstruction:
-        #     No reconstruction: Adadelta
-        #     No-Noisy reconstruction: ASGD, RAdam, SGD
-        #     Noisy reconstruction: Adamax, Adam, NAdam
-        #     Okay reconstruction: Rprop, AdamW, RMSprop
         return self.getOptimizer(optimizerType=optimizerType, params=params, lr=lr, weight_decay=weight_decay, momentum=0.2)
 
     @staticmethod
