@@ -57,7 +57,7 @@ class optimizerMethods:
         numEpochCounts = 15*2  # 15 counts per epoch session (wesad is 5 counts) for 5 epochs
 
         # Set the scheduler.
-        scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=2*numEpochCounts, eta_min=1e-3, last_epoch=-1)
+        scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=2*numEpochCounts, eta_min=5e-3, last_epoch=-1)
         scheduler.step()
 
         return scheduler

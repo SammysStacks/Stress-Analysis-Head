@@ -41,17 +41,18 @@ class trainingProtocolHelpers:
     def trainEpoch(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders):
         # Set random order to loop through the models.
         self.unifyAllModelWeights(allMetaModels, allModels)
-        modelIndices = list(range(len(allMetaModels)))
+        modelIndices = list(range(len(allModels) + len(allMetaModels)))
         random.shuffle(modelIndices)
 
-        # For each meta-training model.
+        # For each training model.
         for modelInd in modelIndices:
-            dataLoader = allMetadataLoaders[modelInd]
-            modelPipeline = allMetaModels[modelInd]
+            dataLoader = allMetadataLoaders[modelInd] if modelInd < len(allMetadataLoaders) else allDataLoaders[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
+            modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
+            trainSharedLayers = modelInd < len(allMetaModels)  # Train the shared layers.
 
             # Train the updated model.
             self.modelMigration.unifyModelWeights(allModels=[modelPipeline], modelWeights=self.sharedModelWeights, layerInfo=self.unifiedLayerData)
-            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=True, specificTraining=True, trainSharedLayers=True, numEpochs=1)   # Full model training.
+            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=True, specificTraining=True, trainSharedLayers=trainSharedLayers, numEpochs=1)   # Full model training.
             self.accelerator.wait_for_everyone()
 
             # Store the new model weights.
