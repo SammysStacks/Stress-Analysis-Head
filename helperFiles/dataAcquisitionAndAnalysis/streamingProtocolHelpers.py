@@ -132,10 +132,15 @@ class streamingProtocolHelpers(featureOrganization):
         # Organize the new features
         self.organizeRawFeatures()  # Features are now stored in rawFeatureHolder in feature organization.
         modelTimes, inputModelData, allNumSignalPoints = self.compileIntervalFeaturesWithPadding()
-        print('inputModeldata', inputModelData.shape)
-        therapyState, _ = self.predictLabels(modelTimes, inputModelData, allNumSignalPoints, therapyParam=self.therapyParam)
-        # interface with hardware
 
+        while not self.therapyControl.therapyProtocol.finishedTherapy:
+            therapyState, allMaps = self.predictLabels(modelTimes, inputModelData, allNumSignalPoints, therapyParam=self.therapyParam)
+            combinedStates = [[param_state, user_compiled_mental] for param_state, user_compiled_mental in zip(self.therapyControl.therapyProtocol.unNormalizedParameter, self.therapyControl.therapyProtocol.userMentalStateCompiledLoss)]
+            if self.plottingTherapyIndicator:
+                self.therapyControl.therapyProtocol.plottingProtocolsMain.plotTherapyResults(combinedStates, allMaps)
+            self.therapyControl.therapyProtocol.checkConvergence(10)
+        # interface with hardware
+        exit()
         # Plot the Data
         if self.plotStreamedData: self.plottingClass.displayData()
 

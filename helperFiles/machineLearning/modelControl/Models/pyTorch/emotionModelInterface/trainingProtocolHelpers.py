@@ -36,7 +36,8 @@ class trainingProtocolHelpers:
         modelPipeline.model.inferenceModel.resetInferenceModel(numExperiments, encodedDimension)
 
         # Train the inference model.
-        modelPipeline.trainModel(dataLoader, submodel=submodel,  inferenceTraining=True, profileTraining=False, specificTraining=False, trainSharedLayers=False, numEpochs=numEpochs)
+        emotionProfile = modelPipeline.trainModel(dataLoader, submodel=submodel,  inferenceTraining=True, profileTraining=False, specificTraining=False, trainSharedLayers=False, numEpochs=numEpochs)
+        return emotionProfile
 
     def trainEpoch(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders):
         # Set random order to loop through the models.

@@ -99,6 +99,7 @@ class featureOrganization(humanMachineInterface):
         allRawFeatureTimeInterval = []
         allRawFeatureInterval = []
         refereneStartTime = []
+
         # for each new point
         for numNewPoint in range(numNewPoints):
             endModelTime = self.startModelTime - self.modelTimeWindow
@@ -118,7 +119,6 @@ class featureOrganization(humanMachineInterface):
                 # Extract the time and feature intervals
                 biomarkerTimeInterval = self.rawFeatureTimesHolder[biomarkerInd][newEndTimePointer:newStartTimePointer]
                 biomarkerFeaturesInterval = self.rawFeatureHolder[biomarkerInd][newEndTimePointer:newStartTimePointer]
-                #print(biomarkerTimeInterval[0], biomarkerTimeInterval[-1], self.startModelTime, endModelTime)
 
                 allRawFeatureTimeInterval[-1].append(biomarkerTimeInterval)
                 allRawFeatureInterval[-1].append(biomarkerFeaturesInterval)
@@ -130,6 +130,8 @@ class featureOrganization(humanMachineInterface):
 
         allSignalData, allNumSignalPoints = self.compileModelHelpers._padSignalData(allRawFeatureTimeInterval, allRawFeatureInterval, refereneStartTime)
         # allSignalData example size: torch.Size([75, 81, 72, 2])
+
+        # allSignalData, allNumSignalPoints = self.compileModelHelpers.preprocessingSignalsTherapy(allSignalData, allNumSignalPoints)
 
         # Update the model time.
         self.startModelTime += self.modelTimeGap
@@ -145,10 +147,12 @@ class featureOrganization(humanMachineInterface):
             # For each channel in the analysis.
             for featureChannelInd in range(len(analysis.featureChannelIndices)):
                 biomarkerInd = analysis.featureChannelIndices[featureChannelInd]
+                # 0: EOG; 1: EEG; 2: EDA; 3: Temp
                 rawFeaturePointer = self.rawFeaturePointers[biomarkerInd]
 
                 # Organize the raw features; NOTE: I am assuming that the raw features are in order of the featureChannelIndices.
                 self.rawFeatureTimesHolder[biomarkerInd].extend(analysis.rawFeatureTimes[featureChannelInd][rawFeaturePointer:])
+
                 self.rawFeatureHolder[biomarkerInd].extend(analysis.rawFeatures[featureChannelInd][rawFeaturePointer:])
 
                 # Update the raw pointers.

@@ -61,7 +61,7 @@ class modelConstants:
 
     # ---------------- Hard-coded therapy parameters --------------------- #
     therapyParams = {
-        'heat': 37,
+        'heat': [torch.full(size=(1, 1, 1, 1), fill_value=37)],
         'music': [440, 410],
         'Vr': None
     }

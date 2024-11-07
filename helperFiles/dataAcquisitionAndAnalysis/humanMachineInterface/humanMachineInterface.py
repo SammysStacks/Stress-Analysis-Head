@@ -3,6 +3,7 @@ import accelerate
 import torch
 
 # Import Files
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.trainingProtocolHelpers import trainingProtocolHelpers
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionPipeline import emotionPipeline
@@ -76,9 +77,10 @@ class humanMachineInterface:
 
     def therapyInitialization(self):
         assert self.actionControl in {"heat", "music", "chatGPT", None}, f"Invalid actionControl: {self.actionControl}. Must be one of 'heat', 'music', or 'chatGPT'."
-        if self.actionControl == 'heat' and self.userName != self.therapyInitializedUser:
+        if True: #self.actionControl == 'heat' and self.userName != self.therapyInitializedUser:
             protocolParameters = {
                 'heuristicMapType': 'uniformSampling',  # The method for generating the simulated map. Options: 'uniformSampling', 'linearSampling', 'parabolicSampling'
+                'simulatedMapType': 'uniformSampling',
                 'numSimulationHeuristicSamples': 50,  # The number of simulation samples to generate.
                 'numSimulationTrueSamples': 30,  # The number of simulation samples to generate.
                 'simulateTherapy': False,  # Whether to simulate the therapy.
@@ -126,18 +128,23 @@ class humanMachineInterface:
         # Add in contextual information to the data.
         allSubjectInds = torch.zeros(inputModelData.shape[0])  # torch.Size([75, 81, 72, 2]) batchSize, numSignals, maxLength, [time, features]
         datasetInd = 1
+        validDataMask = emotionDataInterface.getValidDataMask(inputModelData)
+        inputModelData = self.compileModelHelpers.normalizeSignals(allSignalData=inputModelData, missingDataMask=~validDataMask)
         compiledInputData = self.compileModelHelpers.addContextualInfo(inputModelData, allNumSignalPoints, allSubjectInds, datasetInd)
-        self.trainingProtocols.inferenceTraining([compiledInputData], self.emoPipeline, self.submodel, compiledInputData, 256, numEpochs=20)
-        exit()
-        _, _, _, _, _, _, emotionProfile = self.modelClasses[0].model.forward(compiledInputData)
+
+        emotionProfile = self.trainingProtocols.inferenceTraining([compiledInputData], self.emoPipeline, self.submodel, compiledInputData, 256, numEpochs=5)
         # emotionProfile dim: numNewPoints, numEmotions=30, encodedDimension=256
-        emotionProfile = emotionProfile.detach().cpu().numpy()
+
 
         # Get the emotion scores.
-        emotionScores = emotionProfile.argmax(axis=-1)  # dim: numNewPoints, numEmotions
+        emotionScoresInd = emotionProfile.argmax(axis=-1)  # dim: numNewPoints, numEmotions
+        emotionScores = emotionProfile.gather(-1, emotionScoresInd.unsqueeze(-1)).squeeze(-1).detach().cpu().numpy()
+
         newMentalState = []
         therapyState = []
-        for newPoints in range(len(emotionScores)):
+
+        exit()
+        for newPoints in range(len(emotionScores[0])):
             # Convert the index to a score. First ten are 0.5-5.5 and next 20 are 0.5-4.5
             emotionScores[newPoints] = self.emotionConversion(emotionScores[newPoints])
 
@@ -145,20 +152,24 @@ class humanMachineInterface:
             positiveAffectivity, negativeAffectivity = self.compileModelInfo.scorePANAS(emotionScores)
             stateAnxiety = self.compileModelInfo.scoreSTAI(emotionScores)
 
-            mental_state_tensor = torch.tensor([positiveAffectivity, negativeAffectivity, stateAnxiety]).view(1, 3, 1, 1)
-            newMentalState.append(mental_state_tensor)
-            therapyState.append(therapyParam)
-            # newMentalStates: numNewPoints, numMentalStates=3
-            # therapyStates: numNewPoints, numTherapyInfo
 
-        # Pass the output to the therapy model
-        currentTimePoint = modelTimes[-1]  # make sure it is: timepoints: list of tensor: [tensor(0)]
-        currentParam = therapyParam[-1]  # make sure it is: list of tensor: [torch.Size([1, 1, 1, 1])
-        currentPrediction = newMentalState[-1]  # make sure it is: list of tensor: torch.Size([1, 3, 1, 1])
-        self.therapyControl.therapyProtocol.updateEmotionPredState(self.userName, currentTimePoint, currentParam, currentPrediction)
-        therapyState, allMaps = self.therapyControl.therapyProtocol.updateTherapyState()
-        self.therapyStates.append(therapyState)
+            for batchInd in range(len(stateAnxiety)):
+                PA = positiveAffectivity[batchInd]
+                NA = negativeAffectivity[batchInd]
+                SA = stateAnxiety[batchInd]
+                mental_state_tensor = torch.tensor([PA, NA, SA]).view(1, 3, 1, 1)
+                newMentalState.append(mental_state_tensor)
+                # newMentalStates: numNewPoints, numMentalStates=3
+
+                # Pass the output to the therapy model
+                currentTimePoint = modelTimes[-1]  # make sure it is: timepoints: list of tensor: [tensor(0)]
+                currentParam = therapyParam[-1]  # make sure it is: list of tensor: [torch.Size([1, 1, 1, 1])
+                currentPrediction = newMentalState[-1]  # make sure it is: list of tensor: torch.Size([1, 3, 1, 1])
+                therapyState, allMaps = self.therapyControl.therapyProtocol.updateTherapyState()
+                self.therapyStates.append(therapyState)
+                self.therapyControl.therapyProtocol.updateEmotionPredState(self.userName, currentTimePoint, currentParam, currentPrediction)
 
         # all the time points
         self.timePointEvolution = self.therapyControl.therapyProtocol.timepoints
         return therapyState, allMaps
+

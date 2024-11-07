@@ -86,6 +86,9 @@ class modelParameters:
     def getExclusionSequenceCriteria():
         return 20, 20, 2, 0.5, 0.25  # minSequencePoints, minSignalPresentCount, minBoundaryPoints, maxSinglePointDiff, maxAverageDiff
 
+    @staticmethod
+    def getAdaptiveFactor():
+        return 2
     # -------------------------- Saving/Loading Parameters ------------------------- #
 
     @staticmethod
