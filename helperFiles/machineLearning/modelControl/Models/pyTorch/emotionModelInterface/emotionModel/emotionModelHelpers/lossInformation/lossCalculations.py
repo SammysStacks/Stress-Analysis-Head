@@ -75,13 +75,13 @@ class lossCalculations:
         # signalReconstructedLoss dimension: numExperiments, numSignals, maxSequenceLength
 
         # Calculate the uncertainty in the data.
-        dataUncertainty = self.smoothingFilter(datapoints, kernelSize=3).diff(dim=-1).pow(2)
+        # dataUncertainty = self.smoothingFilter(datapoints, kernelSize=3).diff(dim=-1).pow(2)
         # dataUncertainty: numExperiments, numSignals, maxSequenceLength - 1
 
         # Adjust the loss based on the missing data.
-        signalReconstructedLoss[signalReconstructedLoss < 0.01] = 0  # Remove small errors.
-        validDataMask[:, :, :-1][signalReconstructedLoss[:, :, :-1] < dataUncertainty] = False  # Remove small errors.
-        validDataMask[:, :, 1:][signalReconstructedLoss[:, :, 1:] < dataUncertainty] = False  # Remove small errors.
+        # signalReconstructedLoss[signalReconstructedLoss < 0.01] = 0  # Remove small errors.
+        # validDataMask[:, :, :-1][signalReconstructedLoss[:, :, :-1] < dataUncertainty] = False  # Remove small errors.
+        # validDataMask[:, :, 1:][signalReconstructedLoss[:, :, 1:] < dataUncertainty] = False  # Remove small errors.
         # missingDataMask: numExperiments, numSignals, maxSequenceLength
 
         # Calculate the error in signal reconstruction (encoding loss).
@@ -112,8 +112,8 @@ class lossCalculations:
         # physiologicalSmoothLoss dimension: numExperiments, maxSequenceLength
 
         # Only use large loss values.
-        physiologicalSmoothLoss[physiologicalSmoothLoss < 0.75] = 0
-        resampledSmoothLoss[resampledSmoothLoss < 0.75] = 0
+        # physiologicalSmoothLoss[physiologicalSmoothLoss < 0.75] = 0
+        # resampledSmoothLoss[resampledSmoothLoss < 0.75] = 0
 
         # Calculate the error in signal reconstruction (encoding loss).
         physiologicalSmoothLoss = physiologicalSmoothLoss.mean()
