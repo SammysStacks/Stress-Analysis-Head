@@ -44,8 +44,8 @@ class modelParameters:
         # Dapper: Found 12 (out of 12) well-labeled emotions across 364 experiments with 21 signals.
         # Case: Found 2 (out of 2) well-labeled emotions across 1442 experiments with 51 signals.
         # Collected: Found 30 (out of 30) well-labeled emotions across 165 experiments with 81 signals.
-        if submodel == modelConstants.signalEncoderModel: effectiveMinBatchSize, effectiveMaxBatchSize = 12, 128
-        elif submodel == modelConstants.emotionModel: effectiveMinBatchSize, effectiveMaxBatchSize = 12, 128
+        if submodel == modelConstants.signalEncoderModel: effectiveMinBatchSize, effectiveMaxBatchSize = 4, 160
+        elif submodel == modelConstants.emotionModel: effectiveMinBatchSize, effectiveMaxBatchSize = 4, 160
         else: raise Exception()
 
         # Adjust the batch size based on the number of gradient accumulations.
@@ -84,7 +84,7 @@ class modelParameters:
 
     @staticmethod
     def getExclusionSequenceCriteria():
-        return 20, 20, 2, 0.5, 0.25  # minSequencePoints, minSignalPresentCount, minBoundaryPoints, maxSinglePointDiff, maxAverageDiff
+        return 25, 25, 2, 0.5, 0.2  # minSequencePoints, minSignalPresentCount, minBoundaryPoints, maxSinglePointDiff, maxAverageDiff
 
     @staticmethod
     def getAdaptiveFactor():

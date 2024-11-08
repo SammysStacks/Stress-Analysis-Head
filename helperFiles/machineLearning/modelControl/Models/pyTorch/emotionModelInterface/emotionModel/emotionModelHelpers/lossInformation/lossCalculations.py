@@ -67,24 +67,10 @@ class lossCalculations:
         validDataMask = self.getData(allValidDataMask, reconstructionDataMask)  # Dim: numExperiments, numSignals, maxSequenceLength
         if validDataMask.sum() == 0: print("No batches"); return None
 
-        # Unpack the signal data.
+        # Calculate the error in signal reconstruction (encoding loss).
         datapoints = emotionDataInterface.getChannelData(initialSignalData, channelName=modelConstants.signalChannel)
-        # allDatapoints and allTimepoints: numExperiments, numSignals, maxSequenceLength
-
-        # Calculate the error in signal reconstruction (encoding loss).
-        signalReconstructedLoss = self.reconstructionLoss(reconstructedSignalData, datapoints)
+        signalReconstructedLoss = (reconstructedSignalData[validDataMask] - datapoints[validDataMask]).pow(2).mean()
         # signalReconstructedLoss dimension: numExperiments, numSignals, maxSequenceLength
-
-        # Calculate the uncertainty in the data.
-        lossWeights = torch.zeros_like(signalReconstructedLoss, device=signalReconstructedLoss.device, dtype=signalReconstructedLoss.dtype)
-        lossImportance = (2*modelConstants.minMaxScale**2 - self.smoothingFilter(datapoints, kernelSize=3).diff(dim=-1).pow(2)) / 2
-        lossWeights[:, :, :-1] = lossWeights[:, :, :-1] + lossImportance
-        lossWeights[:, :, 1:] = lossWeights[:, :, 1:] + lossImportance
-        lossWeights[:, :, -1] = lossWeights[:, :, -1] * 2
-        lossWeights[:, :, 1] = lossWeights[:, :, 1] * 2
-
-        # Calculate the error in signal reconstruction (encoding loss).
-        signalReconstructedLoss = (signalReconstructedLoss[validDataMask] * lossWeights[validDataMask]).sum() / lossWeights[validDataMask].sum()
 
         # Assert that nothing is wrong with the loss calculations.
         self.modelHelpers.assertVariableIntegrity(signalReconstructedLoss, variableName="encoded signal reconstructed loss", assertGradient=False)
