@@ -17,7 +17,7 @@ waveletTypes=( \
 )
 
 numSignalEncoderLayers=4
-encodedDimension=128
+encodedDimension=64
 optimizer='AdamW'
 goldenRatio=4
 
