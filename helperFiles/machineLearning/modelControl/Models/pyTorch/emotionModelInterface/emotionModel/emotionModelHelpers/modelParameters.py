@@ -89,6 +89,7 @@ class modelParameters:
     @staticmethod
     def getAdaptiveFactor():
         return 2
+
     # -------------------------- Saving/Loading Parameters ------------------------- #
 
     @staticmethod
