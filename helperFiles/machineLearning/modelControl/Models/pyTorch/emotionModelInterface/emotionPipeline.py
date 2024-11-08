@@ -42,7 +42,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     numPointsAnalyzed += batchSignalInfo.size(0)
 
                     # Set the training parameters.
-                    if profileTraining and not specificTraining and not trainSharedLayers: currentTrainingMask = None
+                    if profileTraining and not specificTraining and not trainSharedLayers: currentTrainingMask = batchTestingMask
                     elif inferenceTraining: currentTrainingMask = None
                     else: currentTrainingMask = batchTrainingMask
 
