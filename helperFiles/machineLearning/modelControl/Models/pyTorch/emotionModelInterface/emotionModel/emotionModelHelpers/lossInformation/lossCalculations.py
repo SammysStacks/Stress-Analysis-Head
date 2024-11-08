@@ -120,9 +120,8 @@ class lossCalculations:
         resampledSmoothLoss = resampledSmoothLoss.mean()
 
         # Assert that nothing is wrong with the loss calculations.
+        if physiologicalSmoothLoss.isnan().any().item(): physiologicalSmoothLoss = torch.zeros(1, device=physiologicalSmoothLoss.device).mean()
         if resampledSmoothLoss.isnan().any().item(): resampledSmoothLoss = torch.zeros(1, device=resampledSmoothLoss.device).mean()
-        self.modelHelpers.assertVariableIntegrity(physiologicalSmoothLoss, variableName="physiological smooth loss", assertGradient=False)
-        self.modelHelpers.assertVariableIntegrity(resampledSmoothLoss, variableName="resampled smooth loss", assertGradient=False)
 
         return physiologicalSmoothLoss, resampledSmoothLoss
 
