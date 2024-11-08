@@ -2,6 +2,8 @@
 import math
 
 import torch
+from torch import dtype
+from torch.xpu import device
 
 # Helper classes
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.generalMethods.modelHelpers import modelHelpers
@@ -74,17 +76,15 @@ class lossCalculations:
         # signalReconstructedLoss dimension: numExperiments, numSignals, maxSequenceLength
 
         # Calculate the uncertainty in the data.
-        # dataUncertainty = self.smoothingFilter(datapoints, kernelSize=3).diff(dim=-1).pow(2)
-        # dataUncertainty: numExperiments, numSignals, maxSequenceLength - 1
-
-        # Adjust the loss based on the missing data.
-        # signalReconstructedLoss[signalReconstructedLoss < 0.01] = 0  # Remove small errors.
-        # validDataMask[:, :, :-1][signalReconstructedLoss[:, :, :-1] < dataUncertainty] = False  # Remove small errors.
-        # validDataMask[:, :, 1:][signalReconstructedLoss[:, :, 1:] < dataUncertainty] = False  # Remove small errors.
-        # missingDataMask: numExperiments, numSignals, maxSequenceLength
+        lossWeights = torch.zeros_like(signalReconstructedLoss, device=signalReconstructedLoss.device, dtype=signalReconstructedLoss.dtype)
+        lossImportance = (2*modelConstants.minMaxScale**2 - self.smoothingFilter(datapoints, kernelSize=3).diff(dim=-1).pow(2)) / 2
+        lossWeights[:, :, :-1] = lossWeights[:, :, :-1] + lossImportance
+        lossWeights[:, :, 1:] = lossWeights[:, :, 1:] + lossImportance
+        lossWeights[:, :, -1] = lossWeights[:, :, -1] * 2
+        lossWeights[:, :, 1] = lossWeights[:, :, 1] * 2
 
         # Calculate the error in signal reconstruction (encoding loss).
-        signalReconstructedLoss = signalReconstructedLoss[validDataMask].mean()
+        signalReconstructedLoss = (signalReconstructedLoss[validDataMask] * lossWeights[validDataMask]).sum() / lossWeights[validDataMask].sum()
 
         # Assert that nothing is wrong with the loss calculations.
         self.modelHelpers.assertVariableIntegrity(signalReconstructedLoss, variableName="encoded signal reconstructed loss", assertGradient=False)
@@ -109,16 +109,11 @@ class lossCalculations:
         # resampledSmoothLoss dimension: numExperiments, numSignals, encodedDimension
         # physiologicalSmoothLoss dimension: numExperiments, maxSequenceLength
 
-        # Only use large loss values.
-        # physiologicalSmoothLoss[physiologicalSmoothLoss < 0.75] = 0
-        # resampledSmoothLoss[resampledSmoothLoss < 0.75] = 0
-
         # Calculate the error in signal reconstruction (encoding loss).
         physiologicalSmoothLoss = physiologicalSmoothLoss.mean()
         resampledSmoothLoss = resampledSmoothLoss.mean()
 
         # Assert that nothing is wrong with the loss calculations.
-        if resampledSmoothLoss.isnan().any().item(): resampledSmoothLoss = torch.zeros(1, device=resampledSmoothLoss.device).mean()
         self.modelHelpers.assertVariableIntegrity(physiologicalSmoothLoss, variableName="physiological smooth loss", assertGradient=False)
         self.modelHelpers.assertVariableIntegrity(resampledSmoothLoss, variableName="resampled smooth loss", assertGradient=False)
 
@@ -131,18 +126,14 @@ class lossCalculations:
         if len(kernel) != 0: assert len(kernel) % 2 == 1, "The kernel size must be odd."
 
         # Add batch and channel dimensions for conv1d
-        if kernelSize is not None: kernel = torch.ones((1, 1, kernelSize), dtype=torch.float64) / kernelSize
-        else: kernel = torch.as_tensor(kernel).unsqueeze(0).unsqueeze(0) / kernel.sum()
+        if kernelSize is not None: kernel = torch.ones((1, 1, kernelSize), dtype=data.dtype, device=data.device) / kernelSize
+        else: kernel = torch.as_tensor(kernel, dtype=data.dtype, device=data.device).unsqueeze(0).unsqueeze(0) / kernel.sum()
 
         # Add in the channel dimension.
         kernel = kernel.expand(data.size(1), data.size(1), kernel.size(-1))
-        kernel = kernel.to(data.device)
-        kernel = kernel.to(data.dtype)
 
         # Apply the convolution
         filtered_data = torch.nn.functional.conv1d(data, kernel, padding=kernel.size(-1) // 2)
-
-        # Remove batch and channel dimensions
         return filtered_data
 
     def calculateActivityLoss(self, predictedActivityLabels, allLabels, allLabelsMask, activityClassWeights):

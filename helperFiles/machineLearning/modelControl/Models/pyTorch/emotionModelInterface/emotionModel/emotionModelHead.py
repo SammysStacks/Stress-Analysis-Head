@@ -194,9 +194,6 @@ class emotionModelHead(nn.Module):
         # ------------------- Learned Emotion Mapping ------------------- #
 
         if submodel == modelConstants.emotionModel:
-            # Get the subject-specific indices.
-            subjectInds = emotionDataInterface.getMetaDataChannel(metadata, channelName=modelConstants.subjectIndexMD)  # Dim: batchSize
-
             # Perform the backward pass: physiologically -> emotion data.
             reversibleInterface.changeDirections(forwardDirection=False)
             basicEmotionProfile = physiologicalProfile.unsqueeze(1).repeat(repeats=(1, self.numEmotions*self.numBasicEmotions, 1))
@@ -205,11 +202,12 @@ class emotionModelHead(nn.Module):
 
             # Reconstruct the emotion data.
             basicEmotionProfile = basicEmotionProfile.view(batchSize, self.numEmotions, self.numBasicEmotions, self.encodedDimension)
+            subjectInds = emotionDataInterface.getMetaDataChannel(metadata, channelName=modelConstants.subjectIndexMD)  # Dim: batchSize
             emotionProfile = self.specificEmotionModel.calculateEmotionProfile(basicEmotionProfile, subjectInds)
 
         # ------------------- Learned Activity Mapping ------------------- #
 
-            # Perform the backward pass: physiologically -> emotion data.
+            # Perform the backward pass: physiologically -> activity data.
             reversibleInterface.changeDirections(forwardDirection=False)
             resampledActivityData = physiologicalProfile.unsqueeze(1).repeat(repeats=(1, self.numActivityChannels, 1))
             activityProfile = self.coreModelPass(self.numActivityModelLayers, metaLearningData=resampledActivityData, specificModel=self.specificActivityModel, sharedModel=self.sharedActivityModel)
