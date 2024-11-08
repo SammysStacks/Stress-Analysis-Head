@@ -16,7 +16,7 @@ class reversibleLinearLayer(reversibleInterface):
         self.numSignals = numSignals  # The number of signals in the input data.
         self.kernelSize = kernelSize  # The restricted window for the neural weights.
         self.numLayers = numLayers  # The number of layers in the reversible linear layer.
-        self.bounds = 2  # The bounds for the neural weights: lower values are like identity.
+        self.bounds = 0.5  # The bounds for the neural weights: lower values are like identity.
 
         # Assert the validity of the input parameters.
         assert 1 < kernelSize <= sequenceLength, f"The kernel size is larger than the sequence length: {kernelSize}, {sequenceLength}"

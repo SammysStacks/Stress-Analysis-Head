@@ -63,8 +63,7 @@ class lossCalculations:
         reconstructedSignalData = self.getData(allReconstructedSignalData, reconstructionDataMask)  # Dim: numExperiments, numSignals, maxSequenceLength
         initialSignalData = self.getData(allInitialSignalData, reconstructionDataMask)  # Dim: numExperiments, numSignals, maxSequenceLength, numChannels
         validDataMask = self.getData(allValidDataMask, reconstructionDataMask)  # Dim: numExperiments, numSignals, maxSequenceLength
-        batchSize, numSignals, maxSequenceLength = allValidDataMask.size()
-        if batchSize == 0: print("No signal encoding batches"); return None
+        if validDataMask.sum() == 0: print("No batches"); return None
 
         # Unpack the signal data.
         datapoints = emotionDataInterface.getChannelData(initialSignalData, channelName=modelConstants.signalChannel)
@@ -101,8 +100,7 @@ class lossCalculations:
         resampledSignalData = self.getData(allResampledSignalData, reconstructionDataMask)  # Dim: numExperiments, numSignals, encodedDimension
         physiologicalProfile = self.getData(allPhysiologicalProfile, reconstructionDataMask)  # Dim: numExperiments, maxSequenceLength
         validDataMask = self.getData(allValidDataMask, reconstructionDataMask)  # Dim: numExperiments, numSignals, maxSequenceLength
-        batchSize, numSignals, maxSequenceLength = allValidDataMask.size()
-        if batchSize == 0: print("No signal encoding batches"); return None
+        if validDataMask.sum() == 0: print("No batches"); return None, None
         validSignalMask = torch.any(validDataMask, dim=-1)
 
         # Calculate the smooth loss.
@@ -120,8 +118,9 @@ class lossCalculations:
         resampledSmoothLoss = resampledSmoothLoss.mean()
 
         # Assert that nothing is wrong with the loss calculations.
-        if physiologicalSmoothLoss.isnan().any().item(): physiologicalSmoothLoss = torch.zeros(1, device=physiologicalSmoothLoss.device).mean()
         if resampledSmoothLoss.isnan().any().item(): resampledSmoothLoss = torch.zeros(1, device=resampledSmoothLoss.device).mean()
+        self.modelHelpers.assertVariableIntegrity(physiologicalSmoothLoss, variableName="physiological smooth loss", assertGradient=False)
+        self.modelHelpers.assertVariableIntegrity(resampledSmoothLoss, variableName="resampled smooth loss", assertGradient=False)
 
         return physiologicalSmoothLoss, resampledSmoothLoss
 
