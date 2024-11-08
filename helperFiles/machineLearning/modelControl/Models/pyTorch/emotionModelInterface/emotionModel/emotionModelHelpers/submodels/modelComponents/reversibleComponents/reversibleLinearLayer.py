@@ -62,17 +62,17 @@ class reversibleLinearLayer(reversibleInterface):
     def applyLayer(self, inputData, layerInd):
         # Unpack the dimensions.
         batchSize, numSignals, sequenceLength = inputData.size()
-        assert sequenceLength == self.sequenceLength, f"The sequence length is not correct: {sequenceLength}, {self.sequenceLength}"
-        assert numSignals == self.numSignals, f"The number of signals is not correct: {numSignals}, {self.numSignals}"
-
-        # Apply a mask to the neural weights.
-        kernelWeights = self.linearOperators[layerInd]
         neuralWeights = torch.zeros(numSignals, sequenceLength, sequenceLength, dtype=torch.float64, device=inputData.device)
         # neuralWeight: numSignals, sequenceLength, sequenceLength
 
+        # Assert the validity of the input parameters.
+        assert sequenceLength == self.sequenceLength, f"The sequence length is not correct: {sequenceLength}, {self.sequenceLength}"
+        assert numSignals == self.numSignals, f"The number of signals is not correct: {numSignals}, {self.numSignals}"
+
         # Gather the values for a skewed symmetric matrix.
-        neuralWeights[:, self.rowInds, self.colInds] = kernelWeights
-        neuralWeights = neuralWeights - neuralWeights.transpose(-2, -1)  # Ensure the neural weights are symmetric.
+        neuralWeights[:, self.rowInds, self.colInds] = -self.linearOperators[layerInd]
+        neuralWeights[:, self.colInds, self.rowInds] = self.linearOperators[layerInd]
+        # neuralWeight: numSignals, sequenceLength, sequenceLength
 
         # Create an orthogonal matrix.
         neuralWeights = torch.matrix_exp(neuralWeights)
@@ -87,10 +87,10 @@ class reversibleLinearLayer(reversibleInterface):
 
 if __name__ == "__main__":
     # General parameters.
-    _batchSize, _numSignals, _sequenceLength = 2, 3, 256
+    _batchSize, _numSignals, _sequenceLength = 2, 300, 256
     _activationMethod = 'reversibleLinearSoftSign'
-    _kernelSize = 3
-    _numLayers = 1
+    _kernelSize = 5
+    _numLayers = 4
 
     # Set up the parameters.
     neuralLayerClass = reversibleLinearLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod, switchActivationDirection=False)
