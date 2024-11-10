@@ -2,7 +2,7 @@
 
 optimizers=('Adadelta' 'Adam' 'AdamW' 'NAdam' 'RAdam' 'Adamax' 'ASGD' 'RMSprop' 'Rprop' 'SGD')
 
-numSignalEncoderLayers=4
+numSignalEncoderLayers=8
 waveletType='bior3.7'
 encodedDimension=64
 goldenRatio=4
