@@ -4,7 +4,7 @@ optimizers=('Adadelta' 'Adam' 'AdamW' 'NAdam' 'RAdam' 'Adamax' 'ASGD' 'RMSprop' 
 
 numSignalEncoderLayers=8
 waveletType='bior3.7'
-encodedDimension=64
+encodedDimension=128
 goldenRatio=4
 
 for optimizer in "${optimizers[@]}"
