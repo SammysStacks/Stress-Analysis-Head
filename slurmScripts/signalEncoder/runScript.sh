@@ -10,7 +10,7 @@ signalEncoderLayers=(1 2 4 8)
 # Total: 4
 
 waveletType="bior3.7"
-optimizer="AdamW"     # Replace with actual value
+optimizer="NAdam"     # Replace with actual value
 
 for encodedDimension in "${encodedDimensions[@]}"
 do

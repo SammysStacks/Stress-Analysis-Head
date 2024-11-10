@@ -18,8 +18,8 @@ waveletTypes=( \
 
 numSignalEncoderLayers=4
 encodedDimension=64
-optimizer='AdamW'
-goldenRatio=4
+optimizer='NAdam'
+goldenRatio=2
 
 for waveletType in "${waveletTypes[@]}"
 do
