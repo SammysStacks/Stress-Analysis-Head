@@ -35,15 +35,12 @@ class compileModelDataHelpers:
         self.emotionPredictionModelInfo = None
         self.signalEncoderModelInfo = None
         self.minSignalPresentCount = None
-        self.maxClassPercentage = None
         self.maxSinglePointDiff = None
         self.minSequencePoints = None
         self.minBoundaryPoints = None
         self.maxAverageDiff = None
-        self.minNumClasses = None
 
         # Exclusion criterion.
-        self.minNumClasses, self.maxClassPercentage = self.modelParameters.getExclusionClassCriteria(submodel)
         self.minSequencePoints, self.minSignalPresentCount, self.minBoundaryPoints, self.maxSinglePointDiff, self.maxAverageDiff = self.modelParameters.getExclusionSequenceCriteria()
         self.adaptiveFactor = self.modelParameters.getAdaptiveFactor()
 
@@ -75,56 +72,46 @@ class compileModelDataHelpers:
     # ------------------------- Signal Organization ------------------------ #
 
     @staticmethod
-    def organizeActivityLabels(activityNames, activityLabels):
+    def organizeActivityLabels(activityNames, allFeatureLabels, activityLabelInd):
+        # Remove the bad or unknown labels.
+        goodActivityMask = ~torch.isnan(allFeatureLabels[:, activityLabelInd])
+        activityLabels = allFeatureLabels[:, activityLabelInd][goodActivityMask]
+
         # Find the unique activity labels
         uniqueActivityLabels, validActivityLabels = torch.unique(activityLabels, return_inverse=True)
         assert len(activityLabels) == len(validActivityLabels), f"{len(activityLabels)} != {len(validActivityLabels)}"
 
         # Get the corresponding unique activity names
         uniqueActivityNames = np.asarray(activityNames)[uniqueActivityLabels.to(torch.int)]
+        allFeatureLabels[:, activityLabelInd][goodActivityMask] = validActivityLabels.float()
 
-        return uniqueActivityNames, validActivityLabels.to(torch.float32)
+        return uniqueActivityNames, allFeatureLabels
 
-    def organizeLabels(self, allFeatureLabels, metaTraining):
+    def _preprocessLabels(self, allFeatureLabels):
         # allFeatureLabels: A torch array or list of size (batchSize, numLabels)
         # metaTraining: Boolean indicating if the data is for training
         # Convert to tensor and initialize lists
         batchSize, numLabels = allFeatureLabels.shape
-        allSingleClassIndices = [[] for _ in range(numLabels)]
+        allSingleClassMasks = []
 
-        # Iterate over each label type (emotion)
+        # Mask out the bad or unknown labels.
+        goodLabelInds = 0 <= allFeatureLabels  # The minimum label should be 0
+        allFeatureLabels[~goodLabelInds] = self.missingLabelValue
+
+        # For each label type.
         for labelTypeInd in range(numLabels):
             featureLabels = allFeatureLabels[:, labelTypeInd]
-            # featureLabels dim: batchSize
-
-            # Mask out unknown labels
-            goodLabelInds = 0 <= featureLabels  # The minimum label should be 0
-            featureLabels[~goodLabelInds] = self.missingLabelValue
+            goodLabels = goodLabelInds[:, labelTypeInd]
 
             # Count the number of times the emotion label has a unique value.
-            unique_classes, class_counts = torch.unique(featureLabels[goodLabelInds], return_counts=True)
+            unique_classes, class_counts = torch.unique(featureLabels[goodLabels], return_counts=True)
             smallClassMask = class_counts < 3
 
-            # For small distributions.
-            if smallClassMask.any():
-                # Remove labels belonging to small classes
-                smallClassLabels = unique_classes[smallClassMask]
-                smallClassLabelMask = torch.isin(featureLabels, smallClassLabels)
-                allSingleClassIndices[labelTypeInd] = smallClassLabelMask.cpu().numpy().tolist()
-                featureLabels[smallClassLabelMask] = self.missingLabelValue
+            # Remove labels belonging to small classes.
+            smallClassLabelMask = torch.isin(featureLabels, unique_classes[smallClassMask])
+            allSingleClassMasks.append(smallClassLabelMask)
 
-                # Recalculate unique classes.
-                goodLabelInds = goodLabelInds & ~smallClassLabelMask
-                unique_classes, class_counts = torch.unique(featureLabels[goodLabelInds], return_counts=True)
-
-            # Ensure greater variability in the class rating system.
-            if metaTraining and (len(unique_classes) < self.minNumClasses or self.maxClassPercentage <= class_counts.max().item()/batchSize):
-                featureLabels[:] = self.missingLabelValue
-
-            # Save the edits made to the featureLabels
-            allFeatureLabels[:, labelTypeInd] = featureLabels
-
-        return allFeatureLabels, allSingleClassIndices
+        return allFeatureLabels, allSingleClassMasks
 
     @staticmethod
     def addContextualInfo(allSignalData, allNumSignalPoints, allSubjectInds, datasetInd):

@@ -35,7 +35,7 @@ class neuralOperatorInterface(emotionModelWeights):
         mode = 'periodization'  # Mode for the waveletType transform.
 
         # Hardcoded parameters.
-        learningProtocol = 'rFC' if reversibleFlag else 'FC'  # The protocol for learning the wavelet data.
+        learningProtocol = 'rCNN' if reversibleFlag else 'FC'  # The protocol for learning the wavelet data.
         skipConnectionProtocol = 'none' if reversibleFlag else 'CNN'  # The protocol for the skip connections.
         numDecompositions = waveletNeuralOperatorLayer.max_decompositions(signal_length=sequenceLength, wavelet_name=waveletType) if learningProtocol not in ['drCNN', 'drFC'] else 1  # Number of decompositions for the waveletType transform.
 

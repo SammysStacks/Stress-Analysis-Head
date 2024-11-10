@@ -191,7 +191,7 @@ class compileModelData(compileModelDataHelpers):
             # Remove any experiments and signals that are bad.
             allSignalData, allNumSignalPoints = self._padSignalData(allRawFeatureIntervalTimes, allRawFeatureIntervals, surveyAnswerTimes)
             allSignalData, allNumSignalPoints, featureNames = self._preprocessSignals(allSignalData, allNumSignalPoints, featureNames)
-            allFeatureLabels, allSmallClassIndices = self.organizeLabels(allFeatureLabels, metaTraining)
+            allFeatureLabels, allSingleClassMasks = self._preprocessLabels(allFeatureLabels)
             # allSmallClassIndices dimension: numLabels, batchSize*  →  *if there are no small classes, the dimension is empty
             # allSignalData dimension: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
             # allNumSignalPoints dimension: batchSize, numSignals
@@ -218,17 +218,13 @@ class compileModelData(compileModelDataHelpers):
 
             # For each type of label/emotion recorded.
             for labelTypeInd in range(numLabels):
-                currentFeatureLabels = allFeatureLabels[:, labelTypeInd].clone()
-                smallClassIndices = allSmallClassIndices[labelTypeInd]
+                currentFeatureLabels = allFeatureLabels[:, labelTypeInd]
+                smallClassMask = allSingleClassMasks[labelTypeInd]
                 # smallClassIndices dimension: numSmallClassIndices → containing their indices in the batch.
                 # currentFeatureLabels dimension: batchSize
 
-                # Temporarily remove the single classes.
-                currentFeatureLabels[smallClassIndices] = self.missingLabelValue
-                validLabelMask = ~torch.isnan(currentFeatureLabels)
-                # validLabelMask dimension: batchSize
-
                 # Apply the mask to get the valid class data.
+                validLabelMask = ~torch.isnan(currentFeatureLabels) & ~smallClassMask  # Dim: batchSize
                 currentIndices = allExperimentalIndices[validLabelMask]  # Dim: numValidLabels
                 stratifyBy = currentFeatureLabels[validLabelMask]  # Dim: numValidLabels
 
@@ -243,17 +239,20 @@ class compileModelData(compileModelDataHelpers):
                 # Populate the training and testing mask.
                 currentTestingMask[Testing_Indices, labelTypeInd] = True
                 currentTrainingMask[Training_Indices, labelTypeInd] = True
+                # currentTrainingMask dimension: batchSize, numLabels
 
                 # Add back the single class values to the training mask.
-                currentTrainingMask[smallClassIndices, labelTypeInd] = True
+                currentTrainingMask[smallClassMask, labelTypeInd] = True
+                # currentTestingMask dimension: batchSize, numLabels
+
+                # Assert the validity of the split.
+                assert torch.all(~(currentTestingMask & currentTrainingMask)), "Each data point should be in either training, testing, or none, with no overlap."
+                # NOTE: The data can be in the training mask or the testing mask or neither; however, it cannot be in both.
 
             # ---------------------- Data Adjustments ---------------------- #
 
             # Remove any unused activity labels/names.
-            goodActivityMask = ((currentTestingMask[:, activityLabelInd]) | (currentTrainingMask[:, activityLabelInd])) & ~torch.isnan(allFeatureLabels[:, activityLabelInd])
-            activityNames, allFeatureLabels[:, activityLabelInd][goodActivityMask] \
-                = self.organizeActivityLabels(activityNames, allFeatureLabels[:, activityLabelInd][goodActivityMask])  # Expects inputs/outputs from 0 to n-1
-            allFeatureLabels[~goodActivityMask] = self.missingLabelValue  # Remove any unused activity indices (as the good indices were rehashed)
+            activityNames, allFeatureLabels = self.organizeActivityLabels(activityNames, allFeatureLabels, activityLabelInd)  # Expects inputs/outputs from 0 to n-1
 
             # Add the demographic information.
             allSignalData = self.addContextualInfo(allSignalData, allNumSignalPoints, allSubjectInds, metadataInd)
@@ -261,10 +260,8 @@ class compileModelData(compileModelDataHelpers):
 
             # ---------------------- Create the Model ---------------------- #
 
-            # Get the model parameters
-            batch_size = self.modelParameters.getTrainingBatchSize(submodel, numExperiments=len(allSignalData))
-
             # Organize the training data into the expected pytorch format.
+            batch_size = self.modelParameters.getTrainingBatchSize(submodel, numExperiments=len(allSignalData))
             pytorchDataClass = pytorchDataInterface(batch_size=batch_size, num_workers=0, shuffle=True, accelerator=self.accelerator)
             modelDataLoader = pytorchDataClass.getDataLoader(allSignalData, allFeatureLabels, currentTrainingMask, currentTestingMask)
             reconstructionIndex = emotionDataInterface.getReconstructionIndex(currentTrainingMask)
@@ -273,9 +270,7 @@ class compileModelData(compileModelDataHelpers):
             modelPipeline = emotionPipeline(accelerator=self.accelerator, datasetName=metadatasetName, allEmotionClasses=numQuestionOptions, numSubjects=numSubjects,
                                             userInputParams=self.userInputParams, emotionNames=surveyQuestions, activityNames=activityNames, featureNames=featureNames,
                                             submodel=submodel, numExperiments=len(allSignalData), reconstructionIndex=reconstructionIndex)
-
-            # Hugging face integration.
-            modelDataLoader = modelPipeline.acceleratorInterface(modelDataLoader)
+            modelDataLoader = modelPipeline.acceleratorInterface(modelDataLoader)  # Hugging face integration.
 
             # Store the information.
             allModelPipelines.append(modelPipeline)

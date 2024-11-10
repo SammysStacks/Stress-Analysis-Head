@@ -14,7 +14,6 @@ class emotionPipeline(emotionPipelineHelpers):
                          emotionNames=emotionNames, activityNames=activityNames, featureNames=featureNames, submodel=submodel, numExperiments=numExperiments)
         # General parameters.
         self.reconstructionIndex = reconstructionIndex  # The index of the signal to reconstruct.
-        self.augmentData = True
 
         # Finish setting up the model.
         self.compileOptimizer(submodel)  # Initialize the optimizer (for back propagation)
@@ -53,14 +52,10 @@ class emotionPipeline(emotionPipelineHelpers):
                     # batchSignalIdentifiers dimension: batchSize, numSignals, numSignalIdentifiers
                     # metaBatchInfo dimension: batchSize, numMetadata
 
-                    # For every new batch.
-                    if not inferenceTraining and self.accelerator.sync_gradients: self.augmentData = random.uniform(a=0, b=1) < 0.25
-                    signalBatchData = signalBatchData.double()  # Convert the data to double precision.
-
-                    if not inferenceTraining and self.augmentData:
+                    if not inferenceTraining:
                         # Augment the signals to train an arbitrary sequence length and order.
-                        augmentedBatchData = self.dataAugmentation.changeNumSignals(signalBatchData, dropoutPercent=0.2)
-                        augmentedBatchData = self.dataAugmentation.signalDropout(augmentedBatchData, dropoutPercent=0.2)
+                        augmentedBatchData = self.dataAugmentation.changeNumSignals(signalBatchData, dropoutPercent=0.25)
+                        augmentedBatchData = self.dataAugmentation.signalDropout(augmentedBatchData, dropoutPercent=0.25)
                         # augmentedBatchData: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
                     else: augmentedBatchData = signalBatchData
 
@@ -91,8 +86,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     if signalReconstructedLoss is None: self.accelerator.print("Not useful loss"); continue
 
                     # Initialize basic core loss value.
-                    finalLoss = signalReconstructedLoss
-                    if self.augmentData: finalLoss = finalLoss + 0.001*(physiologicalSmoothLoss + resampledSmoothLoss)
+                    finalLoss = signalReconstructedLoss + 0.001*(physiologicalSmoothLoss + resampledSmoothLoss)
                     self.accelerator.print("Final-Recon-Phys-Resamp", finalLoss.item(), signalReconstructedLoss.item(), physiologicalSmoothLoss.item(), resampledSmoothLoss.item(), flush=True)
 
                     # ------------------- Update the Model  -------------------- #

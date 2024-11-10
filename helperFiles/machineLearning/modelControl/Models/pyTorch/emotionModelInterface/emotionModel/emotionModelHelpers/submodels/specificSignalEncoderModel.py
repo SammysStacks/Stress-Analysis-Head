@@ -1,5 +1,6 @@
 from torch import nn
 
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.neuralOperators.neuralOperatorInterface import neuralOperatorInterface
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.trainingProfileInformation import trainingProfileInformation
@@ -72,3 +73,21 @@ class specificSignalEncoderModel(neuralOperatorInterface):
             signalData = self.neuralLayers[pseudoLayerInd].reversibleInterface(signalData)
 
         return signalData.contiguous()
+
+    def printParams(self):
+        # Count the trainable parameters.
+        numParams = (sum(p.numel() for p in self.parameters() if p.requires_grad) - self.profileModel.physiologicalProfile.size(0) * self.encodedDimension) / self.numSignals
+        print(f'The model has {numParams} trainable parameters.')
+
+
+if __name__ == "__main__":
+    # General parameters.
+    _neuralOperatorParameters = modelParameters.getNeuralParameters({'waveletType': 'bior3.7'})['neuralOperatorParameters']
+    _batchSize, _numSignals, _sequenceLength = 2, 6, 128
+
+    # Set up the parameters.
+    neuralLayerClass = specificSignalEncoderModel(numExperiments=_batchSize, operatorType='wavelet', encodedDimension=_sequenceLength, numSignals=_numSignals, numLiftingLayers=1, goldenRatio=4, learningProtocol='rCNN', neuralOperatorParameters=_neuralOperatorParameters)
+    neuralLayerClass.addLayer()
+
+    # Print the number of trainable parameters.
+    neuralLayerClass.printParams()

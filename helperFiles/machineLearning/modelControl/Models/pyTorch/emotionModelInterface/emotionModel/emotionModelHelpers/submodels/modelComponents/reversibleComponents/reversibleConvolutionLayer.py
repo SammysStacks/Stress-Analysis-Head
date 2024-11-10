@@ -87,12 +87,17 @@ class reversibleConvolutionLayer(reversibleInterface):
 
         return outputData
 
+    def printParams(self):
+        # Count the trainable parameters.
+        numParams = sum(p.numel() for p in self.parameters() if p.requires_grad) / self.numSignals
+        print(f'The model has {numParams} trainable parameters.')
+
 
 if __name__ == "__main__":
     # General parameters.
     _batchSize, _numSignals, _sequenceLength = 2, 3, 128
     _activationMethod = 'reversibleLinearSoftSign'
-    _kernelSize = 5
+    _kernelSize = 3
     _numLayers = 1
 
     # Set up the parameters.
@@ -101,3 +106,4 @@ if __name__ == "__main__":
 
     # Perform the convolution in the fourier and spatial domains.
     _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(_inputData, atol=1e-6, numLayers=1)
+    neuralLayerClass.printParams()

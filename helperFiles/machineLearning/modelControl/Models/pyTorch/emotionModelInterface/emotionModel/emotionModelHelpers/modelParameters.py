@@ -77,12 +77,6 @@ class modelParameters:
     # -------------------------- Compilation Parameters ------------------------- #
 
     @staticmethod
-    def getExclusionClassCriteria(submodel):
-        if submodel == modelConstants.signalEncoderModel: return -1, 2  # Emotion classes dont matter.
-        elif submodel == modelConstants.emotionModel: return 2, 0.8  # minNumClasses, maxClassPercentage
-        else: raise Exception()
-
-    @staticmethod
     def getExclusionSequenceCriteria():
         return 25, 25, 2, 0.5, 0.2  # minSequencePoints, minSignalPresentCount, minBoundaryPoints, maxSinglePointDiff, maxAverageDiff
 
