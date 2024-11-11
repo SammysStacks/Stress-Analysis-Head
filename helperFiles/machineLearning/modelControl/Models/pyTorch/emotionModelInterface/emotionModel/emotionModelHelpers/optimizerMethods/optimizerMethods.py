@@ -14,9 +14,9 @@ class optimizerMethods:
         modelParams = [
             # Specify the model parameters for the signal encoding.
             {'params': model.inferenceModel.parameters(), 'weight_decay': 0, 'lr': 0.01},
-            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': 1e-3, 'lr': 0.01},
-            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "profileModel" not in name), 'weight_decay': 1e-3, 'lr': 0.01},
-            {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': 1e-3, 'lr': 1},
+            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': 1e-3, 'lr': 0.1},
+            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "profileModel" not in name), 'weight_decay': 1e-3, 'lr': 0.1},
+            {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': 1e-3, 'lr': 0.1},
         ]
 
         if submodel == modelConstants.emotionModel:
@@ -56,7 +56,7 @@ class optimizerMethods:
         numEpochCounts = 10*3  # 10 counts per epoch session.
 
         # Set the scheduler.
-        scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=2*numEpochCounts, eta_min=1e-4, last_epoch=-1)
+        scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=2*numEpochCounts, eta_min=1e-3, last_epoch=-1)
         scheduler.step()
 
         return scheduler
