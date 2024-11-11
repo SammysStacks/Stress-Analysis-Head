@@ -1,12 +1,12 @@
 #!/bin/bash
 
-encodedDimensions=(64 128)
+encodedDimensions=(64 128 256)
 # Total: 2
 
-goldenRatios=(1 2 4 8)
+goldenRatios=(1 2 4 8 16 32)
 # Total: 4
 
-signalEncoderLayers=(1 2 4 8)
+signalEncoderLayers=(4 8 16 32)
 # Total: 4
 
 waveletType="bior3.7"
