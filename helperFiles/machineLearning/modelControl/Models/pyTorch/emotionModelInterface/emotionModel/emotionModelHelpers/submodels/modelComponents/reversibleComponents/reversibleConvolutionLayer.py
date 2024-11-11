@@ -16,7 +16,6 @@ class reversibleConvolutionLayer(reversibleInterface):
         self.numSignals = numSignals  # The number of signals in the input data.
         self.kernelSize = kernelSize  # The restricted window for the neural weights.
         self.numLayers = numLayers  # The number of layers in the reversible linear layer.
-        self.bounds = 1  # The bounds for the neural weights: lower values are like identity.
 
         # The restricted window for the neural weights.
         upperWindowMask = torch.ones(self.sequenceLength, self.sequenceLength, dtype=torch.float64)
@@ -39,7 +38,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         for layerInd in range(self.numLayers):
             # Create the neural weights.
             parameters = nn.Parameter(torch.randn(numSignals, kernelSize//2 or 1, dtype=torch.float64))
-            parameters = nn.init.uniform_(parameters, a=-self.bounds, b=self.bounds)
+            parameters = nn.init.normal_(parameters, mean=0, std=0.25)
             self.linearOperators.append(parameters)
 
             # Add the activation function.
@@ -97,7 +96,7 @@ if __name__ == "__main__":
     # General parameters.
     _batchSize, _numSignals, _sequenceLength = 2, 3, 128
     _activationMethod = 'reversibleLinearSoftSign'
-    _kernelSize = 31
+    _kernelSize = 63
     _numLayers = 1
 
     # Set up the parameters.

@@ -121,21 +121,3 @@ class trainingProtocolHelpers:
         # Unify all the model weights.
         if allMetaModels: self.modelMigration.unifyModelWeights(allModels=allMetaModels, modelWeights=self.sharedModelWeights, layerInfo=self.unifiedLayerData)
         if allModels: self.modelMigration.unifyModelWeights(allModels=allModels, modelWeights=self.sharedModelWeights, layerInfo=self.unifiedLayerData)
-
-    # DEPRECATED
-    def constrainSpectralNorm(self, allMetaModels, allModels, unifiedLayerData, addingSN):
-        # Unify all the model weights.
-        self.unifyAllModelWeights(allMetaModels, allModels)
-
-        # For each meta-training model.
-        for modelPipeline in allMetaModels:
-            self.modelHelpers.hookSpectralNormalization(modelPipeline.model, n_power_iterations=5, addingSN=addingSN)
-
-        # For each training model.
-        for modelPipeline in allModels:
-            self.modelHelpers.hookSpectralNormalization(modelPipeline.model, n_power_iterations=5, addingSN=addingSN)
-
-        # Unify all the model weights.
-        self.unifyAllModelWeights(allMetaModels, allModels)
-
-        return unifiedLayerData

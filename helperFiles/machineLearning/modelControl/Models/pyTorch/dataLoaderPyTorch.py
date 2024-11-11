@@ -1,15 +1,9 @@
 import keras
-# General
 import numpy as np
-
-# PyTorch
 import torch
-import tensorflow as tf
-from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import Dataset, DataLoader
 
-# Import helper files
-from .modelMigration import modelMigration
+from helperFiles.machineLearning.modelControl.Models.pyTorch.modelMigration import modelMigration
 
 
 class CustomDataset(Dataset):
@@ -22,27 +16,27 @@ class CustomDataset(Dataset):
         if variableSequence: features = torch.tensor(keras.utils.pad_sequences(features, padding='post', dtype=float))
 
         # Read in the feature and labels.
-        self.labels = self.copyDataFormat(labels, dtype=torch.float)
-        self.features = self.copyDataFormat(features, dtype=torch.float)
+        self.features = self.copyDataFormat(features)
+        self.labels = self.copyDataFormat(labels)
         self.setMasks(trainingMasks, testingMasks)
 
     def setMasks(self, trainingMasks, testingMasks):
         if trainingMasks is not None:
-            self.trainingMasks = self.copyDataFormat(trainingMasks, dtype=torch.bool)
-            self.testingMasks = self.copyDataFormat(testingMasks, dtype=torch.bool)
+            self.trainingMasks = self.copyDataFormat(trainingMasks).to(dtype=torch.bool)
+            self.testingMasks = self.copyDataFormat(testingMasks).to(dtype=torch.bool)
 
             # Assert the integrity of the training/testing indices.
             if self.trainingMasks is None: assert self.testingMasks is None
 
     @staticmethod
-    def copyDataFormat(data, dtype=torch.float32):
+    def copyDataFormat(data):
         if data is None: return None
 
         # Read in the feature labels.
         if isinstance(data, torch.Tensor):
-            return data.clone().detach().to(dtype)
+            return data.clone()
         elif isinstance(data, (list, np.ndarray)):
-            return torch.tensor(data, dtype=dtype)
+            return torch.tensor(data)
         else:
             assert False, f"Unknown  instance type: {type(data)}"
 
@@ -80,7 +74,8 @@ class CustomDataset(Dataset):
 class pytorchDataInterface:
     def __init__(self, batch_size=32, num_workers=0, shuffle=True, accelerator=None):
         # Specify the CPU or GPU capabilities.
-        self.device = modelMigration().getModelDevice(accelerator)
+        self.device = modelMigration.getModelDevice(accelerator)
+
         # General parameters
         self.num_workers = num_workers
         self.batch_size = batch_size
@@ -101,57 +96,9 @@ class pytorchDataInterface:
             shuffle=self.shuffle,
             dataset=dataset,
         )
+
         return dataloader
 
-    def getDataLoader_variableLength(self, allFeatures, allLabels):
-        dataset = CustomDataset(allFeatures, allLabels, variableSequence=True)
-        dataloader = DataLoader(
-            dataset,
-            num_workers=self.num_workers,
-            batch_size=self.batch_size,
-            collate_fn=self.collate_fn,
-            shuffle=self.shuffle,
-        )
-        return dataloader
-
-    @staticmethod
-    def collate_fn(batch):
-        """ Custom collate function for padding variable-length sequences """
-        # Separate data and labels from the batch
-        data, labels = zip(*batch)
-
-        # Pad the sequences. You can choose to pad with a specific value if needed (default is 0)
-        padded_data = pad_sequence(data, batch_first=True, padding_value=0.0)
-
-        # Stack the labels into a single tensor
-        labels = torch.stack(labels)
-
-        return padded_data, labels
-
-    @staticmethod
-    def collate_fn2(loadedData):
-        """ If given, called when iterating over the DataLoader """
-        # Initialize holders
-        batchLabels = []
-        batchData = []
-
-        # For each datapoint
-        for dataInfo in loadedData:
-            data, labels = dataInfo
-
-            # Organize the data and labels
-            batchLabels.append(labels)
-            batchData.append(data)
-
-        # Pad and realign the data
-        paddedData = tf.keras.utils.pad_sequences(batchData, padding='pre', dtype=float)
-        paddedData = torch.tensor(paddedData)
-
-        return paddedData, torch.stack(batchLabels)
-
-
-# -------------------------------------------------------------------------- #
-# ------------------------------ User Testing ------------------------------ #
 
 if __name__ == "__main__":
     # Specify data params

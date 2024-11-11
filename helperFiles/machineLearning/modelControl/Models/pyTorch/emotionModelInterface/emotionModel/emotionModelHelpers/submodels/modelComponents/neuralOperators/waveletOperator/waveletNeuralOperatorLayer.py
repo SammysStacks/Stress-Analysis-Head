@@ -7,12 +7,11 @@ from ...reversibleComponents.reversibleInterface import reversibleInterface
 class waveletNeuralOperatorLayer(waveletNeuralOperatorWeights):
 
     def __init__(self, sequenceLength, numInputSignals, numOutputSignals, numDecompositions, waveletType, mode, addBiasTerm, activationMethod,
-                 skipConnectionProtocol, encodeLowFrequencyProtocol='lowFreq', encodeHighFrequencyProtocol='highFreq', learningProtocol='CNN', extraOperators=()):
+                 skipConnectionProtocol, encodeLowFrequencyProtocol='lowFreq', encodeHighFrequencyProtocol='highFreq', learningProtocol='CNN'):
         super(waveletNeuralOperatorLayer, self).__init__(sequenceLength=sequenceLength, numInputSignals=numInputSignals, numOutputSignals=numOutputSignals, numDecompositions=numDecompositions,
                                                          waveletType=waveletType, mode=mode, addBiasTerm=addBiasTerm, activationMethod=activationMethod, skipConnectionProtocol=skipConnectionProtocol,
                                                          encodeLowFrequencyProtocol=encodeLowFrequencyProtocol, encodeHighFrequencyProtocol=encodeHighFrequencyProtocol, learningProtocol=learningProtocol)
-        self.extraOperators = extraOperators  # Extra operators to apply to the wavelet data.
-        
+
     def forward(self, neuralOperatorData, residualLowFrequencyTerms=None, residualHighFrequencyTerms=None):
         # Apply the wavelet neural operator and the skip connection.
         neuralOperatorData = self.waveletNeuralOperator(neuralOperatorData, residualLowFrequencyTerms, residualHighFrequencyTerms)
@@ -41,35 +40,6 @@ class waveletNeuralOperatorLayer(waveletNeuralOperatorWeights):
         if not reversibleInterface.forwardDirection: return self.forward(neuralOperatorData, residualLowFrequencyTerms=None, residualHighFrequencyTerms=None)
         else: return self.backwardPass(neuralOperatorData, residualLowFrequencyTerms=None, residualHighFrequencyTerms=None)
 
-    def fourierInterface(self, realFourierData, imaginaryFourierData):
-        # Assert that the dimensions are correct.
-        assert self.expectedSequenceLength == realFourierData.size(-1), f"The expected sequence length must equal the real Fourier data length: {self.expectedSequenceLength}, {realFourierData.size(-1)}"
-        assert realFourierData.size() == imaginaryFourierData.size(), f"The real and imaginary Fourier data must have the same dimensions: {realFourierData.size()}, {imaginaryFourierData.size()}"
-        assert self.numInputSignals == self.numOutputSignals, f"The number of input signals must equal the output signals for now: {self.numInputSignals}, {self.numOutputSignals}"
-        assert self.numInputSignals == 2*realFourierData.size(1), f"The number of input signals must equal twice the incoming signals: {self.numInputSignals}, {realFourierData.size(1)}"
-        initialNumSignals = realFourierData.size(1)
-
-        # Combine the real and imaginary Fourier data.
-        fourierData = torch.cat(tensors=(realFourierData, imaginaryFourierData), dim=1)
-        # fourierData dimension: batchSize, 2*numInputSignals, fourierDimension
-        
-        if not reversibleInterface.forwardDirection:
-            # Apply the neural operator and the activation method.
-            fourierData = self.waveletNeuralOperator(fourierData, residualLowFrequencyTerms=None, residualHighFrequencyTerms=None)
-            fourierData = self.activationFunction(fourierData)  # Apply the activation function.
-            # fourierData dimension: batchSize, 2*numOutputSignals, fourierDimension
-        else:
-            # Apply the neural operator and the activation method.
-            fourierData = self.activationFunction(fourierData)  # Apply the activation function.
-            fourierData = self.waveletNeuralOperator(fourierData, residualLowFrequencyTerms=None, residualHighFrequencyTerms=None)
-            # fourierData dimension: batchSize, 2*numOutputSignals, fourierDimension
-
-        # Split the real and imaginary Fourier data.
-        realFourierData, imaginaryFourierData = fourierData[:, 0:initialNumSignals], fourierData[:, initialNumSignals:]
-        assert realFourierData.size() == imaginaryFourierData.size(), f"The real and imaginary Fourier data must have the same dimensions: {realFourierData.size()}, {imaginaryFourierData.size()}"
-
-        return realFourierData, imaginaryFourierData
-
     def waveletNeuralOperator(self, inputData, residualLowFrequencyTerms=None, residualHighFrequencyTerms=None):
         # Extract the input data parameters.
         batchSize, numInputSignals, sequenceLength = inputData.size()
@@ -85,22 +55,10 @@ class waveletNeuralOperatorLayer(waveletNeuralOperatorWeights):
         # highFrequencies[decompositionLayer] dimension: batchSize, numLiftedChannels, highFrequenciesShapes[decompositionLayer]
         # lowFrequency dimension: batchSize, numLiftedChannels, lowFrequencyShape
 
-        if not reversibleInterface.forwardDirection:
-            # Apply the extra operators.
-            lowFrequency, highFrequencies = self.applyExtraOperators(lowFrequency, highFrequencies)
-
-            # Encode each frequency decomposition, separating high and low frequencies.
-            lowFrequency, highFrequencies = self.independentFrequencyAnalysis(lowFrequency, highFrequencies, residualLowFrequencyTerms, residualHighFrequencyTerms)
-            # highFrequencies[highFrequencyInd] dimension: batchSize, numOutputSignals, highFrequenciesShapes[decompositionLayer]
-            # lowFrequency dimension: batchSize, numOutputSignals, lowFrequencyShape
-        else:
-            # Encode each frequency decomposition, separating high and low frequencies.
-            lowFrequency, highFrequencies = self.independentFrequencyAnalysis(lowFrequency, highFrequencies, residualLowFrequencyTerms, residualHighFrequencyTerms)
-            # highFrequencies[highFrequencyInd] dimension: batchSize, numOutputSignals, highFrequenciesShapes[decompositionLayer]
-            # lowFrequency dimension: batchSize, numOutputSignals, lowFrequencyShape
-
-            # Apply the extra operators.
-            lowFrequency, highFrequencies = self.applyExtraOperators(lowFrequency, highFrequencies)
+        # Encode each frequency decomposition, separating high and low frequencies.
+        lowFrequency, highFrequencies = self.independentFrequencyAnalysis(lowFrequency, highFrequencies, residualLowFrequencyTerms, residualHighFrequencyTerms)
+        # highFrequencies[highFrequencyInd] dimension: batchSize, numOutputSignals, highFrequenciesShapes[decompositionLayer]
+        # lowFrequency dimension: batchSize, numOutputSignals, lowFrequencyShape
 
         # Perform wavelet reconstruction.
         reconstructedData = self.idwt((lowFrequency, highFrequencies))
@@ -151,16 +109,3 @@ class waveletNeuralOperatorLayer(waveletNeuralOperatorWeights):
                 # frequencies dimension: batchSize, numOutputSignals, frequencyDimension
 
         return frequencies
-
-    def applyExtraOperators(self, lowFrequency, highFrequencies):
-        # Apply the extra operators.
-        for extraOperatorInd in range(len(self.extraOperators)):
-            if reversibleInterface.forwardDirection: extraOperatorInd = len(self.extraOperators) - 1 - extraOperatorInd
-            extraOperator = self.extraOperators[extraOperatorInd]
-
-            # Apply the extra operator.
-            lowFrequency, highFrequencies = extraOperator.waveletInterface(lowFrequency, highFrequencies)
-            # highFrequencies[decompositionLayer] dimension: batchSize, numLiftedChannels, highFrequenciesShapes[decompositionLayer]
-            # lowFrequency dimension: batchSize, numLiftedChannels, lowFrequencyShape
-
-        return lowFrequency, highFrequencies

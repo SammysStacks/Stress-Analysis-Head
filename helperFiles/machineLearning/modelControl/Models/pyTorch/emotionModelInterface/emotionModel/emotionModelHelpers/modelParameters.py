@@ -38,11 +38,11 @@ class modelParameters:
         return userInputParams
 
     def getTrainingBatchSize(self, submodel, numExperiments):
-        # Wesad: Found 32 (out of 32) well-labeled emotions across 60 experiments with 59 signals.
-        # Emognition: Found 12 (out of 12) well-labeled emotions across 407 experiments with 55 signals.
+        # Wesad: Found 32 (out of 32) well-labeled emotions across 60 experiments with 60 signals.
+        # Emognition: Found 12 (out of 12) well-labeled emotions across 407 experiments with 54 signals.
         # Amigos: Found 10 (out of 12) well-labeled emotions across 673 experiments with 127 signals.
-        # Dapper: Found 12 (out of 12) well-labeled emotions across 364 experiments with 22 signals.
-        # Case: Found 2 (out of 2) well-labeled emotions across 1442 experiments with 51 signals.
+        # Dapper: Found 12 (out of 12) well-labeled emotions across 364 experiments with 21 signals.
+        # Case: Found 2 (out of 2) well-labeled emotions across 1442 experiments with 50 signals.
         # Collected: Found 30 (out of 30) well-labeled emotions across 165 experiments with 48 signals.
         if submodel == modelConstants.signalEncoderModel: effectiveMinBatchSize, effectiveMaxBatchSize = 12, 160
         elif submodel == modelConstants.emotionModel: effectiveMinBatchSize, effectiveMaxBatchSize = 12, 160
@@ -78,7 +78,7 @@ class modelParameters:
 
     @staticmethod
     def getExclusionSequenceCriteria():
-        return 25, 25, 2, 0.5, 0.2  # minSequencePoints, minSignalPresentCount, minBoundaryPoints, maxSinglePointDiff, maxAverageDiff
+        return 30, 30, 2, 0.25, 0.2  # minSequencePoints, minSignalPresentCount, minBoundaryPoints, maxSinglePointDiff, maxAverageDiff
 
     @staticmethod
     def getAdaptiveFactor():

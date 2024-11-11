@@ -83,7 +83,7 @@ class compileModelDataHelpers:
 
         # Get the corresponding unique activity names
         uniqueActivityNames = np.asarray(activityNames)[uniqueActivityLabels.to(torch.int)]
-        allFeatureLabels[:, activityLabelInd][goodActivityMask] = validActivityLabels.float()
+        allFeatureLabels[:, activityLabelInd][goodActivityMask] = validActivityLabels.to(allFeatureLabels.dtype)
 
         return uniqueActivityNames, allFeatureLabels
 
@@ -168,24 +168,25 @@ class compileModelDataHelpers:
         numExperiments = len(allRawFeatureIntervals)
 
         # Initialize the padded array and end signal indices list
-        allSignalData = torch.zeros(size=(numExperiments, numSignals, maxSequenceLength, len(modelConstants.signalChannelNames)), dtype=torch.float32)  # +1 for the time data
+        allSignalData = torch.zeros(size=(numExperiments, numSignals, maxSequenceLength, len(modelConstants.signalChannelNames)))  # +1 for the time data
         allNumSignalPoints = torch.empty(size=(numExperiments, numSignals), dtype=torch.int)
 
         # Get the indices for each of the signal information.
         dataChannelInd = emotionDataInterface.getChannelInd(channelName=modelConstants.signalChannel)
         timeChannelInd = emotionDataInterface.getChannelInd(channelName=modelConstants.timeChannel)
+
         maxSequenceLength = 0
         # For each batch of biomarkers.
         for experimentalInd in range(numExperiments):
-            batchData = allRawFeatureIntervals[experimentalInd]
             batchTimes = allRawFeatureIntervalTimes[experimentalInd]
+            batchData = allRawFeatureIntervals[experimentalInd]
             surveyAnswerTime = referenceTimes[experimentalInd]
 
             currentSignalInd = 0
             # For each biomarker in the batch.
             for (biomarkerData, biomarkerTimes) in zip(batchData, batchTimes):
-                biomarkerData = torch.tensor(biomarkerData, dtype=torch.float32).T  # Dim: numBiomarkerFeatures, batchSpecificFeatureLength
-                biomarkerTimes = torch.tensor(biomarkerTimes, dtype=torch.float32)  # Dim: batchSpecificFeatureLength
+                biomarkerData = torch.tensor(biomarkerData).T  # Dim: numBiomarkerFeatures, batchSpecificFeatureLength
+                biomarkerTimes = torch.tensor(biomarkerTimes)  # Dim: batchSpecificFeatureLength
                 biomarkerTimes = surveyAnswerTime - biomarkerTimes
 
                 # Remove data outside the time window.
@@ -283,7 +284,7 @@ class compileModelDataHelpers:
         # Create boolean masks for signals that don’t meet the requirements
         minLowerBoundaryMask = self.minBoundaryPoints <= (biomarkerData < -modelConstants.minMaxScale + 0.25).sum(dim=-1)  # Number of points below -0.95: batchSize, numSignals
         minUpperBoundaryMask = self.minBoundaryPoints <= (modelConstants.minMaxScale - 0.25 < biomarkerData).sum(dim=-1)  # Number of points above 0.95: batchSize, numSignals
-        averageDiff = biomarkerData.diff(dim=-1).abs().mean(dim=-1) < self.maxAverageDiff  # Average difference between consecutive points: batchSize, numSignals
+        averageDiff = biomarkerData.diff(dim=-1).abs().mean(dim=-1) <= self.maxAverageDiff  # Average difference between consecutive points: batchSize, numSignals
         minPointsMask = self.minSequencePoints <= validDataMask.sum(dim=-1)  # Minimum number of points: batchSize, numSignals
         validSignalMask = validDataMask.any(dim=-1)  # Missing data: batchSize, numSignals
 

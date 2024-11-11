@@ -179,9 +179,9 @@ class compileModelData(compileModelDataHelpers):
             # ---------------------- Data Preparation ---------------------- #
 
             # Convert the incoming information to torch tensors.
-            surveyAnswerTimes = torch.as_tensor(list(itertools.chain.from_iterable(surveyAnswerTimes)), dtype=torch.float32)
-            activityLabels = torch.as_tensor(activityLabels, dtype=torch.float32).reshape(-1, 1)
-            surveyAnswersList = torch.as_tensor(surveyAnswersList, dtype=torch.float32)
+            surveyAnswerTimes = torch.as_tensor(list(itertools.chain.from_iterable(surveyAnswerTimes)))
+            activityLabels = torch.as_tensor(activityLabels).reshape(-1, 1)
+            surveyAnswersList = torch.as_tensor(surveyAnswersList)
             allSubjectInds = torch.as_tensor(subjectOrder, dtype=torch.int)
 
             # Add the human activity recognition to the end.

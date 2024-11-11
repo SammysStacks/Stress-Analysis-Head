@@ -6,9 +6,8 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class fourierNeuralOperatorLayer(fourierNeuralOperatorWeights):
 
-    def __init__(self, sequenceLength, numInputSignals, numOutputSignals, addBiasTerm, activationMethod, skipConnectionProtocol, encodeRealFrequencies, encodeImaginaryFrequencies, learningProtocol='rFC', extraOperators=()):
+    def __init__(self, sequenceLength, numInputSignals, numOutputSignals, addBiasTerm, activationMethod, skipConnectionProtocol, encodeRealFrequencies, encodeImaginaryFrequencies, learningProtocol='rFC'):
         super(fourierNeuralOperatorLayer, self).__init__(sequenceLength, numInputSignals, numOutputSignals, addBiasTerm, activationMethod, skipConnectionProtocol, encodeRealFrequencies, encodeImaginaryFrequencies, learningProtocol)
-        self.extraOperators = extraOperators  # Extra operators to apply to the Fourier data.
 
     def forward(self, neuralOperatorData, realFrequencyTerms=None, imaginaryFrequencyTerms=None):
         # Apply the wavelet neural operator and the skip connection.
@@ -38,35 +37,6 @@ class fourierNeuralOperatorLayer(fourierNeuralOperatorWeights):
         if not reversibleInterface.forwardDirection: return self.forward(neuralOperatorData, realFrequencyTerms=None, imaginaryFrequencyTerms=None)
         else: return self.backwardPass(neuralOperatorData, realFrequencyTerms=None, imaginaryFrequencyTerms=None)
 
-    def waveletInterface(self, lowFrequency, highFrequencies):
-        # Assert that the dimensions are correct.
-        assert self.expectedSequenceLength == lowFrequency.size(-1), f"The expected sequence length must equal the wavelet length: {self.expectedSequenceLength}, {lowFrequency.size()}"
-        assert self.numInputSignals == self.numOutputSignals, f"The number of input signals must equal the output signals for now: {self.numInputSignals}, {self.numOutputSignals}"
-        assert len(highFrequencies) == 1, f"The high frequency terms must have only one decomposition: {len(highFrequencies)} {highFrequencies}"
-        assert self.numInputSignals == 2*lowFrequency.size(1), f"The number of input signals must equal twice the incoming signals: {self.numInputSignals}, {lowFrequency.size(1)}"
-        initialNumSignals = lowFrequency.size(1)
-
-        # Combine the real and imaginary Fourier data.
-        frequencyCoeffs = torch.cat(tensors=(lowFrequency, highFrequencies[0]), dim=1)
-        # frequencyCoeffs dimension: batchSize, 2*numInputSignals, waveletDimension
-
-        if not reversibleInterface.forwardDirection:
-            # Apply the neural operator and the activation method.
-            frequencyCoeffs = self.fourierNeuralOperator(frequencyCoeffs, realFrequencyTerms=None, imaginaryFrequencyTerms=None)
-            frequencyCoeffs = self.activationFunction(frequencyCoeffs)  # Apply the activation function.
-            # frequencyCoeffs dimension: batchSize, 2*numOutputSignals, waveletDimension
-        else:
-            # Apply the neural operator and the activation method.
-            frequencyCoeffs = self.activationFunction(frequencyCoeffs)  # Apply the activation function.
-            frequencyCoeffs = self.fourierNeuralOperator(frequencyCoeffs, realFrequencyTerms=None, imaginaryFrequencyTerms=None)
-            # frequencyCoeffs dimension: batchSize, 2*numOutputSignals, waveletDimension
-
-        # Split the real and imaginary Fourier data.
-        lowFrequency, highFrequencies = frequencyCoeffs[:, 0:initialNumSignals], frequencyCoeffs[:, initialNumSignals:]
-        assert lowFrequency.size() == highFrequencies.size(), f"The low and high frequency terms must have the same dimensions: {lowFrequency.size()}, {highFrequencies.size()}"
-
-        return lowFrequency, [highFrequencies]
-
     def fourierNeuralOperator(self, inputData, realFrequencyTerms=None, imaginaryFrequencyTerms=None):
         # Extract the input data parameters.
         batchSize, numInputSignals, sequenceLength = inputData.size()
@@ -82,22 +52,11 @@ class fourierNeuralOperatorLayer(fourierNeuralOperatorWeights):
         # imaginaryFourierData: batchSize, numInputSignals, fourierDimension
         # realFourierData: batchSize, numInputSignals, fourierDimension
 
-        # Apply the extra operators.
-        if not reversibleInterface.forwardDirection: realFourierData, imaginaryFourierData = self.applyExtraOperators(realFourierData, imaginaryFourierData)
-        # imaginaryFourierData: batchSize, numInputSignals, fourierDimension
-        # realFourierData: batchSize, numInputSignals, fourierDimension
-
         # Learn a new set of wavelet coefficients using both of the frequency data.
         if self.learningProtocol in ['drFC', 'drCNN']: realFourierData, imaginaryFourierData = self.dualFrequencyWeights(realFourierData, imaginaryFourierData)
         else:  # Multiply relevant Fourier modes (Sampling low-frequency spectrum).
             if self.encodeImaginaryFrequencies: imaginaryFourierData = self.applyEncoding(equationString='oin,bin->bon', frequencies=imaginaryFourierData, weights=self.imaginaryFourierWeights, frequencyTerms=imaginaryFrequencyTerms)
             if self.encodeRealFrequencies: realFourierData = self.applyEncoding(equationString='oin,bin->bon', frequencies=realFourierData, weights=self.realFourierWeights, frequencyTerms=realFrequencyTerms)
-            # b = batchSize, i = numInputChannels, o = numInputChannels, n = fourierDimension
-        # imaginaryFourierData: batchSize, numOutputChannels, fourierDimension
-        # realFourierData: batchSize, numOutputChannels, fourierDimension
-
-        # Apply the extra operators.
-        if reversibleInterface.forwardDirection: realFourierData, imaginaryFourierData = self.applyExtraOperators(realFourierData, imaginaryFourierData)
         # imaginaryFourierData: batchSize, numOutputChannels, fourierDimension
         # realFourierData: batchSize, numOutputChannels, fourierDimension
 
@@ -126,16 +85,3 @@ class fourierNeuralOperatorLayer(fourierNeuralOperatorWeights):
                 # frequencies dimension: batchSize, numOutputSignals, frequencyDimension
 
         return frequencies
-
-    def applyExtraOperators(self, realFourierData, imaginaryFourierData):
-        # Apply the extra operators.
-        for extraOperatorInd in range(len(self.extraOperators)):
-            if reversibleInterface.forwardDirection: extraOperatorInd = len(self.extraOperators) - 1 - extraOperatorInd
-            extraOperator = self.extraOperators[extraOperatorInd]
-
-            # Apply the extra operator.
-            realFourierData, imaginaryFourierData = extraOperator.fourierInterface(realFourierData, imaginaryFourierData)
-            # imaginaryFourierData: batchSize, numOutputChannels, fourierDimension
-            # realFourierData: batchSize, numOutputChannels, fourierDimension
-
-        return realFourierData, imaginaryFourierData

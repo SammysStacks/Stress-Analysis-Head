@@ -24,7 +24,6 @@ from helperFiles.machineLearning.dataInterface.compileModelData import compileMo
 # Configure cuDNN and PyTorch's global settings.
 torch.backends.cudnn.deterministic = False  # If False: allow non-deterministic algorithms in cuDNN, which can enhance performance but reduce reproducibility.
 torch.autograd.set_detect_anomaly(True)  # If True: detect NaN values in the output of autograd.
-torch.set_default_dtype(torch.float64)  # Set the default data type. Float32 is typical for neural network computations.
 torch.backends.cudnn.benchmark = False  # If True: Enable cuDNN's auto-tuner to find the most efficient algorithm for the current configuration, potentially improving performance if fixed input size.
 
 if __name__ == "__main__":
@@ -32,13 +31,13 @@ if __name__ == "__main__":
     accelerator = accelerate.Accelerator(
         dataloader_config=accelerate.DataLoaderConfiguration(split_batches=True),  # Whether to split batches across devices or not.
         cpu=torch.backends.mps.is_available(),  # Whether to use the CPU. MPS is NOT fully compatible yet.
-        step_scheduler_with_optimizer=True,  # Whether to wrap the optimizer in a scheduler.
+        step_scheduler_with_optimizer=False,  # Whether to wrap the optimizer in a scheduler.
         gradient_accumulation_steps=1,  # The number of gradient accumulation steps.
-        mixed_precision="no",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"
+        mixed_precision="bf16",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"
     )
 
     # General model parameters.
-    trainingDate = "2024-11-06 signal encoder parameters fourier"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2024-11-11 signal encoder parameters"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.2  # The percentage of testing points.
 
     # Training flags.
@@ -55,11 +54,13 @@ if __name__ == "__main__":
     parser.add_argument('--reversibleLearningProtocol', type=str, default='rCNN', help='The learning protocol for the model: rCNN, rFC')
     parser.add_argument('--irreversibleLearningProtocol', type=str, default='FC', help='The learning protocol for the model: CNN, FC')
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are using: cpu, cuda')
+    parser.add_argument('--learningRate', type=float, default=0.1, help='The learning rate of the model.')
+    parser.add_argument('--weightDecay', type=float, default=1e-4, help='The weight decay of the model.')
 
     # Add arguments for the signal encoder architecture.
-    parser.add_argument('--goldenRatio', type=int, default=4, help='The number of shared layers per specific layer.')
+    parser.add_argument('--goldenRatio', type=int, default=1, help='The number of shared layers per specific layer.')
     parser.add_argument('--numSignalEncoderLayers', type=int, default=4, help='The number of layers in the model.')
-    parser.add_argument('--encodedDimension', type=int, default=64, help='The dimension of the encoded signal.')
+    parser.add_argument('--encodedDimension', type=int, default=128, help='The dimension of the encoded signal.')
  
     # Add arguments for the neural operator.
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')

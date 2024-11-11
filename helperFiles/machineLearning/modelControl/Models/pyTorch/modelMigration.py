@@ -32,12 +32,8 @@ class modelMigration:
 
     @staticmethod
     def getModelDevice(accelerator=None):
-        if accelerator:
-            return accelerator.device
-
-        else:
-            # Find the pytorch device
-            return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        if accelerator: return accelerator.device
+        else: return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # ---------------------------------------------------------------------- #
     # ------------------- Alter/Transfer Model Parameters ------------------ #
