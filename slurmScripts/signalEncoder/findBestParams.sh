@@ -1,6 +1,6 @@
 #!/bin/bash
 
-waveletTypes=('bior3.7' 'haar' 'rbio3.7')
+waveletTypes=('bior3.7' 'haar' 'db3' 'dmey')
 optimizers=('AdamW' 'NAdam' 'RAdam')
 encodedDimensions=(64 128 256)
 signalEncoderLayers=(4 8 16)
