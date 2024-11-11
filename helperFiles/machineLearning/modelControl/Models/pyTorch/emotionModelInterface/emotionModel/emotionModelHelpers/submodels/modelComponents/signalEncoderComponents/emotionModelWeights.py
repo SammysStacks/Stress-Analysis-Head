@@ -44,7 +44,7 @@ class emotionModelWeights(convolutionalHelpers):
         return physiologicalProfile
 
     @staticmethod
-    def physiologicalHook(grad): return grad*10
+    def physiologicalHook(grad): return grad
 
     # ------------------- Neural Operator Architectures ------------------- #
 

@@ -1,4 +1,3 @@
-import random
 import time
 
 from .emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
@@ -41,7 +40,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     numPointsAnalyzed += batchSignalInfo.size(0)
 
                     # Set the training parameters.
-                    if profileTraining and not specificTraining and not trainSharedLayers: currentTrainingMask = batchTestingMask
+                    if profileTraining and not specificTraining and not trainSharedLayers: currentTrainingMask = None
                     elif inferenceTraining: currentTrainingMask = None
                     else: currentTrainingMask = batchTrainingMask
 
@@ -93,6 +92,7 @@ class emotionPipeline(emotionPipelineHelpers):
 
                     # Prevent exploding loss values.
                     while 2 < finalLoss.item(): finalLoss = finalLoss / 10
+                    if profileTraining and not specificTraining and not trainSharedLayers: finalLoss = finalLoss*100
 
                     t1 = time.time()
                     # Calculate the gradients.
