@@ -53,7 +53,7 @@ class emotionModelWeights(convolutionalHelpers):
         activationMethod, switchActivationDirection = activationMethod.split('_')
         if sequenceLength < 3: return nn.Identity()
 
-        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=min(25, (sequenceLength | 1) - 2), numLayers=1, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection == "True")
+        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=min(65, (sequenceLength | 1) - 2), numLayers=1, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection == "True")
 
     @staticmethod
     def reversibleNeuralWeightRFC(numSignals, sequenceLength, activationMethod):
@@ -74,7 +74,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def postProcessingLayerRCNN(numSignals, sequenceLength, activationMethod, switchActivationDirection):
-        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=min(25, (sequenceLength | 1) - 2), numLayers=1, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection)
+        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=min(65, (sequenceLength | 1) - 2), numLayers=1, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection)
 
     @staticmethod
     def postProcessingLayerRFC(numSignals, sequenceLength, activationMethod, switchActivationDirection):

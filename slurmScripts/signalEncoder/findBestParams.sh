@@ -1,38 +1,43 @@
 #!/bin/bash
 
-weightDecays=(0.01 0.001 0.0001)
-signalEncoderLayers=(4 8 16 32)
+waveletTypes=('bior3.7' 'db3' 'rbio3.7' 'coif3' 'sym3' 'dmey')
+optimizers=('AdamW' 'NAdam' 'RAdam')
 encodedDimensions=(64 128 256)
-lrs=(1 0.1 0.01 0.001 0.0001)
-goldenRatios=(1 2 4 8)
+signalEncoderLayers=(4 8 16)
+weightDecays=(0.01 0.0001)
+lrs=(1 0.1 0.01 0.001)
+goldenRatios=(1 2 4)
 
-waveletType="bior3.7"
-optimizer="RAdam"     # Replace with actual value
-
-for encodedDimension in "${encodedDimensions[@]}"
+for optimizer in "${optimizers[@]}"
 do
-  for goldenRatio in "${goldenRatios[@]}"
+  for waveletType in "${waveletTypes[@]}"
   do
-    for numSignalEncoderLayers in "${signalEncoderLayers[@]}"
+    for encodedDimension in "${encodedDimensions[@]}"
     do
-      for lr in "${lrs[@]}"
+      for goldenRatio in "${goldenRatios[@]}"
       do
-        for weightDecay in "${weightDecays[@]}"
+        for numSignalEncoderLayers in "${signalEncoderLayers[@]}"
         do
-          # Check if goldenRatio is greater than numSignalEncoderLayers
-          if [ "$goldenRatio" -gt "$numSignalEncoderLayers" ]; then
-              continue  # Skip this iteration if the condition is true
-          fi
+          for lr in "${lrs[@]}"
+          do
+            for weightDecay in "${weightDecays[@]}"
+            do
+              # Check if goldenRatio is greater than numSignalEncoderLayers
+              if [ "$goldenRatio" -gt "$numSignalEncoderLayers" ]; then
+                  continue  # Skip this iteration if the condition is true
+              fi
 
-          echo "Submitting job with $numSignalEncoderLayers numSignalEncoderLayers, $goldenRatio goldenRatio, $encodedDimension encodedDimension on $1"
+              echo "Submitting job with $numSignalEncoderLayers numSignalEncoderLayers, $goldenRatio goldenRatio, $encodedDimension encodedDimension on $1"
 
-          if [ "$1" == "CPU" ]; then
-              sbatch -J "signalEncoder_numSignalEncoderLayers_${numSignalEncoderLayers}_goldenRatio_${goldenRatio}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_CPU.sh "$numSignalEncoderLayers" "$goldenRatio" "$encodedDimension" "$1" "$waveletType" "$optimizer" "$lr" "$weightDecay"
-          elif [ "$1" == "GPU" ]; then
-              sbatch -J "signalEncoder_numSignalEncoderLayers_${numSignalEncoderLayers}_goldenRatio_${goldenRatio}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_GPU.sh "$numSignalEncoderLayers" "$goldenRatio" "$encodedDimension" "$1" "$waveletType" "$optimizer" "$lr" "$weightDecay"
-          else
-              echo "No known device listed: $1"
-          fi
+              if [ "$1" == "CPU" ]; then
+                  sbatch -J "signalEncoder_numSignalEncoderLayers_${numSignalEncoderLayers}_goldenRatio_${goldenRatio}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_CPU.sh "$numSignalEncoderLayers" "$goldenRatio" "$encodedDimension" "$1" "$waveletType" "$optimizer" "$lr" "$weightDecay"
+              elif [ "$1" == "GPU" ]; then
+                  sbatch -J "signalEncoder_numSignalEncoderLayers_${numSignalEncoderLayers}_goldenRatio_${goldenRatio}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_GPU.sh "$numSignalEncoderLayers" "$goldenRatio" "$encodedDimension" "$1" "$waveletType" "$optimizer" "$lr" "$weightDecay"
+              else
+                  echo "No known device listed: $1"
+              fi
+            done
+          done
         done
       done
     done
