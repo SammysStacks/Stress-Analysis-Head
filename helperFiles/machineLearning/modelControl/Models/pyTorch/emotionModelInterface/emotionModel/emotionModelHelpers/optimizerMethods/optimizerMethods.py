@@ -36,7 +36,7 @@ class optimizerMethods:
         modelParams = self.getModelParams(submodel, model)
 
         # Set the optimizer and scheduler.
-        optimizer = self.setOptimizer(modelParams, lr=1e-2, weight_decay=1e-3, optimizerType=self.userInputParams["optimizerType"])
+        optimizer = self.setOptimizer(modelParams, lr=self.userInputParams["learningRate"], weight_decay=self.userInputParams["weightDecay"], optimizerType=self.userInputParams["optimizerType"])
         scheduler = self.getLearningRateScheduler(optimizer)
 
         return optimizer, scheduler
