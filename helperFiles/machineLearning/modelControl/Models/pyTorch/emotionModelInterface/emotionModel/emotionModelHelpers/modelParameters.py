@@ -23,12 +23,10 @@ class modelParameters:
                 'waveletType': userInputParams['waveletType'],  # The type of wavelet to use for the wavelet transform.
                 'encodeHighFrequencyProtocol': 'highFreq',  # The protocol for encoding the high frequency signals.
                 'encodeLowFrequencyProtocol': 'lowFreq',  # The protocol for encoding the low frequency signals.
-                'extraOperators': [],  # The extra operators to apply to the wavelet transform.
             },
             'fourier': {
                 'encodeImaginaryFrequencies': True,  # The protocol for encoding the high frequency signals.
                 'encodeRealFrequencies': True,  # The protocol for encoding the low frequency signals.
-                'extraOperators': [],  # The extra operators to apply to the wavelet transform.
             }
         }
 
