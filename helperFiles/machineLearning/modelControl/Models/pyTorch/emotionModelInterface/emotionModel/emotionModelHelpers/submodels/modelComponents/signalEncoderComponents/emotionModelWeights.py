@@ -53,14 +53,14 @@ class emotionModelWeights(convolutionalHelpers):
         activationMethod, switchActivationDirection = activationMethod.split('_')
         if sequenceLength < 3: return nn.Identity()
 
-        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=min(63, (sequenceLength | 1) - 2), numLayers=1, activationMethod='none', switchActivationDirection=switchActivationDirection == "True")
+        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=min(63, (sequenceLength | 1) - 2), numLayers=1, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection == "True")
 
     @staticmethod
     def reversibleNeuralWeightRFC(numSignals, sequenceLength, activationMethod):
         activationMethod, switchActivationDirection = activationMethod.split('_')
         if sequenceLength < 3: return nn.Identity()
 
-        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength, numLayers=1, activationMethod='none', switchActivationDirection=switchActivationDirection == "True")
+        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength, numLayers=1, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection == "True")
 
     @staticmethod
     def neuralWeightFC(sequenceLength):
