@@ -73,6 +73,8 @@ class reversibleLinearLayer(reversibleInterface):
         neuralWeights[:, self.rowInds, self.colInds] = -self.linearOperators[layerInd]
         neuralWeights[:, self.colInds, self.rowInds] = self.linearOperators[layerInd]
         # neuralWeight: numSignals, sequenceLength, sequenceLength
+        print(neuralWeights[0, 0:5, 0:5])
+        print(self.linearOperators[layerInd][0])
 
         # Create an orthogonal matrix.
         neuralWeights = torch.matrix_exp(neuralWeights)
@@ -90,7 +92,7 @@ if __name__ == "__main__":
     _batchSize, _numSignals, _sequenceLength = 2, 300, 256
     _activationMethod = 'reversibleLinearSoftSign'
     _kernelSize = 5
-    _numLayers = 4
+    _numLayers = 1
 
     # Set up the parameters.
     neuralLayerClass = reversibleLinearLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod, switchActivationDirection=False)

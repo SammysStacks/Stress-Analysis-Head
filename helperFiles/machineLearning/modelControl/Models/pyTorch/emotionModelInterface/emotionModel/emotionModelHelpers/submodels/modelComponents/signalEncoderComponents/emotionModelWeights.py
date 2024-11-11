@@ -49,14 +49,18 @@ class emotionModelWeights(convolutionalHelpers):
     # ------------------- Neural Operator Architectures ------------------- #
 
     @staticmethod
-    def reversibleNeuralWeightRFC(numSignals, sequenceLength, activationMethod):
-        activationMethod, switchActivationDirection = activationMethod.split('_')
-        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength, numLayers=1, activationMethod='none', switchActivationDirection=switchActivationDirection == "True")
-
-    @staticmethod
     def reversibleNeuralWeightRCNN(numSignals, sequenceLength, activationMethod):
         activationMethod, switchActivationDirection = activationMethod.split('_')
-        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=min(31, sequenceLength | 1), numLayers=1, activationMethod='none', switchActivationDirection=switchActivationDirection == "True")
+        if sequenceLength < 3: return nn.Identity()
+
+        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=min(63, (sequenceLength | 1) - 2), numLayers=1, activationMethod='none', switchActivationDirection=switchActivationDirection == "True")
+
+    @staticmethod
+    def reversibleNeuralWeightRFC(numSignals, sequenceLength, activationMethod):
+        activationMethod, switchActivationDirection = activationMethod.split('_')
+        if sequenceLength < 3: return nn.Identity()
+
+        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength, numLayers=1, activationMethod='none', switchActivationDirection=switchActivationDirection == "True")
 
     @staticmethod
     def neuralWeightFC(sequenceLength):
@@ -70,7 +74,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def postProcessingLayerRCNN(numSignals, sequenceLength, activationMethod, switchActivationDirection):
-        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=min(31, sequenceLength | 1), numLayers=1, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection)
+        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=min(63, (sequenceLength | 1) - 2), numLayers=1, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection)
 
     @staticmethod
     def postProcessingLayerRFC(numSignals, sequenceLength, activationMethod, switchActivationDirection):

@@ -28,7 +28,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         self.kernelInds = self.rowInds - self.colInds + self.kernelSize // 2  # Adjust for kernel center
 
         # Assert the validity of the input parameters.
-        assert 1 < kernelSize <= sequenceLength, f"The kernel size is larger than the sequence length: {kernelSize}, {sequenceLength}"
+        assert kernelSize <= sequenceLength - 1, f"The kernel size must be less than the sequence length: {kernelSize}, {sequenceLength}"
         assert self.kernelInds.max() == self.kernelSize//2 - 1, f"The kernel indices are not valid: {self.kernelInds.max()}"
         assert self.kernelInds.min() == 0, f"The kernel indices are not valid: {self.kernelInds.min()}"
 
@@ -38,7 +38,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         # Create the neural layers.
         for layerInd in range(self.numLayers):
             # Create the neural weights.
-            parameters = nn.Parameter(torch.randn(numSignals, kernelSize//2, dtype=torch.float64))
+            parameters = nn.Parameter(torch.randn(numSignals, kernelSize//2 or 1, dtype=torch.float64))
             parameters = nn.init.uniform_(parameters, a=-self.bounds, b=self.bounds)
             self.linearOperators.append(parameters)
 
