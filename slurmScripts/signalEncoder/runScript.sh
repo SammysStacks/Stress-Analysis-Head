@@ -1,9 +1,9 @@
 #!/bin/bash
 
-encodedDimensions=(64 128 256)
+encodedDimensions=(64 128 256 512)
 # Total: 2
 
-goldenRatios=(1 2 4 8 16 32)
+goldenRatios=(1 2 4 8)
 # Total: 4
 
 signalEncoderLayers=(4 8 16 32)
