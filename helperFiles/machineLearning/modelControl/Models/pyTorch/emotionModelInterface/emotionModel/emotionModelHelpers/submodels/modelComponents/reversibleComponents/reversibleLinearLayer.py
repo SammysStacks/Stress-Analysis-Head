@@ -73,8 +73,6 @@ class reversibleLinearLayer(reversibleInterface):
         neuralWeights[:, self.rowInds, self.colInds] = -self.linearOperators[layerInd]
         neuralWeights[:, self.colInds, self.rowInds] = self.linearOperators[layerInd]
         # neuralWeight: numSignals, sequenceLength, sequenceLength
-        print(neuralWeights[0, 0:5, 0:5])
-        print(self.linearOperators[layerInd][0])
 
         # Create an orthogonal matrix.
         neuralWeights = torch.matrix_exp(neuralWeights)

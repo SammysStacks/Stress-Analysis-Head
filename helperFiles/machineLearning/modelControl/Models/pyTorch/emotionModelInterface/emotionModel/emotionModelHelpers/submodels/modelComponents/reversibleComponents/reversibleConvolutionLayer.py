@@ -97,7 +97,7 @@ if __name__ == "__main__":
     # General parameters.
     _batchSize, _numSignals, _sequenceLength = 2, 3, 128
     _activationMethod = 'reversibleLinearSoftSign'
-    _kernelSize = 3
+    _kernelSize = 31
     _numLayers = 1
 
     # Set up the parameters.
