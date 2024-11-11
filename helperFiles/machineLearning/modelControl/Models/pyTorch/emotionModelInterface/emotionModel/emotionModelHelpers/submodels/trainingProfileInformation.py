@@ -12,7 +12,6 @@ class trainingProfileInformation(emotionModelWeights):
 
     def resetTrainingProfile(self, numExperiments, encodedDimension):
         self.physiologicalProfile = self.getInitialPhysiologicalProfile(numExperiments=numExperiments, encodedDimension=encodedDimension)
-        self.physiologicalProfile.register_hook(self.physiologicalHook)
 
     def getCurrentPhysiologicalProfile(self, batchInds):
         return self.physiologicalProfile[batchInds]
