@@ -3,8 +3,8 @@
 waveletTypes=('bior6.8')
 optimizers=('AdamW')
 encodedDimensions=(64 128 256)
-signalEncoderLayers=(1 2 3 4)
-weightDecays=(0.0001 0)
+signalEncoderLayers=(8 16 32 48)
+weightDecays=(0)
 goldenRatios=(1 2 3 4)
 lrs=(0.01)
 
