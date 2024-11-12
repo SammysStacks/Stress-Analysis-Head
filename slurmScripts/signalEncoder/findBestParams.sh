@@ -5,7 +5,7 @@ optimizers=('AdamW')
 encodedDimensions=(128 256)
 signalEncoderLayers=(4 8)
 weightDecays=(0.01 0.001 0)
-goldenRatios=(2 4)
+goldenRatios=(2 4 8)
 lrs=(0.1 0.01 0.001)
 
 for optimizer in "${optimizers[@]}"
