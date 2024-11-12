@@ -37,7 +37,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2024-11-11 signal encoder parameters"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2024-11-11"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.2  # The percentage of testing points.
 
     # Training flags.
@@ -50,12 +50,12 @@ if __name__ == "__main__":
 
     # Add arguments for the general model
     parser.add_argument('--submodel', type=str, default=modelConstants.signalEncoderModel, help='The component of the model we are training. Options: signalEncoderModel, emotionModel')
-    parser.add_argument('--optimizerType', type=str, default='RAdam', help='The optimizerType used during training convergence: Options: RMSprop, Adam, AdamW, SGD, etc.')
+    parser.add_argument('--optimizerType', type=str, default='AdamW', help='The optimizerType used during training convergence: Options: RMSprop, Adam, AdamW, SGD, etc.')
     parser.add_argument('--reversibleLearningProtocol', type=str, default='rCNN', help='The learning protocol for the model: rCNN, rFC')
     parser.add_argument('--irreversibleLearningProtocol', type=str, default='FC', help='The learning protocol for the model: CNN, FC')
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are using: cpu, cuda')
-    parser.add_argument('--learningRate', type=float, default=0.01, help='The learning rate of the model.')
-    parser.add_argument('--weightDecay', type=float, default=0, help='The weight decay of the model.')
+    parser.add_argument('--learningRate', type=float, default=0.1, help='The learning rate of the model.')  # Higher values converge faster; Lower values create stable convergence.
+    parser.add_argument('--weightDecay', type=float, default=0.001, help='The weight decay of the model.')  # Higher values converge better; Lower values create unstable convergence.
 
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--goldenRatio', type=int, default=4, help='The number of shared layers per specific layer.')
@@ -64,7 +64,7 @@ if __name__ == "__main__":
  
     # Add arguments for the neural operator.
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
-    parser.add_argument('--waveletType', type=str, default='bior3.7', help='The wavelet type for the wavelet transform: bior3.7, db3, dmey, etc')
+    parser.add_argument('--waveletType', type=str, default='bior6.8', help='The wavelet type for the wavelet transform: bior3.7, db3, dmey, etc')
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions).')

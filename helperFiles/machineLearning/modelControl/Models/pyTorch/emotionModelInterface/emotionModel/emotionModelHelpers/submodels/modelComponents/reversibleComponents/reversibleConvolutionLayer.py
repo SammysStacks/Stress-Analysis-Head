@@ -16,7 +16,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         self.numSignals = numSignals  # The number of signals in the input data.
         self.kernelSize = kernelSize  # The restricted window for the neural weights.
         self.numLayers = numLayers  # The number of layers in the reversible linear layer.
-        self.bounds = 1  # The bounds for the neural weights: lower values are like identity.
+        self.bounds = 2  # The bounds for the neural weights: lower values are like identity.
 
         # The restricted window for the neural weights.
         upperWindowMask = torch.ones(self.sequenceLength, self.sequenceLength, dtype=torch.float64)
@@ -28,7 +28,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         self.kernelInds = self.rowInds - self.colInds + self.kernelSize // 2  # Adjust for kernel center
 
         # Assert the validity of the input parameters.
-        assert kernelSize <= sequenceLength - 1, f"The kernel size must be less than the sequence length: {kernelSize}, {sequenceLength}"
+        assert 1 <= kernelSize <= sequenceLength - 1, f"The kernel size must be less than the sequence length: {kernelSize}, {sequenceLength}"
         assert self.kernelInds.max() == self.kernelSize//2 - 1, f"The kernel indices are not valid: {self.kernelInds.max()}"
         assert self.kernelInds.min() == 0, f"The kernel indices are not valid: {self.kernelInds.min()}"
 

@@ -53,9 +53,9 @@ class compileModelDataHelpers:
         emotionPredictionModelInfo = f"emotionPrediction on {userInputParams['deviceListed']} with {userInputParams['optimizerType']}"
 
         if submodel == modelConstants.signalEncoderModel:
-            return f"{trainingDate} {signalEncoderModelInfo}"
+            return f"{trainingDate} {signalEncoderModelInfo.replace(".", "-")}"
         elif submodel == modelConstants.emotionModel:
-            return f"{trainingDate} {emotionPredictionModelInfo}"
+            return f"{trainingDate} {emotionPredictionModelInfo.replace(".", "-")}"
         else: raise Exception()
 
     # ---------------------- Saving/Loading Model Data --------------------- #

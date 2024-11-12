@@ -64,8 +64,8 @@ class modelParameters:
 
     @staticmethod
     def getInferenceBatchSize(submodel, device):
-        if submodel == modelConstants.signalEncoderModel: return 128 if device == "cpu" else 128
-        elif submodel == modelConstants.emotionModel: return 128 if device == "cpu" else 128
+        if submodel == modelConstants.signalEncoderModel: return 256 if device == "cpu" else 256
+        elif submodel == modelConstants.emotionModel: return 256 if device == "cpu" else 256
         else: raise Exception()
 
     @staticmethod
@@ -76,7 +76,7 @@ class modelParameters:
 
     @staticmethod
     def getExclusionSequenceCriteria():
-        return 30, 30, 2, 0.25, 0.2  # minSequencePoints, minSignalPresentCount, minBoundaryPoints, maxSinglePointDiff, maxAverageDiff
+        return 30, 30, 2, 0.2, 0.1  # minSequencePoints, minSignalPresentCount, minBoundaryPoints, maxSinglePointDiff, maxAverageDiff
 
     @staticmethod
     def getAdaptiveFactor():
