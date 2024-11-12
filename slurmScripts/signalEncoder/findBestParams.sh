@@ -2,10 +2,10 @@
 
 waveletTypes=('bior6.8')
 optimizers=('AdamW')
-encodedDimensions=(64 128 256)
+encodedDimensions=(96 128 180)
 signalEncoderLayers=(8 16 32 48)
 weightDecays=(0)
-goldenRatios=(1 2 3 4)
+goldenRatios=(1 2 3 4 8)
 lrs=(0.01)
 
 for optimizer in "${optimizers[@]}"
