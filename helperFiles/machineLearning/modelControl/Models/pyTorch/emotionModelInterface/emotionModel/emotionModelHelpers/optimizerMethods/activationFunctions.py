@@ -35,12 +35,12 @@ def getActivationMethod(activationMethod):
 
 
 class reversibleLinearSoftSign(reversibleInterface):
-    def __init__(self, invertedActivation=False, linearity=4/3, infiniteBound=0.5, scalarAdjustment=1):
+    def __init__(self, invertedActivation=False, linearity=7/4, infiniteBound=33/49, scalarAdjustment=1):
         super(reversibleLinearSoftSign, self).__init__()
         self.invertedActivation = invertedActivation  # Whether the non-linearity term is inverted
         self.scalarAdjustment = scalarAdjustment  # Scalar adjustment for numerical stability
-        self.infiniteBound = infiniteBound  # This controls how the activation converges at +/- infinity.
-        self.linearity = linearity  # Corresponds to `r` in the equation
+        self.infiniteBound = infiniteBound  # This controls how the activation converges at +/- infinity; Ex: 0.5, 13/21, 33/49
+        self.linearity = linearity  # Corresponds to `r` in the equation; Ex: 4/3, 3/2, 7/4
         self.tolerance = 1e-20  # Tolerance for numerical stability
 
         # Assert the validity of the inputs.
@@ -64,6 +64,7 @@ class reversibleLinearSoftSign(reversibleInterface):
         x = signY*(sqrtTerm.sqrt() - 1)/2 - signY / (2*a*r) + y / (2*a)
 
         return x / self.scalarAdjustment
+
 
 class boundedS(reversibleInterface):
     def __init__(self, invertedActivation=False, linearity=2):
