@@ -36,12 +36,12 @@ class modelParameters:
         return userInputParams
 
     def getTrainingBatchSize(self, submodel, numExperiments):
-        # Wesad: Found 32 (out of 32) well-labeled emotions across 60 experiments with 60 signals.
-        # Emognition: Found 12 (out of 12) well-labeled emotions across 407 experiments with 54 signals.
-        # Amigos: Found 10 (out of 12) well-labeled emotions across 673 experiments with 127 signals.
-        # Dapper: Found 12 (out of 12) well-labeled emotions across 364 experiments with 21 signals.
-        # Case: Found 2 (out of 2) well-labeled emotions across 1442 experiments with 50 signals.
-        # Collected: Found 30 (out of 30) well-labeled emotions across 165 experiments with 48 signals.
+        # Wesad: Found 32 (out of 32) well-labeled emotions across 60 experiments with 28 signals.
+        # Emognition: Found 12 (out of 12) well-labeled emotions across 407 experiments with 50 signals.
+        # Amigos: Found 10 (out of 12) well-labeled emotions across 673 experiments with 118 signals.
+        # Dapper: Found 12 (out of 12) well-labeled emotions across 364 experiments with 15 signals.
+        # Case: Found 2 (out of 2) well-labeled emotions across 1442 experiments with 41 signals.
+        # Collected: Found 30 (out of 30) well-labeled emotions across 165 experiments with 46 signals.
         if submodel == modelConstants.signalEncoderModel: effectiveMinBatchSize, effectiveMaxBatchSize = 12, 160
         elif submodel == modelConstants.emotionModel: effectiveMinBatchSize, effectiveMaxBatchSize = 12, 160
         else: raise Exception()
@@ -70,7 +70,7 @@ class modelParameters:
 
     @staticmethod
     def getEpochInfo():
-        return 1000, 10, 10  # numEpochs, numEpoch_toPlot, numEpoch_toSaveFull
+        return 2500, 10, 10  # numEpochs, numEpoch_toPlot, numEpoch_toSaveFull
 
     # -------------------------- Compilation Parameters ------------------------- #
 

@@ -58,8 +58,8 @@ if __name__ == "__main__":
     parser.add_argument('--weightDecay', type=float, default=0, help='The weight decay of the model.')  # Higher values do not converge as far; Lower values create unstable convergence.
 
     # Add arguments for the signal encoder architecture.
-    parser.add_argument('--goldenRatio', type=int, default=4, help='The number of shared layers per specific layer.')
-    parser.add_argument('--numSignalEncoderLayers', type=int, default=8, help='The number of layers in the model.')
+    parser.add_argument('--goldenRatio', type=int, default=1, help='The number of shared layers per specific layer.')
+    parser.add_argument('--numSignalEncoderLayers', type=int, default=16, help='The number of layers in the model.')
     parser.add_argument('--encodedDimension', type=int, default=128, help='The dimension of the encoded signal.')
  
     # Add arguments for the neural operator.

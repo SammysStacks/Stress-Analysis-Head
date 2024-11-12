@@ -2,11 +2,11 @@
 
 waveletTypes=('bior6.8')
 optimizers=('AdamW')
-encodedDimensions=(96 128 180)
+encodedDimensions=(128)
 signalEncoderLayers=(8 16 32 48)
-weightDecays=(0)
-goldenRatios=(1 2 3 4 8)
-lrs=(0.01)
+weightDecays=(0.0001)
+goldenRatios=(1 2 3 4)
+lrs=(0.01 0.1)
 
 for optimizer in "${optimizers[@]}"
 do
@@ -27,7 +27,7 @@ do
                   continue  # Skip this iteration if the condition is true
               fi
 
-              echo "Submitting job with $numSignalEncoderLayers numSignalEncoderLayers, $goldenRatio goldenRatio, $encodedDimension encodedDimension on $1"
+              echo "Submitting job with $numSignalEncoderLayers numSignalEncoderLayers, $goldenRatio goldenRatio, $encodedDimension encodedDimension, $waveletType waveletType, $optimizer optimizer, $lr lr, $weightDecay weightDecay on $1"
 
               if [ "$1" == "CPU" ]; then
                   sbatch -J "signalEncoder_numSignalEncoderLayers_${numSignalEncoderLayers}_goldenRatio_${goldenRatio}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_CPU.sh "$numSignalEncoderLayers" "$goldenRatio" "$encodedDimension" "$1" "$waveletType" "$optimizer" "$lr" "$weightDecay"

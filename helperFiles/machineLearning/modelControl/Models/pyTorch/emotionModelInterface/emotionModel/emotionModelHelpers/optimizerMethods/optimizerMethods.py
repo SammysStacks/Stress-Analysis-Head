@@ -1,4 +1,8 @@
+import math
+
 import torch.optim as optim
+from torch.optim import Optimizer
+from torch.optim.lr_scheduler import LRScheduler, _warn_get_lr_called_within_step
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
@@ -44,17 +48,15 @@ class optimizerMethods:
     def setOptimizer(self, params, lr, weight_decay, optimizerType):
         return self.getOptimizer(optimizerType=optimizerType, params=params, lr=lr, weight_decay=weight_decay, momentum=0.2)
 
-    def getLearningRateScheduler(self, optimizer):
+    @staticmethod
+    def getLearningRateScheduler(optimizer):
         # Options:
         # Slow ramp up: transformers.get_constant_schedule_with_warmup(optimizer=self.optimizer, num_warmup_steps=30)
         # Cosine waveform: optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=20, eta_min=1e-8, last_epoch=-1)
         # Reduce on plateau (need further editing of loop): optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=0.5, patience=10, threshold=1e-4, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08)
         # Defined lambda function: optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda=lambda_function); lambda_function = lambda epoch: (epoch/50) if epoch < -1 else 1
         # torch.optim.lr_scheduler.constrainedLR(optimizer, start_factor=0.3333333333333333, end_factor=1.0, total_iters=5, last_epoch=-1)
-        scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=3, eta_min=max(1e-4, self.userInputParams["learningRate"]/1000), last_epoch=-1)
-        scheduler.step()
-
-        return scheduler
+        return CosineAnnealingLR_customized(optimizer, T_max=5, last_epoch=-1)
 
     @staticmethod
     def getOptimizer(optimizerType, params, lr, weight_decay, momentum=0.9):
@@ -112,3 +114,25 @@ class optimizerMethods:
             return optim.SGD(params, lr=lr, momentum=momentum, dampening=0, weight_decay=weight_decay, nesterov=True)
         else:
             assert False, "No optimizer initialized"
+
+class CosineAnnealingLR_customized(LRScheduler):
+    def __init__(self, optimizer: Optimizer, T_max: int, last_epoch: int = -1):
+        self.T_max = T_max
+
+        # Call the parent class constructor
+        super().__init__(optimizer, last_epoch)
+        self.step()
+
+    def get_lr(self):
+        """Retrieve the learning rate of each parameter group."""
+        _warn_get_lr_called_within_step(self)
+
+        # Base case: learning rate is constant.
+        if self.last_epoch == 0: return [group["lr"] for group in self.optimizer.param_groups]
+
+        # Base case: reset the learning rate.
+        if self.last_epoch % self.T_max == 0: return [base_lr for base_lr in self.base_lrs]
+
+        # Apply decay to each base learning rate
+        decay_factor = 10 ** -((self.T_max - self.last_epoch) % self.T_max)
+        return [base_lr * decay_factor for base_lr in self.base_lrs]
