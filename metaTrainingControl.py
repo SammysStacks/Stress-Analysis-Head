@@ -55,7 +55,7 @@ if __name__ == "__main__":
     parser.add_argument('--irreversibleLearningProtocol', type=str, default='FC', help='The learning protocol for the model: CNN, FC')
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are using: cpu, cuda')
     parser.add_argument('--learningRate', type=float, default=0.01, help='The learning rate of the model.')
-    parser.add_argument('--weightDecay', type=float, default=1e-4, help='The weight decay of the model.')
+    parser.add_argument('--weightDecay', type=float, default=0, help='The weight decay of the model.')
 
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--goldenRatio', type=int, default=4, help='The number of shared layers per specific layer.')
