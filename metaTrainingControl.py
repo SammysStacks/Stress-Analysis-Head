@@ -55,12 +55,12 @@ if __name__ == "__main__":
     parser.add_argument('--irreversibleLearningProtocol', type=str, default='FC', help='The learning protocol for the model: CNN, FC')
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are using: cpu, cuda')
     parser.add_argument('--learningRate', type=float, default=0.01, help='The learning rate of the model.')
-    parser.add_argument('--weightDecay', type=float, default=1e-6, help='The weight decay of the model.')
+    parser.add_argument('--weightDecay', type=float, default=1e-4, help='The weight decay of the model.')
 
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--goldenRatio', type=int, default=4, help='The number of shared layers per specific layer.')
     parser.add_argument('--numSignalEncoderLayers', type=int, default=4, help='The number of layers in the model.')
-    parser.add_argument('--encodedDimension', type=int, default=64, help='The dimension of the encoded signal.')
+    parser.add_argument('--encodedDimension', type=int, default=128, help='The dimension of the encoded signal.')
  
     # Add arguments for the neural operator.
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
