@@ -36,7 +36,7 @@ class reversibleLinearLayer(reversibleInterface):
         for layerInd in range(self.numLayers):
             # Create the neural weights.
             parameters = nn.Parameter(torch.randn(numSignals, len(self.colInds), dtype=torch.float64))
-            parameters = nn.init.normal_(parameters, mean=0, std=0.25)
+            parameters = nn.init.uniform_(parameters, a=-self.bounds, b=self.bounds)
             self.linearOperators.append(parameters)
 
             # Add the activation function.
@@ -89,7 +89,7 @@ if __name__ == "__main__":
     # General parameters.
     _batchSize, _numSignals, _sequenceLength = 2, 300, 256
     _activationMethod = 'reversibleLinearSoftSign'
-    _kernelSize = 5
+    _kernelSize = 7
     _numLayers = 1
 
     # Set up the parameters.
