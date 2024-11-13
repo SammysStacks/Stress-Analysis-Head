@@ -35,7 +35,7 @@ class emotionModelWeights(convolutionalHelpers):
     def getInitialPhysiologicalProfile(numExperiments, encodedDimension):
         # Initialize the physiological profile.
         physiologicalProfile = torch.randn(numExperiments, encodedDimension, dtype=torch.float64)
-        # physiologicalProfile = nn.init.normal_(physiologicalProfile, mean=0, std=0.5)
+        physiologicalProfile = nn.init.normal_(physiologicalProfile, mean=0, std=0.25)
 
         # Initialize the physiological profile as a parameter.
         physiologicalProfile = nn.Parameter(physiologicalProfile)
