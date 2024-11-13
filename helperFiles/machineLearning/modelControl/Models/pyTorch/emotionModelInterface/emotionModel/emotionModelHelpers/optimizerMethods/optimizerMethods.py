@@ -15,20 +15,20 @@ class optimizerMethods:
         modelParams = [
             # Specify the model parameters for the signal encoding.
             {'params': model.inferenceModel.parameters(), 'weight_decay': 0, 'lr': 0.01},
-            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': self.userInputParams["weightDecay"], 'lr': self.userInputParams["learningRate"]/10},
-            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "profileModel" not in name), 'weight_decay': self.userInputParams["weightDecay"], 'lr': self.userInputParams["learningRate"]/10},
+            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': self.userInputParams["weightDecay"]/10, 'lr': self.userInputParams["learningRate"]/10},
+            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "profileModel" not in name), 'weight_decay': self.userInputParams["weightDecay"]/10, 'lr': self.userInputParams["learningRate"]/10},
             {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': self.userInputParams["weightDecay"], 'lr': self.userInputParams["learningRate"]},
         ]
 
         if submodel == modelConstants.emotionModel:
             modelParams.extend([
                 # Specify the model parameters for the emotion prediction.
-                {'params': model.specificEmotionModel.parameters(), 'weight_decay': self.userInputParams["weightDecay"], 'lr': 1E-3},
-                {'params': model.sharedEmotionModel.parameters(), 'weight_decay': self.userInputParams["weightDecay"], 'lr': 1E-3},
+                {'params': model.specificEmotionModel.parameters(), 'weight_decay': self.userInputParams["weightDecay"]/10, 'lr': 1E-3},
+                {'params': model.sharedEmotionModel.parameters(), 'weight_decay': self.userInputParams["weightDecay"]/10, 'lr': 1E-3},
 
                 # Specify the model parameters for the human activity recognition.
-                {'params': model.specificActivityModel.parameters(), 'weight_decay': self.userInputParams["weightDecay"], 'lr': 1E-3},
-                {'params': model.sharedActivityModel.parameters(), 'weight_decay': self.userInputParams["weightDecay"], 'lr': 1E-3},
+                {'params': model.specificActivityModel.parameters(), 'weight_decay': self.userInputParams["weightDecay"]/10, 'lr': 1E-3},
+                {'params': model.sharedActivityModel.parameters(), 'weight_decay': self.userInputParams["weightDecay"]/10, 'lr': 1E-3},
             ])
 
         return modelParams
@@ -38,7 +38,7 @@ class optimizerMethods:
         modelParams = self.getModelParams(submodel, model)
 
         # Set the optimizer and scheduler.
-        optimizer = self.setOptimizer(modelParams, lr=self.userInputParams["learningRate"], weight_decay=self.userInputParams["weightDecay"], optimizerType=self.userInputParams["optimizerType"])
+        optimizer = self.setOptimizer(modelParams, lr=self.userInputParams["learningRate"]/10, weight_decay=self.userInputParams["weightDecay"]/10, optimizerType=self.userInputParams["optimizerType"])
         scheduler = self.getLearningRateScheduler(optimizer)
 
         return optimizer, scheduler
@@ -54,7 +54,7 @@ class optimizerMethods:
         # Reduce on plateau (need further editing of loop): optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=0.5, patience=10, threshold=1e-4, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08)
         # Defined lambda function: optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda=lambda_function); lambda_function = lambda epoch: (epoch/50) if epoch < -1 else 1
         # torch.optim.lr_scheduler.constrainedLR(optimizer, start_factor=0.3333333333333333, end_factor=1.0, total_iters=5, last_epoch=-1)
-        return CosineAnnealingLR_customized(optimizer, T_max=3, absolute_min_lr=1e-4, multiplicativeFactor=10, last_epoch=-1)
+        return CosineAnnealingLR_customized(optimizer, T_max=2, absolute_min_lr=1e-3, multiplicativeFactor=10, last_epoch=-1)
 
     @staticmethod
     def getOptimizer(optimizerType, params, lr, weight_decay, momentum=0.9):

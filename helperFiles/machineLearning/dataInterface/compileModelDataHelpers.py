@@ -49,7 +49,7 @@ class compileModelDataHelpers:
     @staticmethod
     def embedInformation(submodel, userInputParams, trainingDate):
         # Embedded information for each model.
-        signalEncoderModelInfo = f"signalEncoder on {userInputParams['deviceListed']} with {userInputParams['optimizerType']} at numSignalEncoderLayers {userInputParams['numSignalEncoderLayers']} at goldenRatio {userInputParams['goldenRatio']} at encodedDimension {userInputParams['encodedDimension']} at learningRate {userInputParams['learningRate']} at weightDecay {userInputParams['weightDecay']}"
+        signalEncoderModelInfo = f"signalEncoder on {userInputParams['deviceListed']} with {userInputParams['optimizerType']} at sigEncLayers {userInputParams['numSignalEncoderLayers']} at goldenRatio {userInputParams['goldenRatio']} at encodedDim {userInputParams['encodedDimension']} at lr {userInputParams['learningRate']} at wd {userInputParams['weightDecay']}"
         emotionPredictionModelInfo = f"emotionPrediction on {userInputParams['deviceListed']} with {userInputParams['optimizerType']}"
 
         if submodel == modelConstants.signalEncoderModel:
@@ -100,8 +100,9 @@ class compileModelDataHelpers:
 
         # For each label type.
         for labelTypeInd in range(numLabels):
-            featureLabels = allFeatureLabels[:, labelTypeInd]
+            featureLabels = allFeatureLabels[:, labelTypeInd].clone()
             goodLabels = goodLabelInds[:, labelTypeInd]
+            featureLabels = featureLabels.int()
 
             # Count the number of times the emotion label has a unique value.
             unique_classes, class_counts = torch.unique(featureLabels[goodLabels], return_counts=True)

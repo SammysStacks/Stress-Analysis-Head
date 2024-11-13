@@ -38,7 +38,7 @@ if __name__ == "__main__":
 
     # General model parameters.
     trainingDate = "2024-11-11"  # The current date we are training the model. Unique identifier of this training set.
-    testSplitRatio = 0.2  # The percentage of testing points.
+    testSplitRatio = 0.1  # The percentage of testing points.
 
     # Training flags.
     storeLoss = True  # If you want to record any loss values.
@@ -55,11 +55,11 @@ if __name__ == "__main__":
     parser.add_argument('--irreversibleLearningProtocol', type=str, default='FC', help='The learning protocol for the model: CNN, FC')
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are using: cpu, cuda')
     parser.add_argument('--learningRate', type=float, default=0.01, help='The learning rate of the model.')  # Higher values converge faster; Lower values create stable convergence.
-    parser.add_argument('--weightDecay', type=float, default=0.0001, help='The weight decay of the model.')  # Higher values do not converge as far; Lower values create unstable convergence.
+    parser.add_argument('--weightDecay', type=float, default=0.001, help='The weight decay of the model.')  # Higher values do not converge as far; Lower values create unstable convergence.
 
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--goldenRatio', type=int, default=2, help='The number of shared layers per specific layer.')
-    parser.add_argument('--numSignalEncoderLayers', type=int, default=6, help='The number of layers in the model.')
+    parser.add_argument('--numSignalEncoderLayers', type=int, default=8, help='The number of layers in the model.')
     parser.add_argument('--encodedDimension', type=int, default=128, help='The dimension of the encoded signal.')
  
     # Add arguments for the neural operator.

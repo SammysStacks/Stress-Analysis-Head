@@ -218,23 +218,18 @@ class compileModelData(compileModelDataHelpers):
 
             # For each type of label/emotion recorded.
             for labelTypeInd in range(numLabels):
-                currentFeatureLabels = allFeatureLabels[:, labelTypeInd]
+                currentFeatureLabels = allFeatureLabels[:, labelTypeInd].clone()
                 smallClassMask = allSingleClassMasks[labelTypeInd]
                 # smallClassIndices dimension: numSmallClassIndices → containing their indices in the batch.
                 # currentFeatureLabels dimension: batchSize
 
                 # Apply the mask to get the valid class data.
                 validLabelMask = ~torch.isnan(currentFeatureLabels) & ~smallClassMask  # Dim: batchSize
+                currentClassLabels = currentFeatureLabels[validLabelMask].int()  # Dim: numValidLabels
                 currentIndices = allExperimentalIndices[validLabelMask]  # Dim: numValidLabels
-                stratifyBy = currentFeatureLabels[validLabelMask]  # Dim: numValidLabels
-
-                # You must have at least two labels per class.
-                if len(stratifyBy) == 0 or testSplitRatio < len(torch.unique(stratifyBy)) / len(stratifyBy):
-                    print(f"\t\tThe unique label ratio is {len(torch.unique(stratifyBy)) / len(stratifyBy)}. Not training on {surveyQuestions[labelTypeInd]} labels", flush=True)
-                    continue
 
                 # Randomly split the data and labels, keeping a balance between testing/training.
-                Training_Indices, Testing_Indices = train_test_split(currentIndices.cpu().numpy(), test_size=testSplitRatio, shuffle=True, stratify=stratifyBy.cpu().numpy(), random_state=random_state)
+                Training_Indices, Testing_Indices = train_test_split(currentIndices.detach().cpu().numpy(), test_size=testSplitRatio, shuffle=True, stratify=currentClassLabels.detach().cpu().numpy(), random_state=random_state)
 
                 # Populate the training and testing mask.
                 currentTestingMask[Testing_Indices, labelTypeInd] = True

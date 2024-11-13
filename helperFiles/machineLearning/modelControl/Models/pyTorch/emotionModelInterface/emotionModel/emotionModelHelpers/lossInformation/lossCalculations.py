@@ -73,7 +73,8 @@ class lossCalculations:
         # signalReconstructedLoss dimension: numExperiments, numSignals, maxSequenceLength
 
         # Finalize the loss calculation.
-        signalReconstructedLoss[signalReconstructedLoss < 0.01] = 0
+        signalReconstructedLoss[signalReconstructedLoss < 0.1] = signalReconstructedLoss[signalReconstructedLoss < 0.1] / 10
+        signalReconstructedLoss[signalReconstructedLoss < 0.04] = signalReconstructedLoss[signalReconstructedLoss < 0.04] / 10
         signalReconstructedLoss = signalReconstructedLoss.mean()
 
         # Assert that nothing is wrong with the loss calculations.

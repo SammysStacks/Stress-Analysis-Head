@@ -1,4 +1,3 @@
-# Helper classes
 import torch
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.generalMethods.classWeightHelpers import classWeightHelpers
@@ -54,13 +53,15 @@ class emotionDataInterface:
 
     @staticmethod
     def getLabelInds_withPoints(allTrainingMasks):
+        numExperiments, numLabels = allTrainingMasks.size()
+
         # Find the label indices with training points.
         numTrainingPoints = allTrainingMasks.sum(dim=0)  # Find the number of training points per label.
-        goodExperimentalInds = numTrainingPoints.nonzero()
+        goodExperimentalInds = (numTrainingPoints.nonzero(as_tuple=True)[0][numTrainingPoints < numExperiments])
         # If there are no good indices, return an empty list.
         if len(goodExperimentalInds) == 0: return []
 
-        return goodExperimentalInds[:, 0]
+        return goodExperimentalInds
 
     # ---------------------- Contextual Data Getters ---------------------- #
     
