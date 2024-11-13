@@ -145,7 +145,7 @@ class customLossMethods(nn.Module):
         else:
             # Calculate the loss of the prediction and ensure a smooth value.
             lossValue = self.loss_fn(predictedVals, targetVals, class_weights)
-        assert not lossValue.isnan().any().item() and not lossValue.isinf().any().item(), print(predictedVals, targetVals, lossValue)
+        assert not lossValue.isnan().any() and not lossValue.isinf().any(), print(predictedVals, targetVals, lossValue)
 
         return lossValue
 

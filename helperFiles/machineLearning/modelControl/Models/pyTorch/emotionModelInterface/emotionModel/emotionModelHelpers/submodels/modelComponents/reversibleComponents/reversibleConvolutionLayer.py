@@ -1,6 +1,7 @@
 import torch
 import torch.fft
 import torch.nn as nn
+from torch.utils.checkpoint import checkpoint
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
@@ -16,11 +17,11 @@ class reversibleConvolutionLayer(reversibleInterface):
         self.numSignals = numSignals  # The number of signals in the input data.
         self.kernelSize = kernelSize  # The restricted window for the neural weights.
         self.numLayers = numLayers  # The number of layers in the reversible linear layer.
-        self.bounds = 2  # The bounds for the neural weights: lower values are like identity.
+        self.bounds = 1/3  # The bounds for the neural weights: lower values are like identity.
 
         # The restricted window for the neural weights.
         upperWindowMask = torch.ones(self.sequenceLength, self.sequenceLength, dtype=torch.float64)
-        if self.sequenceLength != self.kernelSize: upperWindowMask = torch.tril(upperWindowMask, diagonal=kernelSize//2)
+        if self.sequenceLength != self.kernelSize: upperWindowMask = torch.tril(upperWindowMask, diagonal=self.kernelSize//2)
         upperWindowMask = torch.triu(upperWindowMask, diagonal=1)
 
         # Calculate the offsets to map positions to kernel indices
@@ -28,7 +29,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         self.kernelInds = self.rowInds - self.colInds + self.kernelSize // 2  # Adjust for kernel center
 
         # Assert the validity of the input parameters.
-        assert 1 <= kernelSize <= sequenceLength - 1, f"The kernel size must be less than the sequence length: {kernelSize}, {sequenceLength}"
+        assert 1 <= self.kernelSize//2 <= sequenceLength - 1, f"The kernel size must be less than the sequence length: {self.kernelSize}, {self.sequenceLength}"
         assert self.kernelInds.max() == self.kernelSize//2 - 1, f"The kernel indices are not valid: {self.kernelInds.max()}"
         assert self.kernelInds.min() == 0, f"The kernel indices are not valid: {self.kernelInds.min()}"
 
@@ -38,7 +39,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         # Create the neural layers.
         for layerInd in range(self.numLayers):
             # Create the neural weights.
-            parameters = nn.Parameter(torch.randn(numSignals, kernelSize//2 or 1, dtype=torch.float64))
+            parameters = nn.Parameter(torch.randn(numSignals, self.kernelSize//2 or 1, dtype=torch.float64))
             parameters = nn.init.uniform_(parameters, a=-self.bounds, b=self.bounds)
             self.linearOperators.append(parameters)
 
@@ -81,6 +82,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         neuralWeights = neuralWeights.matrix_exp()
         if not self.forwardDirection: neuralWeights = neuralWeights.transpose(-2, -1)  # Ensure the neural weights are symmetric.
         # For orthogonal matrices: A.exp().inverse() = A.exp().transpose() = (-A).exp()
+        print(neuralWeights[0, :, :])
 
         # Apply the neural weights to the input data.
         outputData = torch.einsum('bns,nsi->bni', inputData, neuralWeights)
@@ -95,9 +97,9 @@ class reversibleConvolutionLayer(reversibleInterface):
 
 if __name__ == "__main__":
     # General parameters.
-    _batchSize, _numSignals, _sequenceLength = 2, 3, 128
+    _batchSize, _numSignals, _sequenceLength = 64, 128, 8
     _activationMethod = 'reversibleLinearSoftSign'
-    _kernelSize = 63
+    _kernelSize = 2*_sequenceLength - 1
     _numLayers = 1
 
     # Set up the parameters.

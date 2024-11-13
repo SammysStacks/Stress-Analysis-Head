@@ -1,5 +1,3 @@
-import math
-
 import torch.optim as optim
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LRScheduler, _warn_get_lr_called_within_step
@@ -25,12 +23,12 @@ class optimizerMethods:
         if submodel == modelConstants.emotionModel:
             modelParams.extend([
                 # Specify the model parameters for the emotion prediction.
-                {'params': model.specificEmotionModel.parameters(), 'weight_decay': 1e-6, 'lr': 1E-3},
-                {'params': model.sharedEmotionModel.parameters(), 'weight_decay': 1e-6, 'lr': 1E-3},
+                {'params': model.specificEmotionModel.parameters(), 'weight_decay': self.userInputParams["weightDecay"], 'lr': 1E-3},
+                {'params': model.sharedEmotionModel.parameters(), 'weight_decay': self.userInputParams["weightDecay"], 'lr': 1E-3},
 
                 # Specify the model parameters for the human activity recognition.
-                {'params': model.specificActivityModel.parameters(), 'weight_decay': 1e-6, 'lr': 1E-3},
-                {'params': model.sharedActivityModel.parameters(), 'weight_decay': 1e-6, 'lr': 1E-3},
+                {'params': model.specificActivityModel.parameters(), 'weight_decay': self.userInputParams["weightDecay"], 'lr': 1E-3},
+                {'params': model.sharedActivityModel.parameters(), 'weight_decay': self.userInputParams["weightDecay"], 'lr': 1E-3},
             ])
 
         return modelParams
@@ -56,7 +54,7 @@ class optimizerMethods:
         # Reduce on plateau (need further editing of loop): optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=0.5, patience=10, threshold=1e-4, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08)
         # Defined lambda function: optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda=lambda_function); lambda_function = lambda epoch: (epoch/50) if epoch < -1 else 1
         # torch.optim.lr_scheduler.constrainedLR(optimizer, start_factor=0.3333333333333333, end_factor=1.0, total_iters=5, last_epoch=-1)
-        return CosineAnnealingLR_customized(optimizer, T_max=5, last_epoch=-1)
+        return CosineAnnealingLR_customized(optimizer, T_max=5, absolute_min_lr=1e-5, multiplicativeFactor=10, last_epoch=-1)
 
     @staticmethod
     def getOptimizer(optimizerType, params, lr, weight_decay, momentum=0.9):
@@ -75,23 +73,23 @@ class optimizerMethods:
         elif optimizerType == 'Adam':
             # Adam is a first-order gradient-based optimization of stochastic objective functions, based on adaptive estimates.
             # It's broadly used and suitable for most problems without much hyperparameter tuning.
-            return optim.Adam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=weight_decay, amsgrad=False, maximize=False)
+            return optim.Adam(params, lr=lr, betas=(0.7, 0.97), eps=1e-08, weight_decay=weight_decay, amsgrad=False, maximize=False)
         elif optimizerType == 'AdamW':
             # AdamW modifies the way Adam implements weight decay, decoupling it from the gradient updates, leading to a more effective use of L2 regularization.
             # Use when regularization is a priority and particularly when fine-tuning pre-trained models.
-            return optim.AdamW(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=weight_decay, amsgrad=False, maximize=False)
+            return optim.AdamW(params, lr=lr, betas=(0.7, 0.97), eps=1e-08, weight_decay=weight_decay, amsgrad=False, maximize=False)
         elif optimizerType == 'NAdam':
             # NAdam combines Adam with Nesterov momentum, aiming to combine the benefits of Nesterov accelerated gradient and Adam.
             # Use in deep architectures where fine control over convergence is needed.
-            return optim.NAdam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=weight_decay, momentum_decay=0.004, decoupled_weight_decay=True)
+            return optim.NAdam(params, lr=lr, betas=(0.7, 0.97), eps=1e-08, weight_decay=weight_decay, momentum_decay=0.004, decoupled_weight_decay=True)
         elif optimizerType == 'RAdam':
             # RAdam (Rectified Adam) is an Adam variant that introduces a term to rectify the variance of the adaptive learning rate.
             # Use it when facing unstable or poor training results with Adam, especially in smaller sample sizes.
-            return optim.RAdam(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=weight_decay, decoupled_weight_decay=True)
+            return optim.RAdam(params, lr=lr, betas=(0.7, 0.97), eps=1e-08, weight_decay=weight_decay, decoupled_weight_decay=True)
         elif optimizerType == 'Adamax':
             # Adamax is a variant of Adam based on the infinity norm, proposed as a more stable alternative.
             # Suitable for embeddings and sparse gradients.
-            return optim.Adamax(params, lr=lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=weight_decay)
+            return optim.Adamax(params, lr=lr, betas=(0.7, 0.97), eps=1e-08, weight_decay=weight_decay)
         elif optimizerType == 'ASGD':
             # ASGD (Averaged Stochastic Gradient Descent) is used when you require robustness over a large number of epochs.
             # Suitable for larger-scale and less well-behaved problems; often used in place of SGD when training for a very long time.
@@ -116,8 +114,10 @@ class optimizerMethods:
             assert False, "No optimizer initialized"
 
 class CosineAnnealingLR_customized(LRScheduler):
-    def __init__(self, optimizer: Optimizer, T_max: int, last_epoch: int = -1):
-        self.T_max = T_max
+    def __init__(self, optimizer: Optimizer, T_max: int, absolute_min_lr: float, multiplicativeFactor: int, last_epoch: int = -1):
+        self.multiplicativeFactor = multiplicativeFactor  # The multiplicative factor for the learning rate decay.
+        self.absolute_min_lr = absolute_min_lr  # The absolute minimum learning rate to use.
+        self.T_max = T_max  # The number of iterations before resetting the learning rate.
 
         # Call the parent class constructor
         super().__init__(optimizer, last_epoch)
@@ -130,9 +130,6 @@ class CosineAnnealingLR_customized(LRScheduler):
         # Base case: learning rate is constant.
         if self.last_epoch == 0: return [group["lr"] for group in self.optimizer.param_groups]
 
-        # Base case: reset the learning rate.
-        if self.last_epoch % self.T_max == 0: return [base_lr for base_lr in self.base_lrs]
-
         # Apply decay to each base learning rate
-        decay_factor = 10 ** -((self.T_max - self.last_epoch) % self.T_max)
-        return [base_lr * decay_factor for base_lr in self.base_lrs]
+        decay_factor = self.multiplicativeFactor ** -((self.T_max - self.last_epoch) % self.T_max)
+        return [max(self.absolute_min_lr, base_lr * decay_factor) for base_lr in self.base_lrs]

@@ -78,7 +78,7 @@ class waveletNeuralHelpers(emotionModelWeights):
         wavelet = pywt.Wavelet(wavelet_name)
         filter_length = len(wavelet.dec_lo)  # Decomposition low-pass filter length
         max_level = torch.floor(torch.log2(torch.tensor(signal_length / (filter_length - 1), dtype=torch.float32))).int()
-        return max_level.item()
+        return max_level
 
     def getWaveletDimensions(self, sequenceLength):
         # Get the expected output shapes (hard to calculate by hand).

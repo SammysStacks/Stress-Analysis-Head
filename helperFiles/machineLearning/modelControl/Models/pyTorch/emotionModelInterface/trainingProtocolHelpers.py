@@ -1,10 +1,8 @@
 # General
 import random
-
-import torch
 import time
 
-from torch.utils.data import dataloader
+import torch
 
 # Helper classes.
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.generalMethods.modelHelpers import modelHelpers
@@ -84,6 +82,7 @@ class trainingProtocolHelpers:
         for modelInd in range(len(allMetaModels) + len(allModels)):
             lossDataLoader = allMetadataLoaders[modelInd] if modelInd < len(allMetadataLoaders) else allDataLoaders[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
             modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
+            modelPipeline.setupTrainingFlags(modelPipeline.model, trainingFlag=False)
 
             # Calculate and store all the training and testing losses of the untrained model.
             with torch.no_grad(): modelPipeline.organizeLossInfo.storeTrainingLosses(submodel, modelPipeline, lossDataLoader)

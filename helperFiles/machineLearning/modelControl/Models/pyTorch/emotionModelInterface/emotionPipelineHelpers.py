@@ -34,7 +34,7 @@ class emotionPipelineHelpers:
                                       featureNames=featureNames, numSubjects=numSubjects, datasetName=datasetName, numExperiments=numExperiments)
         self.model = self.model.double()  # Convert the model to double precision.
         # try: self.model = torch.compile(self.model, backend='inductor')  # ['cudagraphs', 'inductor', 'onnxrt', 'openxla', 'tvm']
-        # # self.model = torch.jit.script(self.model)
+        # self.model = torch.jit.script(self.model)
         # except Exception as e: print(f"\t\tCannot use torch compilation yet: {e}")
 
         # Initialize helper classes.
@@ -85,7 +85,7 @@ class emotionPipelineHelpers:
             return None
 
         # Emotion model training.
-        elif submodel == modelConstants.emotionModel:
+        if submodel == modelConstants.emotionModel:
             if trainSharedLayers: self.setupTrainingFlags(self.model.sharedEmotionModel, trainingFlag=True)
             if specificTraining: self.setupTrainingFlags(self.model.specificEmotionModel, trainingFlag=True)
 

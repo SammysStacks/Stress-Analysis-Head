@@ -1,3 +1,5 @@
+import time
+
 import torch
 import torch.fft
 import torch.nn as nn
@@ -16,7 +18,7 @@ class reversibleLinearLayer(reversibleInterface):
         self.numSignals = numSignals  # The number of signals in the input data.
         self.kernelSize = kernelSize  # The restricted window for the neural weights.
         self.numLayers = numLayers  # The number of layers in the reversible linear layer.
-        self.bounds = 2  # The bounds for the neural weights: lower values are like identity.
+        self.bounds = 1/3  # The bounds for the neural weights: lower values are like identity.
 
         # Assert the validity of the input parameters.
         assert 1 < kernelSize <= sequenceLength, f"The kernel size is larger than the sequence length: {kernelSize}, {sequenceLength}"
@@ -87,10 +89,10 @@ class reversibleLinearLayer(reversibleInterface):
 
 if __name__ == "__main__":
     # General parameters.
-    _batchSize, _numSignals, _sequenceLength = 2, 300, 256
+    _batchSize, _numSignals, _sequenceLength = 64, 128, 128
     _activationMethod = 'reversibleLinearSoftSign'
-    _kernelSize = 7
-    _numLayers = 1
+    _kernelSize = _sequenceLength - 1
+    _numLayers = 10
 
     # Set up the parameters.
     neuralLayerClass = reversibleLinearLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod, switchActivationDirection=False)

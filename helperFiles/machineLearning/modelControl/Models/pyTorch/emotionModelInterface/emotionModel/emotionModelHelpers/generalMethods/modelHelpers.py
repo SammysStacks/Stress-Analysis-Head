@@ -15,8 +15,8 @@ class modelHelpers:
     def assertVariableIntegrity(self, variable, variableName, assertGradient=False):
         if variable is not None:
             # Assert that the variable has a discrete value.
-            assert not variable.isnan().any().item(), f"NaNs present in {variableName}: {variable}"
-            assert not variable.isinf().any().item(), f"Infs present in {variableName}: {variable}"
+            assert not variable.isnan().any(), f"NaNs present in {variableName}: {variable}"
+            assert not variable.isinf().any(), f"Infs present in {variableName}: {variable}"
 
             if variable.is_leaf:
                 # Assert a valid gradient exists if needed.
@@ -24,26 +24,6 @@ class modelHelpers:
                 self.assertVariableIntegrity(variable.grad, variableName + " gradient", assertGradient=False)
 
     # -------------------------- Model Interface -------------------------- #
-
-    @staticmethod
-    def calculate_weight_variance(modelPipelines):
-        # Initialize variance holder.
-        params_variance = {}
-
-        with torch.no_grad():
-            # Assume all models have the same architecture and parameter names
-            param_names = list(modelPipelines[0].model.state_dict().keys())
-
-            for name in param_names:
-                # Collect the weights for this parameter from all models
-                weights = [modelPipeline.model.state_dict()[name].unsqueeze(0) for modelPipeline in modelPipelines]
-                weights_tensor = torch.cat(weights, dim=0)  # Shape: (num_models, *param_shape)
-
-                # Calculate the variance along the first dimension (num_models)
-                variance = torch.var(weights_tensor, dim=0)
-                params_variance[name] = variance.mean().item()
-
-        return params_variance
 
     @staticmethod
     def getAutoencoderWeights(model):
@@ -157,7 +137,7 @@ class modelHelpers:
                 else:
                     # Calculate the spectral norm.
                     singular_values = torch.linalg.svdvals(layerParams)
-                    spectralNorm = singular_values.max().item()  # Get the maximum singular value (spectral norm)
+                    spectralNorm = singular_values.max()  # Get the maximum singular value (spectral norm)
 
                 # Constrain the spectral norm.
                 if maxSpectralNorm < spectralNorm != 0:
@@ -168,7 +148,7 @@ class modelHelpers:
         # For each trainable parameter in the model with its name.
         for name, layerParams in model.named_parameters():
             # Calculate the L2 norm. THIS IS NOT SN, except for the 1D case.
-            paramNorm = torch.norm(layerParams, p='fro').item()
+            paramNorm = torch.norm(layerParams, p='fro')
 
             # Constrain the spectral norm.
             if maxNorm < paramNorm != 0:

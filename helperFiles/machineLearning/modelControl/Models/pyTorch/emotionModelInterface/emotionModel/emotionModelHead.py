@@ -299,8 +299,8 @@ class emotionModelHead(nn.Module):
         validIndsLeft = torch.clamp(mappedPhysiologicalTimedInds + 1, min=0, max=encodedDimension - 1)  # timepoints <= physiologicalTimesExpanded[validIndsRight]
         # mappedPhysiologicalTimedInds dimension: batchSize, numSignals, maxSequenceLength
 
-        # Get the closest physiological data to the timepoints. c
-        physiologicalTimesExpanded = self.sharedSignalEncoderModel.pseudoEncodedTimes.unsqueeze(0).unsqueeze(0).expand_as(resampledSignalData)
+        # Get the closest physiological data to the timepoints.
+        physiologicalTimesExpanded = self.sharedSignalEncoderModel.pseudoEncodedTimes.view(1, 1, -1).expand_as(resampledSignalData)
         closestPhysiologicalTimesRight = torch.gather(input=physiologicalTimesExpanded, dim=2, index=validIndsRight)  # Initialize the tensor.
         closestPhysiologicalTimesLeft = torch.gather(input=physiologicalTimesExpanded, dim=2, index=validIndsLeft)  # Initialize the tensor.
         closestPhysiologicalDataRight = torch.gather(input=resampledSignalData, dim=2, index=validIndsRight)  # Initialize the tensor.

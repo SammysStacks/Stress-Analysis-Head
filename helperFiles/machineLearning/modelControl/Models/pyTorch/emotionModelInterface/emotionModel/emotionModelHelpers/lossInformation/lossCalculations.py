@@ -130,17 +130,17 @@ class lossCalculations:
         # Calculate the activity classification accuracy/loss and assert the integrity of the loss.
         activityLosses = self.activityClassificationLoss(predictedActivityLabels[activityDataMask], trueActivityLabels.long())
         activityLoss = weightLoss(activityLosses, activityClassWeights, trueActivityLabels)
-        assert not activityLoss.isnan().any().item() and not activityLoss.isinf().any().item(), f"Check your inputs to (or the method) self.activityClassificationLoss. Found {activityLoss} value"
+        assert not activityLoss.isnan().any() and not activityLoss.isinf().any(), f"Check your inputs to (or the method) self.activityClassificationLoss. Found {activityLoss} value"
 
         return activityLoss
 
     def calculateEmotionsLoss(self, emotionInd, predictedEmotionlabels, allLabels, allLabelsMask, allEmotionClassWeights):
         # Calculate the loss from predicting similar basic emotions.
         emotionOrthogonalityLoss = self.lossCalculations.scoreEmotionOrthonormality(allBasicEmotionDistributions)
-        assert not emotionOrthogonalityLoss.isnan().any().item() and not emotionOrthogonalityLoss.isinf().any().item()
+        assert not emotionOrthogonalityLoss.isnan().any() and not emotionOrthogonalityLoss.isinf().any()
         # Calculate the loss from model-specific weights.
         modelSpecificWeights = self.lossCalculations.scoreModelWeights(self.model.predictUserEmotions.allSubjectWeights)
-        assert not modelSpecificWeights.isnan().any().item() and not modelSpecificWeights.isinf().any().item()
+        assert not modelSpecificWeights.isnan().any() and not modelSpecificWeights.isinf().any()
         # Add all the losses together into one value.
         finalLoss = reconstructedLoss + activityLoss * 2 + emotionOrthogonalityLoss / 2  # + modelSpecificWeights*0.01
 

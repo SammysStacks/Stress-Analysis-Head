@@ -170,7 +170,7 @@ class compileModelData(compileModelDataHelpers):
             activityLabelInd = len(surveyQuestions)
 
             # Assert the assumptions made about the incoming data
-            assert surveyAnswersList.min().item() >= -2, "All ratings must be greater than 0 (exception for -2, which is reserved for missing)."
+            assert surveyAnswersList.min() >= -2, "All ratings must be greater than 0 (exception for -2, which is reserved for missing)."
             assert -1 not in surveyAnswersList, print("surveyAnswersList should contain ratings from 0 to n", flush=True)
             # Specify the incoming dimensions.
             # allRawFeatureIntervals dimension: batchSize, numBiomarkers, finalDistributionLength*, numBiomarkerFeatures*  ->  *finalDistributionLength, *numBiomarkerFeatures are not constant

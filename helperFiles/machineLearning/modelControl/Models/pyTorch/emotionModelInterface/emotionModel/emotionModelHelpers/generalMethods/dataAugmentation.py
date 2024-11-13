@@ -15,27 +15,6 @@ class dataAugmentation:
         return data + torch.randn_like(data, device=data.device) * noiseSTD if trainingFlag or noiseSTD == 0 else data
 
     @staticmethod
-    def getTimeIntervalInd(timeData, timePoint, mustIncludeTimePoint=False):
-        # timeData is a torch array of size (maxSequenceLength)
-        # Assert the validity of the input parameters.
-        assert 0 <= timePoint, f"Expected a positive time point, but got {timePoint}"
-        timeData = torch.as_tensor(timeData)  # Ensure timeData is a torch tensor
-
-        # Find the index of the time point in the time data
-        timeInd = torch.where(timePoint <= timeData)[0]
-        if len(timeInd) == 0: return 0
-
-        # Determine if the time point is included in the time data
-        isTimePointIncluded = timeData[0] <= timePoint
-        timeInd = timeInd[0].item()
-
-        # Include the time point if necessary
-        if not isTimePointIncluded and mustIncludeTimePoint:
-            timeInd = max(timeInd - 1, 0)
-
-        return timeInd
-
-    @staticmethod
     def shuffleDimension(signalData, shuffle_indices=None):
         # signalData: [batchSize, numSignals, maxSequenceLength, numChannels]
         batchSize, numSignals, maxSequenceLength, numChannels = signalData.shape
@@ -79,18 +58,18 @@ class dataAugmentation:
         augmentedData = signalData * dropoutMask
 
         return augmentedData
-    
+
     @staticmethod
     def signalDropout(signalData, dropoutPercent):
-        # Assuming signalDatas is your tensor with dimensions [batchSize, numSignals, maxSequenceLength, numChannels]
+        # Assuming signalData is your tensor with dimensions [batchSize, numSignals, sequenceLength, numChannels]
         batchSize, numSignals, sequenceLength, numChannels = signalData.size()
         if dropoutPercent == 0: return signalData
 
-        # Find a random percentage to drop the data.
-        dropoutMask = dropoutPercent < torch.rand((batchSize, numSignals, sequenceLength), device=signalData.device)
+        # Create the dropout mask with the required shape directly
+        dropoutMask = dropoutPercent < torch.rand((batchSize, numSignals, sequenceLength, 1), device=signalData.device)
 
-        # Slice all the data at the same index
-        augmentedData = signalData * dropoutMask.unsqueeze(-1)
+        # Apply the dropout mask without needing unsqueeze
+        augmentedData = signalData * dropoutMask
 
         return augmentedData
 

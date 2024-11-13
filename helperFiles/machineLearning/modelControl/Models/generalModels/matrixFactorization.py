@@ -4,16 +4,16 @@
 
 # General
 import os
+import sys
+
 import joblib
 import numpy as np
 import tensorflow as tf
-import sys
-
 from torch import nn
 
 from helperFiles.machineLearning.feedbackControl.virtualRealityControl.imageSimilarities import imageSimilarities
+
 # Import files
-from .._globalModel import globalModel
 sys.path.append(os.path.dirname(__file__) + "/../../../feedbackControl/virtualRealityControl/")
 from ..tensorFlow.neuralNetwork import neuralNetwork
 

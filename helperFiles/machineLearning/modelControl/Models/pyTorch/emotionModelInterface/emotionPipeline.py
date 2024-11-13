@@ -1,5 +1,4 @@
 import time
-
 import torch
 
 from .emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
@@ -64,6 +63,7 @@ class emotionPipeline(emotionPipelineHelpers):
 
                         # ------------ Forward pass through the model  ------------- #
 
+                        t11 = time.time()
                         # Perform the forward pass through the model.
                         validDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = self.model.forward(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, inferenceTraining=inferenceTraining)
                         # reconstructedSignalData dimension: batchSize, numSignals, maxSequenceLength
@@ -73,6 +73,7 @@ class emotionPipeline(emotionPipelineHelpers):
                         # resampledSignalData dimension: batchSize, encodedDimension
                         # activityProfile: batchSize, numActivities, encodedDimension
                         # emotionProfile: batchSize, numEmotions, encodedDimension
+                        t22 = time.time()
 
                         # Assert that nothing is wrong with the predictions.
                         self.modelHelpers.assertVariableIntegrity(reconstructedSignalData, variableName="reconstructed signal data", assertGradient=False)
@@ -84,13 +85,13 @@ class emotionPipeline(emotionPipelineHelpers):
                         self.modelHelpers.assertVariableIntegrity(validDataMask, variableName="valid data mask", assertGradient=False)
 
                         # Calculate the error in signal compression (signal encoding loss).
-                        physiologicalSmoothLoss, resampledSmoothLoss = self.organizeLossInfo.calculateSmoothLoss(physiologicalProfile, resampledSignalData, validDataMask, currentTrainingMask, self.reconstructionIndex)
+                        # physiologicalSmoothLoss, resampledSmoothLoss = self.organizeLossInfo.calculateSmoothLoss(physiologicalProfile, resampledSignalData, validDataMask, currentTrainingMask, self.reconstructionIndex)
                         signalReconstructedLoss = self.organizeLossInfo.calculateSignalEncodingLoss(augmentedBatchData, reconstructedSignalData, validDataMask, currentTrainingMask, self.reconstructionIndex)
                         if signalReconstructedLoss is None: self.accelerator.print("Not useful loss"); continue
 
                         # Initialize basic core loss value.
                         finalLoss = signalReconstructedLoss  # + 0.001*(physiologicalSmoothLoss + resampledSmoothLoss)
-                        self.accelerator.print("Final-Recon-Phys-Resamp", finalLoss.item(), signalReconstructedLoss.item(), physiologicalSmoothLoss.item(), resampledSmoothLoss.item(), flush=True)
+                        self.accelerator.print("Final-Recon-Phys-Resamp", finalLoss.item(), signalReconstructedLoss.item(), flush=True)
 
                         # ------------------- Update the Model  -------------------- #
 
@@ -98,12 +99,12 @@ class emotionPipeline(emotionPipelineHelpers):
                         # Calculate the gradients.
                         self.accelerator.backward(finalLoss)  # Calculate the gradients.
                         self.backpropogateModel()  # Backpropagation.
-
-                        t2 = time.time(); self.accelerator.print(f"{'Shared' if trainSharedLayers else '\tSpecific'} layer training {self.datasetName} {numPointsAnalyzed}: {t2 - t1}\n")
+                        t2 = time.time(); self.accelerator.print(f"{'Shared' if trainSharedLayers else '\tSpecific'} layer training {self.datasetName} {numPointsAnalyzed}: {t22 - t11} {t2 - t1}\n")
 
         # Prepare the model/data for evaluation.
         self.accelerator.wait_for_everyone()  # Wait before continuing.
-        self.scheduler.step()  # Update the learning rate.
+        if profileTraining: self.scheduler.step()  # Update the learning rate.
+        self.setupTrainingFlags(self.model, trainingFlag=False)  # Turn off training flags.
 
         return emotionProfile
 

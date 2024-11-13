@@ -23,10 +23,10 @@ class reversibleInterface(nn.Module):
     def scaleNeuralWeights(grad): return grad
 
     def checkDualReconstruction(self, x1, x2, atol=1e-8, numLayers=10):
-        t1 = time.time()
         # Initialize the forward data.
         reversibleInterface.changeDirections(False)
         f1, f2 = x1.clone().double(), x2.clone().double()
+        t1 = time.time()
 
         # Perform the forward passes.
         for layerInd in range(numLayers):
@@ -48,10 +48,10 @@ class reversibleInterface(nn.Module):
         return f1, f2, r1, r2
 
     def checkReconstruction(self, inputData, atol=1e-8, numLayers=10):
-        t1 = time.time()
         # Initialize the forward data.
         reversibleInterface.changeDirections(False)
         forwardData = inputData.clone().double()
+        t1 = time.time()
 
         # Perform the forward passes.
         for layerInd in range(numLayers):
