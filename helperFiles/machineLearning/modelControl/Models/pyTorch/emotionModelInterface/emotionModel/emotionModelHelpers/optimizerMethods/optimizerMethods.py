@@ -113,6 +113,7 @@ class optimizerMethods:
         else:
             assert False, "No optimizer initialized"
 
+
 class CosineAnnealingLR_customized(LRScheduler):
     def __init__(self, optimizer: Optimizer, T_max: int, absolute_min_lr: float, multiplicativeFactor: int, last_epoch: int = -1):
         self.multiplicativeFactor = multiplicativeFactor  # The multiplicative factor for the learning rate decay.
