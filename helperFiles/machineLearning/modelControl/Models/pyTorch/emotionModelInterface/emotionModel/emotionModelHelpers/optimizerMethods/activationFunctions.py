@@ -35,7 +35,7 @@ def getActivationMethod(activationMethod):
 
 
 class reversibleLinearSoftSign(reversibleInterface):
-    def __init__(self, invertedActivation=False, linearity=7/4, infiniteBound=33/49, scalarAdjustment=1):
+    def __init__(self, invertedActivation=False, linearity=3/2, infiniteBound=2/3, scalarAdjustment=1):
         super(reversibleLinearSoftSign, self).__init__()
         self.invertedActivation = invertedActivation  # Whether the non-linearity term is inverted
         self.scalarAdjustment = scalarAdjustment  # Scalar adjustment for numerical stability
