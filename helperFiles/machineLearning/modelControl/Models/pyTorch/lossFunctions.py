@@ -64,7 +64,7 @@ class pytorchLossMethods:
             self.loss_fn = torch.nn.KLDivLoss(reduction='none', log_target=False)
 
         elif lossType == "BCEWithLogitsLoss":
-            self.loss_fn = nn.BCEWithLogitsLoss(weight=class_weights, reduction='mean', pos_weight=None)
+            self.loss_fn = nn.BCEWithLogitsLoss(weight=class_weights, reduction='none', pos_weight=None)
 
         # ----------------- Compile Regression Loss Methods ---------------- #
 
@@ -80,13 +80,13 @@ class pytorchLossMethods:
         #               It behaves like L1 loss when the difference is large and like MSE loss when the difference is small.
         #               When delta is set to 1, Huber loss is equivalent to SmoothL1Loss.
         elif lossType == "Huber":
-            self.loss_fn = nn.HuberLoss(reduction='mean', delta=1.0)
+            self.loss_fn = nn.HuberLoss(reduction='none', delta=0.1)
 
         # Smooth L1: Very similar as Huber loss, it is used for regression tasks.
         #               It's a combination of L1 loss and L2 loss and is less sensitive to outliers.
         #               The beta parameter controls the transition point between L1 and L2 loss.
         elif lossType == "SmoothL1Loss":
-            self.loss_fn = nn.SmoothL1Loss(reduction='mean', beta=1.0)
+            self.loss_fn = nn.SmoothL1Loss(reduction='none', beta=0.1)
 
         # Poisson-Negative Log Likelihood: positive target values
         elif lossType == "PoissonNLLLoss":

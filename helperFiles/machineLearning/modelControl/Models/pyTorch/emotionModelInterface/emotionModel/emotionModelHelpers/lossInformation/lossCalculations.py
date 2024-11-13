@@ -2,7 +2,7 @@
 import math
 
 import torch
-from torch import dtype
+from torch import dtype, nn
 from torch.xpu import device
 
 # Helper classes
@@ -35,13 +35,9 @@ class lossCalculations:
         #       Custom Classification Options: "weightedKLDiv", "diceLoss", "FocalLoss"
         #       Regression Options: "MeanSquaredError", "MeanAbsoluteError", "Huber", "SmoothL1Loss", "PoissonNLLLoss", "GammaNLLLoss"
         #       Custom Regression Options: "R2", "pearson", "LogCoshLoss", "weightedMSE"
-        self.emotionDist_lossType = "MeanSquaredError"  # The loss enforcing correct distribution shape.
-        self.activityClass_lossType = "CrossEntropyLoss"  # The loss enforcing correct activity recognition.
         # Initialize the loss function WITHOUT the class weights.
-        self.activityClassificationLoss = pytorchLossMethods(lossType=self.activityClass_lossType, class_weights=None).loss_fn
-        self.emotionClassificationLoss = pytorchLossMethods(lossType=self.emotionDist_lossType, class_weights=None).loss_fn
-        self.positionalEncoderLoss = pytorchLossMethods(lossType="MeanSquaredError", class_weights=None).loss_fn
-        self.reconstructionLoss = pytorchLossMethods(lossType="MeanSquaredError", class_weights=None).loss_fn
+        self.MeanSquaredError = pytorchLossMethods(lossType="MeanSquaredError", class_weights=None).loss_fn
+        self.smoothL1Loss = nn.SmoothL1Loss(reduction='none', beta=0.1)
 
     # -------------------------- Loss Calculations ------------------------- #
 
@@ -69,12 +65,11 @@ class lossCalculations:
 
         # Calculate the error in signal reconstruction (encoding loss).
         datapoints = emotionDataInterface.getChannelData(initialSignalData, channelName=modelConstants.signalChannel)
-        signalReconstructedLoss = (reconstructedSignalData[validDataMask] - datapoints[validDataMask]).pow(2)
+        signalReconstructedLoss = self.smoothL1Loss(reconstructedSignalData[validDataMask], datapoints[validDataMask])
         # signalReconstructedLoss dimension: numExperiments, numSignals, maxSequenceLength
 
         # Finalize the loss calculation.
-        signalReconstructedLoss[signalReconstructedLoss < 0.1] = signalReconstructedLoss[signalReconstructedLoss < 0.1] / 10
-        signalReconstructedLoss[signalReconstructedLoss < 0.04] = signalReconstructedLoss[signalReconstructedLoss < 0.04] / 10
+        signalReconstructedLoss[signalReconstructedLoss < 0.05] = signalReconstructedLoss[signalReconstructedLoss < 0.05] / 10
         signalReconstructedLoss = signalReconstructedLoss.mean()
 
         # Assert that nothing is wrong with the loss calculations.
