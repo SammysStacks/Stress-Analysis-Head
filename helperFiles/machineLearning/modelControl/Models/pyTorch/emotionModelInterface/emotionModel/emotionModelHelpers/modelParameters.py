@@ -36,12 +36,12 @@ class modelParameters:
         return userInputParams
 
     def getTrainingBatchSize(self, submodel, numExperiments):
-        # Wesad: Found 32 (out of 32) well-labeled emotions across 60 experiments with 29 signals.
-        # Emognition: Found 12 (out of 12) well-labeled emotions across 407 experiments with 47 signals.
-        # Amigos: Found 10 (out of 12) well-labeled emotions across 673 experiments with 118 signals.
-        # Dapper: Found 12 (out of 12) well-labeled emotions across 364 experiments with 15 signals.
-        # Case: Found 2 (out of 2) well-labeled emotions across 1442 experiments with 42 signals.
-        # Collected: Found 30 (out of 30) well-labeled emotions across 165 experiments with 48 signals.
+        # Wesad: Found 32 (out of 32) well-labeled emotions across 60 experiments with 70 signals.
+        # Emognition: Found 12 (out of 12) well-labeled emotions across 407 experiments with 55 signals.
+        # Amigos: Found 10 (out of 12) well-labeled emotions across 673 experiments with 123 signals.
+        # Dapper: Found 12 (out of 12) well-labeled emotions across 364 experiments with 22 signals.
+        # Case: Found 2 (out of 2) well-labeled emotions across 1442 experiments with 51 signals.
+        # Collected: Found 30 (out of 30) well-labeled emotions across 165 experiments with 71 signals.
         if submodel == modelConstants.signalEncoderModel: effectiveMinBatchSize, effectiveMaxBatchSize = 12, 160
         elif submodel == modelConstants.emotionModel: effectiveMinBatchSize, effectiveMaxBatchSize = 12, 160
         else: raise Exception()
@@ -76,7 +76,7 @@ class modelParameters:
 
     @staticmethod
     def getExclusionSequenceCriteria():
-        return 30, 30, 2, 0.25, 0.1  # minSequencePoints, minSignalPresentCount, minBoundaryPoints, maxSinglePointDiff, maxAverageDiff
+        return 10, 20, 1, 0.5, 0.4  # minSequencePoints, minSignalPresentCount, minBoundaryPoints, maxSinglePointDiff, maxAverageDiff
 
     @staticmethod
     def getAdaptiveFactor():

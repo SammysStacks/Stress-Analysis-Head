@@ -106,7 +106,7 @@ class compileModelDataHelpers:
 
             # Count the number of times the emotion label has a unique value.
             unique_classes, class_counts = torch.unique(featureLabels[goodLabels], return_counts=True)
-            smallClassMask = class_counts < 3
+            smallClassMask = class_counts <= 2
 
             # Remove labels belonging to small classes.
             smallClassLabelMask = torch.isin(featureLabels, unique_classes[smallClassMask])
@@ -232,8 +232,6 @@ class compileModelDataHelpers:
 
         # Find single point differences
         badSinglePointMaxDiff = self.maxSinglePointDiff < biomarkerData.diff(dim=-1).abs()  # Maximum difference between consecutive points: batchSize, numSignals, maxSequenceLength-1
-
-        # Remove any bad data points.
         allSignalData[:, :, :-1][badSinglePointMaxDiff] = 0  # Remove small errors.
         allSignalData[:, :, 1:][badSinglePointMaxDiff] = 0  # Remove small errors.
 
@@ -241,11 +239,13 @@ class compileModelDataHelpers:
         validDataMask = emotionDataInterface.getValidDataMask(allSignalData)
         allSignalData = self.normalizeSignals(allSignalData=allSignalData, missingDataMask=~validDataMask)
         biomarkerData = emotionDataInterface.getChannelData(signalData=allSignalData, channelName=modelConstants.signalChannel)
+        biomarkerDiffs = biomarkerData.diff(dim=-1).abs()
+        biomarkerDiffs[biomarkerDiffs == 0] = torch.nan
 
         # Create boolean masks for signals that don’t meet the requirements
         minLowerBoundaryMask = self.minBoundaryPoints <= (biomarkerData[:, :, 1:-1] < -modelConstants.minMaxScale + 0.25).sum(dim=-1)  # Number of points below -0.95: batchSize, numSignals
         minUpperBoundaryMask = self.minBoundaryPoints <= (modelConstants.minMaxScale - 0.25 < biomarkerData[:, :, 1:-1]).sum(dim=-1)  # Number of points above 0.95: batchSize, numSignals
-        averageDiff = biomarkerData.diff(dim=-1).abs().mean(dim=-1) < self.maxAverageDiff  # Average difference between consecutive points: batchSize, numSignals
+        averageDiff = biomarkerDiffs.nanmean(dim=-1) < self.maxAverageDiff  # Average difference between consecutive points: batchSize, numSignals
         minPointsMask = self.minSequencePoints <= validDataMask.sum(dim=-1)  # Minimum number of points: batchSize, numSignals
         validSignalMask = validDataMask.any(dim=-1)  # Missing data: batchSize, numSignals
 
