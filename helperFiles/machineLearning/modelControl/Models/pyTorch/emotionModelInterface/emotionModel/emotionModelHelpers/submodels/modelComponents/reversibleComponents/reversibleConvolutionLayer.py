@@ -82,7 +82,6 @@ class reversibleConvolutionLayer(reversibleInterface):
         neuralWeights = neuralWeights.matrix_exp()
         if not self.forwardDirection: neuralWeights = neuralWeights.transpose(-2, -1)  # Ensure the neural weights are symmetric.
         # For orthogonal matrices: A.exp().inverse() = A.exp().transpose() = (-A).exp()
-        print(neuralWeights[0, :, :])
 
         # Apply the neural weights to the input data.
         outputData = torch.einsum('bns,nsi->bni', inputData, neuralWeights)
@@ -97,7 +96,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
 if __name__ == "__main__":
     # General parameters.
-    _batchSize, _numSignals, _sequenceLength = 64, 128, 8
+    _batchSize, _numSignals, _sequenceLength = 64, 128, 128
     _activationMethod = 'reversibleLinearSoftSign'
     _kernelSize = 2*_sequenceLength - 1
     _numLayers = 1

@@ -1,11 +1,11 @@
 #!/bin/bash
 
 waveletTypes=('bior6.8')
-optimizers=('AdamW')
+optimizers=('RAdam')
 encodedDimensions=(128)
-signalEncoderLayers=(8 16 32 48)
+signalEncoderLayers=(8 16 32)
 weightDecays=(0.0001)
-goldenRatios=(1 2 3 4)
+goldenRatios=(1 2 4)
 lrs=(0.01 0.1)
 
 for optimizer in "${optimizers[@]}"
