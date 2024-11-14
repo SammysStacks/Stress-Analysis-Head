@@ -190,7 +190,7 @@ class compileModelData(compileModelDataHelpers):
 
             # Remove any experiments and signals that are bad.
             allSignalData, allNumSignalPoints = self._padSignalData(allRawFeatureIntervalTimes, allRawFeatureIntervals, surveyAnswerTimes)
-            allSignalData, allNumSignalPoints, featureNames = self._preprocessSignals(allSignalData, allNumSignalPoints, featureNames)
+            allSignalData, allNumSignalPoints, featureNames = self._preprocessSignals(allSignalData, allNumSignalPoints, featureNames, metadatasetName)
             allFeatureLabels, allSingleClassMasks = self._preprocessLabels(allFeatureLabels)
             # allSmallClassIndices dimension: numLabels, batchSize*  →  *if there are no small classes, the dimension is empty
             # allSignalData dimension: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]

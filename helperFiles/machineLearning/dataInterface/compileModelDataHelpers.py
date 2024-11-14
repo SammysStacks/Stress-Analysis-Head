@@ -214,7 +214,7 @@ class compileModelDataHelpers:
 
         return allSignalData, allNumSignalPoints
 
-    def _preprocessSignals(self, allSignalData, allNumSignalPoints, featureNames):
+    def _preprocessSignals(self, allSignalData, allNumSignalPoints, featureNames, metadatasetName):
         # allSignalData: A torch array of size (batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel])
         # allNumSignalPoints: A torch array of size (batchSize, numSignals)
         # featureNames: A torch array of size numSignals
@@ -222,30 +222,32 @@ class compileModelDataHelpers:
         assert len(allSignalData) == 0 or len(featureNames) == allSignalData.shape[1], \
             f"Feature names do not match data dimensions. {len(featureNames)} != {allSignalData.shape[1]}"
 
-        # Standardize all signals at once for the entire batch
-        validDataMask = emotionDataInterface.getValidDataMask(allSignalData)
-        allSignalData = self.normalizeSignals(allSignalData=allSignalData, missingDataMask=~validDataMask)
-        biomarkerData = emotionDataInterface.getChannelData(signalData=allSignalData, channelName=modelConstants.signalChannel)
-        # allSignalData dim: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
-        # missingDataMask dim: batchSize, numSignals, maxSequenceLength
-        # biomarkerData: batchSize, numSignals, maxSequenceLength
+        for _ in range(3):
+            # Standardize all signals at once for the entire batch
+            validDataMask = emotionDataInterface.getValidDataMask(allSignalData)
+            allSignalData = self.normalizeSignals(allSignalData=allSignalData, missingDataMask=~validDataMask)
+            biomarkerData = emotionDataInterface.getChannelData(signalData=allSignalData, channelName=modelConstants.signalChannel)
+            # allSignalData dim: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
+            # missingDataMask dim: batchSize, numSignals, maxSequenceLength
+            # biomarkerData: batchSize, numSignals, maxSequenceLength
 
-        # Find single point differences
-        badSinglePointMaxDiff = self.maxSinglePointDiff < biomarkerData.diff(dim=-1).abs()  # Maximum difference between consecutive points: batchSize, numSignals, maxSequenceLength-1
-        allSignalData[:, :, :-1][badSinglePointMaxDiff] = 0  # Remove small errors.
-        allSignalData[:, :, 1:][badSinglePointMaxDiff] = 0  # Remove small errors.
+            # Find single point differences
+            if metadatasetName.lower() not in ['empatch']: badSinglePointMaxDiff = self.maxSinglePointDiff < biomarkerData.diff(dim=-1).abs()  # Maximum difference between consecutive points: batchSize, numSignals, maxSequenceLength-1
+            else: badSinglePointMaxDiff = 0.75 < biomarkerData.diff(dim=-1).abs()  # Maximum difference between consecutive points: batchSize, numSignals, maxSequenceLength-1
+            allSignalData[:, :, :-1][badSinglePointMaxDiff] = 0  # Remove small errors.
+            allSignalData[:, :, 1:][badSinglePointMaxDiff] = 0  # Remove small errors.
 
-        # Find single boundary points.
-        boundaryPointsMask = modelConstants.minMaxScale - 0.25 < biomarkerData  # batchSize, numSignals, maxSequenceLength
-        goodBatchSignalBoundaries = 2 <= boundaryPointsMask.sum(dim=-1)  # batchSize, numSignals
-        boundaryPointsMask[goodBatchSignalBoundaries.unsqueeze(-1).expand_as(boundaryPointsMask)] = False
-        allSignalData[boundaryPointsMask.unsqueeze(-1).expand_as(allSignalData)] = 0
+            # Find single boundary points.
+            boundaryPointsMask = modelConstants.minMaxScale - 0.25 < biomarkerData  # batchSize, numSignals, maxSequenceLength
+            goodBatchSignalBoundaries = 2 <= boundaryPointsMask.sum(dim=-1)  # batchSize, numSignals
+            boundaryPointsMask[goodBatchSignalBoundaries.unsqueeze(-1).expand_as(boundaryPointsMask)] = False
+            allSignalData[boundaryPointsMask.unsqueeze(-1).expand_as(allSignalData)] = 0
 
-        # Find single boundary points.
-        boundaryPointsMask = biomarkerData < -modelConstants.minMaxScale + 0.25  # batchSize, numSignals, maxSequenceLength
-        goodBatchSignalBoundaries = 2 <= boundaryPointsMask.sum(dim=-1)  # batchSize, numSignals
-        boundaryPointsMask[goodBatchSignalBoundaries.unsqueeze(-1).expand_as(boundaryPointsMask)] = False
-        allSignalData[boundaryPointsMask.unsqueeze(-1).expand_as(allSignalData)] = 0
+            # Find single boundary points.
+            boundaryPointsMask = biomarkerData < -modelConstants.minMaxScale + 0.25  # batchSize, numSignals, maxSequenceLength
+            goodBatchSignalBoundaries = 2 <= boundaryPointsMask.sum(dim=-1)  # batchSize, numSignals
+            boundaryPointsMask[goodBatchSignalBoundaries.unsqueeze(-1).expand_as(boundaryPointsMask)] = False
+            allSignalData[boundaryPointsMask.unsqueeze(-1).expand_as(allSignalData)] = 0
 
         # Re-normalize the data after removing bad points.
         validDataMask = emotionDataInterface.getValidDataMask(allSignalData)
@@ -257,7 +259,8 @@ class compileModelDataHelpers:
         # Create boolean masks for signals that don’t meet the requirements
         minLowerBoundaryMask = self.minBoundaryPoints <= (biomarkerData[:, :, 1:-1] < -modelConstants.minMaxScale + 0.25).sum(dim=-1)  # Number of points below -0.95: batchSize, numSignals
         minUpperBoundaryMask = self.minBoundaryPoints <= (modelConstants.minMaxScale - 0.25 < biomarkerData[:, :, 1:-1]).sum(dim=-1)  # Number of points above 0.95: batchSize, numSignals
-        averageDiff = biomarkerDiffs.nanmean(dim=-1) < self.maxAverageDiff  # Average difference between consecutive points: batchSize, numSignals
+        if metadatasetName.lower() not in ['empatch']: averageDiff = biomarkerDiffs.nanmean(dim=-1) < self.maxAverageDiff  # Average difference between consecutive points: batchSize, numSignals
+        else: averageDiff = biomarkerDiffs.nanmean(dim=-1) < 0.5  # Average difference between consecutive points: batchSize, numSignals
         minPointsMask = self.minSequencePoints <= validDataMask.sum(dim=-1)  # Minimum number of points: batchSize, numSignals
         validSignalMask = validDataMask.any(dim=-1)  # Missing data: batchSize, numSignals
 
