@@ -222,7 +222,7 @@ class compileModelDataHelpers:
         assert len(allSignalData) == 0 or len(featureNames) == allSignalData.shape[1], \
             f"Feature names do not match data dimensions. {len(featureNames)} != {allSignalData.shape[1]}"
 
-        for _ in range(3):
+        for _ in range(4):
             # Standardize all signals at once for the entire batch
             validDataMask = emotionDataInterface.getValidDataMask(allSignalData)
             allSignalData = self.normalizeSignals(allSignalData=allSignalData, missingDataMask=~validDataMask)
