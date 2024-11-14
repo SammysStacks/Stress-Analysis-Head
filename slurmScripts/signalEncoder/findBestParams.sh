@@ -1,6 +1,6 @@
 #!/bin/bash
 
-waveletTypes=('bior3.7')
+waveletTypes=('bior6.8')
 optimizers=('AdamW')
 encodedDimensions=(128)
 signalEncoderLayers=(8 16 32)
