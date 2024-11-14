@@ -15,8 +15,8 @@ class optimizerMethods:
         modelParams = [
             # Specify the model parameters for the signal encoding.
             {'params': model.inferenceModel.parameters(), 'weight_decay': 0, 'lr': 0.01},
-            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': self.userInputParams["weightDecay"]/10, 'lr': self.userInputParams["learningRate"]/10},
-            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "profileModel" not in name), 'weight_decay': self.userInputParams["weightDecay"]/10, 'lr': self.userInputParams["learningRate"]/10},
+            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': self.userInputParams["weightDecay"]/10, 'lr': self.userInputParams["learningRate"]},
+            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "profileModel" not in name), 'weight_decay': self.userInputParams["weightDecay"]/10, 'lr': self.userInputParams["learningRate"]},
             {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': self.userInputParams["weightDecay"], 'lr': self.userInputParams["learningRate"]},
         ]
 
@@ -38,7 +38,7 @@ class optimizerMethods:
         modelParams = self.getModelParams(submodel, model)
 
         # Set the optimizer and scheduler.
-        optimizer = self.setOptimizer(modelParams, lr=self.userInputParams["learningRate"]/10, weight_decay=self.userInputParams["weightDecay"]/10, optimizerType=self.userInputParams["optimizerType"])
+        optimizer = self.setOptimizer(modelParams, lr=self.userInputParams["learningRate"], weight_decay=self.userInputParams["weightDecay"]/10, optimizerType=self.userInputParams["optimizerType"])
         scheduler = self.getLearningRateScheduler(optimizer)
 
         return optimizer, scheduler
