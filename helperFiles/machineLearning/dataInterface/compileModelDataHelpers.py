@@ -236,8 +236,16 @@ class compileModelDataHelpers:
         allSignalData[:, :, 1:][badSinglePointMaxDiff] = 0  # Remove small errors.
 
         # Find single boundary points.
-        # minLowerBoundaryMask = 1 <= (biomarkerData < -modelConstants.minMaxScale + 0.25)  # Number of points below -0.75: batchSize, numSignals, maxSequenceLength
-        # if minLowerBoundaryMask.sum(dim=-1)
+        boundaryPointsMask = modelConstants.minMaxScale - 0.25 < biomarkerData  # batchSize, numSignals, maxSequenceLength
+        goodBatchSignalBoundaries = 2 <= boundaryPointsMask.sum(dim=-1)  # batchSize, numSignals
+        boundaryPointsMask[goodBatchSignalBoundaries.unsqueeze(-1).expand_as(boundaryPointsMask)] = False
+        allSignalData[boundaryPointsMask.unsqueeze(-1).expand_as(allSignalData)] = 0
+
+        # Find single boundary points.
+        boundaryPointsMask = biomarkerData < -modelConstants.minMaxScale + 0.25  # batchSize, numSignals, maxSequenceLength
+        goodBatchSignalBoundaries = 2 <= boundaryPointsMask.sum(dim=-1)  # batchSize, numSignals
+        boundaryPointsMask[goodBatchSignalBoundaries.unsqueeze(-1).expand_as(boundaryPointsMask)] = False
+        allSignalData[boundaryPointsMask.unsqueeze(-1).expand_as(allSignalData)] = 0
 
         # Re-normalize the data after removing bad points.
         validDataMask = emotionDataInterface.getValidDataMask(allSignalData)
