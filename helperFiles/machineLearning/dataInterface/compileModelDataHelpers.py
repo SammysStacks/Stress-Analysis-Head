@@ -49,7 +49,7 @@ class compileModelDataHelpers:
     @staticmethod
     def embedInformation(submodel, userInputParams, trainingDate):
         # Embedded information for each model.
-        signalEncoderModelInfo = f"signalEncoder on {userInputParams['deviceListed']} with {userInputParams['optimizerType']} at sigEncLayers {userInputParams['numSignalEncoderLayers']} at goldenRatio {userInputParams['goldenRatio']} at encodedDim {userInputParams['encodedDimension']} at lr {userInputParams['learningRate']} at wd {userInputParams['weightDecay']} with wave {userInputParams['waveletType']}"
+        signalEncoderModelInfo = f"signalEncoder on {userInputParams['deviceListed']} with {userInputParams['optimizerType']} at sigEncLayers {userInputParams['numSignalEncoderLayers']} at goldenRatio {userInputParams['goldenRatio']} at encodedDim {userInputParams['encodedDimension']} at lr {userInputParams['learningRate']} at wd {userInputParams['weightDecay']} with wave {userInputParams['neuralOperatorParameters']['wavelet']['waveletType']}"
         emotionPredictionModelInfo = f"emotionPrediction on {userInputParams['deviceListed']} with {userInputParams['optimizerType']}"
 
         if submodel == modelConstants.signalEncoderModel:
