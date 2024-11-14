@@ -42,7 +42,7 @@ class organizeTrainingLosses(lossCalculations):
             # Calculate the smoothness loss.
             physiologicalSmoothTrainingLoss, resampledSmoothTrainingLoss = self.calculateSmoothLoss(physiologicalProfile, resampledSignalData, validDataMask, allTrainingMasks, modelPipeline.reconstructionIndex)
             physiologicalSmoothTestingLoss, resampledSmoothTestingLoss = self.calculateSmoothLoss(physiologicalProfile, resampledSignalData, validDataMask, allTestingMasks, modelPipeline.reconstructionIndex)
-            self.accelerator.print("Smoothness loss values:", physiologicalSmoothTrainingLoss.item(), resampledSmoothTrainingLoss.item())
+            self.accelerator.print("Smoothness loss values (Phy-Resamp):", physiologicalSmoothTrainingLoss.item(), resampledSmoothTrainingLoss.item())
 
             # Store the signal encoder loss information.
             self.storeLossInformation(signalReconstructedTrainingLoss, signalReconstructedTestingLoss, model.specificSignalEncoderModel.trainingLosses_signalReconstruction, model.specificSignalEncoderModel.testingLosses_signalReconstruction)

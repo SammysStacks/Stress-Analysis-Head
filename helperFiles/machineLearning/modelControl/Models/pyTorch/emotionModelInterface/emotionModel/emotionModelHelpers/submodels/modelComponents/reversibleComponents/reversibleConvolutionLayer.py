@@ -16,7 +16,6 @@ class reversibleConvolutionLayer(reversibleInterface):
         self.numSignals = numSignals  # The number of signals in the input data.
         self.kernelSize = kernelSize  # The restricted window for the neural weights.
         self.numLayers = numLayers  # The number of layers in the reversible linear layer.
-        self.bounds = 1/3  # The bounds for the neural weights: lower values are like identity.
 
         # The restricted window for the neural weights.
         upperWindowMask = torch.ones(self.sequenceLength, self.sequenceLength, dtype=torch.float64)
@@ -39,7 +38,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         for layerInd in range(self.numLayers):
             # Create the neural weights.
             parameters = nn.Parameter(torch.randn(numSignals, self.kernelSize//2 or 1, dtype=torch.float64))
-            parameters = nn.init.uniform_(parameters, a=-self.bounds, b=self.bounds)
+            parameters = nn.init.xavier_normal_(parameters)
             self.linearOperators.append(parameters)
 
             # Add the activation function.
@@ -95,7 +94,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
 if __name__ == "__main__":
     # General parameters.
-    _batchSize, _numSignals, _sequenceLength = 64, 128, 128
+    _batchSize, _numSignals, _sequenceLength = 64, 128, 8
     _activationMethod = 'reversibleLinearSoftSign'
     _kernelSize = 2*_sequenceLength - 1
     _numLayers = 1
@@ -103,6 +102,7 @@ if __name__ == "__main__":
     # Set up the parameters.
     neuralLayerClass = reversibleConvolutionLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod, switchActivationDirection=False)
     _inputData = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float64)
+    _inputData = nn.init.normal_(_inputData, mean=0, std=0.4)
 
     # Perform the convolution in the fourier and spatial domains.
     _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(_inputData, atol=1e-6, numLayers=1)

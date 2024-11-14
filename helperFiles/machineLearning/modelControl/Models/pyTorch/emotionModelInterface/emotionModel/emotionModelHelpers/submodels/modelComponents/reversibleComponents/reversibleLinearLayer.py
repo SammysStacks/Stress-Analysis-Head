@@ -16,7 +16,6 @@ class reversibleLinearLayer(reversibleInterface):
         self.numSignals = numSignals  # The number of signals in the input data.
         self.kernelSize = kernelSize  # The restricted window for the neural weights.
         self.numLayers = numLayers  # The number of layers in the reversible linear layer.
-        self.bounds = 1/3  # The bounds for the neural weights: lower values are like identity.
 
         # Assert the validity of the input parameters.
         assert 1 < kernelSize <= sequenceLength, f"The kernel size is larger than the sequence length: {kernelSize}, {sequenceLength}"
@@ -36,7 +35,7 @@ class reversibleLinearLayer(reversibleInterface):
         for layerInd in range(self.numLayers):
             # Create the neural weights.
             parameters = nn.Parameter(torch.randn(numSignals, len(self.colInds), dtype=torch.float64))
-            parameters = nn.init.uniform_(parameters, a=-self.bounds, b=self.bounds)
+            parameters = nn.init.xavier_normal_(parameters)
             self.linearOperators.append(parameters)
 
             # Add the activation function.

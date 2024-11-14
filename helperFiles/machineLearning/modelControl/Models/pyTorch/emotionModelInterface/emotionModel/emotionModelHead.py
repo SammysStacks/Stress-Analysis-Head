@@ -3,17 +3,17 @@ from torch import nn
 import random
 import torch
 
-from .emotionModelHelpers.emotionDataInterface import emotionDataInterface
-from .emotionModelHelpers.modelConstants import modelConstants
-from .emotionModelHelpers.modelParameters import modelParameters
-from .emotionModelHelpers.submodels.inferenceModel import inferenceModel
 from .emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
-from .emotionModelHelpers.submodels.sharedActivityModel import sharedActivityModel
-from .emotionModelHelpers.submodels.sharedEmotionModel import sharedEmotionModel
+from .emotionModelHelpers.submodels.specificSignalEncoderModel import specificSignalEncoderModel
 from .emotionModelHelpers.submodels.sharedSignalEncoderModel import sharedSignalEncoderModel
 from .emotionModelHelpers.submodels.specificActivityModel import specificActivityModel
 from .emotionModelHelpers.submodels.specificEmotionModel import specificEmotionModel
-from .emotionModelHelpers.submodels.specificSignalEncoderModel import specificSignalEncoderModel
+from .emotionModelHelpers.submodels.sharedActivityModel import sharedActivityModel
+from .emotionModelHelpers.submodels.sharedEmotionModel import sharedEmotionModel
+from .emotionModelHelpers.emotionDataInterface import emotionDataInterface
+from .emotionModelHelpers.submodels.inferenceModel import inferenceModel
+from .emotionModelHelpers.modelParameters import modelParameters
+from .emotionModelHelpers.modelConstants import modelConstants
 
 
 class emotionModelHead(nn.Module):
@@ -188,7 +188,7 @@ class emotionModelHead(nn.Module):
         # reconstructedSignalData: batchSize, numSignals, maxSequenceLength
 
         # Visualize the data transformations within signal encoding.
-        if submodel == modelConstants.signalEncoderModel and not inferenceTraining and random.random() < 0.01:
+        if submodel == modelConstants.signalEncoderModel and not inferenceTraining and random.random() < 0.1:
             with torch.no_grad(): self.visualizeSignalEncoding(physiologicalProfile, resampledSignalData, reconstructedSignalData, signalData, validDataMask)
 
         # ------------------- Learned Emotion Mapping ------------------- #
@@ -233,30 +233,29 @@ class emotionModelHead(nn.Module):
         return metaLearningData
 
     def fullPass(self, submodel, signalData, signalIdentifiers, metadata, device, inferenceTraining):
-        with torch.no_grad():
-            # Preallocate the output tensors.
-            numExperiments, numSignals, maxSequenceLength, numChannels = signalData.size()
-            basicEmotionProfile = torch.zeros((numExperiments, self.numBasicEmotions, self.encodedDimension), device=device, dtype=torch.float64)
-            emotionProfile = torch.zeros((numExperiments, self.numEmotions, self.encodedDimension), device=device, dtype=torch.float64)
-            reconstructedSignalData = torch.zeros((numExperiments, numSignals, maxSequenceLength), device=device, dtype=torch.float64)
-            resampledSignalData = torch.zeros((numExperiments, numSignals, self.encodedDimension), device=device, dtype=torch.float64)
-            validDataMask = torch.zeros((numExperiments, numSignals, maxSequenceLength), device=device, dtype=torch.bool)
-            physiologicalProfile = torch.zeros((numExperiments, self.encodedDimension), device=device, dtype=torch.float64)
-            activityProfile = torch.zeros((numExperiments, self.encodedDimension), device=device, dtype=torch.float64)
-            testingBatchSize = modelParameters.getInferenceBatchSize(submodel, device)
-            startBatchInd = 0
+        # Preallocate the output tensors.
+        numExperiments, numSignals, maxSequenceLength, numChannels = signalData.size()
+        basicEmotionProfile = torch.zeros((numExperiments, self.numBasicEmotions, self.encodedDimension), device=device, dtype=torch.float64)
+        emotionProfile = torch.zeros((numExperiments, self.numEmotions, self.encodedDimension), device=device, dtype=torch.float64)
+        reconstructedSignalData = torch.zeros((numExperiments, numSignals, maxSequenceLength), device=device, dtype=torch.float64)
+        resampledSignalData = torch.zeros((numExperiments, numSignals, self.encodedDimension), device=device, dtype=torch.float64)
+        validDataMask = torch.zeros((numExperiments, numSignals, maxSequenceLength), device=device, dtype=torch.bool)
+        physiologicalProfile = torch.zeros((numExperiments, self.encodedDimension), device=device, dtype=torch.float64)
+        activityProfile = torch.zeros((numExperiments, self.encodedDimension), device=device, dtype=torch.float64)
+        testingBatchSize = modelParameters.getInferenceBatchSize(submodel, device)
+        startBatchInd = 0
 
-            while startBatchInd < numExperiments:
-                endBatchInd = startBatchInd + testingBatchSize
+        while startBatchInd < numExperiments:
+            endBatchInd = startBatchInd + testingBatchSize
 
-                # Perform a full pass of the model.
-                validDataMask[startBatchInd:endBatchInd], reconstructedSignalData[startBatchInd:endBatchInd], resampledSignalData[startBatchInd:endBatchInd], physiologicalProfile[startBatchInd:endBatchInd], \
-                    activityProfile[startBatchInd:endBatchInd], basicEmotionProfile[startBatchInd:endBatchInd], emotionProfile[startBatchInd:endBatchInd] \
-                    = self.forward(submodel=submodel, signalData=signalData[startBatchInd:endBatchInd], signalIdentifiers=signalIdentifiers[startBatchInd:endBatchInd],
-                                   metadata=metadata[startBatchInd:endBatchInd], device=device, inferenceTraining=inferenceTraining)
+            # Perform a full pass of the model.
+            validDataMask[startBatchInd:endBatchInd], reconstructedSignalData[startBatchInd:endBatchInd], resampledSignalData[startBatchInd:endBatchInd], physiologicalProfile[startBatchInd:endBatchInd], \
+                activityProfile[startBatchInd:endBatchInd], basicEmotionProfile[startBatchInd:endBatchInd], emotionProfile[startBatchInd:endBatchInd] \
+                = self.forward(submodel=submodel, signalData=signalData[startBatchInd:endBatchInd], signalIdentifiers=signalIdentifiers[startBatchInd:endBatchInd],
+                               metadata=metadata[startBatchInd:endBatchInd], device=device, inferenceTraining=inferenceTraining)
 
-                # Update the batch index.
-                startBatchInd = endBatchInd
+            # Update the batch index.
+            startBatchInd = endBatchInd
 
         return validDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile
 

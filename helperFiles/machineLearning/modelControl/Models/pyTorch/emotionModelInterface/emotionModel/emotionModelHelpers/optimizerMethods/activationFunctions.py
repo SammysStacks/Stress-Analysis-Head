@@ -35,19 +35,22 @@ def getActivationMethod(activationMethod):
 
 
 class reversibleLinearSoftSign(reversibleInterface):
-    def __init__(self, invertedActivation=False, linearity=0.9, infiniteBound=None, scalarAdjustment=1):
+    def __init__(self, invertedActivation=False, inversionPoint=1.5, scalarAdjustment=1):
         super(reversibleLinearSoftSign, self).__init__()
         self.invertedActivation = invertedActivation  # Whether the non-linearity term is inverted
         self.scalarAdjustment = scalarAdjustment  # Scalar adjustment for numerical stability
-        self.infiniteBound = infiniteBound  # This controls how the activation converges at +/- infinity; Ex: 0.5, 13/21, 33/49
-        self.linearity = linearity  # Corresponds to `r` in the equation; Ex: 4/3, 3/2, 7/4
+        self.inversionPoint = inversionPoint  # The point at which the activation inverts. Higher values increase the non-linearity and decrease the final magnitude.
         self.tolerance = 1e-20  # Tolerance for numerical stability
 
         # If the infiniteBound term is not provided, use the r that makes y = x = 1.
-        if self.infiniteBound is None: self.infiniteBound = 1 - 1/(2*self.linearity)
+        self.linearity = 2 / (1 + self.inversionPoint)  # Corresponds to `r` in the equation
+        self.infiniteBound = 1 - 1/((1 + self.inversionPoint)*self.linearity)  # This controls how the activation converges at +/- infinity; Ex: 0.5, 13/21, 33/49
 
         # Assert the validity of the inputs.
-        assert 0 < self.linearity, "The inversion point must be positive to ensure a stable convergence."
+        assert 1 <= self.inversionPoint, "The inversion point must be greater than 1 to ensure a stable convergence."
+        assert self.infiniteBound == 0.5, "The infinite bound term must be 0.5 to ensure a stable convergence."
+        # Notes: The linearity term must be 1 if the inversion point is 1 to ensure a stable convergence.
+        # Notes: The inversion point must be greater than 1 to ensure a stable convergence.
 
     def forward(self, x):
         if self.forwardDirection != self.invertedActivation: return self.forwardPass(x)
