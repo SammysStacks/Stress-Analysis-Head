@@ -102,8 +102,8 @@ class emotionPipeline(emotionPipelineHelpers):
                         t2 = time.time(); self.accelerator.print(f"{'Shared' if trainSharedLayers else '\tSpecific'} layer training {self.datasetName} {numPointsAnalyzed}: {t22 - t11} {t2 - t1}\n")
 
         # Prepare the model/data for evaluation.
+        if (profileTraining and not specificTraining and not trainSharedLayers) or inferenceTraining: self.scheduler.step()  # Update the learning rate.
         self.accelerator.wait_for_everyone()  # Wait before continuing.
-        if profileTraining: self.scheduler.step()  # Update the learning rate.
         self.setupTrainingFlags(self.model, trainingFlag=False)  # Turn off training flags.
 
         return emotionProfile
