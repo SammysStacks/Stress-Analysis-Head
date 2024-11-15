@@ -74,7 +74,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def postProcessingLayerRFC(numSignals, sequenceLength, activationMethod, switchActivationDirection):
-        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=3, numLayers=1, activationMethod='none', switchActivationDirection=switchActivationDirection == "True")
+        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=3, numLayers=1, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection == "True")
 
     # ------------------- Emotion/Activity Encoding Architectures ------------------- #
 
