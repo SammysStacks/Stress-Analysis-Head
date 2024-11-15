@@ -68,8 +68,8 @@ class lossCalculations:
         # signalReconstructedLoss dimension: numExperiments, numSignals, maxSequenceLength
 
         # Calculate the uncertainty in the data.
-        # dataUncertainty = self.smoothL1Loss(input=datapoints, target=self.smoothingFilter(datapoints, kernelSize=3))[validDataMask] / 2
-        # signalReconstructedLoss[signalReconstructedLoss < dataUncertainty] = signalReconstructedLoss[signalReconstructedLoss < dataUncertainty] / 10
+        dataUncertainty = self.smoothL1Loss(input=datapoints, target=self.smoothingFilter(datapoints, kernelSize=3))[validDataMask]
+        signalReconstructedLoss[signalReconstructedLoss < dataUncertainty] = signalReconstructedLoss[signalReconstructedLoss < dataUncertainty] / 100
         # dataUncertainty: numExperiments, numSignals, maxSequenceLength
 
         # Finalize the loss calculation.
