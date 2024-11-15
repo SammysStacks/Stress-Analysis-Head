@@ -18,7 +18,7 @@ class reversibleLinearLayer(reversibleInterface):
         self.numLayers = numLayers  # The number of layers in the reversible linear layer.
 
         # Assert the validity of the input parameters.
-        assert 1 < kernelSize <= sequenceLength, f"The kernel size is larger than the sequence length: {kernelSize}, {sequenceLength}"
+        assert 1 <= self.kernelSize//2 <= sequenceLength - 1, f"The kernel size must be less than the sequence length: {self.kernelSize}, {self.sequenceLength}"
 
         # The restricted window for the neural weights.
         upperWindowMask = torch.ones(self.sequenceLength, self.sequenceLength, dtype=torch.float64)
@@ -83,13 +83,18 @@ class reversibleLinearLayer(reversibleInterface):
 
         return outputData
 
+    def printParams(self):
+        # Count the trainable parameters.
+        numParams = sum(p.numel() for p in self.parameters() if p.requires_grad) / self.numSignals
+        print(f'The model has {numParams} trainable parameters.')
+
 
 if __name__ == "__main__":
     # General parameters.
     _batchSize, _numSignals, _sequenceLength = 64, 128, 128
     _activationMethod = 'reversibleLinearSoftSign'
-    _kernelSize = _sequenceLength - 1
-    _numLayers = 10
+    _kernelSize = 2*_sequenceLength-1
+    _numLayers = 1
 
     # Set up the parameters.
     neuralLayerClass = reversibleLinearLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod, switchActivationDirection=False)
@@ -97,3 +102,4 @@ if __name__ == "__main__":
 
     # Perform the convolution in the fourier and spatial domains.
     _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(_inputData, atol=1e-6, numLayers=1)
+    neuralLayerClass.printParams()

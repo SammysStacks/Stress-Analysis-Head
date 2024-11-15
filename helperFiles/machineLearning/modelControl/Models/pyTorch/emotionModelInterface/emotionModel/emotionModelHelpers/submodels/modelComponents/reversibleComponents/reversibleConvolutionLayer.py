@@ -38,7 +38,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         for layerInd in range(self.numLayers):
             # Create the neural weights.
             parameters = nn.Parameter(torch.randn(numSignals, self.kernelSize//2 or 1, dtype=torch.float64))
-            parameters = nn.init.xavier_normal_(parameters)
+            parameters = nn.init.kaiming_normal_(parameters)
             self.linearOperators.append(parameters)
 
             # Add the activation function.
@@ -94,7 +94,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
 if __name__ == "__main__":
     # General parameters.
-    _batchSize, _numSignals, _sequenceLength = 64, 128, 8
+    _batchSize, _numSignals, _sequenceLength = 64, 128, 128
     _activationMethod = 'reversibleLinearSoftSign'
     _kernelSize = 2*_sequenceLength - 1
     _numLayers = 1
