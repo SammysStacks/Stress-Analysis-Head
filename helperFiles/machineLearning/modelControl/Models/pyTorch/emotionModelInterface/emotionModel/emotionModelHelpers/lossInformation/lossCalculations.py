@@ -64,12 +64,12 @@ class lossCalculations:
 
         # Calculate the error in signal reconstruction (encoding loss).
         datapoints = emotionDataInterface.getChannelData(initialSignalData, channelName=modelConstants.signalChannel)
-        signalReconstructedLoss = self.smoothL1Loss(reconstructedSignalData[validDataMask], datapoints[validDataMask])
+        signalReconstructedLoss = self.smoothL1Loss(input=reconstructedSignalData, target=datapoints)[validDataMask]
         # signalReconstructedLoss dimension: numExperiments, numSignals, maxSequenceLength
 
         # Calculate the uncertainty in the data.
-        dataUncertainty = self.smoothL1Loss(datapoints[validDataMask], self.smoothingFilter(datapoints, kernelSize=3)[validDataMask])
-        signalReconstructedLoss[signalReconstructedLoss <= dataUncertainty] = signalReconstructedLoss[signalReconstructedLoss < dataUncertainty] / 10
+        dataUncertainty = self.smoothL1Loss(input=datapoints, target=self.smoothingFilter(datapoints, kernelSize=3))[validDataMask] / 2
+        signalReconstructedLoss[signalReconstructedLoss < dataUncertainty] = signalReconstructedLoss[signalReconstructedLoss < dataUncertainty] / 10
         # dataUncertainty: numExperiments, numSignals, maxSequenceLength
 
         # Finalize the loss calculation.

@@ -36,11 +36,11 @@ class modelParameters:
         return userInputParams
 
     def getTrainingBatchSize(self, submodel, numExperiments):
-        # Wesad: Found 32 (out of 32) well-labeled emotions across 60 experiments with 53 signals.
-        # Emognition: Found 12 (out of 12) well-labeled emotions across 407 experiments with 46 signals.
-        # Amigos: Found 10 (out of 12) well-labeled emotions across 673 experiments with 107 signals.
-        # Dapper: Found 12 (out of 12) well-labeled emotions across 364 experiments with 18 signals.
-        # Case: Found 2 (out of 2) well-labeled emotions across 1442 experiments with 38 signals.
+        # Wesad: Found 32 (out of 32) well-labeled emotions across 60 experiments with 46 signals.
+        # Emognition: Found 12 (out of 12) well-labeled emotions across 407 experiments with 43 signals.
+        # Amigos: Found 10 (out of 12) well-labeled emotions across 673 experiments with 88 signals.
+        # Dapper: Found 12 (out of 12) well-labeled emotions across 364 experiments with 16 signals.
+        # Case: Found 2 (out of 2) well-labeled emotions across 1442 experiments with 36 signals.
         # Collected: Found 30 (out of 30) well-labeled emotions across 165 experiments with 65 signals.
         if submodel == modelConstants.signalEncoderModel: effectiveMinBatchSize, effectiveMaxBatchSize = 12, 160
         elif submodel == modelConstants.emotionModel: effectiveMinBatchSize, effectiveMaxBatchSize = 12, 160
