@@ -85,13 +85,13 @@ class emotionPipeline(emotionPipelineHelpers):
                         self.modelHelpers.assertVariableIntegrity(validDataMask, variableName="valid data mask", assertGradient=False)
 
                         # Calculate the error in signal compression (signal encoding loss).
-                        # physiologicalSmoothLoss, resampledSmoothLoss = self.organizeLossInfo.calculateSmoothLoss(physiologicalProfile, resampledSignalData, validDataMask, currentTrainingMask, self.reconstructionIndex)
+                        physiologicalSmoothLoss, resampledSmoothLoss = self.organizeLossInfo.calculateSmoothLoss(physiologicalProfile, resampledSignalData, validDataMask, currentTrainingMask, self.reconstructionIndex)
                         signalReconstructedLoss = self.organizeLossInfo.calculateSignalEncodingLoss(augmentedBatchData, reconstructedSignalData, validDataMask, currentTrainingMask, self.reconstructionIndex)
                         if signalReconstructedLoss is None: self.accelerator.print("Not useful loss"); continue
 
                         # Initialize basic core loss value.
-                        finalLoss = signalReconstructedLoss  # + 0.001*(physiologicalSmoothLoss + resampledSmoothLoss)
-                        self.accelerator.print("Final-Recon-Phys-Resamp", finalLoss.item(), signalReconstructedLoss.item(), flush=True)
+                        finalLoss = signalReconstructedLoss + 0.001*(physiologicalSmoothLoss + resampledSmoothLoss)
+                        self.accelerator.print("Final-Recon-Phys-Resamp", finalLoss.item(), signalReconstructedLoss.item(), physiologicalSmoothLoss.item(), resampledSmoothLoss.item(), flush=True)
 
                         # ------------------- Update the Model  -------------------- #
 
@@ -103,8 +103,8 @@ class emotionPipeline(emotionPipelineHelpers):
 
         # Prepare the model/data for evaluation.
         if (profileTraining and not specificTraining and not trainSharedLayers) or inferenceTraining: self.scheduler.step()  # Update the learning rate.
-        self.accelerator.wait_for_everyone()  # Wait before continuing.
         self.setupTrainingFlags(self.model, trainingFlag=False)  # Turn off training flags.
+        self.accelerator.wait_for_everyone()  # Wait before continuing.
 
         return emotionProfile
 
