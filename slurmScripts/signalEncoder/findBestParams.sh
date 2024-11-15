@@ -3,7 +3,7 @@
 waveletTypes=('bior3.7')
 optimizers=('AdamW')
 encodedDimensions=(128 256)
-signalEncoderLayers=(2 4 8)
+signalEncoderLayers=(2 4 8 16)
 weightDecays=(0.0001)
 goldenRatios=(1 2 4 8)
 lrs=(0.01)
