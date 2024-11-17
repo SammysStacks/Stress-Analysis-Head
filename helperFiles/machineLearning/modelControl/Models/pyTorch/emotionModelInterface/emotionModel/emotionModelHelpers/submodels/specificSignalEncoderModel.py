@@ -66,13 +66,13 @@ class specificSignalEncoderModel(neuralOperatorInterface):
     def printParams(self):
         # Count the trainable parameters.
         numParams = (sum(p.numel() for p in self.parameters() if p.requires_grad) - self.profileModel.physiologicalProfile.size(0) * self.encodedDimension) / self.numSignals
-        print(f'The model has {numParams} trainable parameters.')
+        print(f'The model has {numParams} trainable parameters per signal; {numParams*self.numSignals} total parameters.')
 
 
 if __name__ == "__main__":
     # General parameters.
     _neuralOperatorParameters = modelParameters.getNeuralParameters({'waveletType': 'bior3.7'})['neuralOperatorParameters']
-    _batchSize, _numSignals, _sequenceLength = 2, 6, 128
+    _batchSize, _numSignals, _sequenceLength = 2, 88, 256
 
     # Set up the parameters.
     neuralLayerClass = specificSignalEncoderModel(numExperiments=_batchSize, operatorType='wavelet', encodedDimension=_sequenceLength, numSignals=_numSignals, numLiftingLayers=1, goldenRatio=4, learningProtocol='rCNN', neuralOperatorParameters=_neuralOperatorParameters)

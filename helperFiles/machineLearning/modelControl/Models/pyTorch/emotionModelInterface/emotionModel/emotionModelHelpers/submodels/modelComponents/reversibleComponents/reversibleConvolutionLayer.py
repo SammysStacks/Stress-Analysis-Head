@@ -24,7 +24,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
         # Calculate the offsets to map positions to kernel indices
         self.rowInds, self.colInds = upperWindowMask.nonzero(as_tuple=False).T
-        self.kernelInds = self.rowInds - self.colInds + self.kernelSize // 2  # Adjust for kernel center
+        self.kernelInds = self.rowInds - self.colInds + self.kernelSize // 2  # Adjust for the kernel center
 
         # Assert the validity of the input parameters.
         assert 1 <= self.kernelSize//2 <= sequenceLength - 1, f"The kernel size must be less than the sequence length: {self.kernelSize}, {self.sequenceLength}"
