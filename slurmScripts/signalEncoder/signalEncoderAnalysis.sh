@@ -11,7 +11,6 @@ srun accelerate launch ./../../metaTrainingControl.py \
     --waveletType "$5" \
     --optimizerType "$6" \
     --learningRate "$7" \
-    --weightDecay "$8"
 
 end=$(date +%s)
 runtime=$((end-start))

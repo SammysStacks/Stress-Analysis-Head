@@ -22,9 +22,9 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.modelMigration impo
 from helperFiles.machineLearning.dataInterface.compileModelData import compileModelData
 
 # Configure cuDNN and PyTorch's global settings.
-torch.backends.cudnn.deterministic = False  # If False: allow non-deterministic algorithms in cuDNN, which can enhance performance but reduce reproducibility.
-torch.autograd.set_detect_anomaly(True)  # If True: detect NaN values in the output of autograd.
-torch.backends.cudnn.benchmark = False  # If True: Enable cuDNN's auto-tuner to find the most efficient algorithm for the current configuration, potentially improving performance if fixed input size.
+torch.backends.cudnn.deterministic = True  # If True: ensures that the model will be reproducible.
+torch.autograd.set_detect_anomaly(False)  # If True: detect NaN values in the output of autograd. Will be slower.
+torch.backends.cudnn.benchmark = False  # If True: Enable cuDNN's auto-tuner to find the most efficient algorithm, improving performance if fixed input size.
 
 if __name__ == "__main__":
     # Define the accelerator parameters.
@@ -33,7 +33,7 @@ if __name__ == "__main__":
         cpu=torch.backends.mps.is_available(),  # Whether to use the CPU. MPS is NOT fully compatible yet.
         step_scheduler_with_optimizer=False,  # Whether to wrap the optimizer in a scheduler.
         gradient_accumulation_steps=1,  # The number of gradient accumulation steps.
-        mixed_precision="no",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"
+        mixed_precision="fp16",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"
     )
 
     # General model parameters.
@@ -52,11 +52,10 @@ if __name__ == "__main__":
     parser.add_argument('--irreversibleLearningProtocol', type=str, default='FC', help='The learning protocol for the model: CNN, FC')
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are using: cpu, cuda')
     parser.add_argument('--learningRate', type=float, default=0.01, help='The learning rate of the model.')  # Higher values converge faster; Lower values create stable convergence.
-    parser.add_argument('--weightDecay', type=float, default=0, help='DEPRECATED; The weight decay of the model.')  # Higher values do not converge as far; Lower values create unstable convergence.
 
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--goldenRatio', type=int, default=1, help='The number of shared layers per specific layer.')
-    parser.add_argument('--numSignalEncoderLayers', type=int, default=4, help='The number of layers in the model.')
+    parser.add_argument('--numSignalEncoderLayers', type=int, default=8, help='The number of layers in the model.')
     parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
  
     # Add arguments for the neural operator.

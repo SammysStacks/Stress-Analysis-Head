@@ -32,6 +32,26 @@ class emotionModelWeights(convolutionalHelpers):
 
         return physiologicalProfile
 
+    @staticmethod
+    def smoothingFilter(data, kernel=(), kernelSize=None):
+        # Validate input parameters
+        assert len(kernel) != 0 or kernelSize is not None, "The kernel or kernel size must be specified."
+        if kernelSize is not None: assert kernelSize % 2 == 1, "The kernel size must be odd."
+        if len(kernel) != 0: assert len(kernel) % 2 == 1, "The kernel size must be odd."
+
+        # Define the kernel
+        if kernelSize is not None: kernel = torch.ones((1, 1, kernelSize), dtype=data.dtype, device=data.device) / kernelSize
+        else: kernel = torch.as_tensor(kernel, dtype=data.dtype, device=data.device).unsqueeze(0).unsqueeze(0)
+        kernel = kernel / kernel.sum(dim=-1)  # Normalize kernel
+
+        # Expand kernel to match data channels
+        kernel = kernel.expand(data.size(1), 1, kernel.size(-1))
+
+        # Apply the 1D convolution along the last dimension with padding
+        filtered_data = torch.nn.functional.conv1d(data, kernel, padding=kernel.size(-1) // 2, groups=data.size(1))
+
+        return filtered_data
+
     # ------------------- Neural Operator Architectures ------------------- #
 
     @staticmethod

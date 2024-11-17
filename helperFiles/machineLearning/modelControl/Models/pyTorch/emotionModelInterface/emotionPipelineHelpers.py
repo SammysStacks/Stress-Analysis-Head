@@ -74,6 +74,7 @@ class emotionPipelineHelpers:
 
     def setupTraining(self, submodel, inferenceTraining, profileTraining, specificTraining, trainSharedLayers):
         # Do not train the model at all.
+        assert specificTraining == trainSharedLayers, "The training flags are not set correctly."
         self.setupTrainingFlags(self.model, trainingFlag=False)
 
         if inferenceTraining:
