@@ -38,12 +38,7 @@ class lossCalculations:
         self.meanSquaredError = pytorchLossMethods(lossType="MeanSquaredError", class_weights=None).loss_fn
         self.smoothL1Loss = nn.SmoothL1Loss(reduction='none', beta=0.25)
 
-    # -------------------------- Loss Calculations ------------------------- #
-
-    @staticmethod
-    def getData(data, mask):
-        if data is None or mask is None: return data
-        return data[mask.expand_as(data)]
+    # -------------------------- Signal Encoder Loss Calculations ------------------------- #
 
     def calculateSignalEncodingLoss(self, allInitialSignalData, allReconstructedSignalData, allValidDataMask, allSignalMask):
         # Get the relevant data for the loss calculation.
@@ -71,15 +66,6 @@ class lossCalculations:
 
         return signalReconstructedLoss
 
-    def calculateSmoothLoss(self, allPhysiologicalProfile):
-        physiologicalSmoothLoss = allPhysiologicalProfile.diff(n=2, dim=-1).pow(2).mean()
-        # physiologicalSmoothLoss dimension: numExperiments, maxSequenceLength
-
-        # Assert that nothing is wrong with the loss calculations.
-        self.modelHelpers.assertVariableIntegrity(physiologicalSmoothLoss, variableName="physiological smooth loss", assertGradient=False)
-
-        return physiologicalSmoothLoss
-
     @staticmethod
     def smoothingFilter(data, kernel=(), kernelSize=None):
         # Validate input parameters
@@ -99,6 +85,8 @@ class lossCalculations:
         filtered_data = torch.nn.functional.conv1d(data, kernel, padding=kernel.size(-1) // 2, groups=data.size(1))
 
         return filtered_data
+
+    # -------------------------- Loss Calculations ------------------------- #
 
     def calculateActivityLoss(self, predictedActivityLabels, allLabels, allLabelsMask, activityClassWeights):
         # Find the boolean flags for the data involved in the loss calculation.
