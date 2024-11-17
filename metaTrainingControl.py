@@ -51,7 +51,7 @@ if __name__ == "__main__":
     parser.add_argument('--reversibleLearningProtocol', type=str, default='rCNN', help='The learning protocol for the model: rCNN, rFC')
     parser.add_argument('--irreversibleLearningProtocol', type=str, default='FC', help='The learning protocol for the model: CNN, FC')
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are using: cpu, cuda')
-    parser.add_argument('--learningRate', type=float, default=1e-2, help='The learning rate of the model.')  # Higher values converge faster; Lower values create stable convergence.
+    parser.add_argument('--learningRate', type=float, default=0.1, help='The learning rate of the model.')  # Higher values converge faster; Lower values create stable convergence.
     parser.add_argument('--weightDecay', type=float, default=0, help='DEPRECATED; The weight decay of the model.')  # Higher values do not converge as far; Lower values create unstable convergence.
 
     # Add arguments for the signal encoder architecture.
