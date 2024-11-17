@@ -35,10 +35,9 @@ def getActivationMethod(activationMethod):
 
 
 class reversibleLinearSoftSign(reversibleInterface):
-    def __init__(self, invertedActivation=False, inversionPoint=1.5, scalarAdjustment=1):
+    def __init__(self, invertedActivation=False, inversionPoint=2):
         super(reversibleLinearSoftSign, self).__init__()
         self.invertedActivation = invertedActivation  # Whether the non-linearity term is inverted
-        self.scalarAdjustment = scalarAdjustment  # Scalar adjustment for numerical stability
         self.inversionPoint = inversionPoint  # The point at which the activation inverts. Higher values increase the non-linearity and decrease the final magnitude.
         self.tolerance = 1e-20  # Tolerance for numerical stability
 
@@ -48,7 +47,7 @@ class reversibleLinearSoftSign(reversibleInterface):
 
         # Assert the validity of the inputs.
         assert 1 <= self.inversionPoint, "The inversion point must be greater than 1 to ensure a stable convergence."
-        assert self.infiniteBound == 0.5, "The infinite bound term must be 0.5 to ensure a stable convergence."
+        assert self.infiniteBound == 0.5, "The infinite bound term must be 0.5 to ensure a stable convergence!!"
         # Notes: The linearity term must be 1 if the inversion point is 1 to ensure a stable convergence.
         # Notes: The inversion point must be greater than 1 to ensure a stable convergence.
 
@@ -57,19 +56,17 @@ class reversibleLinearSoftSign(reversibleInterface):
         else: return self.inversePass(x)
 
     def forwardPass(self, x):
-        x = x * self.scalarAdjustment  # Adjust the scalar for numerical stability
-        return (self.infiniteBound*x + x / (1 + x.abs()) / self.linearity) / self.scalarAdjustment  # f(x) = x + x / (1 + |x|) / r
+        return self.infiniteBound*x + x / (1 + x.abs()) / self.linearity  # f(x) = x + x / (1 + |x|) / r
 
     def inversePass(self, y):
         # Prepare the terms for the inverse pass.
         signY = torch.nn.functional.hardtanh(y, min_val=-self.tolerance, max_val=self.tolerance) / self.tolerance
         r, a = self.linearity, self.infiniteBound  # The linearity and infinite bound terms
-        y = y * self.scalarAdjustment  # Adjust the scalar for numerical stability
 
         sqrtTerm = ((r*a)**2 + 2*a*r*(1 + signY*y*r) + (r*y - signY).pow(2)) / (r*a)**2
         x = signY*(sqrtTerm.sqrt() - 1)/2 - signY / (2*a*r) + y / (2*a)
 
-        return x / self.scalarAdjustment
+        return x
 
 
 class boundedS(reversibleInterface):

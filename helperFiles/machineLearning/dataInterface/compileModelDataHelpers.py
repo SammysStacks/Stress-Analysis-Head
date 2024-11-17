@@ -74,16 +74,19 @@ class compileModelDataHelpers:
     @staticmethod
     def organizeActivityLabels(activityNames, allFeatureLabels, activityLabelInd):
         # Remove the bad or unknown labels.
-        goodActivityMask = ~torch.isnan(allFeatureLabels[:, activityLabelInd])
-        activityLabels = allFeatureLabels[:, activityLabelInd][goodActivityMask]
+        activityLabels = allFeatureLabels[:, activityLabelInd]
+        goodActivityMask = ~torch.isnan(activityLabels)
+        activityLabels = activityLabels[goodActivityMask]
 
         # Find the unique activity labels
-        uniqueActivityLabels, validActivityLabels = torch.unique(activityLabels, return_inverse=True)
-        assert len(activityLabels) == len(validActivityLabels), f"{len(activityLabels)} != {len(validActivityLabels)}"
+        uniqueActivityClasses, validActivityClasses = torch.unique(activityLabels, return_inverse=True)
+        assert len(activityLabels) == len(validActivityClasses), f"{len(activityLabels)} != {len(validActivityClasses)}"
+        # validActivityClasses: Class indices for each experiment.
+        # uniqueActivityClasses: A subset of activityName indices.
 
         # Get the corresponding unique activity names
-        uniqueActivityNames = np.asarray(activityNames)[uniqueActivityLabels.to(torch.int)]
-        allFeatureLabels[:, activityLabelInd][goodActivityMask] = validActivityLabels.to(allFeatureLabels.dtype)
+        uniqueActivityNames = np.asarray(activityNames)[uniqueActivityClasses.to(torch.int)]
+        allFeatureLabels[:, activityLabelInd][goodActivityMask] = validActivityClasses.to(allFeatureLabels.dtype)
 
         return uniqueActivityNames, allFeatureLabels
 
@@ -115,9 +118,8 @@ class compileModelDataHelpers:
         return allFeatureLabels, allSingleClassMasks
 
     @staticmethod
-    def addContextualInfo(allSignalData, allNumSignalPoints, allSubjectInds, datasetInd):
+    def addContextualInfo(allSignalData, allSubjectInds, datasetInd):
         # allSignalData: A torch tensor of size (batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel])
-        # allNumSignalPoints: A torch array of size (batchSize, numSignals)
         # allSubjectInds: A torch array of size batchSize
         numExperiments, numSignals, maxSequenceLength, numChannels = allSignalData.shape
         numSignalIdentifiers = len(modelConstants.signalIdentifiers)
@@ -136,18 +138,17 @@ class compileModelDataHelpers:
             # metadata dim: numSignals, numMetadata, numChannels
 
             # Compile all the signal information: signal specific.
-            eachSignal_numPoints = allNumSignalPoints[experimentInd].unsqueeze(-1).unsqueeze(-1).repeat(1, 1, numChannels)
             signalInds = torch.arange(numSignals).unsqueeze(-1).unsqueeze(-1).repeat(1, 1, numChannels)
             batchInds = torch.full(size=(numSignals, 1, numChannels), fill_value=experimentInd)
-            signalIdentifiers = torch.hstack((eachSignal_numPoints, signalInds, batchInds))
+            signalIdentifiers = torch.hstack((signalInds, batchInds))
             # signalIdentifiers dim: numSignals, numSignalIdentifiers, numChannels
 
             # Assert the correct hardcoded dimensions.
-            assert emotionDataInterface.getSignalIdentifierIndex(identifierName=modelConstants.numSignalPointsSI) == 0, "Asserting I am self-consistent. Hardcoded assertion"
-            assert emotionDataInterface.getSignalIdentifierIndex(identifierName=modelConstants.signalIndexSI) == 1, "Asserting I am self-consistent. Hardcoded assertion"
+            assert emotionDataInterface.getSignalIdentifierIndex(identifierName=modelConstants.signalIndexSI) == 0, "Asserting I am self-consistent. Hardcoded assertion"
+            assert emotionDataInterface.getSignalIdentifierIndex(identifierName=modelConstants.batchIndexSI) == 1, "Asserting I am self-consistent. Hardcoded assertion"
             assert emotionDataInterface.getMetadataIndex(metadataName=modelConstants.datasetIndexMD) == 0, "Asserting I am self-consistent. Hardcoded assertion"
             assert emotionDataInterface.getMetadataIndex(metadataName=modelConstants.subjectIndexMD) == 1, "Asserting I am self-consistent. Hardcoded assertion"
-            assert numSignalIdentifiers == 3, "Asserting I am self-consistent. Hardcoded assertion"
+            assert numSignalIdentifiers == 2, "Asserting I am self-consistent. Hardcoded assertion"
             assert numMetadata == 2, "Asserting I am self-consistent. Hardcoded assertion"
 
             # Add the demographic data to the feature array.
@@ -168,11 +169,8 @@ class compileModelDataHelpers:
         numSignals = sum(len(biomarkerData[0]) for biomarkerData in allRawFeatureIntervals[0])
         numExperiments = len(allRawFeatureIntervals)
 
-        # Initialize the padded array and end signal indices list
+        # Initialize the padded array and signal indices.
         allSignalData = torch.zeros(size=(numExperiments, numSignals, maxSequenceLength, len(modelConstants.signalChannelNames)))  # +1 for the time data
-        allNumSignalPoints = torch.empty(size=(numExperiments, numSignals), dtype=torch.int)
-
-        # Get the indices for each of the signal information.
         dataChannelInd = emotionDataInterface.getChannelInd(channelName=modelConstants.signalChannel)
         timeChannelInd = emotionDataInterface.getChannelInd(channelName=modelConstants.timeChannel)
 
@@ -200,10 +198,8 @@ class compileModelDataHelpers:
                 finalSignalInd = currentSignalInd + numBiomarkerFeatures
 
                 # Fill the padded array with the signal data
-
-                allSignalData[experimentalInd, currentSignalInd:finalSignalInd, 0:batchSpecificFeatureLength, timeChannelInd] = biomarkerTimes
+                allSignalData[experimentalInd, currentSignalInd:finalSignalInd, 0:batchSpecificFeatureLength, timeChannelInd] = biomarkerTimes + 1e-25
                 allSignalData[experimentalInd, currentSignalInd:finalSignalInd, 0:batchSpecificFeatureLength, dataChannelInd] = biomarkerData
-                allNumSignalPoints[experimentalInd, currentSignalInd:finalSignalInd] = batchSpecificFeatureLength
 
                 # Update the current signal index
                 maxSequenceLength = max(maxSequenceLength, batchSpecificFeatureLength)
@@ -212,11 +208,10 @@ class compileModelDataHelpers:
         # Remove unused points.
         allSignalData = allSignalData[:, :, 0:maxSequenceLength, :]
 
-        return allSignalData, allNumSignalPoints
+        return allSignalData
 
-    def _preprocessSignals(self, allSignalData, allNumSignalPoints, featureNames, metadatasetName):
+    def _preprocessSignals(self, allSignalData, featureNames, metadatasetName):
         # allSignalData: A torch array of size (batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel])
-        # allNumSignalPoints: A torch array of size (batchSize, numSignals)
         # featureNames: A torch array of size numSignals
         # Ensure the feature names match the number of signals
         assert len(allSignalData) == 0 or len(featureNames) == allSignalData.shape[1], \
@@ -270,63 +265,13 @@ class compileModelDataHelpers:
 
         # Filter out the invalid signals
         allSignalData[~validSignalMask.unsqueeze(-1).unsqueeze(-1).expand_as(allSignalData)] = 0
-        allNumSignalPoints[~validSignalMask] = 0
 
-        return allSignalData[:, validSignalInds, :, :], allNumSignalPoints[:, validSignalInds], featureNames[validSignalInds]
+        return allSignalData[:, validSignalInds, :, :], featureNames[validSignalInds]
 
     def normalizeSignals(self, allSignalData, missingDataMask):
         # signalBatchData dimension: numExperiments, numSignals, maxSequenceLength, [timeChannel, signalChannel]
         # missingDataMask dimension: numExperiments, numSignals, maxSequenceLength
         signalChannelInd = emotionDataInterface.getChannelInd(channelName=modelConstants.signalChannel)
         allSignalData[:, :, :, signalChannelInd] = self.generalMethods.minMaxScale_noInverse(allSignalData[:, :, :, signalChannelInd], scale=modelConstants.minMaxScale, missingDataMask=missingDataMask)
-
-        return allSignalData
-
-    def preprocessingSignalsTherapy(self, allSignalData, allNumSignalPoints):
-        # allSignalData: A torch array of size (batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel])
-        # allNumSignalPoints: A torch array of size (batchSize, numSignals)
-        # featureNames: A torch array of size numSignals
-        # Ensure the feature names match the number of signals
-        validDataMask = emotionDataInterface.getValidDataMask(allSignalData)
-        allSignalData = self.normalizeSignals(allSignalData=allSignalData, missingDataMask=~validDataMask)
-        biomarkerData = emotionDataInterface.getChannelData(signalData=allSignalData, channelName=modelConstants.signalChannel)
-        allSignalData = self.adaptivePreprocessSignal(allSignalData, biomarkerData)
-
-        # Re-normalize the data after removing bad points.
-        validDataMask = emotionDataInterface.getValidDataMask(allSignalData)
-        allSignalData = self.normalizeSignals(allSignalData=allSignalData, missingDataMask=~validDataMask)
-        biomarkerData = emotionDataInterface.getChannelData(signalData=allSignalData, channelName=modelConstants.signalChannel)
-
-        # Create boolean masks for signals that don’t meet the requirements
-        minLowerBoundaryMask = self.minBoundaryPoints <= (biomarkerData < -modelConstants.minMaxScale + 0.25).sum(dim=-1)  # Number of points below -0.95: batchSize, numSignals
-        minUpperBoundaryMask = self.minBoundaryPoints <= (modelConstants.minMaxScale - 0.25 < biomarkerData).sum(dim=-1)  # Number of points above 0.95: batchSize, numSignals
-        averageDiff = biomarkerData.diff(dim=-1).abs().mean(dim=-1) <= self.maxAverageDiff  # Average difference between consecutive points: batchSize, numSignals
-        minPointsMask = self.minSequencePoints <= validDataMask.sum(dim=-1)  # Minimum number of points: batchSize, numSignals
-        validSignalMask = validDataMask.any(dim=-1)  # Missing data: batchSize, numSignals
-
-        # Combine all masks into a single mask and expand to match dimensions.
-        validSignalMask = minPointsMask & minLowerBoundaryMask & minUpperBoundaryMask & averageDiff & validSignalMask
-        validSignalInds = self.minSignalPresentCount < validSignalMask.sum(dim=0)
-
-        # Filter out the invalid signals
-        allSignalData[~validSignalMask.unsqueeze(-1).unsqueeze(-1).expand_as(allSignalData)] = 0
-        allNumSignalPoints[~validSignalMask] = 0
-
-        return allSignalData[:, validSignalInds, :, :], allNumSignalPoints[:, validSignalInds]
-
-    def adaptivePreprocessSignal(self, allSignalData, signalData):
-        # adaptive filtering based on the general variability of the signal
-        # if the signal has high variability, then the threshold is set higher to prevent loss of valid points
-        # vice versa
-        channel_std = signalData.std(dim=-1, keepdim=True)
-
-        # TODO: finish implement this
-        threshold = self.adaptiveFactor * channel_std
-        diffMagnitude = signalData.diff(dim=-1).abs()
-        badMaxSinglePointDiff = self.maxSinglePointDiff < diffMagnitude
-
-        # Remove any bad data points and neighborring points
-        allSignalData[:, :, :-1][badMaxSinglePointDiff] = 0
-        allSignalData[:, :, 1:][badMaxSinglePointDiff] = 0
 
         return allSignalData

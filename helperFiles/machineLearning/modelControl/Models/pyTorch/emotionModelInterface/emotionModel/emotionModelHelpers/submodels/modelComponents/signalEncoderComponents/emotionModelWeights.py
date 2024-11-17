@@ -1,5 +1,3 @@
-import math
-
 import torch
 from torch import nn
 
@@ -21,23 +19,13 @@ class emotionModelWeights(convolutionalHelpers):
 
         return nn.Sequential(linearLayer, activationFunctions.getActivationMethod(activationMethod))
 
-    # ------------------- Ebbinghaus Forgetting Curve ------------------- #
-
-    @staticmethod
-    def ebbinghausDecayPoly(deltaTimes, signalWeights):
-        return signalWeights.pow(2) / (1 + deltaTimes.pow(2))
-
-    @staticmethod
-    def ebbinghausDecayExp(deltaTimes, signalWeights):
-        return signalWeights.pow(2) * torch.exp(-deltaTimes.pow(2))
-
     # ------------------- Physiological Profile ------------------- #
 
     @staticmethod
     def getInitialPhysiologicalProfile(numExperiments, encodedDimension):
         # Initialize the physiological profile.
         physiologicalProfile = torch.randn(numExperiments, encodedDimension, dtype=torch.float64)
-        physiologicalProfile = nn.init.kaiming_normal_(physiologicalProfile, a=0, mode='fan_in', nonlinearity='leaky_relu')
+        physiologicalProfile = nn.init.normal_(physiologicalProfile, mean=0, std=1/3)
 
         # Initialize the physiological profile as a parameter.
         physiologicalProfile = nn.Parameter(physiologicalProfile)
@@ -57,6 +45,7 @@ class emotionModelWeights(convolutionalHelpers):
     def reversibleNeuralWeightRFC(numSignals, sequenceLength, activationMethod):
         activationMethod, switchActivationDirection = activationMethod.split('_')
         if sequenceLength <= 1: return nn.Identity()
+        print("Deprecated!")
 
         return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=3, numLayers=1, activationMethod='none', switchActivationDirection=switchActivationDirection == "True")
 
@@ -76,6 +65,8 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def postProcessingLayerRFC(numSignals, sequenceLength, activationMethod, switchActivationDirection):
+        print("Deprecated!")
+
         return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=3, numLayers=1, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection == "True")
 
     # ------------------- Emotion/Activity Encoding Architectures ------------------- #

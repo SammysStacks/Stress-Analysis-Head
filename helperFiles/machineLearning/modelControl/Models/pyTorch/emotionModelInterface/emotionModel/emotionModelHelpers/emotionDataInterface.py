@@ -9,14 +9,6 @@ class emotionDataInterface:
     # ---------------------- Labeled Data Getters ---------------------- #
 
     @staticmethod
-    def getReconstructionIndex(allTrainingMasks):
-        # Find the first label index with training points.
-        reconstructionIndices = emotionDataInterface.getLabelInds_withPoints(allTrainingMasks)
-        assert len(reconstructionIndices) != 0, f"We should have some training data: {reconstructionIndices}"
-
-        return reconstructionIndices[0]
-
-    @staticmethod
     def getActivityColumn(allLabels, activityLabelInd):
         return allLabels[:, activityLabelInd]
 
@@ -111,6 +103,14 @@ class emotionDataInterface:
         # metadata dimension: batchSize, numMetadata
 
         return signalData, signalIdentifiers, metadata
+
+    @staticmethod
+    def separateMaskInformation(trainingMask, numLabels):
+        # Separate the training mask information.
+        labelMask = trainingMask[:, 0:numLabels]
+        signalMask = trainingMask[:, numLabels:]
+
+        return labelMask, signalMask
 
     # ---------------------- Signal Data Getters ---------------------- #
 

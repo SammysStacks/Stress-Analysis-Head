@@ -14,21 +14,21 @@ class optimizerMethods:
     def getModelParams(self, submodel, model):
         modelParams = [
             # Specify the model parameters for the signal encoding.
-            {'params': model.inferenceModel.parameters(), 'weight_decay': 0, 'lr': 0.01},
-            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': self.userInputParams["weightDecay"], 'lr': self.userInputParams["learningRate"]/10},
-            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "profileModel" not in name), 'weight_decay': self.userInputParams["weightDecay"], 'lr': self.userInputParams["learningRate"]/10},
-            {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': self.userInputParams["weightDecay"], 'lr': self.userInputParams["learningRate"]},
+            {'params': model.inferenceModel.parameters(), 'weight_decay': 1e-3, 'lr': 0.01},
+            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': 0, 'lr': self.userInputParams["learningRate"]/10},
+            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "profileModel" not in name), 'weight_decay': 1e-4, 'lr': self.userInputParams["learningRate"]/10},
+            {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': 1e-3, 'lr': self.userInputParams["learningRate"]},
         ]
 
         if submodel == modelConstants.emotionModel:
             modelParams.extend([
                 # Specify the model parameters for the emotion prediction.
-                {'params': model.specificEmotionModel.parameters(), 'weight_decay': self.userInputParams["weightDecay"], 'lr': 1E-3},
-                {'params': model.sharedEmotionModel.parameters(), 'weight_decay': self.userInputParams["weightDecay"], 'lr': 1E-3},
+                {'params': model.specificEmotionModel.parameters(), 'weight_decay': 1e-6, 'lr': 1E-3},
+                {'params': model.sharedEmotionModel.parameters(), 'weight_decay': 1e-6, 'lr': 1E-3},
 
                 # Specify the model parameters for the human activity recognition.
-                {'params': model.specificActivityModel.parameters(), 'weight_decay': self.userInputParams["weightDecay"], 'lr': 1E-3},
-                {'params': model.sharedActivityModel.parameters(), 'weight_decay': self.userInputParams["weightDecay"], 'lr': 1E-3},
+                {'params': model.specificActivityModel.parameters(), 'weight_decay': 1e-6, 'lr': 1E-3},
+                {'params': model.sharedActivityModel.parameters(), 'weight_decay': 1e-6, 'lr': 1E-3},
             ])
 
         return modelParams
@@ -38,7 +38,7 @@ class optimizerMethods:
         modelParams = self.getModelParams(submodel, model)
 
         # Set the optimizer and scheduler.
-        optimizer = self.setOptimizer(modelParams, lr=self.userInputParams["learningRate"]/10, weight_decay=self.userInputParams["weightDecay"], optimizerType=self.userInputParams["optimizerType"])
+        optimizer = self.setOptimizer(modelParams, lr=self.userInputParams["learningRate"]/10, weight_decay=0, optimizerType=self.userInputParams["optimizerType"])
         scheduler = self.getLearningRateScheduler(optimizer)
 
         return optimizer, scheduler

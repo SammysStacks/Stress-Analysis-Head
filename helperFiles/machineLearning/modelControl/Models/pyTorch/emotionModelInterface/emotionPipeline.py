@@ -1,4 +1,5 @@
 import time
+
 import torch
 
 from .emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
@@ -8,13 +9,10 @@ from .emotionPipelineHelpers import emotionPipelineHelpers
 class emotionPipeline(emotionPipelineHelpers):
 
     def __init__(self, accelerator, datasetName, allEmotionClasses, numSubjects, userInputParams,
-                 emotionNames, activityNames, featureNames, submodel, numExperiments, reconstructionIndex):
+                 emotionNames, activityNames, featureNames, submodel, numExperiments):
         # General parameters.
         super().__init__(accelerator=accelerator, datasetName=datasetName, allEmotionClasses=allEmotionClasses, numSubjects=numSubjects, userInputParams=userInputParams,
                          emotionNames=emotionNames, activityNames=activityNames, featureNames=featureNames, submodel=submodel, numExperiments=numExperiments)
-        # General parameters.
-        self.reconstructionIndex = reconstructionIndex  # The index of the signal to reconstruct.
-
         # Finish setting up the model.
         self.compileOptimizer(submodel)  # Initialize the optimizer (for back propagation)
 
@@ -34,19 +32,15 @@ class emotionPipeline(emotionPipelineHelpers):
                 with self.accelerator.accumulate(self.model):  # Accumulate the gradients.
                     with self.accelerator.autocast():  # Enable mixed precision auto-casting
                         # Extract the data, labels, and testing/training indices.
-                        if not inferenceTraining: batchSignalInfo, batchSignalLabels, batchTrainingMask, batchTestingMask = self.extractBatchInformation(batchData)
-                        else: batchSignalInfo = batchData; batchTrainingMask, batchTestingMask = None, None
+                        if not inferenceTraining: batchSignalInfo, batchSignalLabels, batchTrainingLabelMask, _, batchTrainingSignalMask, _ = self.extractBatchInformation(batchData)
+                        else: batchSignalInfo = batchData; batchTrainingLabelMask, batchTrainingSignalMask = None, None
 
                         # We can skip this batch, and backpropagation if necessary.
                         if batchSignalInfo.size(0) == 0: self.backpropogateModel(); continue
                         numPointsAnalyzed += batchSignalInfo.size(0)
 
                         # Set the training parameters.
-                        if profileTraining and not specificTraining and not trainSharedLayers: currentTrainingMask = None
-                        elif inferenceTraining: currentTrainingMask = None
-                        else: currentTrainingMask = batchTrainingMask
-
-                        # Unpack the batch data information.
+                        if profileTraining and not specificTraining and not trainSharedLayers: batchTrainingLabelMask, batchTrainingSignalMask = None, None
                         signalBatchData, batchSignalIdentifiers, metaBatchInfo = emotionDataInterface.separateData(batchSignalInfo)
                         # signalBatchData[:, :, :, 0] = timepoints: [further away from survey (300) -> closest to survey (0)]
                         # signalBatchData dimension: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
@@ -56,8 +50,8 @@ class emotionPipeline(emotionPipelineHelpers):
                         if not inferenceTraining:
                             with torch.no_grad():
                                 # Augment the signals to train an arbitrary sequence length and order.
-                                augmentedBatchData = self.dataAugmentation.changeNumSignals(signalBatchData, dropoutPercent=0.2)
-                                augmentedBatchData = self.dataAugmentation.signalDropout(augmentedBatchData, dropoutPercent=0.2)
+                                augmentedBatchData = self.dataAugmentation.changeNumSignals(signalBatchData, dropoutPercent=0.1)
+                                augmentedBatchData = self.dataAugmentation.signalDropout(augmentedBatchData, dropoutPercent=0.1)
                                 # augmentedBatchData: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
                         else: augmentedBatchData = signalBatchData
 
@@ -85,13 +79,12 @@ class emotionPipeline(emotionPipelineHelpers):
                         self.modelHelpers.assertVariableIntegrity(validDataMask, variableName="valid data mask", assertGradient=False)
 
                         # Calculate the error in signal compression (signal encoding loss).
-                        physiologicalSmoothLoss, resampledSmoothLoss = self.organizeLossInfo.calculateSmoothLoss(physiologicalProfile, resampledSignalData, validDataMask, currentTrainingMask, self.reconstructionIndex)
-                        signalReconstructedLoss = self.organizeLossInfo.calculateSignalEncodingLoss(augmentedBatchData, reconstructedSignalData, validDataMask, currentTrainingMask, self.reconstructionIndex)
+                        signalReconstructedLoss = self.organizeLossInfo.calculateSignalEncodingLoss(augmentedBatchData, reconstructedSignalData, validDataMask, batchTrainingSignalMask)
                         if signalReconstructedLoss is None: self.accelerator.print("Not useful loss"); continue
+                        finalLoss = signalReconstructedLoss
 
                         # Initialize basic core loss value.
-                        finalLoss = signalReconstructedLoss + 0.01*(physiologicalSmoothLoss + resampledSmoothLoss)
-                        self.accelerator.print("Final-Recon-Phys-Resamp", finalLoss.item(), signalReconstructedLoss.item(), physiologicalSmoothLoss.item(), resampledSmoothLoss.item(), flush=True)
+                        self.accelerator.print("Final loss:", finalLoss.item(), flush=True)
 
                         # ------------------- Update the Model  -------------------- #
 

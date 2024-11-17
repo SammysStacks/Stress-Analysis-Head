@@ -41,7 +41,7 @@ class modelConstants:
     timeChannel = "time"
 
     # Compile the contextual identifiers.
-    signalIdentifiers = [numSignalPointsSI, signalIndexSI, batchIndexSI]
+    signalIdentifiers = [signalIndexSI, batchIndexSI]
     metadata = [datasetIndexMD, subjectIndexMD]
 
     timeWindows = [90, 120]

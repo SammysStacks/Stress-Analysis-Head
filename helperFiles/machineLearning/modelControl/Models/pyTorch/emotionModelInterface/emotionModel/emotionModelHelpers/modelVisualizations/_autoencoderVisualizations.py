@@ -24,34 +24,6 @@ class autoencoderVisualizations(globalPlottingProtocols):
     # ---------------------------------------------------------------------- #
     # --------------------- Visualize Model Parameters --------------------- #
 
-    def plotEncoder(self, initialSignalData, reconstructedSignals, comparisonTimes, comparisonSignal, epoch, plotTitle="Encoder Prediction", numSignalPlots=1):
-        # Assert the integrity of the incoming data
-        assert initialSignalData.shape[0:2] == comparisonSignal.shape[0:2], f"{initialSignalData.shape} {comparisonSignal.shape}"
-        batchSize, numSignals, numEncodedPoints = comparisonSignal.shape
-        if batchSize == 0: return None
-
-        # Get the signals to plot.
-        plottingSignals = np.arange(0, numSignalPlots)
-        plottingSignals = np.concatenate((plottingSignals, np.sort(numSignals - plottingSignals - 1)))
-        assert plottingSignals[-1] == numSignals - 1, f"{plottingSignals} {numSignals}"
-
-        # Unpack the data
-        datapoints = emotionDataInterface.getChannelData(initialSignalData, channelName=modelConstants.signalChannel)
-        timepoints = emotionDataInterface.getChannelData(initialSignalData, channelName=modelConstants.timeChannel)
-
-        batchInd = 0
-        for signalInd in plottingSignals:
-            # Plot the signal reconstruction.
-            plt.plot(timepoints[batchInd, signalInd, :], datapoints[batchInd, signalInd, :], 'o', color=self.blackColor, markersize=2, alpha=0.5, label="Initial Signal")
-            plt.plot(timepoints[batchInd, signalInd, :], reconstructedSignals[batchInd, signalInd, :], 'o', color=self.lightColors[0], markersize=2, alpha=0.5, label="Reconstructed Signal")
-            plt.plot(comparisonTimes, comparisonSignal[batchInd, signalInd, :], self.lightColors[1], linewidth=2, alpha=0.8, label="Resampled Signal")
-            plt.xlabel("Points")
-            plt.ylabel("Signal (AU)")
-            plt.title(f"{plotTitle.split('/')[-1]}; Signal {signalInd + 1}")
-            plt.legend(loc="best")
-            if self.saveDataFolder: self.displayFigure(self.saveDataFolder + f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf")
-            else: self.clearFigure()
-
     def plotSignalComparison(self, originalSignal, comparisonSignal, epoch, plotTitle, numSignalPlots=1):
         """ originalSignal dimension: batchSize, numSignals, numTotalPoints """
         # Assert the integrity of the incoming data

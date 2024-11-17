@@ -86,12 +86,15 @@ class emotionPipelineHelpers:
 
         # Emotion model training.
         if submodel == modelConstants.emotionModel:
-            if trainSharedLayers: self.setupTrainingFlags(self.model.sharedEmotionModel, trainingFlag=True)
-            if specificTraining: self.setupTrainingFlags(self.model.specificEmotionModel, trainingFlag=True)
+            self.setupTrainingFlags(self.model.sharedEmotionModel, trainingFlag=trainSharedLayers)
+            self.setupTrainingFlags(self.model.specificEmotionModel, trainingFlag=specificTraining)
+            assert not profileTraining, "We cannot train layers during emotion model training."
+        else:
+            # Signal encoder training.
+            self.setupTrainingFlags(self.model.sharedSignalEncoderModel, trainingFlag=trainSharedLayers)
+            self.setupTrainingFlags(self.model.specificSignalEncoderModel, trainingFlag=specificTraining)
 
-        # Signal encoder training
-        if trainSharedLayers: self.setupTrainingFlags(self.model.sharedSignalEncoderModel, trainingFlag=True)
-        if specificTraining: self.setupTrainingFlags(self.model.specificSignalEncoderModel, trainingFlag=True)
+        # Profile model training.
         self.setupTrainingFlags(self.model.specificSignalEncoderModel.profileModel, trainingFlag=profileTraining)
 
     @staticmethod
@@ -110,13 +113,19 @@ class emotionPipelineHelpers:
     def prepareInformation(dataLoader):
         # Load in all the data and labels for final predictions.
         allData, allLabels, allTrainingMasks, allTestingMasks = dataLoader.dataset.getAll()
+
+        # Separate the data and mask information.
+        allTrainingLabelMask, allTrainingSignalMask = emotionDataInterface.separateMaskInformation(allTrainingMasks, allLabels.size(-1))
+        allTestingLabelMask, allTestingSignalMask = emotionDataInterface.separateMaskInformation(allTestingMasks, allLabels.size(-1))
         allSignalData, allSignalIdentifiers, allMetadata = emotionDataInterface.separateData(allData)
+        # allSignalData: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
+        # allTrainingLabelMask, allTestingLabelMask: batchSize, numEmotions + 1 (activity)
+        # allTrainingSignalMask, allTestingSignalMask: batchSize, numSignals
+        # allSignalIdentifiers: batchSize, numSignals, numSignalIdentifiers
+        # allLabels: batchSize, numEmotions + 1 (activity) + numSignals
+        # allMetadata: batchSize, numMetadata
 
-        # Assert the integrity of the dataloader.
-        assert allLabels.shape == allTrainingMasks.shape, "We should specify the training indices for each label"
-        assert allLabels.shape == allTestingMasks.shape, "We should specify the testing indices for each label"
-
-        return allData, allLabels, allTrainingMasks, allTestingMasks, allSignalData, allSignalIdentifiers, allMetadata
+        return allLabels, allSignalData, allSignalIdentifiers, allMetadata, allTrainingLabelMask, allTrainingSignalMask, allTestingLabelMask, allTestingSignalMask
 
     def extractBatchInformation(self, batchData):
         # Extract the data, labels, and testing/training indices.
@@ -125,4 +134,7 @@ class emotionPipelineHelpers:
         batchTrainingMask, batchTestingMask = batchTrainingMask.to(self.accelerator.device), batchTestingMask.to(self.accelerator.device)
         batchSignalInfo, batchSignalLabels = batchSignalInfo.to(self.accelerator.device), batchSignalLabels.to(self.accelerator.device)
 
-        return batchSignalInfo, batchSignalLabels, batchTrainingMask, batchTestingMask
+        # Separate the mask information.
+        batchTrainingLabelMask, batchTrainingSignalMask = emotionDataInterface.separateMaskInformation(batchTrainingMask, batchSignalLabels.size(-1))
+        batchTestingLabelMask, batchTestingSignalMask = emotionDataInterface.separateMaskInformation(batchTestingMask, batchSignalLabels.size(-1))
+        return batchSignalInfo, batchSignalLabels, batchTrainingLabelMask, batchTestingLabelMask, batchTrainingSignalMask, batchTestingSignalMask

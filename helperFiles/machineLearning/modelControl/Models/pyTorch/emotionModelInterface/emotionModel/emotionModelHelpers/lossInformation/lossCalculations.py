@@ -35,41 +35,32 @@ class lossCalculations:
         #       Regression Options: "MeanSquaredError", "MeanAbsoluteError", "Huber", "SmoothL1Loss", "PoissonNLLLoss", "GammaNLLLoss"
         #       Custom Regression Options: "R2", "pearson", "LogCoshLoss", "weightedMSE"
         # Initialize the loss function WITHOUT the class weights.
-        self.MeanSquaredError = pytorchLossMethods(lossType="MeanSquaredError", class_weights=None).loss_fn
-        self.smoothL1Loss = nn.SmoothL1Loss(reduction='none', beta=0.1)
+        self.meanSquaredError = pytorchLossMethods(lossType="MeanSquaredError", class_weights=None).loss_fn
+        self.smoothL1Loss = nn.SmoothL1Loss(reduction='none', beta=0.25)
 
     # -------------------------- Loss Calculations ------------------------- #
 
     @staticmethod
     def getData(data, mask):
         if data is None or mask is None: return data
-        return data[mask]
+        return data[mask.expand_as(data)]
 
-    def getReconstructionDataMask(self, allLabelsMask, reconstructionIndex):
-        # Find the boolean flags for the data involved in the loss calculation.
-        if allLabelsMask is not None and reconstructionIndex is not None:
-            return self.dataInterface.getEmotionColumn(allLabelsMask, reconstructionIndex)  # Dim: numExperiments
-        return None
+    def calculateSignalEncodingLoss(self, allInitialSignalData, allReconstructedSignalData, allValidDataMask, allSignalMask):
+        # Get the relevant data for the loss calculation.
+        allDatapoints = emotionDataInterface.getChannelData(allInitialSignalData, channelName=modelConstants.signalChannel)
+        validDataMask = allValidDataMask.clone()
 
-    def calculateSignalEncodingLoss(self, allInitialSignalData, allReconstructedSignalData, allValidDataMask, allLabelsMask, reconstructionIndex):
-        # Find the boolean flags for the data involved in the loss calculation.
-        reconstructionDataMask = self.getReconstructionDataMask(allLabelsMask, reconstructionIndex)
-        # reconstructionDataMask dimension: numExperiments
-
-        # Isolate the signals for this loss (For example, training vs. testing).
-        reconstructedSignalData = self.getData(allReconstructedSignalData, reconstructionDataMask)  # Dim: numExperiments, numSignals, maxSequenceLength
-        initialSignalData = self.getData(allInitialSignalData, reconstructionDataMask)  # Dim: numExperiments, numSignals, maxSequenceLength, numChannels
-        validDataMask = self.getData(allValidDataMask, reconstructionDataMask)  # Dim: numExperiments, numSignals, maxSequenceLength
-        if validDataMask.sum() == 0: print("No batches"); return None
+        # Compile the relevant data for the loss calculation.
+        if allSignalMask is not None: validDataMask[~allSignalMask.unsqueeze(-1).expand_as(validDataMask)] = False
+        if validDataMask.sum() == 0: print("No valid batches"); return None
 
         # Calculate the error in signal reconstruction (encoding loss).
-        datapoints = emotionDataInterface.getChannelData(initialSignalData, channelName=modelConstants.signalChannel)
-        signalReconstructedLoss = self.smoothL1Loss(input=reconstructedSignalData, target=datapoints)[validDataMask]
+        signalReconstructedLoss = self.smoothL1Loss(input=allReconstructedSignalData[validDataMask], target=allDatapoints[validDataMask])
         # signalReconstructedLoss dimension: numExperiments, numSignals, maxSequenceLength
 
         # Calculate the uncertainty in the data.
-        dataUncertainty = self.smoothL1Loss(input=datapoints, target=self.smoothingFilter(datapoints, kernelSize=3))[validDataMask]
-        signalReconstructedLoss[signalReconstructedLoss < dataUncertainty] = signalReconstructedLoss[signalReconstructedLoss < dataUncertainty] / 100
+        dataUncertainty = self.smoothL1Loss(input=allDatapoints, target=self.smoothingFilter(allDatapoints, kernelSize=3))[validDataMask]
+        signalReconstructedLoss[signalReconstructedLoss < dataUncertainty] = signalReconstructedLoss[signalReconstructedLoss < dataUncertainty] / 2
         # dataUncertainty: numExperiments, numSignals, maxSequenceLength
 
         # Finalize the loss calculation.
@@ -80,33 +71,14 @@ class lossCalculations:
 
         return signalReconstructedLoss
 
-    def calculateSmoothLoss(self, allPhysiologicalProfile, allResampledSignalData, allValidDataMask, allLabelsMask, reconstructionIndex):
-        # Find the boolean flags for the data involved in the loss calculation.
-        reconstructionDataMask = self.getReconstructionDataMask(allLabelsMask, reconstructionIndex)
-        # reconstructionDataMask dimension: numExperiments
-
-        # Isolate the signals for this loss (For example, training vs. testing).
-        resampledSignalData = self.getData(allResampledSignalData, reconstructionDataMask)  # Dim: numExperiments, numSignals, encodedDimension
-        physiologicalProfile = self.getData(allPhysiologicalProfile, reconstructionDataMask)  # Dim: numExperiments, maxSequenceLength
-        validDataMask = self.getData(allValidDataMask, reconstructionDataMask)  # Dim: numExperiments, numSignals, maxSequenceLength
-        if validDataMask.sum() == 0: print("No batches"); return None, None
-        validSignalMask = torch.any(validDataMask, dim=-1)
-
-        # Calculate the smooth loss.
-        resampledSmoothLoss = resampledSignalData[validSignalMask].diff(n=2, dim=-1).pow(2)
-        physiologicalSmoothLoss = physiologicalProfile.diff(n=2, dim=-1).pow(2)
-        # resampledSmoothLoss dimension: numExperiments, numSignals, encodedDimension
+    def calculateSmoothLoss(self, allPhysiologicalProfile):
+        physiologicalSmoothLoss = allPhysiologicalProfile.diff(n=2, dim=-1).pow(2).mean()
         # physiologicalSmoothLoss dimension: numExperiments, maxSequenceLength
-
-        # Calculate the error in signal reconstruction (encoding loss).
-        physiologicalSmoothLoss = physiologicalSmoothLoss.mean()
-        resampledSmoothLoss = resampledSmoothLoss.mean()
 
         # Assert that nothing is wrong with the loss calculations.
         self.modelHelpers.assertVariableIntegrity(physiologicalSmoothLoss, variableName="physiological smooth loss", assertGradient=False)
-        self.modelHelpers.assertVariableIntegrity(resampledSmoothLoss, variableName="resampled smooth loss", assertGradient=False)
 
-        return physiologicalSmoothLoss, resampledSmoothLoss
+        return physiologicalSmoothLoss
 
     @staticmethod
     def smoothingFilter(data, kernel=(), kernelSize=None):
@@ -122,11 +94,9 @@ class lossCalculations:
 
         # Expand kernel to match data channels
         kernel = kernel.expand(data.size(1), 1, kernel.size(-1))
-        if data.dim() == 2: data = data.unsqueeze(0)  # Add batch dimension
 
         # Apply the 1D convolution along the last dimension with padding
         filtered_data = torch.nn.functional.conv1d(data, kernel, padding=kernel.size(-1) // 2, groups=data.size(1))
-        filtered_data = filtered_data.squeeze(0) if data.dim() == 2 else filtered_data
 
         return filtered_data
 
@@ -240,23 +210,6 @@ class lossCalculations:
 
     # ---------------------------------------------------------------------- #
     # ----------------------- Standardization Losses ----------------------- #
-
-    def errorPerClass(self, output, target):
-        with torch.no_grad():
-            # Calculate the error per class
-            batchSize, num_classes = output.size()
-            class_errors = torch.zeros(num_classes)
-            uniqueClasses = torch.unique(target[0], return_inverse=False, return_counts=False, dim=-1, sorted=True)
-
-            for i in range(len(uniqueClasses)):
-                # Mask for the current class
-                class_mask = (target[0] == uniqueClasses[i])
-
-                if True in class_mask:
-                    class_errors[i] = self.positionalEncoderLoss(output[:, class_mask], target[:, class_mask]).mean() * (num_classes-1)**2
-
-            print("Loss per class:", class_errors)
-            print("Final classes:", output[0:2])
 
     @staticmethod
     def gradient_penalty(inputs, outputs, dims):

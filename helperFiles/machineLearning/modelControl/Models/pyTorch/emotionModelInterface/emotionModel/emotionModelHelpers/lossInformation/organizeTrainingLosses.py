@@ -17,52 +17,33 @@ class organizeTrainingLosses(lossCalculations):
 
     def storeTrainingLosses(self, submodel, modelPipeline, lossDataLoader):
         self.accelerator.print(f"\nCalculating loss for {modelPipeline.model.datasetName} model", flush=True)
-
-        # Prepare the model/data for evaluation.
         modelPipeline.setupTrainingFlags(modelPipeline.model, trainingFlag=False)  # Set all models into evaluation mode.
         model = modelPipeline.model
 
         # Load in all the data and labels for final predictions and calculate the activity and emotion class weights.
-        allData, allLabels, allTrainingMasks, allTestingMasks, allSignalData, allSignalIdentifiers, allMetadata = modelPipeline.prepareInformation(lossDataLoader)
+        allLabels, allSignalData, allSignalIdentifiers, allMetadata, allTrainingLabelMask, allTrainingSignalMask, allTestingLabelMask, allTestingSignalMask = modelPipeline.prepareInformation(lossDataLoader)
+        model, allSignalData, allSignalIdentifiers, allMetadata = (tensor.to(self.accelerator.device) for tensor in (model, allSignalData, allSignalIdentifiers, allMetadata))
+        # allSignalData: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
+        # allTrainingLabelMask, allTestingLabelMask: batchSize, numEmotions + 1 (activity)
+        # allTrainingSignalMask, allTestingSignalMask: batchSize, numSignals
+        # allSignalIdentifiers: batchSize, numSignals, numSignalIdentifiers
+        # allLabels: batchSize, numEmotions + 1 (activity) + numSignals
+        # allMetadata: batchSize, numMetadata
 
         # Stop gradient tracking.
         with torch.no_grad():
-            model, allSignalData, allSignalIdentifiers, allMetadata = (tensor.to(self.accelerator.device) for tensor in (model, allSignalData, allSignalIdentifiers, allMetadata))
-
             t1 = time.time()
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
             validDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = model.fullPass(submodel, allSignalData, allSignalIdentifiers, allMetadata, device=self.accelerator.device, inferenceTraining=False)
-            t2 = time.time(); self.accelerator.print("Full Pass", t2 - t1)
+            t2 = time.time(); self.accelerator.print("\tFull Pass", t2 - t1)
 
             # Calculate the signal encoding loss.
-            signalReconstructedTrainingLoss = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, validDataMask, allTrainingMasks, modelPipeline.reconstructionIndex)
-            signalReconstructedTestingLoss = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, validDataMask, allTestingMasks, modelPipeline.reconstructionIndex)
-            self.accelerator.print("Reconstruction loss values:", signalReconstructedTrainingLoss.item(), signalReconstructedTestingLoss.item())
-
-            # Calculate the smoothness loss.
-            physiologicalSmoothTrainingLoss, resampledSmoothTrainingLoss = self.calculateSmoothLoss(physiologicalProfile, resampledSignalData, validDataMask, allTrainingMasks, modelPipeline.reconstructionIndex)
-            physiologicalSmoothTestingLoss, resampledSmoothTestingLoss = self.calculateSmoothLoss(physiologicalProfile, resampledSignalData, validDataMask, allTestingMasks, modelPipeline.reconstructionIndex)
-            self.accelerator.print("Smoothness loss values (Phy-Resamp):", physiologicalSmoothTrainingLoss.item(), resampledSmoothTrainingLoss.item())
+            signalReconstructedTrainingLoss = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, validDataMask, allTrainingSignalMask)
+            signalReconstructedTestingLoss = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, validDataMask, allTestingSignalMask)
 
             # Store the signal encoder loss information.
             self.storeLossInformation(signalReconstructedTrainingLoss, signalReconstructedTestingLoss, model.specificSignalEncoderModel.trainingLosses_signalReconstruction, model.specificSignalEncoderModel.testingLosses_signalReconstruction)
-            self.storeLossInformation(physiologicalSmoothTrainingLoss, physiologicalSmoothTestingLoss, model.specificSignalEncoderModel.trainingLosses_smoothPhysiology, model.specificSignalEncoderModel.testingLosses_smoothPhysiology)
-            self.storeLossInformation(resampledSmoothTrainingLoss, resampledSmoothTestingLoss, model.specificSignalEncoderModel.trainingLosses_smoothResampled, model.specificSignalEncoderModel.testingLosses_smoothResampled)
-
-            # if submodel == modelConstants.emotionModel:
-            # Segment the data into its time window.
-            # segmentedSignalData = dataAugmentation.getRecentSignalPoints(allSignalData, self.generalTimeWindow)
-
-            # Calculate the signal encoding loss.
-            # manifoldReconstructedTestingLoss, manifoldMeanTestingLoss, manifoldMinMaxTestingLoss = \
-            #     self.calculateManifoldReductionLoss(allEncodedData, allManifoldData, allTransformedManifoldData, allReconstructedEncodedData, allTestingMasks, reconstructionIndex)
-            # manifoldReconstructedTrainingLoss, manifoldMeanTrainingLoss, manifoldMinMaxTrainingLoss = \
-            #     self.calculateManifoldReductionLoss(allEncodedData, allManifoldData, allTransformedManifoldData, allReconstructedEncodedData, allTrainingMasks, reconstructionIndex)
-            # # Store the latent reconstruction loss.
-            # self.storeLossInformation(manifoldReconstructedTrainingLoss, manifoldReconstructedTestingLoss, model.signalMappingModel.trainingLosses_encodingReconstruction,
-            #                           model.signalMappingModel.testingLosses_encodingReconstruction)
-            # self.storeLossInformation(manifoldMinMaxTrainingLoss, manifoldMinMaxTestingLoss, model.signalMappingModel.trainingLosses_manifoldMinMax, model.signalMappingModel.testingLosses_manifoldMinMax)
-            # self.storeLossInformation(manifoldMeanTrainingLoss, manifoldMeanTestingLoss, model.signalMappingModel.trainingLosses_manifoldMean, model.signalMappingModel.testingLosses_manifoldMean)
+            self.accelerator.print("Reconstruction loss values:", signalReconstructedTrainingLoss.item(), signalReconstructedTestingLoss.item())
 
             # Calculate the activity classification accuracy/loss and assert the integrity of the loss.
             # activityTestingLoss = self.calculateActivityLoss(allActivityDistributions, allLabels, allTestingMasks, activityClassWeights)

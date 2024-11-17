@@ -197,7 +197,7 @@ class modelMigration:
     # ------------------------ Saving Model Methods ------------------------ #
 
     def saveModels(self, modelPipelines, datasetNames, sharedModelWeights, submodelsSaving,
-                   submodel, trainingDate, numEpochs, metaTraining, saveModelAttributes=True, storeOptimizer=False):
+                   submodel, trainingDate, numEpochs, metaTraining, saveModelAttributes=True):
         # Assert the integrity of the input variables.
         assert len(modelPipelines) == len(datasetNames), f"You provided {len(modelPipelines)} models to save, but only {len(datasetNames)} datasetNames."
         assert 0 < len(modelPipelines), "No models provided to save."

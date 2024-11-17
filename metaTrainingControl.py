@@ -37,11 +37,8 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2024-11-12"  # The current date we are training the model. Unique identifier of this training set.
-    testSplitRatio = 0.25  # The percentage of testing points.
-
-    # Training flags.
-    storeLoss = True  # If you want to record any loss values.
+    trainingDate = "2024-11-16"  # The current date we are training the model. Unique identifier of this training set.
+    testSplitRatio = 0.2  # The percentage of testing points.
 
     # ----------------------- Parse Model Parameters ----------------------- #
 
@@ -55,16 +52,16 @@ if __name__ == "__main__":
     parser.add_argument('--irreversibleLearningProtocol', type=str, default='FC', help='The learning protocol for the model: CNN, FC')
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are using: cpu, cuda')
     parser.add_argument('--learningRate', type=float, default=1e-2, help='The learning rate of the model.')  # Higher values converge faster; Lower values create stable convergence.
-    parser.add_argument('--weightDecay', type=float, default=1e-4, help='The weight decay of the model.')  # Higher values do not converge as far; Lower values create unstable convergence.
+    parser.add_argument('--weightDecay', type=float, default=0, help='DEPRECATED; The weight decay of the model.')  # Higher values do not converge as far; Lower values create unstable convergence.
 
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--goldenRatio', type=int, default=1, help='The number of shared layers per specific layer.')
-    parser.add_argument('--numSignalEncoderLayers', type=int, default=6, help='The number of layers in the model.')
+    parser.add_argument('--numSignalEncoderLayers', type=int, default=8, help='The number of layers in the model.')
     parser.add_argument('--encodedDimension', type=int, default=128, help='The dimension of the encoded signal.')
  
     # Add arguments for the neural operator.
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
-    parser.add_argument('--waveletType', type=str, default='bior3.7', help='The wavelet type for the wavelet transform: bior3.7, db3, dmey, etc')
+    parser.add_argument('--waveletType', type=str, default='bior2.2', help='The wavelet type for the wavelet transform: bior3.7, db3, dmey, etc')
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions).')
@@ -78,8 +75,8 @@ if __name__ == "__main__":
     print("Arguments:", userInputParams)
 
     # Compile additional input parameters.
-    userInputParams = modelParameters.getNeuralParameters(userInputParams)
     print("Frequency resolution:", modelConstants.timeWindows[-1]/userInputParams['encodedDimension'], "\n")
+    userInputParams = modelParameters.getNeuralParameters(userInputParams)
 
     # --------------------------- Setup Training --------------------------- #
 
@@ -90,15 +87,13 @@ if __name__ == "__main__":
     modelMigration = modelMigration(accelerator)  # Initialize the model migration class.
 
     # Specify training parameters
-    numEpochs, numEpoch_toPlot, numEpoch_toSaveFull = modelParameters.getEpochInfo()  # The number of epochs to plot and save the model.
-    datasetNames, metaDatasetNames, allDatasetNames = modelParameters.compileModelNames()  # Compile the model names.
     trainingDate = modelCompiler.embedInformation(submodel, userInputParams, trainingDate)  # Embed training information into the name.
+    datasetNames, metaDatasetNames, allDatasetNames = modelParameters.compileModelNames()  # Compile the model names.
+    numEpochs, numEpoch_toPlot, numEpoch_toSaveFull = modelParameters.getEpochInfo()  # The number of epochs to plot and save the model.
 
     # Compile the final modules.
     allModels, allDataLoaders, allMetaModels, allMetadataLoaders, _ = modelCompiler.compileModelsFull(metaDatasetNames, submodel, testSplitRatio, datasetNames)
-
-    # Store the initial loss information.
-    if storeLoss: trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)
+    trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)  # Calculate the initial loss.
 
     # -------------------------- Meta-model Training ------------------------- #
 
@@ -114,7 +109,7 @@ if __name__ == "__main__":
         trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders)
 
         # Store the initial loss information and plot.
-        if storeLoss: trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)
+        trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)
         if plotSteps: trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate)
 
         # Save the model sometimes (only on the main device).
