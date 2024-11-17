@@ -44,11 +44,6 @@ class emotionPipelineHelpers:
         self.dataAugmentation = dataAugmentation()
         self.modelHelpers = modelHelpers()
 
-        # Finish setting up the model.
-        if submodel == modelConstants.emotionModel:
-            self.model.sharedEmotionModel.lastActivityLayer = self.modelHelpers.getLastActivationLayer(self.organizeLossInfo.activityClass_lossType, predictingProb=True)  # Apply activation on the last layer: 'softmax', 'logsoftmax', or None.
-            self.model.sharedEmotionModel.lastEmotionLayer = self.modelHelpers.getLastActivationLayer(self.organizeLossInfo.emotionDist_lossType, predictingProb=True)  # Apply activation on the last layer: 'softmax', 'logsoftmax', or None.
-
         # Assert data integrity of the inputs.
         assert len(self.emotionNames) == len(self.allEmotionClasses), f"Found {len(self.emotionNames)} emotions with {len(self.allEmotionClasses)} classes specified."
         assert len(self.activityNames) == self.numActivities, f"Found {len(self.activityNames)} activities with {self.numActivities} classes specified."
@@ -73,9 +68,7 @@ class emotionPipelineHelpers:
         else: raise Exception()
 
     def setupTraining(self, submodel, inferenceTraining, profileTraining, specificTraining, trainSharedLayers):
-        # Do not train the model at all.
-        assert specificTraining == trainSharedLayers, "The training flags are not set correctly."
-        self.setupTrainingFlags(self.model, trainingFlag=False)
+        self.setupTrainingFlags(self.model, trainingFlag=False)  # Set the model to evaluation mode.
 
         if inferenceTraining:
             # Prepare the model for inference training.

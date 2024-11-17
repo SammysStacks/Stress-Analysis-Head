@@ -35,7 +35,7 @@ def getActivationMethod(activationMethod):
 
 
 class reversibleLinearSoftSign(reversibleInterface):
-    def __init__(self, invertedActivation=False, inversionPoint=2):
+    def __init__(self, invertedActivation=False, inversionPoint=1.5):
         super(reversibleLinearSoftSign, self).__init__()
         self.invertedActivation = invertedActivation  # Whether the non-linearity term is inverted
         self.inversionPoint = inversionPoint  # The point at which the activation inverts. Higher values increase the non-linearity and decrease the final magnitude.
@@ -131,14 +131,23 @@ class boundedExp(nn.Module):
 
         return linearTerm * exponentialTerm
 
+class reversibleActivationInterface(reversibleInterface):
+    def __init__(self, activationFunctions):
+        super(reversibleActivationInterface, self).__init__()
+        self.activationFunctions = activationFunctions
+
+    def forward(self, x): return self.activationFunctions(x)
+
 
 if __name__ == "__main__":
     # Test the activation functions
     data = torch.randn(2, 10, 100, dtype=torch.float64)
-    data = data - data.min(dim=-1, keepdim=True).values
-    data = data / data.max(dim=-1, keepdim=True).values
-    data = 2 * data - 1
+    data = nn.init.normal_(data, mean=0, std=1 / 3)
+
+    # Compile model.
+    activationModel = nn.Sequential()
+    for i in range(100): activationModel.append(reversibleLinearSoftSign(invertedActivation=i % 2 == 0))
 
     # Perform the forward and inverse pass.
-    activationClass = reversibleLinearSoftSign(invertedActivation=True)
-    _forwardData, _reconstructedData = activationClass.checkReconstruction(data, atol=1e-6, numLayers=100)
+    activationClass = reversibleActivationInterface(activationModel)
+    _forwardData, _reconstructedData = activationClass.checkReconstruction(data, atol=1e-6, numLayers=1)
