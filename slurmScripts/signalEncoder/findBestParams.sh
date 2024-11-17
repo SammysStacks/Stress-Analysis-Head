@@ -6,7 +6,7 @@ encodedDimensions=(128 256)
 signalEncoderLayers=(8 16 32 48)
 goldenRatios=(1 2 4 8)
 weightDecays=(0)
-lrs=(0.1)
+lrs=(0.01)
 
 for optimizer in "${optimizers[@]}"
 do
