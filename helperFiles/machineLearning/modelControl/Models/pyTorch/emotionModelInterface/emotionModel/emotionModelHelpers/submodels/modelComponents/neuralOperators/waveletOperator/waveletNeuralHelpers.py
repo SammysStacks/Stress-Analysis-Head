@@ -64,7 +64,7 @@ class waveletNeuralHelpers(emotionModelWeights):
         self.idwt = DWT1DInverse(wave=self.waveletType, mode=self.mode)
 
         # Check the final output sizes.
-        self.lowFrequencyShape, self.highFrequenciesShapes = self.getWaveletDimensions(self.sequenceLength)
+        self.lowFrequencyShape, self.highFrequenciesShapes = self.getWaveletDimensions(self.expectedSequenceLength)
 
     def assertValidParams(self):
         # Assert that the frequency protocol is valid.

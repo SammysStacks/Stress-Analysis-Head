@@ -28,7 +28,7 @@ class neuralOperatorInterface(emotionModelWeights):
 
         # Hardcoded parameters.
         activationMethod = f"{emotionModelWeights.getActivationType()}_{switchActivationDirection}"
-        mode = 'periodization'  # Mode for the waveletType transform.
+        mode = 'symmetric'  # Mode for the waveletType transform.
         numDecompositions = 1
 
         # Hardcoded parameters.

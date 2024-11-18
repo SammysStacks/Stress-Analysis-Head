@@ -2,10 +2,9 @@
 
 waveletTypes=('bior2.2')
 optimizers=('RAdam')
-encodedDimensions=(256 512)
-signalEncoderLayers=(1 2 3 4 5 6)
-goldenRatios=(1 2 3 4 5 6)
-lrs=(0.01)
+encodedDimensions=(256 300)
+signalEncoderLayers=(1 2 4 8 16 32 48)
+goldenRatios=(1 2 4 8 16)
 
 for optimizer in "${optimizers[@]}"
 do
@@ -17,24 +16,21 @@ do
       do
         for numSignalEncoderLayers in "${signalEncoderLayers[@]}"
         do
-          for lr in "${lrs[@]}"
-          do
-            # Check if goldenRatio is greater than numSignalEncoderLayers
-            if [ "$goldenRatio" -gt "$numSignalEncoderLayers" ]; then
-              
+          # Check if goldenRatio is greater than numSignalEncoderLayers
+          if [ "$goldenRatio" -gt "$numSignalEncoderLayers" ]; then
+
 continue  # Skip this iteration if the condition is true
-            fi
+          fi
 
-            echo "Submitting job with $numSignalEncoderLayers numSignalEncoderLayers, $goldenRatio goldenRatio, $encodedDimension encodedDimension, $waveletType waveletType, $optimizer optimizer, $lr lr on $1"
+          echo "Submitting job with $numSignalEncoderLayers numSignalEncoderLayers, $goldenRatio goldenRatio, $encodedDimension encodedDimension, $waveletType waveletType, $optimizer optimizer on $1"
 
-            if [ "$1" == "CPU" ]; then
-                sbatch -J "signalEncoder_numSignalEncoderLayers_${numSignalEncoderLayers}_goldenRatio_${goldenRatio}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_CPU.sh "$numSignalEncoderLayers" "$goldenRatio" "$encodedDimension" "$1" "$waveletType" "$optimizer" "$lr"
-            elif [ "$1" == "GPU" ]; then
-                sbatch -J "signalEncoder_numSignalEncoderLayers_${numSignalEncoderLayers}_goldenRatio_${goldenRatio}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_GPU.sh "$numSignalEncoderLayers" "$goldenRatio" "$encodedDimension" "$1" "$waveletType" "$optimizer" "$lr"
-            else
-                echo "No known device listed: $1"
-            fi
-          done
+          if [ "$1" == "CPU" ]; then
+              sbatch -J "signalEncoder_numSignalEncoderLayers_${numSignalEncoderLayers}_goldenRatio_${goldenRatio}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_CPU.sh "$numSignalEncoderLayers" "$goldenRatio" "$encodedDimension" "$1" "$waveletType" "$optimizer"
+          elif [ "$1" == "GPU" ]; then
+              sbatch -J "signalEncoder_numSignalEncoderLayers_${numSignalEncoderLayers}_goldenRatio_${goldenRatio}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_GPU.sh "$numSignalEncoderLayers" "$goldenRatio" "$encodedDimension" "$1" "$waveletType" "$optimizer"
+          else
+              echo "No known device listed: $1"
+          fi
         done
       done
     done

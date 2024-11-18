@@ -32,7 +32,7 @@ class waveletNeuralOperatorWeights(waveletNeuralHelpers):
         elif skipConnectionProtocol == 'CNN':
             skipConnectionModel = self.skipConnectionCNN(numSignals=self.numInputSignals)
         elif skipConnectionProtocol == 'FC':
-            skipConnectionModel = self.skipConnectionFC(sequenceLength=self.sequenceLength)
+            skipConnectionModel = self.skipConnectionFC(sequenceLength=self.expectedSequenceLength)
         else: raise ValueError("The skip connection protocol must be in ['none', 'identity', 'CNN'].")
 
         return skipConnectionModel

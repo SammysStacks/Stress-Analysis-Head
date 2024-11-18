@@ -23,12 +23,12 @@ class optimizerMethods:
         if submodel == modelConstants.emotionModel:
             modelParams.extend([
                 # Specify the model parameters for the emotion prediction.
-                {'params': model.specificEmotionModel.parameters(), 'weight_decay': 1e-6, 'lr': 1E-3},
-                {'params': model.sharedEmotionModel.parameters(), 'weight_decay': 1e-6, 'lr': 1E-3},
+                {'params': model.specificEmotionModel.parameters(), 'weight_decay': 1e-6, 'lr': self.userInputParams["emotionLearningRate"]},
+                {'params': model.sharedEmotionModel.parameters(), 'weight_decay': 1e-6, 'lr': self.userInputParams["emotionLearningRate"]},
 
                 # Specify the model parameters for the human activity recognition.
-                {'params': model.specificActivityModel.parameters(), 'weight_decay': 1e-6, 'lr': 1E-3},
-                {'params': model.sharedActivityModel.parameters(), 'weight_decay': 1e-6, 'lr': 1E-3},
+                {'params': model.specificActivityModel.parameters(), 'weight_decay': 1e-6, 'lr': self.userInputParams["activityLearningRate"]},
+                {'params': model.sharedActivityModel.parameters(), 'weight_decay': 1e-6, 'lr': self.userInputParams["activityLearningRate"]},
             ])
 
         return modelParams
