@@ -145,7 +145,7 @@ class emotionModelHead(nn.Module):
         assert self.numSignalEncoderLayers == numSharedLayers, f"The number of layers in the shared model ({numSharedLayers}) does not match the number of layers in the model ({self.numSignalEncoderLayers})."
         if self.numSignalEncoderLayers % self.goldenRatio == 0 and self.numSignalEncoderLayers != 0: assert numSpecificLayers == self.numSignalEncoderLayers // self.goldenRatio, f"The number of layers in the specific model ({numSpecificLayers}) does not match the number of layers in the model ({self.numSignalEncoderLayers})."
 
-    def forward(self, submodel, signalData, signalIdentifiers, metadata, device, inferenceTraining=False, trainingFlag=False):
+    def forward(self, submodel, signalData, signalIdentifiers, metadata, device, inferenceTraining=False):
         # timepoints: [further away from survey (300) -> closest to survey (0)]
         # signalData: [batchSize, numSignals, maxSequenceLength, numChannels]
         # signalIdentifiers: [batchSize, numSignals, numSignalIdentifiers]
