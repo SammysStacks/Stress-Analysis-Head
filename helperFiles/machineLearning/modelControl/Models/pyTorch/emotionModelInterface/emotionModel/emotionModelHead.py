@@ -144,7 +144,7 @@ class emotionModelHead(nn.Module):
         assert self.numSignalEncoderLayers == numSharedLayers, f"The number of layers in the shared model ({numSharedLayers}) does not match the number of layers in the model ({self.numSignalEncoderLayers})."
         if self.numSignalEncoderLayers % self.goldenRatio == 0 and self.numSignalEncoderLayers != 0: assert numSpecificLayers == self.numSignalEncoderLayers // self.goldenRatio, f"The number of layers in the specific model ({numSpecificLayers}) does not match the number of layers in the model ({self.numSignalEncoderLayers})."
 
-    def forward(self, submodel, signalData, signalIdentifiers, metadata, device, inferenceTraining=False):
+    def forward(self, submodel, signalData, signalIdentifiers, metadata, device, inferenceTraining=False, trainingFlag=False):
         # timepoints: [further away from survey (300) -> closest to survey (0)]
         # signalData: [batchSize, numSignals, maxSequenceLength, numChannels]
         # signalIdentifiers: [batchSize, numSignals, numSignalIdentifiers]
@@ -188,7 +188,7 @@ class emotionModelHead(nn.Module):
         # resampledSignalData: batchSize, numSignals, encodedDimension
 
         # Resample the signal data.
-        reconstructedSignalData = self.interpolateData(signalData, resampledSignalData)
+        reconstructedSignalData = self.interpolateData(signalData, resampledSignalData, trainingFlag)
         # reconstructedSignalData: batchSize, numSignals, maxSequenceLength
 
         # Visualize the data transformations within signal encoding.
@@ -289,10 +289,11 @@ class emotionModelHead(nn.Module):
         plt.legend()
         plt.show()
 
-    def interpolateData(self, signalData, resampledSignalData):
+    def interpolateData(self, signalData, resampledSignalData, trainingFlag):
         # Extract the dimensions of the data.
         timepoints = emotionDataInterface.getChannelData(signalData, channelName=modelConstants.timeChannel)
         batchSize, numSignals, encodedDimension = resampledSignalData.size()
+        if trainingFlag: timepoints = timepoints + torch.randn_like(timepoints) * 1e-4  # Add noise to the timepoints to prevent exact matches.
 
         # Align the timepoints to the physiological times.
         reversedPhysiologicalTimes = torch.flip(self.sharedSignalEncoderModel.pseudoEncodedTimes, dims=[0])
@@ -308,7 +309,7 @@ class emotionModelHead(nn.Module):
         closestPhysiologicalTimesLeft = torch.gather(input=physiologicalTimesExpanded, dim=2, index=validIndsLeft)  # Initialize the tensor.
         closestPhysiologicalDataRight = torch.gather(input=resampledSignalData, dim=2, index=validIndsRight)  # Initialize the tensor.
         closestPhysiologicalDataLeft = torch.gather(input=resampledSignalData, dim=2, index=validIndsLeft)  # Initialize the tensor.
-        assert ((closestPhysiologicalTimesLeft <= timepoints) & (timepoints <= closestPhysiologicalTimesRight)).all(), "The timepoints must be within the range of the closest physiological times."
+        assert ((closestPhysiologicalTimesLeft <= timepoints + 0.1) & (timepoints - 0.1 <= closestPhysiologicalTimesRight)).all(), "The timepoints must be within the range of the closest physiological times."
         # closestPhysiologicalData dimension: batchSize, numSignals, maxSequenceLength
 
         # Perform linear interpolation.

@@ -29,7 +29,7 @@ class emotionPipeline(emotionPipelineHelpers):
 
             # For each data batch in the epoch.
             for batchDataInd, batchData in enumerate(dataLoader):
-                with self.accelerator.accumulate(self.model):  # Accumulate the gradients.
+                with (self.accelerator.accumulate(self.model)):  # Accumulate the gradients.
                     with self.accelerator.autocast():  # Enable mixed precision auto-casting
                         # Extract the data, labels, and testing/training indices.
                         if not inferenceTraining: batchSignalInfo, batchSignalLabels, batchTrainingLabelMask, _, batchTrainingSignalMask, _ = self.extractBatchInformation(batchData)
@@ -59,7 +59,7 @@ class emotionPipeline(emotionPipelineHelpers):
 
                         t11 = time.time()
                         # Perform the forward pass through the model.
-                        validDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = self.model.forward(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, inferenceTraining=inferenceTraining)
+                        validDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = self.model.forward(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, inferenceTraining=inferenceTraining, trainingFlag=True)
                         # reconstructedSignalData dimension: batchSize, numSignals, maxSequenceLength
                         # basicEmotionProfile: batchSize, numBasicEmotions, encodedDimension
                         # validDataMask dimension: batchSize, numSignals, maxSequenceLength

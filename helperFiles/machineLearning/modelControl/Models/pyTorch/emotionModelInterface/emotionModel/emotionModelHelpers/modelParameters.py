@@ -42,8 +42,8 @@ class modelParameters:
         # Dapper: Found 12 (out of 12) well-labeled emotions across 364 experiments with 16 signals.
         # Case: Found 2 (out of 2) well-labeled emotions across 1442 experiments with 36 signals.
         # Collected: Found 30 (out of 30) well-labeled emotions across 165 experiments with 65 signals.
-        if submodel == modelConstants.signalEncoderModel: effectiveMinBatchSize, effectiveMaxBatchSize = 12, 160
-        elif submodel == modelConstants.emotionModel: effectiveMinBatchSize, effectiveMaxBatchSize = 12, 160
+        if submodel == modelConstants.signalEncoderModel: effectiveMinBatchSize, effectiveMaxBatchSize = 32, 160
+        elif submodel == modelConstants.emotionModel: effectiveMinBatchSize, effectiveMaxBatchSize = 32, 160
         else: raise Exception()
 
         # Adjust the batch size based on the number of gradient accumulations.
