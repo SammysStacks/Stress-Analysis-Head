@@ -2,9 +2,9 @@
 
 waveletTypes=('bior2.2')
 optimizers=('RAdam')
-encodedDimensions=(256)
-signalEncoderLayers=(8 16 32)
-goldenRatios=(1 2 4 8 16)
+encodedDimensions=(512)
+signalEncoderLayers=(1 2 3 4 5 6)
+goldenRatios=(1 2 3 4 5 6)
 lrs=(0.01)
 
 for optimizer in "${optimizers[@]}"
