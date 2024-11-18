@@ -2,7 +2,7 @@
 
 waveletTypes=('bior2.2')
 optimizers=('RAdam')
-encodedDimensions=(512)
+encodedDimensions=(256)
 signalEncoderLayers=(8 16 32)
 goldenRatios=(1 2 4 8 16)
 lrs=(0.01)
