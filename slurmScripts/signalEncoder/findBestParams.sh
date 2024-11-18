@@ -4,7 +4,7 @@ waveletTypes=('bior2.2')
 optimizers=('RAdam')
 encodedDimensions=(300)
 signalEncoderLayers=(4 8 16 32 48)
-goldenRatios=(1 2 4 8 16 24 48)
+goldenRatios=(1 2 4 8 16 24 32 48)
 
 for optimizer in "${optimizers[@]}"
 do
