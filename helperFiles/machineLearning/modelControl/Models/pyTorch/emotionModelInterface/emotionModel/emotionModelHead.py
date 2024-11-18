@@ -176,7 +176,7 @@ class emotionModelHead(nn.Module):
         # physiologicalProfile: batchSize, encodedDimension
 
         # Irreversible smoothing of the physiological profile.
-        # physiologicalProfile = self.specificSignalEncoderModel.smoothingFilter(physiologicalProfile.unsqueeze(1), kernelSize=3).squeeze(1)
+        physiologicalProfile = self.specificSignalEncoderModel.smoothingFilter(physiologicalProfile.unsqueeze(1), kernelSize=3).squeeze(1)
         # physiologicalProfile: batchSize, encodedDimension
 
         # ------------------- Learned Signal Mapping ------------------- #
