@@ -25,7 +25,7 @@ class emotionModelWeights(convolutionalHelpers):
     def getInitialPhysiologicalProfile(numExperiments, encodedDimension):
         # Initialize the physiological profile.
         physiologicalProfile = torch.randn(numExperiments, encodedDimension, dtype=torch.float64)
-        physiologicalProfile = nn.init.normal_(physiologicalProfile, mean=0, std=1/2)
+        physiologicalProfile = nn.init.normal_(physiologicalProfile, mean=0, std=1/3)
 
         # Initialize the physiological profile as a parameter.
         physiologicalProfile = nn.Parameter(physiologicalProfile)
@@ -55,19 +55,17 @@ class emotionModelWeights(convolutionalHelpers):
     # ------------------- Neural Operator Architectures ------------------- #
 
     @staticmethod
-    def reversibleNeuralWeightRCNN(numSignals, sequenceLength, activationMethod):
-        activationMethod, switchActivationDirection = activationMethod.split('_')
+    def reversibleNeuralWeightRCNN(numSignals, sequenceLength):
         if sequenceLength <= 1: return nn.Identity()
 
-        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=1, activationMethod='none', switchActivationDirection=switchActivationDirection == "True")
+        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=1, activationMethod='none', switchActivationDirection=False)
 
     @staticmethod
-    def reversibleNeuralWeightRFC(numSignals, sequenceLength, activationMethod):
-        activationMethod, switchActivationDirection = activationMethod.split('_')
+    def reversibleNeuralWeightRFC(numSignals, sequenceLength):
         if sequenceLength <= 1: return nn.Identity()
         print("Deprecated!")
 
-        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=3, numLayers=1, activationMethod='none', switchActivationDirection=switchActivationDirection == "True")
+        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=3, numLayers=1, activationMethod='none', switchActivationDirection=False)
 
     @staticmethod
     def neuralWeightFC(sequenceLength):

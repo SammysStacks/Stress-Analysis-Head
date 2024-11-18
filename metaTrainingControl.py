@@ -33,7 +33,7 @@ if __name__ == "__main__":
         cpu=torch.backends.mps.is_available(),  # Whether to use the CPU. MPS is NOT fully compatible yet.
         step_scheduler_with_optimizer=False,  # Whether to wrap the optimizer in a scheduler.
         gradient_accumulation_steps=1,  # The number of gradient accumulation steps.
-        mixed_precision="no",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"
+        mixed_precision="bf16",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"
     )
 
     # General model parameters.
@@ -54,8 +54,8 @@ if __name__ == "__main__":
     parser.add_argument('--learningRate', type=float, default=0.01, help='The learning rate of the model.')  # Higher values converge faster; Lower values create stable convergence.
 
     # Add arguments for the signal encoder architecture.
-    parser.add_argument('--goldenRatio', type=int, default=16, help='The number of shared layers per specific layer.')
-    parser.add_argument('--numSignalEncoderLayers', type=int, default=32, help='The number of layers in the model.')
+    parser.add_argument('--goldenRatio', type=int, default=24, help='The number of shared layers per specific layer.')
+    parser.add_argument('--numSignalEncoderLayers', type=int, default=48, help='The number of layers in the model.')
     parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
  
     # Add arguments for the neural operator.
@@ -87,23 +87,20 @@ if __name__ == "__main__":
 
     # Specify training parameters
     trainingDate = modelCompiler.embedInformation(submodel, userInputParams, trainingDate)  # Embed training information into the name.
-    datasetNames, metaDatasetNames, allDatasetNames = modelParameters.compileModelNames()  # Compile the model names.
+    datasetNames, metaDatasetNames = modelParameters.compileModelNames()  # Compile the model names.
     numEpochs, numEpoch_toPlot, numEpoch_toSaveFull = modelParameters.getEpochInfo()  # The number of epochs to plot and save the model.
 
     # Compile the final modules.
     allModels, allDataLoaders, allMetaModels, allMetadataLoaders, _ = modelCompiler.compileModelsFull(metaDatasetNames, submodel, testSplitRatio, datasetNames)
-
-
-
-    allModels.append(allMetaModels.pop(0))
-    allDataLoaders.append(allMetadataLoaders.pop(0))
-
-
-
-
-    trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)  # Calculate the initial loss.
+    allDataLoaders.append(allMetadataLoaders.pop(0))  # Do not metatrain with wesad data.
+    datasetNames.append(metaDatasetNames.pop(0))  # Do not metatrain with wesad data.
+    allModels.append(allMetaModels.pop(0))  # Do not metatrain with wesad data.
+    allDatasetNames = metaDatasetNames + datasetNames  # Compile all the dataset names.
 
     # -------------------------- Meta-model Training ------------------------- #
+
+    # Calculate the initial loss.
+    trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)  # Calculate the initial loss.
 
     # For each training epoch
     for epoch in range(1, numEpochs + 1):
@@ -121,8 +118,8 @@ if __name__ == "__main__":
         if plotSteps: trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate)
 
         # Save the model sometimes (only on the main device).
-        # if saveFullModel and accelerator.is_local_main_process:
-        #     trainingProtocols.saveModelState(epoch, allMetaModels, allModels, submodel, allDatasetNames, trainingDate)
+        if saveFullModel and accelerator.is_local_main_process:
+            trainingProtocols.saveModelState(epoch, allMetaModels, allModels, submodel, allDatasetNames, trainingDate)
 
         # Finalize the epoch parameters.
         accelerator.wait_for_everyone()  # Wait before continuing.

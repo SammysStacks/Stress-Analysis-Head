@@ -126,9 +126,8 @@ class modelParameters:
         # Specify which metadata analyses to compile
         metaDatasetNames = [modelConstants.wesadDatasetName, modelConstants.emognitionDatasetName, modelConstants.amigosDatasetName, modelConstants.dapperDatasetName, modelConstants.caseDatasetName]
         datasetNames = [modelConstants.empatchDatasetName]
-        allDatasetNames = metaDatasetNames + datasetNames
 
         # Assert the integrity of dataset collection.
         assert len(datasetNames) == 1
 
-        return datasetNames, metaDatasetNames, allDatasetNames
+        return datasetNames, metaDatasetNames

@@ -1,19 +1,20 @@
+import random
+
+import torch
 from matplotlib import pyplot as plt
 from torch import nn
-import random
-import torch
 
+from .emotionModelHelpers.emotionDataInterface import emotionDataInterface
+from .emotionModelHelpers.modelConstants import modelConstants
+from .emotionModelHelpers.modelParameters import modelParameters
+from .emotionModelHelpers.submodels.inferenceModel import inferenceModel
 from .emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
-from .emotionModelHelpers.submodels.specificSignalEncoderModel import specificSignalEncoderModel
+from .emotionModelHelpers.submodels.sharedActivityModel import sharedActivityModel
+from .emotionModelHelpers.submodels.sharedEmotionModel import sharedEmotionModel
 from .emotionModelHelpers.submodels.sharedSignalEncoderModel import sharedSignalEncoderModel
 from .emotionModelHelpers.submodels.specificActivityModel import specificActivityModel
 from .emotionModelHelpers.submodels.specificEmotionModel import specificEmotionModel
-from .emotionModelHelpers.submodels.sharedActivityModel import sharedActivityModel
-from .emotionModelHelpers.submodels.sharedEmotionModel import sharedEmotionModel
-from .emotionModelHelpers.emotionDataInterface import emotionDataInterface
-from .emotionModelHelpers.submodels.inferenceModel import inferenceModel
-from .emotionModelHelpers.modelParameters import modelParameters
-from .emotionModelHelpers.modelConstants import modelConstants
+from .emotionModelHelpers.submodels.specificSignalEncoderModel import specificSignalEncoderModel
 
 
 class emotionModelHead(nn.Module):
@@ -173,9 +174,6 @@ class emotionModelHead(nn.Module):
         # Get the estimated physiological profiles.
         if inferenceTraining: physiologicalProfile = self.inferenceModel.getCurrentPhysiologicalProfile(batchInds)
         else: physiologicalProfile = self.specificSignalEncoderModel.profileModel.getCurrentPhysiologicalProfile(batchInds)
-        # physiologicalProfile: batchSize, encodedDimension
-
-        # Irreversible smoothing of the physiological profile.
         physiologicalProfile = self.specificSignalEncoderModel.smoothingFilter(physiologicalProfile.unsqueeze(1), kernelSize=3).squeeze(1)
         # physiologicalProfile: batchSize, encodedDimension
 
@@ -188,7 +186,7 @@ class emotionModelHead(nn.Module):
         # resampledSignalData: batchSize, numSignals, encodedDimension
 
         # Resample the signal data.
-        reconstructedSignalData = self.interpolateData(signalData, resampledSignalData, trainingFlag)
+        reconstructedSignalData = self.interpolateData(signalData, resampledSignalData)
         # reconstructedSignalData: batchSize, numSignals, maxSequenceLength
 
         # Visualize the data transformations within signal encoding.
@@ -289,11 +287,10 @@ class emotionModelHead(nn.Module):
         plt.legend()
         plt.show()
 
-    def interpolateData(self, signalData, resampledSignalData, trainingFlag):
+    def interpolateData(self, signalData, resampledSignalData):
         # Extract the dimensions of the data.
         timepoints = emotionDataInterface.getChannelData(signalData, channelName=modelConstants.timeChannel)
         batchSize, numSignals, encodedDimension = resampledSignalData.size()
-        if trainingFlag: timepoints = timepoints + torch.randn_like(timepoints) * 1e-4  # Add noise to the timepoints to prevent exact matches.
 
         # Align the timepoints to the physiological times.
         reversedPhysiologicalTimes = torch.flip(self.sharedSignalEncoderModel.pseudoEncodedTimes, dims=[0])

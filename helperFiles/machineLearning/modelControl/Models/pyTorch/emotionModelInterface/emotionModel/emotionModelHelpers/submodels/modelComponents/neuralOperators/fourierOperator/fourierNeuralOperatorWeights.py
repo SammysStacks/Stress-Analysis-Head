@@ -62,8 +62,8 @@ class fourierNeuralOperatorWeights(emotionModelWeights):
         return skipConnectionModel
 
     def getNeuralWeightParameters(self, inChannel, fourierDimension):
-        if self.learningProtocol == 'rFC': return self.reversibleNeuralWeightRFC(numSignals=inChannel, sequenceLength=fourierDimension, activationMethod=self.activationMethod)
-        elif self.learningProtocol == 'rCNN': return self.reversibleNeuralWeightRCNN(numSignals=inChannel, sequenceLength=fourierDimension, activationMethod=self.activationMethod)
+        if self.learningProtocol == 'rFC': return self.reversibleNeuralWeightRFC(numSignals=inChannel, sequenceLength=fourierDimension)
+        elif self.learningProtocol == 'rCNN': return self.reversibleNeuralWeightRCNN(numSignals=inChannel, sequenceLength=fourierDimension)
         elif self.learningProtocol == 'FC': return self.neuralWeightFC(sequenceLength=fourierDimension)
         else: raise ValueError(f"The learning protocol ({self.learningProtocol}) must be in ['rFC', 'FCC', 'rCNN', 'CNN'].")
 
