@@ -89,7 +89,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
 if __name__ == "__main__":
     # General parameters.
     _neuralOperatorParameters = modelParameters.getNeuralParameters({'waveletType': 'bior3.7'})['neuralOperatorParameters']
-    _batchSize, _numSignals, _sequenceLength = 2, 6, 128
+    _batchSize, _numSignals, _sequenceLength = 2, 128, 300
 
     # Set up the parameters.
     neuralLayerClass = sharedSignalEncoderModel(operatorType='wavelet', encodedDimension=_sequenceLength, numLiftingLayers=1, goldenRatio=4, learningProtocol='rCNN', neuralOperatorParameters=_neuralOperatorParameters)
