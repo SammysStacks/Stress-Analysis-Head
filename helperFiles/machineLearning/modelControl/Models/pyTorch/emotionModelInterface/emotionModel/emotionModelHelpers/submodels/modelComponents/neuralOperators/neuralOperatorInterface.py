@@ -29,7 +29,7 @@ class neuralOperatorInterface(emotionModelWeights):
         # Hardcoded parameters.
         activationMethod = f"{emotionModelWeights.getActivationType()}_{switchActivationDirection}"
         mode = 'periodization'  # Mode: 'zero' (lossy), 'symmetric' (lossy), 'reflect' (lossy), or 'periodization' (lossless).
-        numDecompositions = 1
+        numDecompositions = 2
 
         # Hardcoded parameters.
         learningProtocol = 'rCNN' if reversibleFlag else 'FC'  # The protocol for learning the wavelet data.
