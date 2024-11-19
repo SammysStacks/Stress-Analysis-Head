@@ -1,10 +1,10 @@
 #!/bin/bash
 
-waveletTypes=('bior2.2')
+waveletTypes=('bior2.2' 'bior3.7' 'db3' 'dmey')
+signalEncoderLayers=(8 16 32 48 64)
+encodedDimensions=(256 512)
 optimizers=('AdamW')
-encodedDimensions=(128 256 512)
-signalEncoderLayers=(4 8 16 32 48 64)
-goldenRatios=(1 2 4 8)
+goldenRatios=(1 2)
 
 for optimizer in "${optimizers[@]}"
 do

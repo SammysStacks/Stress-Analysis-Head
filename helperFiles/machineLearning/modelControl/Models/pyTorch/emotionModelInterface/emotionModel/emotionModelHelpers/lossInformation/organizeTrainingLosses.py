@@ -42,7 +42,7 @@ class organizeTrainingLosses(lossCalculations):
             signalReconstructedTestingLosses = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, validDataMask, allTestingSignalMask)
 
             # Store the signal encoder loss information.
-            self.storeLossInformation(signalReconstructedTrainingLosses.nanmean(), signalReconstructedTestingLosses.nanmean(), model.specificSignalEncoderModel.trainingLosses_signalReconstruction, model.specificSignalEncoderModel.testingLosses_signalReconstruction)
+            self.storeLossInformation(signalReconstructedTrainingLosses, signalReconstructedTestingLosses, model.specificSignalEncoderModel.trainingLosses_signalReconstruction, model.specificSignalEncoderModel.testingLosses_signalReconstruction)
             self.accelerator.print("Reconstruction loss values:", signalReconstructedTrainingLosses.nanmean().item(), signalReconstructedTestingLosses.nanmean().item())
 
             # Calculate the activity classification accuracy/loss and assert the integrity of the loss.
@@ -112,8 +112,8 @@ class organizeTrainingLosses(lossCalculations):
         gatheredTrainingLoss, gatheredTestingLoss = self.accelerator.gather_for_metrics((trainingLoss, testingLoss))
 
         # Store the loss information.
-        trainingHolder.append(gatheredTrainingLoss.detach().mean().item())
-        testingHolder.append(gatheredTestingLoss.detach().mean().item())
+        trainingHolder.append(gatheredTrainingLoss.detach().cpu().numpy())
+        testingHolder.append(gatheredTestingLoss.detach().cpu().numpy())
 
     # ----------------------- Class Weighting Methods ---------------------- #
 
