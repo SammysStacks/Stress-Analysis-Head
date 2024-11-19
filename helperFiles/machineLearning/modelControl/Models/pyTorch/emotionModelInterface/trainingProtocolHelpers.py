@@ -51,7 +51,7 @@ class trainingProtocolHelpers:
 
             # Train the updated model.
             self.modelMigration.unifyModelWeights(allModels=[modelPipeline], modelWeights=self.sharedModelWeights, layerInfo=self.unifiedLayerData)
-            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=False, numEpochs=2)  # Signal-specific training: training only.
+            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=False, numEpochs=3)  # Signal-specific training: training only.
             modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=False, specificTraining=True, trainSharedLayers=trainSharedLayers, stepScheduler=False, numEpochs=1)   # Full model training.
             self.accelerator.wait_for_everyone()
 
@@ -72,7 +72,7 @@ class trainingProtocolHelpers:
             modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
 
             # Train the updated model.
-            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=2)  # Signal-specific training: training only.
+            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=3)  # Signal-specific training: training only.
             self.accelerator.wait_for_everyone()
 
     def calculateLossInformation(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel):

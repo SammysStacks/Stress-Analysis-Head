@@ -50,8 +50,8 @@ class emotionPipeline(emotionPipelineHelpers):
                         if not inferenceTraining:
                             with torch.no_grad():
                                 # Augment the signals to train an arbitrary sequence length and order.
-                                augmentedBatchData = self.dataAugmentation.changeNumSignals(signalBatchData, dropoutPercent=0.1)
-                                augmentedBatchData = self.dataAugmentation.signalDropout(augmentedBatchData, dropoutPercent=0.1)
+                                augmentedBatchData = self.dataAugmentation.changeNumSignals(signalBatchData, dropoutPercent=0.2)
+                                augmentedBatchData = self.dataAugmentation.signalDropout(augmentedBatchData, dropoutPercent=0.2)
                                 # augmentedBatchData: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
                         else: augmentedBatchData = signalBatchData
 

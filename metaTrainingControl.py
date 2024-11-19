@@ -1,12 +1,8 @@
 """ Written by Samuel Solomon: https://scholar.google.com/citations?user=9oq12oMAAAAJ&hl=en """
 
 import os
-
 # Set specific environmental parameters.
-os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Suppress TensorFlow logging (1 = INFO, 2 = WARNING and ERROR, 3 = ERROR only)
-os.environ["TORCH_COMPILE_DEBUG"] = "1"
 
 # General
 import accelerate
@@ -22,9 +18,9 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.modelMigration impo
 from helperFiles.machineLearning.dataInterface.compileModelData import compileModelData
 
 # Configure cuDNN and PyTorch's global settings.
-torch.backends.cudnn.deterministic = True  # If True: ensures that the model will be reproducible.
+torch.backends.cudnn.deterministic = False  # If True: ensures that the model will be reproducible.
 torch.autograd.set_detect_anomaly(False)  # If True: detect NaN values in the output of autograd. Will be slower.
-torch.backends.cudnn.benchmark = False  # If True: Enable cuDNN's auto-tuner to find the most efficient algorithm, improving performance if fixed input size.
+torch.backends.cudnn.benchmark = False  # Enable cuDNN's auto-tuner to find the most efficient algorithm. Keep true for fixed input sizes.
 
 if __name__ == "__main__":
     # Define the accelerator parameters.
