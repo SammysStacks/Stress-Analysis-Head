@@ -61,8 +61,8 @@ class modelVisualizations(globalPlottingProtocols):
             datasetNames = [modelPipeline.model.datasetName for modelPipeline in allModelPipelines]
 
             # Plot reconstruction loss.
-            self.generalViz.plotTrainingLosses([sharedModel.trainingLosses_signalReconstruction for sharedModel in specificModels],
-                                               [sharedModel.testingLosses_signalReconstruction for sharedModel in specificModels],
+            self.generalViz.plotTrainingLosses([specificModel.trainingLosses_signalReconstruction for specificModel in specificModels],
+                                               [specificModel.testingLosses_signalReconstruction for specificModel in specificModels],
                                                lossLabels=[f"{datasetName} Signal Encoding Reconstruction Loss" for datasetName in datasetNames],
                                                plotTitle="trainingLosses/Signal Encoder Convergence Losses")
 
