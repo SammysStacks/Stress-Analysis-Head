@@ -260,7 +260,7 @@ class compileModelData(compileModelDataHelpers):
             # ---------------------- Create the Model ---------------------- #
 
             # Organize the training data into the expected pytorch format.
-            batch_size = self.modelParameters.getTrainingBatchSize(submodel, numExperiments=len(allSignalData))
+            batch_size = self.modelParameters.getTrainingBatchSize(submodel, numExperiments=len(allSignalData), datasetName=metadatasetName)
             pytorchDataClass = pytorchDataInterface(batch_size=batch_size, num_workers=0, shuffle=True, accelerator=self.accelerator)
             modelDataLoader = pytorchDataClass.getDataLoader(allSignalData, allFeatureLabels, currentTrainingMask, currentTestingMask)
 
