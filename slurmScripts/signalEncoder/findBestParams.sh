@@ -1,7 +1,7 @@
 #!/bin/bash
 
 waveletTypes=('bior2.2')
-optimizers=('RAdam')
+optimizers=('AdamW')
 encodedDimensions=(300)
 signalEncoderLayers=(4 8 16 32 48 64)
 goldenRatios=(1 2 4)
