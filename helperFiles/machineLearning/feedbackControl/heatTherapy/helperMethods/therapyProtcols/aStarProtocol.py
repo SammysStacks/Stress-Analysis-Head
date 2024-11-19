@@ -161,7 +161,7 @@ class aStarTherapyProtocol(generalTherapyProtocol):
 
         # Perform a weighted average of all the personalized maps.
 
-        personalizedMap = np.sum(self.discretePersonalizedMap * personalizedMapWeights[:, np.newaxis, np.newaxis], axis=0) # Added another np.newaxis
+        personalizedMap = np.sum(self.discretePersonalizedMap * personalizedMapWeights[:, np.newaxis], axis=0)
         if self.applyGaussianFilter:
             combinedSTD = torch.cat((self.gausParam_STD, self.gausLoss_STD))
             # Smoothen the personalized map.

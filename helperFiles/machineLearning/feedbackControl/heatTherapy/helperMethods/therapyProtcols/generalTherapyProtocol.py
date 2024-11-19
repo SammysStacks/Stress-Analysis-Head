@@ -18,7 +18,7 @@ class generalTherapyProtocol(abc.ABC):
         self.simulateTherapy = simulationParameters['simulateTherapy']  # Whether to simulate the therapy.
         self.initialParameterBounds = initialParameterBounds  # The parameter bounds for the therapy.
         self.modelParameterBounds = [0, 1]  # The model parameter bounds for the therapy.
-        self.applyGaussianFilter = True  # Whether to apply a Gaussian filter on the discrete maps.
+        self.applyGaussianFilter = False  # Whether to apply a Gaussian filter on the discrete maps.
         self.finishedTherapy = False  # Whether the therapy has finished.
 
         # Initialize the hard-coded survey information.
@@ -169,8 +169,8 @@ class generalTherapyProtocol(abc.ABC):
         else:
             # for real time running the model
             # Assume we have a random start state
-            #currentTime, currentParam, currentPredictions = self.simulationProtocols.getInitialState()
-            currentTime, currentParam, currentPredictions = initialTime, initialParam, initialPredicitons  # currentTime: tensor(0); currentParam: torch.Size([1, 1, 1, 1]); currentPredictions: torch.Size([1, 3, 1, 1]) predefined.
+            currentTime, currentParam, currentPredictions = self.simulationProtocols.getInitialState()
+            #currentTime, currentParam, currentPredictions = initialTime, initialParam, initialPredicitons  # currentTime: tensor(0); currentParam: torch.Size([1, 1, 1, 1]); currentPredictions: torch.Size([1, 3, 1, 1]) predefined.
             print('currentTime, currentParam, currentPredictions', currentTime, currentParam, currentPredictions)
             return currentTime, currentParam, currentPredictions
 
