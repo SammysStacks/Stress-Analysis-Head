@@ -57,6 +57,7 @@ class modelVisualizations(globalPlottingProtocols):
         # Plot the loss on the primary GPU.
         if self.accelerator.is_local_main_process:
             specificModels = [modelPipeline.model.specificSignalEncoderModel for modelPipeline in allModelPipelines]
+            featureNames = [modelPipeline.model.featureNames for modelPipeline in allModelPipelines]
             datasetNames = [modelPipeline.model.datasetName for modelPipeline in allModelPipelines]
 
             # Plot reconstruction loss.

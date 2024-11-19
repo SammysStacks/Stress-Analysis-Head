@@ -218,8 +218,8 @@ class trainingProtocols(extractData):
 
         # ---------------------- Compile Training Data --------------------- #
 
-        # Organize the final labels for the features
         featureLabelTypes, allFinalLabels = [], []
+        # Organize the final labels for the features
         if not metaTraining: featureLabelTypes, allFinalLabels = self.compileModelInfo.extractFinalLabels(surveyAnswersList, allFinalLabels)
 
         # ------------------------------------------------------------------ #

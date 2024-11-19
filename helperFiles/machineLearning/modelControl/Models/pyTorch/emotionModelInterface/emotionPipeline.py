@@ -16,7 +16,7 @@ class emotionPipeline(emotionPipelineHelpers):
         # Finish setting up the model.
         self.compileOptimizer(submodel)  # Initialize the optimizer (for back propagation)
 
-    def trainModel(self, dataLoader, submodel, inferenceTraining, profileTraining, specificTraining, trainSharedLayers, numEpochs):
+    def trainModel(self, dataLoader, submodel, inferenceTraining, profileTraining, specificTraining, trainSharedLayers, stepScheduler, numEpochs):
         # Load in all the data and labels for final predictions and calculate the activity and emotion class weights.
         # allData, allLabels, allTrainingMasks, allTestingMasks, allSignalData, allSignalIdentifiers, allMetadata, reconstructionIndex = self.prepareInformation(dataLoader)
         # allEmotionClassWeights, activityClassWeights = self.organizeLossInfo.getClassWeights(allLabels, allTrainingMasks, allTestingMasks, self.numActivities)
@@ -79,9 +79,9 @@ class emotionPipeline(emotionPipelineHelpers):
                         self.modelHelpers.assertVariableIntegrity(validDataMask, variableName="valid data mask", assertGradient=False)
 
                         # Calculate the error in signal compression (signal encoding loss).
-                        signalReconstructedLoss = self.organizeLossInfo.calculateSignalEncodingLoss(augmentedBatchData, reconstructedSignalData, validDataMask, batchTrainingSignalMask)
-                        if signalReconstructedLoss is None: self.accelerator.print("Not useful loss"); continue
-                        finalLoss = signalReconstructedLoss
+                        signalReconstructedLosses = self.organizeLossInfo.calculateSignalEncodingLoss(augmentedBatchData, reconstructedSignalData, validDataMask, batchTrainingSignalMask)
+                        if signalReconstructedLosses is None: self.accelerator.print("Not useful loss"); continue
+                        finalLoss = signalReconstructedLosses.nanmean()
 
                         # Initialize basic core loss value.
                         self.accelerator.print("Final loss:", finalLoss.item(), flush=True)
@@ -94,8 +94,10 @@ class emotionPipeline(emotionPipelineHelpers):
                         self.backpropogateModel()  # Backpropagation.
                         t2 = time.time(); self.accelerator.print(f"{'Shared' if trainSharedLayers else '\tSpecific'} layer training {self.datasetName} {numPointsAnalyzed}: {t22 - t11} {t2 - t1}\n")
 
+        # Update the learning rate.
+        if stepScheduler: self.scheduler.step()
+
         # Prepare the model/data for evaluation.
-        if (profileTraining and not specificTraining and not trainSharedLayers) or inferenceTraining: self.scheduler.step()  # Update the learning rate.
         self.setupTrainingFlags(self.model, trainingFlag=False)  # Turn off training flags.
         self.accelerator.wait_for_everyone()  # Wait before continuing.
 

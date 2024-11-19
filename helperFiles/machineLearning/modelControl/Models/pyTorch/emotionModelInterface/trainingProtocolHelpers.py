@@ -34,7 +34,7 @@ class trainingProtocolHelpers:
         modelPipeline.model.inferenceModel.resetInferenceModel(numExperiments, encodedDimension)
 
         # Train the inference model.
-        emotionProfile = modelPipeline.trainModel(dataLoader, submodel=submodel,  inferenceTraining=True, profileTraining=False, specificTraining=False, trainSharedLayers=False, numEpochs=numEpochs)
+        emotionProfile = modelPipeline.trainModel(dataLoader, submodel=submodel,  inferenceTraining=True, profileTraining=False, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=numEpochs)
         return emotionProfile
 
     def trainEpoch(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders):
@@ -51,7 +51,8 @@ class trainingProtocolHelpers:
 
             # Train the updated model.
             self.modelMigration.unifyModelWeights(allModels=[modelPipeline], modelWeights=self.sharedModelWeights, layerInfo=self.unifiedLayerData)
-            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=False, specificTraining=True, trainSharedLayers=trainSharedLayers, numEpochs=1)   # Full model training.
+            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=False, numEpochs=2)  # Signal-specific training: training only.
+            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=False, specificTraining=True, trainSharedLayers=trainSharedLayers, stepScheduler=False, numEpochs=1)   # Full model training.
             self.accelerator.wait_for_everyone()
 
             # Store the new model weights.
@@ -71,7 +72,7 @@ class trainingProtocolHelpers:
             modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
 
             # Train the updated model.
-            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=True, specificTraining=False, trainSharedLayers=False, numEpochs=1)  # Signal-specific training: training only.
+            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=2)  # Signal-specific training: training only.
             self.accelerator.wait_for_everyone()
 
     def calculateLossInformation(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel):

@@ -23,7 +23,6 @@ class emotionModelHead(nn.Module):
         # General model parameters.
         self.numActivities = len(activityNames)  # The number of activities to predict.
         self.numEmotions = len(emotionNames)  # The number of emotions to predict.
-        self.numSignals = len(featureNames)  # The number of signals going into the model.
         self.activityNames = activityNames  # The names of each activity we are predicting. Dim: numActivities
         self.featureNames = featureNames  # The names of each feature/signal in the model. Dim: numSignals
         self.emotionNames = emotionNames  # The names of each emotion we are predicting. Dim: numEmotions
@@ -63,10 +62,10 @@ class emotionModelHead(nn.Module):
             numLiftingLayers=self.numLiftingLayersSignalEncoder,
             learningProtocol=self.reversibleLearningProtocol,
             encodedDimension=self.encodedDimension,
+            featureNames=self.featureNames,
             operatorType=self.operatorType,
             numExperiments=numExperiments,
             goldenRatio=self.goldenRatio,
-            numSignals=self.numSignals,
         )
 
         # The autoencoder model reduces the incoming signal's dimension.
@@ -174,7 +173,7 @@ class emotionModelHead(nn.Module):
         # Get the estimated physiological profiles.
         if inferenceTraining: physiologicalProfile = self.inferenceModel.getCurrentPhysiologicalProfile(batchInds)
         else: physiologicalProfile = self.specificSignalEncoderModel.profileModel.getCurrentPhysiologicalProfile(batchInds)
-        physiologicalProfile = self.specificSignalEncoderModel.smoothingFilter(physiologicalProfile.unsqueeze(1), kernelSize=3).squeeze(1)
+        # physiologicalProfile = self.specificSignalEncoderModel.smoothingFilter(physiologicalProfile.unsqueeze(1), kernelSize=3).squeeze(1)
         # physiologicalProfile: batchSize, encodedDimension
 
         # ------------------- Learned Signal Mapping ------------------- #

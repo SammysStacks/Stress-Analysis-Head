@@ -25,7 +25,7 @@ class emotionModelWeights(convolutionalHelpers):
     def getInitialPhysiologicalProfile(numExperiments, encodedDimension):
         # Initialize the physiological profile.
         physiologicalProfile = torch.randn(numExperiments, encodedDimension, dtype=torch.float64)
-        physiologicalProfile = nn.init.normal_(physiologicalProfile, mean=0, std=1/3)
+        physiologicalProfile = nn.init.normal_(physiologicalProfile, mean=0, std=1/2)
 
         # Initialize the physiological profile as a parameter.
         physiologicalProfile = nn.Parameter(physiologicalProfile)
@@ -58,14 +58,14 @@ class emotionModelWeights(convolutionalHelpers):
     def reversibleNeuralWeightRCNN(numSignals, sequenceLength):
         if sequenceLength <= 1: return nn.Identity()
 
-        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=1, activationMethod='none', switchActivationDirection=False)
+        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=1, activationMethod='none')
 
     @staticmethod
     def reversibleNeuralWeightRFC(numSignals, sequenceLength):
         if sequenceLength <= 1: return nn.Identity()
         print("Deprecated!")
 
-        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=3, numLayers=1, activationMethod='none', switchActivationDirection=False)
+        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=3, numLayers=1, activationMethod='none')
 
     @staticmethod
     def neuralWeightFC(sequenceLength):
@@ -78,14 +78,14 @@ class emotionModelWeights(convolutionalHelpers):
     # ------------------- Reversible Signal Encoding Architectures ------------------- #
 
     @staticmethod
-    def postProcessingLayerRCNN(numSignals, sequenceLength, activationMethod, switchActivationDirection):
-        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=1, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection == "True")
+    def postProcessingLayerRCNN(numSignals, sequenceLength, activationMethod):
+        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=1, activationMethod=activationMethod)
 
     @staticmethod
-    def postProcessingLayerRFC(numSignals, sequenceLength, activationMethod, switchActivationDirection):
+    def postProcessingLayerRFC(numSignals, sequenceLength, activationMethod):
         print("Deprecated!")
 
-        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=3, numLayers=1, activationMethod=activationMethod, switchActivationDirection=switchActivationDirection == "True")
+        return reversibleLinearLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=3, numLayers=1, activationMethod=activationMethod)
 
     # ------------------- Emotion/Activity Encoding Architectures ------------------- #
 

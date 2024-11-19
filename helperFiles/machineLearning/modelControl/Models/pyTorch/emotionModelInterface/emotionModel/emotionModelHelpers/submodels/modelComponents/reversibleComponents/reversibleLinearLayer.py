@@ -8,7 +8,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class reversibleLinearLayer(reversibleInterface):
 
-    def __init__(self, numSignals, sequenceLength, kernelSize, numLayers, activationMethod, switchActivationDirection):
+    def __init__(self, numSignals, sequenceLength, kernelSize, numLayers, activationMethod):
         super(reversibleLinearLayer, self).__init__()
         # General parameters.
         self.activationMethod = activationMethod  # The activation method to use.
@@ -29,7 +29,8 @@ class reversibleLinearLayer(reversibleInterface):
         self.rowInds, self.colInds = upperWindowMask.nonzero(as_tuple=False).T
 
         # Initialize the neural layers.
-        self.activationFunctions,  self.linearOperators = nn.ModuleList(), nn.ParameterList()
+        self.activationFunction = activationFunctions.getActivationMethod(activationMethod)
+        self.linearOperators = nn.ParameterList()
 
         # Create the neural layers.
         for layerInd in range(self.numLayers):
@@ -38,25 +39,21 @@ class reversibleLinearLayer(reversibleInterface):
             parameters = nn.init.xavier_normal_(parameters)
             self.linearOperators.append(parameters)
 
-            # Add the activation function.
-            activationMethod = f"{self.activationMethod}_{switchActivationDirection}"
-            self.activationFunctions.append(activationFunctions.getActivationMethod(activationMethod))
-            switchActivationDirection = not switchActivationDirection
-
         # Scale the gradients.
         for layerInd in range(self.numLayers): self.linearOperators[layerInd].register_hook(self.scaleNeuralWeights)
 
     def forward(self, inputData):
         for layerInd in range(self.numLayers):
-            if not self.forwardDirection:
-                pseudoLayerInd = self.numLayers - layerInd - 1
-                inputData = self.applyLayer(inputData, pseudoLayerInd)
-                inputData = self.activationFunctions[pseudoLayerInd](inputData)
-            else:
-                inputData = self.activationFunctions[layerInd](inputData)
-                inputData = self.applyLayer(inputData, layerInd)
+            if not self.forwardDirection: layerInd = self.numLayers - layerInd - 1
+
+            # Apply the weights to the input data.
+            if self.activationMethod == 'none': inputData = self.applyLayer(inputData, layerInd)
+            else: inputData = self.activationFunction(inputData, self.layerHolder(layerInd))
 
         return inputData
+
+    def layerHolder(self, layerInd):
+        return lambda x: self.applyLayer(x, layerInd)
 
     def applyLayer(self, inputData, layerInd):
         # Unpack the dimensions.
@@ -97,7 +94,7 @@ if __name__ == "__main__":
     _numLayers = 1
 
     # Set up the parameters.
-    neuralLayerClass = reversibleLinearLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod, switchActivationDirection=False)
+    neuralLayerClass = reversibleLinearLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod)
     _inputData = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float64)
 
     # Perform the convolution in the fourier and spatial domains.

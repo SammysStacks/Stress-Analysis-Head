@@ -19,7 +19,7 @@ class waveletNeuralOperatorLayer(waveletNeuralOperatorWeights):
         # neuralOperatorData dimension: batchSize, numOutputSignals, finalLength
 
         # Apply the activation function.
-        neuralOperatorData = self.activationFunction(neuralOperatorData)
+        if self.activationMethod != 'none': neuralOperatorData = self.activationFunction(neuralOperatorData)
         # neuralOperatorData dimension: batchSize, numOutputSignals, finalLength
 
         return neuralOperatorData

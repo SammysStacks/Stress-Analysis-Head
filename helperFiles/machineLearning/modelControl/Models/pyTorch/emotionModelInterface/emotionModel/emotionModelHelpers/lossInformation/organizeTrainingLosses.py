@@ -38,12 +38,12 @@ class organizeTrainingLosses(lossCalculations):
             t2 = time.time(); self.accelerator.print("\tFull Pass", t2 - t1)
 
             # Calculate the signal encoding loss.
-            signalReconstructedTrainingLoss = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, validDataMask, allTrainingSignalMask)
-            signalReconstructedTestingLoss = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, validDataMask, allTestingSignalMask)
+            signalReconstructedTrainingLosses = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, validDataMask, allTrainingSignalMask)
+            signalReconstructedTestingLosses = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, validDataMask, allTestingSignalMask)
 
             # Store the signal encoder loss information.
-            self.storeLossInformation(signalReconstructedTrainingLoss, signalReconstructedTestingLoss, model.specificSignalEncoderModel.trainingLosses_signalReconstruction, model.specificSignalEncoderModel.testingLosses_signalReconstruction)
-            self.accelerator.print("Reconstruction loss values:", signalReconstructedTrainingLoss.item(), signalReconstructedTestingLoss.item())
+            self.storeLossInformation(signalReconstructedTrainingLosses, signalReconstructedTestingLosses, model.specificSignalEncoderModel.trainingLosses_signalReconstruction, model.specificSignalEncoderModel.testingLosses_signalReconstruction)
+            self.accelerator.print("Reconstruction loss values:", signalReconstructedTrainingLosses.nanmean().item(), signalReconstructedTestingLosses.nanmean().item())
 
             # Calculate the activity classification accuracy/loss and assert the integrity of the loss.
             # activityTestingLoss = self.calculateActivityLoss(allActivityDistributions, allLabels, allTestingMasks, activityClassWeights)

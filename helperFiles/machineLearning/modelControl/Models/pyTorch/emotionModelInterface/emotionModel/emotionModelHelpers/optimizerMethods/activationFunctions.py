@@ -16,8 +16,7 @@ def getActivationMethod(activationMethod):
         topExponent = int(activationMethod.split('_')[1]) if '_' in activationMethod else 0
         activationFunction = boundedExp(decayConstant=topExponent, nonLinearityRegion=nonLinearityRegion)
     elif activationMethod.startswith('reversibleLinearSoftSign'):
-        invertedActivation = activationMethod.split('_')[1] == "True"
-        activationFunction = reversibleLinearSoftSign(invertedActivation=invertedActivation)
+        activationFunction = reversibleLinearSoftSign()
     elif activationMethod.startswith('boundedS'):
         invertedActivation = activationMethod.split('_')[1] == "True"
         activationFunction = boundedS(invertedActivation=invertedActivation)
@@ -35,9 +34,8 @@ def getActivationMethod(activationMethod):
 
 
 class reversibleLinearSoftSign(reversibleInterface):
-    def __init__(self, invertedActivation=False, inversionPoint=1.5):
+    def __init__(self, inversionPoint=2):
         super(reversibleLinearSoftSign, self).__init__()
-        self.invertedActivation = invertedActivation  # Whether the non-linearity term is inverted
         self.inversionPoint = inversionPoint  # The point at which the activation inverts. Higher values increase the non-linearity and decrease the final magnitude.
         self.tolerance = 1e-20  # Tolerance for numerical stability
 
@@ -51,9 +49,12 @@ class reversibleLinearSoftSign(reversibleInterface):
         # Notes: The linearity term must be 1 if the inversion point is 1 to ensure a stable convergence.
         # Notes: The inversion point must be greater than 1 to ensure a stable convergence.
 
-    def forward(self, x):
-        if self.forwardDirection != self.invertedActivation: return self.forwardPass(x)
-        else: return self.inversePass(x)
+    def forward(self, x, linearModel):
+        x = self.forwardPass(x)  # Increase the signal.
+        x = linearModel(x)  # Learn in the scaled domain.
+        x = self.inversePass(x)  # Decrease the signal.
+
+        return x
 
     def forwardPass(self, x):
         return self.infiniteBound*x + x / (1 + x.abs()) / self.linearity  # f(x) = x + x / (1 + |x|) / r
@@ -70,7 +71,7 @@ class reversibleLinearSoftSign(reversibleInterface):
 
 
 class boundedS(reversibleInterface):
-    def __init__(self, invertedActivation=False, linearity=2):
+    def __init__(self, invertedActivation=False, linearity=1):
         super(boundedS, self).__init__()
         self.invertedActivation = invertedActivation  # Whether the non-linearity term is inverted
         self.linearity = linearity  # Corresponds to `r` in the equation
@@ -137,17 +138,3 @@ class reversibleActivationInterface(reversibleInterface):
         self.activationFunctions = activationFunctions
 
     def forward(self, x): return self.activationFunctions(x)
-
-
-if __name__ == "__main__":
-    # Test the activation functions
-    data = torch.randn(2, 10, 100, dtype=torch.float64)
-    data = nn.init.normal_(data, mean=0, std=1 / 3)
-
-    # Compile model.
-    activationModel = nn.Sequential()
-    for i in range(100): activationModel.append(reversibleLinearSoftSign(invertedActivation=i % 2 == 0))
-
-    # Perform the forward and inverse pass.
-    activationClass = reversibleActivationInterface(activationModel)
-    _forwardData, _reconstructedData = activationClass.checkReconstruction(data, atol=1e-6, numLayers=1)

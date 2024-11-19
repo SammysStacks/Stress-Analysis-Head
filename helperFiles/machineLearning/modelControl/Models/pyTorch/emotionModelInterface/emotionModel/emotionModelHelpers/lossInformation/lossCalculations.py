@@ -50,10 +50,16 @@ class lossCalculations:
         if validDataMask.sum() == 0: print("No valid batches"); return None
 
         # Calculate the error in signal reconstruction (encoding loss).
-        signalReconstructedLoss = self.smoothL1Loss(input=allReconstructedSignalData[validDataMask], target=allDatapoints[validDataMask]).mean()
+        signalReconstructedLoss = self.smoothL1Loss(input=allReconstructedSignalData, target=allDatapoints)
+        # signalReconstructedLoss: batchSize, numSignals, sequenceLength
 
         # Assert that nothing is wrong with the loss calculations.
         self.modelHelpers.assertVariableIntegrity(signalReconstructedLoss, variableName="encoded signal reconstructed loss", assertGradient=False)
+
+        # Calculate the mean loss across all signals.
+        signalReconstructedLoss[~validDataMask] = torch.nan  # Zero out the loss for invalid data points.
+        signalReconstructedLoss = signalReconstructedLoss.nanmean(dim=-1)  # Dim: batchSize, numSignals
+        signalReconstructedLoss = signalReconstructedLoss.nanmean(dim=0)   # Dim: numSignals
 
         return signalReconstructedLoss
 
