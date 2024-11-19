@@ -3,8 +3,8 @@
 waveletTypes=('bior2.2')
 optimizers=('RAdam')
 encodedDimensions=(300)
-signalEncoderLayers=(4 8 16 32 48)
-goldenRatios=(1 2 4 8 16 24 32 48)
+signalEncoderLayers=(4 8 16 32 48 64)
+goldenRatios=(1 2 4)
 
 for optimizer in "${optimizers[@]}"
 do
@@ -18,8 +18,7 @@ do
         do
           # Check if goldenRatio is greater than numSignalEncoderLayers
           if [ "$goldenRatio" -gt "$numSignalEncoderLayers" ]; then
-
-continue  # Skip this iteration if the condition is true
+            continue  # Skip this iteration if the condition is true
           fi
 
           echo "Submitting job with $numSignalEncoderLayers numSignalEncoderLayers, $goldenRatio goldenRatio, $encodedDimension encodedDimension, $waveletType waveletType, $optimizer optimizer on $1"
