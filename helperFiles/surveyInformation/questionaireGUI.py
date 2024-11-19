@@ -68,8 +68,8 @@ class stressQuestionnaireGUI(QtWidgets.QMainWindow):
         self.scroll.verticalScrollBar().setStyleSheet('background: grey; margin-left: 1rem;')
 
         # Get the questionnaire data: question and answers
-        self.readQuestionnaireData(folderPath + "PANAS Questions.json", folderPath + "I-STAI-Y1 Questions.json")
         self.surveyDemographicOptions(folderPath + "Subject Demographics.json")
+        self.readQuestionnaireData()
 
         # Initialize user-interaction parameters
         self.resetSurveyInformation()
