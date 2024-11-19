@@ -13,7 +13,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         super(specificSignalEncoderModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numInputSignals=len(featureNames)*numLiftingLayers, numOutputSignals=len(featureNames)*numLiftingLayers, addBiasTerm=False)
         # General model parameters.
         self.neuralOperatorParameters = neuralOperatorParameters  # The parameters for the neural operator.
-        self.activationMethod = self.getActivationType()  # The activation method to use.
+        self.activationMethod = self.getReversibleActivation()  # The activation method to use.
         self.learningProtocol = learningProtocol  # The learning protocol for the model.
         self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
         self.numLiftingLayers = numLiftingLayers  # The number of lifting layers to use.

@@ -145,16 +145,14 @@ class emotionModelHead(nn.Module):
         if self.numSignalEncoderLayers % self.goldenRatio == 0 and self.numSignalEncoderLayers != 0: assert numSpecificLayers == self.numSignalEncoderLayers // self.goldenRatio, f"The number of layers in the specific model ({numSpecificLayers}) does not match the number of layers in the model ({self.numSignalEncoderLayers})."
 
     def forward(self, submodel, signalData, signalIdentifiers, metadata, device, inferenceTraining=False):
-        # timepoints: [further away from survey (300) -> closest to survey (0)]
-        # signalData: [batchSize, numSignals, maxSequenceLength, numChannels]
-        # signalIdentifiers: [batchSize, numSignals, numSignalIdentifiers]
-        # metadata: [batchSize, numMetadata]
-
-        # Prepare the data for the model.
         signalData, signalIdentifiers, metadata = (tensor.to(device) for tensor in (signalData, signalIdentifiers, metadata))
         signalIdentifiers, signalData, metadata = signalIdentifiers.int(), signalData.double(), metadata.int()
         batchSize, numSignals, maxSequenceLength, numChannels = signalData.size()
         assert numChannels == len(modelConstants.signalChannelNames)
+        # timepoints: [further away from survey (300) -> closest to survey (0)]
+        # signalData: [batchSize, numSignals, maxSequenceLength, numChannels]
+        # signalIdentifiers: [batchSize, numSignals, numSignalIdentifiers]
+        # metadata: [batchSize, numMetadata]
 
         # Initialize default output tensors.
         basicEmotionProfile = torch.zeros((batchSize, self.numBasicEmotions, self.encodedDimension), device=device)
@@ -173,7 +171,6 @@ class emotionModelHead(nn.Module):
         # Get the estimated physiological profiles.
         if inferenceTraining: physiologicalProfile = self.inferenceModel.getCurrentPhysiologicalProfile(batchInds)
         else: physiologicalProfile = self.specificSignalEncoderModel.profileModel.getCurrentPhysiologicalProfile(batchInds)
-        physiologicalProfile = self.specificSignalEncoderModel.smoothingFilter(physiologicalProfile.unsqueeze(1), kernelSize=3).squeeze(1)
         # physiologicalProfile: batchSize, encodedDimension
 
         # ------------------- Learned Signal Mapping ------------------- #

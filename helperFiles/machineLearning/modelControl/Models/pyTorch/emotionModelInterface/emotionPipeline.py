@@ -21,6 +21,8 @@ class emotionPipeline(emotionPipelineHelpers):
         # allData, allLabels, allTrainingMasks, allTestingMasks, allSignalData, allSignalIdentifiers, allMetadata, reconstructionIndex = self.prepareInformation(dataLoader)
         # allEmotionClassWeights, activityClassWeights = self.organizeLossInfo.getClassWeights(allLabels, allTrainingMasks, allTestingMasks, self.numActivities)
         self.setupTraining(submodel, inferenceTraining=inferenceTraining, profileTraining=profileTraining, specificTraining=specificTraining, trainSharedLayers=trainSharedLayers)
+        datasetSpecificTraining = profileTraining and (specificTraining or trainSharedLayers)
+        onlyProfileTraining = profileTraining and not (specificTraining or trainSharedLayers)
         self.accelerator.print(f"\nTraining {self.datasetName} model", flush=True)
 
         # For each training epoch.
@@ -32,15 +34,15 @@ class emotionPipeline(emotionPipelineHelpers):
                 with (self.accelerator.accumulate(self.model)):  # Accumulate the gradients.
                     with self.accelerator.autocast():  # Enable mixed precision auto-casting
                         # Extract the data, labels, and testing/training indices.
-                        if not inferenceTraining: batchSignalInfo, batchSignalLabels, batchTrainingLabelMask, _, batchTrainingSignalMask, _ = self.extractBatchInformation(batchData)
-                        else: batchSignalInfo = batchData; batchTrainingLabelMask, batchTrainingSignalMask = None, None
+                        if not inferenceTraining: batchSignalInfo, batchSignalLabels, batchTrainingLabelMask, batchTestingLabelMask, batchTrainingSignalMask, batchTestingSignalMask = self.extractBatchInformation(batchData)
+                        else: batchSignalInfo = batchData; batchTrainingLabelMask, batchTestingLabelMask, batchTrainingSignalMask, batchTestingSignalMask = None, None, None, None
+                        if onlyProfileTraining: batchTrainingLabelMask, batchTestingLabelMask, batchTrainingSignalMask, batchTestingSignalMask = None, None, None, None
 
                         # We can skip this batch, and backpropagation if necessary.
                         if batchSignalInfo.size(0) == 0: self.backpropogateModel(); continue
                         numPointsAnalyzed += batchSignalInfo.size(0)
 
                         # Set the training parameters.
-                        if profileTraining and not specificTraining and not trainSharedLayers: batchTrainingLabelMask, batchTrainingSignalMask = None, None
                         signalBatchData, batchSignalIdentifiers, metaBatchInfo = emotionDataInterface.separateData(batchSignalInfo)
                         # signalBatchData[:, :, :, 0] = timepoints: [further away from survey (300) -> closest to survey (0)]
                         # signalBatchData dimension: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
@@ -79,18 +81,30 @@ class emotionPipeline(emotionPipelineHelpers):
                         self.modelHelpers.assertVariableIntegrity(validDataMask, variableName="valid data mask", assertGradient=False)
 
                         # Calculate the error in signal compression (signal encoding loss).
-                        signalReconstructedLosses = self.organizeLossInfo.calculateSignalEncodingLoss(augmentedBatchData, reconstructedSignalData, validDataMask, batchTrainingSignalMask)
-                        if signalReconstructedLosses is None: self.accelerator.print("Not useful loss"); continue
-                        finalLoss = signalReconstructedLosses.nanmean()
+                        trainingSignalReconstructedLosses = self.organizeLossInfo.calculateSignalEncodingLoss(augmentedBatchData, reconstructedSignalData, validDataMask, batchTrainingSignalMask)
+                        if trainingSignalReconstructedLosses is None: self.accelerator.print("Not useful loss"); continue
+                        finalTrainingLoss = trainingSignalReconstructedLosses.nanmean()
 
                         # Initialize basic core loss value.
-                        self.accelerator.print("Final loss:", finalLoss.item(), flush=True)
+                        self.accelerator.print("Final loss:", finalTrainingLoss.item(), flush=True)
 
                         # ------------------- Update the Model  -------------------- #
 
                         t1 = time.time()
-                        # Calculate the gradients.
-                        self.accelerator.backward(finalLoss)  # Calculate the gradients.
+                        if datasetSpecificTraining:
+                            # Calculate the error in signal compression (signal encoding loss).
+                            testingSignalReconstructedLosses = self.organizeLossInfo.calculateSignalEncodingLoss(augmentedBatchData, reconstructedSignalData, validDataMask, batchTestingSignalMask)
+                            finalTestingLoss = testingSignalReconstructedLosses.nanmean() if testingSignalReconstructedLosses is not None else None
+                            assert batchTestingSignalMask is not None, "The testing signal mask must be defined."
+                            self.accelerator.backward(finalTestingLoss, retain_graph=True)
+
+                            # For each layer in the model.
+                            for layerName, layerParams in self.model.named_parameters():
+                                # Remove the gradients from the shared and specific layers.
+                                if layerParams.grad is not None and 'profileModel' not in layerName: layerParams.grad.zero_()
+
+                        # Update the model parameters.
+                        self.accelerator.backward(finalTrainingLoss)  # Calculate the gradients.
                         self.backpropogateModel()  # Backpropagation.
                         t2 = time.time(); self.accelerator.print(f"{'Shared' if trainSharedLayers else '\tSpecific'} layer training {self.datasetName} {numPointsAnalyzed}: {t22 - t11} {t2 - t1}\n")
 
@@ -104,8 +118,10 @@ class emotionPipeline(emotionPipelineHelpers):
         return emotionProfile
 
     def backpropogateModel(self):
-        # Clip the gradients if they are too large.
         if self.accelerator.sync_gradients:
+            # Clip the gradients to prevent exploding gradients.
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=5.0)
+
             # Backpropagation the gradient.
             self.optimizer.step()  # Adjust the weights.
             self.optimizer.zero_grad()  # Zero your gradients to restart the gradient tracking.

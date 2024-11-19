@@ -200,9 +200,12 @@ class compileModelData(compileModelDataHelpers):
             # featureNames dimension: numSignals
 
             # Compile the valid indices.
-            numExperiments, numSignals, maxSequenceLength, numSignalChannels = allSignalData.size()
             validDataMask = emotionDataInterface.getValidDataMask(allSignalData)  # Dim: batchSize, numSignals, maxSequenceLength
+            allSmallClassesMask = validDataMask.sum(dim=-1) <= self.minSignalPresentCount  # Dim: batchSize, numSignals
             validSignalInds = 0 < validDataMask.sum(dim=-1)  # Dim: batchSize, numSignals
+
+            # Get dimensional information.
+            numExperiments, numSignals, maxSequenceLength, numSignalChannels = allSignalData.size()
             allExperimentalIndices = torch.arange(0, numExperiments)
             numSubjects = max(allSubjectInds) + 1
             numLabels = allFeatureLabels.size(1)
@@ -227,15 +230,19 @@ class compileModelData(compileModelDataHelpers):
                     # Apply the mask to get the valid class data.
                     validLabelMask = ~torch.isnan(currentFeatureLabels) & ~smallClassMask  # Dim: batchSize
                     currentClassLabels = currentFeatureLabels[validLabelMask].int()  # Dim: numValidLabels
-                    currentClassLabels = currentClassLabels.detach().cpu().numpy()  # Convert to numpy.
                     currentIndices = allExperimentalIndices[validLabelMask]  # Dim: numValidLabels
+                    stratifyBy = currentClassLabels.detach().cpu().numpy()  # Convert to numpy.
                 else:
-                    validLabelMask = validSignalInds[:, labelTypeInd - numLabels]  # Dim: batchSize
-                    currentIndices = allExperimentalIndices[validLabelMask]  # Dim: numValidLabels
-                    currentClassLabels, smallClassMask = None, None
+                    signalInd = labelTypeInd - numLabels
+                    validLabelMask = validSignalInds[:, signalInd]  # Dim: batchSize
+                    smallClassMask = allSmallClassesMask[:, signalInd]  # Dim: batchSize
+
+                    # Apply the mask to get the valid class data.
+                    currentIndices = allExperimentalIndices[validLabelMask & ~smallClassMask].int()  # Dim: numValidLabels
+                    stratifyBy = None
 
                 # Randomly split the data and labels, keeping a balance between testing/training.
-                Training_Indices, Testing_Indices = train_test_split(currentIndices.detach().cpu().numpy(), test_size=testSplitRatio, shuffle=True, stratify=currentClassLabels, random_state=random_state)
+                Training_Indices, Testing_Indices = train_test_split(currentIndices.detach().cpu().numpy(), test_size=testSplitRatio, shuffle=True, stratify=stratifyBy, random_state=random_state)
 
                 # Populate the training and testing mask.
                 currentTestingMask[Testing_Indices, labelTypeInd] = True

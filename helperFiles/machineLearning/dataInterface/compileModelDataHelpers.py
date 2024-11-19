@@ -261,7 +261,8 @@ class compileModelDataHelpers:
 
         # Combine all masks into a single mask and expand to match dimensions.
         validSignalMask = minPointsMask & minLowerBoundaryMask & minUpperBoundaryMask & averageDiff & validSignalMask
-        validSignalInds = self.minSignalPresentCount < validSignalMask.sum(dim=0)
+        if metadatasetName.lower() not in ['empatch']: validSignalInds = self.minSignalPresentCount < validSignalMask.sum(dim=0)
+        else: validSignalInds = 10 < validSignalMask.sum(dim=0)
 
         # Filter out the invalid signals
         allSignalData[~validSignalMask.unsqueeze(-1).unsqueeze(-1).expand_as(allSignalData)] = 0

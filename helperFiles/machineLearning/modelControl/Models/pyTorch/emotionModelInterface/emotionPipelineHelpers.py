@@ -68,28 +68,27 @@ class emotionPipelineHelpers:
         else: raise Exception()
 
     def setupTraining(self, submodel, inferenceTraining, profileTraining, specificTraining, trainSharedLayers):
+        if inferenceTraining: assert not (profileTraining or specificTraining or trainSharedLayers), "We cannot train layers during inference."
         self.setupTrainingFlags(self.model, trainingFlag=False)  # Set the model to evaluation mode.
 
-        if inferenceTraining:
-            # Prepare the model for inference training.
-            self.setupTrainingFlags(self.model.inferenceModel, trainingFlag=True)
-            assert not trainSharedLayers, "We cannot train layers during inference."
-            assert not specificTraining, "We cannot train layers during inference."
-            assert not profileTraining, "We cannot train layers during inference."
-            return None
+        # Prepare the model for inference training.
+        if inferenceTraining: self.setupTrainingFlags(self.model.inferenceModel, trainingFlag=inferenceTraining); return None
 
         # Emotion model training.
         if submodel == modelConstants.emotionModel:
-            self.setupTrainingFlags(self.model.sharedEmotionModel, trainingFlag=trainSharedLayers)
+            # Activity model training.
+            self.setupTrainingFlags(self.model.specificActivityModel, trainingFlag=specificTraining)
+            self.setupTrainingFlags(self.model.sharedActivityModel, trainingFlag=trainSharedLayers)
+
+            # Emotion model training.
             self.setupTrainingFlags(self.model.specificEmotionModel, trainingFlag=specificTraining)
+            self.setupTrainingFlags(self.model.sharedEmotionModel, trainingFlag=trainSharedLayers)
             assert not profileTraining, "We cannot train layers during emotion model training."
         else:
             # Signal encoder training.
-            self.setupTrainingFlags(self.model.sharedSignalEncoderModel, trainingFlag=trainSharedLayers)
+            self.setupTrainingFlags(self.model.specificSignalEncoderModel.profileModel, trainingFlag=profileTraining)
             self.setupTrainingFlags(self.model.specificSignalEncoderModel, trainingFlag=specificTraining)
-
-        # Profile model training.
-        self.setupTrainingFlags(self.model.specificSignalEncoderModel.profileModel, trainingFlag=profileTraining)
+            self.setupTrainingFlags(self.model.sharedSignalEncoderModel, trainingFlag=trainSharedLayers)
 
     @staticmethod
     def setupTrainingFlags(model, trainingFlag):

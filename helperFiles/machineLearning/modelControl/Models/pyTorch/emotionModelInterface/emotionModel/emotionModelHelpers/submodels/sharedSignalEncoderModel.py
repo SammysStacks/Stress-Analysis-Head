@@ -16,7 +16,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         # General model parameters.
         self.neuralOperatorParameters = neuralOperatorParameters  # The parameters for the neural operator.
         self.encodedTimeWindow = modelConstants.timeWindows[-1]  # The time window for the encoded signal.
-        self.activationMethod = self.getActivationType()  # The activation method to use.
+        self.activationMethod = self.getReversibleActivation()  # The activation method to use.
         self.fourierDimension = encodedDimension // 2 + 1  # The dimension of the fourier data.
         self.learningProtocol = learningProtocol  # The learning protocol for the model.
         self.encodedDimension = encodedDimension  # The dimension of the encoded signal.

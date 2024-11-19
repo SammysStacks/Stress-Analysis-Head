@@ -48,31 +48,33 @@ class trainingProtocolHelpers:
             dataLoader = allMetadataLoaders[modelInd] if modelInd < len(allMetadataLoaders) else allDataLoaders[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
             modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
             trainSharedLayers = modelInd < len(allMetaModels)  # Train the shared layers.
+            stepScheduler = modelInd == modelIndices[-1]  # Step the scheduler.
 
             # Train the updated model.
             self.modelMigration.unifyModelWeights(allModels=[modelPipeline], modelWeights=self.sharedModelWeights, layerInfo=self.unifiedLayerData)
-            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=False, numEpochs=3)  # Signal-specific training: training only.
-            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=False, specificTraining=True, trainSharedLayers=trainSharedLayers, stepScheduler=False, numEpochs=1)   # Full model training.
+            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=True, specificTraining=True, trainSharedLayers=trainSharedLayers, stepScheduler=False, numEpochs=1)   # Full model training.
             self.accelerator.wait_for_everyone()
 
-            # Store the new model weights.
+            # Unify all the model weights and retrain the specific models.
             self.unifiedLayerData = self.modelMigration.copyModelWeights(modelPipeline, self.sharedModelWeights)
+            if trainSharedLayers: self.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, stepScheduler=stepScheduler, skipModelInd=modelInd)
 
-        # Unify all the model weights and retrain the specific models.
-        self.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders)
+        # Unify all the model weights.
         self.unifyAllModelWeights(allMetaModels, allModels)
 
-    def datasetSpecificTraining(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders):
+    def datasetSpecificTraining(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, stepScheduler, skipModelInd=None):
         # Unify all the model weights.
         self.unifyAllModelWeights(allMetaModels, allModels)
 
         # For each meta-training model.
         for modelInd in range(len(allMetaModels) + len(allModels)):
+            if skipModelInd is not None and modelInd == skipModelInd: continue
             dataLoader = allMetadataLoaders[modelInd] if modelInd < len(allMetadataLoaders) else allDataLoaders[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
             modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
 
             # Train the updated model.
-            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=3)  # Signal-specific training: training only.
+            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=True, specificTraining=True, trainSharedLayers=False, stepScheduler=stepScheduler, numEpochs=1)  # Signal-specific training: training only.
+            self.unifiedLayerData = self.modelMigration.copyModelWeights(modelPipeline, self.sharedModelWeights)
             self.accelerator.wait_for_everyone()
 
     def calculateLossInformation(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel):
