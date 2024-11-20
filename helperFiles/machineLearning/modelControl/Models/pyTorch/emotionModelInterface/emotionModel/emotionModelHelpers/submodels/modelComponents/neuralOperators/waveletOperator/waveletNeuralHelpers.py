@@ -9,6 +9,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 # Notes:
 # - The wavelet neural operator layer is a custom module that applies a wavelet decomposition and reconstruction to the input data.
 # - The wavelet neural operator layer is used to learn the encoding of the input data.
+
 # Wavelet options:
 #   Biorthogonal Wavelets ('bior'):
 #       bior1.1, bior1.3, bior1.5
@@ -17,19 +18,29 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 #       bior4.4
 #       bior5.5
 #       bior6.8
-#   Complex Gaussian Wavelets ('cgau'):
+
+#   Reverse Biorthogonal Wavelets:
+#       rbio1.1, rbio1.3, rbio1.5, rbio2.2, rbio2.4, rbio2.6, rbio2.8, rbio3.1, rbio3.3, rbio3.5, rbio3.7, rbio3.9, rbio4.4, rbio5.5, rbio6.8
+
+#   Complex Gaussian Wavelets ('cgau'): COMPLEX CONTINUOUS
 #       cgau1, cgau2, cgau3, cgau4, cgau5, cgau6, cgau7, cgau8
 #       cmor
+
 #   Coiflet Wavelets ('coif'):
 #       coif1, coif2, coif3, coif4, coif5, coif6, coif7, coif8, coif9, coif10, coif11, coif12, coif13, coif14, coif15, coif16, coif17
+
 #   Daubechies Wavelets ('db'):
 #       db1, db2, db3, db4, db5, db6, db7, db8, db9, db10, db11, db12, db13, db14, db15, db16, db17, db18, db19, db20, db21, db22, db23, db24, db25, db26, db27, db28, db29, db30, db31, db32, db33, db34, db35, db36, db37, db38
+
+#   Gaussian Wavelets: CONTINUOUS
+#       gaus1, gaus2, gaus3, gaus4, gaus5, gaus6, gaus7, gaus8
+
+#   Symlet Wavelets:
+#       sym2, sym3, sym4, sym5, sym6, sym7, sym8, sym9, sym10, sym11, sym12, sym13, sym14, sym15, sym16, sym17, sym18, sym19, sym20
+
 #   Miscellaneous Wavelets and Other Families:
-#       dmey, fbsp
-#       Gaussian Wavelets: gaus1, gaus2, gaus3, gaus4, gaus5, gaus6, gaus7, gaus8
-#       haar, mexh, morl, shan
-#       Reverse Biorthogonal Wavelets: rbio1.1, rbio1.3, rbio1.5, rbio2.2, rbio2.4, rbio2.6, rbio2.8, rbio3.1, rbio3.3, rbio3.5, rbio3.7, rbio3.9, rbio4.4, rbio5.5, rbio6.8
-#       Symlet Wavelets: sym2, sym3, sym4, sym5, sym6, sym7, sym8, sym9, sym10, sym11, sym12, sym13, sym14, sym15, sym16, sym17, sym18, sym19, sym20
+#       haar, dmey,  # Discrete Wavelets
+#       fbsp, mexh, morl, shan  # Continuous Wavelets
 
 
 class waveletNeuralHelpers(emotionModelWeights):

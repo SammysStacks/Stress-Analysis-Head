@@ -138,16 +138,15 @@ class generalVisualizations(globalPlottingProtocols):
             plt.plot(np.nanmean(trainingLosses[modelInd], axis=-1), label=f'{lossLabels[modelInd]} (Train)', color=self.darkColors[modelInd], linewidth=2)
             if testingLosses is not None:
                 testingLoss = np.nanmean(testingLosses[modelInd], axis=-1)
-                plt.plot(testingLoss, '--', color=self.darkColors[modelInd], linewidth=2, alpha=0.75)
+                plt.plot(testingLoss, color=self.darkColors[modelInd], linewidth=2, alpha=0.75)
 
         # Plot the losses
         for modelInd in range(len(trainingLosses)):
-            plt.plot(np.asarray(trainingLosses[modelInd]), color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
+            plt.plot(np.asarray(trainingLosses[modelInd]), color=self.darkColors[modelInd], linewidth=1, alpha=0.025)
             if testingLosses is not None:
                 testingLoss = np.asarray(testingLosses[modelInd])
-                if np.isnan(testingLoss).all(): continue
-                testingLoss = testingLoss[~np.isnan(testingLoss)]
-                # plt.plot(testingLoss, '--', color=self.darkColors[modelInd], linewidth=1, alpha=0.01)
+                testingLoss[np.isnan(testingLoss)] = None
+                plt.plot(testingLoss, '--', color=self.darkColors[modelInd], linewidth=1, alpha=0.025)
 
         # Label the plot.
         if logY: plt.yscale('log')

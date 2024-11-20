@@ -24,7 +24,7 @@ class emotionModelWeights(convolutionalHelpers):
     def getInitialPhysiologicalProfile(numExperiments, encodedDimension):
         # Initialize the physiological profile.
         physiologicalProfile = torch.randn(numExperiments, encodedDimension, dtype=torch.float64)
-        physiologicalProfile = nn.init.normal_(physiologicalProfile, mean=0, std=1/2)
+        physiologicalProfile = nn.init.normal_(physiologicalProfile, mean=0, std=1)
 
         # Initialize the physiological profile as a parameter.
         physiologicalProfile = nn.Parameter(physiologicalProfile)
@@ -47,7 +47,8 @@ class emotionModelWeights(convolutionalHelpers):
         kernel = kernel.expand(data.size(1), 1, kernel.size(-1))
 
         # Apply the 1D convolution along the last dimension with padding
-        filtered_data = torch.nn.functional.conv1d(data, kernel, padding=kernel.size(-1) // 2, groups=data.size(1))
+        filtered_data = torch.nn.functional.pad(data, (kernel.size(-1) // 2, kernel.size(-1) // 2), mode='reflect')
+        filtered_data = torch.nn.functional.conv1d(filtered_data, kernel, padding=0, groups=data.size(1), stride=1, dilation=1)
 
         return filtered_data
 
