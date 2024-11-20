@@ -154,33 +154,6 @@ class generalVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(self.saveDataFolder + f"{plotTitle} at epoch {len(trainingLosses[0])}.pdf")
         else: plt.show()
 
-    def plotAllTrainingLosses(self, trainingLosses, testingLosses, lossLabels, paramNames, plotTitle="Model Convergence Loss", logY=True):
-        # Assert the validity of the input data.
-        assert len(trainingLosses) == len(lossLabels), "Number of loss labels must match the number of loss indices."
-        if len(trainingLosses[0]) == 0: return None  # Base case: there is no data to plot.
-
-        # For each dataset (wesad, emognition, etc.)
-        for trainingLossesInd in range(len(trainingLosses)):
-            if testingLosses is not None: datasetTestingLoss = np.asarray(testingLosses[trainingLossesInd])
-            datasetTrainingLoss = np.asarray(trainingLosses[trainingLossesInd])
-
-            # For each parameter (signal, activity, emotion).
-            for paramInd in range(len(paramNames)):
-                plt.plot(datasetTrainingLoss[:, paramInd], label=f'{lossLabels[trainingLossesInd]} (Train)', color=self.darkColors[trainingLossesInd], linewidth=2)
-                if testingLosses is not None: plt.plot(datasetTestingLoss[:, paramInd], color=self.darkColors[trainingLossesInd], linewidth=2, alpha=0.5)
-            # Set y-axis to a logarithmic scale
-            if logY: plt.yscale('log')
-
-        # Label the plot.
-        plt.xlabel("Training Epoch")
-        plt.ylabel("Loss Values")
-        plt.title(f"{plotTitle.split('/')[-1]}")
-        # plt.legend(loc="upper right", bbox_to_anchor=(1.35, 1))  # Move legend off to the right, level with the top
-
-        # Save the figure if desired.
-        if self.saveDataFolder: self.displayFigure(self.saveDataFolder + f"{plotTitle} at epoch {len(trainingLosses[0])}.pdf")
-        else: plt.show()
-
     def generalDataPlotting(self, plottingData, plottingLabels, plotTitle="Model Convergence Loss"):
         # Plot the training path.
         for plottingDataInd in range(len(plottingData)):
