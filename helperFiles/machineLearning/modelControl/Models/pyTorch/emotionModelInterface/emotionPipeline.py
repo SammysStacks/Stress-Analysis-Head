@@ -21,9 +21,9 @@ class emotionPipeline(emotionPipelineHelpers):
         # allData, allLabels, allTrainingMasks, allTestingMasks, allSignalData, allSignalIdentifiers, allMetadata, reconstructionIndex = self.prepareInformation(dataLoader)
         # allEmotionClassWeights, activityClassWeights = self.organizeLossInfo.getClassWeights(allLabels, allTrainingMasks, allTestingMasks, self.numActivities)
         self.setupTraining(submodel, inferenceTraining=inferenceTraining, profileTraining=profileTraining, specificTraining=specificTraining, trainSharedLayers=trainSharedLayers)
+        if self.model.debugging: self.accelerator.print(f"\nTraining {self.datasetName} model")
         datasetSpecificTraining = profileTraining and (specificTraining or trainSharedLayers)
         onlyProfileTraining = profileTraining and not (specificTraining or trainSharedLayers)
-        self.accelerator.print(f"\nTraining {self.datasetName} model", flush=True)
 
         # For each training epoch.
         for epoch in range(numEpochs):
@@ -52,8 +52,8 @@ class emotionPipeline(emotionPipelineHelpers):
                         if not inferenceTraining:
                             with torch.no_grad():
                                 # Augment the signals to train an arbitrary sequence length and order.
-                                augmentedBatchData = self.dataAugmentation.changeNumSignals(signalBatchData, dropoutPercent=0.2)
-                                augmentedBatchData = self.dataAugmentation.signalDropout(augmentedBatchData, dropoutPercent=0.2)
+                                augmentedBatchData = self.dataAugmentation.changeNumSignals(signalBatchData, dropoutPercent=0.1)
+                                augmentedBatchData = self.dataAugmentation.signalDropout(augmentedBatchData, dropoutPercent=0.1)
                                 # augmentedBatchData: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
                         else: augmentedBatchData = signalBatchData
 
@@ -86,7 +86,7 @@ class emotionPipeline(emotionPipelineHelpers):
                         finalTrainingLoss = trainingSignalReconstructedLosses.nanmean()
 
                         # Initialize basic core loss value.
-                        self.accelerator.print("Final loss:", finalTrainingLoss.item(), flush=True)
+                        if self.model.debugging: self.accelerator.print("Final loss:", finalTrainingLoss.item())
 
                         # ------------------- Update the Model  -------------------- #
 
@@ -106,7 +106,7 @@ class emotionPipeline(emotionPipelineHelpers):
                         # Update the model parameters.
                         self.accelerator.backward(finalTrainingLoss)  # Calculate the gradients.
                         self.backpropogateModel()  # Backpropagation.
-                        t2 = time.time(); self.accelerator.print(f"{'Shared' if trainSharedLayers else '\tSpecific'} layer training {self.datasetName} {numPointsAnalyzed}: {t22 - t11} {t2 - t1}\n")
+                        if self.model.debugging: t2 = time.time(); self.accelerator.print(f"{'Shared' if trainSharedLayers else '\tSpecific'} layer training {self.datasetName} {numPointsAnalyzed}: {t22 - t11} {t2 - t1}\n")
 
         # Update the learning rate.
         if stepScheduler: self.scheduler.step()
@@ -125,4 +125,4 @@ class emotionPipeline(emotionPipelineHelpers):
             # Backpropagation the gradient.
             self.optimizer.step()  # Adjust the weights.
             self.optimizer.zero_grad()  # Zero your gradients to restart the gradient tracking.
-            self.accelerator.print(f"Backprop with LR: {self.scheduler.get_last_lr()}", flush=True)
+            if self.model.debugging: self.accelerator.print(f"Backprop with LR: {self.scheduler.get_last_lr()}")

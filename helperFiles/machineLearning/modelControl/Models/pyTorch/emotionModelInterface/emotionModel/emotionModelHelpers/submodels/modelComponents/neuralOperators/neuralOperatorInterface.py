@@ -46,7 +46,7 @@ class neuralOperatorInterface(emotionModelWeights):
         encodeRealFrequencies = neuralOperatorParameters.get('encodeRealFrequencies', True)
 
         # Hardcoded parameters.
-        learningProtocol = 'rFC' if reversibleFlag else 'FC'  # The protocol for learning the wavelet data.
+        learningProtocol = 'rCNN' if reversibleFlag else 'FC'  # The protocol for learning the wavelet data.
         skipConnectionProtocol = 'none' if reversibleFlag else 'CNN'  # The protocol for the skip connections.
         activationMethod = 'none' if reversibleFlag else emotionModelWeights.getIrreversibleActivation()  # The activation method to use.
 

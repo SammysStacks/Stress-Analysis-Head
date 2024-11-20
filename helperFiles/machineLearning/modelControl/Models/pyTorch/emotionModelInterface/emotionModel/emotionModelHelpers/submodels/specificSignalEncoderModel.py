@@ -9,14 +9,13 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class specificSignalEncoderModel(neuralOperatorInterface):
 
-    def __init__(self, numExperiments, operatorType, encodedDimension, featureNames, numLiftingLayers, goldenRatio, learningProtocol, neuralOperatorParameters):
-        super(specificSignalEncoderModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numInputSignals=len(featureNames)*numLiftingLayers, numOutputSignals=len(featureNames)*numLiftingLayers, addBiasTerm=False)
+    def __init__(self, numExperiments, operatorType, encodedDimension, featureNames, goldenRatio, learningProtocol, neuralOperatorParameters):
+        super(specificSignalEncoderModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numInputSignals=len(featureNames), numOutputSignals=len(featureNames), addBiasTerm=False)
         # General model parameters.
         self.neuralOperatorParameters = neuralOperatorParameters  # The parameters for the neural operator.
         self.activationMethod = self.getReversibleActivation()  # The activation method to use.
         self.learningProtocol = learningProtocol  # The learning protocol for the model.
         self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
-        self.numLiftingLayers = numLiftingLayers  # The number of lifting layers to use.
         self.numSignals = len(featureNames)  # The number of signals to encode.
         self.featureNames = featureNames  # The names of the signals to encode.
         self.goldenRatio = goldenRatio  # The golden ratio for the model.
@@ -44,8 +43,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
     def addLayer(self):
         self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True))
-        if self.learningProtocol == 'rCNN': self.processingLayers.append(self.postProcessingLayerRCNN(numSignals=self.numSignals*self.numLiftingLayers, sequenceLength=self.encodedDimension, activationMethod=self.activationMethod))
-        elif self.learningProtocol == 'rFC': self.processingLayers.append(self.postProcessingLayerRFC(numSignals=self.numSignals*self.numLiftingLayers, sequenceLength=self.encodedDimension, activationMethod=self.activationMethod))
+        if self.learningProtocol == 'rCNN': self.processingLayers.append(self.postProcessingLayerRCNN(numSignals=self.numSignals, sequenceLength=self.encodedDimension, activationMethod=self.activationMethod))
         else: raise "The learning protocol is not yet implemented."
 
     def learningInterface(self, layerInd, signalData):
@@ -77,11 +75,11 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 if __name__ == "__main__":
     # General parameters.
     _neuralOperatorParameters = modelParameters.getNeuralParameters({'waveletType': 'bior3.7'})['neuralOperatorParameters']
-    _batchSize, _numSignals, _sequenceLength = 2, 88, 256
+    _batchSize, _numSignals, _sequenceLength = 2, 128, 256
     _featureNames = [f"signal_{i}" for i in range(_numSignals)]
 
     # Set up the parameters.
-    neuralLayerClass = specificSignalEncoderModel(numExperiments=_batchSize, operatorType='wavelet', encodedDimension=_sequenceLength, featureNames=_featureNames, numLiftingLayers=1, goldenRatio=4, learningProtocol='rCNN', neuralOperatorParameters=_neuralOperatorParameters)
+    neuralLayerClass = specificSignalEncoderModel(numExperiments=_batchSize, operatorType='wavelet', encodedDimension=_sequenceLength, featureNames=_featureNames, goldenRatio=4, learningProtocol='rCNN', neuralOperatorParameters=_neuralOperatorParameters)
     neuralLayerClass.addLayer()
 
     # Print the number of trainable parameters.

@@ -38,8 +38,7 @@ class emotionModelHead(nn.Module):
         # Signal encoder parameters.
         self.reversibleLearningProtocol = userInputParams['reversibleLearningProtocol']   # The learning protocol for the model.
         self.neuralOperatorParameters = userInputParams['neuralOperatorParameters']   # The parameters for the neural operator.
-        self.numLiftingLayersSignalEncoder = 1  # The number of lifting layers to use in the signal encoder.
-        self.numSignalEncoderLayers = 0  # The number of layers in the model.
+        self.numSignalEncoderLayers = 0  # The number of layers in the model. Added downstream.
 
         # Emotion and activity parameters.
         self.irreversibleLearningProtocol = userInputParams['irreversibleLearningProtocol']  # The learning protocol for the model.
@@ -59,7 +58,6 @@ class emotionModelHead(nn.Module):
         # The signal encoder model to find a common feature vector across all signals.
         self.specificSignalEncoderModel = specificSignalEncoderModel(
             neuralOperatorParameters=self.neuralOperatorParameters,
-            numLiftingLayers=self.numLiftingLayersSignalEncoder,
             learningProtocol=self.reversibleLearningProtocol,
             encodedDimension=self.encodedDimension,
             featureNames=self.featureNames,
@@ -71,7 +69,6 @@ class emotionModelHead(nn.Module):
         # The autoencoder model reduces the incoming signal's dimension.
         self.sharedSignalEncoderModel = sharedSignalEncoderModel(
             neuralOperatorParameters=self.neuralOperatorParameters,
-            numLiftingLayers=self.numLiftingLayersSignalEncoder,
             learningProtocol=self.reversibleLearningProtocol,
             encodedDimension=self.encodedDimension,
             operatorType=self.operatorType,

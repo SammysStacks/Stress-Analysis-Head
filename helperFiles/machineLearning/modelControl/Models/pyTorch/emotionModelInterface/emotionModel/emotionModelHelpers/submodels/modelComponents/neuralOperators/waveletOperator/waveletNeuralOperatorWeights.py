@@ -61,4 +61,4 @@ class waveletNeuralOperatorWeights(waveletNeuralHelpers):
         if self.learningProtocol == 'rFC': return self.reversibleNeuralWeightRFC(numSignals=inChannel, sequenceLength=initialFrequencyDim)
         elif self.learningProtocol == 'rCNN': return self.reversibleNeuralWeightRCNN(numSignals=inChannel, sequenceLength=initialFrequencyDim)
         elif self.learningProtocol == 'FC': return self.neuralWeightFC(sequenceLength=initialFrequencyDim)
-        else: raise ValueError(f"The learning protocol ({self.learningProtocol}) must be in ['rFC', 'FCC', 'rCNN', 'CNN'].")
+        else: raise ValueError(f"The learning protocol ({self.learningProtocol}) must be in ['FCC', 'rCNN', 'CNN'].")

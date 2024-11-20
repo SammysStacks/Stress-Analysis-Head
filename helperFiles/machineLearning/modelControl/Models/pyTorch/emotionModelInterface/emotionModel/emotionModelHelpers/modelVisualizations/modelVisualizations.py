@@ -49,7 +49,7 @@ class modelVisualizations(globalPlottingProtocols):
     # ---------------------------------------------------------------------- #
 
     def plotDatasetComparison(self, submodel, allModelPipelines, trainingDate):
-        self.accelerator.print(f"\nCalculating loss for model comparison", flush=True)
+        self.accelerator.print(f"\nCalculating loss for model comparison")
 
         # Prepare the model/data for evaluation.
         self.setSavingFolder(f"trainingFigures/{submodel}/{trainingDate}/modelComparison/")  # Label the correct folder to save this analysis.
@@ -66,7 +66,7 @@ class modelVisualizations(globalPlottingProtocols):
                                                plotTitle="trainingLosses/Signal Encoder Convergence Losses")
 
     def plotAllTrainingEvents(self, submodel, modelPipeline, lossDataLoader, trainingDate, currentEpoch):
-        self.accelerator.print(f"\nPlotting results for the {modelPipeline.model.datasetName} model", flush=True)
+        self.accelerator.print(f"\nPlotting results for the {modelPipeline.model.datasetName} model")
 
         # Prepare the model/data for evaluation.
         self.setSavingFolder(f"trainingFigures/{submodel}/{trainingDate}/{modelPipeline.model.datasetName}/")

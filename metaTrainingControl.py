@@ -44,7 +44,7 @@ if __name__ == "__main__":
     # Add arguments for the general model
     parser.add_argument('--submodel', type=str, default=modelConstants.signalEncoderModel, help='The component of the model we are training. Options: signalEncoderModel, emotionModel')
     parser.add_argument('--optimizerType', type=str, default='AdamW', help='The optimizerType used during training convergence: Options: RMSprop, Adam, AdamW, SGD, etc.')
-    parser.add_argument('--reversibleLearningProtocol', type=str, default='rCNN', help='The learning protocol for the model: rCNN, rFC')
+    parser.add_argument('--reversibleLearningProtocol', type=str, default='rCNN', help='The learning protocol for the model: rCNN')
     parser.add_argument('--irreversibleLearningProtocol', type=str, default='FC', help='The learning protocol for the model: CNN, FC')
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are using: cpu, cuda')
 
@@ -59,8 +59,8 @@ if __name__ == "__main__":
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions).')
-    parser.add_argument('--numActivityModelLayers', type=int, default=4, help='The number of layers in the activity model.')
     parser.add_argument('--activityLearningRate', type=float, default=0.01, help='The learning rate of the activity model.')
+    parser.add_argument('--numActivityModelLayers', type=int, default=4, help='The number of layers in the activity model.')
     parser.add_argument('--emotionLearningRate', type=float, default=0.01, help='The learning rate of the emotion model.')
     parser.add_argument('--numEmotionModelLayers', type=int, default=4, help='The number of layers in the emotion model.')
     parser.add_argument('--numActivityChannels', type=int, default=4, help='The number of activity channels.')
@@ -102,7 +102,7 @@ if __name__ == "__main__":
 
     # For each training epoch
     for epoch in range(1, numEpochs + 1):
-        print(f"\nEpoch: {epoch}", flush=True)
+        print(f"\nEpoch: {epoch}")
         startEpochTime = time.time()
 
         # Get the saving information.

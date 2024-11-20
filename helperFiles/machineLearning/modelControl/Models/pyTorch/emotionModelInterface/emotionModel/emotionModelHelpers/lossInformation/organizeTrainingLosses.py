@@ -16,7 +16,7 @@ class organizeTrainingLosses(lossCalculations):
     # -------------------------- Loss Calculations ------------------------- #     
 
     def storeTrainingLosses(self, submodel, modelPipeline, lossDataLoader):
-        self.accelerator.print(f"\nCalculating loss for {modelPipeline.model.datasetName} model", flush=True)
+        self.accelerator.print(f"\nCalculating loss for {modelPipeline.model.datasetName} model")
         modelPipeline.setupTrainingFlags(modelPipeline.model, trainingFlag=False)  # Set all models into evaluation mode.
         model = modelPipeline.model
 

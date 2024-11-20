@@ -11,8 +11,8 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class sharedSignalEncoderModel(neuralOperatorInterface):
 
-    def __init__(self, operatorType, encodedDimension, numLiftingLayers, goldenRatio, learningProtocol, neuralOperatorParameters):
-        super(sharedSignalEncoderModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numInputSignals=numLiftingLayers, numOutputSignals=numLiftingLayers, addBiasTerm=False)
+    def __init__(self, operatorType, encodedDimension, goldenRatio, learningProtocol, neuralOperatorParameters):
+        super(sharedSignalEncoderModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numInputSignals=1, numOutputSignals=1, addBiasTerm=False)
         # General model parameters.
         self.neuralOperatorParameters = neuralOperatorParameters  # The parameters for the neural operator.
         self.encodedTimeWindow = modelConstants.timeWindows[-1]  # The time window for the encoded signal.
@@ -20,7 +20,6 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         self.fourierDimension = encodedDimension // 2 + 1  # The dimension of the fourier data.
         self.learningProtocol = learningProtocol  # The learning protocol for the model.
         self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
-        self.numLiftingLayers = numLiftingLayers  # The number of lifting layers to use.
         self.goldenRatio = goldenRatio  # The golden ratio for the model.
 
         # Initialize the pseudo-encoded times for the fourier data.
@@ -38,17 +37,15 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
 
     def addLayer(self):
         self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True))
-        if self.learningProtocol == 'rCNN': self.processingLayers.append(self.postProcessingLayerRCNN(numSignals=self.numLiftingLayers, sequenceLength=self.encodedDimension, activationMethod=self.activationMethod))
-        elif self.learningProtocol == 'rFC': self.processingLayers.append(self.postProcessingLayerRFC(numSignals=self.numLiftingLayers, sequenceLength=self.encodedDimension, activationMethod=self.activationMethod))
+        if self.learningProtocol == 'rCNN': self.processingLayers.append(self.postProcessingLayerRCNN(numSignals=1, sequenceLength=self.encodedDimension, activationMethod=self.activationMethod))
         else: raise "The learning protocol is not yet implemented."
 
     def learningInterface(self, layerInd, signalData):
         # Extract the signal data parameters.
         batchSize, numSignals, signalLength = signalData.shape
-        numSignals = numSignals // self.numLiftingLayers
 
         # Reshape the signal data.
-        signalData = signalData.view(batchSize*numSignals, self.numLiftingLayers, signalLength)
+        signalData = signalData.view(batchSize*numSignals, 1, signalLength)
 
         # For the forward/harder direction.
         if not reversibleInterface.forwardDirection:
@@ -65,7 +62,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
             signalData = self.activationFunction(signalData, lambda x: self.neuralLayers[pseudoLayerInd].reversibleInterface(x))
 
         # Reshape the signal data.
-        signalData = signalData.view(batchSize, numSignals*self.numLiftingLayers, signalLength)
+        signalData = signalData.view(batchSize, numSignals, signalLength)
 
         return signalData.contiguous()
 
@@ -90,10 +87,10 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
 if __name__ == "__main__":
     # General parameters.
     _neuralOperatorParameters = modelParameters.getNeuralParameters({'waveletType': 'bior3.7'})['neuralOperatorParameters']
-    _batchSize, _numSignals, _sequenceLength = 2, 128, 300
+    _batchSize, _numSignals, _sequenceLength = 2, 128, 256
 
     # Set up the parameters.
-    neuralLayerClass = sharedSignalEncoderModel(operatorType='wavelet', encodedDimension=_sequenceLength, numLiftingLayers=1, goldenRatio=4, learningProtocol='rCNN', neuralOperatorParameters=_neuralOperatorParameters)
+    neuralLayerClass = sharedSignalEncoderModel(operatorType='wavelet', encodedDimension=_sequenceLength, goldenRatio=4, learningProtocol='rCNN', neuralOperatorParameters=_neuralOperatorParameters)
     neuralLayerClass.addLayer()
 
     # Print the number of trainable parameters.

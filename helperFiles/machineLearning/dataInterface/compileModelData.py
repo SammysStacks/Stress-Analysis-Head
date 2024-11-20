@@ -152,7 +152,7 @@ class compileModelData(compileModelDataHelpers):
 
         # Specify model parameters
         loadSubmodelDate, loadSubmodelEpochs, loadSubmodel = self.modelParameters.getModelInfo(submodel, specificInfo)
-        print(f"\nSplitting the data into {'meta-' if metaTraining else ''}models:", flush=True)
+        print(f"\nSplitting the data into {'meta-' if metaTraining else ''}models:")
 
         # For each meta-information collected.
         for metadataInd in range(len(metaRawFeatureIntervalTimes)):
@@ -171,7 +171,7 @@ class compileModelData(compileModelDataHelpers):
 
             # Assert the assumptions made about the incoming data
             assert surveyAnswersList.min() >= -2, "All ratings must be greater than 0 (exception for -2, which is reserved for missing)."
-            assert -1 not in surveyAnswersList, print("surveyAnswersList should contain ratings from 0 to n", flush=True)
+            assert -1 not in surveyAnswersList, print("surveyAnswersList should contain ratings from 0 to n")
             # Specify the incoming dimensions.
             # allRawFeatureIntervals dimension: batchSize, numBiomarkers, finalDistributionLength*, numBiomarkerFeatures*  ->  *finalDistributionLength, *numBiomarkerFeatures are not constant
             # allRawFeatureTimeIntervals dimension: batchSize, numBiomarkers, finalDistributionLength*  ->  *finalDistributionLength is not constant
@@ -283,7 +283,7 @@ class compileModelData(compileModelDataHelpers):
             # Gather the number of bits of information per second.
             numGoodEmotions = torch.any(currentTestingMask, dim=0).sum().item() - numSignals
             print(f"\t{metadatasetName.capitalize()}: Found {numGoodEmotions - 1} (out of {numLabels - 1}) emotions across {numExperiments} experiments "
-                  f"for {numSignals} signals with {round(numExperiments/batch_size, 3)} batches of {batch_size} experiments", flush=True)
+                  f"for {numSignals} signals with {round(numExperiments/batch_size, 3)} batches of {batch_size} experiments")
 
         # Load in the previous model weights and attributes.
         self.modelMigration.loadModels(allModelPipelines, loadSubmodel, loadSubmodelDate, loadSubmodelEpochs, metaTraining=True, loadModelAttributes=True, loadModelWeights=True)
@@ -299,7 +299,7 @@ class compileModelData(compileModelDataHelpers):
         self.modelMigration.replaceFinalModelFolder("_finalModels/storedModels/")
 
         if len(allDummyModelPipelines) == 0:
-            print(f"\nInitializing the models for {modelName}:", flush=True)
+            print(f"\nInitializing the models for {modelName}:")
             # For each model we want.
             for metadataInd in range(len(datasetNames)):
                 datasetName = datasetNames[metadataInd]

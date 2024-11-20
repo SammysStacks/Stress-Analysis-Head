@@ -68,7 +68,7 @@ class waveletNeuralHelpers(emotionModelWeights):
 
     def assertValidParams(self):
         # Assert that the frequency protocol is valid.
-        assert self.learningProtocol in ['rFC', 'FCC', 'rCNN', 'CNN', 'FC'], "Invalid learning protocol. Must be in ['FC', 'FCC', 'rCNN']."
+        assert self.learningProtocol in ['FCC', 'rCNN', 'CNN', 'FC'], "Invalid learning protocol. Must be in ['FC', 'FCC', 'rCNN']."
         assert self.encodeHighFrequencyProtocol in ['highFreq', 'none'], "The high-frequency encoding protocol must be 'highFreq', 'none'."
         assert self.encodeLowFrequencyProtocol in ['lowFreq', 'none'], "The low-frequency encoding protocol must be 'lowFreq', 'none'."
         assert self.numInputSignals == self.numOutputSignals, "The number of input signals must equal the output signals for now."
