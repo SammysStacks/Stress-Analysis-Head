@@ -1,8 +1,10 @@
 """ Written by Samuel Solomon: https://scholar.google.com/citations?user=9oq12oMAAAAJ&hl=en """
 
 import os
+import sys
 # Set specific environmental parameters.
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+sys.stderr = sys.stdout  # Redirect stderr to stdout
 
 # General
 import accelerate

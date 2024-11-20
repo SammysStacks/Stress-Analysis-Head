@@ -31,7 +31,6 @@ sounddevice
 soundfile
 SpeechRecognition
 sympy
-tensorflow
 tensorly
 torchsummary
 torchviz
