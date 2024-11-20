@@ -133,14 +133,18 @@ class generalVisualizations(globalPlottingProtocols):
         # Base case: there is no data to plot.
         if len(trainingLosses[0]) == 0: return None
 
-        # Plot the training loss.
-        for trainingLossesInd in range(len(trainingLosses)):
-            plt.plot(trainingLosses[trainingLossesInd], label=f'{lossLabels[trainingLossesInd]} (Train)', color=self.darkColors[trainingLossesInd], linewidth=2)
-            if testingLosses is not None: plt.plot(testingLosses[trainingLossesInd], color=self.darkColors[trainingLossesInd], linewidth=2, alpha=0.5)
-        # Set y-axis to a logarithmic scale
-        if logY: plt.yscale('log')
+        # Plot the losses
+        for modelInd in range(len(trainingLosses)):
+            plt.plot(np.asarray(trainingLosses[modelInd]).mean(axis=-1), label=f'{lossLabels[modelInd]} (Train)', color=self.darkColors[modelInd], linewidth=2)
+            if testingLosses is not None: plt.plot(np.asarray(trainingLosses[modelInd]).mean(axis=-1), '--', color=self.darkColors[modelInd], linewidth=2, alpha=0.75)
+
+        # Plot the losses
+        for modelInd in range(len(trainingLosses)):
+            plt.plot(np.asarray(trainingLosses[modelInd]).mean(axis=-1), color=self.darkColors[modelInd], linewidth=2, alpha=0.1)
+            if testingLosses is not None: plt.plot(np.asarray(trainingLosses[modelInd]).mean(axis=-1), '--', color=self.darkColors[modelInd], linewidth=2, alpha=0.1)
 
         # Label the plot.
+        if logY: plt.yscale('log')
         plt.xlabel("Training Epoch")
         plt.ylabel("Loss Values")
         plt.title(f"{plotTitle.split('/')[-1]}")
