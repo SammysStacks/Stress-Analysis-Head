@@ -143,10 +143,12 @@ class generalVisualizations(globalPlottingProtocols):
 
         # Plot the losses
         for modelInd in range(len(trainingLosses)):
-            plt.plot(np.asarray(trainingLosses[modelInd]), color=self.darkColors[modelInd], linewidth=2, alpha=0.1)
+            plt.plot(np.asarray(trainingLosses[modelInd]), color=self.darkColors[modelInd], linewidth=1, alpha=0.01)
             if testingLosses is not None:
-                testingLoss = testingLosses[modelInd][np.isnan(testingLosses[modelInd])]
-                plt.plot(testingLoss, '--', color=self.darkColors[modelInd], linewidth=2, alpha=0.1)
+                testingLoss = np.asarray(testingLosses[modelInd])
+                if np.isnan(testingLoss).all(): continue
+                testingLoss = testingLoss[np.isnan(testingLoss)]
+                plt.plot(testingLoss, '--', color=self.darkColors[modelInd], linewidth=1, alpha=0.01)
 
         # Label the plot.
         if logY: plt.yscale('log')
