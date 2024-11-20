@@ -48,7 +48,6 @@ class trainingProtocolHelpers:
             dataLoader = allMetadataLoaders[modelInd] if modelInd < len(allMetadataLoaders) else allDataLoaders[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
             modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
             trainSharedLayers = modelInd < len(allMetaModels)  # Train the shared layers.
-            stepScheduler = modelInd == modelIndices[-1]  # Step the scheduler.
 
             # Train the updated model.
             self.modelMigration.unifyModelWeights(allModels=[modelPipeline], modelWeights=self.sharedModelWeights, layerInfo=self.unifiedLayerData)
@@ -57,10 +56,10 @@ class trainingProtocolHelpers:
 
             # Unify all the model weights and retrain the specific models.
             self.unifiedLayerData = self.modelMigration.copyModelWeights(modelPipeline, self.sharedModelWeights)
-            if trainSharedLayers: self.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, stepScheduler=stepScheduler, skipModelInd=modelInd)
 
         # Unify all the model weights.
         self.unifyAllModelWeights(allMetaModels, allModels)
+        self.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, stepScheduler=True, skipModelInd=None)
 
     def datasetSpecificTraining(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, stepScheduler, skipModelInd=None):
         # Unify all the model weights.

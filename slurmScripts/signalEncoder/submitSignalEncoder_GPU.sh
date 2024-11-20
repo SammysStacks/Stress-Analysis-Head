@@ -19,7 +19,6 @@
 
 # Load in your modules
 module load python/3.10.12-gcc-11.3.1-n4zmj3v
-module load  cuda/12.2.1-gcc-11.3.1-yfdtcdo
 nvcc --version
 
 # Set the PyTorch CUDA allocation configuration
