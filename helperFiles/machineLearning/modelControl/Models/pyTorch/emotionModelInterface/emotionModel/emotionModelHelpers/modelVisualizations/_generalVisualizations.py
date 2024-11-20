@@ -135,13 +135,18 @@ class generalVisualizations(globalPlottingProtocols):
 
         # Plot the losses
         for modelInd in range(len(trainingLosses)):
-            plt.plot(np.asarray(trainingLosses[modelInd]).mean(axis=-1), label=f'{lossLabels[modelInd]} (Train)', color=self.darkColors[modelInd], linewidth=2)
-            if testingLosses is not None: plt.plot(np.asarray(trainingLosses[modelInd]).mean(axis=-1), '--', color=self.darkColors[modelInd], linewidth=2, alpha=0.75)
+            plt.plot(np.asarray(trainingLosses[modelInd]).nanmean(axis=-1), label=f'{lossLabels[modelInd]} (Train)', color=self.darkColors[modelInd], linewidth=2)
+            if testingLosses is not None:
+                testingLoss = np.asarray(testingLosses[modelInd]).nanmean(axis=-1)
+                testingLoss = np.where(np.isnan(testingLoss), 0, testingLoss)
+                plt.plot(testingLoss, '--', color=self.darkColors[modelInd], linewidth=2, alpha=0.75)
 
         # Plot the losses
         for modelInd in range(len(trainingLosses)):
-            plt.plot(np.asarray(trainingLosses[modelInd]).mean(axis=-1), color=self.darkColors[modelInd], linewidth=2, alpha=0.1)
-            if testingLosses is not None: plt.plot(np.asarray(trainingLosses[modelInd]).mean(axis=-1), '--', color=self.darkColors[modelInd], linewidth=2, alpha=0.1)
+            plt.plot(np.asarray(trainingLosses[modelInd]), color=self.darkColors[modelInd], linewidth=2, alpha=0.1)
+            if testingLosses is not None:
+                testingLoss = testingLosses[modelInd][np.isnan(testingLosses[modelInd])]
+                plt.plot(testingLoss, '--', color=self.darkColors[modelInd], linewidth=2, alpha=0.1)
 
         # Label the plot.
         if logY: plt.yscale('log')
