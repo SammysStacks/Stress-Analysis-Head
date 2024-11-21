@@ -40,7 +40,7 @@ class trainingProtocolHelpers:
     def trainEpoch(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders):
         # Set random order to loop through the models.
         self.unifyAllModelWeights(allMetaModels, allModels)
-        modelIndices = list(range(len(allModels) + len(allMetaModels)))
+        modelIndices = list(range(len(allMetaModels)))
         random.shuffle(modelIndices)
 
         # For each training model.
@@ -70,9 +70,12 @@ class trainingProtocolHelpers:
             if skipModelInd is not None and modelInd == skipModelInd: continue
             dataLoader = allMetadataLoaders[modelInd] if modelInd < len(allMetadataLoaders) else allDataLoaders[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
             modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
+            if modelPipeline.datasetName.lower() == 'empatch': numEpochs = 2
+            elif modelPipeline.datasetName.lower() == 'wesad': numEpochs = 12
+            else: numEpochs = 1
 
             # Train the updated model.
-            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=True, specificTraining=True, trainSharedLayers=False, stepScheduler=stepScheduler, numEpochs=1)  # Signal-specific training: training only.
+            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=True, specificTraining=True, trainSharedLayers=False, stepScheduler=stepScheduler, numEpochs=numEpochs)  # Signal-specific training: training only.
             self.unifiedLayerData = self.modelMigration.copyModelWeights(modelPipeline, self.sharedModelWeights)
             self.accelerator.wait_for_everyone()
 
