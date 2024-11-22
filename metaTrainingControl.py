@@ -67,6 +67,10 @@ if __name__ == "__main__":
     parser.add_argument('--numEmotionModelLayers', type=int, default=4, help='The number of layers in the emotion model.')
     parser.add_argument('--numActivityChannels', type=int, default=4, help='The number of activity channels.')
 
+    # Temporary parameters.
+    parser.add_argument('--generalLR', type=int, default=1e-1, help='The number of experiments to run.')
+    parser.add_argument('--physioLR', type=int, default=1e-2, help='The number of experiments to run.')
+
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
     submodel = userInputParams['submodel']

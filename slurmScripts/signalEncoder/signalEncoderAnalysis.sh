@@ -10,6 +10,9 @@ srun accelerate launch ./../../metaTrainingControl.py \
     --submodel "signalEncoderModel" \
     --waveletType "$5" \
     --optimizerType "$6" \
+    ----physioLR "$7" \
+    ----generalLR "$8" \
+
 
 end=$(date +%s)
 runtime=$((end-start))
