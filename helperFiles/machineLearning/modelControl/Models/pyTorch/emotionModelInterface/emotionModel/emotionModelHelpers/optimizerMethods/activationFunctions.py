@@ -34,7 +34,7 @@ def getActivationMethod(activationMethod):
 
 
 class reversibleLinearSoftSign(reversibleInterface):
-    def __init__(self, inversionPoint=2.0):
+    def __init__(self, inversionPoint):
         super(reversibleLinearSoftSign, self).__init__()
         self.inversionPoint = inversionPoint  # The point at which the activation inverts. Higher values increase the non-linearity and decrease the final magnitude.
         self.tolerance = 1e-20  # Tolerance for numerical stability
