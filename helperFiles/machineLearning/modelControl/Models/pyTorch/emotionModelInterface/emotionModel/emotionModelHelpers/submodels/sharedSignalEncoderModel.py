@@ -16,7 +16,6 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         # General model parameters.
         self.neuralOperatorParameters = neuralOperatorParameters  # The parameters for the neural operator.
         self.encodedTimeWindow = modelConstants.timeWindows[-1]  # The time window for the encoded signal.
-        self.activationMethod = self.getReversibleActivation()  # The activation method to use.
         self.fourierDimension = encodedDimension // 2 + 1  # The dimension of the fourier data.
         self.learningProtocol = learningProtocol  # The learning protocol for the model.
         self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
@@ -29,7 +28,6 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         assert len(deltaTimes) == 1, f"The time gaps are not similar: {deltaTimes}"
 
         # The neural layers for the signal encoder.
-        self.activationFunction = activationFunctions.getActivationMethod(self.activationMethod)
         self.processingLayers, self.neuralLayers = nn.ModuleList(), nn.ModuleList()
 
     def forward(self):
@@ -37,7 +35,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
 
     def addLayer(self):
         self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True))
-        if self.learningProtocol == 'rCNN': self.processingLayers.append(self.postProcessingLayerRCNN(numSignals=1, sequenceLength=self.encodedDimension, activationMethod=self.activationMethod))
+        if self.learningProtocol == 'rCNN': self.processingLayers.append(self.postProcessingLayerRCNN(numSignals=1, sequenceLength=self.encodedDimension))
         else: raise "The learning protocol is not yet implemented."
 
     def learningInterface(self, layerInd, signalData):
@@ -50,7 +48,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         # For the forward/harder direction.
         if not reversibleInterface.forwardDirection:
             # Apply the neural operator layer with activation.
-            signalData = self.activationFunction(signalData, lambda x: self.neuralLayers[layerInd].reversibleInterface(x))
+            signalData = self.neuralLayers[layerInd](signalData)
             signalData = self.processingLayers[layerInd](signalData)
         else:
             # Get the reverse layer index.
@@ -59,7 +57,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
 
             # Apply the neural operator layer with activation.
             signalData = self.processingLayers[pseudoLayerInd](signalData)
-            signalData = self.activationFunction(signalData, lambda x: self.neuralLayers[pseudoLayerInd].reversibleInterface(x))
+            signalData = self.neuralLayers[pseudoLayerInd](signalData)
 
         # Reshape the signal data.
         signalData = signalData.view(batchSize, numSignals, signalLength)

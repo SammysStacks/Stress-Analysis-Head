@@ -89,7 +89,7 @@ class reversibleLinearLayer(reversibleInterface):
 if __name__ == "__main__":
     # General parameters.
     _batchSize, _numSignals, _sequenceLength = 64, 128, 128
-    _activationMethod = 'reversibleLinearSoftSign'
+    _activationMethod = 'reversibleLinearSoftSign_2'
     _kernelSize = 2*_sequenceLength-1
     _numLayers = 1
 

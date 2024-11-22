@@ -51,12 +51,9 @@ class reversibleConvolutionLayer(reversibleInterface):
 
             # Apply the weights to the input data.
             if self.activationMethod == 'none': inputData = self.applyLayer(inputData, layerInd)
-            else: inputData = self.activationFunction(inputData, self.layerHolder(layerInd))
+            else: inputData = self.activationFunction(inputData, lambda x: self.applyLayer(x, layerInd))
 
         return inputData
-
-    def layerHolder(self, layerInd):
-        return lambda x: self.applyLayer(x, layerInd)
 
     def applyLayer(self, inputData, layerInd):
         # Unpack the dimensions.
@@ -92,14 +89,14 @@ class reversibleConvolutionLayer(reversibleInterface):
 if __name__ == "__main__":
     # General parameters.
     _batchSize, _numSignals, _sequenceLength = 64, 128, 128
-    _activationMethod = 'reversibleLinearSoftSign'
+    _activationMethod = 'reversibleLinearSoftSign_2'
     _kernelSize = 2*_sequenceLength - 1
     _numLayers = 1
 
     # Set up the parameters.
     neuralLayerClass = reversibleConvolutionLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod)
     _inputData = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float64)
-    _inputData = nn.init.normal_(_inputData, mean=0, std=1/2)
+    _inputData = nn.init.normal_(_inputData, mean=0, std=1)
 
     # Perform the convolution in the fourier and spatial domains.
     _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(_inputData, atol=1e-6, numLayers=1)

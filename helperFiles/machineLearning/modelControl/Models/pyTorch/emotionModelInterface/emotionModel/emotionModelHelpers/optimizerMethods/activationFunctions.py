@@ -16,7 +16,7 @@ def getActivationMethod(activationMethod):
         topExponent = int(activationMethod.split('_')[1]) if '_' in activationMethod else 0
         activationFunction = boundedExp(decayConstant=topExponent, nonLinearityRegion=nonLinearityRegion)
     elif activationMethod.startswith('reversibleLinearSoftSign'):
-        activationFunction = reversibleLinearSoftSign()
+        activationFunction = reversibleLinearSoftSign(inversionPoint = float(activationMethod.split('_')[1]))
     elif activationMethod.startswith('boundedS'):
         invertedActivation = activationMethod.split('_')[1] == "True"
         activationFunction = boundedS(invertedActivation=invertedActivation)
@@ -34,7 +34,7 @@ def getActivationMethod(activationMethod):
 
 
 class reversibleLinearSoftSign(reversibleInterface):
-    def __init__(self, inversionPoint=2):
+    def __init__(self, inversionPoint=2.0):
         super(reversibleLinearSoftSign, self).__init__()
         self.inversionPoint = inversionPoint  # The point at which the activation inverts. Higher values increase the non-linearity and decrease the final magnitude.
         self.tolerance = 1e-20  # Tolerance for numerical stability
@@ -44,7 +44,7 @@ class reversibleLinearSoftSign(reversibleInterface):
         self.infiniteBound = 1 - 1/((1 + self.inversionPoint)*self.linearity)  # This controls how the activation converges at +/- infinity; Ex: 0.5, 13/21, 33/49
 
         # Assert the validity of the inputs.
-        assert 1 <= self.inversionPoint, "The inversion point must be greater than 1 to ensure a stable convergence."
+        # assert 1 <= self.inversionPoint, "The inversion point must be greater than 1 to ensure a stable convergence."
         assert self.infiniteBound == 0.5, "The infinite bound term must be 0.5 to ensure a stable convergence!!"
         # Notes: The linearity term must be 1 if the inversion point is 1 to ensure a stable convergence.
         # Notes: The inversion point must be greater than 1 to ensure a stable convergence.

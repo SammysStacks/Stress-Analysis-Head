@@ -1,7 +1,6 @@
 from torch import nn
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.neuralOperators.neuralOperatorInterface import neuralOperatorInterface
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.trainingProfileInformation import trainingProfileInformation
@@ -13,7 +12,6 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         super(specificSignalEncoderModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numInputSignals=len(featureNames), numOutputSignals=len(featureNames), addBiasTerm=False)
         # General model parameters.
         self.neuralOperatorParameters = neuralOperatorParameters  # The parameters for the neural operator.
-        self.activationMethod = self.getReversibleActivation()  # The activation method to use.
         self.learningProtocol = learningProtocol  # The learning protocol for the model.
         self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
         self.numSignals = len(featureNames)  # The number of signals to encode.
@@ -21,7 +19,6 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         self.goldenRatio = goldenRatio  # The golden ratio for the model.
 
         # The neural layers for the signal encoder.
-        self.activationFunction = activationFunctions.getActivationMethod(self.activationMethod)
         self.profileModel = trainingProfileInformation(numExperiments, encodedDimension)
         self.processingLayers, self.neuralLayers = nn.ModuleList(), nn.ModuleList()
 
@@ -43,14 +40,14 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
     def addLayer(self):
         self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True))
-        if self.learningProtocol == 'rCNN': self.processingLayers.append(self.postProcessingLayerRCNN(numSignals=self.numSignals, sequenceLength=self.encodedDimension, activationMethod=self.activationMethod))
+        if self.learningProtocol == 'rCNN': self.processingLayers.append(self.postProcessingLayerRCNN(numSignals=self.numSignals, sequenceLength=self.encodedDimension))
         else: raise "The learning protocol is not yet implemented."
 
     def learningInterface(self, layerInd, signalData):
         # For the forward/harder direction.
         if not reversibleInterface.forwardDirection:
             # Apply the neural operator layer with activation.
-            signalData = self.activationFunction(signalData, lambda x: self.neuralLayers[layerInd].reversibleInterface(x))
+            signalData = self.neuralLayers[layerInd](signalData)
             signalData = self.processingLayers[layerInd](signalData)
         else:
             # Get the reverse layer index.
@@ -59,7 +56,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
             # Apply the neural operator layer with activation.
             signalData = self.processingLayers[pseudoLayerInd](signalData)
-            signalData = self.activationFunction(signalData, lambda x: self.neuralLayers[pseudoLayerInd].reversibleInterface(x))
+            signalData = self.neuralLayers[pseudoLayerInd](signalData)
 
         return signalData.contiguous()
 

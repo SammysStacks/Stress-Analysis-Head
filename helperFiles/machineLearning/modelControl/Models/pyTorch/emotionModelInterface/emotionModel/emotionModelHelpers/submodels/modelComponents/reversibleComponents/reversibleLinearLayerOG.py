@@ -83,7 +83,7 @@ class reversibleLinearLayerOG(reversibleInterface):
 if __name__ == "__main__":
     # General parameters.
     _batchSize, _numSignals, _sequenceLength = 2, 3, 256
-    _activationMethod = 'reversibleLinearSoftSign'
+    _activationMethod = 'reversibleLinearSoftSign_2'
     _kernelSize = 21
     _numLayers = 100
 
