@@ -26,8 +26,7 @@ waveletTypes=( \
 
 waveletTypes=( \
     # 17 coif wavelets
-    'coif1' 'coif2' 'coif3' 'coif4' 'coif5' 'coif6' 'coif7' 'coif8' 'coif9' 'coif10' \
-    'coif11' 'coif12' 'coif13' 'coif14' 'coif15' 'coif16' 'coif17' \
+    'coif9' 'coif10' 'coif11' 'coif12' 'coif13' 'coif14' 'coif15' 'coif16' 'coif17' \
 
     # 15 rbio wavelets
     'rbio1.1' 'rbio1.3' 'rbio1.5' 'rbio2.2' 'rbio2.4' 'rbio2.6' 'rbio2.8' \

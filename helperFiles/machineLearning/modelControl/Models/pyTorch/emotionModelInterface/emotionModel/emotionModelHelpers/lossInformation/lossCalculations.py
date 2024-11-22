@@ -43,10 +43,10 @@ class lossCalculations:
     def calculateSignalEncodingLoss(self, allInitialSignalData, allReconstructedSignalData, allValidDataMask, allSignalMask):
         # Get the relevant data for the loss calculation.
         allDatapoints = emotionDataInterface.getChannelData(allInitialSignalData, channelName=modelConstants.signalChannel)
-        validDataMask = allValidDataMask.clone()
+        validDataMask = allValidDataMask.clone()  # Masks out missing data points.
 
         # Compile the relevant data for the loss calculation.
-        if allSignalMask is not None: validDataMask[~allSignalMask.unsqueeze(-1).expand_as(validDataMask)] = False
+        if allSignalMask is not None: validDataMask[~allSignalMask.unsqueeze(-1).expand_as(validDataMask)] = False  # Additionally, masks out training vs testing.
         if validDataMask.sum() == 0: print("No valid batches"); return None
 
         # Calculate the error in signal reconstruction (encoding loss).
@@ -55,6 +55,10 @@ class lossCalculations:
 
         # Assert that nothing is wrong with the loss calculations.
         self.modelHelpers.assertVariableIntegrity(signalReconstructedLoss, variableName="encoded signal reconstructed loss", assertGradient=False)
+
+        # TODO: Downplay uncertain data point losses? If so how??
+        # signalReconstructedLoss[~validDataMask] = signalReconstructedLoss[~validDataMask] / 2
+        # signalReconstructedLoss[~validDataMask] = torch.nan
 
         # Calculate the mean loss across all signals.
         signalReconstructedLoss[~validDataMask] = torch.nan  # Zero out the loss for invalid data points.
