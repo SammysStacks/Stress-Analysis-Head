@@ -65,9 +65,9 @@ class emotionModelWeights(convolutionalHelpers):
     # ------------------- Reversible Signal Encoding Architectures ------------------- #
 
     @staticmethod
-    def reversibleNeuralWeightRCNN(numSignals, sequenceLength):
+    def reversibleNeuralWeightRCNN(numSignals, sequenceLength, activationMethod):
         if sequenceLength <= 1: return nn.Identity()
-        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=1, activationMethod='none')
+        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=1, activationMethod=activationMethod)
 
     @staticmethod
     def postProcessingLayerRCNN(numSignals, sequenceLength, activationMethod):

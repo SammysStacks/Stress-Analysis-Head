@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Specify the module parameters
-#SBATCH --time=7-00:00:00   # Total runtime. Maximum 9-10 days
+#SBATCH --time=1-00:00:00   # Total runtime. Maximum 9-10 days
 #SBATCH --mem=24G    # Total memory
 #SBATCH --ntasks=1    # number of processor cores (i.e. tasks)
 #SBATCH --nodes=1     # Total number of nodes
@@ -16,4 +16,4 @@
 #SBATCH --mail-type=BEGIN,END,FAIL
 
 # RUN FILE
-sh signalEncoderAnalysis.sh "$1" "$2" "$3" "$4" "$5" "$6"
+sh signalEncoderAnalysis.sh "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8"
