@@ -7,7 +7,7 @@ waveletType='bior3.3'
 encodedDimension=256
 goldenRatio=2
 
-lr_general=0.1
+lr_general=0.001
 lr_physio=0.01
 
 for optimizer in "${optimizers[@]}"

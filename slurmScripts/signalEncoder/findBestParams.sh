@@ -1,12 +1,12 @@
 #!/bin/bash
 
 waveletTypes=('bior3.3')
-signalEncoderLayers=(4 8 16 24 32)
+signalEncoderLayers=(8 16 24 32)
 encodedDimensions=(64 128 256)
 goldenRatios=(1 2 4)
 optimizers=('AdamW')
 
-lr_general=0.1
+lr_general=0.001
 lr_physio=0.01
 
 for optimizer in "${optimizers[@]}"

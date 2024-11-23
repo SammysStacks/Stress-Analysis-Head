@@ -25,9 +25,6 @@ waveletTypes=( \
 )
 
 waveletTypes=( \
-    # 17 coif wavelets
-    'coif9' 'coif10' 'coif11' 'coif12' 'coif13' 'coif14' 'coif15' 'coif16' 'coif17' \
-
     # 15 rbio wavelets
     'rbio1.1' 'rbio1.3' 'rbio1.5' 'rbio2.2' 'rbio2.4' 'rbio2.6' 'rbio2.8' \
     'rbio3.1' 'rbio3.3' 'rbio3.5' 'rbio3.7' 'rbio3.9' 'rbio4.4' 'rbio5.5' 'rbio6.8' \
@@ -37,7 +34,7 @@ waveletTypes=( \
     'bior3.1' 'bior3.3' 'bior3.5' 'bior3.7' 'bior3.9' 'bior4.4' 'bior5.5' 'bior6.8' \
 )
 
-lr_general=0.1
+lr_general=0.001
 lr_physio=0.01
 
 numSignalEncoderLayers=16
