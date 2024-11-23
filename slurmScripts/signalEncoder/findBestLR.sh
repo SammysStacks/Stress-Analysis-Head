@@ -3,11 +3,11 @@
 lrs_general=(0.1 0.01 0.001)
 lrs_physio=(0.1 0.01 0.001)
 
-numSignalEncoderLayers=16
+numSignalEncoderLayers=8
 waveletType='bior3.3'
 encodedDimension=256
 optimizer='AdamW'
-goldenRatio=2
+goldenRatio=1
 
 for lr_physio in "${lrs_physio[@]}"
 do
