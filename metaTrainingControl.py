@@ -35,7 +35,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2024-11-22 8-2 ACT 2 2 smooth phy"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2024-11-22 16-1 ACT 1 1 smooth phy-5"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.2  # The percentage of testing points.
 
     # ----------------------- Parse Model Parameters ----------------------- #
