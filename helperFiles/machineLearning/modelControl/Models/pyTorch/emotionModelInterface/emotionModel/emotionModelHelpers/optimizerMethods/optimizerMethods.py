@@ -16,7 +16,7 @@ class optimizerMethods:
             # Specify the model parameters for the signal encoding.
             {'params': model.inferenceModel.parameters(), 'weight_decay': 0, 'lr': 1e-2},
             {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': 0, 'lr': self.userInputParams['generalLR']},  # 0.1 - 0.001
-            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "profileModel" not in name), 'weight_decay': 0, 'lr': self.userInputParams['generalLR']},  # 0.1 - 0.001
+            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "profileModel" not in name), 'weight_decay': 0, 'lr': 2*self.userInputParams['generalLR']},  # 0.1 - 0.001
             {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': 0, 'lr': self.userInputParams['physioLR']},  # 0.1 - 0.01
         ]
 

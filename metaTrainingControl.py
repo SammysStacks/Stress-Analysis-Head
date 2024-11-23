@@ -68,8 +68,8 @@ if __name__ == "__main__":
     parser.add_argument('--numActivityChannels', type=int, default=4, help='The number of activity channels.')
 
     # Temporary parameters.
-    parser.add_argument('--generalLR', type=float, default=1e-2, help='The number of experiments to run.')
-    parser.add_argument('--physioLR', type=float, default=1e-1, help='The number of experiments to run.')
+    parser.add_argument('--generalLR', type=float, default=1e-3, help='The number of experiments to run.')
+    parser.add_argument('--physioLR', type=float, default=1e-2, help='The number of experiments to run.')
 
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
