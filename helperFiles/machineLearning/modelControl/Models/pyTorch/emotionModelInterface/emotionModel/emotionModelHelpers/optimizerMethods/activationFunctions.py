@@ -44,19 +44,20 @@ class reversibleLinearSoftSign(reversibleInterface):
         self.infiniteBound = 1 - 1/((1 + self.inversionPoint)*self.linearity)  # This controls how the activation converges at +/- infinity; Ex: 0.5, 13/21, 33/49
 
         # Assert the validity of the inputs.
-        # assert 1 <= self.inversionPoint, "The inversion point must be greater than 1 to ensure a stable convergence."
         assert self.infiniteBound == 0.5, "The infinite bound term must be 0.5 to ensure a stable convergence!!"
+        assert 0 < self.linearity, "The linearity must be positive to ensure a stable convergence."
         # Notes: The linearity term must be 1 if the inversion point is 1 to ensure a stable convergence.
         # Notes: The inversion point must be greater than 1 to ensure a stable convergence.
 
     def forward(self, x, linearModel):
-        x = self.forwardPass(x)  # Increase the signal.
+        x = self.forwardPass(x)  # Increase the signal below inversion point; decrease above.
         x = linearModel(x)  # Learn in the scaled domain.
-        x = self.inversePass(x)  # Decrease the signal.
+        x = self.inversePass(x)  # Decrease the signal below inversion point; increase above.
 
         return x
 
     def forwardPass(self, x):
+        # Increase the signal below inversion point; decrease above.
         return self.infiniteBound*x + x / (1 + x.abs()) / self.linearity  # f(x) = x + x / (1 + |x|) / r
 
     def inversePass(self, y):
@@ -64,6 +65,7 @@ class reversibleLinearSoftSign(reversibleInterface):
         signY = torch.nn.functional.hardtanh(y, min_val=-self.tolerance, max_val=self.tolerance) / self.tolerance
         r, a = self.linearity, self.infiniteBound  # The linearity and infinite bound terms
 
+        # Decrease the signal below inversion point; increase above.
         sqrtTerm = ((r*a)**2 + 2*a*r*(1 + signY*y*r) + (r*y - signY).pow(2)) / (r*a)**2
         x = signY*(sqrtTerm.sqrt() - 1)/2 - signY / (2*a*r) + y / (2*a)
 

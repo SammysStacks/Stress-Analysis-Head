@@ -168,7 +168,7 @@ class emotionModelHead(nn.Module):
         # Get the estimated physiological profiles.
         if inferenceTraining: physiologicalProfile = self.inferenceModel.getCurrentPhysiologicalProfile(batchInds)
         else: physiologicalProfile = self.specificSignalEncoderModel.profileModel.getCurrentPhysiologicalProfile(batchInds)
-        # physiologicalProfile = self.specificSignalEncoderModel.smoothingFilter(physiologicalProfile.unsqueeze(1), kernelSize=3).squeeze(1)
+        physiologicalProfile = self.specificSignalEncoderModel.smoothingFilter(physiologicalProfile.unsqueeze(1), kernelSize=3).squeeze(1)
         # physiologicalProfile: batchSize, encodedDimension
 
         # ------------------- Learned Signal Mapping ------------------- #

@@ -53,10 +53,8 @@ class fourierNeuralOperatorLayer(fourierNeuralOperatorWeights):
         # realFourierData: batchSize, numInputSignals, fourierDimension
 
         # Learn a new set of wavelet coefficients using both of the frequency data.
-        if self.learningProtocol in ['drFC', 'drCNN']: realFourierData, imaginaryFourierData = self.dualFrequencyWeights(realFourierData, imaginaryFourierData)
-        else:  # Multiply relevant Fourier modes (Sampling low-frequency spectrum).
-            if self.encodeImaginaryFrequencies: imaginaryFourierData = self.applyEncoding(equationString='oin,bin->bon', frequencies=imaginaryFourierData, weights=self.imaginaryFourierWeights, frequencyTerms=imaginaryFrequencyTerms)
-            if self.encodeRealFrequencies: realFourierData = self.applyEncoding(equationString='oin,bin->bon', frequencies=realFourierData, weights=self.realFourierWeights, frequencyTerms=realFrequencyTerms)
+        if self.encodeImaginaryFrequencies: imaginaryFourierData = self.applyEncoding(equationString='oin,bin->bon', frequencies=imaginaryFourierData, weights=self.imaginaryFourierWeights, frequencyTerms=imaginaryFrequencyTerms)
+        if self.encodeRealFrequencies: realFourierData = self.applyEncoding(equationString='oin,bin->bon', frequencies=realFourierData, weights=self.realFourierWeights, frequencyTerms=realFrequencyTerms)
         # imaginaryFourierData: batchSize, numOutputChannels, fourierDimension
         # realFourierData: batchSize, numOutputChannels, fourierDimension
 

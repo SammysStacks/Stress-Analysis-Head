@@ -15,13 +15,8 @@ class waveletNeuralOperatorWeights(waveletNeuralHelpers):
         self.activationFunction = activationFunctions.getActivationMethod(activationMethod=activationMethod)  # Activation function for the neural operator.
         if self.addBiasTerm: self.operatorBiases = self.neuralBiasParameters(numChannels=numOutputSignals)  # Bias terms for the neural operator.
         self.skipConnectionModel = self.getSkipConnectionProtocol(skipConnectionProtocol)  # Skip connection model for the neural operator.
-
-        if self.learningProtocol in ['drFC', 'drCNN']:
-            self.dualFrequencyWeights = self.getNeuralWeightParameters(inChannel=self.numInputSignals, initialFrequencyDim=self.lowFrequencyShape)  # Learnable parameters for the dual-frequency signal.
-            assert numDecompositions == 1, f"The number of decompositions must be 1 for the dual-frequency signal: {numDecompositions}"
-        else:
-            self.highFrequenciesWeights = self.getHighFrequencyWeights()  # Learnable parameters for the high-frequency signal.
-            self.lowFrequencyWeights = self.getLowFrequencyWeights()  # Learnable parameters for the low-frequency signal.
+        self.highFrequenciesWeights = self.getHighFrequencyWeights()  # Learnable parameters for the high-frequency signal.
+        self.lowFrequencyWeights = self.getLowFrequencyWeights()  # Learnable parameters for the low-frequency signal.
 
     def getSkipConnectionProtocol(self, skipConnectionProtocol):
         # Decide on the skip connection protocol.
@@ -44,7 +39,7 @@ class waveletNeuralOperatorWeights(waveletNeuralHelpers):
             # For each high frequency term.
             highFrequenciesWeights = nn.ModuleList()
             for highFrequenciesInd in range(len(self.highFrequenciesShapes)):
-                highFrequencyParam = self.getNeuralWeightParameters(inChannel=self.numInputSignals, initialFrequencyDim=self.highFrequenciesShapes[highFrequenciesInd])
+                highFrequencyParam = self.getNeuralWeightParameters(inChannel=self.numInputSignals, initialFrequencyDim=self.highFrequenciesShapes[highFrequenciesInd], addActivation=False)
                 # Store the high-frequency weights.
                 highFrequenciesWeights.append(highFrequencyParam)
 
@@ -52,13 +47,12 @@ class waveletNeuralOperatorWeights(waveletNeuralHelpers):
 
     def getLowFrequencyWeights(self):
         # Initialize the low-frequency weights.
-        if self.encodeLowFrequency: lowFrequencyWeights = self.getNeuralWeightParameters(inChannel=self.numInputSignals, initialFrequencyDim=self.lowFrequencyShape)
+        if self.encodeLowFrequency: lowFrequencyWeights = self.getNeuralWeightParameters(inChannel=self.numInputSignals, initialFrequencyDim=self.lowFrequencyShape, addActivation=True)
         else: lowFrequencyWeights = None
 
         return lowFrequencyWeights
 
-    def getNeuralWeightParameters(self, inChannel, initialFrequencyDim):
-        if self.learningProtocol == 'rFC': return self.reversibleNeuralWeightRFC(numSignals=inChannel, sequenceLength=initialFrequencyDim)
-        elif self.learningProtocol == 'rCNN': return self.reversibleNeuralWeightRCNN(numSignals=inChannel, sequenceLength=initialFrequencyDim)
+    def getNeuralWeightParameters(self, inChannel, initialFrequencyDim, addActivation):
+        if self.learningProtocol == 'rCNN': return self.reversibleNeuralWeightRCNN(numSignals=inChannel, sequenceLength=initialFrequencyDim, addActivation=addActivation)
         elif self.learningProtocol == 'FC': return self.neuralWeightFC(sequenceLength=initialFrequencyDim)
         else: raise ValueError(f"The learning protocol ({self.learningProtocol}) must be in ['FCC', 'rCNN', 'CNN'].")

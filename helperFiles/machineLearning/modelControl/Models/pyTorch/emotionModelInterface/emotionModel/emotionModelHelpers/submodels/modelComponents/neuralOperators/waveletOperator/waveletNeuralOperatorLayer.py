@@ -67,11 +67,6 @@ class waveletNeuralOperatorLayer(waveletNeuralOperatorWeights):
         # b = batchSize, i = numLiftedChannels, o = numOutputSignals, n = signalDimension
         # 'oin,bin->bon' = weights.size(), frequencies.size() -> frequencies.size()
 
-        if self.learningProtocol in ['drFC', 'drCNN']:
-            # Learn a new set of wavelet coefficients using both of the frequency data.
-            lowFrequency, highFrequencies[0] = self.dualFrequencyWeights(lowFrequency, highFrequencies[0])
-            return lowFrequency, highFrequencies
-
         # For each set of high-frequency coefficients.
         for highFrequencyInd in range(len(highFrequencies)):
             # Learn a new set of wavelet coefficients to transform the data.
