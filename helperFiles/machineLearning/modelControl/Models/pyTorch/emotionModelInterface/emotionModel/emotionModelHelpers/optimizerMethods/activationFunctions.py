@@ -49,10 +49,12 @@ class reversibleLinearSoftSign(reversibleInterface):
         # Notes: The linearity term must be 1 if the inversion point is 1 to ensure a stable convergence.
         # Notes: The inversion point must be greater than 1 to ensure a stable convergence.
 
-    def forward(self, x, linearModel):
-        x = self.forwardPass(x)  # Increase the signal below inversion point; decrease above.
+    def forward(self, x, linearModel, forwardFirst=True):
+        # forwardPass: Increase the signal below inversion point; decrease above.
+        # inversePass: Decrease the signal below inversion point; increase above.
+        x = self.forwardPass(x) if forwardFirst else self.inversePass(x)
         x = linearModel(x)  # Learn in the scaled domain.
-        x = self.inversePass(x)  # Decrease the signal below inversion point; increase above.
+        x = self.inversePass(x) if forwardFirst else self.forwardPass(x)
 
         return x
 

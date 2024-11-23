@@ -51,7 +51,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
             # Apply the weights to the input data.
             if self.activationMethod == 'none': inputData = self.applyLayer(inputData, layerInd)
-            else: inputData = self.activationFunction(inputData, lambda x: self.applyLayer(x, layerInd))
+            else: inputData = self.activationFunction(inputData, lambda x: self.applyLayer(x, layerInd), forwardFirst=layerInd % 2 == 0)
 
         return inputData
 
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     _batchSize, _numSignals, _sequenceLength = 64, 128, 128
     _activationMethod = 'reversibleLinearSoftSign_2'
     _kernelSize = 2*_sequenceLength - 1
-    _numLayers = 1
+    _numLayers = 2
 
     # Set up the parameters.
     neuralLayerClass = reversibleConvolutionLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod)
