@@ -86,9 +86,9 @@ class emotionPipelineHelpers:
             assert not profileTraining, "We cannot train layers during emotion model training."
         else:
             # Signal encoder training.
-            self.setupTrainingFlags(self.model.specificSignalEncoderModel.profileModel, trainingFlag=profileTraining)
-            self.setupTrainingFlags(self.model.specificSignalEncoderModel, trainingFlag=specificTraining)
             self.setupTrainingFlags(self.model.sharedSignalEncoderModel, trainingFlag=trainSharedLayers)
+            self.setupTrainingFlags(self.model.specificSignalEncoderModel, trainingFlag=specificTraining)
+            self.setupTrainingFlags(self.model.specificSignalEncoderModel.profileModel, trainingFlag=profileTraining)
 
     @staticmethod
     def setupTrainingFlags(model, trainingFlag):
