@@ -37,10 +37,10 @@ waveletTypes=( \
 lr_general=0.001
 lr_physio=0.01
 
-numSignalEncoderLayers=16
+numSignalEncoderLayers=8
 encodedDimension=256
 optimizer='AdamW'
-goldenRatio=2
+goldenRatio=1
 
 for waveletType in "${waveletTypes[@]}"
 do

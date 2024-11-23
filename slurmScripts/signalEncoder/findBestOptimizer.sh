@@ -2,10 +2,10 @@
 
 optimizers=('Adadelta' 'Adam' 'AdamW' 'NAdam' 'RAdam' 'Adamax' 'ASGD' 'RMSprop' 'Rprop' 'SGD')
 
-numSignalEncoderLayers=16
+numSignalEncoderLayers=8
 waveletType='bior3.3'
 encodedDimension=256
-goldenRatio=2
+goldenRatio=1
 
 lr_general=0.001
 lr_physio=0.01
