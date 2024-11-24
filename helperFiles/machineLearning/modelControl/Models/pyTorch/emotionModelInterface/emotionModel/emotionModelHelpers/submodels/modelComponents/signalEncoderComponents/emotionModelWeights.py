@@ -24,7 +24,7 @@ class emotionModelWeights(convolutionalHelpers):
     def getInitialPhysiologicalProfile(numExperiments, encodedDimension):
         # Initialize the physiological profile.
         physiologicalProfile = torch.randn(numExperiments, encodedDimension, dtype=torch.float64)
-        physiologicalProfile = nn.init.normal_(physiologicalProfile, mean=0, std=1/2)
+        physiologicalProfile = nn.init.normal_(physiologicalProfile, mean=0, std=1/3)
 
         # Initialize the physiological profile as a parameter.
         physiologicalProfile = nn.Parameter(physiologicalProfile)
@@ -67,11 +67,11 @@ class emotionModelWeights(convolutionalHelpers):
     @staticmethod
     def reversibleNeuralWeightRCNN(numSignals, sequenceLength, addActivation):
         if sequenceLength <= 1: return nn.Identity()
-        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=1, activationMethod=f"{emotionModelWeights.getReversibleActivation()}_0.5" if addActivation else 'none')
+        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=1, activationMethod=f"{emotionModelWeights.getReversibleActivation()}_1" if addActivation else 'none')
 
     @staticmethod
     def postProcessingLayerRCNN(numSignals, sequenceLength):
-        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=2, activationMethod=f"{emotionModelWeights.getReversibleActivation()}_0.5")
+        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=2, activationMethod=f"{emotionModelWeights.getReversibleActivation()}_1")
 
     # ------------------- Emotion/Activity Encoding Architectures ------------------- #
 

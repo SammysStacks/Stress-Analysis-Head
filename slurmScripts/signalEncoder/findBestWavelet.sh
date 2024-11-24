@@ -39,7 +39,7 @@ lr_physio=0.01
 
 numSignalEncoderLayers=8
 encodedDimension=256
-optimizer='AdamW'
+optimizer='RAdam'
 goldenRatio=1
 
 for waveletType in "${waveletTypes[@]}"

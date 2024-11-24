@@ -6,7 +6,7 @@ lrs_physio=(0.1 0.01 0.001)
 numSignalEncoderLayers=8
 waveletType='bior3.3'
 encodedDimension=256
-optimizer='AdamW'
+optimizer='RAdam'
 goldenRatio=1
 
 for lr_physio in "${lrs_physio[@]}"

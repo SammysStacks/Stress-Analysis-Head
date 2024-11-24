@@ -4,7 +4,7 @@ waveletTypes=('bior3.3')
 signalEncoderLayers=(4 8 16)
 encodedDimensions=(128 256)
 goldenRatios=(1 2)
-optimizers=('AdamW')
+optimizers=('RAdam')
 
 lr_general=0.001
 lr_physio=0.01
