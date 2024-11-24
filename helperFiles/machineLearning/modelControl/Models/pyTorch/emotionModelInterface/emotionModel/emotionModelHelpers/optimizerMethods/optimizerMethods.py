@@ -44,7 +44,7 @@ class optimizerMethods:
         return optimizer, scheduler
 
     def setOptimizer(self, params, lr, weight_decay, optimizerType):
-        return self.getOptimizer(optimizerType=optimizerType, params=params, lr=lr, weight_decay=weight_decay, momentum=0.2)
+        return self.getOptimizer(optimizerType=optimizerType, params=params, lr=lr, weight_decay=weight_decay, momentum=0.5)
 
     @staticmethod
     def getLearningRateScheduler(optimizer):

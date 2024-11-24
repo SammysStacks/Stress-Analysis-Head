@@ -124,7 +124,7 @@ class compileModelInfo:
 
     def getUserInputParameters(self):
 
-        userInputParams = {'submodel': 'signalEncoderModel', 'optimizerType': 'AdamW', 'reversibleLearningProtocol': 'rCNN', 'irreversibleLearningProtocol': 'FC', 'deviceListed': 'cpu', 'goldenRatio': 4, 'numSignalEncoderLayers': 8,
+        userInputParams = {'submodel': 'signalEncoderModel', 'optimizerType': 'AdamW', 'reversibleLearningProtocol': 'rCNN', 'irreversibleLearningProtocol': 'FC', 'deviceListed': 'cpu', 'numSpecificEncoderLayers': 4, 'numSharedEncoderLayers': 8,
                     'encodedDimension': 256, 'operatorType': 'wavelet', 'waveletType': 'bior3.7', 'numBasicEmotions': 6, 'numActivityModelLayers': 8, 'numEmotionModelLayers': 8, 'numActivityChannels': 4}
         userInputParams = modelParameters.getNeuralParameters(userInputParams)
         return userInputParams

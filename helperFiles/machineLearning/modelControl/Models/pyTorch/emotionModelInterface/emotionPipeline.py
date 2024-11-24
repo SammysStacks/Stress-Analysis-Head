@@ -22,7 +22,6 @@ class emotionPipeline(emotionPipelineHelpers):
         # allEmotionClassWeights, activityClassWeights = self.organizeLossInfo.getClassWeights(allLabels, allTrainingMasks, allTestingMasks, self.numActivities)
         self.setupTraining(submodel, inferenceTraining=inferenceTraining, profileTraining=profileTraining, specificTraining=specificTraining, trainSharedLayers=trainSharedLayers)
         if self.model.debugging: self.accelerator.print(f"\nTraining {self.datasetName} model")
-        datasetSpecificTraining = profileTraining and (specificTraining or trainSharedLayers)
         onlyProfileTraining = profileTraining and not (specificTraining or trainSharedLayers)
 
         # For each training epoch.
@@ -53,7 +52,7 @@ class emotionPipeline(emotionPipelineHelpers):
                             with torch.no_grad():
                                 # Augment the signals to train an arbitrary sequence length and order.
                                 augmentedBatchData = self.dataAugmentation.changeNumSignals(signalBatchData, dropoutPercent=0.1)
-                                augmentedBatchData = self.dataAugmentation.signalDropout(augmentedBatchData, dropoutPercent=0.1)
+                                augmentedBatchData = self.dataAugmentation.signalDropout(augmentedBatchData, dropoutPercent=0.2)
                                 # augmentedBatchData: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
                         else: augmentedBatchData = signalBatchData
 
@@ -86,23 +85,11 @@ class emotionPipeline(emotionPipelineHelpers):
                         finalTrainingLoss = trainingSignalReconstructedLosses.nanmean()
 
                         # Initialize basic core loss value.
-                        if self.model.debugging: self.accelerator.print("Final loss:", finalTrainingLoss.item())
+                        if self.model.debugging: self.accelerator.print("Final encoder loss:", finalTrainingLoss.item())
 
                         # ------------------- Update the Model  -------------------- #
 
                         t1 = time.time()
-                        if datasetSpecificTraining:
-                            # Calculate the error in signal compression (signal encoding loss).
-                            testingSignalReconstructedLosses = self.organizeLossInfo.calculateSignalEncodingLoss(augmentedBatchData, reconstructedSignalData, validDataMask, batchTestingSignalMask)
-                            finalTestingLoss = testingSignalReconstructedLosses.nanmean() if testingSignalReconstructedLosses is not None else None
-                            assert batchTestingSignalMask is not None, "The testing signal mask must be defined."
-                            self.accelerator.backward(finalTestingLoss, retain_graph=True)
-
-                            # For each layer in the model.
-                            for layerName, layerParams in self.model.named_parameters():
-                                # Remove the gradients from the shared and specific layers.
-                                if layerParams.grad is not None and 'profileModel' not in layerName: layerParams.grad.zero_()
-
                         # Update the model parameters.
                         self.accelerator.backward(finalTrainingLoss)  # Calculate the gradients.
                         self.backpropogateModel()  # Backpropagation.

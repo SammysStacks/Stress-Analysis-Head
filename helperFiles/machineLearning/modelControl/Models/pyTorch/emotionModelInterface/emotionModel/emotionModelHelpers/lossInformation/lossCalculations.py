@@ -36,14 +36,14 @@ class lossCalculations:
         #       Custom Regression Options: "R2", "pearson", "LogCoshLoss", "weightedMSE"
         # Initialize the loss function WITHOUT the class weights.
         self.meanSquaredError = pytorchLossMethods(lossType="MeanSquaredError", class_weights=None).loss_fn
-        self.smoothL1Loss = nn.SmoothL1Loss(reduction='none', beta=0.25)
+        self.smoothL1Loss = nn.SmoothL1Loss(reduction='none', beta=0.1)
 
     # -------------------------- Signal Encoder Loss Calculations ------------------------- #
 
     def calculateSignalEncodingLoss(self, allInitialSignalData, allReconstructedSignalData, allValidDataMask, allSignalMask):
         # Get the relevant data for the loss calculation.
         allDatapoints = emotionDataInterface.getChannelData(allInitialSignalData, channelName=modelConstants.signalChannel)
-        validDataMask = allValidDataMask.clone()  # Masks out missing data points.
+        validDataMask = allValidDataMask.clone()  # Masks out missing data points: batchSize, numSignals, sequenceLength
 
         # Compile the relevant data for the loss calculation.
         if allSignalMask is not None: validDataMask[~allSignalMask.unsqueeze(-1).expand_as(validDataMask)] = False  # Additionally, masks out training vs testing.
@@ -56,14 +56,16 @@ class lossCalculations:
         # Assert that nothing is wrong with the loss calculations.
         self.modelHelpers.assertVariableIntegrity(signalReconstructedLoss, variableName="encoded signal reconstructed loss", assertGradient=False)
 
-        # TODO: Downplay uncertain data point losses? If so how??
-        # signalReconstructedLoss[~validDataMask] = signalReconstructedLoss[~validDataMask] / 2
-        # signalReconstructedLoss[~validDataMask] = torch.nan
+        # TODO:
+        # Downplay uncertain data point losses.
+        signalReconstructedLoss[signalReconstructedLoss < 0.1] = signalReconstructedLoss[signalReconstructedLoss < 0.1] / 2
+        signalReconstructedLoss[~validDataMask] = torch.nan  # Zero out the loss for invalid data points.
+        # signalReconstructedLoss: batchSize, numSignals, sequenceLength
 
         # Calculate the mean loss across all signals.
-        signalReconstructedLoss[~validDataMask] = torch.nan  # Zero out the loss for invalid data points.
         signalReconstructedLoss = signalReconstructedLoss.nanmean(dim=-1)  # Dim: batchSize, numSignals
         signalReconstructedLoss = signalReconstructedLoss.nanmean(dim=0)   # Dim: numSignals
+        # signalReconstructedLoss: numSignals
 
         return signalReconstructedLoss
 

@@ -42,9 +42,6 @@ class reversibleConvolutionLayer(reversibleInterface):
             parameters = nn.init.kaiming_normal_(parameters)
             self.linearOperators.append(parameters)
 
-        # Scale the gradients.
-        for layerInd in range(self.numLayers): self.linearOperators[layerInd].register_hook(self.scaleNeuralWeights)
-
     def forward(self, inputData):
         for layerInd in range(self.numLayers):
             if not self.forwardDirection: layerInd = self.numLayers - layerInd - 1

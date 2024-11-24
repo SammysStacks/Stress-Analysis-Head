@@ -32,13 +32,13 @@ class emotionModelHead(nn.Module):
         # General parameters.
         self.encodedDimension = userInputParams['encodedDimension']  # The dimension of the encoded signal.
         self.operatorType = userInputParams['operatorType']  # The type of operator to use for the neural operator.
-        self.goldenRatio = userInputParams['goldenRatio']  # The number of shared layers per specific layer.
         self.debugging = True
 
         # Signal encoder parameters.
         self.reversibleLearningProtocol = userInputParams['reversibleLearningProtocol']   # The learning protocol for the model.
         self.neuralOperatorParameters = userInputParams['neuralOperatorParameters']   # The parameters for the neural operator.
-        self.numSignalEncoderLayers = 0  # The number of layers in the model. Added downstream.
+        self.numSpecificEncoderLayers = userInputParams['numSpecificEncoderLayers']  # The number of specific layers.
+        self.numSharedEncoderLayers = userInputParams['numSharedEncoderLayers']  # The number of shared layers.
 
         # Emotion and activity parameters.
         self.irreversibleLearningProtocol = userInputParams['irreversibleLearningProtocol']  # The learning protocol for the model.
@@ -58,26 +58,22 @@ class emotionModelHead(nn.Module):
         # The signal encoder model to find a common feature vector across all signals.
         self.specificSignalEncoderModel = specificSignalEncoderModel(
             neuralOperatorParameters=self.neuralOperatorParameters,
+            numSpecificEncoderLayers=self.numSpecificEncoderLayers,
             learningProtocol=self.reversibleLearningProtocol,
             encodedDimension=self.encodedDimension,
             featureNames=self.featureNames,
             operatorType=self.operatorType,
             numExperiments=numExperiments,
-            goldenRatio=self.goldenRatio,
         )
 
         # The autoencoder model reduces the incoming signal's dimension.
         self.sharedSignalEncoderModel = sharedSignalEncoderModel(
             neuralOperatorParameters=self.neuralOperatorParameters,
+            numSharedEncoderLayers=self.numSharedEncoderLayers,
             learningProtocol=self.reversibleLearningProtocol,
             encodedDimension=self.encodedDimension,
             operatorType=self.operatorType,
-            goldenRatio=self.goldenRatio,
         )
-
-        # Construct the model weights.
-        for _ in range(userInputParams['numSignalEncoderLayers']): self.addNewSignalEncoderLayer()
-        self.specificSignalEncoderModel.addLayer()  # Add the final layer to the specific model.
 
         # -------------------- Final Emotion Prediction -------------------- #
 
@@ -89,7 +85,7 @@ class emotionModelHead(nn.Module):
                 numBasicEmotions=self.numBasicEmotions,
                 numModelLayers=self.numEmotionModelLayers,
                 operatorType=self.operatorType,
-                goldenRatio=self.goldenRatio,
+                numSpecificEncoderLayers=self.numSpecificEncoderLayers,
                 numEmotions=self.numEmotions,
                 numSubjects=self.numSubjects,
 
@@ -113,7 +109,7 @@ class emotionModelHead(nn.Module):
                 numModelLayers=self.numActivityModelLayers,
                 numActivities=self.numActivities,
                 operatorType=self.operatorType,
-                goldenRatio=self.goldenRatio,
+                numSpecificEncoderLayers=self.numSpecificEncoderLayers,
             )
 
             self.sharedActivityModel = sharedActivityModel(
@@ -126,20 +122,6 @@ class emotionModelHead(nn.Module):
             )
 
     # ------------------------- Full Forward Calls ------------------------- #
-
-    def addNewSignalEncoderLayer(self):
-        # Adjust the model architecture.
-        if self.numSignalEncoderLayers % self.goldenRatio == 0: self.specificSignalEncoderModel.addLayer()
-        self.sharedSignalEncoderModel.addLayer()
-        self.numSignalEncoderLayers += 1
-
-        # Analyze the new architecture.
-        numSpecificLayers = len(self.specificSignalEncoderModel.neuralLayers)
-        numSharedLayers = len(self.sharedSignalEncoderModel.neuralLayers)
-
-        # Assert the validity of the model architecture.
-        assert self.numSignalEncoderLayers == numSharedLayers, f"The number of layers in the shared model ({numSharedLayers}) does not match the number of layers in the model ({self.numSignalEncoderLayers})."
-        if self.numSignalEncoderLayers % self.goldenRatio == 0 and self.numSignalEncoderLayers != 0: assert numSpecificLayers == self.numSignalEncoderLayers // self.goldenRatio, f"The number of layers in the specific model ({numSpecificLayers}) does not match the number of layers in the model ({self.numSignalEncoderLayers})."
 
     def forward(self, submodel, signalData, signalIdentifiers, metadata, device, inferenceTraining=False):
         signalData, signalIdentifiers, metadata = (tensor.to(device) for tensor in (signalData, signalIdentifiers, metadata))
@@ -168,7 +150,7 @@ class emotionModelHead(nn.Module):
         # Get the estimated physiological profiles.
         if inferenceTraining: physiologicalProfile = self.inferenceModel.getCurrentPhysiologicalProfile(batchInds)
         else: physiologicalProfile = self.specificSignalEncoderModel.profileModel.getCurrentPhysiologicalProfile(batchInds)
-        physiologicalProfile = self.specificSignalEncoderModel.smoothingFilter(physiologicalProfile.unsqueeze(1), kernelSize=5).squeeze(1)
+        physiologicalProfile = self.sharedSignalEncoderModel.smoothPhysiologicalProfile(physiologicalProfile)
         # physiologicalProfile: batchSize, encodedDimension
 
         # ------------------- Learned Signal Mapping ------------------- #
@@ -176,7 +158,7 @@ class emotionModelHead(nn.Module):
         # Perform the backward pass: physiologically -> signal data.
         reversibleInterface.changeDirections(forwardDirection=False)
         resampledSignalData = physiologicalProfile.unsqueeze(1).repeat(repeats=(1, numSignals, 1))
-        resampledSignalData = self.coreModelPass(self.numSignalEncoderLayers, resampledSignalData, specificModel=self.specificSignalEncoderModel, sharedModel=self.sharedSignalEncoderModel)
+        resampledSignalData = self.coreModelPass(metaLearningData=resampledSignalData, numSpecificLayers=self.numSpecificEncoderLayers, numSharedLayers=self.numSharedEncoderLayers, specificModel=self.specificSignalEncoderModel, sharedModel=self.sharedSignalEncoderModel)
         # resampledSignalData: batchSize, numSignals, encodedDimension
 
         # Resample the signal data.
@@ -214,16 +196,17 @@ class emotionModelHead(nn.Module):
         return validDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile
 
     @staticmethod
-    def coreModelPass(numModelLayers, metaLearningData, specificModel, sharedModel):
-        specificLayerCounter = 0
+    def coreModelPass(metaLearningData, numSpecificLayers, numSharedLayers, specificModel, sharedModel):
+        # Calculate the estimated physiological profile given each signal.
+        for specificLayerInd in range(numSpecificLayers): metaLearningData = specificModel.learningInterface(layerInd=specificLayerInd, signalData=metaLearningData)
+        # metaLearningData: batchSize, numSignals, finalDimension
 
-        # For each layer in the model.
-        for layerInd in range(numModelLayers):
-            # Calculate the estimated physiological profile given each signal.
-            if layerInd % specificModel.goldenRatio == 0: metaLearningData = specificModel.learningInterface(layerInd=specificLayerCounter, signalData=metaLearningData); specificLayerCounter += 1
-            metaLearningData = sharedModel.learningInterface(layerInd=layerInd, signalData=metaLearningData)
-        metaLearningData = specificModel.learningInterface(layerInd=specificLayerCounter, signalData=metaLearningData)
-        assert specificLayerCounter + 1 == len(specificModel.neuralLayers), f"The specific layer counter ({specificLayerCounter}) does not match the number of specific layers ({len(specificModel.neuralLayers)})."
+        # Calculate the estimated physiological profile given each signal.
+        for sharedLayerInd in range(numSharedLayers): metaLearningData = sharedModel.learningInterface(layerInd=sharedLayerInd, signalData=metaLearningData)
+        # metaLearningData: batchSize, numSignals, finalDimension
+
+        # Calculate the estimated physiological profile given each signal.
+        for specificLayerInd in range(numSpecificLayers): metaLearningData = specificModel.learningInterface(layerInd=numSpecificLayers + specificLayerInd, signalData=metaLearningData)
         # metaLearningData: batchSize, numSignals, finalDimension
 
         return metaLearningData
@@ -314,7 +297,7 @@ class emotionModelHead(nn.Module):
 
     def reconstructPhysiologicalProfile(self, resampledSignalData):
         reversibleInterface.changeDirections(forwardDirection=True)
-        reconstructedPhysiologicalProfile = self.coreModelPass(self.numSignalEncoderLayers, resampledSignalData, specificModel=self.specificSignalEncoderModel, sharedModel=self.sharedSignalEncoderModel)
+        reconstructedPhysiologicalProfile = self.coreModelPass(metaLearningData=resampledSignalData, numSpecificLayers=self.numSpecificEncoderLayers, numSharedLayers=self.numSharedEncoderLayers, specificModel=self.specificSignalEncoderModel, sharedModel=self.sharedSignalEncoderModel)
         reversibleInterface.changeDirections(forwardDirection=False)
 
         return reconstructedPhysiologicalProfile

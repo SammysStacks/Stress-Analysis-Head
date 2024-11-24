@@ -5,7 +5,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class specificEmotionModel(neuralOperatorInterface):
 
-    def __init__(self, numSubjects, numBasicEmotions, encodedDimension, numEmotions, numModelLayers, goldenRatio, operatorType, learningProtocol, neuralOperatorParameters):
+    def __init__(self, numSubjects, numBasicEmotions, encodedDimension, numEmotions, numModelLayers, numSpecificEncoderLayers, operatorType, learningProtocol, neuralOperatorParameters):
         super(specificEmotionModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numInputSignals=numBasicEmotions, numOutputSignals=numBasicEmotions, addBiasTerm=False)
         # General model parameters.
         self.neuralOperatorParameters = neuralOperatorParameters  # The parameters for the neural operator.
@@ -13,19 +13,19 @@ class specificEmotionModel(neuralOperatorInterface):
         self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
         self.numBasicEmotions = numBasicEmotions  # The number of basic emotions to encode.
         self.numModelLayers = numModelLayers  # The number of model layers to use.
-        self.goldenRatio = goldenRatio  # The golden ratio for the model.
+        self.numSpecificEncoderLayers = numSpecificEncoderLayers  # The golden ratio for the model.
         self.numEmotions = numEmotions  # The number of signals to encode.
         self.numSubjects = numSubjects  # The number of subjects to encode.
 
         # The neural layers for the signal encoder.
         self.processingLayers, self.neuralLayers = nn.ModuleList(), nn.ModuleList()
-        for layerInd in range(1 + self.numModelLayers // self.goldenRatio): self.addLayer()
+        for layerInd in range(1 + self.numModelLayers // self.numSpecificEncoderLayers): self.addLayer()
 
         # Initialize the basic emotion weight.
         self.basicEmotionWeights = self.getSubjectSpecificBasicEmotionWeights(numBasicEmotions=numBasicEmotions, numSubjects=numSubjects)
         
         # Assert the validity of the input parameters.
-        assert self.numModelLayers % self.goldenRatio == 0, "The number of model layers must be divisible by the golden ratio."
+        assert self.numModelLayers % self.numSpecificEncoderLayers == 0, "The number of model layers must be divisible by the golden ratio."
         assert self.encodedDimension % 2 == 0, "The encoded dimension must be divisible by 2."
         assert 0 < self.encodedDimension, "The encoded dimension must be greater than 0."
 

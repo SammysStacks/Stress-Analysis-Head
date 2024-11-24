@@ -8,19 +8,20 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class specificSignalEncoderModel(neuralOperatorInterface):
 
-    def __init__(self, numExperiments, operatorType, encodedDimension, featureNames, goldenRatio, learningProtocol, neuralOperatorParameters):
+    def __init__(self, numExperiments, operatorType, encodedDimension, featureNames, numSpecificEncoderLayers, learningProtocol, neuralOperatorParameters):
         super(specificSignalEncoderModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numInputSignals=len(featureNames), numOutputSignals=len(featureNames), addBiasTerm=False)
         # General model parameters.
         self.neuralOperatorParameters = neuralOperatorParameters  # The parameters for the neural operator.
+        self.numSpecificEncoderLayers = numSpecificEncoderLayers  # The number of specific encoder layers.
         self.learningProtocol = learningProtocol  # The learning protocol for the model.
         self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
         self.numSignals = len(featureNames)  # The number of signals to encode.
         self.featureNames = featureNames  # The names of the signals to encode.
-        self.goldenRatio = goldenRatio  # The golden ratio for the model.
 
         # The neural layers for the signal encoder.
         self.profileModel = trainingProfileInformation(numExperiments, encodedDimension)
         self.processingLayers, self.neuralLayers = nn.ModuleList(), nn.ModuleList()
+        for _ in range(2*self.numSpecificEncoderLayers): self.addLayer()
 
         # Assert the validity of the input parameters.
         assert self.encodedDimension % 2 == 0, "The encoded dimension must be divisible by 2."
@@ -76,7 +77,7 @@ if __name__ == "__main__":
     _featureNames = [f"signal_{i}" for i in range(_numSignals)]
 
     # Set up the parameters.
-    neuralLayerClass = specificSignalEncoderModel(numExperiments=_batchSize, operatorType='wavelet', encodedDimension=_sequenceLength, featureNames=_featureNames, goldenRatio=4, learningProtocol='rCNN', neuralOperatorParameters=_neuralOperatorParameters)
+    neuralLayerClass = specificSignalEncoderModel(numExperiments=_batchSize, operatorType='wavelet', encodedDimension=_sequenceLength, featureNames=_featureNames, numSpecificEncoderLayers=4, learningProtocol='rCNN', neuralOperatorParameters=_neuralOperatorParameters)
     neuralLayerClass.addLayer()
 
     # Print the number of trainable parameters.

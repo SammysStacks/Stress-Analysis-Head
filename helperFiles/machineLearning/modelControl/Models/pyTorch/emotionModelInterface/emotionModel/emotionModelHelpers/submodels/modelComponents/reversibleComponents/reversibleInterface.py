@@ -4,22 +4,16 @@ import torch
 from matplotlib import pyplot as plt
 from torch import nn
 
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.generalMethods.weightInitialization import weightInitialization
-
 
 class reversibleInterface(nn.Module):
     forwardDirection = True
 
     def __init__(self):
         super(reversibleInterface, self).__init__()
-        self.weightInitialization = weightInitialization()
 
     @classmethod
     def changeDirections(cls, forwardDirection):
         cls.forwardDirection = forwardDirection  # Modify class attribute
-
-    @staticmethod
-    def scaleNeuralWeights(grad): return grad
 
     def checkDualReconstruction(self, x1, x2, atol=1e-8, numLayers=10):
         # Initialize the forward data.
