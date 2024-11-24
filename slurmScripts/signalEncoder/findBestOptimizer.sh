@@ -1,6 +1,7 @@
 #!/bin/bash
 
 optimizers=('Adadelta' 'Adam' 'AdamW' 'NAdam' 'RAdam' 'Adamax' 'ASGD' 'RMSprop' 'Rprop' 'SGD')
+optimizers=('Adam' 'AdamW' 'NAdam' 'RAdam' 'RMSprop')
 
 numSignalEncoderLayers=8
 waveletType='bior3.3'
