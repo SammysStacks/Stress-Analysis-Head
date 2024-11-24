@@ -58,11 +58,17 @@ class lossCalculations:
 
         # TODO:
         # Downplay uncertain data point losses.
-        signalReconstructedLoss[signalReconstructedLoss < 0.1] = signalReconstructedLoss[signalReconstructedLoss < 0.1] / 2
-        signalReconstructedLoss[~validDataMask] = torch.nan  # Zero out the loss for invalid data points.
-        # signalReconstructedLoss: batchSize, numSignals, sequenceLength
+        findMaxLoss = torch.where(validDataMask, signalReconstructedLoss, float('-inf'))
+        validDataMask[findMaxLoss.abs().argmax(dim=-1, keepdim=True)] = False
+        # validDataMask: batchSize, numSignals, sequenceLength
+
+        # Downplay uncertain data point losses.
+        findMinLoss = torch.where(validDataMask, signalReconstructedLoss, float('inf'))
+        validDataMask[findMinLoss.abs().argmin(dim=-1, keepdim=True)] = False
+        # validDataMask: batchSize, numSignals, sequenceLength
 
         # Calculate the mean loss across all signals.
+        signalReconstructedLoss[~validDataMask] = torch.nan  # Zero out the loss for invalid data points.
         signalReconstructedLoss = signalReconstructedLoss.nanmean(dim=-1)  # Dim: batchSize, numSignals
         signalReconstructedLoss = signalReconstructedLoss.nanmean(dim=0)   # Dim: numSignals
         # signalReconstructedLoss: numSignals
