@@ -14,7 +14,7 @@ do
   for lr_general in "${lrs_general[@]}"
   do
     # Check if numSpecificEncoderLayers is greater than numSharedEncoderLayers
-    if [ "$lr_physio" -gt "$lr_general" ]; then
+    if (( $(echo "$lr_physio < $lr_general" | bc -l) )); then
       continue  # Skip this iteration if the condition is true
     fi
 
