@@ -106,9 +106,6 @@ class emotionPipeline(emotionPipelineHelpers):
 
     def backpropogateModel(self):
         if self.accelerator.sync_gradients:
-            # Clip the gradients to prevent exploding gradients.
-            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
-
             # Backpropagation the gradient.
             self.optimizer.step()  # Adjust the weights.
             self.optimizer.zero_grad()  # Zero your gradients to restart the gradient tracking.

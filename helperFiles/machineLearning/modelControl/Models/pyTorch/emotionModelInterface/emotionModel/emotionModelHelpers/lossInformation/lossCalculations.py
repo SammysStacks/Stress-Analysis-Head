@@ -50,17 +50,12 @@ class lossCalculations:
         if validDataMask.sum() == 0: print("No valid batches"); return None
 
         # Calculate the error in signal reconstruction (encoding loss).
-        signalReconstructedLoss = self.smoothL1Loss(input=allReconstructedSignalData, target=allDatapoints)
+        # signalReconstructedLoss = self.meanSquaredError(input=allReconstructedSignalData, target=allDatapoints)
+        signalReconstructedLoss = (allReconstructedSignalData - allDatapoints).pow(2)
         # signalReconstructedLoss: batchSize, numSignals, sequenceLength
 
         # Assert that nothing is wrong with the loss calculations.
         self.modelHelpers.assertVariableIntegrity(signalReconstructedLoss, variableName="encoded signal reconstructed loss", assertGradient=False)
-
-        # Downplay uncertain data point losses
-        findMaxLoss = torch.where(validDataMask, signalReconstructedLoss, float('-inf'))
-        findMinLoss = torch.where(validDataMask, signalReconstructedLoss, float('inf'))
-        max_indices = findMaxLoss.argmax(dim=-1, keepdim=True)
-        min_indices = findMinLoss.argmin(dim=-1, keepdim=True)
 
         # Create index grids for batch and numSignals dimensions
         batch_indices, signal_indices = torch.meshgrid(
@@ -69,9 +64,13 @@ class lossCalculations:
             indexing="ij"
         )
 
-        # Update validDataMask using scatter_ to avoid ambiguity in indexing
-        validDataMask[batch_indices, signal_indices, max_indices.squeeze(-1)] = False
-        validDataMask[batch_indices, signal_indices, min_indices.squeeze(-1)] = False
+        for _ in range(2):
+            # Downplay uncertain data point losses
+            findMaxLoss = torch.where(validDataMask, signalReconstructedLoss, float('-inf'))
+            max_indices = findMaxLoss.argmax(dim=-1, keepdim=True)
+
+            # Update validDataMask using scatter_ to avoid ambiguity in indexing
+            validDataMask[batch_indices, signal_indices, max_indices.squeeze(-1)] = False
 
         # Calculate the mean loss across all signals.
         signalReconstructedLoss[~validDataMask] = torch.nan  # Zero out the loss for invalid data points.

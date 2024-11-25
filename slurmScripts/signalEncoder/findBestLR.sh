@@ -1,7 +1,7 @@
 #!/bin/bash
 
 lrs_general=(0.01 0.001 0.0001)
-lrs_physio=(0.1 0.01 0.001 0.0001)
+lrs_physio=(0.1/2 0.01/2 0.001/2 0.0001/2)
 
 numSpecificEncoderLayers=2
 numSharedEncoderLayers=8

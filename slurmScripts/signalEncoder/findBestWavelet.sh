@@ -40,7 +40,7 @@ encodedDimension=256
 optimizer='RAdam'
 
 lr_general=0.001
-lr_physio=0.01
+lr_physio=0.005
 
 for waveletType in "${waveletTypes[@]}"
 do
