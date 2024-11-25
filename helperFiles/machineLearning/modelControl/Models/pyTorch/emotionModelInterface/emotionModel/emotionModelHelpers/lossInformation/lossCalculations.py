@@ -64,7 +64,7 @@ class lossCalculations:
             indexing="ij"
         )
 
-        for _ in range(2):
+        for _ in range(3):
             # Downplay uncertain data point losses
             findMaxLoss = torch.where(validDataMask, signalReconstructedLoss, float('-inf'))
             max_indices = findMaxLoss.argmax(dim=-1, keepdim=True)
