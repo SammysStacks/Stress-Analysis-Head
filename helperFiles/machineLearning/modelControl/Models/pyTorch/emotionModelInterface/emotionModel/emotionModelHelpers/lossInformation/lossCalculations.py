@@ -56,16 +56,22 @@ class lossCalculations:
         # Assert that nothing is wrong with the loss calculations.
         self.modelHelpers.assertVariableIntegrity(signalReconstructedLoss, variableName="encoded signal reconstructed loss", assertGradient=False)
 
-        # TODO:
-        # Downplay uncertain data point losses.
+        # Downplay uncertain data point losses
         findMaxLoss = torch.where(validDataMask, signalReconstructedLoss, float('-inf'))
-        validDataMask[findMaxLoss.abs().argmax(dim=-1, keepdim=True)] = False
-        # validDataMask: batchSize, numSignals, sequenceLength
-
-        # Downplay uncertain data point losses.
         findMinLoss = torch.where(validDataMask, signalReconstructedLoss, float('inf'))
-        validDataMask[findMinLoss.abs().argmin(dim=-1, keepdim=True)] = False
-        # validDataMask: batchSize, numSignals, sequenceLength
+        max_indices = findMaxLoss.argmax(dim=-1, keepdim=True)
+        min_indices = findMinLoss.argmin(dim=-1, keepdim=True)
+
+        # Create index grids for batch and numSignals dimensions
+        batch_indices, signal_indices = torch.meshgrid(
+            torch.arange(validDataMask.size(0), device=validDataMask.device),
+            torch.arange(validDataMask.size(1), device=validDataMask.device),
+            indexing="ij"
+        )
+
+        # Update validDataMask using scatter_ to avoid ambiguity in indexing
+        validDataMask[batch_indices, signal_indices, max_indices.squeeze(-1)] = False
+        validDataMask[batch_indices, signal_indices, min_indices.squeeze(-1)] = False
 
         # Calculate the mean loss across all signals.
         signalReconstructedLoss[~validDataMask] = torch.nan  # Zero out the loss for invalid data points.
