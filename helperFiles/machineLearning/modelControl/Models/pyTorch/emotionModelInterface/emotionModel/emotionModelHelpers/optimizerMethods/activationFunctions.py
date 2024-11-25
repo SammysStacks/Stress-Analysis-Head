@@ -17,9 +17,6 @@ def getActivationMethod(activationMethod):
         activationFunction = boundedExp(decayConstant=topExponent, nonLinearityRegion=nonLinearityRegion)
     elif activationMethod.startswith('reversibleLinearSoftSign'):
         activationFunction = reversibleLinearSoftSign(inversionPoint = float(activationMethod.split('_')[1]))
-    elif activationMethod.startswith('boundedS'):
-        invertedActivation = activationMethod.split('_')[1] == "True"
-        activationFunction = boundedS(invertedActivation=invertedActivation)
     elif activationMethod == 'PReLU':
         activationFunction = nn.PReLU()
     elif activationMethod == 'selu':
@@ -70,43 +67,6 @@ class reversibleLinearSoftSign(reversibleInterface):
         # Decrease the signal below inversion point; increase above.
         sqrtTerm = ((r*a)**2 + 2*a*r*(1 + signY*y*r) + (r*y - signY).pow(2)) / (r*a)**2
         x = signY*(sqrtTerm.sqrt() - 1)/2 - signY / (2*a*r) + y / (2*a)
-
-        return x
-
-
-class boundedS(reversibleInterface):
-    def __init__(self, invertedActivation=False, linearity=1):
-        super(boundedS, self).__init__()
-        self.invertedActivation = invertedActivation  # Whether the non-linearity term is inverted
-        self.linearity = linearity  # Corresponds to `r` in the equation
-        self.tolerance = 1e-100  # Tolerance for numerical stability
-
-        # Assert the validity of the inputs.
-        assert 0 < self.linearity, "The linearity term must be positive."
-
-    def forward(self, x):
-        if self.forwardDirection != self.invertedActivation: return self.forwardPass(x)
-        else: return self.inversePass(x)
-
-    def forwardPass(self, x):
-        return x + x / (1 + x.pow(2)) / self.linearity
-
-    # TODO: unstable, diverges to infinity
-    def inversePass(self, y):
-        b, b2, b3 = self.linearity, self.linearity ** 2, self.linearity ** 3
-        y2, y3, y4 = y.pow(2), y.pow(3), y.pow(4)
-
-        # Compute components.
-        term2 = 3 * b * (b + 1) - b2 * y2
-        term1 = 2 * b3 * y3 + 18 * b3 * y - 9 * b2 * y
-        N = term1 + torch.sqrt(torch.abs(4 * term2.pow(3) + term1.pow(2)))
-
-        # Compute the cube root term
-        signN = torch.nn.functional.hardtanh(N, min_val=-self.tolerance, max_val=self.tolerance) / self.tolerance
-        cube_root_term = signN * (N.abs() + self.tolerance).pow(1 / 3)
-
-        # Compute x using the given equation
-        x = (cube_root_term / (3 * (2 ** (1 / 3)) * b)) - ((2 ** (1 / 3)) * term2) / (3 * b * cube_root_term + self.tolerance) + y / 3
 
         return x
 

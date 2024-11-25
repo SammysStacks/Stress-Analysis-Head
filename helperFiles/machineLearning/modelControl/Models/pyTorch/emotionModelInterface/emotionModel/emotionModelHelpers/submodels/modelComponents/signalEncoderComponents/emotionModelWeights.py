@@ -74,7 +74,7 @@ class emotionModelWeights(convolutionalHelpers):
         return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=1, activationMethod=f"{emotionModelWeights.getReversibleActivation()}_0.5")
 
     def physiologicalSmoothing(self):
-        return self.convolutionalFilters_resNetBlocks(numResNets=1, numBlocks=2, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="none", numLayers=None, addBias=False)
+        return self.convolutionalFiltersBlocks(numBlocks=1, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="none", numLayers=None, addBias=False)
 
     # ------------------- Emotion/Activity Encoding Architectures ------------------- #
 

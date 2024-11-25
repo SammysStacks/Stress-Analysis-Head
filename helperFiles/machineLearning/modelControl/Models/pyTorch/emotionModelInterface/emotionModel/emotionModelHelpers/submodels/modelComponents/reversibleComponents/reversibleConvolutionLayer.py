@@ -69,7 +69,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
         # Create an orthogonal matrix.
         neuralWeights = neuralWeights.matrix_exp()
-        if not self.forwardDirection: neuralWeights = neuralWeights.transpose(-2, -1)  # Ensure the neural weights are symmetric.
+        if self.forwardDirection: neuralWeights = neuralWeights.transpose(-2, -1)  # Ensure the neural weights are symmetric.
         # For orthogonal matrices: A.exp().inverse() = A.exp().transpose() = (-A).exp()
 
         # Apply the neural weights to the input data.

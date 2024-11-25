@@ -1,7 +1,7 @@
 #!/bin/bash
 
 optimizers=('Adadelta' 'Adam' 'AdamW' 'NAdam' 'RAdam' 'Adamax' 'ASGD' 'RMSprop' 'Rprop' 'SGD')
-#optimizers=('Adam' 'AdamW' 'NAdam' 'RAdam' 'RMSprop')
+optimizers=('Adam' 'AdamW' 'NAdam' 'RMSprop' 'Adadelta' 'Adadelta')  # 7 optimizers.  'RAdam'
 
 numSpecificEncoderLayers=2
 numSharedEncoderLayers=8
@@ -9,7 +9,7 @@ waveletType='bior3.3'
 encodedDimension=256
 
 lr_general=0.001
-lr_physio=0.005
+lr_physio=0.01
 
 for optimizer in "${optimizers[@]}"
 do

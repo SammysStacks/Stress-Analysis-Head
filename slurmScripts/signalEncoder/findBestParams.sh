@@ -1,13 +1,13 @@
 #!/bin/bash
 
-numSpecificEncoderLayers=(1 2 4 8)
-signalEncoderLayers=(2 4 6 8 16 24)
-encodedDimensions=(128 256)
+numSpecificEncoderLayers=(1 2 3 4 5 6 7 8)
+signalEncoderLayers=(4 6 8 10 12 14 16)
+encodedDimensions=(64 128 256)
 waveletTypes=('bior3.3')
 optimizers=('RAdam')
 
 lr_general=0.001
-lr_physio=0.005
+lr_physio=0.01
 
 for optimizer in "${optimizers[@]}"
 do

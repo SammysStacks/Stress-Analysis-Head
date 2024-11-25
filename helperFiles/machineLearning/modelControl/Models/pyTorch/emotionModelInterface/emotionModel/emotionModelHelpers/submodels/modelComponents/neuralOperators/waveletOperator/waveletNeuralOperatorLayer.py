@@ -1,7 +1,6 @@
 import torch
 
 from .waveletNeuralOperatorWeights import waveletNeuralOperatorWeights
-from ...reversibleComponents.reversibleInterface import reversibleInterface
 
 
 class waveletNeuralOperatorLayer(waveletNeuralOperatorWeights):
@@ -23,22 +22,10 @@ class waveletNeuralOperatorLayer(waveletNeuralOperatorWeights):
         # neuralOperatorData dimension: batchSize, numOutputSignals, finalLength
 
         return neuralOperatorData
-    
-    def backwardPass(self, neuralOperatorData, residualLowFrequencyTerms=None, residualHighFrequencyTerms=None):
-        # Assert that the skip connection model is None.
-        assert self.skipConnectionModel is None, "The skip connection model must be None for the reversible interface."
-
-        # Apply the activation function and the wavelet neural operator.
-        neuralOperatorData = self.activationFunction(neuralOperatorData)
-        neuralOperatorData = self.waveletNeuralOperator(neuralOperatorData, residualLowFrequencyTerms, residualHighFrequencyTerms)
-        # neuralOperatorData dimension: batchSize, numOutputSignals, finalLength
-
-        return neuralOperatorData
 
     def reversibleInterface(self, neuralOperatorData):
         assert self.skipConnectionModel is None, "The skip connection model must be None for the reversible interface."
-        if not reversibleInterface.forwardDirection: return self.forward(neuralOperatorData, residualLowFrequencyTerms=None, residualHighFrequencyTerms=None)
-        else: return self.backwardPass(neuralOperatorData, residualLowFrequencyTerms=None, residualHighFrequencyTerms=None)
+        return self.waveletNeuralOperator(neuralOperatorData, residualLowFrequencyTerms=None, residualHighFrequencyTerms=None)
 
     def waveletNeuralOperator(self, inputData, residualLowFrequencyTerms=None, residualHighFrequencyTerms=None):
         # Perform wavelet decomposition.

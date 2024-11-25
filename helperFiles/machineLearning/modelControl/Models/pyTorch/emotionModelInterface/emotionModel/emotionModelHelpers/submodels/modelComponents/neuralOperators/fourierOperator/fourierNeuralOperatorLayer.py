@@ -1,7 +1,6 @@
 import torch
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.neuralOperators.fourierOperator.fourierNeuralOperatorWeights import fourierNeuralOperatorWeights
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
 
 
 class fourierNeuralOperatorLayer(fourierNeuralOperatorWeights):
@@ -16,26 +15,14 @@ class fourierNeuralOperatorLayer(fourierNeuralOperatorWeights):
         # neuralOperatorData dimension: batchSize, numOutputSignals, finalLength
 
         # Apply the activation function.
-        neuralOperatorData = self.activationFunction(neuralOperatorData)
-        # neuralOperatorData dimension: batchSize, numOutputSignals, finalLength
-
-        return neuralOperatorData
-
-    def backwardPass(self, neuralOperatorData, realFrequencyTerms=None, imaginaryFrequencyTerms=None):
-        # Assert that the skip connection model is None.
-        assert self.skipConnectionModel is None, "The skip connection model must be None for the reversible interface."
-
-        # Apply the activation function and the wavelet neural operator.
-        neuralOperatorData = self.activationFunction(neuralOperatorData)
-        neuralOperatorData = self.fourierNeuralOperator(neuralOperatorData, realFrequencyTerms, imaginaryFrequencyTerms)
+        if self.activationMethod != 'none': neuralOperatorData = self.activationFunction(neuralOperatorData)
         # neuralOperatorData dimension: batchSize, numOutputSignals, finalLength
 
         return neuralOperatorData
 
     def reversibleInterface(self, neuralOperatorData):
         assert self.skipConnectionModel is None, "The skip connection model must be None for the reversible interface."
-        if not reversibleInterface.forwardDirection: return self.forward(neuralOperatorData, realFrequencyTerms=None, imaginaryFrequencyTerms=None)
-        else: return self.backwardPass(neuralOperatorData, realFrequencyTerms=None, imaginaryFrequencyTerms=None)
+        return self.forward(neuralOperatorData, realFrequencyTerms=None, imaginaryFrequencyTerms=None)
 
     def fourierNeuralOperator(self, inputData, realFrequencyTerms=None, imaginaryFrequencyTerms=None):
         # Extract the input data parameters.

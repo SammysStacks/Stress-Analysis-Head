@@ -1,7 +1,7 @@
 #!/bin/bash
 
-lrs_general=(0.01 0.001 0.0001)
-lrs_physio=(0.1/2 0.01/2 0.001/2 0.0001/2)
+lrs_general=(0.01 0.001 0.0001 0.00001)
+lrs_physio=(0.1 0.01 0.001 0.0001)
 
 numSpecificEncoderLayers=2
 numSharedEncoderLayers=8
@@ -13,6 +13,11 @@ for lr_physio in "${lrs_physio[@]}"
 do
   for lr_general in "${lrs_general[@]}"
   do
+        # Check if numSpecificEncoderLayers is greater than numSharedEncoderLayers
+    if [ "$lr_physio" -gt "$lr_general" ]; then
+      continue  # Skip this iteration if the condition is true
+    fi
+
     echo "Submitting job with $numSharedEncoderLayers numSharedEncoderLayers, $numSpecificEncoderLayers numSpecificEncoderLayers, $encodedDimension encodedDimension, $waveletType waveletType, $optimizer optimizer on $1"
 
     if [ "$1" == "CPU" ]; then
