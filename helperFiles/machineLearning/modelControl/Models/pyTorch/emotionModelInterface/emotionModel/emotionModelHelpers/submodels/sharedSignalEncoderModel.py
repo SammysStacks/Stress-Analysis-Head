@@ -40,7 +40,8 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         else: raise "The learning protocol is not yet implemented."
 
     def smoothPhysiologicalProfile(self, physiologicalProfile):
-        return self.physiologicalSmoothingModel(physiologicalProfile.unsqueeze(1)).squeeze(1)
+        physiologicalProfile = self.physiologicalSmoothingModel(physiologicalProfile.unsqueeze(1))
+        return self.smoothingFilter(physiologicalProfile, kernel=[1, 1, 1]).squeeze(1)
 
     def learningInterface(self, layerInd, signalData):
         # Extract the signal data parameters.
