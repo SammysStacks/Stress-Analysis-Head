@@ -2,9 +2,9 @@
 
 numSpecificEncoderLayers=(2)
 maxNumDecompLevels=(1 2 3 4 5)
-signalEncoderLayers=(8 12 16)
+signalEncoderLayers=(8 12)
 encodedDimensions=(256)
-waveletTypes=('bior2.2' 'bior3.3' 'bior3.5' 'bior3.7' 'bior3.9')
+waveletTypes=('bior2.2' 'bior3.1' 'bior3.3' 'bior3.5' 'bior3.7' 'bior3.9' 'bior4.4' 'bior5.5' 'bior6.8')
 optimizers=('RAdam')
 
 lr_general=0.001
