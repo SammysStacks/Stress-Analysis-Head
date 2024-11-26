@@ -1,3 +1,4 @@
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.neuralOperators.fourierOperator.fourierNeuralOperatorLayer import fourierNeuralOperatorLayer
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.neuralOperators.waveletOperator.waveletNeuralOperatorLayer import waveletNeuralOperatorLayer
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.emotionModelWeights import emotionModelWeights
@@ -18,7 +19,7 @@ class neuralOperatorInterface(emotionModelWeights):
         # Decide on the neural operator layer.
         if self.operatorType == 'wavelet': return self.initializeWaveletLayer(self.sequenceLength, neuralOperatorParameters, reversibleFlag)
         elif self.operatorType == 'fourier': return self.initializeFourierLayer(self.sequenceLength, neuralOperatorParameters, reversibleFlag)
-        else: raise ValueError(f"The operator type ({self.operatorType}) must be in ['wavelet'].")
+        else: raise ValueError(f"The operator type ({self.operatorType}) must be in {'wavelet'}.")
 
     def initializeWaveletLayer(self, sequenceLength, neuralOperatorParameters, reversibleFlag):
         # Unpack the neural operator parameters.
@@ -28,11 +29,15 @@ class neuralOperatorInterface(emotionModelWeights):
 
         # Hardcoded parameters.
         numDecompositions = waveletNeuralOperatorLayer.max_decompositions(signal_length=sequenceLength, wavelet_name=waveletType)  # Number of decompositions for the waveletType transform.
+        print(numDecompositions)
+
+
         activationMethod = 'none' if reversibleFlag else emotionModelWeights.getIrreversibleActivation()  # The activation method to use.
         skipConnectionProtocol = 'none' if reversibleFlag else 'CNN'  # The protocol for the skip connections.
         learningProtocol = 'rCNN' if reversibleFlag else 'FC'  # The protocol for learning the wavelet data.
         mode = 'periodization'  # Mode: 'zero' (lossy), 'symmetric' (lossy), 'reflect' (lossy), or 'periodization' (lossless).
-        # numDecompositions = min(numDecompositions, self.maxWaveletDecompositions)  # Limit the number of decompositions.
+        assert numDecompositions > modelConstants.userInputParams['maxWaveletDecompositions']
+        numDecompositions = min(numDecompositions, modelConstants.userInputParams['maxWaveletDecompositions'] or numDecompositions)  # Limit the number of decompositions.
 
         return waveletNeuralOperatorLayer(sequenceLength=sequenceLength, numInputSignals=self.numInputSignals, numOutputSignals=self.numOutputSignals, numDecompositions=numDecompositions,
                                           waveletType=waveletType, mode=mode, addBiasTerm=self.addBiasTerm, activationMethod=activationMethod, skipConnectionProtocol=skipConnectionProtocol,

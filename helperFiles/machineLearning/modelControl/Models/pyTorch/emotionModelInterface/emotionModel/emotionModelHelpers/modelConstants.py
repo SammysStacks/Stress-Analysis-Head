@@ -66,4 +66,12 @@ class modelConstants:
         'Vr': None
     }
 
+    # -------------------------------------------------------------------- #
+
+    userInputParams = None
+
+    @classmethod
+    def updateModelParams(cls, userInputParams):
+        cls.userInputParams = userInputParams
+
 
