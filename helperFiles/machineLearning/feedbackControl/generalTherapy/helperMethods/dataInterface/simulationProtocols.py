@@ -4,8 +4,8 @@ import torch.nn.functional as F
 import numpy as np
 
 # Import helper files.
-from helperFiles.machineLearning.feedbackControl.heatTherapy.helperMethods.dataInterface.dataInterface import dataInterface
-from helperFiles.machineLearning.feedbackControl.heatTherapy.helperMethods.therapyProtcols.helperTherapyMethods.generalMethods import generalMethods
+from helperFiles.machineLearning.feedbackControl.generalTherapy.helperMethods.dataInterface.dataInterface import dataInterface
+from helperFiles.machineLearning.feedbackControl.generalTherapy.helperMethods.therapyProtcols.helperTherapyMethods.generalMethods import generalMethods
 
 
 class simulationProtocols:

@@ -4,7 +4,7 @@ import torch
 import os
 
 # Import files.
-from helperFiles.machineLearning.feedbackControl.heatTherapy.helperMethods.dataInterface.dataInterface import dataInterface
+from helperFiles.machineLearning.feedbackControl.generalTherapy.helperMethods.dataInterface.dataInterface import dataInterface
 from helperFiles.machineLearning.featureAnalysis.compiledFeatureNames.compileFeatureNames import compileFeatureNames
 from helperFiles.machineLearning.modelControl.modelSpecifications.compileModelInfo import compileModelInfo
 from helperFiles.dataAcquisitionAndAnalysis.excelProcessing.extractDataProtocols import extractData

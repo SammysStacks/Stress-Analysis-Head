@@ -2,12 +2,12 @@
 import torch
 from torch import nn
 # Import files.
-from helperFiles.machineLearning.feedbackControl.heatTherapy.helperMethods.therapyProtcols.nnHelpers.modelParameters.sharedModelWeights import sharedModelWeights
-from helperFiles.machineLearning.feedbackControl.heatTherapy.helperMethods.therapyProtcols.nnHelpers.modelParameters.specificModelWeights import specificModelWeights
+from helperFiles.machineLearning.feedbackControl.generalTherapy.helperMethods.therapyProtcols.nnHelpers.modelParameters.sharedModelWeights import sharedModelWeights
+from helperFiles.machineLearning.feedbackControl.generalTherapy.helperMethods.therapyProtcols.nnHelpers.modelParameters.specificModelWeights import specificModelWeights
 
 
-class heatTherapyModelUpdate(nn.Module):
-    def __init__(self, numTemperatures=1, numLosses=3, numTempBins=11, numLossBins=11):
+class heatTherapyModel(nn.Module):
+    def __init__(self, numTemperatures=1, numLosses=3, numTempBins=11, numLossBins=101):
         # General model parameters.
         super().__init__()
         # General model parameters.
@@ -44,6 +44,8 @@ class heatTherapyModelUpdate(nn.Module):
 
     def forward(self, initialPatientStates):
         print('initialPatientStates: ', initialPatientStates)
+        print('number of temperature bins: ', self.numTempBins)
+        print('number of loss bins: ', self.numLossBins)
 
         # Add a batch dimension
         if initialPatientStates.dim() == 1:
@@ -57,14 +59,39 @@ class heatTherapyModelUpdate(nn.Module):
         batchSize, numInitialFeatures = initialPatientStates.size()
         # initialPatientStates dimensions: [batchSize, numInputFeatures=4].
 
-        # Predict the next States for the patient.
-        deltafinalStatePrediction = self.predictNextTotalState(initialPatientStates)
-        # finalTemperaturePrediction dimensions: [numParameters, batchSize, 1].
-        return deltafinalStatePrediction
+        # Predict the next temperatures for the patient.
+        finalTemperaturePredictions = self.predictNextTemperature(initialPatientStates)
+        # finalTemperaturePrediction dimensions: [numParameters, batchSize, allNumParameterBins].
 
-    def predictNextTotalState(self, patientStates):
-        # predict temperature, delta PA, delta NA, delta SA
-        sharedStateFeatures = self.sharedModelWeights.sharedFeatureExtractionTotal(patientStates)
-        deltafinalStatePredictions = self.specificModelWeights.predictingStates(sharedStateFeatures)
+        # Update the patient's state. RESNET
+        compiledTemperaturePredictions = finalTemperaturePredictions.transpose(0, 1).contiguous().view(batchSize, self.numTemperatures * self.numTempBins)
+        nextPatientStates = torch.cat(tensors=(compiledTemperaturePredictions, initialPatientStates), dim=1)
+        # nextPatientStates dimensions: [batchSize, numInputLossFeatures].
+        print('nextPatientStates: ', nextPatientStates)
 
-        return deltafinalStatePredictions
+        # Predict the expected loss of the patient.
+        finalLossPredictions = self.predictNextState(nextPatientStates)
+        # finalLossPrediction dimensions: [numPredictions, batchSize, numPredictionBins].
+
+        # Assert the dimensions are correct.
+        assert finalTemperaturePredictions.size() == (self.numTemperatures, initialPatientStates.size(0), self.numTempBins), f"Incorrect dimensions: {finalTemperaturePredictions.size()}"
+        assert finalLossPredictions.size() == (self.numLosses, initialPatientStates.size(0), self.numLossBins), f"Incorrect dimensions: {finalLossPredictions.size()}"
+
+        return finalTemperaturePredictions, finalLossPredictions
+
+    def predictNextTemperature(self, patientStates):
+        """ patientStates: The patient's current state. Dimensions: [batchSize, numInputFeatures=4]. """
+        # Predict the next temperature of the patient.
+        sharedTempFeatures = self.sharedModelWeights.sharedTempFeatureExtraction(patientStates)  # Extract the shared model features.
+        finalTemperaturePredictions = self.specificModelWeights.predictNextTemperature(sharedTempFeatures)
+        # finalTemperaturePrediction dimensions: [numParameters, batchSize, allNumParameterBins].
+
+        return finalTemperaturePredictions
+
+    def predictNextState(self, patientStates):
+        # Predict the expected loss of the patient.
+        sharedLossFeatures = self.sharedModelWeights.sharedLossFeatureExtraction(patientStates)  # Extract the shared model features.
+        finalLossPredictions = self.specificModelWeights.predictNextLoss(sharedLossFeatures)
+        # finalLossPrediction dimensions: [numPredictions, batchSize, numPredictionBins].
+
+        return finalLossPredictions

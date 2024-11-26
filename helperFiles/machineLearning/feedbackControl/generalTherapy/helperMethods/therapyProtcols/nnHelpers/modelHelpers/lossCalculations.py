@@ -4,8 +4,8 @@ from torch import nn
 import torch.nn.functional as F
 
 # Import files.
-from helperFiles.machineLearning.feedbackControl.heatTherapy.helperMethods.therapyProtcols.generalTherapyProtocol import generalTherapyProtocol
-from helperFiles.machineLearning.feedbackControl.heatTherapy.helperMethods.dataInterface.dataInterface import dataInterface
+from helperFiles.machineLearning.feedbackControl.generalTherapy.helperMethods.therapyProtcols.generalTherapyProtocol import generalTherapyProtocol
+from helperFiles.machineLearning.feedbackControl.generalTherapy.helperMethods.dataInterface.dataInterface import dataInterface
 
 
 class lossCalculations:

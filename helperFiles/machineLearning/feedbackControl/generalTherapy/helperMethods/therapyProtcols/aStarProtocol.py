@@ -5,7 +5,7 @@ from .generalTherapyProtocol import generalTherapyProtocol
 
 
 class aStarTherapyProtocol(generalTherapyProtocol):
-    def __init__(self, initialParameterBounds, unNormalizedParameterBinWidths, simulationParameters, therapyMethod, learningRate=5):
+    def __init__(self, initialParameterBounds, unNormalizedParameterBinWidths, simulationParameters, therapySelection, therapyMethod, learningRate=5):
         super().__init__(initialParameterBounds, unNormalizedParameterBinWidths, simulationParameters, therapyMethod)
         # Define update parameters.
         self.gausParam_STD = self.gausParameterSTDs # The standard deviation for the Gaussian distribution.
@@ -13,7 +13,7 @@ class aStarTherapyProtocol(generalTherapyProtocol):
         self.learningRate = learningRate  # The learning rate for the therapy.
         self.discretePersonalizedMap = []  # The discrete personalized map.
 
-        # Bias terms.
+        # Bias terms
         self.percentHeuristic = 1  # The percentage of the heuristic map to use.
         self.explorationBias = 1  # The bias for exploration.
         self.uncertaintyBias = 1  # The bias for uncertainty.

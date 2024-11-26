@@ -1,12 +1,12 @@
 # Import the necessary libraries.
-from helperFiles.machineLearning.feedbackControl.heatTherapy.helperMethods.therapyProtcols.aStarProtocol import aStarTherapyProtocol
-from helperFiles.machineLearning.feedbackControl.heatTherapy.helperMethods.therapyProtcols.basicProtocol import basicTherapyProtocol
-from helperFiles.machineLearning.feedbackControl.heatTherapy.helperMethods.therapyProtcols.hmmProtocol import hmmTherapyProtocol
-from helperFiles.machineLearning.feedbackControl.heatTherapy.helperMethods.therapyProtcols.nnProtocol import nnTherapyProtocol
+from helperFiles.machineLearning.feedbackControl.generalTherapy.helperMethods.therapyProtcols.aStarProtocol import aStarTherapyProtocol
+from helperFiles.machineLearning.feedbackControl.generalTherapy.helperMethods.therapyProtcols.basicProtocol import basicTherapyProtocol
+from helperFiles.machineLearning.feedbackControl.generalTherapy.helperMethods.therapyProtcols.hmmProtocol import hmmTherapyProtocol
+from helperFiles.machineLearning.feedbackControl.generalTherapy.helperMethods.therapyProtcols.nnProtocol import nnTherapyProtocol
 
 
-class heatTherapyHelpers:
-    def __init__(self, userName, initialParameterBounds, unNormalizedParameterBinWidths, simulationParameters, therapyMethod="aStarTherapyProtocol", plotResults=False):
+class therapyHelpers:
+    def __init__(self, userName, initialParameterBounds, unNormalizedParameterBinWidths, simulationParameters, therapySelection, therapyMethod="aStarTherapyProtocol", plotResults=False):
         # General parameters.
         self.unNormalizedParameterBinWidths = unNormalizedParameterBinWidths  # The bin widths for the parameter bounds.
         self.initialParameterBounds = initialParameterBounds  # The parameter bounds for the therapy.
@@ -20,16 +20,16 @@ class heatTherapyHelpers:
         self.therapyType = None
 
         # Set up the therapy protocols.
-        self.setupTherapyProtocols(therapyMethod)
+        self.setupTherapyProtocols(therapySelection, therapyMethod)
 
     def setUserName(self, userName):
         self.userName = userName
 
-    def setupTherapyProtocols(self, therapyMethod):
+    def setupTherapyProtocols(self, therapySelection, therapyMethod):
         # Change the therapy method.
         self.therapyMethod = therapyMethod
         if self.therapyMethod == "aStarTherapyProtocol":
-            self.therapyProtocol = aStarTherapyProtocol(self.initialParameterBounds, self.unNormalizedParameterBinWidths, self.simulationParameters, therapyMethod, learningRate=2)
+            self.therapyProtocol = aStarTherapyProtocol(self.initialParameterBounds, self.unNormalizedParameterBinWidths, self.simulationParameters, therapySelection, therapyMethod, learningRate=2)
         elif self.therapyMethod == "basicTherapyProtocol":
             self.therapyProtocol = basicTherapyProtocol(self.initialParameterBounds, self.unNormalizedParameterBinWidths, self.simulationParameters, therapyMethod)
         elif self.therapyMethod == "nnTherapyProtocol":

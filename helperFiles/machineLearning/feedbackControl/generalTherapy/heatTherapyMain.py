@@ -1,11 +1,11 @@
 # Import the necessary libraries.
-from helperFiles.machineLearning.feedbackControl.heatTherapy.heatTherapyHelpers import heatTherapyHelpers
+from helperFiles.machineLearning.feedbackControl.generalTherapy.therapyHelpers import therapyHelpers
 
 
-class heatTherapyControl(heatTherapyHelpers):
-    def __init__(self, userName, initialParameterBounds, unNormalizedParameterBinWidths, simulationParameters, therapyMethod, plotResults=False):
+class heatTherapyControl(therapyHelpers):
+    def __init__(self, userName, initialParameterBounds, unNormalizedParameterBinWidths, simulationParameters, therapySelection, therapyMethod, plotResults=False):
         super().__init__(userName=userName, initialParameterBounds=initialParameterBounds, unNormalizedParameterBinWidths=unNormalizedParameterBinWidths,
-                         simulationParameters=simulationParameters, therapyMethod=therapyMethod, plotResults=plotResults)
+                         simulationParameters=simulationParameters, therapySelection=therapySelection,therapyMethod=therapyMethod, plotResults=plotResults)
 
     def runTherapyProtocol(self, maxIterations=None):
         # Initialize holder parameters such as the user maps.
@@ -62,6 +62,7 @@ class heatTherapyControl(heatTherapyHelpers):
 
 
 if __name__ == "__main__":
+    therapySelection = "Heat"
     # User parameters.
     userTherapyMethod = "aStarTherapyProtocol"  # The therapy algorithm to run. Options: "aStarTherapyProtocol", "basicTherapyProtocol", "nnTherapyProtocol", "hmmTherapyProtocol"
     testingUserName = "Squirtle"  # The username for the therapy.
@@ -79,6 +80,6 @@ if __name__ == "__main__":
     }
 
     # Initialize the therapy protocol
-    therapyProtocol = heatTherapyControl(testingUserName, temperatureBounds, temperatureBinWidth, currentSimulationParameters, therapyMethod=userTherapyMethod, plotResults=plotTherapyResults)
+    therapyProtocol = heatTherapyControl(testingUserName, temperatureBounds, temperatureBinWidth, currentSimulationParameters, therapySelection=therapySelection, therapyMethod=userTherapyMethod, plotResults=plotTherapyResults)
     # Run the therapy protocol.
     therapyProtocol.runTherapyProtocol(maxIterations=None)

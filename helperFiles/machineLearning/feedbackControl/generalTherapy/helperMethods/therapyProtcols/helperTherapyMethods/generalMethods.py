@@ -4,7 +4,7 @@ import torch
 import numpy as np
 
 # Import helper files.
-from helperFiles.machineLearning.feedbackControl.heatTherapy.helperMethods.dataInterface.dataInterface import dataInterface
+from helperFiles.machineLearning.feedbackControl.generalTherapy.helperMethods.dataInterface.dataInterface import dataInterface
 
 
 class generalMethods:
