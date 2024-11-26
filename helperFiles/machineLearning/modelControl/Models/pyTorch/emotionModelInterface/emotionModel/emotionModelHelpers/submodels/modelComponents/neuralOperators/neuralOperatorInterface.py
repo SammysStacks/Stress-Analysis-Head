@@ -33,6 +33,8 @@ class neuralOperatorInterface(emotionModelWeights):
         skipConnectionProtocol = 'none' if reversibleFlag else 'CNN'  # The protocol for the skip connections.
         learningProtocol = 'rCNN' if reversibleFlag else 'FC'  # The protocol for learning the wavelet data.
         mode = 'periodization'  # Mode: 'zero' (lossy), 'symmetric' (lossy), 'reflect' (lossy), or 'periodization' (lossless).
+
+        # TODO: EDIT
         assert numDecompositions > modelConstants.userInputParams['maxWaveletDecompositions']
         numDecompositions = min(numDecompositions, modelConstants.userInputParams['maxWaveletDecompositions'] or numDecompositions)  # Limit the number of decompositions.
 
