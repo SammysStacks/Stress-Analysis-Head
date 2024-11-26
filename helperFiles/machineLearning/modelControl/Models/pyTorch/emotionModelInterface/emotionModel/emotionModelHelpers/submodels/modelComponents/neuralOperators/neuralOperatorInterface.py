@@ -29,9 +29,6 @@ class neuralOperatorInterface(emotionModelWeights):
 
         # Hardcoded parameters.
         numDecompositions = waveletNeuralOperatorLayer.max_decompositions(signal_length=sequenceLength, wavelet_name=waveletType)  # Number of decompositions for the waveletType transform.
-        print(numDecompositions)
-
-
         activationMethod = 'none' if reversibleFlag else emotionModelWeights.getIrreversibleActivation()  # The activation method to use.
         skipConnectionProtocol = 'none' if reversibleFlag else 'CNN'  # The protocol for the skip connections.
         learningProtocol = 'rCNN' if reversibleFlag else 'FC'  # The protocol for learning the wavelet data.
