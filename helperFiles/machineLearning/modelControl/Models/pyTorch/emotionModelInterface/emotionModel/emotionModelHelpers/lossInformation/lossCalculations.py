@@ -1,4 +1,3 @@
-# General
 import math
 
 import torch
@@ -6,10 +5,8 @@ from torch import nn
 
 # Helper classes
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.generalMethods.modelHelpers import modelHelpers
-# Loss methods
 from helperFiles.machineLearning.modelControl.Models.pyTorch.lossFunctions import pytorchLossMethods, weightLoss
 from ..emotionDataInterface import emotionDataInterface
-from ..generalMethods.generalMethods import generalMethods
 from ..modelConstants import modelConstants
 from ..modelParameters import modelParameters
 
@@ -23,10 +20,12 @@ class lossCalculations:
         self.numEmotions = len(allEmotionClasses)  # The number of emotions to predict.
         self.accelerator = accelerator  # Hugging face model optimizations.
 
+        # Calculate the number of sequence points to throw out.
+        self.minSequencePoints = modelParameters.getExclusionSequenceCriteria()[0]  # The minimum number of sequence points to consider.
+        self.numCulledLosses = int(0.1*self.minSequencePoints)  # The percentage of the data to trim from the top of the signal.
+
         # Initialize helper classes.
         self.dataInterface = emotionDataInterface()
-        self.modelParameters = modelParameters
-        self.generalMethods = generalMethods()
         self.modelHelpers = modelHelpers()
 
         # Specify the model's loss functions (READ BEFORE USING!!). 
@@ -60,7 +59,7 @@ class lossCalculations:
         batchSize, numSignals, sequenceLength = allDatapoints.size()
         batch_indices, signal_indices = torch.meshgrid(torch.arange(batchSize, device=validDataMask.device), torch.arange(numSignals, device=validDataMask.device), indexing="ij")
 
-        for _ in range(4):
+        for _ in range(self.numCulledLosses):
             # Remove the top 3 noisy points to smoothen the loss.
             findMaxLoss = torch.where(validDataMask, signalReconstructedLoss, float('-inf'))
             max_indices = findMaxLoss.argmax(dim=-1, keepdim=True).squeeze(-1)

@@ -1,8 +1,8 @@
 #!/bin/bash
 
-numSpecificEncoderLayers=(1 2 3 4 5 6 7 8)
-signalEncoderLayers=(4 6 8 10 12 14 16)
-encodedDimensions=(64 128 256)
+numSpecificEncoderLayers=(1 2 4 6 8)
+signalEncoderLayers=(8 12 16)
+encodedDimensions=(128 256)
 waveletTypes=('bior3.3')
 optimizers=('RAdam')
 

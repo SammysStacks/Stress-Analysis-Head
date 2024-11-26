@@ -1,10 +1,10 @@
 #!/bin/bash
 
-lrs_general=(0.01 0.001 0.0001 0.00001)
-lrs_physio=(0.1 0.01 0.001 0.0001)
+lrs_general=(0.001 0.0001 0.00001)
+lrs_physio=(0.01 0.001)
 
 numSpecificEncoderLayers=2
-numSharedEncoderLayers=8
+numSharedEncoderLayers=16
 waveletType='bior3.3'
 encodedDimension=256
 optimizer='RAdam'

@@ -4,7 +4,7 @@ optimizers=('Adadelta' 'Adam' 'AdamW' 'NAdam' 'RAdam' 'Adamax' 'ASGD' 'RMSprop' 
 optimizers=('Adam' 'AdamW' 'NAdam' 'RMSprop' 'Adadelta' 'Adadelta')  # 7 optimizers.  'RAdam'
 
 numSpecificEncoderLayers=2
-numSharedEncoderLayers=8
+numSharedEncoderLayers=16
 waveletType='bior3.3'
 encodedDimension=256
 
