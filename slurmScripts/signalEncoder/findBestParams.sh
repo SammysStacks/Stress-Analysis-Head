@@ -1,10 +1,10 @@
 #!/bin/bash
 
-numSpecificEncoderLayers=(1 2 4)
+numSpecificEncoderLayers=(2)
 maxNumDecompLevels=(1 2 3 4 5)
 signalEncoderLayers=(8 12 16)
 encodedDimensions=(256)
-waveletTypes=('bior2.2' 'bior3.3' 'bior3.5' 'bior3.7')
+waveletTypes=('bior2.2' 'bior3.3' 'bior3.5' 'bior3.7' 'bior3.9')
 optimizers=('RAdam')
 
 lr_general=0.001
