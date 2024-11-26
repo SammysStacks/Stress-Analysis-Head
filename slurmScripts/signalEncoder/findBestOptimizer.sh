@@ -5,7 +5,7 @@ optimizers=('Adam' 'AdamW' 'NAdam' 'RMSprop' 'Adadelta' 'Adadelta')  # 7 optimiz
 
 numSpecificEncoderLayers=2
 numSharedEncoderLayers=16
-waveletType='bior3.3'
+waveletType='bior2.2'
 encodedDimension=256
 
 lr_general=0.001

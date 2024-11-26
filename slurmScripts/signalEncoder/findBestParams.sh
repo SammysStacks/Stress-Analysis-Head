@@ -3,7 +3,7 @@
 numSpecificEncoderLayers=(1 2 4 6 8)
 signalEncoderLayers=(8 12 16)
 encodedDimensions=(128 256)
-waveletTypes=('bior3.3')
+waveletTypes=('bior2.2')
 optimizers=('RAdam')
 
 lr_general=0.001

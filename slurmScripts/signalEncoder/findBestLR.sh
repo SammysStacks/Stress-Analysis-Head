@@ -5,7 +5,7 @@ lrs_physio=(0.01 0.001)
 
 numSpecificEncoderLayers=2
 numSharedEncoderLayers=16
-waveletType='bior3.3'
+waveletType='bior2.2'
 encodedDimension=256
 optimizer='RAdam'
 
