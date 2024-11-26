@@ -154,9 +154,7 @@ class emotionModelHead(nn.Module):
         # physiologicalProfile: batchSize, encodedDimension
 
         # Normalize the physiological profile.
-        physiologicalProfile = physiologicalProfile - physiologicalProfile.min(dim=-1, keepdim=True).values
-        physiologicalProfile = physiologicalProfile / physiologicalProfile.max(dim=-1, keepdim=True).values
-        physiologicalProfile = physiologicalProfile * 2 - 1
+        physiologicalProfile = physiologicalProfile / physiologicalProfile.std(dim=-1, keepdim=True) / 2
 
         # ------------------- Learned Signal Mapping ------------------- #
 

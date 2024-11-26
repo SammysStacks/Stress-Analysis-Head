@@ -1,6 +1,7 @@
 import torch
 import torch.fft
 import torch.nn as nn
+from matplotlib import pyplot as plt
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
@@ -85,10 +86,10 @@ class reversibleConvolutionLayer(reversibleInterface):
 
 if __name__ == "__main__":
     # General parameters.
-    _batchSize, _numSignals, _sequenceLength = 64, 128, 128
-    _activationMethod = 'reversibleLinearSoftSign_2'
+    _batchSize, _numSignals, _sequenceLength = 128, 128, 512
+    _activationMethod = 'reversibleLinearSoftSign_1'
     _kernelSize = 2*_sequenceLength - 1
-    _numLayers = 2
+    _numLayers = 1
 
     # Set up the parameters.
     neuralLayerClass = reversibleConvolutionLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod)
@@ -98,3 +99,6 @@ if __name__ == "__main__":
     # Perform the convolution in the fourier and spatial domains.
     _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(_inputData, atol=1e-6, numLayers=1)
     neuralLayerClass.printParams()
+
+    plt.hist((_forwardData.norm(dim=-1) / _inputData.norm(dim=-1)).view(-1).detach().numpy(), bins=100, alpha=0.5, label='Input/Output Norm Ratio')
+    plt.show()

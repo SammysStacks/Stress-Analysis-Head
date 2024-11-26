@@ -24,12 +24,6 @@ class emotionModelWeights(convolutionalHelpers):
     def getInitialPhysiologicalProfile(numExperiments, encodedDimension):
         # Initialize the physiological profile.
         physiologicalProfile = torch.randn(numExperiments, encodedDimension, dtype=torch.float64)
-        physiologicalProfile = nn.init.kaiming_normal_(physiologicalProfile, mode='fan_out', nonlinearity='leaky_relu', a=0)
-
-        # Normalize the physiological profile.
-        physiologicalProfile = physiologicalProfile - physiologicalProfile.min(dim=-1, keepdim=True).values
-        physiologicalProfile = physiologicalProfile / physiologicalProfile.max(dim=-1, keepdim=True).values
-        physiologicalProfile = physiologicalProfile * 2 - 1
 
         # Initialize the physiological profile as a parameter.
         physiologicalProfile = nn.Parameter(physiologicalProfile)
@@ -76,7 +70,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def postProcessingLayerRCNN(numSignals, sequenceLength):
-        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=1, activationMethod=f"{emotionModelWeights.getReversibleActivation()}_0.5")
+        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=1, activationMethod=f"{emotionModelWeights.getReversibleActivation()}_1")
 
     def physiologicalSmoothing(self):
         return nn.Sequential(

@@ -25,6 +25,9 @@ class waveletNeuralOperatorLayer(waveletNeuralOperatorWeights):
 
     def reversibleInterface(self, neuralOperatorData):
         assert self.skipConnectionModel is None, "The skip connection model must be None for the reversible interface."
+        assert self.activationMethod == 'none', "The activation method must be 'none' for the reversible interface."
+
+        # Apply the wavelet neural operator.
         return self.waveletNeuralOperator(neuralOperatorData, residualLowFrequencyTerms=None, residualHighFrequencyTerms=None)
 
     def waveletNeuralOperator(self, inputData, residualLowFrequencyTerms=None, residualHighFrequencyTerms=None):

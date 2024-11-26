@@ -16,11 +16,11 @@ class neuralOperatorInterface(emotionModelWeights):
 
     def getNeuralOperatorLayer(self, neuralOperatorParameters, reversibleFlag):
         # Decide on the neural operator layer.
-        if self.operatorType == 'wavelet': return self.initializeWaveletLayer(self.sequenceLength, neuralOperatorParameters, reversibleFlag, layerMultiple=1)
-        elif self.operatorType == 'fourier': return self.initializeFourierLayer(self.sequenceLength, neuralOperatorParameters, reversibleFlag, layerMultiple=1)
+        if self.operatorType == 'wavelet': return self.initializeWaveletLayer(self.sequenceLength, neuralOperatorParameters, reversibleFlag)
+        elif self.operatorType == 'fourier': return self.initializeFourierLayer(self.sequenceLength, neuralOperatorParameters, reversibleFlag)
         else: raise ValueError(f"The operator type ({self.operatorType}) must be in ['wavelet'].")
 
-    def initializeWaveletLayer(self, sequenceLength, neuralOperatorParameters, reversibleFlag, layerMultiple):
+    def initializeWaveletLayer(self, sequenceLength, neuralOperatorParameters, reversibleFlag):
         # Unpack the neural operator parameters.
         encodeHighFrequencyProtocol = neuralOperatorParameters['wavelet'].get('encodeHighFrequencyProtocol', 'highFreq')  # The protocol for encoding the high frequency signals.
         encodeLowFrequencyProtocol = neuralOperatorParameters['wavelet'].get('encodeLowFrequencyProtocol', 'lowFreq')  # The protocol for encoding the low frequency signals.
@@ -32,12 +32,13 @@ class neuralOperatorInterface(emotionModelWeights):
         skipConnectionProtocol = 'none' if reversibleFlag else 'CNN'  # The protocol for the skip connections.
         learningProtocol = 'rCNN' if reversibleFlag else 'FC'  # The protocol for learning the wavelet data.
         mode = 'periodization'  # Mode: 'zero' (lossy), 'symmetric' (lossy), 'reflect' (lossy), or 'periodization' (lossless).
+        # numDecompositions = min(numDecompositions, self.maxWaveletDecompositions)  # Limit the number of decompositions.
 
-        return waveletNeuralOperatorLayer(sequenceLength=sequenceLength, numInputSignals=self.numInputSignals*layerMultiple, numOutputSignals=self.numOutputSignals*layerMultiple, numDecompositions=numDecompositions,
+        return waveletNeuralOperatorLayer(sequenceLength=sequenceLength, numInputSignals=self.numInputSignals, numOutputSignals=self.numOutputSignals, numDecompositions=numDecompositions,
                                           waveletType=waveletType, mode=mode, addBiasTerm=self.addBiasTerm, activationMethod=activationMethod, skipConnectionProtocol=skipConnectionProtocol,
                                           encodeLowFrequencyProtocol=encodeLowFrequencyProtocol, encodeHighFrequencyProtocol=encodeHighFrequencyProtocol, learningProtocol=learningProtocol)
 
-    def initializeFourierLayer(self, sequenceLength, neuralOperatorParameters, reversibleFlag, layerMultiple):
+    def initializeFourierLayer(self, sequenceLength, neuralOperatorParameters, reversibleFlag):
         # Unpack the neural operator parameters.
         encodeImaginaryFrequencies = neuralOperatorParameters.get('encodeImaginaryFrequencies', True)
         encodeRealFrequencies = neuralOperatorParameters.get('encodeRealFrequencies', True)
@@ -47,5 +48,5 @@ class neuralOperatorInterface(emotionModelWeights):
         skipConnectionProtocol = 'none' if reversibleFlag else 'CNN'  # The protocol for the skip connections.
         learningProtocol = 'rCNN' if reversibleFlag else 'FC'  # The protocol for learning the wavelet data.
 
-        return fourierNeuralOperatorLayer(sequenceLength=sequenceLength, numInputSignals=self.numInputSignals*layerMultiple, numOutputSignals=self.numOutputSignals*layerMultiple, addBiasTerm=self.addBiasTerm, activationMethod=activationMethod,
+        return fourierNeuralOperatorLayer(sequenceLength=sequenceLength, numInputSignals=self.numInputSignals, numOutputSignals=self.numOutputSignals, addBiasTerm=self.addBiasTerm, activationMethod=activationMethod,
                                           skipConnectionProtocol=skipConnectionProtocol, encodeRealFrequencies=encodeRealFrequencies, encodeImaginaryFrequencies=encodeImaginaryFrequencies, learningProtocol=learningProtocol)
