@@ -60,7 +60,7 @@ class lossCalculations:
         batchSize, numSignals, sequenceLength = allDatapoints.size()
         batch_indices, signal_indices = torch.meshgrid(torch.arange(batchSize, device=validDataMask.device), torch.arange(numSignals, device=validDataMask.device), indexing="ij")
 
-        for _ in range(3):
+        for _ in range(4):
             # Remove the top 3 noisy points to smoothen the loss.
             findMaxLoss = torch.where(validDataMask, signalReconstructedLoss, float('-inf'))
             max_indices = findMaxLoss.argmax(dim=-1, keepdim=True).squeeze(-1)
