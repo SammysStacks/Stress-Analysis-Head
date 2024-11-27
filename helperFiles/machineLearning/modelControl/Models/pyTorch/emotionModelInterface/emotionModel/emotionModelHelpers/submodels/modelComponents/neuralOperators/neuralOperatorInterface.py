@@ -37,6 +37,7 @@ class neuralOperatorInterface(emotionModelWeights):
         # TODO: EDIT
         assert numDecompositions > modelConstants.userInputParams['maxWaveletDecompositions']
         numDecompositions = min(numDecompositions, modelConstants.userInputParams['maxWaveletDecompositions'] or numDecompositions)  # Limit the number of decompositions.
+        # numDecompositions = numDecompositions - 1
 
         return waveletNeuralOperatorLayer(sequenceLength=sequenceLength, numInputSignals=self.numInputSignals, numOutputSignals=self.numOutputSignals, numDecompositions=numDecompositions,
                                           waveletType=waveletType, mode=mode, addBiasTerm=self.addBiasTerm, activationMethod=activationMethod, skipConnectionProtocol=skipConnectionProtocol,

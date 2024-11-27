@@ -154,7 +154,7 @@ class emotionModelHead(nn.Module):
         # physiologicalProfile: batchSize, encodedDimension
 
         # Normalize the physiological profile.
-        physiologicalProfile = physiologicalProfile / physiologicalProfile.std(dim=-1, keepdim=True) / 2
+        physiologicalProfile = physiologicalProfile / physiologicalProfile.std(dim=-1, keepdim=True) / 3
 
         # ------------------- Learned Signal Mapping ------------------- #
 
@@ -169,7 +169,7 @@ class emotionModelHead(nn.Module):
         # reconstructedSignalData: batchSize, numSignals, maxSequenceLength
 
         # Visualize the data transformations within signal encoding.
-        if submodel == modelConstants.signalEncoderModel and not inferenceTraining and random.random() < 0.1:
+        if submodel == modelConstants.signalEncoderModel and not inferenceTraining and random.random() < 0.01:
             with torch.no_grad(): self.visualizeSignalEncoding(physiologicalProfile, resampledSignalData, reconstructedSignalData, signalData, validDataMask)
 
         # ------------------- Learned Emotion Mapping ------------------- #

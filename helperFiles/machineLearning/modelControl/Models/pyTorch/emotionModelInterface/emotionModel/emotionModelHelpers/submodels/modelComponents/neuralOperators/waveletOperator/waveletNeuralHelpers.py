@@ -85,9 +85,9 @@ class waveletNeuralHelpers(emotionModelWeights):
         assert self.numInputSignals == self.numOutputSignals, "The number of input signals must equal the output signals for now."
 
     @staticmethod
-    def max_decompositions(signal_length, wavelet_name):
+    def max_decompositions(signal_length, wavelet_name, minSignalLength=None):
         wavelet = pywt.Wavelet(wavelet_name)
-        filter_length = len(wavelet.dec_lo)  # Decomposition low-pass filter length
+        filter_length = len(wavelet.dec_lo) if minSignalLength is None else minSignalLength + 1  # Decomposition low-pass filter length
         max_level = torch.floor(torch.log2(torch.tensor(signal_length / (filter_length - 1), dtype=torch.float32))).int()
         return max_level
 
