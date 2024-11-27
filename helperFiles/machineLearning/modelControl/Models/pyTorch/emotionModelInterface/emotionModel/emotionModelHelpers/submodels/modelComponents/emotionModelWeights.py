@@ -69,7 +69,6 @@ class emotionModelWeights(convolutionalHelpers):
         if sequenceLength <= 1: return nn.Identity()
         if sequenceLength < 16: return nn.Identity()
 
-        addActivation = 64 <= sequenceLength and False
         return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=1, activationMethod='none')  # f"{emotionModelWeights.getReversibleActivation()}_0.5" if addActivation else 'none')
 
     @staticmethod

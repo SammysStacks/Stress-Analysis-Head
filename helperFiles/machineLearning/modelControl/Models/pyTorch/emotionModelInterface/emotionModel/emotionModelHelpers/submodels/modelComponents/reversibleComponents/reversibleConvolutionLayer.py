@@ -85,20 +85,23 @@ class reversibleConvolutionLayer(reversibleInterface):
 
 
 if __name__ == "__main__":
-    # General parameters.
-    _batchSize, _numSignals, _sequenceLength = 128, 128, 32
-    _activationMethod = 'reversibleLinearSoftSign_1'
-    _kernelSize = 2*_sequenceLength - 1
-    _numLayers = 1
+    # for i in [2, 4, 8, 16, 32, 64, 128, 256]:
+    # for i in [16, 32, 64, 128, 256]:
+    for i in [2, 4, 8, 16]:
+        # General parameters.
+        _batchSize, _numSignals, _sequenceLength = 256, 128, i
+        _activationMethod = 'reversibleLinearSoftSign_2'
+        _kernelSize = 2*_sequenceLength - 1
+        _numLayers = 1
 
-    # Set up the parameters.
-    neuralLayerClass = reversibleConvolutionLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod)
-    _inputData = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float64)
-    _inputData = nn.init.normal_(_inputData, mean=0, std=1)
+        # Set up the parameters.
+        neuralLayerClass = reversibleConvolutionLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod)
+        _inputData = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float64)
+        _inputData = nn.init.normal_(_inputData, mean=0, std=1)
 
-    # Perform the convolution in the fourier and spatial domains.
-    _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(_inputData, atol=1e-6, numLayers=1)
-    neuralLayerClass.printParams()
+        # Perform the convolution in the fourier and spatial domains.
+        _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(_inputData, atol=1e-6, numLayers=1, plotResults=False)
+        neuralLayerClass.printParams()
 
-    plt.hist((_forwardData.norm(dim=-1) / _inputData.norm(dim=-1)).view(-1).detach().numpy(), bins=100, alpha=0.5, label='Input/Output Norm Ratio')
+        plt.hist((_forwardData.norm(dim=-1) / _inputData.norm(dim=-1)).view(-1).detach().numpy(), bins=150, alpha=0.2, label='Input/Output Norm Ratio')
     plt.show()

@@ -40,7 +40,7 @@ class reversibleInterface(nn.Module):
 
         return f1, f2, r1, r2
 
-    def checkReconstruction(self, inputData, atol=1e-8, numLayers=10):
+    def checkReconstruction(self, inputData, atol=1e-8, numLayers=10, plotResults=True):
         # Initialize the forward data.
         reversibleInterface.changeDirections(False)
         forwardData = inputData.clone().double()
@@ -60,7 +60,7 @@ class reversibleInterface(nn.Module):
 
         # Calculate the time taken for the forward and backward passes.
         t2 = time.time(); print(f"Time taken for {numLayers} layers: {t2 - t1}")
-        self.plotReconstruction(inputData, forwardData, reconstructedData, atol=atol, numPlots=2)
+        if plotResults: self.plotReconstruction(inputData, forwardData, reconstructedData, atol=atol, numPlots=2)
 
         return forwardData, reconstructedData
 
