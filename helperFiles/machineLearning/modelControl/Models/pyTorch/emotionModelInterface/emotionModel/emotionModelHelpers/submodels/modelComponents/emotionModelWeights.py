@@ -1,3 +1,5 @@
+import math
+
 import torch
 from torch import nn
 
@@ -24,7 +26,10 @@ class emotionModelWeights(convolutionalHelpers):
     def getInitialPhysiologicalProfile(numExperiments, encodedDimension):
         # Initialize the physiological profile.
         physiologicalProfile = torch.randn(numExperiments, encodedDimension, dtype=torch.float64)
-        physiologicalProfile = nn.init.normal_(physiologicalProfile, mean=0, std=1/2)
+
+        # Normalize the physiological profile.
+        physiologicalProfile = physiologicalProfile / physiologicalProfile.norm(dim=-1, keepdim=True)
+        physiologicalProfile = physiologicalProfile * math.sqrt(encodedDimension / 2) / 2
 
         # Initialize the physiological profile as a parameter.
         physiologicalProfile = nn.Parameter(physiologicalProfile)
@@ -66,18 +71,16 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def reversibleNeuralWeightRCNN(numSignals, sequenceLength):
-        if sequenceLength <= 1: return nn.Identity()
-        if sequenceLength < 16: return nn.Identity()
-
-        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=1, activationMethod='none')  # f"{emotionModelWeights.getReversibleActivation()}_0.5" if addActivation else 'none')
+        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=1, activationMethod=f"{emotionModelWeights.getReversibleActivation()}_-0.5")
 
     @staticmethod
     def postProcessingLayerRCNN(numSignals, sequenceLength):
-        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=1, activationMethod=f"{emotionModelWeights.getReversibleActivation()}_1")
+        assert 1 < sequenceLength, "The sequence length must be greater than 1."
+        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=1, activationMethod=f"{emotionModelWeights.getReversibleActivation()}_-0.5")
 
     def physiologicalSmoothing(self):
         return nn.Sequential(
-            self.convolutionalFilters_resNetBlocks(numResNets=1, numBlocks=4, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False),
+            self.convolutionalFilters_resNetBlocks(numResNets=4, numBlocks=4, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False),
             self.convolutionalFiltersBlocks(numBlocks=1, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False),
         )
 

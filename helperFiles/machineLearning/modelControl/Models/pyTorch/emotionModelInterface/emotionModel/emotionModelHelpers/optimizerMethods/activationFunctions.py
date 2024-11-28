@@ -42,7 +42,8 @@ class reversibleLinearSoftSign(reversibleInterface):
 
         # Assert the validity of the inputs.
         assert self.infiniteBound == 0.5, "The infinite bound term must be 0.5 to ensure a stable convergence!!"
-        assert 0 < self.linearity, "The linearity must be positive to ensure a stable convergence."
+        assert -2 <= inversionPoint, "The inversion point must be greater than -2 to ensure bijection."
+        assert inversionPoint != -1, "The inversion point must not be -1 to ensure non-linearity."
         # Notes: The linearity term must be 1 if the inversion point is 1 to ensure a stable convergence.
         # Notes: The inversion point must be greater than 1 to ensure a stable convergence.
 

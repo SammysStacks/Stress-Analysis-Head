@@ -1,3 +1,5 @@
+import math
+
 import torch
 import torch.fft
 import torch.nn as nn
@@ -40,7 +42,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         for layerInd in range(self.numLayers):
             # Create the neural weights.
             parameters = nn.Parameter(torch.randn(numSignals, self.kernelSize//2 or 1, dtype=torch.float64))
-            parameters = nn.init.kaiming_normal_(parameters)
+            parameters = nn.init.kaiming_uniform_(parameters)
             self.linearOperators.append(parameters)
 
     def forward(self, inputData):
@@ -49,7 +51,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
             # Apply the weights to the input data.
             if self.activationMethod == 'none': inputData = self.applyLayer(inputData, layerInd)
-            else: inputData = self.activationFunction(inputData, lambda x: self.applyLayer(x, layerInd), forwardFirst=layerInd % 2 == 0)
+            else: inputData = self.activationFunction(inputData, lambda x: self.applyLayer(x, layerInd), forwardFirst=layerInd % 2 == 1)
 
         return inputData
 
@@ -87,17 +89,18 @@ class reversibleConvolutionLayer(reversibleInterface):
 if __name__ == "__main__":
     # for i in [2, 4, 8, 16, 32, 64, 128, 256]:
     # for i in [16, 32, 64, 128, 256]:
-    for i in [2, 4, 8, 16]:
+    for i in [2, 8, 16, 256]:
         # General parameters.
         _batchSize, _numSignals, _sequenceLength = 256, 128, i
-        _activationMethod = 'reversibleLinearSoftSign_2'
+        _activationMethod = 'reversibleLinearSoftSign_-1.5'
         _kernelSize = 2*_sequenceLength - 1
         _numLayers = 1
 
         # Set up the parameters.
         neuralLayerClass = reversibleConvolutionLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod)
         _inputData = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float64)
-        _inputData = nn.init.normal_(_inputData, mean=0, std=1)
+        _inputData = _inputData / _inputData.norm(dim=-1, keepdim=True)
+        _inputData = _inputData * math.sqrt(_sequenceLength / 2)
 
         # Perform the convolution in the fourier and spatial domains.
         _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(_inputData, atol=1e-6, numLayers=1, plotResults=False)
