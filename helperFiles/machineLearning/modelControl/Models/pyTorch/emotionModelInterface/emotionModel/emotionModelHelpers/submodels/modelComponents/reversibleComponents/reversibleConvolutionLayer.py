@@ -89,7 +89,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 if __name__ == "__main__":
     # for i in [2, 4, 8, 16, 32, 64, 128, 256]:
     # for i in [16, 32, 64, 128, 256]:
-    for i in [2, 16, 128, 256]:
+    for i in [4, 16, 128, 256]:
         # General parameters.
         _batchSize, _numSignals, _sequenceLength = 256, 128, i
         _activationMethod = 'reversibleLinearSoftSign_0'

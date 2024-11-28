@@ -1,3 +1,4 @@
+import math
 import random
 
 import torch
@@ -154,6 +155,7 @@ class emotionModelHead(nn.Module):
 
         # Normalize the physiological profile.
         physiologicalProfile = self.sharedSignalEncoderModel.smoothPhysiologicalProfile(physiologicalProfile)
+        physiologicalProfile = physiologicalProfile * math.sqrt(self.encodedDimension / 2) / physiologicalProfile.norm(dim=-1, keepdim=True)
 
         # ------------------- Learned Signal Mapping ------------------- #
 
