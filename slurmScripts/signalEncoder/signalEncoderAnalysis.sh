@@ -12,7 +12,6 @@ srun accelerate launch ./../../metaTrainingControl.py \
     --optimizerType "$6" \
     --physioLR "$7" \
     --generalLR "$8" \
-    --maxWaveletDecompositions "$9"
 
 end=$(date +%s)
 runtime=$((end-start))

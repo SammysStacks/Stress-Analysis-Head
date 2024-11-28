@@ -19,4 +19,4 @@
 module load python/3.10.12-gcc-11.3.1-n4zmj3v
 
 # RUN FILE
-sh signalEncoderAnalysis.sh "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" "$9"
+sh signalEncoderAnalysis.sh "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8"

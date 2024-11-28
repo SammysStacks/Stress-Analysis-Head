@@ -71,12 +71,12 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def reversibleNeuralWeightRCNN(numSignals, sequenceLength):
-        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=1, activationMethod=f"{emotionModelWeights.getReversibleActivation()}_-0.5")
+        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=1, activationMethod=f"{emotionModelWeights.getReversibleActivation()}_0")
 
     @staticmethod
     def postProcessingLayerRCNN(numSignals, sequenceLength):
         assert 1 < sequenceLength, "The sequence length must be greater than 1."
-        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=1, activationMethod=f"{emotionModelWeights.getReversibleActivation()}_-0.5")
+        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=1, activationMethod=f"{emotionModelWeights.getReversibleActivation()}_0")
 
     def physiologicalSmoothing(self):
         return nn.Sequential(
