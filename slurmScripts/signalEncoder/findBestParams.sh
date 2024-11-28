@@ -7,8 +7,8 @@ waveletTypes=('bior2.2' 'bior3.1' 'bior3.3' 'bior3.5' 'bior3.7' 'bior3.9' 'bior4
 optimizers=('RAdam')
 
 waveletTypes=( \
-    # 15 bior wavelets
-    'bior1.1' 'bior1.3' 'bior1.5' 'bior2.2' 'bior2.4' 'bior2.6' 'bior2.8' \
+    # 12 bior wavelets
+    'bior2.2' 'bior2.4' 'bior2.6' 'bior2.8' \
     'bior3.1' 'bior3.3' 'bior3.5' 'bior3.7' 'bior3.9' 'bior4.4' 'bior5.5' 'bior6.8' \
 )
 

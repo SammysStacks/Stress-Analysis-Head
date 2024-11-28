@@ -28,8 +28,9 @@ class emotionModelWeights(convolutionalHelpers):
         physiologicalProfile = torch.randn(numExperiments, encodedDimension, dtype=torch.float64)
 
         # Normalize the physiological profile.
+        physiologicalProfile = physiologicalProfile - physiologicalProfile.mean(dim=-1, keepdim=True)
         physiologicalProfile = physiologicalProfile / physiologicalProfile.norm(dim=-1, keepdim=True)
-        physiologicalProfile = physiologicalProfile * math.sqrt(encodedDimension / 2) / 3
+        physiologicalProfile = physiologicalProfile * math.sqrt(encodedDimension / 2) / 2
 
         # Initialize the physiological profile as a parameter.
         physiologicalProfile = nn.Parameter(physiologicalProfile)
@@ -80,8 +81,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     def physiologicalSmoothing(self):
         return nn.Sequential(
-            self.convolutionalFilters_resNetBlocks(numResNets=4, numBlocks=4, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False),
-            # self.convolutionalFiltersBlocks(numBlocks=1, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False),
+            self.convolutionalFilters_resNetBlocks(numResNets=2, numBlocks=4, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False),
         )
 
     # ------------------- Emotion/Activity Encoding Architectures ------------------- #
