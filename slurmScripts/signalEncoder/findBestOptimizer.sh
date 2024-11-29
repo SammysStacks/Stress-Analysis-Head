@@ -1,7 +1,8 @@
 #!/bin/bash
 
 optimizers=('Adadelta' 'Adam' 'AdamW' 'NAdam' 'RAdam' 'Adamax' 'ASGD' 'RMSprop' 'Rprop' 'SGD')
-optimizers=('Adam' 'AdamW' 'NAdam' 'RMSprop' 'Adadelta' 'Adamax' 'RAdam')  # 7 optimizers.
+optimizers=('Adam' 'AdamW' 'NAdam' 'Adamax' 'RAdam')  # 7 optimizers.
+# RAdam > NAdam =? Adamax > Adam = AdamW > Adamax > RMSProp >  Adadelta
 
 numSpecificEncoderLayers=2
 numSharedEncoderLayers=5
