@@ -1,11 +1,11 @@
 #!/bin/bash
 
-waveletTypes_arr=('bior3.1' 'bior3.3' 'bior3.5')
-numSpecificEncoderLayers_arr=(2 4)
-signalEncoderLayers_arr=(4 8 12 16)
+waveletTypes_arr=('bior3.1' 'bior3.3')  # 'bior3.5'
+numSpecificEncoderLayers_arr=(1 2 4)
+signalEncoderLayers_arr=(4 8 12)
 lrs_general=('0.001' '0.0001')
+lrs_physio=('1' '0.1' '0.01')
 encodedDimensions_arr=(256)
-lrs_physio=('0.1' '0.01')
 optimizers_arr=('RAdam')
 
 for lr_physio in "${lrs_physio[@]}"

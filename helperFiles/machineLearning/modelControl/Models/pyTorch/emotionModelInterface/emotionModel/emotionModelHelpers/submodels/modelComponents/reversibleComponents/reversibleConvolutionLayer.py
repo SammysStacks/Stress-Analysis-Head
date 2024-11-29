@@ -51,7 +51,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
             # Apply the weights to the input data.
             if self.activationMethod == 'none': inputData = self.applyLayer(inputData, layerInd)
-            else: inputData = self.activationFunction(inputData, lambda x: self.applyLayer(x, layerInd), forwardFirst=layerInd % 2 == 0)
+            else: inputData = self.activationFunction(inputData, lambda x: self.applyLayer(x, layerInd), forwardFirst=layerInd % 2 == 1)
 
         return inputData
 
@@ -90,9 +90,9 @@ if __name__ == "__main__":
     # for i in [2, 4, 8, 16, 32, 64, 128, 256]:
     # for i in [16, 32, 64, 128, 256]:
     try:
-        for sequenceLength2 in [16, 256]:
+        for sequenceLength2 in [256]:
             # General parameters.
-            _batchSize, _numSignals, _sequenceLength = 128, 64, sequenceLength2
+            _batchSize, _numSignals, _sequenceLength = 512, 128, sequenceLength2
             _kernelSize = 2*_sequenceLength - 1
             _numLayers = 1
 
@@ -101,10 +101,10 @@ if __name__ == "__main__":
             _inputData = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float64)
             _inputData = _inputData - _inputData.mean(dim=-1, keepdim=True)
             _inputData = _inputData / _inputData.norm(dim=-1, keepdim=True)
-            _inputData = _inputData * math.sqrt(_sequenceLength / 2) / 2
+            _inputData = _inputData * math.sqrt(_sequenceLength / 2) / 3
 
             # Perform the convolution in the fourier and spatial domains.
-            _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(_inputData, atol=1e-6, numLayers=1, plotResults=False)
+            _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(_inputData, atol=1e-6, numLayers=1, plotResults=True)
             neuralLayerClass.printParams()
 
             ratio = (_forwardData.norm(dim=-1) / _inputData.norm(dim=-1)).view(-1).detach().numpy()
