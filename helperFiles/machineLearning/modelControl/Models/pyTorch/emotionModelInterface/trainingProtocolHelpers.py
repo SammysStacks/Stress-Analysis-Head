@@ -75,7 +75,7 @@ class trainingProtocolHelpers:
             else: numEpochs = 1
 
             # Train the updated model.
-            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=False, specificTraining=True, trainSharedLayers=False, stepScheduler=False, numEpochs=numEpochs)  # Signal-specific training: training only.
+            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=False, specificTraining=True, trainSharedLayers=False, stepScheduler=False, numEpochs=1)  # Signal-specific training: training only.
             modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=stepScheduler, numEpochs=numEpochs)  # Signal-specific training: training only.
             self.unifiedLayerData = self.modelMigration.copyModelWeights(modelPipeline, self.sharedModelWeights)
             self.accelerator.wait_for_everyone()

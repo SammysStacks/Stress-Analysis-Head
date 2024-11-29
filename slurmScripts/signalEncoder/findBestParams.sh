@@ -1,16 +1,10 @@
 #!/bin/bash
 
 numSpecificEncoderLayers=(1 2)
-signalEncoderLayers=(8 12 16)
+signalEncoderLayers=(4 6 8 10 12)
 encodedDimensions=(256)
-waveletTypes=('bior2.2' 'bior3.1' 'bior3.3' 'bior3.5' 'bior3.7' 'bior3.9' 'bior4.4' 'bior5.5' 'bior6.8')
+waveletTypes=('bior2.2' 'bior3.1' 'bior3.3' 'bior3.5' 'bior3.7')
 optimizers=('RAdam')
-
-waveletTypes=( \
-    # 12 bior wavelets
-    'bior2.2' 'bior2.4' 'bior2.6' 'bior2.8' \
-    'bior3.1' 'bior3.3' 'bior3.5' 'bior3.7' 'bior3.9' 'bior4.4' 'bior5.5' 'bior6.8' \
-)
 
 lr_general=0.001
 lr_physio=0.01

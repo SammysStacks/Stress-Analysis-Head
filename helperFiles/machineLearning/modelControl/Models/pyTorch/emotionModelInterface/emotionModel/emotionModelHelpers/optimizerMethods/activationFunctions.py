@@ -16,7 +16,7 @@ def getActivationMethod(activationMethod):
         topExponent = int(activationMethod.split('_')[1]) if '_' in activationMethod else 0
         activationFunction = boundedExp(decayConstant=topExponent, nonLinearityRegion=nonLinearityRegion)
     elif activationMethod.startswith('reversibleLinearSoftSign'):
-        activationFunction = reversibleLinearSoftSign(inversionPoint = float(activationMethod.split('_')[1]))
+        activationFunction = reversibleLinearSoftSign()
     elif activationMethod == 'PReLU':
         activationFunction = nn.PReLU()
     elif activationMethod == 'selu':
@@ -29,24 +29,12 @@ def getActivationMethod(activationMethod):
 
     return activationFunction
 
-
 class reversibleLinearSoftSign(reversibleInterface):
-    def __init__(self, inversionPoint):
+    def __init__(self, infiniteBound=1.1, linearity=4):
         super(reversibleLinearSoftSign, self).__init__()
-        self.inversionPoint = inversionPoint  # The point at which the activation inverts. Higher values increase the non-linearity and decrease the final magnitude.
-        self.tolerance = 1e-20  # Tolerance for numerical stability
-
-        # If the infiniteBound term is not provided, use the r that makes y = x = 1.
-        self.linearity = 2 / (1 + self.inversionPoint)  # Corresponds to `r` in the equation
-        self.infiniteBound = 1 - 1/((1 + self.inversionPoint)*self.linearity)  # This controls how the activation converges at +/- infinity; Ex: 0.5, 13/21, 33/49
-
-        # Assert the validity of the inputs.
-        # assert self.infiniteBound == 0.5, "The infinite bound term must be 0.5 to ensure a stable convergence!!"
-        # assert -2 <= inversionPoint, "The inversion point must be greater than -2 to ensure bijection."
-        # assert inversionPoint != -1, "The inversion point must not be -1 to ensure non-linearity."
-        # Notes: The linearity term must be 1 if the inversion point is 1 to ensure a stable convergence.
-        # Notes: The inversion point must be greater than 1 to ensure a stable convergence.
-        self.infiniteBound = 2
+        self.infiniteBound = infiniteBound  # This controls how the activation converges at +/- infinity; Ex: 0.5, 13/21, 33/49
+        self.linearity = linearity  # Corresponds to `r` in the equation
+        self.tolerance = 1e-25  # Tolerance for numerical stability
 
     def forward(self, x, linearModel, forwardFirst=True):
         # forwardPass: Increase the signal below inversion point; decrease above.
@@ -65,6 +53,9 @@ class reversibleLinearSoftSign(reversibleInterface):
         # Prepare the terms for the inverse pass.
         signY = torch.nn.functional.hardtanh(y, min_val=-self.tolerance, max_val=self.tolerance) / self.tolerance
         r, a = self.linearity, self.infiniteBound  # The linearity and infinite bound terms
+
+        # Base case: infiniteBound=0.
+        if a == 0: return y*r / (1 - signY*y*r)  # Poor numerical stability on reconstruction!
 
         # Decrease the signal below inversion point; increase above.
         sqrtTerm = ((r*a)**2 + 2*a*r*(1 + signY*y*r) + (r*y - signY).pow(2)) / (r*a)**2

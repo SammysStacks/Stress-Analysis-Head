@@ -89,22 +89,31 @@ class reversibleConvolutionLayer(reversibleInterface):
 if __name__ == "__main__":
     # for i in [2, 4, 8, 16, 32, 64, 128, 256]:
     # for i in [16, 32, 64, 128, 256]:
-    for i in [4, 16, 128, 256]:
-        # General parameters.
-        _batchSize, _numSignals, _sequenceLength = 256, 128, i
-        _activationMethod = 'reversibleLinearSoftSign_0'
-        _kernelSize = 2*_sequenceLength - 1
-        _numLayers = 1
+    try:
+        for sequenceLength2 in [256]:
+            # General parameters.
+            _batchSize, _numSignals, _sequenceLength = 256, 256, sequenceLength2
+            _kernelSize = 2*_sequenceLength - 1
+            _numLayers = 1
 
-        # Set up the parameters.
-        neuralLayerClass = reversibleConvolutionLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod)
-        _inputData = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float64)
-        _inputData = _inputData / _inputData.norm(dim=-1, keepdim=True)
-        _inputData = _inputData * math.sqrt(_sequenceLength / 2)
+            # Set up the parameters.
+            neuralLayerClass = reversibleConvolutionLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod='reversibleLinearSoftSign')
+            _inputData = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float64)
+            _inputData = _inputData - _inputData.mean(dim=-1, keepdim=True)
+            _inputData = _inputData / _inputData.norm(dim=-1, keepdim=True)
+            _inputData = _inputData * math.sqrt(_sequenceLength / 2) / 2
 
-        # Perform the convolution in the fourier and spatial domains.
-        _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(_inputData, atol=1e-6, numLayers=1, plotResults=False)
-        neuralLayerClass.printParams()
+            # Perform the convolution in the fourier and spatial domains.
+            _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(_inputData, atol=1e-6, numLayers=1, plotResults=True)
+            neuralLayerClass.printParams()
 
-        plt.hist((_forwardData.norm(dim=-1) / _inputData.norm(dim=-1)).view(-1).detach().numpy(), bins=150, alpha=0.2, label='Input/Output Norm Ratio')
+            ratio = (_forwardData.norm(dim=-1) / _inputData.norm(dim=-1)).view(-1).detach().numpy()
+            if abs(ratio.mean() - 1) < 0.002: plt.hist(ratio, bins=150, alpha=0.2, label=f'sequenceLength={_sequenceLength}')
+            print(ratio.mean())
+    except Exception as e: pass
+    plt.title(f'Fin', fontsize=14)  # Increase title font size for readability
+    plt.legend()
+
+    plt.xlim(0.98, 1.02)
+    plt.savefig(f'_lipshitz/Fin.png')
     plt.show()

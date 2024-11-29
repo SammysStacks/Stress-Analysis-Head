@@ -1,10 +1,10 @@
 #!/bin/bash
 
 optimizers=('Adadelta' 'Adam' 'AdamW' 'NAdam' 'RAdam' 'Adamax' 'ASGD' 'RMSprop' 'Rprop' 'SGD')
-optimizers=('Adam' 'AdamW' 'NAdam' 'RMSprop' 'Adadelta' 'Adadelta')  # 7 optimizers.  'RAdam'
+optimizers=('Adam' 'AdamW' 'NAdam' 'RMSprop' 'Adadelta' 'Adamax' 'RAdam')  # 7 optimizers.
 
 numSpecificEncoderLayers=2
-numSharedEncoderLayers=12
+numSharedEncoderLayers=5
 waveletType='bior3.3'
 encodedDimension=256
 

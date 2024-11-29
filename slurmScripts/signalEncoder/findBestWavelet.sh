@@ -34,7 +34,7 @@ waveletTypes=( \
 )
 
 numSpecificEncoderLayers=2
-numSharedEncoderLayers=12
+numSharedEncoderLayers=9
 encodedDimension=256
 optimizer='RAdam'
 

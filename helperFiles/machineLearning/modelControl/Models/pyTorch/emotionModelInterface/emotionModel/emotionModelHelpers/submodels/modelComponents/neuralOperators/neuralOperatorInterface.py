@@ -24,7 +24,7 @@ class neuralOperatorInterface(emotionModelWeights):
         # Unpack the neural operator parameters.
         encodeHighFrequencyProtocol = neuralOperatorParameters['wavelet'].get('encodeHighFrequencyProtocol', 'highFreq')  # The protocol for encoding the high frequency signals.
         encodeLowFrequencyProtocol = neuralOperatorParameters['wavelet'].get('encodeLowFrequencyProtocol', 'lowFreq')  # The protocol for encoding the low frequency signals.
-        waveletType = neuralOperatorParameters['wavelet'].get('waveletType', 'bior3.7')  # The type of wavelet to use for the wavelet transform.
+        waveletType = neuralOperatorParameters['wavelet'].get('waveletType', None)  # The type of wavelet to use for the wavelet transform.
 
         # Hardcoded parameters.
         numDecompositions = waveletNeuralOperatorLayer.max_decompositions(signal_length=sequenceLength, wavelet_name=waveletType, minSignalLength=16)  # Number of decompositions for the waveletType transform.
