@@ -72,8 +72,3 @@ class dataAugmentation:
         augmentedData = signalData * dropoutMask
 
         return augmentedData
-
-    @staticmethod
-    def getInitialSignals(signalData, finalLength):
-        # signalData: [batchSize, numSignals, maxSequenceLength, numChannels]
-        return signalData[:, 0:finalLength, :, :].contiguous()

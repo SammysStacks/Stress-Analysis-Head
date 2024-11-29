@@ -61,9 +61,6 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
         return signalData.contiguous()
 
-    def layerHolder(self, layerInd):
-        return lambda x: self.applyLayer(x, layerInd)
-
     def printParams(self):
         # Count the trainable parameters.
         numParams = (sum(p.numel() for p in self.parameters() if p.requires_grad) - self.profileModel.physiologicalProfile.size(0) * self.encodedDimension) / self.numSignals

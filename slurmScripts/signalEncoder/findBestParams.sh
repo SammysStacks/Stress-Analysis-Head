@@ -1,6 +1,6 @@
 #!/bin/bash
 
-numSpecificEncoderLayers=(1 2)
+numSpecificEncoderLayers=(1 2 4)
 signalEncoderLayers=(4 8 12 16)
 encodedDimensions=(256)
 waveletTypes=('bior2.2' 'bior3.1' 'bior3.3' 'bior3.5' 'bior3.7')

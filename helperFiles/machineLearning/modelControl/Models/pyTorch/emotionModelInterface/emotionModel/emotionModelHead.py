@@ -155,7 +155,6 @@ class emotionModelHead(nn.Module):
 
         # Normalize the physiological profile.
         physiologicalProfile = self.sharedSignalEncoderModel.smoothPhysiologicalProfile(physiologicalProfile)
-        physiologicalProfile = self.sharedSignalEncoderModel.smoothingFilter(physiologicalProfile.unsqueeze(1), kernelSize=3).squeeze(1)
         physiologicalProfile = physiologicalProfile - physiologicalProfile.mean(dim=-1, keepdim=True)
         physiologicalProfile = physiologicalProfile / physiologicalProfile.norm(dim=-1, keepdim=True)
         physiologicalProfile = physiologicalProfile * math.sqrt(self.encodedDimension / 2) / 2
@@ -169,6 +168,7 @@ class emotionModelHead(nn.Module):
         # resampledSignalData: batchSize, numSignals, encodedDimension
 
         # Resample the signal data.
+        resampledSignalData = self.sharedSignalEncoderModel.finalProcessingLayer(resampledSignalData)
         reconstructedSignalData = self.interpolateData(signalData, resampledSignalData)
         # reconstructedSignalData: batchSize, numSignals, maxSequenceLength
 
@@ -304,6 +304,7 @@ class emotionModelHead(nn.Module):
 
     def reconstructPhysiologicalProfile(self, resampledSignalData):
         reversibleInterface.changeDirections(forwardDirection=True)
+        resampledSignalData = self.sharedSignalEncoderModel.finalProcessingLayer(resampledSignalData)
         reconstructedPhysiologicalProfile = self.coreModelPass(metaLearningData=resampledSignalData, numSpecificLayers=self.numSpecificEncoderLayers, numSharedLayers=self.numSharedEncoderLayers, specificModel=self.specificSignalEncoderModel, sharedModel=self.sharedSignalEncoderModel)
         reversibleInterface.changeDirections(forwardDirection=False)
 
