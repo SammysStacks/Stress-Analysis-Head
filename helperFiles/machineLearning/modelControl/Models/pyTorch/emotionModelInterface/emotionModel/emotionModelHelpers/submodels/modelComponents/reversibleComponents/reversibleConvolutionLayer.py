@@ -90,9 +90,9 @@ if __name__ == "__main__":
     # for i in [2, 4, 8, 16, 32, 64, 128, 256]:
     # for i in [16, 32, 64, 128, 256]:
     try:
-        for sequenceLength2 in [256]:
+        for sequenceLength2 in [16, 256]:
             # General parameters.
-            _batchSize, _numSignals, _sequenceLength = 256, 256, sequenceLength2
+            _batchSize, _numSignals, _sequenceLength = 128, 64, sequenceLength2
             _kernelSize = 2*_sequenceLength - 1
             _numLayers = 1
 
@@ -104,16 +104,16 @@ if __name__ == "__main__":
             _inputData = _inputData * math.sqrt(_sequenceLength / 2) / 2
 
             # Perform the convolution in the fourier and spatial domains.
-            _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(_inputData, atol=1e-6, numLayers=1, plotResults=True)
+            _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(_inputData, atol=1e-6, numLayers=1, plotResults=False)
             neuralLayerClass.printParams()
 
             ratio = (_forwardData.norm(dim=-1) / _inputData.norm(dim=-1)).view(-1).detach().numpy()
-            if abs(ratio.mean() - 1) < 0.002: plt.hist(ratio, bins=150, alpha=0.2, label=f'sequenceLength={_sequenceLength}')
+            if abs(ratio.mean() - 1) < 0.1: plt.hist(ratio, bins=150, alpha=0.2, label=f'sequenceLength={_sequenceLength}')
             print(ratio.mean())
     except Exception as e: pass
     plt.title(f'Fin', fontsize=14)  # Increase title font size for readability
     plt.legend()
 
-    plt.xlim(0.98, 1.02)
+    # plt.xlim(0.98, 1.02)
     plt.savefig(f'_lipshitz/Fin.png')
     plt.show()

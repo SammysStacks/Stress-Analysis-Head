@@ -80,7 +80,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def finalPostProcessingLayerRCNN(numSignals, sequenceLength):
-        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=3, activationMethod=f"{emotionModelWeights.getReversibleActivation()}")
+        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=1, activationMethod=f"{emotionModelWeights.getReversibleActivation()}")
 
     def physiologicalSmoothing(self):
         return nn.Sequential(

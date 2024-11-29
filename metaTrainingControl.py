@@ -35,7 +35,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2024-11-28 2"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2024-11-29"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Parse Model Parameters ----------------------- #
@@ -57,7 +57,7 @@ if __name__ == "__main__":
  
     # Add arguments for the neural operator.
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
-    parser.add_argument('--waveletType', type=str, default='bior3.3', help='The wavelet type for the wavelet transform: bior3.7, db3, dmey, etc')
+    parser.add_argument('--waveletType', type=str, default='bior3.1', help='The wavelet type for the wavelet transform: bior3.7, db3, dmey, etc')
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions).')
@@ -107,7 +107,6 @@ if __name__ == "__main__":
     # -------------------------- Meta-model Training ------------------------- #
 
     # Calculate the initial loss.
-    trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate)
     trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)  # Calculate the initial loss.
 
     # For each training epoch

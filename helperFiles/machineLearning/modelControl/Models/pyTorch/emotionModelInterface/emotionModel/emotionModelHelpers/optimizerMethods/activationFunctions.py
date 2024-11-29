@@ -30,7 +30,7 @@ def getActivationMethod(activationMethod):
     return activationFunction
 
 class reversibleLinearSoftSign(reversibleInterface):
-    def __init__(self, infiniteBound=1.1, linearity=4):
+    def __init__(self, infiniteBound=2, linearity=3):
         super(reversibleLinearSoftSign, self).__init__()
         self.infiniteBound = infiniteBound  # This controls how the activation converges at +/- infinity; Ex: 0.5, 13/21, 33/49
         self.linearity = linearity  # Corresponds to `r` in the equation
