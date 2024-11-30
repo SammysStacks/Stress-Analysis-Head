@@ -27,7 +27,8 @@ class globalPlottingProtocols:
         self._createFolder(saveDataFolder)
 
     @staticmethod
-    def _createFolder(filePath): os.makedirs(os.path.dirname(filePath), exist_ok=True)
+    def _createFolder(filePath):
+        if filePath: os.makedirs(os.path.dirname(filePath), exist_ok=True)
 
     @staticmethod
     def clearFigure(fig=None, legend=None):
