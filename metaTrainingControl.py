@@ -36,7 +36,7 @@ if __name__ == "__main__":
 
     # General model parameters.
     trainingDate = "2024-11-29 XU WD"  # The current date we are training the model. Unique identifier of this training set.
-    testSplitRatio = 0.1  # The percentage of testing points.
+    testSplitRatio = 0.2  # The percentage of testing points.
 
     # ----------------------- Parse Model Parameters ----------------------- #
 
@@ -70,7 +70,7 @@ if __name__ == "__main__":
     # Temporary parameters.
     parser.add_argument('--maxWaveletDecompositions', type=int, default=0, help='The maximum number of wavelet decompositions.')
     parser.add_argument('--generalLR', type=float, default=1e-3, help='The number of experiments to run.')
-    parser.add_argument('--physioLR', type=float, default=0.01, help='The number of experiments to run.')
+    parser.add_argument('--physioLR', type=float, default=1, help='The number of experiments to run.')
 
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
@@ -107,6 +107,7 @@ if __name__ == "__main__":
     # -------------------------- Meta-model Training ------------------------- #
 
     # Calculate the initial loss.
+    trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate)
     trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)  # Calculate the initial loss.
 
     # For each training epoch
