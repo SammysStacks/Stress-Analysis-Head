@@ -18,7 +18,6 @@ class trainingPlots(globalPlottingProtocols):
         # General parameters
         self.sharedModelWeights = sharedModelWeights  # Possible models: [modelConstants.signalEncoderModel, modelConstants.autoencoderModel, modelConstants.signalMappingModel, modelConstants.specificEmotionModel, modelConstants.sharedEmotionModel]
         self.datasetNames = datasetNames  # Specify which datasets to compile
-        self.savingFolder = savingBaseFolder  # The folder to save the figures.
         self.accelerator = accelerator  # Hugging face model optimizations.
         self.modelName = modelName  # The emotion model's unique identifier. Options: emotionModel
 
@@ -66,7 +65,7 @@ class trainingPlots(globalPlottingProtocols):
         timeWindows = modelConstants.timeWindows
 
         # Initialize saving folder
-        saveAutoencoderLossPlots = self.savingFolder + "/Time Analysis Plots/"
+        saveAutoencoderLossPlots = "/Time Analysis Plots/"
         os.makedirs(saveAutoencoderLossPlots, exist_ok=True)
         print(loadSubmodel, loadSubmodelDate, loadSubmodelEpochs)
 

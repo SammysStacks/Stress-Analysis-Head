@@ -30,7 +30,7 @@ class generalVisualizations(globalPlottingProtocols):
                  color='tab:blue', markersize=6, alpha=0.6, label="Testing Points")
         plt.xlabel("Predicted Emotion Rating")
         plt.ylabel("Emotion Rating")
-        plt.title(f"{plotTitle.split('/')[-1]}")
+        plt.title(f"{plotTitle}")
         plt.legend(loc="best")
         plt.xlim((-0.1, numClasses-0.9))
         plt.ylim((-0.1, numClasses-0.9))
@@ -49,11 +49,11 @@ class generalVisualizations(globalPlottingProtocols):
                  linewidth=2, alpha=0.6, label="Predicted Emotion Distribution")
         plt.ylabel("Probability (AU)")
         plt.xlabel("Emotion Rating")
-        plt.title(f"{plotTitle.split('/')[-1]}")
+        plt.title(f"{plotTitle}")
         plt.legend(loc="best")
         plt.show()
 
-    def plotPredictedMatrix(self, allTrainingLabels, allTestingLabels, allPredictedTrainingLabels, allPredictedTestingLabels, numClasses, epoch, emotionName):
+    def plotPredictedMatrix(self, allTrainingLabels, allTestingLabels, allPredictedTrainingLabels, allPredictedTestingLabels, numClasses, epoch, emotionName, saveFigureLocation):
         # Assert the correct data format
         allTestingLabels = np.asarray(allTestingLabels)
         allTrainingLabels = np.asarray(allTrainingLabels)
@@ -100,10 +100,10 @@ class generalVisualizations(globalPlottingProtocols):
         plt.suptitle(f"{emotionName}")
 
         # Save the figure is desired.
-        if self.saveDataFolder: self.displayFigure(self.saveDataFolder, saveFigureName=f"{emotionName} epochs{epoch}.pdf", baseSaveFigureName=f"{emotionName}.pdf")
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{emotionName} epochs{epoch}.pdf", baseSaveFigureName=f"{emotionName}.pdf")
         plt.show()
 
-    def plotTrainingLosses(self, trainingLosses, testingLosses, lossLabels, plotTitle="Model Convergence Loss", logY=True):
+    def plotTrainingLosses(self, trainingLosses, testingLosses, lossLabels, saveFigureLocation="", plotTitle="Model Convergence Loss", logY=True):
         # Assert the validity of the input data.
         assert len(trainingLosses) == len(lossLabels), "Number of loss labels must match the number of loss indices."
 
@@ -129,14 +129,14 @@ class generalVisualizations(globalPlottingProtocols):
         if logY: plt.yscale('log')
         plt.xlabel("Training Epoch")
         plt.ylabel("Loss Values")
-        plt.title(f"{plotTitle.split('/')[-1]}")
+        plt.title(f"{plotTitle}")
         plt.legend(loc="upper right", bbox_to_anchor=(1.35, 1))  # Move legend off to the right, level with the top
 
         # Save the figure if desired.
-        if self.saveDataFolder: self.displayFigure(self.saveDataFolder, saveFigureName=f"{plotTitle} epochs{len(trainingLosses[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(trainingLosses[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: plt.show()
 
-    def generalDataPlotting(self, plottingData, plottingLabels, plotTitle="Model Convergence Loss"):
+    def generalDataPlotting(self, plottingData, plottingLabels, saveFigureLocation, plotTitle="Model Convergence Loss"):
         # Plot the training path.
         for plottingDataInd in range(len(plottingData)):
             plt.plot(plottingData[plottingDataInd], label=f'{plottingLabels[plottingDataInd]}', color=self.darkColors[plottingDataInd], linewidth=2)
@@ -145,8 +145,8 @@ class generalVisualizations(globalPlottingProtocols):
         plt.legend(loc="upper right")
         plt.xlabel("Training Epoch")
         plt.ylabel("Data Values")
-        plt.title(f"{plotTitle.split('/')[-1]}")
+        plt.title(f"{plotTitle}")
 
         # Save the figure if desired.
-        if self.saveDataFolder: self.displayFigure(self.saveDataFolder, saveFigureName=f"{plotTitle} epochs{len(plottingData[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(plottingData[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: plt.show(); plt.close('all')

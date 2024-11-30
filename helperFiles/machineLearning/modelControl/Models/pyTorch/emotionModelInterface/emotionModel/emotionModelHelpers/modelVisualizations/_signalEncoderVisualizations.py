@@ -16,21 +16,21 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     # --------------------- Visualize Model Parameters --------------------- #
 
-    def plotPhysiologicalProfile(self, physiologicalTimes, physiologicalProfile, epoch=0, plotTitle="Signal Encoding"):
+    def plotPhysiologicalProfile(self, physiologicalTimes, physiologicalProfile, epoch=0, saveFigureLocation="", plotTitle="Signal Encoding"):
         # Plot the signal reconstruction.
         plt.plot(physiologicalTimes[64:128], physiologicalProfile[0][64:128], c=self.blackColor, label=f"Physiological profile", linewidth=2, alpha=0.8)
 
         # Plotting aesthetics.
         plt.xlabel("Time (Seconds)")
-        plt.title(f"{plotTitle.split('/')[-1]} epoch{epoch}")
+        plt.title(f"{plotTitle} epoch{epoch}")
         plt.ylabel("Signal (AU)")
         plt.legend()
 
         # Save the figure.
-        if self.saveDataFolder: self.displayFigure(self.saveDataFolder, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure()
 
-    def plotPhysiologicalReconstruction(self, physiologicalTimes, physiologicalProfile, reconstructedPhysiologicalProfile, epoch=0, plotTitle="Signal Encoding"):
+    def plotPhysiologicalReconstruction(self, physiologicalTimes, physiologicalProfile, reconstructedPhysiologicalProfile, epoch=0, saveFigureLocation="", plotTitle="Signal Encoding"):
         # Extract the signal dimensions.
         batchSize, numSignals, sequenceLength = reconstructedPhysiologicalProfile.shape
         batchInd = 0
@@ -43,14 +43,14 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Plotting aesthetics.
         plt.xlabel("Time (Seconds)")
-        plt.title(f"{plotTitle.split('/')[-1]} epoch{epoch}")
+        plt.title(f"{plotTitle} epoch{epoch}")
         plt.ylabel("Signal (AU)")
 
         # Save the figure.
-        if self.saveDataFolder: self.displayFigure(self.saveDataFolder, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure()
 
-    def plotEncoder(self, initialSignalData, reconstructedSignals, comparisonTimes, comparisonSignal, epoch, plotTitle="Encoder Prediction", numSignalPlots=1):
+    def plotEncoder(self, initialSignalData, reconstructedSignals, comparisonTimes, comparisonSignal, epoch, saveFigureLocation="", plotTitle="Encoder Prediction", numSignalPlots=1):
         # Assert the integrity of the incoming data
         assert initialSignalData.shape[0:2] == comparisonSignal.shape[0:2], f"{initialSignalData.shape} {comparisonSignal.shape}"
         batchSize, numSignals, numEncodedPoints = comparisonSignal.shape
@@ -73,14 +73,14 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             plt.plot(comparisonTimes, comparisonSignal[batchInd, signalInd, :], self.lightColors[1], linewidth=2, alpha=0.8, label="Resampled Signal")
             plt.xlabel("Points")
             plt.ylabel("Signal (AU)")
-            plt.title(f"{plotTitle.split('/')[-1]} epoch{epoch} signal{signalInd + 1}")
+            plt.title(f"{plotTitle} epoch{epoch} signal{signalInd + 1}")
             plt.legend(loc="best")
 
             # Save the figure.
-            if self.saveDataFolder: self.displayFigure(self.saveDataFolder, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
             else: self.clearFigure()
 
-    def plotSignalComparison(self, originalSignal, comparisonSignal, epoch, plotTitle, numSignalPlots=1):
+    def plotSignalComparison(self, originalSignal, comparisonSignal, epoch, saveFigureLocation, plotTitle, numSignalPlots=1):
         """ originalSignal dimension: batchSize, numSignals, numTotalPoints """
         # Assert the integrity of the incoming data
         assert originalSignal.shape[0:2] == comparisonSignal.shape[0:2], f"{originalSignal.shape} {comparisonSignal.shape}"
@@ -104,13 +104,13 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             plt.title(f"{plotTitle} epoch{epoch} signal{signalInd + 1}")
 
             # Save the plot
-            if self.saveDataFolder: self.displayFigure(self.saveDataFolder, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
             else: self.clearFigure()
 
             # There are too many signals to plot.
             if signalInd + 1 == numSignalPlots: break
 
-    def plotAllSignalComparisons(self, distortedSignals, reconstructedDistortedSignals, trueSignal, epoch, signalInd, plotTitle):
+    def plotAllSignalComparisons(self, distortedSignals, reconstructedDistortedSignals, trueSignal, epoch, signalInd, saveFigureLocation, plotTitle):
         numSignals, numTotalPoints = reconstructedDistortedSignals.shape
         alphas = np.linspace(0.1, 1, numSignals)
 
@@ -126,10 +126,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.legend(['Noisy Signal', 'True Signal', 'Reconstructed Signal'], loc='best')
 
         # Save the plot
-        if self.saveDataFolder:
-            self.displayFigure(self.saveDataFolder, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
-        else:
-            self.clearFigure()
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        else: self.clearFigure()
 
     def plotSignalComparisonHeatmap(self, originalSignal, comparisonSignal):
         # Assert the integrity of the incoming data

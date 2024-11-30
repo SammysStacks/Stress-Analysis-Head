@@ -45,7 +45,7 @@ class globalPlottingProtocols:
         plt.rcdefaults()  # Reset Matplotlib settings to default
 
     def displayFigure(self, saveFigureLocation, saveFigureName, baseSaveFigureName=None):
-        if baseSaveFigureName is not None: plt.savefig(self.baseSavingDataFolder + saveFigureName)
+        if baseSaveFigureName is not None: plt.savefig(self.baseSavingDataFolder + baseSaveFigureName)
         plt.savefig(self.saveDataFolder + saveFigureLocation + saveFigureName)
         self.clearFigure()
 

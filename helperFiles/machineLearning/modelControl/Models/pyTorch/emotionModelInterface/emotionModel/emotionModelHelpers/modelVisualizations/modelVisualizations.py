@@ -87,11 +87,11 @@ class modelVisualizations(globalPlottingProtocols):
 
                 if submodel == modelConstants.signalEncoderModel:
                     # Plot the encoding example.
-                    self.signalEncoderViz.plotPhysiologicalProfile(physiologicalTimes, physiologicalProfile, epoch=currentEpoch, plotTitle="signalEncoding/Physiological Profile")
-                    self.signalEncoderViz.plotPhysiologicalReconstruction(physiologicalTimes, physiologicalProfile, reconstructedPhysiologicalProfile, epoch=currentEpoch, plotTitle="signalEncoding/Physiological Reconstruction")
+                    self.signalEncoderViz.plotPhysiologicalProfile(physiologicalTimes, physiologicalProfile, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Profile")
+                    self.signalEncoderViz.plotPhysiologicalReconstruction(physiologicalTimes, physiologicalProfile, reconstructedPhysiologicalProfile, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Reconstruction")
 
                 # Plot the autoencoder results.
-                self.signalEncoderViz.plotEncoder(signalData, reconstructedSignalData, physiologicalTimes, resampledSignalData, epoch=currentEpoch, plotTitle="signalReconstruction/Signal Encoding Reconstruction", numSignalPlots=1)
+                self.signalEncoderViz.plotEncoder(signalData, reconstructedSignalData, physiologicalTimes, resampledSignalData, epoch=currentEpoch, saveFigureLocation="signalReconstruction/", plotTitle="Signal Encoding Reconstruction", numSignalPlots=1)
 
                 # Dont keep plotting untrained models.
                 if submodel == modelConstants.signalEncoderModel: return None
