@@ -58,8 +58,6 @@ class trainingPlots(globalPlottingProtocols):
     def getSubmodel(metaModel, submodel):
         if submodel == modelConstants.signalEncoderModel:
             return metaModel.model.specificSignalEncoderModel
-        elif submodel == modelConstants.autoencoderModel:
-            return metaModel.model.autoencoderModel
         elif submodel == modelConstants.emotionModel:
             return metaModel.model.emotionModel
         else:
@@ -92,22 +90,6 @@ class trainingPlots(globalPlottingProtocols):
         return finalLosses
 
     def plot_heatmap(self, data, column_labels, row_labels, columnLabel, rowLabel, title=None, color_map='viridis', cbar_label="Value", useLogNorm=False, saveFigurePath=None, cmapBounds=[None, None]):
-        """
-        Plot a heatmap with given labels and title.
-
-        Parameters:
-        - data: 2D numpy array containing the heatmap data.
-        - column_labels: List of labels for the columns.
-        - row_labels: List of labels for the rows.
-        - xlabel: Label for the x-axis.
-        - ylabel: Label for the y-axis.
-        - title: Title of the heatmap. Optional.
-        - color_map: Colormap for the heatmap. Default is 'viridis'.
-        - cbar_label: Label for the colorbar. Default is "Value".
-        - useLogNorm: Boolean to use logarithmic normalization.
-        - saveFigurePath: Path to save the figure.
-        - cmapBounds: List with two elements [min_value, max_value] for colormap scaling.
-        """
         # Create the figure and the heatmap.
         fig, ax = plt.subplots(figsize=(10, 8))
 

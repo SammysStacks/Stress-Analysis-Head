@@ -38,8 +38,8 @@ class emotionPipelineHelpers:
         # except Exception as e: print(f"\t\tCannot use torch compilation yet: {e}")
 
         # Initialize helper classes.
+        self.modelVisualization = modelVisualizations(accelerator, baseSavingFolder="trainingFigures/", stringID="")
         self.organizeLossInfo = organizeTrainingLosses(accelerator, allEmotionClasses, self.activityLabelInd)
-        self.modelVisualization = modelVisualizations(accelerator, modelSubfolder="trainingFigures/")
         self.optimizerMethods = optimizerMethods(userInputParams)
         self.dataAugmentation = dataAugmentation()
         self.modelHelpers = modelHelpers()

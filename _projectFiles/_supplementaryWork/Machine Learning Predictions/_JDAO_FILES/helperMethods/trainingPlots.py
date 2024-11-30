@@ -54,46 +54,6 @@ class trainingPlots(globalPlottingProtocols):
         else:
             raise Exception()
 
-    def plot_heatmap(self, data, column_labels, row_labels, columnLabel, rowLabel, title=None, color_map='viridis', cbar_label="Value", saveFigurePath=None):
-        """
-        Plot a heatmap with given labels and title.
-
-        Parameters:
-        - data: 2D numpy array containing the heatmap data.
-        - column_labels: List of labels for the columns.
-        - row_labels: List of labels for the rows.
-        - xlabel: Label for the x-axis.
-        - ylabel: Label for the y-axis.
-        - title: Title of the heatmap. Optional.
-        - color_map: Colormap for the heatmap. Default is 'viridis'.
-        - cbar_label: Label for the colorbar. Default is "Value".
-        """
-        # Create the figure and the heatmap.
-        fig, ax = plt.subplots(figsize=(10, 8))
-        heatmap = ax.imshow(data, cmap=color_map, aspect='auto', interpolation='spline16')
-
-        # Set the title if provided
-        if title: ax.set_title(title)
-        # Label the axes
-        ax.set_xlabel(columnLabel)
-        ax.set_ylabel(rowLabel)
-
-        # Assign the row and column labels
-        ax.set_xticks(np.arange(len(column_labels)))
-        ax.set_yticks(np.arange(len(row_labels)))
-        ax.set_xticklabels(column_labels)
-        ax.set_yticklabels(row_labels)
-
-        # Rotate the tick labels and set their alignment.
-        plt.setp(ax.get_xticklabels(), rotation=45, ha="right", rotation_mode="anchor")
-
-        # Add a color bar with the label.
-        cbar = ax.figure.colorbar(heatmap, ax=ax)
-        cbar.ax.set_ylabel(cbar_label, rotation=-90, va="bottom")
-
-        # Save the figure if desired.
-        self.displayFigure(saveFigurePath)
-
     def timeLossComparison(self, allMetaModelPipelines, metaLearnedInfo, userInputParams, plotTitle="AutoEncoder Time Loss Plots"):
         print(f"\nPlotting the {plotTitle} Information")
 
@@ -139,9 +99,7 @@ class trainingPlots(globalPlottingProtocols):
             plt.yscale('log')
 
             # Save the figure if desired.
-            if self.savingFolder:
-                self.displayFigure(saveAutoencoderLossPlots + f"{plotTitle}{timeWindow}.pdf")
-            plt.show()
+            if self.savingFolder: self.displayFigure(saveAutoencoderLossPlots, saveFigureName=f"{plotTitle}{timeWindow}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
 
         # ---- Time Analysis Loss versus Epoch, all time windows, one plot per sub model ----
         for metaModelInd in range(len(allMetaModelPipelines)):
@@ -161,9 +119,7 @@ class trainingPlots(globalPlottingProtocols):
             plt.yscale('log')
 
             # Save the figure if desired.
-            if self.savingFolder:
-                self.displayFigure(saveAutoencoderLossPlots + f"{plotTitle}{metadatasetName}.pdf")
-            plt.show()
+            if self.savingFolder: self.displayFigure(saveAutoencoderLossPlots, saveFigureName=f"{plotTitle}{metadatasetName}.pdf", baseSaveFigureName=f"{plotTitle}{metadatasetName}.pdf")
 
     def reconstructionLossComparison(self, allMetaModelPipelines, metaLearnedInfo, userInputParams, plotTitle="AutoEncoder Reconstruction Loss Plots"):
         print(f"\nPlotting the {plotTitle} Information")
@@ -208,9 +164,7 @@ class trainingPlots(globalPlottingProtocols):
             plt.yscale('log')
 
             # Save the figure if desired.
-            if self.savingFolder:
-                self.displayFigure(saveAutoencoderLossPlots + f"{plotTitle}{timeWindow}.pdf")
-            plt.show()
+            if self.savingFolder: self.displayFigure(saveAutoencoderLossPlots, saveFigureName=f"{plotTitle}{timeWindow}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
 
         # ---- Time Analysis Loss versus Epoch, all time windows, one plot per sub model ----
         for metaModelInd in range(len(allMetaModelPipelines)):
@@ -230,9 +184,7 @@ class trainingPlots(globalPlottingProtocols):
             plt.yscale('log')
 
             # Save the figure if desired.
-            if self.savingFolder:
-                self.displayFigure(saveAutoencoderLossPlots + f"{plotTitle}{metadatasetName}.pdf")
-            plt.show()
+            if self.savingFolder: self.displayFigure(saveAutoencoderLossPlots, saveFigureName=f"{plotTitle}{metadatasetName}.pdf", baseSaveFigureName=f"{plotTitle}{metadatasetName}.pdf")
 
         # ---- Heatmap of the reconstruction loss, collected only ----
         metaModel = self.getSubmodel(allMetaModelPipelines[0], loadSubmodel)
@@ -258,184 +210,5 @@ class trainingPlots(globalPlottingProtocols):
         print(accuracy)
         plt.yticks(range(len(yticks)), yticks)
         plt.colorbar(label='Reconstruction Loss')
-        if self.savingFolder:
-            self.displayFigure(saveAutoencoderLossPlots + f"{plotTitle}{metadatasetName}_heatmap.pdf")
+        if self.savingFolder: self.displayFigure(saveAutoencoderLossPlots, saveFigureName=f"{plotTitle}{metadatasetName}_heatmap.pdf", baseSaveFigureName=f"{plotTitle}{metadatasetName}_heatmap.pdf")
         plt.show()
-
-    def meanLossComparison(self, allMetaModelPipelines, metaLearnedInfo, userInputParams, plotTitle="AutoEncoder Mean Loss Plots"):
-        print(f"\nPlotting the {plotTitle} Information")
-
-        # Unpack the model information.
-        loadSubmodel, loadSubmodelDate, loadSubmodelEpochs = metaLearnedInfo
-
-        # Update the compiler information for this model.
-        self.modelCompiler.addSubmodelParameters(loadSubmodel, userInputParams)
-
-        timeWindows = modelConstants.timeWindows
-
-        # Initialize saving folder
-        saveAutoencoderLossPlots = self.savingFolder + "/Time Analysis Plots/"
-        os.makedirs(saveAutoencoderLossPlots, exist_ok=True)
-        print('here')
-
-        # Load in the previous model weights and attributes.
-        self.modelMigration.loadModels(allMetaModelPipelines, loadSubmodel, loadSubmodelDate, loadSubmodelEpochs, metaTraining=True, loadModelAttributes=True)
-
-        # ---- Time Analysis Loss versus Epoch, all sub models, one plot per time window ----
-        # For each timeWindow
-        for timeWindowInd, timeWindow in enumerate(timeWindows):
-            # For each metalearning model
-            for metaModelInd in range(len(allMetaModelPipelines)):
-                metaModel = self.getSubmodel(allMetaModelPipelines[metaModelInd], loadSubmodel)
-                metadatasetName = allMetaModelPipelines[metaModelInd].datasetName
-                print(metadatasetName, metaModel.trainingLosses_timeMeanAnalysis[timeWindowInd])
-                print(metadatasetName, metaModel.testingLosses_timeMeanAnalysis[timeWindowInd])
-                print(metadatasetName, metaModel.numEncodingsPath_timeAnalysis[timeWindowInd])
-
-                # Plot the training loss.
-                plt.plot(metaModel.trainingLosses_timeMeanAnalysis[timeWindowInd], label=f'{metadatasetName} Training Loss', color=self.darkColors[metaModelInd], linewidth=2, alpha=1)
-                plt.plot(metaModel.testingLosses_timeMeanAnalysis[timeWindowInd], label=f'{metadatasetName} Testing Loss', color=self.darkColors[metaModelInd], linewidth=2, alpha=0.5)
-                plt.plot(metaModel.numEncodingsPath_timeAnalysis[timeWindowInd], label=f'{metadatasetName} Num Encodings', color=self.darkColors[metaModelInd], linewidth=2, alpha=0.5, linestyle='--')
-
-            # Label the plot.
-            plt.legend(loc="upper right")
-            plt.xlabel("Training Epoch")
-            plt.ylabel("Loss Values")
-            plt.title(f"{plotTitle}, timeWindow={timeWindow}s")
-            plt.yscale('log')
-
-            # Save the figure if desired.
-            if self.savingFolder:
-                self.displayFigure(saveAutoencoderLossPlots + f"{plotTitle}{timeWindow}.pdf")
-            plt.show()
-
-        # ---- Time Analysis Loss versus Epoch, all time windows, one plot per sub model ----
-        for metaModelInd in range(len(allMetaModelPipelines)):
-            metaModel = self.getSubmodel(allMetaModelPipelines[metaModelInd], loadSubmodel)
-            metadatasetName = allMetaModelPipelines[metaModelInd].datasetName
-            # Plot the training loss.
-            for timeWindowInd, timeWindow in enumerate(timeWindows):
-                plt.plot(metaModel.trainingLosses_timeMeanAnalysis[timeWindowInd], label=f'{metadatasetName} Training Loss, {timeWindow}s', color=self.darkColors[metaModelInd], linewidth=2, alpha=1)
-                plt.plot(metaModel.testingLosses_timeMeanAnalysis[timeWindowInd], label=f'{metadatasetName} Testing Loss, {timeWindow}s', color=self.darkColors[metaModelInd], linewidth=2, alpha=0.5)
-                plt.plot(metaModel.numEncodingsPath_timeAnalysis[timeWindowInd], label=f'{metadatasetName} Num Encodings, {timeWindow}s', color=self.darkColors[metaModelInd], linewidth=2, alpha=0.5, linestyle='--')
-
-            # Label the plot.
-            plt.xlabel("Training Epoch")
-            plt.ylabel("Loss Values")
-            plt.title(f"{plotTitle}, dataset={metadatasetName}")
-            plt.yscale('log')
-
-            # Save the figure if desired.
-            if self.savingFolder:
-                self.displayFigure(saveAutoencoderLossPlots + f"{plotTitle}{metadatasetName}.pdf")
-            plt.show()
-
-    def stdLossComparison(self, allMetaModelPipelines, metaLearnedInfo, userInputParams, plotTitle="AutoEncoder Std Loss Plots"):
-        print(f"\nPlotting the {plotTitle} Information")
-
-        # Unpack the model information.
-        loadSubmodel, loadSubmodelDate, loadSubmodelEpochs = metaLearnedInfo
-
-        # Update the compiler information for this model.
-        self.modelCompiler.addSubmodelParameters(loadSubmodel, userInputParams)
-
-        timeWindows = modelConstants.timeWindows
-
-        # Initialize saving folder
-        saveAutoencoderLossPlots = self.savingFolder + "/Time Analysis Plots/"
-        os.makedirs(saveAutoencoderLossPlots, exist_ok=True)
-        print('here')
-
-        # Load in the previous model weights and attributes.
-        self.modelMigration.loadModels(allMetaModelPipelines, loadSubmodel, loadSubmodelDate, loadSubmodelEpochs, metaTraining=True, loadModelAttributes=True)
-
-        # ---- Time Analysis Loss versus Epoch, all sub models, one plot per time window ----
-        # For each timeWindow
-        for timeWindowInd, timeWindow in enumerate(timeWindows):
-            # For each metalearning model
-            for metaModelInd in range(len(allMetaModelPipelines)):
-                metaModel = self.getSubmodel(allMetaModelPipelines[metaModelInd], loadSubmodel)
-                metadatasetName = allMetaModelPipelines[metaModelInd].datasetName
-                print(metadatasetName, metaModel.trainingLosses_timeSTDAnalysis[timeWindowInd])
-                print(metadatasetName, metaModel.testingLosses_timeSTDAnalysis[timeWindowInd])
-                print(metadatasetName, metaModel.numEncodingsPath_timeAnalysis[timeWindowInd])
-
-                # Plot the training loss.
-                plt.plot(metaModel.trainingLosses_timeSTDAnalysis[timeWindowInd], label=f'{metadatasetName} Training Loss', color=self.darkColors[metaModelInd], linewidth=2, alpha=1)
-                plt.plot(metaModel.testingLosses_timeSTDAnalysis[timeWindowInd], label=f'{metadatasetName} Testing Loss', color=self.darkColors[metaModelInd], linewidth=2, alpha=0.5)
-                plt.plot(metaModel.numEncodingsPath_timeAnalysis[timeWindowInd], label=f'{metadatasetName} Num Encodings', color=self.darkColors[metaModelInd], linewidth=2, alpha=0.5, linestyle='--')
-
-            # Label the plot.
-            plt.legend(loc="upper right")
-            plt.xlabel("Training Epoch")
-            plt.ylabel("Loss Values")
-            plt.title(f"{plotTitle}, timeWindow={timeWindow}s")
-            plt.yscale('log')
-
-            # Save the figure if desired.
-            if self.savingFolder:
-                self.displayFigure(saveAutoencoderLossPlots + f"{plotTitle}{timeWindow}.pdf")
-            plt.show()
-
-        # ---- Time Analysis Loss versus Epoch, all time windows, one plot per sub model ----
-        for metaModelInd in range(len(allMetaModelPipelines)):
-            metaModel = self.getSubmodel(allMetaModelPipelines[metaModelInd], loadSubmodel)
-            metadatasetName = allMetaModelPipelines[metaModelInd].datasetName
-            # Plot the training loss.
-            for timeWindowInd, timeWindow in enumerate(timeWindows):
-                plt.plot(metaModel.trainingLosses_timeSTDAnalysis[timeWindowInd], label=f'{metadatasetName} Training Loss, {timeWindow}s', color=self.darkColors[metaModelInd], linewidth=2, alpha=1)
-                plt.plot(metaModel.testingLosses_timeSTDAnalysis[timeWindowInd], label=f'{metadatasetName} Testing Loss, {timeWindow}s', color=self.darkColors[metaModelInd], linewidth=2, alpha=0.5)
-                plt.plot(metaModel.numEncodingsPath_timeAnalysis[timeWindowInd], label=f'{metadatasetName} Num Encodings, {timeWindow}s', color=self.darkColors[metaModelInd], linewidth=2, alpha=0.5, linestyle='--')
-
-            # Label the plot.
-            plt.xlabel("Training Epoch")
-            plt.ylabel("Loss Values")
-            plt.title(f"{plotTitle}, dataset={metadatasetName}")
-            plt.yscale('log')
-
-            # Save the figure if desired.
-            if self.savingFolder:
-                self.displayFigure(saveAutoencoderLossPlots + f"{plotTitle}{metadatasetName}.pdf")
-            plt.show()
-    '''
-    def autoencoderLossComparison(self, allMetaModelPipelines, allMetadataLoaders, metaLearnedInfo, modelComparisonInfo, comparingModelInd, plotTitle="Autoencoder Loss Plots"):
-        # Initialize saving folder
-        saveAutoencoderLossPlots = self.savingFolder + "/Autoencoder Plots/"
-        os.makedirs(saveAutoencoderLossPlots, exist_ok=True)
-        print("\tPlotting the Autoencoder Loss Information")
-
-        # Load in the previous model weights and attributes.
-        loadSubmodel, loadSubmodelDate, loadSubmodelEpochs = metaLearnedInfo
-        self.modelMigration.loadModels(allMetaModelPipelines, allMetadataLoaders, loadSubmodel, loadSubmodelDate, loadSubmodelEpochs, metaTraining=True, loadModelAttributes=True)
-        # For each metalearning model
-        for metaModelInd in range(len(allMetaModelPipelines)):
-            metaModel = allMetaModelPipelines[metaModelInd]
-            metadatasetName = metaModel.datasetName
-
-            # Plot the training loss.
-            plt.plot(metaModel.model.autoencoderModel.trainingLosses_signalReconstruction, label=f'{metadatasetName} Training Loss', color=self.darkColors[metaModelInd], linewidth=2, alpha=1)
-            plt.plot(metaModel.model.autoencoderModel.testingLosses_signalReconstruction, label=f'{metadatasetName} Testing Loss', color=self.darkColors[metaModelInd], linewidth=2, alpha=0.5)
-
-        # Load in the previous model weights and attributes.
-        loadSubmodel, loadSubmodelDate, loadSubmodelEpochs = modelComparisonInfo
-        self.modelMigration.loadModels(allMetaModelPipelines, allMetadataLoaders, loadSubmodel, loadSubmodelDate, loadSubmodelEpochs, metaTraining=True, loadModelAttributes=True)
-
-        # Plot the training loss.
-        metadatasetName = allMetaModelPipelines[comparingModelInd].datasetName
-        plt.plot(allMetaModelPipelines[comparingModelInd].model.autoencoderModel.trainingLosses_signalReconstruction, label=f'{metadatasetName} Training Loss', color='k', linewidth=2, alpha=1)
-        plt.plot(allMetaModelPipelines[comparingModelInd].model.autoencoderModel.testingLosses_signalReconstruction, label=f'{metadatasetName} Testing Loss', color='k', linewidth=2, alpha=0.5)
-
-        # Set y-axis to logarithmic scale
-        plt.yscale('log')
-
-        # Label the plot.
-        # plt.legend(loc="upper right")
-        plt.xlabel("Training Epoch")
-        plt.ylabel("Loss Values")
-        plt.title(f"{plotTitle}")
-
-        # Save the figure if desired.
-        if self.savingFolder:
-            self.saveFigure(saveAutoencoderLossPlots + f"{plotTitle}.pdf")
-        plt.show()
-    '''

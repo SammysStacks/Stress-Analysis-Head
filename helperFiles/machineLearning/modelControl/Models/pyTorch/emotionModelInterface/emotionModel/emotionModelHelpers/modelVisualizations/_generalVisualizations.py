@@ -10,16 +10,9 @@ from helperFiles.globalPlottingProtocols import globalPlottingProtocols
 
 class generalVisualizations(globalPlottingProtocols):
 
-    def __init__(self, saveDataFolder):
+    def __init__(self, baseSavingFolder, stringID):
         super(generalVisualizations, self).__init__()
-        # General parameter
-        self.saveDataFolder = None
-
-        # Set the location for saving the models.
-        self.setSavingFolder(saveDataFolder)
-                
-    def setSavingFolder(self, saveDataFolder):
-        self.saveDataFolder = saveDataFolder
+        self.setSavingFolder(baseSavingFolder, stringID)
         
     # ---------------------------------------------------------------------- #
     # --------------------- Visualize Model Parameters --------------------- #
@@ -74,7 +67,7 @@ class generalVisualizations(globalPlottingProtocols):
             allTestingLabels, allPredictedTestingLabels, labels=np.arange(numClasses), normalize='true')
 
         # Define a gridspec with width ratios for subplots
-        fig, axes = plt.subplots(1, 2, figsize=np.asarray([15, 5]), gridspec_kw={'width_ratios': [1, 1], 'height_ratios': [1]})
+        fig, axes = plt.subplots(nrows=1, ncols=2, figsize=np.asarray([15, 5]), gridspec_kw={'width_ratios': [1, 1], 'height_ratios': [1]})
 
         # Plot the confusion matrices as heatmaps
         im0 = axes[0].imshow(training_confusion_matrix,
@@ -107,24 +100,8 @@ class generalVisualizations(globalPlottingProtocols):
         plt.suptitle(f"{emotionName}")
 
         # Save the figure is desired.
-        if self.saveDataFolder:
-            self.displayFigure(self.saveDataFolder + f"{emotionName} epochs = {epoch}.pdf")
+        if self.saveDataFolder: self.displayFigure(self.saveDataFolder, saveFigureName=f"{emotionName} epochs{epoch}.pdf", baseSaveFigureName=f"{emotionName}.pdf")
         plt.show()
-
-    def plotTrainingPath_timeAnalysis(self, pathParameters, timeLabels, plotTitle="Model Convergence Loss"):
-        # Plot the training path.
-        for timeWindowInd in range(len(pathParameters)):
-            plt.plot(pathParameters[timeWindowInd], label=f'{timeLabels[timeWindowInd]}', color=self.darkColors[timeWindowInd], linewidth=2)
-
-        # Label the plot.
-        plt.legend(loc="upper right")
-        plt.xlabel("Training Epoch")
-        plt.ylabel("Path Values")
-        plt.title(f"{plotTitle.split('/')[-1]}")
-
-        # Save the figure if desired.
-        if self.saveDataFolder: self.displayFigure(self.saveDataFolder + f"{plotTitle} at epoch {len(pathParameters[0])}.pdf")
-        else: plt.show(); plt.close('all')
 
     def plotTrainingLosses(self, trainingLosses, testingLosses, lossLabels, plotTitle="Model Convergence Loss", logY=True):
         # Assert the validity of the input data.
@@ -156,7 +133,7 @@ class generalVisualizations(globalPlottingProtocols):
         plt.legend(loc="upper right", bbox_to_anchor=(1.35, 1))  # Move legend off to the right, level with the top
 
         # Save the figure if desired.
-        if self.saveDataFolder: self.displayFigure(self.saveDataFolder + f"{plotTitle} at epoch {len(trainingLosses[0])}.pdf")
+        if self.saveDataFolder: self.displayFigure(self.saveDataFolder, saveFigureName=f"{plotTitle} epochs{len(trainingLosses[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: plt.show()
 
     def generalDataPlotting(self, plottingData, plottingLabels, plotTitle="Model Convergence Loss"):
@@ -171,5 +148,5 @@ class generalVisualizations(globalPlottingProtocols):
         plt.title(f"{plotTitle.split('/')[-1]}")
 
         # Save the figure if desired.
-        if self.saveDataFolder: self.displayFigure(self.saveDataFolder + f"{plotTitle} at epoch {len(plottingData[0])}.pdf")
+        if self.saveDataFolder: self.displayFigure(self.saveDataFolder, saveFigureName=f"{plotTitle} epochs{len(plottingData[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: plt.show(); plt.close('all')

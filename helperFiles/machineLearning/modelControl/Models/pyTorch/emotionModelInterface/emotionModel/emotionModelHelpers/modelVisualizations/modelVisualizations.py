@@ -5,46 +5,38 @@ import torch
 
 # Visualization protocols
 from helperFiles.globalPlottingProtocols import globalPlottingProtocols
-from ._autoencoderVisualizations import autoencoderVisualizations
 from ._generalVisualizations import generalVisualizations
 from ._signalEncoderVisualizations import signalEncoderVisualizations
 # Import files for machine learning
-from ..emotionDataInterface import emotionDataInterface
 from ..modelConstants import modelConstants
 
 
 class modelVisualizations(globalPlottingProtocols):
 
-    def __init__(self, accelerator, modelSubfolder):
+    def __init__(self, accelerator, baseSavingFolder, stringID):
         super(modelVisualizations, self).__init__()
-        # General parameters.
         self.accelerator = accelerator
-        self.saveDataFolder = None
-
-        # Plotting settings.
-        # plt.ion()
 
         # Initialize helper classes.
-        self.dataInterface = emotionDataInterface()
+        self.signalEncoderViz = signalEncoderVisualizations(baseSavingFolder="", stringID="")
+        self.generalViz = generalVisualizations(baseSavingFolder="", stringID="")
 
-        # Initialize visualization protocols.
-        self.generalViz = generalVisualizations("")
-        self.autoencoderViz = autoencoderVisualizations("")
-        self.signalEncoderViz = signalEncoderVisualizations("")
         # Organize the visualization components.
-        self.setSavingFolder(modelSubfolder)
+        self.setSavingFolder(baseSavingFolder, stringID)
 
-    def setSavingFolder(self, modelSubfolder):
+    def setSavingFolder(self, baseSavingFolder, stringID):
         # Compile and shorten the name of the model visualization folder.
-        saveDataFolder = os.path.normpath(os.path.dirname(__file__) + f"/../../../dataAnalysis/{modelSubfolder}") + '/'
-        self.saveDataFolder = os.path.relpath(os.path.normpath(saveDataFolder), os.getcwd()) + '/'
-        # Make the folder to save the data.
-        os.makedirs(self.saveDataFolder, exist_ok=True)
+        baseSavingDataFolder = os.path.normpath(os.path.dirname(__file__) + f"/../../../dataAnalysis/{baseSavingFolder}") + '/'
+        saveDataFolder = os.path.normpath(baseSavingDataFolder + stringID + '/')
+
+        # Set the saving folder for the model visualizations.
+        self.baseSavingDataFolder = os.path.relpath(baseSavingDataFolder, os.getcwd()) + '/'
+        self.saveDataFolder = os.path.relpath(saveDataFolder, os.getcwd()) + '/'
+        self._createFolder(self.saveDataFolder)
 
         # Initialize visualization protocols.
-        self.generalViz.setSavingFolder(self.saveDataFolder)
-        self.autoencoderViz.setSavingFolder(self.saveDataFolder)
-        self.signalEncoderViz.setSavingFolder(self.saveDataFolder)
+        self.signalEncoderViz.setSavingFolder(baseSavingFolder, stringID)
+        self.generalViz.setSavingFolder(baseSavingFolder, stringID)
 
     # ---------------------------------------------------------------------- #
 
@@ -52,7 +44,7 @@ class modelVisualizations(globalPlottingProtocols):
         self.accelerator.print(f"\nCalculating loss for model comparison")
 
         # Prepare the model/data for evaluation.
-        self.setSavingFolder(f"trainingFigures/{submodel}/{trainingDate}/modelComparison/")  # Label the correct folder to save this analysis.
+        self.setSavingFolder(baseSavingFolder=f"trainingFigures/{submodel}/", stringID=f"{trainingDate}/modelComparison/")  # Label the correct folder to save this analysis.
 
         # Plot the loss on the primary GPU.
         if self.accelerator.is_local_main_process:
@@ -69,7 +61,7 @@ class modelVisualizations(globalPlottingProtocols):
         self.accelerator.print(f"\nPlotting results for the {modelPipeline.model.datasetName} model")
 
         # Prepare the model/data for evaluation.
-        self.setSavingFolder(f"trainingFigures/{submodel}/{trainingDate}/{modelPipeline.model.datasetName}/")
+        self.setSavingFolder(baseSavingFolder=f"trainingFigures/{submodel}/", stringID=f"{trainingDate}/{modelPipeline.model.datasetName}/")
         modelPipeline.setupTrainingFlags(modelPipeline.model, trainingFlag=False)  # Set all models into evaluation mode.
         model = modelPipeline.model
         numPlottingPoints = 12
