@@ -9,7 +9,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 class plottingProtocolsMain:
     def __init__(self, initialParameterBounds, modelParameterBounds, allNumParameterBins, parameterBinWidths, predictionBounds, allNumPredictionBins, predictionBinWidths):
-        # General parameters.
+        # ================================================General Parameters================================================
         self.initialParameterBounds = initialParameterBounds.squeeze()  # The bounds for the parameter.
         self.modelParameterBounds = modelParameterBounds  # The bounds for the parameter.
         self.parameterBinWidths = parameterBinWidths  # The width of the parameter bins.
@@ -18,7 +18,7 @@ class plottingProtocolsMain:
         self.allNumParameterBins = allNumParameterBins  # The number of parameter bins.
         self.predictionBounds = predictionBounds  # The bounds for the loss.
 
-        # Initialize heatmaps for plotting
+        # =============================================Heat Map Initializations=============================================
         heatmap_size = (self.allNumParameterBins[0], self.allNumPredictionBins[0])
         self.pa_heatmap = np.zeros(heatmap_size)
         self.na_heatmap = np.zeros(heatmap_size)

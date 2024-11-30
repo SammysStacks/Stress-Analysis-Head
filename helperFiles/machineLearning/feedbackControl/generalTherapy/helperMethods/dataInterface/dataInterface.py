@@ -5,12 +5,12 @@ import torch
 class dataInterface:
 
     def __init__(self, predictionWeights, optimalNormalizedState):
-        # General parameters
+        # ================================================General Parameters================================================
         self.optimalNormalizedState = optimalNormalizedState
         self.predictionWeights = predictionWeights
-        self.numPredictions = 3 # PA, NA, SA
-        self.numParameters = 1 # 1 for heat therapy, predicting 1 temperature
-        self.singleBatch = 1 # numTrue sample processed in a single batch (with all the same weights and other parameters)
+        self.numPredictions = 3  # PA, NA, SA
+        self.numParameters = 1  # 1 for heat therapy, predicting 1 temperature
+        self.singleBatch = 1  # numTrueSample processed in a single batch (with all the same weights and other parameters)
 
     def calculateCompiledLoss(self, initialMentalStates):
         """ initialStates: numPoints, (PA, NA, SA); 2D array"""
@@ -18,12 +18,10 @@ class dataInterface:
         predictionWeights_tensor = torch.as_tensor(self.predictionWeights)
         predictionWeights_tensor = predictionWeights_tensor.view(self.singleBatch, self.numPredictions, 1, 1) # dim = 1, 3, 1, 1; torch.Size([1, 3, 1, 1])
         self.optimalNormalizedState = self.optimalNormalizedState.view(self.singleBatch, self.numPredictions, 1, 1) # dim = 1, 3, 1, 1; torch.Size([1, 3, 1, 1])
-        # print the sizes for perdictionWeights and optimalNormalizedState and initialMentalStates
 
         # Calculate the compiled loss.
         compiledLoss = predictionWeights_tensor * (initialMentalStates - self.optimalNormalizedState).pow(2) # weighted MSE; torch.Size([30, 3, 1, 1])
         compiledLoss = compiledLoss.sum(dim=1, keepdim=True) # dim = numPoints, 1, 1, 1; torch.Size([30, 1, 1, 1])
-        # Note: we do not normalize here
         return compiledLoss
 
     @staticmethod
@@ -84,7 +82,6 @@ class dataInterface:
 
     @staticmethod
     def initializeAllBins(allBounds, binWidths):
-
         # Base case: if binWidths is a 1D tensor.
         if allBounds.ndim == 1:
             allBounds = allBounds.unsqueeze(0).expand(len(binWidths), len(allBounds))
@@ -94,6 +91,7 @@ class dataInterface:
         currentLowerBounds, currentUpperBounds = dataInterface.multiDimensionalParameterInterface(allBounds)
 
         finalBins = []
+
         # For each parameter's bins information, initialize the bins.
         for lower, upper, binWidth in zip(currentLowerBounds, currentUpperBounds, binWidths):
             currentBins = dataInterface.initializeBins(bounds=[lower, upper], binWidth=binWidth)
