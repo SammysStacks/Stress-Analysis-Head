@@ -91,6 +91,8 @@ class aStarTherapyProtocol(generalTherapyProtocol):
         # Find the best temperature in the gradient direction.
         newUserParam, benefitFunction = self.findOptimalDirection(probabilityMap, currentParam, currentCompiledLoss)
 
+        # Ensure no list and float addition
+        newUserParam = np.array(newUserParam, dtype=np.float64)
         newUserParam = newUserParam + self.uncertaintyBias * np.random.normal(loc=0, scale=0.5)  # Add noise to the gradient.
 
         # Calculate the new temperature.

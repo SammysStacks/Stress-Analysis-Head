@@ -27,10 +27,6 @@ class binauralBeatsTherapyControl(therapyHelpers):
                 elif self.therapySelection == 'BinauralBeats':
                     therapyState, allMaps = self.therapyProtocol.updateTherapyState3D()
                     self.therapyProtocol.getNextState(therapyState, self.therapyMethod)
-                    print('self.therapyProtocol.unNormalizedParameter', self.therapyProtocol.unNormalizedParameter)
-                    print('self.therapyProtocol.unnoramlizedParameter[0]', self.therapyProtocol.unNormalizedParameter[0])
-                    print('self.therapyProtocol.unnoramlizedParameter[1]', self.therapyProtocol.unNormalizedParameter[1])
-
                     combinedStates = [
                         [
                             unNormalizedParam_1,  # First parameter
