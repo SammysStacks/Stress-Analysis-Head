@@ -12,7 +12,7 @@ from ..dataInterface.dataInterface import dataInterface
 
 
 class generalTherapyProtocol(abc.ABC):
-    def __init__(self, initialParameterBounds, unNormalizedParameterBinWidths, simulationParameters, therapyMethod):
+    def __init__(self, initialParameterBounds, unNormalizedParameterBinWidths, simulationParameters, therapySelection, therapyMethod):
         # General parameters.
         self.unNormalizedParameterBinWidths = unNormalizedParameterBinWidths  # The parameter bounds for the therapy.
         self.simulateTherapy = simulationParameters['simulateTherapy']  # Whether to simulate the therapy.
@@ -43,8 +43,21 @@ class generalTherapyProtocol(abc.ABC):
         if self.predictionBounds.ndim == 1: self.predictionBounds = torch.unsqueeze(self.predictionBounds, dim=0) # ([[5, 25], [5, 25], [20, 80]])
         self.numParameters = len(self.initialParameterBounds)  # The number of parameters. # 1 for now
 
+        # specific therapy intializations
+        self.therapySelection = therapySelection
         # Calculated parameters.
-        self.parameterBinWidths = dataInterface.normalizeParameters(currentParamBounds=self.initialParameterBounds - self.initialParameterBounds[:, 0:1], normalizedParamBounds=self.modelParameterBounds, currentParamValues=self.unNormalizedParameterBinWidths) #torch.tensor([0.1])
+        if self.therapySelection == 'Heat':
+            self.parameterBinWidths = dataInterface.normalizeParameters(currentParamBounds=self.initialParameterBounds - self.initialParameterBounds[:, 0:1], normalizedParamBounds=self.modelParameterBounds, currentParamValues=self.unNormalizedParameterBinWidths) #torch.tensor([0.1])
+        elif self.therapySelection == 'BinauralBeats':
+            # since for binaural beats we are just varying the frequencies differneces, essentially, the bin width for BB would be the same for both dimensions
+            selectedInitialParamBounds_1 = self.initialParameterBounds[0].unsqueeze(0)
+            selectedInitialParamBounds_2 = self.initialParameterBounds[1].unsqueeze(0)
+            self.parameterBinWidths_1 = dataInterface.normalizeParameters(currentParamBounds=selectedInitialParamBounds_1 - selectedInitialParamBounds_1[:, 0:1], normalizedParamBounds=self.modelParameterBounds, currentParamValues=self.unNormalizedParameterBinWidths) #torch.tensor([0.1])
+            self.parameterBinWidths_2 = dataInterface.normalizeParameters(currentParamBounds=selectedInitialParamBounds_2 - selectedInitialParamBounds_2[:, 0:1], normalizedParamBounds=self.modelParameterBounds,
+                                                                          currentParamValues=self.unNormalizedParameterBinWidths)  # torch.tensor([0.1])
+            self.parameterBinWidths = torch.cat((self.parameterBinWidths_1.unsqueeze(1), self.parameterBinWidths_2.unsqueeze(1)), dim=0)
+
+
         self.predictionBinWidths = dataInterface.normalizeParameters(currentParamBounds=self.predictionBounds - self.predictionBounds[:, 0:1], normalizedParamBounds=self.modelParameterBounds, currentParamValues=self.predictionBinWidths)
 
         self.optimalNormalizedState = dataInterface.normalizeParameters(currentParamBounds=self.predictionBounds, normalizedParamBounds=self.modelParameterBounds, currentParamValues=self.optimalPredictions)  # The optimal normalized state for the therapy. tensor([1, 0, 0])
@@ -52,20 +65,37 @@ class generalTherapyProtocol(abc.ABC):
         self.numPredictions = len(self.optimalNormalizedState)  # The number of losses to predict.
         self.gausLossSTDs = self.predictionBinWidths.clone()  # The standard deviation for the Gaussian distribution for losses.
 
-        # Initialize the loss and parameter bins.
-        self.allParameterBins = dataInterface.initializeAllBins(self.modelParameterBounds, self.parameterBinWidths)    # Note this is an UNEVEN 2D list. [[parameter]] bin list
-        self.allPredictionBins = dataInterface.initializeAllBins(self.modelParameterBounds, self.predictionBinWidths)  # Note this is an UNEVEN 2D list. [[PA], [NA], [SA]] bin list TODO: the binwidth could be the same, but we can unNormalize differently?
-        self.unNormalizedAllParameterBins = dataInterface.initializeAllBins(self.initialParameterBounds, self.unNormalizedParameterBinWidths.unsqueeze(0))  # Note this is an UNEVEN 2D list. [[parameter]] bin list
-        # print('allPredictionBins: ', self.allPredictionBins)
+        if therapySelection == 'Heat':
+            # Initialize the loss and parameter bins.
+            self.allParameterBins = dataInterface.initializeAllBins(self.modelParameterBounds, self.parameterBinWidths)  # Note this is an UNEVEN 2D list. [[parameter]] bin list
 
-        # Initialize the number of bins for the parameter and loss.
-        self.allNumParameterBins = [len(self.allParameterBins[parameterInd]) for parameterInd in range(self.numParameters)]  # Parameter number of Bins in the list
+            self.allPredictionBins = dataInterface.initializeAllBins(self.modelParameterBounds, self.predictionBinWidths)  # Note this is an UNEVEN 2D list. [[PA], [NA], [SA]] bin list
+            self.unNormalizedAllParameterBins = dataInterface.initializeAllBins(self.initialParameterBounds, self.unNormalizedParameterBinWidths.unsqueeze(0))  # Note this is an UNEVEN 2D list. [[parameter]] bin list
+            # Initialize the number of bins for the parameter and loss.
+            self.allNumParameterBins = [len(self.allParameterBins[parameterInd]) for parameterInd in range(self.numParameters)]  # Parameter number of Bins in the list
+        elif therapySelection == 'BinauralBeats':
+            self.allParameterBins_1 = dataInterface.initializeAllBins(self.modelParameterBounds, self.parameterBinWidths[0])  # Note this is an UNEVEN 2D list. [[parameter]] bin list
+            self.allParameterBins_2 = dataInterface.initializeAllBins(self.modelParameterBounds, self.parameterBinWidths[1])
+            self.allParameterBins = [self.allParameterBins_1,self.allParameterBins_2]
+            self.allPredictionBins = dataInterface.initializeAllBins(self.modelParameterBounds, self.predictionBinWidths)  # Note this is an UNEVEN 2D list. [[PA], [NA], [SA]] bin list
+            self.unNormalizedAllParameterBins_1 = dataInterface.initializeAllBins(self.initialParameterBounds[0], self.unNormalizedParameterBinWidths.unsqueeze(0))
+            self.unNormalizedAllParameterBins_2 = dataInterface.initializeAllBins(self.initialParameterBounds[1], self.unNormalizedParameterBinWidths.unsqueeze(0))# Note this is an UNEVEN 2D list. [[parameter]] bin list
+            # Convert lists to tensors and concatenate along the first dimension
+            self.unNormalizedAllParameterBins = [self.unNormalizedAllParameterBins_1, self.unNormalizedAllParameterBins_2]
+            # Initialize the number of bins for the parameter and loss.
+            self.allNumParameterBins = [len(self.allParameterBins[parameterInd][0]) for parameterInd in range(self.numParameters)]  # Parameter number of Bins in the list
+
+
+
         self.allNumPredictionBins = [len(self.allPredictionBins[lossInd]) for lossInd in range(self.numPredictions)]  #PA, NA, SA number of bins in the list
-
         # Define a helper class for experimental parameters.
-        self.simulationProtocols = simulationProtocols(self.allParameterBins, self.allPredictionBins, self.predictionBinWidths, self.modelParameterBounds, self.numPredictions, self.numParameters, self.predictionWeights, self.optimalNormalizedState, self.initialParameterBounds, self.unNormalizedAllParameterBins, simulationParameters)
+        """For Binaural Beats therapy, simulation is done in the same dimension as Heat therapy due to the Binaural Beats constraints"""
+        self.simulationProtocols = simulationProtocols(self.allParameterBins, self.allPredictionBins, self.predictionBinWidths, self.modelParameterBounds, self.numPredictions, self.numParameters, self.predictionWeights, self.optimalNormalizedState, self.initialParameterBounds[0], self.unNormalizedAllParameterBins[0], simulationParameters, therapySelection)
         self.plottingProtocolsMain = plottingProtocolsMain(self.initialParameterBounds, self.modelParameterBounds, self.allNumParameterBins, self.parameterBinWidths, self.predictionBounds, self.allNumPredictionBins, self.predictionBinWidths)
-        self.empatchProtocols = empatchProtocols(self.predictionOrder, self.predictionBounds, self.modelParameterBounds, therapyExpMethod='HeatingPad')
+        if self.therapySelection == 'Heat':
+            self.empatchProtocols = empatchProtocols(self.predictionOrder, self.predictionBounds, self.modelParameterBounds, therapyExpMethod='HeatingPad')
+        elif self.therapySelection == 'BinauralBeats':
+            self.empatchProtocols = empatchProtocols(self.predictionOrder, self.predictionBounds, self.modelParameterBounds, therapyExpMethod='BinauralBeats')
         self.dataInterface = dataInterface(self.predictionWeights, self.optimalNormalizedState)
         self.generalMethods = generalMethods()
 
@@ -77,11 +107,13 @@ class generalTherapyProtocol(abc.ABC):
         self.userMentalStateCompiledLoss = None
         self.userName = None
         self.unNormalizedParameter = None
-        self.resetTherapy()
+        self.unNormalizedParam_1 = None
+        self.unNormalizedParam_2 = None
+        self.resetTherapy(therapySelection)
 
 
 
-    def resetTherapy(self):
+    def resetTherapy(self, therapySelection):
         # Reset the therapy parameters.
         self.userMentalStatePath = []  # The path of the user's mental state: PA, NA, SA
         self.finishedTherapy = False  # Whether the therapy has finished.
@@ -90,13 +122,18 @@ class generalTherapyProtocol(abc.ABC):
         self.userMentalStateCompiledLoss = []  # The compiled loss for the user's mental state.
         self.userName = []  # The user's name.
         self.unNormalizedParameter = []
+        self.unNormalizedParam_1 = []
+        self.unNormalizedParam_2 = []
         # Reset the therapy maps.
-        self.initializeMaps()
+        self.initializeMaps(therapySelection)
 
     # ------------------------ Track User States ------------------------ #
-    def initializeMaps(self):
+    def initializeMaps(self, therapySelection):
         if self.simulateTherapy:
-            self.simulationProtocols.initializeSimulatedMaps(self.predictionWeights, self.gausParameterSTDs, self.gausLossSTDs, self.applyGaussianFilter)
+            if therapySelection == "Heat":
+                self.simulationProtocols.initializeSimulatedMaps(self.predictionWeights, self.gausParameterSTDs, self.gausLossSTDs, self.applyGaussianFilter)
+            elif therapySelection == "BinauralBeats":
+                self.simulationProtocols.initializeSimulatedMaps(self.predictionWeights, self.gausParameterSTDs, self.gausLossSTDs, self.applyGaussianFilter)
         else:
             # real data points
             temperature, pa, na, sa = self.empatchProtocols.getTherapyData()
@@ -137,7 +174,7 @@ class generalTherapyProtocol(abc.ABC):
     def initializeUserState(self, userName, initialTime, initialParam, initialPredicitons):
         # Get the user information.
         # timePints: a tensor
-        # parameter: tensor of size 1, 1, 1, 1
+        # parameter: tensor of size 1, 1, 1, 1 for heat and tensor of size 1, 2, 1, 1 for Binaural Beats
         # emotionStates: tensor of size 1, 3, 1, 1
         timepoints, parameters, emotionStates = self.getInitialSate(initialTime, initialParam, initialPredicitons)  # dim: numPoints, timePoint: t; emotionStates: (PA, NA, SA); prediction: predict the next state; Note these are actual state values
         # Check if any of the initial state components are None, and do nothing if they are.
@@ -147,16 +184,32 @@ class generalTherapyProtocol(abc.ABC):
         startTimePoint = timepoints
 
         self.timepoints.append(startTimePoint) # timepoints: list of tensor: [tensor(0)]
+
         self.paramStatePath.append(parameters) # self.paramStatePath: list of tensor: [torch.Size([1, 1, 1, 1])
         self.userMentalStatePath.append(emotionStates) # emotionstates: list of tensor: torch.Size([1, 3, 1, 1])
         # Calculate the initial user loss.
         compiledLoss = self.dataInterface.calculateCompiledLoss(emotionStates[-1])  # compile the loss state for the current emotion state; torch.Size([1, 1, 1, 1])
         self.userMentalStateCompiledLoss.append(compiledLoss) #  list of tensor torch.Size([1, 1, 1, 1])
         self.userName.append(userName) # list: username
-        initialUserParamBinIndex = self.dataInterface.getBinIndex(self.allParameterBins, parameters)
-        initialUserParam = self.unNormalizedAllParameterBins[0][initialUserParamBinIndex]  # bound the initial temperature (1D)
-        initialUserParam = self.boundNewTemperature(initialUserParam, bufferZone=0.01)  # bound the initial temperature (1D)
-        self.unNormalizedParameter.append(initialUserParam) # list of tensor torch.Size([1, 1, 1, 1])
+        if self.therapySelection == 'Heat':
+            initialUserParamBinIndex = self.dataInterface.getBinIndex(self.allParameterBins, parameters)
+            initialUserParam = self.unNormalizedAllParameterBins[0][initialUserParamBinIndex]  # bound the initial temperature (1D)
+            initialUserParam = self.boundNewTemperature(initialUserParam, bufferZone=0.01)  # bound the initial temperature (1D)
+            self.unNormalizedParameter.append(initialUserParam)  # list of tensor torch.Size([1, 1, 1, 1])
+
+
+        elif self.therapySelection == 'BinauralBeats':
+
+            initialUserParamBinIndex_1 = self.dataInterface.getBinIndex(self.allParameterBins[0], parameters[:, 0])
+            initialUserParamBinIndex_2 = self.dataInterface.getBinIndex(self.allParameterBins[1], parameters[:, 1])
+            initialUserParam_1 = self.unNormalizedAllParameterBins[0][0][initialUserParamBinIndex_1]  # bound the initial temperature (1D)
+            initialUserParam_1 = self.boundNewTemperature(initialUserParam_1, bufferZone=0.01)  # bound the initial temperature (1D)
+            initialUserParam_2 = self.unNormalizedAllParameterBins[1][0][initialUserParamBinIndex_2]
+            initialUserParam_2 = self.boundNewTemperature(initialUserParam_2, bufferZone=0.01)
+            initialUserParam = [initialUserParam_1, initialUserParam_2]
+            self.unNormalizedParameter.append(initialUserParam)  # list of tensor torch.Size([1, 1, 1, 1])
+            self.unNormalizedParam_1.append(initialUserParam_1)
+            self.unNormalizedParam_2.append(initialUserParam_2)
 
 
 
@@ -187,22 +240,45 @@ class generalTherapyProtocol(abc.ABC):
             currentParam = self.paramStatePath[-1]
             currentEmotionStates = self.userMentalStatePath[-1]
             # Sample the new loss form a pre-simulated map.
+
             newUserLoss, PA, NA, SA = self.simulationProtocols.getSimulatedCompiledLoss(currentParam, currentEmotionStates, newParamValues, therapyMethod)
+
             # combined mentalstate
             combinedMentalState = torch.cat((PA, NA, SA), dim=1)
-            # unbound temperature:
-            param_state_index = self.dataInterface.getBinIndex(self.allParameterBins[0], newParamValues)
-            param_state_unbound = self.unNormalizedAllParameterBins[0][param_state_index]
-            param_state_unbound = self.boundNewTemperature(param_state_unbound, bufferZone=0.01)  # newUserParam = torch.Size([1, 1, 1, 1])
+            if self.therapySelection == 'Heat':
+                param_state_index = self.dataInterface.getBinIndex(self.allParameterBins[0], newParamValues)
+                param_state_unbound = self.unNormalizedAllParameterBins[0][param_state_index]
+                param_state_unbound = self.boundNewTemperature(param_state_unbound, bufferZone=0.01)  # newUserParam = torch.Size([1, 1, 1, 1])
 
-            # User state update
-            self.timepoints.append(newTimePoint)
-            self.paramStatePath.append(newParamValues)
-            self.userMentalStatePath.append(combinedMentalState)
-            self.userMentalStateCompiledLoss.append(newUserLoss)
-            self.unNormalizedParameter.append(param_state_unbound)
+                # User state update
+                self.timepoints.append(newTimePoint)
+                self.paramStatePath.append(newParamValues)
+                self.userMentalStatePath.append(combinedMentalState)
+                self.userMentalStateCompiledLoss.append(newUserLoss)
+                self.unNormalizedParameter.append(param_state_unbound)
+            elif self.therapySelection == 'BinauralBeats':
+                param_state_index_1 = self.dataInterface.getBinIndex(self.allParameterBins[0], newParamValues[:, 0])
+                param_state_index_2 = self.dataInterface.getBinIndex(self.allParameterBins[0], newParamValues[:, 1])
+
+                param_state_unbound_1 = self.unNormalizedAllParameterBins[0][0][param_state_index_1]
+                param_state_unbound_2 = self.unNormalizedAllParameterBins[1][0][param_state_index_2]
+
+                param_state_unbound_1 = self.boundNewTemperature(param_state_unbound_1, bufferZone=0.01)  # newUserParam = torch.Size([1, 1, 1, 1])
+                param_state_unbound_2 = self.boundNewTemperature(param_state_unbound_2, bufferZone=0.01)
+                param_state_unbound = [param_state_unbound_1, param_state_unbound_2]
+                # User state update
+                self.timepoints.append(newTimePoint)
+                self.paramStatePath.append(newParamValues)
+                self.userMentalStatePath.append(combinedMentalState)
+                self.userMentalStateCompiledLoss.append(newUserLoss)
+                self.unNormalizedParameter.append(param_state_unbound)
+                self.unNormalizedParam_1.append(param_state_unbound_1)
+                self.unNormalizedParam_2.append(param_state_unbound_2)
+
+
+
         else:
-            # TODO !!! eventually, this will be the real-time user state update during experiment
+            # TODO: eventually, this will be the real-time user state update during experiment
             # Simulate a new time.
             lastTimePoint = self.timepoints[-1] if len(self.timepoints) != 0 else 0
             # convert tensor to int

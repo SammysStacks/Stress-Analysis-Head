@@ -9,7 +9,8 @@ from helperFiles.machineLearning.feedbackControl.generalTherapy.helperMethods.th
 
 
 class simulationProtocols:
-    def __init__(self, allParameterBins, allPredictionBins, predictionBinWidths, modelParameterBounds, numPredictions, numParameters, predictionWeights, optimalNormalizedState, initialParameterBounds, unNormalizedParameterBins, simulationParameters):
+    def __init__(self, allParameterBins, allPredictionBins, predictionBinWidths, modelParameterBounds, numPredictions, numParameters, predictionWeights, optimalNormalizedState, initialParameterBounds, unNormalizedParameterBins, simulationParameters,
+                 therapySelection):
         # General parameters.
         self.optimalNormalizedState = optimalNormalizedState
         self.modelParameterBounds = modelParameterBounds
@@ -26,10 +27,15 @@ class simulationProtocols:
         self.initialTimePoint = 0
         self.initialPoints = 1
         self.timeDelay = 10
-        self.startingPoints = [47,  0.5966159,   0.69935307,  0.91997683] # Can use a random start point, for now just this
+        self.therapySelection = therapySelection
+        if self.therapySelection == 'Heat':
+            self.startingPoints = [47,  0.5966159,   0.69935307,  0.91997683] # Can use a random start point, for now just this
+        elif self.therapySelection == 'BinauralBeats':
+            self.startingPoints = [[426, 430], [0.5966159,   0.69935307,  0.91997683]]
 
 
         # Given simulation parameters.
+
         self.UnNormalizedUniformParamSampler = torch.distributions.uniform.Uniform(torch.FloatTensor([initialParameterBounds.squeeze()[0]]), torch.FloatTensor([initialParameterBounds.squeeze()[1]]))
         self.uniformParamSampler = torch.distributions.uniform.Uniform(torch.FloatTensor([modelParameterBounds[0]]), torch.FloatTensor([modelParameterBounds[1]]))
         self.uniformPredictionSampler = torch.distributions.uniform.Uniform(torch.FloatTensor([modelParameterBounds[0]]), torch.FloatTensor([modelParameterBounds[1]]))
@@ -89,7 +95,7 @@ class simulationProtocols:
     def randomlySamplePoints(self, numPoints=1, lastTimePoint=None):
         # generate a random temperature within the bounds.
         sampledPredictions = self.uniformPredictionSampler.sample(torch.Size([numPoints, self.numPredictions])).unsqueeze(-1) # torch.size ([numPoints, numPredictions, 1, 1]) ([1,3,1,1])
-        sampledParameters = self.uniformParamSampler.sample(torch.Size([numPoints, self.numParameters])).unsqueeze(-1) # torch.size ([numPoints, numParameters, 1, 1]) ([1,1,1,1]) for heat therapy we just have temperature so second dim is 1
+        sampledParameters = self.uniformParamSampler.sample(torch.Size([numPoints, self.numParameters])).unsqueeze(-1) # torch.size ([numPoints, numParameters, 1, 1]) ([1,1,1,1]) for heat therapy; ([1, 2, 1, 1]) for binaural beats
         simulatedTimes = self.getSimulatedTimes(numPoints, lastTimePoint) # torch.size([0]) at the beginning. nothing is in here. tensor([], dtype=torch.int64)
         # sampledPredictions dimension: numPoints, numPredictions
         # sampledParameters dimension: numPoints, numParameters
@@ -104,34 +110,52 @@ class simulationProtocols:
         # Get the simulated data points.
         simulatedTimes, sampledParameters, sampledPredictions = self.generateSimulatedMap()
         # sampledPredictions dimension: numSimulationTrueSamples, numPoints, numPredictions, 1, 1; torch.Size([30, 3, 1, 1])
-        # sampledParameters dimension: numSimulationTrueSamples, numPoints, numParameters, 1, 1; torch.Size([30, 1, 1, 1])
+        # sampledParameters dimension: numSimulationTrueSamples, numPoints, numParameters, 1, 1; torch.Size([30, 1, 1, 1]) or torch.Size([30, 2, 1, 1])
         # simulatedTimes dimension: numSimulationTrueSamples with concatination of 0 at the beginning torch([30]) otherwise numSimulationTrueSamples - 1
         # Get the simulated matrix from the simulated points.
 
         simulatedCompiledLoss = self.dataInterface.calculateCompiledLoss(sampledPredictions) # sampledPredictions: numPoints, (PA, NA, SA); 2D array
         # ensure data dimension matches
-        # simulatedCompiledLoss = simulatedCompiledLoss.unsqueeze(2)  # shape: [30, 1, 1, 1] #TODO: check what each dimension means
 
         # Compiling the simulated Data for generating probability matrix
         initialSimulatedData = torch.cat((sampledParameters, sampledPredictions, simulatedCompiledLoss), dim=1) # numPoints, (Parameter, emotionPrediction, compiledLoss), 1, 1; torch.Size([30, 5, 1, 1])
+        if self.therapySelection == 'Heat':
+            initialSimulatedData_PA = initialSimulatedData[:, [0, 1], :, :]  # Shape: [30, 2, 1, 1]
 
-        initialSimulatedData_PA = initialSimulatedData[:, [0, 1], :, :]  # Shape: [30, 2, 1, 1]
+            # Extract for NA: Parameter and second emotion prediction
+            initialSimulatedData_NA = initialSimulatedData[:, [0, 2], :, :]  # Shape: [30, 2, 1, 1]
 
-        # Extract for NA: Parameter and second emotion prediction
-        initialSimulatedData_NA = initialSimulatedData[:, [0, 2], :, :]  # Shape: [30, 2, 1, 1]
+            # Extract for SA: Parameter and third emotion prediction
+            initialSimulatedData_SA = initialSimulatedData[:, [0, 3], :, :]  # Shape: [30, 2, 1, 1]
+            resampledParameterBins, resampledPredictionBins = self.generalMethods.resampleBins(self.allParameterBins, self.allPredictionBins, eventlySpacedBins=False)
 
-        # Extract for SA: Parameter and third emotion prediction
-        initialSimulatedData_SA = initialSimulatedData[:, [0, 3], :, :]  # Shape: [30, 2, 1, 1]
 
-        # resample the data bins
-        resampledParameterBins, resampledPredictionBins = self.generalMethods.resampleBins(self.allParameterBins, self.allPredictionBins, eventlySpacedBins=False)
+            # it doesn't really matter to index resampledPrediciton bins or not, it's the same anyways
+            # Map sizes: torch.Size([4, 19]) corresponding to numParamBins at 1st dimension and numPredictionBins
+            """VERY IMPORTANT: simulated maps are all probability matrices, meaning the probability of possessing certain parameter prediction pairs on the map"""
+            self.simulatedMapPA = self.generalMethods.getProbabilityMatrix(initialSimulatedData_PA, resampledParameterBins, resampledPredictionBins[0], gausParamSTDs, gausLossSTDs[0], noise=0.1, applyGaussianFilter=applyGaussianFilter)
+            self.simulatedMapNA = self.generalMethods.getProbabilityMatrix(initialSimulatedData_NA, resampledParameterBins, resampledPredictionBins[1], gausParamSTDs, gausLossSTDs[1], noise=0.1, applyGaussianFilter=applyGaussianFilter)
+            self.simulatedMapSA = self.generalMethods.getProbabilityMatrix(initialSimulatedData_SA, resampledParameterBins, resampledPredictionBins[2], gausParamSTDs, gausLossSTDs[2], noise=0.1, applyGaussianFilter=applyGaussianFilter)
 
-        # it doesn't really matter to index resampledPrediciton bins or not, it's the same anyways
-        # Map sizes: torch.Size([4, 19]) corresponding to numParamBins at 1st dimension and numPredictionBins
-        """VERY IMPORTANT: simulated maps are all probability matrices, meaning the probability of possessing certain parameter prediction pairs on the map"""
-        self.simulatedMapPA = self.generalMethods.getProbabilityMatrix(initialSimulatedData_PA, resampledParameterBins, resampledPredictionBins[0], gausParamSTDs, gausLossSTDs[0], noise=0.1, applyGaussianFilter=applyGaussianFilter)
-        self.simulatedMapNA = self.generalMethods.getProbabilityMatrix(initialSimulatedData_NA, resampledParameterBins, resampledPredictionBins[1], gausParamSTDs, gausLossSTDs[1], noise=0.1, applyGaussianFilter=applyGaussianFilter)
-        self.simulatedMapSA = self.generalMethods.getProbabilityMatrix(initialSimulatedData_SA, resampledParameterBins, resampledPredictionBins[2], gausParamSTDs, gausLossSTDs[2], noise=0.1, applyGaussianFilter=applyGaussianFilter)
+        elif self.therapySelection == 'BinauralBeats':
+            initialSimulatedData_PA = initialSimulatedData[:, [0, 1, 2], :, :]  # Shape: [30, 3, 1, 1] 3 for 2 parameters and 1 PA value
+
+            # Extract for NA: Parameter and second emotion prediction
+            initialSimulatedData_NA = initialSimulatedData[:, [0, 1, 3], :, :]  # Shape: [30, 3, 1, 1]
+
+            # Extract for SA: Parameter and third emotion prediction
+            initialSimulatedData_SA = initialSimulatedData[:, [0, 1, 4], :, :]  # Shape: [30, 3, 1, 1]
+            # resample the data bins
+
+            resampledParameterBins_single, resampledPredictionBins = self.generalMethods.resampleBins(self.allParameterBins[0], self.allPredictionBins, eventlySpacedBins=False)
+            resampledParameterBins = [resampledParameterBins_single, resampledParameterBins_single]
+            # it doesn't really matter to index resampledPrediciton bins or not, it's the same anyways
+            # Map sizes: torch.Size([4, 19]) corresponding to numParamBins at 1st dimension and numPredictionBins
+            """VERY IMPORTANT: simulated maps are all probability matrices, meaning the probability of possessing certain parameter prediction pairs on the map"""
+            self.simulatedMapPA = self.generalMethods.get3DProbabilityMatrix(initialSimulatedData_PA, resampledParameterBins, resampledPredictionBins[0], gausParamSTDs, gausLossSTDs[0], noise=0.1, applyGaussianFilter=applyGaussianFilter)
+            self.simulatedMapNA = self.generalMethods.get3DProbabilityMatrix(initialSimulatedData_NA, resampledParameterBins, resampledPredictionBins[1], gausParamSTDs, gausLossSTDs[1], noise=0.1, applyGaussianFilter=applyGaussianFilter)
+            self.simulatedMapSA = self.generalMethods.get3DProbabilityMatrix(initialSimulatedData_SA, resampledParameterBins, resampledPredictionBins[2], gausParamSTDs, gausLossSTDs[2], noise=0.1, applyGaussianFilter=applyGaussianFilter)
+
 
         # say that state anxiety has a slightly higher weight and normalize
         self.simulatedMapCompiledLoss = (lossWeights[0]*self.simulatedMapPA + lossWeights[1]*self.simulatedMapNA + lossWeights[2]*self.simulatedMapSA)
@@ -140,29 +164,53 @@ class simulationProtocols:
         # self.simulatedMapCompiledLoss = self.apply_gaussian_smoothing(self.simulatedMapCompiledLoss, kernel_size=3, sigma=0.5)
         # smoothen the map
 
-    def getSimulatedCompiledLoss(self, currentParam, currentUserState, newUserTemp=None, therapyMethod=None):
-        # Unpack the current user state.
-        currentUserTemp = currentParam
-        print('entering loss calculation in the getNextStates')
-        currentUserLoss = self.dataInterface.calculateCompiledLoss(currentUserState) # torch.Size([1, 1, 1, 1])
+    def getSimulatedCompiledLoss(self, currentParam, currentUserState, newParamValues=None, therapyMethod=None):
+        if self.therapySelection == 'Heat':
+            # Unpack the current user state.
+            currentUserTemp = currentParam
+            print('entering loss calculation in the getNextStates')
+            currentUserLoss = self.dataInterface.calculateCompiledLoss(currentUserState) # torch.Size([1, 1, 1, 1])
 
-        newUserTemp = currentUserTemp if newUserTemp is None else newUserTemp
+            newUserTemp = currentUserTemp if newParamValues is None else newParamValues
 
-        # if it is aStarProtocol, resample
-        if therapyMethod == 'aStarTherapyProtocol' or 'basicTherapyProtocol' or 'hmmTherapyProtocol':
-            resampledParameterBins, resampledPredictionBins = self.generalMethods.resampleBins(self.allParameterBins, self.allPredictionBins, eventlySpacedBins=False)
-            # Calculate the bin indices for the current and new user states.
+            # if it is aStarProtocol, resample
+            if therapyMethod == 'aStarTherapyProtocol' or 'basicTherapyProtocol' or 'hmmTherapyProtocol':
+                resampledParameterBins, resampledPredictionBins = self.generalMethods.resampleBins(self.allParameterBins, self.allPredictionBins, eventlySpacedBins=False)
+                # Calculate the bin indices for the current and new user states.
 
-            # doesn't matter to index resampledPrediciton bins or not, it's the same anyway if we are resampling
-            currentLossIndex = self.dataInterface.getBinIndex(resampledPredictionBins[0], currentUserLoss)
-            currentTempBinIndex = self.dataInterface.getBinIndex(resampledParameterBins[0], currentUserTemp)
-            newTempBinIndex = self.dataInterface.getBinIndex(resampledParameterBins[0], newUserTemp)
-            newUserLoss, PA, NA, SA = self.sampleNewLoss(currentUserLoss, currentLossIndex, currentTempBinIndex, newTempBinIndex, currentUserState, therapyMethod, bufferZone=0.01)
-            newUserLoss = torch.tensor(newUserLoss).view(1, 1, 1, 1)
-            PA = torch.tensor(PA).view(1, 1, 1, 1)
-            NA = torch.tensor(NA).view(1, 1, 1, 1)
-            SA = torch.tensor(SA).view(1, 1, 1, 1)
-            return newUserLoss, PA, NA, SA
+                # doesn't matter to index resampledPrediciton bins or not, it's the same anyway if we are resampling
+                currentLossIndex = self.dataInterface.getBinIndex(resampledPredictionBins[0], currentUserLoss)
+                currentTempBinIndex = self.dataInterface.getBinIndex(resampledParameterBins[0], currentUserTemp)
+                newTempBinIndex = self.dataInterface.getBinIndex(resampledParameterBins[0], newUserTemp)
+                newUserLoss, PA, NA, SA = self.sampleNewLoss(currentUserLoss, currentLossIndex, currentTempBinIndex, newTempBinIndex, currentUserState, therapyMethod, bufferZone=0.01)
+                newUserLoss = torch.tensor(newUserLoss).view(1, 1, 1, 1)
+                PA = torch.tensor(PA).view(1, 1, 1, 1)
+                NA = torch.tensor(NA).view(1, 1, 1, 1)
+                SA = torch.tensor(SA).view(1, 1, 1, 1)
+                return newUserLoss, PA, NA, SA
+        elif self.therapySelection == 'BinauralBeats':
+            currentUserParam_1 = currentParam[:, 0]
+            currentUserParam_2 = currentParam[:, 1]
+            currentUserLoss = self.dataInterface.calculateCompiledLoss(currentUserState)  # torch.Size([1, 1, 1, 1])
+            newParamValues = currentParam if newParamValues is None else newParamValues
+            if therapyMethod == 'aStarTherapyProtocol' or 'basicTherapyProtocol' or 'hmmTherapyProtocol':
+                resampledParameterBins_single, resampledPredictionBins = self.generalMethods.resampleBins(self.allParameterBins[0], self.allPredictionBins, eventlySpacedBins=False)
+                resampledParameterBins = [resampledParameterBins_single, resampledParameterBins_single]
+                currentLossIndex = self.dataInterface.getBinIndex(resampledPredictionBins[0], currentUserLoss)
+                currentParamBinIndex_1 = self.dataInterface.getBinIndex(resampledParameterBins[0], currentUserParam_1)
+                currentParamBinIndex_2 = self.dataInterface.getBinIndex(resampledParameterBins[0], currentUserParam_2)
+                newParamBinIndex_1 = self.dataInterface.getBinIndex(resampledParameterBins[0], newParamValues[:, 0])
+                newParamBinIndex_2 = self.dataInterface.getBinIndex(resampledParameterBins[0], newParamValues[:, 1])
+
+                currentParamBinIndex = [currentParamBinIndex_1, currentParamBinIndex_2]
+                newParamBinIndex = [newParamBinIndex_1, newParamBinIndex_2]
+
+                newUserLoss, PA, NA, SA = self.sampleNewLoss3D(currentUserLoss, currentLossIndex, currentParamBinIndex, newParamBinIndex, currentUserState, therapyMethod, bufferZone=0.01)
+                newUserLoss = torch.tensor(newUserLoss).view(1, 1, 1, 1)
+                PA = torch.tensor(PA).view(1, 1, 1, 1)
+                NA = torch.tensor(NA).view(1, 1, 1, 1)
+                SA = torch.tensor(SA).view(1, 1, 1, 1)
+                return newUserLoss, PA, NA, SA
         else:
             # for other conditions or protocols
             # Calculate the bin indices for the current and new user states.
@@ -221,6 +269,64 @@ class simulationProtocols:
                 newUserLossNA = currentUserState[0][1][0][0] + torch.normal(mean=0.0, std=0.01, size=currentUserState[0][1][0][0].size())
                 newUserLossSA = currentUserState[0][2][0][0] + torch.normal(mean=0.0, std=0.01, size=currentUserState[0][2][0][0].size())
                 return newUserLoss, newUserLossPA, newUserLossNA, newUserLossSA
+
+    def sampleNewLoss3D(self, currentUserLoss, currentLossIndex, currentParamBinIndex, newParamIndex, currentUserState, therapyMethod=None, bufferZone=0.01, gausSTD=0.05):
+
+        simulatedMapPA = torch.tensor(self.simulatedMapPA, dtype=torch.float32)
+        simulatedMapNA = torch.tensor(self.simulatedMapNA, dtype=torch.float32)
+        simulatedMapSA = torch.tensor(self.simulatedMapSA, dtype=torch.float32)
+        simulatedMapCompiledLoss = torch.tensor(self.simulatedMapCompiledLoss, dtype=torch.float32)
+
+        if therapyMethod in ['aStarTherapyProtocol', 'basicTherapyProtocol', 'hmmTherapyProtocol']:
+            resampledParameterBins_single, resampledPredictionBins = self.generalMethods.resampleBins(self.allParameterBins[0], self.allPredictionBins, eventlySpacedBins=False)
+            resampledParameterBins = [resampledParameterBins_single, resampledParameterBins_single]
+            if newParamIndex != currentParamBinIndex or torch.rand(1).item() < 0.1:
+                # Extract the slice of the compiled loss map for the new parameter index
+                newLossProbabilities = simulatedMapCompiledLoss[newParamIndex[0], newParamIndex[1]]
+                newLossProbabilities = newLossProbabilities / torch.sum(newLossProbabilities)
+
+                # Apply Gaussian boost
+                gaussian_boost = self.generalMethods.createGaussianArray(
+                    inputData=newLossProbabilities.numpy(),
+                    gausMean=currentLossIndex,
+                    gausSTD=gausSTD,
+                    torchFlag=True
+                )
+                newLossProbabilities = newLossProbabilities + gaussian_boost
+                newLossProbabilities = newLossProbabilities / torch.sum(newLossProbabilities)
+
+                # Sample a new loss
+                newLossBinIndex = torch.multinomial(newLossProbabilities, 1).item()
+                newUserLoss = resampledPredictionBins[0][newLossBinIndex]
+
+                # Repeat the sampling process for PA, NA, SA
+                specificUserLosses = {}
+                for key, simMap in zip(['PA', 'NA', 'SA'], [simulatedMapPA, simulatedMapNA, simulatedMapSA]):
+                    specificLossProbabilities = simMap[newParamIndex[0], newParamIndex[1]]
+                    specificLossProbabilities = specificLossProbabilities / torch.sum(specificLossProbabilities)
+
+                    # Apply Gaussian boost
+                    gaussian_boost = self.generalMethods.createGaussianArray(
+                        inputData=specificLossProbabilities.numpy(),
+                        gausMean=currentLossIndex,
+                        gausSTD=gausSTD,
+                        torchFlag=True
+                    )
+                    specificLossProbabilities = specificLossProbabilities + gaussian_boost
+                    specificLossProbabilities = specificLossProbabilities / torch.sum(specificLossProbabilities)
+
+                    specificBinIndex = torch.multinomial(specificLossProbabilities, 1).item()
+                    specificUserLosses[key] = resampledPredictionBins[0][specificBinIndex]
+
+                return newUserLoss, specificUserLosses['PA'], specificUserLosses['NA'], specificUserLosses['SA']
+            else:
+                # Add small noise if no resampling
+                return (
+                    currentUserLoss + torch.normal(mean=0.0, std=0.01, size=currentUserLoss.size()),
+                    currentUserState[0][0][0][0] + torch.normal(mean=0.0, std=0.01, size=currentUserState[0][0][0][0].size()),
+                    currentUserState[0][1][0][0] + torch.normal(mean=0.0, std=0.01, size=currentUserState[0][1][0][0].size()),
+                    currentUserState[0][2][0][0] + torch.normal(mean=0.0, std=0.01, size=currentUserState[0][2][0][0].size())
+                )
 
     # ------------------------ Sampling Methods ------------------------ #
 

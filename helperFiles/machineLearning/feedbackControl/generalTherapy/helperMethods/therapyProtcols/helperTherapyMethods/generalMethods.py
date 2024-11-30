@@ -20,20 +20,21 @@ class generalMethods:
         # get the max index of the bins with maxlengthParamBins
         maxParamIndex = max([i for i, paramBins in enumerate(allParameterBins) if len(paramBins) == maxLengthParamBins])
         maxLengthPredBins = max([len(predBins) for predBins in allPredictionBins])
+
         # get the max index of the bins with maxlengthPredBins
         maxPredIndex = max([i for i, predBins in enumerate(allPredictionBins) if len(predBins) == maxLengthPredBins])
         # assert that all the bins are normalized between 0 and 1
         # assert min(predBins[0] for predBins in allPredictionBins) == 0.0 and max(predBins[-1] for predBins in allPredictionBins) == 1.0, "Prediction bins must be normalized between 0 and 1"
-        if len(allParameterBins) == 1:
-            if eventlySpacedBins:
-                # Resample the bins to be evenly spaced.
-                allParameterBins = [np.linspace(0, 1, maxLengthParamBins) for _ in allParameterBins]
-                allPredictionBins = [np.linspace(0, 1, maxLengthPredBins) for _ in allPredictionBins]
-            else:
-                # just duplicate the bins with largest binlength within allParameterBins and allPredictionBins
-                allParameterBins = [allParameterBins[maxParamIndex] for _ in allParameterBins]
-                allPredictionBins = [allPredictionBins[maxPredIndex] for _ in allPredictionBins]
 
+        if eventlySpacedBins:
+            # Resample the bins to be evenly spaced.
+            allParameterBins = [np.linspace(0, 1, maxLengthParamBins) for _ in allParameterBins]
+            allPredictionBins = [np.linspace(0, 1, maxLengthPredBins) for _ in allPredictionBins]
+
+        else:
+            # just duplicate the bins with largest binlength within allParameterBins and allPredictionBins
+            allParameterBins = [allParameterBins[maxParamIndex] for _ in allParameterBins]
+            allPredictionBins = [allPredictionBins[maxPredIndex] for _ in allPredictionBins]
         return allParameterBins, allPredictionBins
 
 
@@ -56,12 +57,43 @@ class generalMethods:
     def createGaussianMap(allParameterBins, predictionBins, gausMean, gausSTD):
         # convert input to tensors
         allParameterBins = torch.tensor(allParameterBins).squeeze()
+
         predictionBins = torch.tensor(predictionBins).squeeze()
         # Generate a grid for Gaussian distribution calculations
         x, y = torch.meshgrid(allParameterBins, predictionBins, indexing='ij')
 
         # Calculate Gaussian distribution values across the grid
         gaussMatrix = torch.exp(-0.5 * ((x - gausMean[0]) ** 2 / gausSTD[0] ** 2 + (y - gausMean[1]) ** 2 / gausSTD[1] ** 2))
+        gaussMatrix = gaussMatrix / gaussMatrix.sum()  # Normalize the Gaussian matrix
+
+        return gaussMatrix
+
+    @staticmethod
+    def create3DGaussianMap(allParameterBins, predictionBins, gausMean, gausSTD):
+
+        if isinstance(allParameterBins, torch.Tensor) and allParameterBins.ndimension() == 2:
+            paramBins_1, paramBins_2 = allParameterBins[0].squeeze(), allParameterBins[1].squeeze()
+        elif isinstance(allParameterBins, list) and len(allParameterBins) == 2:
+            paramBins_1, paramBins_2 = allParameterBins
+            paramBins_1 = torch.tensor(paramBins_1).squeeze()
+            paramBins_2 = torch.tensor(paramBins_2).squeeze()
+        else:
+            raise ValueError("allParameterBins must be a 2D tensor or a list of 1D bins.")
+
+        if not isinstance(predictionBins, torch.Tensor):
+            predictionBins = torch.tensor(predictionBins).squeeze()
+
+        # Generate the 3D meshgrid for Gaussian calculations
+        x, y, z = torch.meshgrid(paramBins_1, paramBins_2, predictionBins, indexing='ij')
+
+        # Calculate the 3D Gaussian matrix
+        gaussMatrix = torch.exp(
+            -0.5 * (
+                    ((x - gausMean[0]) ** 2 / gausSTD[0] ** 2) +
+                    ((y - gausMean[1]) ** 2 / gausSTD[1] ** 2) +
+                    ((z - gausMean[2]) ** 2 / gausSTD[2] ** 2)
+            )
+        )
         gaussMatrix = gaussMatrix / gaussMatrix.sum()  # Normalize the Gaussian matrix
 
         return gaussMatrix
@@ -79,18 +111,17 @@ class generalMethods:
         for initialDataPoints in initialSingleEmotionData:
             currentUserTemp = initialDataPoints[0] # within loop: torch.Size([1, 1])
             currentUserLoss = initialDataPoints[1] # within loop: torch.Size([1, 1])
-
             if applyGaussianFilter:
                 # Generate a delta function probability.
                 tempBinIndex = self.dataInterface.getBinIndex(allParameterBins, currentUserTemp)
                 lossBinIndex = self.dataInterface.getBinIndex(singlePredictionBins, currentUserLoss)
+
                 probabilityMatrix[tempBinIndex][lossBinIndex] += 1  # map out bins and fill out with discrete values # parameterbins x lossbins
 
             else:
                 # Generate 2D gaussian matrix.
                 gaussianMatrix = self.createGaussianMap(allParameterBins, singlePredictionBins, gausMean=(currentUserTemp, currentUserLoss), gausSTD=(gausParamSTD, gausLossSTD))
                 probabilityMatrix += gaussianMatrix  # Add the gaussian map to the matrix
-
         # gauss data structure change for input
         if gausLossSTD.dim() == 0:
             gausLossSTD = gausLossSTD.unsqueeze(0)
@@ -109,5 +140,39 @@ class generalMethods:
         probabilityMatrix = probabilityMatrix / probabilityMatrix.sum()
         return probabilityMatrix
 
+    def get3DProbabilityMatrix(self, initialSingleEmotionData, allParameterBins, singlePredictionBins, gausParamSTD, gausLossSTD, noise=0.0, applyGaussianFilter=True):
+        # Extract parameter bins for each dimension
+        paramBins_1 = allParameterBins[0]
+        paramBins_2 = allParameterBins[1]
 
+        # Initialize a 3D probability matrix
+        probabilityMatrix = torch.zeros((len(paramBins_1[0]), len(paramBins_2[0]), len(singlePredictionBins)))
+        # Loop through the initial data points
+        for initialDataPoints in initialSingleEmotionData:
+            currentParam1 = initialDataPoints[0]  # First parameter
+            currentParam2 = initialDataPoints[1]  # Second parameter
+            currentPrediction = initialDataPoints[2]  # Prediction value
 
+            if applyGaussianFilter:
+                # Get bin indices for the current parameters and prediction
+                param1BinIndex = self.dataInterface.getBinIndex(paramBins_1, currentParam1)
+                param2BinIndex = self.dataInterface.getBinIndex(paramBins_2, currentParam2)
+                predictionBinIndex = self.dataInterface.getBinIndex(singlePredictionBins, currentPrediction)
+                # Increment the corresponding bin in the probability matrix
+                probabilityMatrix[param1BinIndex][param2BinIndex][predictionBinIndex] += 1
+
+            else:
+                # Generate a 3D Gaussian distribution centered at the current data point
+                gaussianMatrix = self.create3DGaussianMap(
+                    allParameterBins,  # 2D bins for parameters
+                    singlePredictionBins,  # Prediction bins
+                    gausMean=(currentParam1, currentParam2, currentPrediction),
+                    gausSTD=(gausParamSTD[0], gausParamSTD[1], gausLossSTD)
+                )
+                probabilityMatrix += gaussianMatrix
+
+        # Add noise and normalize the probability matrix
+        probabilityMatrix += noise * torch.randn_like(probabilityMatrix)
+        probabilityMatrix = torch.clamp(probabilityMatrix, min=0.0, max=None)  # Ensure non-negative values
+        probabilityMatrix = probabilityMatrix / probabilityMatrix.sum()  # Normalize
+        return probabilityMatrix

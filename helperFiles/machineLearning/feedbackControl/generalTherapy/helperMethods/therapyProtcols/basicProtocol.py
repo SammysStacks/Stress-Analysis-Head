@@ -7,8 +7,8 @@ from .generalTherapyProtocol import generalTherapyProtocol
 
 
 class basicTherapyProtocol(generalTherapyProtocol):
-    def __init__(self, initialParameterBounds, unNormalizedParameterBinWidths, simulationParameters, therapyMethod):
-        super().__init__(initialParameterBounds, unNormalizedParameterBinWidths, simulationParameters, therapyMethod)
+    def __init__(self, initialParameterBounds, unNormalizedParameterBinWidths, simulationParameters, therapySelection, therapyMethod):
+        super().__init__(initialParameterBounds, unNormalizedParameterBinWidths, simulationParameters, therapySelection, therapyMethod)
         # Specific basic protocol parameters
         self.discretePersonalizedMap = [] # store the probability matrix
         self.gausParam_STD = self.gausParameterSTDs  # self.gausParameterSTDs  # The standard deviation for the Gaussian distribution.

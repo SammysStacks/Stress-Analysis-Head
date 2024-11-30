@@ -39,6 +39,8 @@ class heatTherapyControl(therapyHelpers):
 
                 # Preparation for plotting
                 combinedStates = [[param_state, user_compiled_mental] for param_state, user_compiled_mental in zip(self.therapyProtocol.unNormalizedParameter, self.therapyProtocol.userMentalStateCompiledLoss)]
+                print('combinedStates', combinedStates)
+
                 if self.plotResults:
                     self.therapyProtocol.plottingProtocolsMain.plotTherapyResults(combinedStates, allMaps)
                     print(f"Alpha after iteration: {self.therapyProtocol.percentHeuristic}\n")
@@ -76,7 +78,7 @@ if __name__ == "__main__":
         'simulatedMapType': 'uniformSampling',  # The method for generating the simulated map. Options: 'uniformSampling', 'linearSampling', 'parabolicSampling'
         'numSimulationHeuristicSamples': 50,  # The number of simulation samples to generate.
         'numSimulationTrueSamples': 30,  # The number of simulation samples to generate.
-        'simulateTherapy': False,  # Whether to simulate the therapy.
+        'simulateTherapy': True,  # Whether to simulate the therapy.
     }
 
     # Initialize the therapy protocol

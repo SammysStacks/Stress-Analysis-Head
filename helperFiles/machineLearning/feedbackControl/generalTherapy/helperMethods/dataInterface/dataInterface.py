@@ -84,6 +84,7 @@ class dataInterface:
 
     @staticmethod
     def initializeAllBins(allBounds, binWidths):
+
         # Base case: if binWidths is a 1D tensor.
         if allBounds.ndim == 1:
             allBounds = allBounds.unsqueeze(0).expand(len(binWidths), len(allBounds))

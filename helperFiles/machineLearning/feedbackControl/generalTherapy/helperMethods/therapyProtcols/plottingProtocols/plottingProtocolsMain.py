@@ -4,6 +4,8 @@ import seaborn as sns
 import numpy as np
 import torch
 import time
+from mpl_toolkits.mplot3d import Axes3D
+
 
 class plottingProtocolsMain:
     def __init__(self, initialParameterBounds, modelParameterBounds, allNumParameterBins, parameterBinWidths, predictionBounds, allNumPredictionBins, predictionBinWidths):
@@ -70,6 +72,63 @@ class plottingProtocolsMain:
         plt.show()
 
         print(f"New current state after iteration {num_steps + 1}: parameter = {userStatePath[-1][0].item()}, Loss = {userStatePath[-1][1].item()}")
+
+    def plotTherapyResults3D(self, userStatePath, final_map_pack):
+        # Unpack the user states and maps.
+        benefitFunction, heuristic_map, personalized_map, simulated_map = final_map_pack
+        num_steps = len(userStatePath)
+        titles = ['Projected Benefit Map', 'Heuristic Map', 'Personalized Map', 'Simulated Map']
+        maps = [benefitFunction, heuristic_map, personalized_map, simulated_map]
+
+        # Create figure for 3D plots.
+        fig = plt.figure(figsize=(16, 12))
+
+        # Define a loss slice to visualize. Here, we take the middle slice along the loss axis.
+        loss_slice_idx = maps[0].shape[-1] // 2
+
+        # Convert userStatePath to a NumPy array for easier handling.
+        userStatePath_np = np.array([[state[0].item(), state[1].item(), state[2].item()] for state in userStatePath])
+
+        for i, (map_to_plot, title) in enumerate(zip(maps, titles)):
+            ax = fig.add_subplot(2, 2, i + 1, projection='3d')
+
+            # Extract the middle slice along the loss axis for 3D visualization.
+            data_slice = map_to_plot[:, :, loss_slice_idx].numpy()
+
+            # Create the X, Y grid for parameters.
+            x = np.linspace(self.initialParameterBounds[0][0].item(), self.initialParameterBounds[0][1].item(), map_to_plot.shape[0])
+            y = np.linspace(self.initialParameterBounds[1][0].item(), self.initialParameterBounds[1][1].item(), map_to_plot.shape[1])
+            X, Y = np.meshgrid(x, y)
+
+            # Plot the surface.
+            surf = ax.plot_surface(X, Y, data_slice.T, cmap='viridis', alpha=0.8, edgecolor='none')
+
+            # Plot the user path on the surface.
+            for j in range(num_steps - 1):
+                alpha_value = max(0, 1 - (num_steps - j) * 0.1)  # Gradually decrease alpha for previous lines
+                ax.plot([userStatePath_np[j, 0], userStatePath_np[j + 1, 0]],
+                        [userStatePath_np[j, 1], userStatePath_np[j + 1, 1]],
+                        [userStatePath_np[j, 2], userStatePath_np[j + 1, 2]],
+                        color='red', linewidth=2, alpha=alpha_value)
+
+            # Mark the current state.
+            ax.scatter(userStatePath_np[-1, 0], userStatePath_np[-1, 1], userStatePath_np[-1, 2],
+                       color='black', label='Current State', edgecolor='white', s=100, zorder=10)
+
+            # Set titles and labels.
+            ax.set_title(f'{title} (Slice at Loss Index {loss_slice_idx})')
+            ax.set_xlabel('Parameter 1')
+            ax.set_ylabel('Parameter 2')
+            ax.set_zlabel('Loss')  # Update the z-axis label
+            ax.legend()
+
+        # Adjust layout and add a color bar.
+        fig.tight_layout()
+        plt.colorbar(surf, ax=fig.get_axes(), label='Probability', shrink=0.5, aspect=10)
+        plt.show()
+
+        print(f"New current state after iteration {num_steps + 1}: parameters = {userStatePath_np[-1, 0:2]}, Loss = {userStatePath_np[-1, 2]}")
+
     # ------------------------ Basic Protocol plotting ------------------------ #
 
     def plotTherapyResults_basic(self, userStatePath, simulated_map):

@@ -6,8 +6,8 @@ from .generalTherapyProtocol import generalTherapyProtocol
 
 
 class hmmTherapyProtocol(generalTherapyProtocol):
-    def __init__(self, initialParameterBounds, unNormalizedParameterBinWidths, simulationParameters, therapyMethod):
-        super().__init__(initialParameterBounds, unNormalizedParameterBinWidths, simulationParameters, therapyMethod)
+    def __init__(self, initialParameterBounds, unNormalizedParameterBinWidths, simulationParameters, therapySelection, therapyMethod):
+        super().__init__(initialParameterBounds, unNormalizedParameterBinWidths, simulationParameters, therapySelection, therapyMethod)
         # Resampled bins for the parameter and prediction bins
         self.allParameterBins_resampled, self.allPredictionBins_resampled = self.generalMethods.resampleBins(self.allParameterBins, self.allPredictionBins, eventlySpacedBins=False)
         self.numStates = len(self.allParameterBins_resampled[0])  # 11 in this case; len(self.allParameterBins_resampled[0]) * len(self.allPredictionBins_resampled[0])
