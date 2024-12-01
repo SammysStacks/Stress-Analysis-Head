@@ -1,7 +1,7 @@
 #!/bin/bash
 
-waveletTypes_arr=('bior3.1')  # 'bior3.3' 'bior3.5'
-numSpecificEncoderLayers_arr=(1 2)
+waveletTypes_arr=('bior3.3')  # 'bior3.3' 'bior3.5'
+numSpecificEncoderLayers_arr=(2)
 signalEncoderLayers_arr=(8)
 lrs_general=('1' '0.1' '0.01' '0.001' '0.0001')
 lrs_physio=('10' '1' '0.1' '0.01' '0.001')
