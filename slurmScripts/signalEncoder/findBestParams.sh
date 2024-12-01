@@ -2,7 +2,7 @@
 
 waveletTypes_arr=('bior3.1' 'bior3.3')  # 'bior3.5'
 numSpecificEncoderLayers_arr=(1 2)
-signalEncoderLayers_arr=(6)
+signalEncoderLayers_arr=(3 4 5)
 lrs_general=('0.001' '0.0001' '0.00001')
 lrs_physio=('1' '0.1' '0.01' '0.001' '0.0001' '0.00001')
 encodedDimensions_arr=(128 256)
