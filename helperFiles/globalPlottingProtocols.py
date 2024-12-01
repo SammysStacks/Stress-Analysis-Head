@@ -12,6 +12,7 @@ class globalPlottingProtocols:
         # Setup matplotlib
         self.baseSavingDataFolder = None
         self.saveDataFolder = None
+        self.baseFolderName = "_basePlots/"
         plt.rcdefaults()
         plt.ion()
 
@@ -21,9 +22,9 @@ class globalPlottingProtocols:
         self.blackColor = "#231F20"
 
     def setSavingFolder(self, baseSavingDataFolder, stringID):
+        self.baseSavingDataFolder = baseSavingDataFolder + self.baseFolderName
         self.saveDataFolder = baseSavingDataFolder + stringID
-        self.baseSavingDataFolder = baseSavingDataFolder
-        self._createFolder(baseSavingDataFolder)
+        self._createFolder(self.baseSavingDataFolder)
         self._createFolder(self.saveDataFolder)
 
     @staticmethod
