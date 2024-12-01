@@ -12,7 +12,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     def __init__(self, baseSavingFolder, stringID):
         super(signalEncoderVisualizations, self).__init__()
-        self.setSavingFolder(baseSavingFolder, stringID)
+        self.setSavingFolder(baseSavingFolder, stringID, datasetName)
 
     # --------------------- Visualize Model Parameters --------------------- #
 

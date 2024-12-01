@@ -13,13 +13,13 @@ from ..modelConstants import modelConstants
 
 class modelVisualizations(globalPlottingProtocols):
 
-    def __init__(self, accelerator, baseSavingFolder, stringID):
+    def __init__(self, accelerator, baseSavingFolder, stringID, datasetName):
         super(modelVisualizations, self).__init__()
         self.accelerator = accelerator
 
         # Initialize helper classes.
-        self.signalEncoderViz = signalEncoderVisualizations(baseSavingFolder="", stringID="")
-        self.generalViz = generalVisualizations(baseSavingFolder="", stringID="")
+        self.signalEncoderViz = signalEncoderVisualizations(baseSavingFolder="", stringID="", datasetName=datasetName)
+        self.generalViz = generalVisualizations(baseSavingFolder="", stringID="", datasetName=datasetName)
 
         # Organize the visualization components.
         self.setSavingFolder(baseSavingFolder, stringID)
