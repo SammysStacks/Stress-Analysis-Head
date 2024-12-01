@@ -24,6 +24,7 @@ _projectFiles/_supplementaryWork/Machine Learning Predictions/finalFigures/*
 
 # Machine learning control files and folders
 helperFiles/machineLearning/modelControl/Models/pyTorch/modelArchitectures/emotionModelInterface/dataAnalysis/trainingFigures/
+helperFiles/machineLearning/modelControl/Models/pyTorch/emotionModelInterface/dataAnalysis/trainingFigures/
 helperFiles/machineLearning/modelControl/_finalModels/storedModels/
 helperFiles/machineLearning/modelControl/_finalModels/emotionModel/
 
