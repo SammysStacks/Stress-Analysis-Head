@@ -53,7 +53,6 @@ class globalPlottingProtocols:
 
         # Save the figure to the desired location.
         plt.savefig(self.saveDataFolder + saveFigureLocation + saveFigureName)
-        self.clearFigure()
 
         # Save the figure to the base folder if desired.
         if baseSaveFigureName is not None: plt.savefig(self.baseSavingDataFolder + f"{self.datasetName} {baseSaveFigureName}")
