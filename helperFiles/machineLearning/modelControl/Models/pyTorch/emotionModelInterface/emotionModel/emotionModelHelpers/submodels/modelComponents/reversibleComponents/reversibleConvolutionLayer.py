@@ -1,5 +1,3 @@
-import math
-
 import torch
 import torch.fft
 import torch.nn as nn
@@ -42,7 +40,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         for layerInd in range(self.numLayers):
             # Create the neural weights.
             parameters = nn.Parameter(torch.randn(numSignals, self.kernelSize//2 or 1, dtype=torch.float64))
-            parameters = nn.init.kaiming_uniform_(parameters)
+            parameters = nn.init.kaiming_normal_(parameters)
             self.linearOperators.append(parameters)
 
     def forward(self, inputData):
@@ -51,7 +49,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
             # Apply the weights to the input data.
             if self.activationMethod == 'none': inputData = self.applyLayer(inputData, layerInd)
-            else: inputData = self.activationFunction(inputData, lambda x: self.applyLayer(x, layerInd), forwardFirst=layerInd % 2 == 1)
+            else: inputData = self.activationFunction(inputData, lambda x: self.applyLayer(x, layerInd), forwardFirst=False)
 
         return inputData
 
@@ -89,27 +87,31 @@ class reversibleConvolutionLayer(reversibleInterface):
 if __name__ == "__main__":
     # for i in [2, 4, 8, 16, 32, 64, 128, 256]:
     # for i in [16, 32, 64, 128, 256]:
+    reconstructionFlag = False
+
     try:
-        for sequenceLength2 in [256]:
-            # General parameters.
-            _batchSize, _numSignals, _sequenceLength = 512, 128, sequenceLength2
-            _kernelSize = 2*_sequenceLength - 1
-            _numLayers = 1
+        for layers, sequenceLength2 in [(2, 128)]:
+            for _layerInd in range(1, layers + 1):
+                # General parameters.
+                _batchSize, _numSignals, _sequenceLength = 512, 512, sequenceLength2
+                _kernelSize = 2*_sequenceLength - 1
+                _numLayers = _layerInd
 
-            # Set up the parameters.
-            neuralLayerClass = reversibleConvolutionLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod='reversibleLinearSoftSign')
-            _inputData = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float64)
-            _inputData = _inputData - _inputData.mean(dim=-1, keepdim=True)
-            _inputData = _inputData / _inputData.norm(dim=-1, keepdim=True)
-            _inputData = _inputData * math.sqrt(_sequenceLength / 2) / 3
+                # Set up the parameters.
+                neuralLayerClass = reversibleConvolutionLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod='reversibleLinearSoftSign')
+                physiologicalProfile = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float64)
+                physiologicalProfile = physiologicalProfile - physiologicalProfile.mean(dim=-1, keepdim=True)
+                physiologicalProfile = physiologicalProfile / physiologicalProfile.std(dim=-1, keepdim=True)
+                physiologicalProfile = physiologicalProfile / 6
 
-            # Perform the convolution in the fourier and spatial domains.
-            _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(_inputData, atol=1e-6, numLayers=1, plotResults=True)
-            neuralLayerClass.printParams()
+                # Perform the convolution in the fourier and spatial domains.
+                if reconstructionFlag: _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(physiologicalProfile, atol=1e-6, numLayers=1, plotResults=False)
+                else: _forwardData = neuralLayerClass.forward(physiologicalProfile)
+                neuralLayerClass.printParams()
 
-            ratio = (_forwardData.norm(dim=-1) / _inputData.norm(dim=-1)).view(-1).detach().numpy()
-            if abs(ratio.mean() - 1) < 0.1: plt.hist(ratio, bins=150, alpha=0.2, label=f'sequenceLength={_sequenceLength}')
-            print(ratio.mean())
+                ratio = (_forwardData.norm(dim=-1) / physiologicalProfile.norm(dim=-1)).view(-1).detach().numpy()
+                if abs(ratio.mean() - 1) < 0.1: plt.hist(ratio, bins=150, alpha=0.2, label=f'len{_sequenceLength}_layers={_layerInd}')
+                print(ratio.mean())
     except Exception as e: pass
     plt.title(f'Fin', fontsize=14)  # Increase title font size for readability
     plt.legend()

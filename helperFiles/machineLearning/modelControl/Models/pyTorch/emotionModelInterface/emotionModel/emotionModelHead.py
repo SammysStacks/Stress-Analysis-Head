@@ -148,15 +148,15 @@ class emotionModelHead(nn.Module):
         # ------------------- Estimated Physiological Profile ------------------- #
 
         # Get the estimated physiological profiles.
-        if inferenceTraining: physiologicalProfile = self.inferenceModel.getCurrentPhysiologicalProfile(batchInds)
-        else: physiologicalProfile = self.specificSignalEncoderModel.profileModel.getCurrentPhysiologicalProfile(batchInds)
+        if inferenceTraining: physiologicalProfileOG = self.inferenceModel.getCurrentPhysiologicalProfile(batchInds)
+        else: physiologicalProfileOG = self.specificSignalEncoderModel.profileModel.getCurrentPhysiologicalProfile(batchInds)
         # physiologicalProfile: batchSize, encodedDimension
 
         # Normalize the physiological profile.
-        physiologicalProfile = self.sharedSignalEncoderModel.smoothPhysiologicalProfile(physiologicalProfile)
+        physiologicalProfile = self.sharedSignalEncoderModel.smoothPhysiologicalProfile(physiologicalProfileOG)
         physiologicalProfile = physiologicalProfile - physiologicalProfile.mean(dim=-1, keepdim=True)
         physiologicalProfile = physiologicalProfile / physiologicalProfile.std(dim=-1, keepdim=True)
-        physiologicalProfile = physiologicalProfile / 4
+        physiologicalProfile = physiologicalProfile / 6
 
         # ------------------- Learned Signal Mapping ------------------- #
 
@@ -172,7 +172,7 @@ class emotionModelHead(nn.Module):
 
         # Visualize the data transformations within signal encoding.
         if submodel == modelConstants.signalEncoderModel and not inferenceTraining and random.random() < 0.01:
-            with torch.no_grad(): self.visualizeSignalEncoding(physiologicalProfile, resampledSignalData, reconstructedSignalData, signalData, validDataMask)
+            with torch.no_grad(): self.visualizeSignalEncoding(physiologicalProfileOG, physiologicalProfile, resampledSignalData, reconstructedSignalData, signalData, validDataMask)
 
         # ------------------- Learned Emotion Mapping ------------------- #
 
@@ -243,7 +243,7 @@ class emotionModelHead(nn.Module):
 
         return validDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile
 
-    def visualizeSignalEncoding(self, physiologicalProfile, resampledSignalData, reconstructedSignalData, signalData, validDataMask):
+    def visualizeSignalEncoding(self, physiologicalProfileOG, physiologicalProfile, resampledSignalData, reconstructedSignalData, signalData, validDataMask):
         # Find the first valid signal.
         validSignalMask = torch.any(validDataMask, dim=-1)
         firstBatchInd, firstSignalInd = validSignalMask.nonzero(as_tuple=False)[0, :]
@@ -251,7 +251,8 @@ class emotionModelHead(nn.Module):
 
         # Optionally, plot the physiological profile for visual comparison
         physiologicalTimes = self.sharedSignalEncoderModel.pseudoEncodedTimes.detach().cpu().numpy()
-        plt.plot(physiologicalTimes, physiologicalProfile[firstBatchInd].detach().cpu().numpy(), 'k', linewidth=1, label='Physiological Profile', alpha=0.75)
+        plt.plot(physiologicalTimes, physiologicalProfile[firstBatchInd].detach().cpu().numpy(), 'tab:red', linewidth=1, label='Physiological Profile', alpha=2/3)
+        plt.plot(physiologicalTimes, physiologicalProfileOG[firstBatchInd].detach().cpu().numpy(), 'k', linewidth=1, label='Original Profile', alpha=0.75)
         plt.title(f"batchInd{firstBatchInd}")
         plt.show()
 

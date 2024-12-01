@@ -27,7 +27,6 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         assert len(deltaTimes) == 1, f"The time gaps are not similar: {deltaTimes}"
 
         # The neural layers for the signal encoder.
-        self.finalModelLayer = self.finalPostProcessingLayerRCNN(numSignals=1, sequenceLength=self.encodedDimension)
         self.processingLayers, self.neuralLayers = nn.ModuleList(), nn.ModuleList()
         self.physiologicalSmoothingModel = self.physiologicalSmoothing()
         for _ in range(self.numSharedEncoderLayers): self.addLayer()
@@ -64,19 +63,6 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
             # Apply the neural operator layer with activation.
             signalData = self.processingLayers[pseudoLayerInd](signalData)
             signalData = self.neuralLayers[pseudoLayerInd](signalData)
-
-        # Reshape the signal data.
-        signalData = signalData.view(batchSize, numSignals, signalLength)
-
-        return signalData.contiguous()
-
-    def finalProcessingLayer(self, signalData):
-        # Extract the signal data parameters.
-        batchSize, numSignals, signalLength = signalData.shape
-        signalData = signalData.view(batchSize*numSignals, 1, signalLength)
-
-        # Apply the final processing layer.
-        signalData = self.finalModelLayer(signalData)
 
         # Reshape the signal data.
         signalData = signalData.view(batchSize, numSignals, signalLength)
