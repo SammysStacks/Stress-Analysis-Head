@@ -46,6 +46,8 @@ class globalPlottingProtocols:
 
     def displayFigure(self, saveFigureLocation, saveFigureName, baseSaveFigureName=None):
         if baseSaveFigureName is not None: plt.savefig(self.baseSavingDataFolder + baseSaveFigureName)
+
+        self._createFolder(self.saveDataFolder + saveFigureLocation)
         plt.savefig(self.saveDataFolder + saveFigureLocation + saveFigureName)
         self.clearFigure()
 
