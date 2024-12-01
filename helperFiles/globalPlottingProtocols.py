@@ -9,7 +9,7 @@ class globalPlottingProtocols:
         # Setup matplotlib
         self.baseFolderName = "_basePlots/"
         plt.rcdefaults()
-        plt.ioff()
+        plt.ion()
 
         # Specify the color order.
         self.lightColors = ["#F17FB1", "#5DCBF2", "#B497C9", "#90D6AD", "#FFC162", "#231F20"]  # Red, Blue, Purple, Green, Orange, grey
