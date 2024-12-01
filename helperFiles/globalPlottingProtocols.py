@@ -10,8 +10,6 @@ class globalPlottingProtocols:
 
     def __init__(self):
         # Setup matplotlib
-        self.baseSavingDataFolder = None
-        self.saveDataFolder = None
         self.baseFolderName = "_basePlots/"
         plt.rcdefaults()
         plt.ion()
@@ -21,9 +19,15 @@ class globalPlottingProtocols:
         self.darkColors = ["#F3757A", "#489AD4", "#7E71B4", "#50BC84", "#F9A770", "#4A4546"]  # Red, Blue, Purple, Green, Orange, grey
         self.blackColor = "#231F20"
 
-    def setSavingFolder(self, baseSavingDataFolder, stringID):
+        # Set the saving folder
+        self.baseSavingDataFolder = None
+        self.saveDataFolder = None
+        self.datasetName = None
+
+    def setSavingFolder(self, baseSavingDataFolder, stringID, datasetName):
         self.baseSavingDataFolder = baseSavingDataFolder + self.baseFolderName
         self.saveDataFolder = baseSavingDataFolder + stringID
+        self.datasetName = datasetName
 
         if baseSavingDataFolder:
             self._createFolder(self.baseSavingDataFolder)
@@ -42,17 +46,13 @@ class globalPlottingProtocols:
         if fig: fig.clear(); plt.close(fig)
 
         # Clear all figures and plots
+        plt.rcdefaults()  # Reset Matplotlib settings to the defaults.
         plt.close('all')  # Close all open figures
-        plt.cla()  # Clear the current axes
-        plt.clf()  # Clear the current figure
-        plt.rcdefaults()  # Reset Matplotlib settings to default
 
     def displayFigure(self, saveFigureLocation, saveFigureName, baseSaveFigureName=None):
-        if baseSaveFigureName is not None: plt.savefig(self.baseSavingDataFolder + baseSaveFigureName)
-
         self._createFolder(self.saveDataFolder + saveFigureLocation)
         plt.savefig(self.saveDataFolder + saveFigureLocation + saveFigureName)
-        self.clearFigure()
+        if baseSaveFigureName is not None: plt.savefig(self.baseSavingDataFolder + f"{self.datasetName} {baseSaveFigureName}")
 
     def heatmap(self, data, saveDataPath=None, title=None, xlabel=None, ylabel=None):
         # Plot the heatmap
@@ -66,5 +66,5 @@ class globalPlottingProtocols:
         if self.saveDataFolder and saveDataPath:
             fig.savefig(f"{saveDataPath}.pdf", dpi=500, bbox_inches='tight')
             fig.savefig(f"{saveDataPath}.png", dpi=500, bbox_inches='tight')
-        self.clearFigure(fig, None)
+        self.clearFigure(fig, legend=None)
         plt.rcdefaults()

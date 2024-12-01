@@ -10,7 +10,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class signalEncoderVisualizations(globalPlottingProtocols):
 
-    def __init__(self, baseSavingFolder, stringID):
+    def __init__(self, baseSavingFolder, stringID, datasetName):
         super(signalEncoderVisualizations, self).__init__()
         self.setSavingFolder(baseSavingFolder, stringID, datasetName)
 
@@ -28,7 +28,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Save the figure.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
-        else: self.clearFigure()
+        else: self.clearFigure(fig=None, legend=None)
+        plt.show()
 
     def plotPhysiologicalReconstruction(self, physiologicalTimes, physiologicalProfile, reconstructedPhysiologicalProfile, epoch=0, saveFigureLocation="", plotTitle="Signal Encoding"):
         # Extract the signal dimensions.
@@ -48,7 +49,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Save the figure.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
-        else: self.clearFigure()
+        else: self.clearFigure(fig=None, legend=None)
+        plt.show()
 
     def plotEncoder(self, initialSignalData, reconstructedSignals, comparisonTimes, comparisonSignal, epoch, saveFigureLocation="", plotTitle="Encoder Prediction", numSignalPlots=1):
         # Assert the integrity of the incoming data
@@ -71,14 +73,17 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             plt.plot(timepoints[batchInd, signalInd, :], datapoints[batchInd, signalInd, :], 'o', color=self.blackColor, markersize=2, alpha=0.5, label="Initial Signal")
             plt.plot(timepoints[batchInd, signalInd, :], reconstructedSignals[batchInd, signalInd, :], 'o', color=self.lightColors[0], markersize=2, alpha=0.5, label="Reconstructed Signal")
             plt.plot(comparisonTimes, comparisonSignal[batchInd, signalInd, :], self.lightColors[1], linewidth=2, alpha=0.8, label="Resampled Signal")
-            plt.xlabel("Points")
-            plt.ylabel("Signal (AU)")
+
+            # Plotting aesthetics.
             plt.title(f"{plotTitle} epoch{epoch} signal{signalInd + 1}")
+            plt.ylabel("Signal (AU)")
             plt.legend(loc="best")
+            plt.xlabel("Points")
 
             # Save the figure.
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
-            else: self.clearFigure()
+            else: self.clearFigure(fig=None, legend=None)
+            plt.show()
 
     def plotSignalComparison(self, originalSignal, comparisonSignal, epoch, saveFigureLocation, plotTitle, numSignalPlots=1):
         """ originalSignal dimension: batchSize, numSignals, numTotalPoints """
@@ -105,7 +110,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
             # Save the plot
             if self.saveDataFolder: self.displayFigure(saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
-            else: self.clearFigure()
+            else: self.clearFigure(fig=None, legend=None)
+            plt.show()
 
             # There are too many signals to plot.
             if signalInd + 1 == numSignalPlots: break
@@ -127,7 +133,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
-        else: self.clearFigure()
+        else: self.clearFigure(fig=None, legend=None)
+        plt.show()
 
     def plotSignalComparisonHeatmap(self, originalSignal, comparisonSignal):
         # Assert the integrity of the incoming data

@@ -52,7 +52,7 @@ if __name__ == "__main__":
 
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=2, help='The number of layers in the model.')
-    parser.add_argument('--numSharedEncoderLayers', type=int, default=8, help='The number of layers in the model.')
+    parser.add_argument('--numSharedEncoderLayers', type=int, default=6, help='The number of layers in the model.')
     parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
  
     # Add arguments for the neural operator.
@@ -70,7 +70,7 @@ if __name__ == "__main__":
     # Temporary parameters.
     parser.add_argument('--maxWaveletDecompositions', type=int, default=0, help='The maximum number of wavelet decompositions.')
     parser.add_argument('--generalLR', type=float, default=1e-2, help='The number of experiments to run.')
-    parser.add_argument('--physioLR', type=float, default=1, help='The number of experiments to run.')
+    parser.add_argument('--physioLR', type=float, default=0.1, help='The number of experiments to run.')
 
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())

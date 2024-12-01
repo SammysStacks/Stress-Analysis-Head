@@ -10,9 +10,9 @@ from helperFiles.globalPlottingProtocols import globalPlottingProtocols
 
 class generalVisualizations(globalPlottingProtocols):
 
-    def __init__(self, baseSavingFolder, stringID):
+    def __init__(self, baseSavingFolder, stringID, datasetName):
         super(generalVisualizations, self).__init__()
-        self.setSavingFolder(baseSavingFolder, stringID)
+        self.setSavingFolder(baseSavingFolder, stringID, datasetName)
         
     # ---------------------------------------------------------------------- #
     # --------------------- Visualize Model Parameters --------------------- #
@@ -101,6 +101,7 @@ class generalVisualizations(globalPlottingProtocols):
 
         # Save the figure is desired.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{emotionName} epochs{epoch}.pdf", baseSaveFigureName=f"{emotionName}.pdf")
+        else: self.clearFigure(fig=None, legend=None)
         plt.show()
 
     def plotTrainingLosses(self, trainingLosses, testingLosses, lossLabels, saveFigureLocation="", plotTitle="Model Convergence Loss", logY=True):
@@ -134,7 +135,8 @@ class generalVisualizations(globalPlottingProtocols):
 
         # Save the figure if desired.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(trainingLosses[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
-        else: plt.show()
+        else: self.clearFigure(fig=None, legend=None)
+        plt.show()
 
     def generalDataPlotting(self, plottingData, plottingLabels, saveFigureLocation, plotTitle="Model Convergence Loss"):
         # Plot the training path.
@@ -149,4 +151,5 @@ class generalVisualizations(globalPlottingProtocols):
 
         # Save the figure if desired.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(plottingData[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
-        else: plt.show(); plt.close('all')
+        else: self.clearFigure(fig=None, legend=None)
+        plt.show()

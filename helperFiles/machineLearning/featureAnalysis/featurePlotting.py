@@ -159,7 +159,7 @@ class featurePlotting(globalPlottingProtocols):
                 legend = ax.legend(legendAxes[0:10], legendLabels[0:10], loc=9, bbox_to_anchor=(1.35, 1.02))
                 # Save and clear the figure
                 fig.savefig(saveDataFolder + plotTitles[plotInd] + "_" + biomarkerName + ".png", dpi=300, bbox_extra_artists=(legend,), bbox_inches='tight')
-                self.clearFigure(fig, legend)
+                self.clearFigure(fig, legend=legend); plt.show()
 
     def plotPredictedScores(self, timepoints, predictedLabels, recordedScores, surveyCollectionTimes, experimentTimes, experimentNames, predictionType="Stress", folderName="realTimePredictions/"):
         if len(predictedLabels) == 0:
@@ -200,7 +200,7 @@ class featurePlotting(globalPlottingProtocols):
         legend = ax.legend(legendAxes[0:10], legendLabels[0:10], loc=9, bbox_to_anchor=(1.35, 1.02))
         # Save and clear the figure
         fig.savefig(saveDataFolder + predictionType + ".png", dpi=300, bbox_extra_artists=(legend,), bbox_inches='tight')
-        self.clearFigure(fig, legend)
+        self.clearFigure(fig, legend=legend); plt.show()
 
     def singleFeatureAnalysis(self, readData, timepoints, featureList, featureNames, preAveragingSeconds=0, averageIntervalList=(0, 30),
                               surveyCollectionTimes=np.asarray([]), experimentTimes=(), experimentNames=(), folderName="singleFeatureAnalysis/"):
@@ -256,7 +256,7 @@ class featurePlotting(globalPlottingProtocols):
             legend = ax.legend(legendAxes[0:10], legendLabels[0:10], loc=9, bbox_to_anchor=(1.35, 1.02))
             # Save and clear the figure
             fig.savefig(saveDataFolder + featureNames[featureInd] + ".png", dpi=300, bbox_extra_artists=(legend,), bbox_inches='tight')
-            self.clearFigure(fig, legend)
+            self.clearFigure(fig, legend=legend); plt.show()
 
     def plotEmotionCorrelation(self, allFinalFeatures, currentSurveyAnswersList, surveyQuestions, featureNames, folderName, subjectOrder=()):
         print("\tPlotting emotion correlation in folder:", folderName)
@@ -311,7 +311,7 @@ class featurePlotting(globalPlottingProtocols):
                 ax.set_title("Feature Correlation with Emotions")
                 # Save and clear the figure
                 fig.savefig(saveDataFolder + featureNames[featureInd] + " Feature-Emotion Correlation.png", dpi=300, bbox_inches='tight')
-                self.clearFigure(fig, None)
+                self.clearFigure(fig, legend=None)
 
     def plotPsychCorrelation(self, allFinalFeatures, currentSurveyAnswersList, featureNames, folderName, subjectOrder=()):
         print("\tPlotting psych correlation in folder:", folderName)
@@ -381,7 +381,7 @@ class featurePlotting(globalPlottingProtocols):
                 ax.set_title("Feature Correlation with " + anxietyType)
                 # Save and clear the figure
                 fig.savefig(saveDataFolder + featureNames[featureInd] + ".png", dpi=300, bbox_inches='tight')
-                self.clearFigure(fig, None)
+                self.clearFigure(fig, legend=None)
 
     def correlationMatrix(self, featureList, featureNames, folderName="correlationMatrix/"):
         print("Plotting the Correlation Matrix Amongst the Features")
@@ -420,7 +420,7 @@ class featurePlotting(globalPlottingProtocols):
         sns.set(rc={'figure.figsize': (25, 15)})
         fig = ax.get_figure()
         fig.savefig(saveDataFolder + "correlationMatrixSorted.png", dpi=300)
-        fig.show()
+        self.clearFigure(fig, legend=None)
 
         # Remove Small Correlations
         for i in range(len(matrix)):
@@ -433,7 +433,7 @@ class featurePlotting(globalPlottingProtocols):
         sns.set(rc={'figure.figsize': (25, 15)})
         fig = ax.get_figure()
         fig.savefig(saveDataFolder + "correlationMatrixSortedCull.png", dpi=300)
-        fig.show()
+        self.clearFigure(fig, legend=None)
 
     def featureComparison(self, featureList1, featureList2, featureLabels, featureNames, xChemical, yChemical):
         # Create/verify a directory to save the figures
@@ -464,7 +464,7 @@ class featurePlotting(globalPlottingProtocols):
                 ax.legend()
                 # Save and clear the figure
                 fig.savefig(saveDataFolder + featureNames[featureInd1] + "_" + featureNames[featureInd2] + ".png", dpi=300, bbox_inches='tight')
-                plt.show()
+                self.clearFigure(fig, legend=None)
 
     def singleFeatureComparison(self, featureListFull, featureLabelFull, chemicalOrder, featureNames):
         # Create/verify a directory to save the figures
@@ -495,7 +495,7 @@ class featurePlotting(globalPlottingProtocols):
                 # plt.legend()
                 # Save and clear the figure
                 fig.savefig(saveDataFolderChemical + featureNames[featureInd] + ".png", dpi=300, bbox_inches='tight')
-                self.clearFigure(fig, None)
+                self.clearFigure(fig, legend=None)
 
     def featureDistribution(self, allFinalFeatures, finalLabels, featureNames, labelType="Stress Score", folderName="featureDistributions/"):
         print("Plotting Feature Distributions for " + labelType)
@@ -520,7 +520,7 @@ class featurePlotting(globalPlottingProtocols):
             plt.legend()
             plt.ylabel(featureNames[featureInd])
             fig.savefig(saveDataFolder + featureNames[featureInd] + ".png", dpi=300, bbox_inches='tight')
-            self.clearFigure(fig, None)
+            self.clearFigure(fig, legend=None)
 
     @staticmethod
     def stressLabelPlotting(experimentalOrder, subjectOrder, featureLabelTypes, allFinalLabels):

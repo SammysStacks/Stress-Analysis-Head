@@ -14,10 +14,10 @@ class optimizerMethods:
     def getModelParams(self, submodel, model):
         modelParams = [
             # Specify the model parameters for the signal encoding.
-            {'params': model.inferenceModel.parameters(), 'weight_decay': 1e-4, 'lr': 1e-2},
-            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': 1e-4, 'lr': self.userInputParams['generalLR']/2},  # 0.1 - 0.001
-            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "profileModel" not in name), 'weight_decay': 1e-4, 'lr': self.userInputParams['generalLR']},  # 0.1 - 0.001
-            {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': 1e-4, 'lr': self.userInputParams['physioLR']},  # 0.1 - 0.01
+            {'params': model.inferenceModel.parameters(), 'weight_decay': 1e-3, 'lr': self.userInputParams['physioLR']},
+            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': 1e-3, 'lr': self.userInputParams['generalLR']/2},  # 0.1 - 0.001
+            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "profileModel" not in name), 'weight_decay': 1e-3, 'lr': self.userInputParams['generalLR']},  # 0.1 - 0.001
+            {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': 1e-3, 'lr': self.userInputParams['physioLR']},  # 0.1 - 0.01
         ]
 
         if submodel == modelConstants.emotionModel:

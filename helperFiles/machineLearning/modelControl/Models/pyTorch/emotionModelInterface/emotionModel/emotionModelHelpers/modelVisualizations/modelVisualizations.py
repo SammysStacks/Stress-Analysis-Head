@@ -13,18 +13,16 @@ from ..modelConstants import modelConstants
 
 class modelVisualizations(globalPlottingProtocols):
 
-    def __init__(self, accelerator, baseSavingFolder, stringID, datasetName):
+    def __init__(self, accelerator, datasetName):
         super(modelVisualizations, self).__init__()
         self.accelerator = accelerator
+        self.datasetName = datasetName
 
         # Initialize helper classes.
         self.signalEncoderViz = signalEncoderVisualizations(baseSavingFolder="", stringID="", datasetName=datasetName)
         self.generalViz = generalVisualizations(baseSavingFolder="", stringID="", datasetName=datasetName)
 
-        # Organize the visualization components.
-        self.setSavingFolder(baseSavingFolder, stringID)
-
-    def setSavingFolder(self, baseSavingFolder, stringID):
+    def setModelSavingFolder(self, baseSavingFolder, stringID):
         # Compile and shorten the name of the model visualization folder.
         baseSavingDataFolder = os.path.normpath(os.path.dirname(__file__) + f"/../../../dataAnalysis/{baseSavingFolder}") + '/'
         saveDataFolder = os.path.normpath(baseSavingDataFolder + stringID + '/')
@@ -35,8 +33,8 @@ class modelVisualizations(globalPlottingProtocols):
         self._createFolder(self.saveDataFolder)
 
         # Initialize visualization protocols.
-        self.signalEncoderViz.setSavingFolder(self.baseSavingDataFolder, stringID)
-        self.generalViz.setSavingFolder(self.baseSavingDataFolder, stringID)
+        self.signalEncoderViz.setSavingFolder(self.baseSavingDataFolder, stringID, self.datasetName)
+        self.generalViz.setSavingFolder(self.baseSavingDataFolder, stringID, self.datasetName)
 
     # ---------------------------------------------------------------------- #
 
@@ -44,7 +42,7 @@ class modelVisualizations(globalPlottingProtocols):
         self.accelerator.print(f"\nCalculating loss for model comparison")
 
         # Prepare the model/data for evaluation.
-        self.setSavingFolder(baseSavingFolder=f"trainingFigures/{submodel}/", stringID=f"{trainingDate}/modelComparison/")  # Label the correct folder to save this analysis.
+        self.setModelSavingFolder(baseSavingFolder=f"trainingFigures/{submodel}/{trainingDate}/", stringID=f"modelComparison/")  # Label the correct folder to save this analysis.
 
         # Plot the loss on the primary GPU.
         if self.accelerator.is_local_main_process:
@@ -61,7 +59,7 @@ class modelVisualizations(globalPlottingProtocols):
         self.accelerator.print(f"\nPlotting results for the {modelPipeline.model.datasetName} model")
 
         # Prepare the model/data for evaluation.
-        self.setSavingFolder(baseSavingFolder=f"trainingFigures/{submodel}/", stringID=f"{trainingDate}/{modelPipeline.model.datasetName}/")
+        self.setModelSavingFolder(baseSavingFolder=f"trainingFigures/{submodel}/{trainingDate}/", stringID=f"{modelPipeline.model.datasetName}/")
         modelPipeline.setupTrainingFlags(modelPipeline.model, trainingFlag=False)  # Set all models into evaluation mode.
         model = modelPipeline.model
         numPlottingPoints = 12
