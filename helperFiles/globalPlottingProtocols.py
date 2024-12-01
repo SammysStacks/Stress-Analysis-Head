@@ -24,8 +24,10 @@ class globalPlottingProtocols:
     def setSavingFolder(self, baseSavingDataFolder, stringID):
         self.baseSavingDataFolder = baseSavingDataFolder + self.baseFolderName
         self.saveDataFolder = baseSavingDataFolder + stringID
-        self._createFolder(self.baseSavingDataFolder)
-        self._createFolder(self.saveDataFolder)
+
+        if baseSavingDataFolder:
+            self._createFolder(self.baseSavingDataFolder)
+            if stringID: self._createFolder(self.saveDataFolder)
 
     @staticmethod
     def _createFolder(filePath):
