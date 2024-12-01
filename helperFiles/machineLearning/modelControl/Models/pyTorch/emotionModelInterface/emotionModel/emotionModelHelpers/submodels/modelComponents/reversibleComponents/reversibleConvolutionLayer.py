@@ -40,7 +40,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         for layerInd in range(self.numLayers):
             # Create the neural weights.
             parameters = nn.Parameter(torch.randn(numSignals, self.kernelSize//2 or 1, dtype=torch.float64))
-            parameters = nn.init.xavier_normal_(parameters)
+            parameters = nn.init.xavier_uniform_(parameters)
             self.linearOperators.append(parameters)
 
     def forward(self, inputData):
