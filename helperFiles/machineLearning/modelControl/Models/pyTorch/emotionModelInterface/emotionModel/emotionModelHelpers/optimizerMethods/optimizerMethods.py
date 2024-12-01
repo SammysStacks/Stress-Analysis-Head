@@ -14,10 +14,10 @@ class optimizerMethods:
     def getModelParams(self, submodel, model):
         modelParams = [
             # Specify the model parameters for the signal encoding.
-            {'params': model.inferenceModel.parameters(), 'weight_decay': 1e-3, 'lr': self.userInputParams['physioLR']},
-            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': 1e-3, 'lr': self.userInputParams['generalLR']/2},  # 0.1 - 0.001
-            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "profileModel" not in name), 'weight_decay': 1e-3, 'lr': self.userInputParams['generalLR']},  # 0.1 - 0.001
-            {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': 1e-3, 'lr': self.userInputParams['physioLR']},  # 0.1 - 0.01
+            {'params': model.inferenceModel.parameters(), 'weight_decay': 1e-2, 'lr': self.userInputParams['physioLR']},
+            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': 1e-5, 'lr': self.userInputParams['generalLR']/2},  # 0.1 - 0.001
+            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "profileModel" not in name), 'weight_decay': 1e-5, 'lr': self.userInputParams['generalLR']},  # 0.1 - 0.001
+            {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': 1e-2, 'lr': self.userInputParams['physioLR']},  # 0.1 - 0.01
         ]
 
         if submodel == modelConstants.emotionModel:
@@ -79,7 +79,7 @@ class optimizerMethods:
             # Use when regularization is a priority and particularly when fine-tuning pre-trained models.
             return optim.AdamW(params, lr=lr, betas=(0.7, 0.97), eps=1e-08, weight_decay=weight_decay, amsgrad=False, maximize=False)
         elif optimizerType == 'NAdam':
-            # NAdam combines Adam with Nesterov momentum, aiming to combine the benefits of Nesterov accelerated gradient and Adam.
+            # NAdam combines Adam with Nesterov momentum, aiming to combine the benefits of Nesterov and Adam.
             # Use in deep architectures where fine control over convergence is needed.
             return optim.NAdam(params, lr=lr, betas=(0.7, 0.97), eps=1e-08, weight_decay=weight_decay, momentum_decay=0.004, decoupled_weight_decay=True)
         elif optimizerType == 'RAdam':
@@ -100,7 +100,7 @@ class optimizerMethods:
             return optim.LBFGS(params, lr=lr, max_iter=20, max_eval=None, tolerance_grad=1e-07, tolerance_change=1e-09, history_size=100, line_search_fn=None)
         elif optimizerType == 'RMSprop':
             # RMSprop is an adaptive learning rate method designed to solve Adagrad's radically diminishing learning rates.
-            # It is well-suited to handle non-stationary objectives as in training neural networks.
+            # It is well-suited to handle non-stationary data as in training neural networks.
             return optim.RMSprop(params, lr=lr, alpha=0.99, eps=1e-08, weight_decay=weight_decay, momentum=momentum, centered=False)
         elif optimizerType == 'Rprop':
             # Rprop (Resilient Propagation) uses only the signs of the gradients, disregarding their magnitude.

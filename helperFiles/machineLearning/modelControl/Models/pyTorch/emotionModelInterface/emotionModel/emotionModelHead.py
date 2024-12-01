@@ -1,4 +1,3 @@
-import math
 import random
 
 import torch
@@ -157,7 +156,7 @@ class emotionModelHead(nn.Module):
         physiologicalProfile = self.sharedSignalEncoderModel.smoothPhysiologicalProfile(physiologicalProfile)
         physiologicalProfile = physiologicalProfile - physiologicalProfile.mean(dim=-1, keepdim=True)
         physiologicalProfile = physiologicalProfile / physiologicalProfile.std(dim=-1, keepdim=True)
-        physiologicalProfile = physiologicalProfile / 3
+        physiologicalProfile = physiologicalProfile / 4
 
         # ------------------- Learned Signal Mapping ------------------- #
 
@@ -168,7 +167,6 @@ class emotionModelHead(nn.Module):
         # resampledSignalData: batchSize, numSignals, encodedDimension
 
         # Resample the signal data.
-        resampledSignalData = self.sharedSignalEncoderModel.finalProcessingLayer(resampledSignalData)
         reconstructedSignalData = self.interpolateData(signalData, resampledSignalData)
         # reconstructedSignalData: batchSize, numSignals, maxSequenceLength
 
@@ -305,7 +303,6 @@ class emotionModelHead(nn.Module):
 
     def reconstructPhysiologicalProfile(self, resampledSignalData):
         reversibleInterface.changeDirections(forwardDirection=True)
-        resampledSignalData = self.sharedSignalEncoderModel.finalProcessingLayer(resampledSignalData)
         reconstructedPhysiologicalProfile = self.coreModelPass(metaLearningData=resampledSignalData, numSpecificLayers=self.numSpecificEncoderLayers, numSharedLayers=self.numSharedEncoderLayers, specificModel=self.specificSignalEncoderModel, sharedModel=self.sharedSignalEncoderModel)
         reversibleInterface.changeDirections(forwardDirection=False)
 
