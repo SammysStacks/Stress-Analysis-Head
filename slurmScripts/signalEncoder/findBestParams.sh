@@ -1,10 +1,10 @@
 #!/bin/bash
 
-waveletTypes_arr=('bior3.1' 'bior3.3')  # 'bior3.5'
+waveletTypes_arr=('bior3.1')  # 'bior3.5'
 numSpecificEncoderLayers_arr=(1)
-signalEncoderLayers_arr=(3 4 5 6)
-lrs_general=('0.01' '0.001' '0.0001')
-lrs_physio=('1' '0.1' '0.01' '0.001' '0.0001')
+signalEncoderLayers_arr=(4)
+lrs_general=('1e-0' '1e-1' '1e-2' '1e-3' '1e-4' '1e-5')
+lrs_physio=('1e-0' '1e-1' '1e-2' '1e-3' '1e-4' '1e-5')
 encodedDimensions_arr=(256)
 optimizers_arr=('RAdam')
 
