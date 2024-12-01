@@ -35,8 +35,8 @@ class modelVisualizations(globalPlottingProtocols):
         self._createFolder(self.saveDataFolder)
 
         # Initialize visualization protocols.
-        self.signalEncoderViz.setSavingFolder(baseSavingFolder, stringID)
-        self.generalViz.setSavingFolder(baseSavingFolder, stringID)
+        self.signalEncoderViz.setSavingFolder(self.baseSavingDataFolder, stringID)
+        self.generalViz.setSavingFolder(self.baseSavingDataFolder, stringID)
 
     # ---------------------------------------------------------------------- #
 
