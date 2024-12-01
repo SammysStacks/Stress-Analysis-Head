@@ -35,8 +35,8 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2024-11-29 XU WD"  # The current date we are training the model. Unique identifier of this training set.
-    testSplitRatio = 0.2  # The percentage of testing points.
+    trainingDate = "2024-11-30"  # The current date we are training the model. Unique identifier of this training set.
+    testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Parse Model Parameters ----------------------- #
 
@@ -51,8 +51,8 @@ if __name__ == "__main__":
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are using: cpu, cuda')
 
     # Add arguments for the signal encoder architecture.
-    parser.add_argument('--numSpecificEncoderLayers', type=int, default=2, help='The number of layers in the model.')
-    parser.add_argument('--numSharedEncoderLayers', type=int, default=6, help='The number of layers in the model.')
+    parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model.')
+    parser.add_argument('--numSharedEncoderLayers', type=int, default=8, help='The number of layers in the model.')
     parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
  
     # Add arguments for the neural operator.
@@ -69,7 +69,7 @@ if __name__ == "__main__":
 
     # Temporary parameters.
     parser.add_argument('--maxWaveletDecompositions', type=int, default=0, help='The maximum number of wavelet decompositions.')
-    parser.add_argument('--generalLR', type=float, default=1e-1, help='The number of experiments to run.')
+    parser.add_argument('--generalLR', type=float, default=1e-3, help='The number of experiments to run.')
     parser.add_argument('--physioLR', type=float, default=1, help='The number of experiments to run.')
 
     # Parse the arguments.
