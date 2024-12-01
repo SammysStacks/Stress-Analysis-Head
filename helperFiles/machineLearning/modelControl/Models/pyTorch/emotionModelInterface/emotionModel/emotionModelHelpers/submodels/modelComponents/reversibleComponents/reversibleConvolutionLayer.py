@@ -117,5 +117,5 @@ if __name__ == "__main__":
     plt.legend()
 
     # plt.xlim(0.98, 1.02)
-    plt.savefig(f'_lipshitz/Fin.png')
+    # plt.savefig(f'_lipshitz/Fin.png')
     plt.show()
