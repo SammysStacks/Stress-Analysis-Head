@@ -1,9 +1,6 @@
-# General
-import os
-
-# Plotting
-import seaborn as sns
 import matplotlib.pyplot as plt
+import seaborn as sns
+import os
 
 
 class globalPlottingProtocols:
@@ -12,7 +9,7 @@ class globalPlottingProtocols:
         # Setup matplotlib
         self.baseFolderName = "_basePlots/"
         plt.rcdefaults()
-        plt.ion()
+        plt.ioff()
 
         # Specify the color order.
         self.lightColors = ["#F17FB1", "#5DCBF2", "#B497C9", "#90D6AD", "#FFC162", "#231F20"]  # Red, Blue, Purple, Green, Orange, grey
@@ -48,11 +45,19 @@ class globalPlottingProtocols:
         # Clear all figures and plots
         plt.rcdefaults()  # Reset Matplotlib settings to the defaults.
         plt.close('all')  # Close all open figures
+        plt.cla()  # Clear the current axes
+        plt.clf()  # Clear the current figure
 
     def displayFigure(self, saveFigureLocation, saveFigureName, baseSaveFigureName=None):
         self._createFolder(self.saveDataFolder + saveFigureLocation)
+
+        # Save the figure to the desired location.
         plt.savefig(self.saveDataFolder + saveFigureLocation + saveFigureName)
+        self.clearFigure()
+
+        # Save the figure to the base folder if desired.
         if baseSaveFigureName is not None: plt.savefig(self.baseSavingDataFolder + f"{self.datasetName} {baseSaveFigureName}")
+        self.clearFigure()
 
     def heatmap(self, data, saveDataPath=None, title=None, xlabel=None, ylabel=None):
         # Plot the heatmap
