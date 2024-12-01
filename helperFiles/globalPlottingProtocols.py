@@ -20,11 +20,11 @@ class globalPlottingProtocols:
         self.darkColors = ["#F3757A", "#489AD4", "#7E71B4", "#50BC84", "#F9A770", "#4A4546"]  # Red, Blue, Purple, Green, Orange, grey
         self.blackColor = "#231F20"
 
-    def setSavingFolder(self, saveDataFolder, baseSavingDataFolder):
+    def setSavingFolder(self, baseSavingDataFolder, stringID):
+        self.saveDataFolder = baseSavingDataFolder + stringID
         self.baseSavingDataFolder = baseSavingDataFolder
         self._createFolder(baseSavingDataFolder)
-        self.saveDataFolder = saveDataFolder
-        self._createFolder(saveDataFolder)
+        self._createFolder(self.saveDataFolder)
 
     @staticmethod
     def _createFolder(filePath):
@@ -46,8 +46,6 @@ class globalPlottingProtocols:
 
     def displayFigure(self, saveFigureLocation, saveFigureName, baseSaveFigureName=None):
         if baseSaveFigureName is not None: plt.savefig(self.baseSavingDataFolder + baseSaveFigureName)
-
-        self._createFolder(self.saveDataFolder + saveFigureLocation)
         plt.savefig(self.saveDataFolder + saveFigureLocation + saveFigureName)
         self.clearFigure()
 
@@ -61,7 +59,6 @@ class globalPlottingProtocols:
         if ylabel: plt.ylabel(ylabel)
         fig = ax.get_figure()
         if self.saveDataFolder and saveDataPath:
-            self._createFolder(saveDataPath)
             fig.savefig(f"{saveDataPath}.pdf", dpi=500, bbox_inches='tight')
             fig.savefig(f"{saveDataPath}.png", dpi=500, bbox_inches='tight')
         self.clearFigure(fig, None)

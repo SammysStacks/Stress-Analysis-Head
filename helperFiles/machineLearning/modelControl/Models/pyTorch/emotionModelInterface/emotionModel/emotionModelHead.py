@@ -254,6 +254,7 @@ class emotionModelHead(nn.Module):
         # Optionally, plot the physiological profile for visual comparison
         physiologicalTimes = self.sharedSignalEncoderModel.pseudoEncodedTimes.detach().cpu().numpy()
         plt.plot(physiologicalTimes, physiologicalProfile[firstBatchInd].detach().cpu().numpy(), 'k', linewidth=1, label='Physiological Profile', alpha=0.75)
+        plt.title(f"batchInd{firstBatchInd}")
         plt.show()
 
         # Get the first valid signal points.
@@ -267,7 +268,7 @@ class emotionModelHead(nn.Module):
         plt.plot(validTimepoints, validDatapoints, 'ok', markersize=3, label='Initial Signal', alpha=0.75)
         plt.plot(validTimepoints, validReconstructedPoints, 'o', color='tab:red', markersize=3, label='Reconstructed Signal', alpha=0.75)
         plt.plot(physiologicalTimes, resampledSignalData[firstBatchInd, firstSignalInd, :].detach().cpu().numpy(), 'tab:blue', linewidth=1, label='Resampled Signal', alpha=0.75)
-        plt.title(f"{firstBatchInd} {firstSignalInd} {len(validTimepoints)} {validTimepoints[0]} {validTimepoints[-1]} {len(physiologicalTimes)}")
+        plt.title(f"batchInd{firstBatchInd} signalInd{firstSignalInd} numPoints{len(validTimepoints)}")
         plt.legend()
         plt.show()
 
