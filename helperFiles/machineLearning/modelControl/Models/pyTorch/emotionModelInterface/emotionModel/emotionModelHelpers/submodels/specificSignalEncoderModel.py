@@ -63,7 +63,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
     def printParams(self):
         # Count the trainable parameters.
-        numParams = (sum(p.numel() for p in self.parameters() if p.requires_grad) - self.profileModel.physiologicalProfileFFT.size(0) * self.encodedDimension) / self.numSignals
+        numParams = (sum(p.numel() for p in self.parameters() if p.requires_grad) - self.profileModel.numExperiments * self.encodedDimension) / self.numSignals
         print(f'The model has {numParams} trainable parameters per signal; {numParams*self.numSignals} total parameters.')
 
 

@@ -9,9 +9,10 @@ class inferenceModel(nn.Module):
         super(inferenceModel, self).__init__()
         self.encodedDimension = encodedDimension
         self.physiologicalProfile = None
+        self.downsizingRatio = 4
 
     def resetInferenceModel(self, numExperiments, encodedDimension):
-        self.physiologicalProfile = emotionModelWeights.getInitialPhysiologicalProfile(numExperiments, encodedDimension)
+        self.physiologicalProfile = emotionModelWeights.getInitialPhysiologicalProfile(numExperiments, encodedDimension, downsizingRatio=self.downsizingRatio)
         self.physiologicalProfile.requires_grad = True
 
     def getCurrentPhysiologicalProfile(self, batchInds):
