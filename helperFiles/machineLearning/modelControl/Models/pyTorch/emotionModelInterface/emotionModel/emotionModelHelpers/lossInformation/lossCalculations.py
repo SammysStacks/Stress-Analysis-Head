@@ -35,7 +35,7 @@ class lossCalculations:
         #       Custom Regression Options: "R2", "pearson", "LogCoshLoss", "weightedMSE"
         # Initialize the loss function WITHOUT the class weights.
         self.meanSquaredError = pytorchLossMethods(lossType="MeanSquaredError", class_weights=None).loss_fn
-        self.smoothL1Loss = nn.SmoothL1Loss(reduction='none', beta=0.04)
+        self.smoothL1Loss = nn.SmoothL1Loss(reduction='none', beta=0.1)
 
     # -------------------------- Signal Encoder Loss Calculations ------------------------- #
 

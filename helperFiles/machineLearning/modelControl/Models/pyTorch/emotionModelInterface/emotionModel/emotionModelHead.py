@@ -149,10 +149,13 @@ class emotionModelHead(nn.Module):
         # Get the estimated physiological profiles.
         if inferenceTraining: physiologicalProfileOG = self.inferenceModel.getCurrentPhysiologicalProfile(batchInds)
         else: physiologicalProfileOG = self.specificSignalEncoderModel.profileModel.getCurrentPhysiologicalProfile(batchInds)
-        # physiologicalProfile: batchSize, encodedDimension
+        # physiologicalProfile: batchSize, encodedDimension // modelConstants.downsizingRatio
 
         # Normalize the physiological profile.
         physiologicalProfile = self.sharedSignalEncoderModel.smoothPhysiologicalProfile(physiologicalProfileOG)
+        physiologicalProfile = physiologicalProfile - physiologicalProfile.mean(dim=-1, keepdim=True)
+        physiologicalProfile = physiologicalProfile / physiologicalProfile.std(dim=-1, keepdim=True) / 3
+        # physiologicalProfile: batchSize, encodedDimension
 
         # ------------------- Learned Signal Mapping ------------------- #
 
@@ -248,7 +251,7 @@ class emotionModelHead(nn.Module):
         # Optionally, plot the physiological profile for visual comparison
         physiologicalTimes = self.sharedSignalEncoderModel.pseudoEncodedTimes.detach().cpu().numpy()
         plt.plot(physiologicalTimes, physiologicalProfile[firstBatchInd].detach().cpu().numpy(), 'tab:red', linewidth=1, label='Physiological Profile', alpha=2/3)
-        plt.plot(physiologicalTimes, physiologicalProfileOG[firstBatchInd].detach().cpu().numpy(), 'k', linewidth=1, label='Original Profile', alpha=0.75)
+        plt.plot(torch.linspace(start=physiologicalTimes[0], end=physiologicalTimes[-1], steps=physiologicalProfileOG.size(-1)).detach().cpu().numpy(), physiologicalProfileOG[firstBatchInd].detach().cpu().numpy(), 'k', linewidth=1, label='Original Profile', alpha=0.75)
         plt.title(f"batchInd{firstBatchInd}")
         plt.show()
 

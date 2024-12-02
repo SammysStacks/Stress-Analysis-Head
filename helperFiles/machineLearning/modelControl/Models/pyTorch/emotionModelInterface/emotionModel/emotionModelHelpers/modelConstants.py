@@ -48,6 +48,7 @@ class modelConstants:
     # Specify the data interface parameters.
     minMaxScale = 1  # The maximum value for the min-max scaling.
     numBatches = 16  # The number of batches to use in the model.
+    downsizingRatio = 8
 
     # Specify the data interface parameter names.
     signalChannelNames = [timeChannel, signalChannel]

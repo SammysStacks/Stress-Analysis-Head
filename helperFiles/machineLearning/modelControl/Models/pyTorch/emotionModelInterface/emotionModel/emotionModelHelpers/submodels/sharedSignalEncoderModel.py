@@ -27,6 +27,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         assert len(deltaTimes) == 1, f"The time gaps are not similar: {deltaTimes}"
 
         # The neural layers for the signal encoder.
+        self.physiologicalGenerationModel = self.physiologicalGeneration(numOutputFeatures=encodedDimension)
         self.processingLayers, self.neuralLayers = nn.ModuleList(), nn.ModuleList()
         self.physiologicalSmoothingModel = self.physiologicalSmoothing()
         for _ in range(self.numSharedEncoderLayers): self.addLayer()
@@ -40,14 +41,17 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         else: raise "The learning protocol is not yet implemented."
 
     def smoothPhysiologicalProfile(self, physiologicalProfile):
-        physiologicalProfile = physiologicalProfile.unsqueeze(1)
+        # Learned up-sampling of the physiological profile.
+        physiologicalProfile = self.physiologicalGenerationModel(physiologicalProfile)
 
         # Smoothing the physiological profile.
+        physiologicalProfile = physiologicalProfile.unsqueeze(1)
         physiologicalProfile = self.smoothingFilter(physiologicalProfile, kernelSize=3)
         physiologicalProfile = self.physiologicalSmoothingModel(physiologicalProfile)
         physiologicalProfile = self.smoothingFilter(physiologicalProfile, kernelSize=3)
+        physiologicalProfile = physiologicalProfile.squeeze(1)
 
-        return physiologicalProfile.squeeze(1)
+        return physiologicalProfile
 
     def learningInterface(self, layerInd, signalData):
         # Extract the signal data parameters.
@@ -97,7 +101,7 @@ if __name__ == "__main__":
     _batchSize, _numSignals, _sequenceLength = 2, 128, 256
 
     # Set up the parameters.
-    neuralLayerClass = sharedSignalEncoderModel(operatorType='wavelet', encodedDimension=_sequenceLength, numSharedEncoderLayers=4, learningProtocol='rCNN', neuralOperatorParameters=_neuralOperatorParameters)
+    neuralLayerClass = sharedSignalEncoderModel(operatorType='wavelet', encodedDimension=_sequenceLength, numSharedEncoderLayers=8, learningProtocol='rCNN', neuralOperatorParameters=_neuralOperatorParameters)
     neuralLayerClass.addLayer()
 
     # Print the number of trainable parameters.

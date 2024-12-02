@@ -1,6 +1,7 @@
 import torch
 from matplotlib import pyplot as plt
 
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.emotionModelWeights import emotionModelWeights
 
 
@@ -11,21 +12,15 @@ class trainingProfileInformation(emotionModelWeights):
         self.encodedDimension = encodedDimension
         self.numExperiments = numExperiments
         self.physiologicalProfile = None
-        self.downsizingRatio = 8
 
         # Initialize the blank signal profile.
         self.resetTrainingProfile(numExperiments=numExperiments, encodedDimension=encodedDimension)
 
     def resetTrainingProfile(self, numExperiments, encodedDimension):
-        self.physiologicalProfile = self.getInitialPhysiologicalProfile(numExperiments=numExperiments, encodedDimension=encodedDimension, downsizingRatio=self.downsizingRatio)
+        self.physiologicalProfile = self.getInitialPhysiologicalProfile(numExperiments=numExperiments, encodedDimension=encodedDimension)
 
     def getCurrentPhysiologicalProfile(self, batchInds):
-        physiologicalProfile = self.physiologicalProfile[batchInds].unsqueeze(1)
-
-        # Interpolate the physiological profile.
-        physiologicalProfile = torch.nn.functional.interpolate(physiologicalProfile, size=None, scale_factor=self.downsizingRatio, mode='linear', align_corners=True, recompute_scale_factor=True, antialias=False)
-
-        return physiologicalProfile.squeeze(1)
+        return self.physiologicalProfile[batchInds]
 
 
 if __name__ == '__main__':
