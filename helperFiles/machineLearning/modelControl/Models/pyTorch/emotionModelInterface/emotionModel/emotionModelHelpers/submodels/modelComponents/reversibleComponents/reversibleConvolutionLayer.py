@@ -40,7 +40,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         for layerInd in range(self.numLayers):
             # Create the neural weights.
             parameters = nn.Parameter(torch.randn(numSignals, self.kernelSize//2 or 1, dtype=torch.float64))
-            parameters = nn.init.kaiming_uniform_(parameters)
+            parameters = nn.init.xavier_uniform_(parameters)
             self.linearOperators.append(parameters)
 
     def forward(self, inputData):
@@ -89,8 +89,8 @@ if __name__ == "__main__":
     # for i in [16, 32, 64, 128, 256]:
     reconstructionFlag = False
 
-    for layers, sequenceLength2 in [(2, 256), (2, 128), (2, 16)]:
-        try:
+    try:
+        for layers, sequenceLength2 in [(2, 256)]:
             for _layerInd in range(1, layers + 1):
                 # General parameters.
                 _batchSize, _numSignals, _sequenceLength = 512, 512, sequenceLength2
@@ -112,9 +112,11 @@ if __name__ == "__main__":
                 ratio = (_forwardData.norm(dim=-1) / physiologicalProfile.norm(dim=-1)).view(-1).detach().numpy()
                 if abs(ratio.mean() - 1) < 0.1: plt.hist(ratio, bins=150, alpha=0.2, label=f'len{_sequenceLength}_layers={_layerInd}')
                 print(ratio.mean())
-            plt.title(f'Fin', fontsize=14)  # Increase title font size for readability
-            plt.legend()
+    except Exception as e: pass
+    plt.title(f'Fin', fontsize=14)  # Increase title font size for readability
+    plt.legend()
 
+<<<<<<< HEAD
 <<<<<<< HEAD
     # plt.xlim(0.98, 1.02)
     # plt.savefig(f'_lipshitz/Fin.png')
@@ -125,3 +127,8 @@ if __name__ == "__main__":
             plt.show()
         except Exception as e: pass
 >>>>>>> 4bbb1e788 (Lab)
+=======
+    # plt.xlim(0.98, 1.02)
+    # plt.savefig(f'_lipshitz/Fin.png')
+    plt.show()
+>>>>>>> c640670a5 (Lab)
