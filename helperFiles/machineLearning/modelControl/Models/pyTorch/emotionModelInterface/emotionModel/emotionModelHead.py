@@ -1,20 +1,19 @@
-import random
-
-import torch
 from matplotlib import pyplot as plt
 from torch import nn
+import torch
+import random
 
-from .emotionModelHelpers.emotionDataInterface import emotionDataInterface
-from .emotionModelHelpers.modelConstants import modelConstants
-from .emotionModelHelpers.modelParameters import modelParameters
-from .emotionModelHelpers.submodels.inferenceModel import inferenceModel
-from .emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
-from .emotionModelHelpers.submodels.sharedActivityModel import sharedActivityModel
-from .emotionModelHelpers.submodels.sharedEmotionModel import sharedEmotionModel
-from .emotionModelHelpers.submodels.sharedSignalEncoderModel import sharedSignalEncoderModel
-from .emotionModelHelpers.submodels.specificActivityModel import specificActivityModel
-from .emotionModelHelpers.submodels.specificEmotionModel import specificEmotionModel
-from .emotionModelHelpers.submodels.specificSignalEncoderModel import specificSignalEncoderModel
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.inferenceModel import inferenceModel
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.sharedActivityModel import sharedActivityModel
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.sharedEmotionModel import sharedEmotionModel
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.sharedSignalEncoderModel import sharedSignalEncoderModel
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.specificActivityModel import specificActivityModel
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.specificEmotionModel import specificEmotionModel
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.specificSignalEncoderModel import specificSignalEncoderModel
 
 
 class emotionModelHead(nn.Module):
@@ -154,9 +153,6 @@ class emotionModelHead(nn.Module):
 
         # Normalize the physiological profile.
         physiologicalProfile = self.sharedSignalEncoderModel.smoothPhysiologicalProfile(physiologicalProfileOG)
-        physiologicalProfile = physiologicalProfile - physiologicalProfile.mean(dim=-1, keepdim=True)
-        physiologicalProfile = physiologicalProfile / physiologicalProfile.std(dim=-1, keepdim=True)
-        physiologicalProfile = physiologicalProfile / 6
 
         # ------------------- Learned Signal Mapping ------------------- #
 

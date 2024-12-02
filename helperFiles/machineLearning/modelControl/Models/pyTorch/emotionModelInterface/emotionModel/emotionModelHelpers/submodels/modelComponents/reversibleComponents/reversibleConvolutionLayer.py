@@ -90,7 +90,7 @@ if __name__ == "__main__":
     reconstructionFlag = False
 
     try:
-        for layers, sequenceLength2 in [(2, 256)]:
+        for layers, sequenceLength2 in [(2, 256), (2, 128), (2, 64), (2, 32), (2, 16), (2, 8), (2, 4), (2, 2)]:
             for _layerInd in range(1, layers + 1):
                 # General parameters.
                 _batchSize, _numSignals, _sequenceLength = 512, 512, sequenceLength2
@@ -112,10 +112,10 @@ if __name__ == "__main__":
                 ratio = (_forwardData.norm(dim=-1) / physiologicalProfile.norm(dim=-1)).view(-1).detach().numpy()
                 if abs(ratio.mean() - 1) < 0.1: plt.hist(ratio, bins=150, alpha=0.2, label=f'len{_sequenceLength}_layers={_layerInd}')
                 print(ratio.mean())
-    except Exception as e: pass
-    plt.title(f'Fin', fontsize=14)  # Increase title font size for readability
-    plt.legend()
+            plt.title(f'Fin', fontsize=14)  # Increase title font size for readability
+            plt.legend()
 
-    # plt.xlim(0.98, 1.02)
-    plt.savefig(f'_lipshitz/KU len{_sequenceLength}_layers={_layerInd}')
-    plt.show()
+            # plt.xlim(0.98, 1.02)
+            plt.savefig(f'_lipshitz/len{sequenceLength2}_layers={layers}')
+            plt.show()
+    except Exception as e: pass

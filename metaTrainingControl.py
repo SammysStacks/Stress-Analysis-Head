@@ -31,11 +31,11 @@ if __name__ == "__main__":
         cpu=torch.backends.mps.is_available(),  # Whether to use the CPU. MPS is NOT fully compatible yet.
         step_scheduler_with_optimizer=False,  # Whether to wrap the optimizer in a scheduler.
         gradient_accumulation_steps=1,  # The number of gradient accumulation steps.
-        mixed_precision="bf16",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"
+        mixed_precision="fp16",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"
     )
 
     # General model parameters.
-    trainingDate = "2024-11-30 XU"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2024-12-01"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Parse Model Parameters ----------------------- #
@@ -52,7 +52,7 @@ if __name__ == "__main__":
 
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model.')
-    parser.add_argument('--numSharedEncoderLayers', type=int, default=3, help='The number of layers in the model.')
+    parser.add_argument('--numSharedEncoderLayers', type=int, default=4, help='The number of layers in the model.')
     parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
  
     # Add arguments for the neural operator.

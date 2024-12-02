@@ -41,7 +41,8 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
 
     def smoothPhysiologicalProfile(self, physiologicalProfile):
         physiologicalProfile = self.physiologicalSmoothingModel(physiologicalProfile.unsqueeze(1))
-        physiologicalProfile = self.smoothingFilter(physiologicalProfile, kernelSize=3)  # TODO
+        # physiologicalProfile = self.smoothingFilter(physiologicalProfile, kernelSize=3)
+        # physiologicalProfile = self.smoothingFilter(physiologicalProfile, kernelSize=3)
 
         return physiologicalProfile.squeeze(1)
 
