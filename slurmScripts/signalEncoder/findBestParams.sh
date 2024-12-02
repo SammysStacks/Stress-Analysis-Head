@@ -3,8 +3,8 @@
 waveletTypes_arr=('bior3.1')  # 'bior3.1' > 'bior3.3' > 'bior2.2' > 'bior3.5'
 numSpecificEncoderLayers_arr=(1 2)  # 2
 signalEncoderLayers_arr=(4 8)  # 2
-lrs_general=('1e-3' '1e-4')  # 2
-lrs_physio=('1e-1' '1e-2')  # 2
+lrs_general=('1e-3')  # 2  '1e-4'
+lrs_physio=('1e-1' '1e-2' '1e-3')  # 3
 encodedDimensions_arr=(128 256)  # 2
 optimizers_arr=('RAdam')
 
