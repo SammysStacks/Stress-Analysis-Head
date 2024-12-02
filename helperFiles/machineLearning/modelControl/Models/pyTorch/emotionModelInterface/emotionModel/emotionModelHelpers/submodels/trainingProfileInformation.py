@@ -11,7 +11,7 @@ class trainingProfileInformation(emotionModelWeights):
         self.encodedDimension = encodedDimension
         self.numExperiments = numExperiments
         self.physiologicalProfile = None
-        self.downsizingRatio = 4
+        self.downsizingRatio = 8
 
         # Initialize the blank signal profile.
         self.resetTrainingProfile(numExperiments=numExperiments, encodedDimension=encodedDimension)
