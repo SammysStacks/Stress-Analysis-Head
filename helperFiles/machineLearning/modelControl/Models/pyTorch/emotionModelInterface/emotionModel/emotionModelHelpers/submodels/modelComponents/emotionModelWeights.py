@@ -1,3 +1,5 @@
+import math
+
 import torch
 from torch import nn
 
@@ -23,11 +25,13 @@ class emotionModelWeights(convolutionalHelpers):
     @staticmethod
     def getInitialPhysiologicalProfile(numExperiments, encodedDimension):
         # Initialize the physiological profile.
-        physiologicalProfile = torch.randn(numExperiments, encodedDimension, dtype=torch.float64)
-        physiologicalProfile = nn.init.normal_(physiologicalProfile, mean=0, std=1)
+        fourierDimension = encodedDimension // 2 + 1  # Number of Fourier modes (frequencies) to use.
+        physiologicalProfileFFT = torch.randn(numExperiments, fourierDimension, dtype=torch.float64)
+        physiologicalProfileFFT = nn.init.normal_(physiologicalProfileFFT, mean=0, std=1)
+        physiologicalProfileFFT = math.sqrt(encodedDimension) * physiologicalProfileFFT / physiologicalProfileFFT.norm(dim=-1, keepdim=True)
 
         # Initialize the physiological profile as a parameter.
-        physiologicalProfile = nn.Parameter(physiologicalProfile)
+        physiologicalProfile = nn.Parameter(physiologicalProfileFFT)
 
         return physiologicalProfile
 
