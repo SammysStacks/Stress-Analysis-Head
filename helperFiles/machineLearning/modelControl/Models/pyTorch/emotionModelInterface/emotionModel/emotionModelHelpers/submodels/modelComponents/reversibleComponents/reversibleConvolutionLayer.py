@@ -116,19 +116,6 @@ if __name__ == "__main__":
     plt.title(f'Fin', fontsize=14)  # Increase title font size for readability
     plt.legend()
 
-<<<<<<< HEAD
-<<<<<<< HEAD
     # plt.xlim(0.98, 1.02)
-    # plt.savefig(f'_lipshitz/Fin.png')
+    plt.savefig(f'_lipshitz/KU len{_sequenceLength}_layers={_layerInd}')
     plt.show()
-=======
-            # plt.xlim(0.98, 1.02)
-            plt.savefig(f'_lipshitz/KU len{_sequenceLength}_layers={_layerInd}')
-            plt.show()
-        except Exception as e: pass
->>>>>>> 4bbb1e788 (Lab)
-=======
-    # plt.xlim(0.98, 1.02)
-    # plt.savefig(f'_lipshitz/Fin.png')
-    plt.show()
->>>>>>> c640670a5 (Lab)
