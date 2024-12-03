@@ -54,6 +54,7 @@ if __name__ == "__main__":
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model.')
     parser.add_argument('--numSharedEncoderLayers', type=int, default=6, help='The number of layers in the model.')
     parser.add_argument('--encodedDimension', type=int, default=128, help='The dimension of the encoded signal.')
+    parser.add_argument('--numEncodedWeights', type=int, default=64, help='The number of profile weights.')
  
     # Add arguments for the neural operator.
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')

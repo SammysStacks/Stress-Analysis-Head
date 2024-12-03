@@ -57,10 +57,17 @@ class modelConstants:
     specificModelWeights = [specificSignalEncoderModel, specificEmotionModel, specificActivityModel]
     sharedModelWeights = [sharedSignalEncoderModel, sharedEmotionModel, sharedActivityModel]
     inferenceModelWeights = [inferenceModel]
+    userInputParams = None
 
-    # -------------------------------------------------------------------- #
+    @classmethod
+    def updateModelParams(cls, userInputParams):
+        cls.userInputParams = userInputParams
+
+        # Update the model constants.
+        numEncodedWeights = userInputParams['numEncodedWeights']
 
     # ---------------- Hard-coded therapy parameters --------------------- #
+
     therapyParams = {
         'heat': [torch.full(size=(1, 1, 1, 1), fill_value=37)],
         'music': [440, 410],
@@ -68,11 +75,4 @@ class modelConstants:
     }
 
     # -------------------------------------------------------------------- #
-
-    userInputParams = None
-
-    @classmethod
-    def updateModelParams(cls, userInputParams):
-        cls.userInputParams = userInputParams
-
 
