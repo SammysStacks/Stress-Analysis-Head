@@ -35,7 +35,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2024-12-02 XU 8 1e-3"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2024-12-02"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Parse Model Parameters ----------------------- #
@@ -70,7 +70,7 @@ if __name__ == "__main__":
     # Temporary parameters.
     parser.add_argument('--maxWaveletDecompositions', type=int, default=0, help='The maximum number of wavelet decompositions.')
     parser.add_argument('--generalLR', type=float, default=1e-3, help='The number of experiments to run.')
-    parser.add_argument('--physioLR', type=float, default=1e-3, help='The number of experiments to run.')
+    parser.add_argument('--physioLR', type=float, default=1e-1, help='The number of experiments to run.')
 
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
