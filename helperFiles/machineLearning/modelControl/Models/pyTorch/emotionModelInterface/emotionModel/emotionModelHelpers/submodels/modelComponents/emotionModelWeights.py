@@ -27,8 +27,7 @@ class emotionModelWeights(convolutionalHelpers):
     def getInitialPhysiologicalProfile(numExperiments):
         # Initialize the physiological profile.
         physiologicalProfile = torch.randn(numExperiments, modelConstants.numEncodedWeights, dtype=torch.float64)
-        # physiologicalProfile = nn.init.normal_(physiologicalProfile, mean=0, std=1/3)
-        physiologicalProfile = nn.init.kaiming_uniform_(physiologicalProfile)
+        physiologicalProfile = nn.init.xavier_uniform_(physiologicalProfile)
 
         # Initialize the physiological profile as a parameter.
         physiologicalProfile = nn.Parameter(physiologicalProfile)
@@ -78,15 +77,16 @@ class emotionModelWeights(convolutionalHelpers):
 
     def physiologicalSmoothing(self):
         return nn.Sequential(
-            self.convolutionalFilters_resNetBlocks(numResNets=3, numBlocks=3, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False),
+            self.convolutionalFilters_resNetBlocks(numResNets=4, numBlocks=4, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False),
+            # self.convolutionalFiltersBlocks(numBlocks=1, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False),
         )
 
     @staticmethod
     def physiologicalGeneration(numOutputFeatures):
-        return nn.Sequential(
-            nn.Linear(modelConstants.numEncodedWeights, modelConstants.numEncodedWeights, bias=False),
-            nn.Linear(modelConstants.numEncodedWeights, numOutputFeatures, bias=False),
-        )
+        return nn.Linear(modelConstants.numEncodedWeights, numOutputFeatures, bias=False)
+
+    @staticmethod
+    def gradientHook(grad): return grad * 1e-3 / modelConstants.userInputParams['generalLR']
 
     # ------------------- Emotion/Activity Encoding Architectures ------------------- #
 

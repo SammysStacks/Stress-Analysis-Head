@@ -32,6 +32,9 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         self.physiologicalSmoothingModel = self.physiologicalSmoothing()
         for _ in range(self.numSharedEncoderLayers): self.addLayer()
 
+        # Register gradient hook for the weights.
+        for param in self.physiologicalGenerationModel.parameters(): param.register_hook(self.gradientHook)
+
     def forward(self):
         raise "You cannot call the dataset-specific signal encoder module."
 
@@ -45,10 +48,10 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         physiologicalProfile = self.physiologicalGenerationModel(physiologicalProfile)
 
         # Smoothing the physiological profile.
-        # physiologicalProfile = physiologicalProfile.unsqueeze(1)
-        # physiologicalProfile = self.physiologicalSmoothingModel(physiologicalProfile)
-        # physiologicalProfile = self.smoothingFilter(physiologicalProfile, kernelSize=3)
-        # physiologicalProfile = physiologicalProfile.squeeze(1)
+        physiologicalProfile = physiologicalProfile.unsqueeze(1)
+        physiologicalProfile = self.physiologicalSmoothingModel(physiologicalProfile)
+        physiologicalProfile = self.smoothingFilter(physiologicalProfile, kernelSize=3)
+        physiologicalProfile = physiologicalProfile.squeeze(1)
 
         return physiologicalProfile
 

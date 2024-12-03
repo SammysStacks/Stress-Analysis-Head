@@ -154,7 +154,7 @@ class emotionModelHead(nn.Module):
         # Normalize the physiological profile.
         physiologicalProfile = self.sharedSignalEncoderModel.smoothPhysiologicalProfile(physiologicalProfileOG)
         physiologicalProfile = physiologicalProfile - physiologicalProfile.mean(dim=-1, keepdim=True)
-        physiologicalProfile = physiologicalProfile / physiologicalProfile.std(dim=-1, keepdim=True) / 6
+        physiologicalProfile = physiologicalProfile / physiologicalProfile.std(dim=-1, keepdim=True) / 3
         # physiologicalProfile: batchSize, encodedDimension
 
         # ------------------- Learned Signal Mapping ------------------- #
