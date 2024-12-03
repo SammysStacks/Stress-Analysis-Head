@@ -20,6 +20,7 @@ class trainingProfileInformation(emotionModelWeights):
         self.physiologicalProfile = self.getInitialPhysiologicalProfile(numExperiments=numExperiments, encodedDimension=encodedDimension)
 
     def getCurrentPhysiologicalProfile(self, batchInds):
+        # with torch.no_grad(): self.physiologicalProfile.data = self.physiologicalProfile.data.round(decimals=4)
         return self.physiologicalProfile[batchInds]
 
 
