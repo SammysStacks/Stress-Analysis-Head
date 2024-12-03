@@ -1,6 +1,6 @@
 #!/bin/bash
 
-allNumEncodedWeights=(32 64 128)  # 4
+allNumEncodedWeights=(16 32 64 128)  # 4
 waveletTypes_arr=('bior3.1')  # 'bior3.1' > 'bior3.3' > 'bior2.2' > 'bior3.5'
 numSpecificEncoderLayers_arr=(1 2)  # 2
 signalEncoderLayers_arr=(8)  # 1
