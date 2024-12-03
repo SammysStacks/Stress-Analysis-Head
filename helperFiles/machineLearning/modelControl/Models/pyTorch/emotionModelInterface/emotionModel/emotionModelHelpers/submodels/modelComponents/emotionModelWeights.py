@@ -76,17 +76,14 @@ class emotionModelWeights(convolutionalHelpers):
         return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=numLayers, activationMethod=f"{emotionModelWeights.getReversibleActivation()}")
 
     def physiologicalSmoothing(self):
-        return nn.Sequential(
-            self.convolutionalFilters_resNetBlocks(numResNets=4, numBlocks=4, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False),
-            # self.convolutionalFiltersBlocks(numBlocks=1, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False),
-        )
+        return self.convolutionalFilters_resNetBlocks(numResNets=4, numBlocks=4, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False)
 
     @staticmethod
     def physiologicalGeneration(numOutputFeatures):
         return nn.Linear(modelConstants.numEncodedWeights, numOutputFeatures, bias=False)
 
     @staticmethod
-    def gradientHook(grad): return grad * 1e-3 / modelConstants.userInputParams['generalLR']
+    def gradientHook(grad): return grad * 1e-4 / modelConstants.userInputParams['generalLR']
 
     # ------------------- Emotion/Activity Encoding Architectures ------------------- #
 
