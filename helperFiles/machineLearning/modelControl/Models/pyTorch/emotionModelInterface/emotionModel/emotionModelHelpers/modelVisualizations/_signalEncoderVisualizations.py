@@ -29,7 +29,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Save the figure.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None)
-        plt.show()
 
     def plotPhysiologicalReconstruction(self, physiologicalTimes, physiologicalProfile, reconstructedPhysiologicalProfile, epoch=0, saveFigureLocation="", plotTitle="Signal Encoding"):
         # Extract the signal dimensions.
@@ -50,7 +49,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Save the figure.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None)
-        plt.show()
 
     def plotEncoder(self, initialSignalData, reconstructedSignals, comparisonTimes, comparisonSignal, epoch, saveFigureLocation="", plotTitle="Encoder Prediction", numSignalPlots=1):
         # Assert the integrity of the incoming data
@@ -83,7 +81,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             # Save the figure.
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
             else: self.clearFigure(fig=None, legend=None)
-            plt.show()
 
     def plotSignalComparison(self, originalSignal, comparisonSignal, epoch, saveFigureLocation, plotTitle, numSignalPlots=1):
         """ originalSignal dimension: batchSize, numSignals, numTotalPoints """
@@ -111,7 +108,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             # Save the plot
             if self.saveDataFolder: self.displayFigure(saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
             else: self.clearFigure(fig=None, legend=None)
-            plt.show()
 
             # There are too many signals to plot.
             if signalInd + 1 == numSignalPlots: break
@@ -134,7 +130,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None)
-        plt.show()
 
     def plotSignalComparisonHeatmap(self, originalSignal, comparisonSignal):
         # Assert the integrity of the incoming data

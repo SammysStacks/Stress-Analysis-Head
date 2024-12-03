@@ -134,7 +134,6 @@ class generalVisualizations(globalPlottingProtocols):
         # Save the figure if desired.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(trainingLosses[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None)
-        plt.show()
 
     def generalDataPlotting(self, plottingData, plottingLabels, saveFigureLocation, plotTitle="Model Convergence Loss"):
         # Plot the training path.
