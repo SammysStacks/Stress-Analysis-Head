@@ -46,9 +46,9 @@ class modelConstants:
 
     timeWindows = [90, 120]
     # Specify the data interface parameters.
+    numEncodedWeights = 8  # The number of encoded weights.
     minMaxScale = 1  # The maximum value for the min-max scaling.
     numBatches = 16  # The number of batches to use in the model.
-    downsizingRatio = 16
 
     # Specify the data interface parameter names.
     signalChannelNames = [timeChannel, signalChannel]

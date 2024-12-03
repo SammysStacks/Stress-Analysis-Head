@@ -1,7 +1,6 @@
 import torch
 from matplotlib import pyplot as plt
 
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.emotionModelWeights import emotionModelWeights
 
 
@@ -17,10 +16,9 @@ class trainingProfileInformation(emotionModelWeights):
         self.resetTrainingProfile(numExperiments=numExperiments, encodedDimension=encodedDimension)
 
     def resetTrainingProfile(self, numExperiments, encodedDimension):
-        self.physiologicalProfile = self.getInitialPhysiologicalProfile(numExperiments=numExperiments, encodedDimension=encodedDimension)
+        self.physiologicalProfile = self.getInitialPhysiologicalProfile(numExperiments=numExperiments)
 
     def getCurrentPhysiologicalProfile(self, batchInds):
-        # with torch.no_grad(): self.physiologicalProfile.data = self.physiologicalProfile.data.round(decimals=4)
         return self.physiologicalProfile[batchInds]
 
 

@@ -24,12 +24,11 @@ class emotionModelWeights(convolutionalHelpers):
     # ------------------- Physiological Profile ------------------- #
 
     @staticmethod
-    def getInitialPhysiologicalProfile(numExperiments, encodedDimension):
+    def getInitialPhysiologicalProfile(numExperiments):
         # Initialize the physiological profile.
-        physiologicalProfile = torch.randn(numExperiments, encodedDimension // modelConstants.downsizingRatio, dtype=torch.float64)
+        physiologicalProfile = torch.randn(numExperiments, modelConstants.numEncodedWeights, dtype=torch.float64)
         # physiologicalProfile = nn.init.normal_(physiologicalProfile, mean=0, std=1/3)
-        # physiologicalProfile = nn.init.kaiming_uniform_(physiologicalProfile)
-        physiologicalProfile = nn.init.xavier_uniform_(physiologicalProfile)
+        physiologicalProfile = nn.init.kaiming_uniform_(physiologicalProfile)
 
         # Initialize the physiological profile as a parameter.
         physiologicalProfile = nn.Parameter(physiologicalProfile)
@@ -84,7 +83,10 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def physiologicalGeneration(numOutputFeatures):
-        return nn.Linear(numOutputFeatures // modelConstants.downsizingRatio, numOutputFeatures, bias=False)
+        return nn.Sequential(
+            nn.Linear(modelConstants.numEncodedWeights, modelConstants.numEncodedWeights, bias=False),
+            nn.Linear(modelConstants.numEncodedWeights, numOutputFeatures, bias=False),
+        )
 
     # ------------------- Emotion/Activity Encoding Architectures ------------------- #
 
