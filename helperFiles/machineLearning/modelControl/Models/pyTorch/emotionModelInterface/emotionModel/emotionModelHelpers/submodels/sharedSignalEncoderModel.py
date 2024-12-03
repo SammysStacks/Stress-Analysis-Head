@@ -34,6 +34,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
 
         # Register gradient hook for the weights.
         for param in self.physiologicalGenerationModel.parameters(): param.register_hook(self.gradientHook)
+        for param in self.physiologicalSmoothingModel.parameters(): param.register_hook(self.gradientHook)
 
     def forward(self):
         raise "You cannot call the dataset-specific signal encoder module."
