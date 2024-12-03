@@ -28,8 +28,8 @@ class emotionModelWeights(convolutionalHelpers):
         # Initialize the physiological profile.
         physiologicalProfile = torch.randn(numExperiments, encodedDimension // modelConstants.downsizingRatio, dtype=torch.float64)
         # physiologicalProfile = nn.init.normal_(physiologicalProfile, mean=0, std=1/3)
-        # physiologicalProfile = nn.init.kaiming_uniform_(physiologicalProfile)
-        physiologicalProfile = nn.init.xavier_uniform_(physiologicalProfile)
+        physiologicalProfile = nn.init.kaiming_uniform_(physiologicalProfile)
+        # physiologicalProfile = nn.init.xavier_uniform_(physiologicalProfile)
 
         # Initialize the physiological profile as a parameter.
         physiologicalProfile = nn.Parameter(physiologicalProfile)
@@ -79,7 +79,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     def physiologicalSmoothing(self):
         return nn.Sequential(
-            self.convolutionalFilters_resNetBlocks(numResNets=6, numBlocks=3, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False),
+            self.convolutionalFilters_resNetBlocks(numResNets=3, numBlocks=3, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False),
         )
 
     @staticmethod
