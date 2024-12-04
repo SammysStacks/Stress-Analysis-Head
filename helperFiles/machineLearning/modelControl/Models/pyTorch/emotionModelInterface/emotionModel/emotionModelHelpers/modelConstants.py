@@ -46,7 +46,7 @@ class modelConstants:
 
     timeWindows = [90, 120]
     # Specify the data interface parameters.
-    numEncodedWeights = 64  # The number of encoded weights.
+    numEncodedWeights = None  # The number of encoded weights.
     minMaxScale = 1  # The maximum value for the min-max scaling.
     numBatches = 16  # The number of batches to use in the model.
 
@@ -64,7 +64,7 @@ class modelConstants:
         cls.userInputParams = userInputParams
 
         # Update the model constants.
-        numEncodedWeights = userInputParams['numEncodedWeights']
+        modelConstants.numEncodedWeights = userInputParams['numEncodedWeights']
 
     # ---------------- Hard-coded therapy parameters --------------------- #
 
