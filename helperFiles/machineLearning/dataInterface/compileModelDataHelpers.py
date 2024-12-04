@@ -52,10 +52,8 @@ class compileModelDataHelpers:
         signalEncoderModelInfo = f"signalEncoder on {userInputParams['deviceListed']} {userInputParams['optimizerType']} sharedLayers{userInputParams['numSharedEncoderLayers']} specificLayers{userInputParams['numSpecificEncoderLayers']} encodedDim{userInputParams['encodedDimension']} LR-G{userInputParams['generalLR']}-P{userInputParams['physioLR']} numPParams{userInputParams['numEncodedWeights']} {userInputParams['neuralOperatorParameters']['wavelet']['waveletType']}"
         emotionPredictionModelInfo = f"emotionPrediction on {userInputParams['deviceListed']} with {userInputParams['optimizerType']}"
 
-        if submodel == modelConstants.signalEncoderModel:
-            return f"{trainingDate} {signalEncoderModelInfo.replace('.', '-')}"
-        elif submodel == modelConstants.emotionModel:
-            return f"{trainingDate} {emotionPredictionModelInfo.replace('.', '-')}"
+        if submodel == modelConstants.signalEncoderModel: return f"{trainingDate} {signalEncoderModelInfo.replace('.', '-')}"
+        elif submodel == modelConstants.emotionModel: return f"{trainingDate} {emotionPredictionModelInfo.replace('.', '-')}"
         else: raise Exception()
 
     # ---------------------- Saving/Loading Model Data --------------------- #
