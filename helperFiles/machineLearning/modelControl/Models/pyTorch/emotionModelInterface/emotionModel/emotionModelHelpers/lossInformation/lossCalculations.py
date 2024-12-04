@@ -22,7 +22,7 @@ class lossCalculations:
 
         # Calculate the number of sequence points to throw out.
         self.minSequencePoints = modelParameters.getExclusionSequenceCriteria()[0]  # The minimum number of sequence points to consider.
-        self.cullPercentage = 0.1  # The percentage of the data to trim from the top of the signal.
+        self.cullPercentage = 0.2  # The percentage of the data to trim from the top of the signal.
 
         # Initialize helper classes.
         self.dataInterface = emotionDataInterface()
