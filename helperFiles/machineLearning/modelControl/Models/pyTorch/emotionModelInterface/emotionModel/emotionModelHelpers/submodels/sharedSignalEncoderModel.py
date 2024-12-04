@@ -29,12 +29,10 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         # The neural layers for the signal encoder.
         self.physiologicalGenerationModel = self.physiologicalGeneration(numOutputFeatures=encodedDimension)
         self.processingLayers, self.neuralLayers = nn.ModuleList(), nn.ModuleList()
-        self.physiologicalSmoothingModel = self.physiologicalSmoothing()
         for _ in range(self.numSharedEncoderLayers): self.addLayer()
 
         # Register gradient hook for the weights.
         for param in self.physiologicalGenerationModel.parameters(): param.register_hook(self.gradientHook)
-        for param in self.physiologicalSmoothingModel.parameters(): param.register_hook(self.gradientHook)
 
     def forward(self):
         raise "You cannot call the dataset-specific signal encoder module."
@@ -44,18 +42,9 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         if self.learningProtocol == 'rCNN': self.processingLayers.append(self.postProcessingLayerRCNN(numSignals=1, sequenceLength=self.encodedDimension))
         else: raise "The learning protocol is not yet implemented."
 
+    # Learned up-sampling of the physiological profile.
     def smoothPhysiologicalProfile(self, physiologicalProfile):
-        # Learned up-sampling of the physiological profile.
-        physiologicalProfile = self.physiologicalGenerationModel(physiologicalProfile)
-
-        # Smoothing the physiological profile.
-        physiologicalProfile = physiologicalProfile.unsqueeze(1)
-        # physiologicalProfile = self.smoothingFilter(physiologicalProfile, kernelSize=3)
-        physiologicalProfile = self.physiologicalSmoothingModel(physiologicalProfile)
-        # physiologicalProfile = self.smoothingFilter(physiologicalProfile, kernelSize=3)
-        physiologicalProfile = physiologicalProfile.squeeze(1)
-
-        return physiologicalProfile
+        return self.physiologicalGenerationModel(physiologicalProfile.unsqueeze(1)).squeeze(1)
 
     def learningInterface(self, layerInd, signalData):
         # Extract the signal data parameters.
@@ -101,8 +90,9 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
 
 if __name__ == "__main__":
     # General parameters.
-    _neuralOperatorParameters = modelParameters.getNeuralParameters({'waveletType': 'bior3.7'})['neuralOperatorParameters']
+    _neuralOperatorParameters = modelParameters.getNeuralParameters({'waveletType': 'bior3.1'})['neuralOperatorParameters']
     _batchSize, _numSignals, _sequenceLength = 2, 128, 256
+    modelConstants.numEncodedWeights = 8
 
     # Set up the parameters.
     neuralLayerClass = sharedSignalEncoderModel(operatorType='wavelet', encodedDimension=_sequenceLength, numSharedEncoderLayers=8, learningProtocol='rCNN', neuralOperatorParameters=_neuralOperatorParameters)

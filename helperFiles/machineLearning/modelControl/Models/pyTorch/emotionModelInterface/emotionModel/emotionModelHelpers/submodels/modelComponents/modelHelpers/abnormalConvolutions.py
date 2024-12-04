@@ -63,8 +63,6 @@ class abnormalConvolutions(nn.Module):
         return poolingLayers
 
 
-# -------------------------------------------------------------------------- #
-
 class splitPoolingHead(nn.Module):
     def __init__(self, module, poolingLayers):
         super().__init__()
@@ -74,3 +72,20 @@ class splitPoolingHead(nn.Module):
 
     def forward(self, inputs):
         return self.module(inputs, self.poolingLayers)
+
+
+class subPixelUpsampling1D(nn.Module):
+    def __init__(self, upscale_factor):
+        super().__init__()
+        self.upscale_factor = upscale_factor
+
+    def forward(self, x):
+        batch_size, channels, width = x.size()
+        new_channels = channels // self.upscale_factor
+        if channels % self.upscale_factor != 0: raise ValueError('The number of channels must be divisible by the upscale factor.')
+
+        # Perform the sub-pixel convolution.
+        x = x.contiguous().view(batch_size, new_channels, self.upscale_factor, width)
+        x = x.permute(0, 1, 3, 2).contiguous().view(batch_size, new_channels, width * self.upscale_factor)
+
+        return x

@@ -75,15 +75,17 @@ class emotionModelWeights(convolutionalHelpers):
     def postProcessingLayerRCNN(numSignals, sequenceLength, numLayers=1):
         return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=numLayers, activationMethod=f"{emotionModelWeights.getReversibleActivation()}")
 
-    def physiologicalSmoothing(self):
-        return self.convolutionalFilters_resNetBlocks(numResNets=4, numBlocks=4, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False)
+    def physiologicalGeneration(self, numOutputFeatures):
+        numUpSamples = int(math.log2(numOutputFeatures // modelConstants.numEncodedWeights))
+
+        layers = []
+        for i in range(numUpSamples):
+            layers.append(self.convolutionalFilters_resNetBlocks(numResNets=1, numBlocks=1, numChannels=[1, 2], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False))
+            layers.append(self.convolutionalFilters_resNetBlocks(numResNets=4, numBlocks=4, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False))
+        return nn.Sequential(*layers)
 
     @staticmethod
-    def physiologicalGeneration(numOutputFeatures):
-        return nn.Linear(modelConstants.numEncodedWeights, numOutputFeatures, bias=False)
-
-    @staticmethod
-    def gradientHook(grad): return grad * 1e-4 / modelConstants.userInputParams['generalLR'] / 2
+    def gradientHook(grad): return grad * 1e-4 / modelConstants.userInputParams['sharedLR']
 
     # ------------------- Emotion/Activity Encoding Architectures ------------------- #
 

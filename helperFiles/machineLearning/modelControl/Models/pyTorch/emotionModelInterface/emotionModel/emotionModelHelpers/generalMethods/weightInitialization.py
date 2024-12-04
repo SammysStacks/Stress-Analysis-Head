@@ -8,13 +8,14 @@ from torch.nn.init import calculate_gain
 
 class weightInitialization:
 
-    def initialize_weights(self, modelParam, activationMethod='selu', layerType='conv1D'):
+    def initialize_weights(self, modelParam, layerType='conv1D'):
         #  Options:
         #     Asymmetric activations: self.kaiming_uniform_weights(modelParam, a=math.sqrt(5), nonlinearity='conv1d', normalizationGain=normalizationGain)
         #     Symmetric activations: self.xavier_uniform_weights(modelParam, nonlinearity='conv1d', normalizationGain=normalizationGain)
 
         # Extract the linearity of the layer.
         layerInformation = layerType.split("_")
+        if len(layerInformation) == 1: return modelParam
         linearity = layerInformation[0]
         normalizationGain = 1.0
 

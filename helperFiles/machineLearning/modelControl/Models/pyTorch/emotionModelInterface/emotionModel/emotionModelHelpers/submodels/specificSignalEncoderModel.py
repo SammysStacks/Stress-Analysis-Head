@@ -1,5 +1,6 @@
 from torch import nn
 
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.neuralOperators.neuralOperatorInterface import neuralOperatorInterface
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
@@ -63,18 +64,19 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
     def printParams(self):
         # Count the trainable parameters.
-        numParams = (sum(p.numel() for p in self.parameters() if p.requires_grad) - self.profileModel.numExperiments * self.encodedDimension) / self.numSignals
+        numParams = sum(p.numel() for p in self.parameters() if p.requires_grad) / self.numSignals
         print(f'The model has {numParams} trainable parameters per signal; {numParams*self.numSignals} total parameters.')
 
 
 if __name__ == "__main__":
     # General parameters.
-    _neuralOperatorParameters = modelParameters.getNeuralParameters({'waveletType': 'bior3.7'})['neuralOperatorParameters']
+    _neuralOperatorParameters = modelParameters.getNeuralParameters({'waveletType': 'bior3.1'})['neuralOperatorParameters']
     _batchSize, _numSignals, _sequenceLength = 2, 128, 256
     _featureNames = [f"signal_{i}" for i in range(_numSignals)]
+    modelConstants.numEncodedWeights = 8
 
     # Set up the parameters.
-    neuralLayerClass = specificSignalEncoderModel(numExperiments=_batchSize, operatorType='wavelet', encodedDimension=_sequenceLength, featureNames=_featureNames, numSpecificEncoderLayers=4, learningProtocol='rCNN', neuralOperatorParameters=_neuralOperatorParameters)
+    neuralLayerClass = specificSignalEncoderModel(numExperiments=_batchSize, operatorType='wavelet', encodedDimension=_sequenceLength, featureNames=_featureNames, numSpecificEncoderLayers=2, learningProtocol='rCNN', neuralOperatorParameters=_neuralOperatorParameters)
     neuralLayerClass.addLayer()
 
     # Print the number of trainable parameters.

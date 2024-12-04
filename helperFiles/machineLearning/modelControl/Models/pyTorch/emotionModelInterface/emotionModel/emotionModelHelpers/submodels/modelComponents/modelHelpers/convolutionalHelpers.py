@@ -1,52 +1,15 @@
-# PyTorch
 import torch
 import torch.nn as nn
 from torch.utils.checkpoint import checkpoint
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.modelHelpers.abnormalConvolutions import abnormalConvolutions
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.modelHelpers.abnormalConvolutions import abnormalConvolutions, subPixelUpsampling1D
 
 
 class convolutionalHelpers(abnormalConvolutions):
 
     def __init__(self):
         super(convolutionalHelpers, self).__init__()
-
-    # ------------------------ General Architectures ----------------------- #
-
-    @staticmethod
-    def encodingInterface_reshapeMethod(signalData, transformation, useCheckpoint=False):
-        # Extract the incoming data's dimension.
-        batchSize, numSignals, signalDimension = signalData.size()
-
-        # Reshape the data to process each signal separately.
-        signalData = signalData.view(batchSize * numSignals, 1, signalDimension)
-
-        # Apply a CNN network.
-        if useCheckpoint:
-            signalData = checkpoint(transformation, signalData, use_reentrant=False)
-        else:
-            signalData = transformation(signalData)
-
-        # Return to the initial dimension of the input.
-        signalData = signalData.view(batchSize, numSignals, signalDimension)
-
-        return signalData
-
-    @staticmethod
-    def encodingInterface_forEach(signalData, transformation, useCheckpoint=False):
-        # Initialize the processed data.
-        processedData = torch.zeros_like(signalData, device=signalData.mainDevice)
-
-        # For each input channel.
-        for signalInd in range(signalData.size(1)):
-            # Apply a CNN network.
-            if useCheckpoint:
-                processedData[:, signalInd:signalInd + 1, :] = checkpoint(transformation, signalData[:, signalInd:signalInd + 1, :], use_reentrant=False)
-            else:
-                processedData[:, signalInd:signalInd + 1, :] = transformation(signalData[:, signalInd:signalInd + 1, :])
-
-        return processedData
 
     # --------------- Standard Convolutional Architectures --------------- #
 
@@ -74,10 +37,8 @@ class convolutionalHelpers(abnormalConvolutions):
         return nn.Sequential(*layers)
 
     def convolutionalFilters_resNetBlocks(self, numResNets, numBlocks, numChannels, kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod='selu', numLayers=None, addBias=False):
-        if not isinstance(numChannels, list):
-            assert numLayers is not None
-        else:
-            assert numChannels[0] == numChannels[-1] or numChannels[0] == 1, f"For restNets we need the same first and last channel number: {numChannels}"
+        if not isinstance(numChannels, list): assert numLayers is not None
+        else: assert len(numChannels) == 2; assert numChannels[0] == numChannels[1] or numChannels[1] % numChannels[0] == 0
 
         layers = []
         for i in range(numResNets):
@@ -85,6 +46,8 @@ class convolutionalHelpers(abnormalConvolutions):
                 self.convolutionalFiltersBlocks(numBlocks=numBlocks, numChannels=numChannels, kernel_sizes=kernel_sizes, dilations=dilations, groups=groups, strides=strides,
                                                 convType=convType, activationMethod=activationMethod, numLayers=numLayers, addBias=addBias),
             )))
+
+            if isinstance(numChannels, list) and numChannels[0] < numChannels[-1]: layers.append(subPixelUpsampling1D(upscale_factor=numChannels[-1] // numChannels[0]))
 
         return nn.Sequential(*layers)
 
@@ -146,7 +109,7 @@ class convolutionalHelpers(abnormalConvolutions):
             else: raise ValueError("Unknown convolutional type")
 
             # Initialize the weights of the convolutional layer.
-            layer = self.weightInitialization.initialize_weights(layer, activationMethod=activationMethod, layerType=convType)
+            layer = self.weightInitialization.initialize_weights(layer, layerType=convType)
             layers.append(layer)
 
             # Get the activation method.
@@ -202,12 +165,12 @@ class addModules(torch.nn.Module):
 class ResNet(torch.nn.Module):
     def __init__(self, module):
         super().__init__()
-        # General helpers.
         self.module = module
 
     def forward(self, inputs):
         # Return the residual connection.
-        return self.module(inputs) + inputs
+        newOutput = self.module(inputs)
+        return newOutput + inputs.expand_as(newOutput)
 
     # -------------------------------------------------------------------------- #
 
