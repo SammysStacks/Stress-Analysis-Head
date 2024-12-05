@@ -1,15 +1,15 @@
 #!/bin/bash
 
-# General parameters: 1
-numSpecificEncoderLayers_arr=(2)  # 2
-encodedDimensions_arr=(256)  # 2
+# General parameters: 4
+numSpecificEncoderLayers_arr=(2)  # 1
+encodedDimensions_arr=(256)  # 1
 signalEncoderLayers_arr=(12)  # 1
-allNumEncodedWeights=(64 128 256)  # 5
+allNumEncodedWeights=(32 64 128 256)  # 4
 
-# Learning rates: 18
-lrs_physio=('1e-1' '1e-2' '1e-3')  # 3
+# Learning rates: 12
+lrs_physio=('1e-1' '1e-2')  # 2
 lrs_general=('1e-2' '1e-3' '1e-4')  # 3
-lrs_shared=('1e-3' '1e-4')  # 2
+lrs_shared=('1e-4' '5e-5')  # 2
 
 # Finalized parameters.
 waveletTypes_arr=('bior3.1')  # 'bior3.1' > 'bior3.3' > 'bior2.2' > 'bior3.5'

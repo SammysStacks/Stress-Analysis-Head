@@ -22,7 +22,8 @@ class lossCalculations:
 
         # Calculate the number of sequence points to throw out.
         self.minSequencePoints = modelParameters.getExclusionSequenceCriteria()[0]  # The minimum number of sequence points to consider.
-        self.cullPercentage = 0.1  # The percentage of the data to trim from the top of the signal.
+        self.numCulledLosses = int(self.minSequencePoints*0.1)  # The percentage of the data to trim from the top of the signal.
+        assert self.numCulledLosses == 3, "Hardcoded: The number of culled losses should be around 3."
 
         # Initialize helper classes.
         self.dataInterface = emotionDataInterface()
@@ -49,21 +50,15 @@ class lossCalculations:
         if validDataMask.sum() == 0: print("No valid batches"); return None
 
         # Calculate the error in signal reconstruction (encoding loss).
-        signalReconstructedLoss = (allReconstructedSignalData - allDatapoints).pow(2)
-        # signalReconstructedLoss: batchSize, numSignals, sequenceLength
-
-        # Assert that nothing is wrong with the loss calculations.
+        signalReconstructedLoss = self.smoothL1Loss(allReconstructedSignalData, allDatapoints)
         self.modelHelpers.assertVariableIntegrity(signalReconstructedLoss, variableName="encoded signal reconstructed loss", assertGradient=False)
+        # signalReconstructedLoss: batchSize, numSignals, sequenceLength
 
         # Create index grids for batch and numSignals dimensions
         batchSize, numSignals, sequenceLength = allDatapoints.size()
         batch_indices, signal_indices = torch.meshgrid(torch.arange(batchSize, device=validDataMask.device), torch.arange(numSignals, device=validDataMask.device), indexing="ij")
 
-        # Calculate the minimum number of sequence points to consider.
-        numMinPoints = max(validDataMask.sum(dim=-1).min().item(), self.minSequencePoints)  # The minimum number of sequence points to consider.
-        numCulledLosses = math.ceil(self.cullPercentage*numMinPoints)  # The percentage of the data to trim from the top of the signal.
-
-        for _ in range(3):
+        for _ in range(self.numCulledLosses):
             # Remove the top 3 noisy points to smoothen the loss.
             findMaxLoss = torch.where(validDataMask, signalReconstructedLoss, float('-inf'))
             max_indices = findMaxLoss.argmax(dim=-1, keepdim=True).squeeze(-1)
