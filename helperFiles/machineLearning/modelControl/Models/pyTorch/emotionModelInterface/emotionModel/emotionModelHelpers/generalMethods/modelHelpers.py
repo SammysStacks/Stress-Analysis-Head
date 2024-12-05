@@ -26,27 +26,9 @@ class modelHelpers:
     # -------------------------- Model Interface -------------------------- #
 
     @staticmethod
-    def getAutoencoderWeights(model):
-        weightsCNN = []
-        weightsFC = []
-
-        # For each trainable parameter in the model.
-        for layerName, layerParams in model.named_parameters():
-            # Get the autoencoder components
-            modelAttributes = layerName.split(".")
-            autoencoderComponent = modelAttributes[1].split("_")[0]
-
-            # If we have a CNN network
-            if autoencoderComponent in ["compressSignalsCNN"] and modelAttributes[-1] == 'weight' and len(layerParams.channelData.shape) == 3:
-                # layerParams Dim: numOutChannels, numInChannels/Groups, numInFeatures -> (1, 1, 15)
-                weightsCNN.append(layerParams.channelData.numpy().copy())
-
-            # If we have an FC network
-            if autoencoderComponent in ["compressSignalsFC"] and modelAttributes[-1] == 'weight':
-                # layerParams Dim: numOutFeatures, numInFeatures.
-                weightsFC.append(layerParams.channelData.numpy().copy())
-
-        return weightsCNN, weightsFC
+    def roundModelWeights(model, decimals=4):
+        for param in model.parameters():
+            param.data = param.data.round(decimals=decimals)
 
     @staticmethod
     def printModelParams(model):

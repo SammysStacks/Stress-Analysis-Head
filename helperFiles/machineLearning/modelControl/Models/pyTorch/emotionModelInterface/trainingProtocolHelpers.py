@@ -75,6 +75,7 @@ class trainingProtocolHelpers:
             else: numEpochs = 1
 
             # Train the updated model.
+            modelPipeline.modelHelpers.roundModelWeights(modelPipeline.model, decimals=8)
             modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=False, specificTraining=True, trainSharedLayers=False, stepScheduler=False, numEpochs=numEpochs)  # Signal-specific training: training only.
             modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=numEpochs)  # Signal-specific training: training only.
             self.unifiedLayerData = self.modelMigration.copyModelWeights(modelPipeline, self.sharedModelWeights)
