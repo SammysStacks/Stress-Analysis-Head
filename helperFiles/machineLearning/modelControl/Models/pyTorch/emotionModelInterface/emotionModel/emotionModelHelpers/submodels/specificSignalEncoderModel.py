@@ -16,6 +16,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         self.numSpecificEncoderLayers = numSpecificEncoderLayers  # The number of specific encoder layers.
         self.learningProtocol = learningProtocol  # The learning protocol for the model.
         self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
+        self.numExperiments = numExperiments  # The number of experiments.
         self.numSignals = len(featureNames)  # The number of signals to encode.
         self.featureNames = featureNames  # The names of the signals to encode.
 
@@ -64,8 +65,12 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
     def printParams(self):
         # Count the trainable parameters.
-        numParams = sum(p.numel() for p in self.parameters() if p.requires_grad) / self.numSignals
-        print(f'The model has {numParams} trainable parameters per signal; {numParams*self.numSignals} total parameters.')
+        numProfileParams = sum(p.numel() for name, p in self.named_parameters() if p.requires_grad and 'profileModel' in name) / self.numExperiments
+        numParams = sum(p.numel() for name, p in self.named_parameters() if p.requires_grad and 'profileModel' not in name) / self.numSignals
+
+        # Print the number of trainable parameters.
+        totalParams = numParams*self.numSignals + numProfileParams*self.numExperiments
+        print(f'The model has {totalParams} trainable parameters: {numParams} per signal and {numProfileParams} per experiment.')
 
 
 if __name__ == "__main__":
@@ -73,7 +78,7 @@ if __name__ == "__main__":
     _neuralOperatorParameters = modelParameters.getNeuralParameters({'waveletType': 'bior3.1'})['neuralOperatorParameters']
     _batchSize, _numSignals, _sequenceLength = 2, 128, 256
     _featureNames = [f"signal_{i}" for i in range(_numSignals)]
-    modelConstants.numEncodedWeights = 8
+    modelConstants.numEncodedWeights = 64
 
     # Set up the parameters.
     neuralLayerClass = specificSignalEncoderModel(numExperiments=_batchSize, operatorType='wavelet', encodedDimension=_sequenceLength, featureNames=_featureNames, numSpecificEncoderLayers=2, learningProtocol='rCNN', neuralOperatorParameters=_neuralOperatorParameters)

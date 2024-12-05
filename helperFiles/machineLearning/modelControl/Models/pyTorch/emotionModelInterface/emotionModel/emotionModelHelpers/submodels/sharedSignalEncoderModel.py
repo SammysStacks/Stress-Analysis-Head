@@ -92,7 +92,7 @@ if __name__ == "__main__":
     # General parameters.
     _neuralOperatorParameters = modelParameters.getNeuralParameters({'waveletType': 'bior3.1'})['neuralOperatorParameters']
     _batchSize, _numSignals, _sequenceLength = 2, 128, 256
-    modelConstants.numEncodedWeights = 8
+    modelConstants.numEncodedWeights = 64
 
     # Set up the parameters.
     neuralLayerClass = sharedSignalEncoderModel(operatorType='wavelet', encodedDimension=_sequenceLength, numSharedEncoderLayers=8, learningProtocol='rCNN', neuralOperatorParameters=_neuralOperatorParameters)

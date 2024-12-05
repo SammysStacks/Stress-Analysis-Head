@@ -22,7 +22,7 @@ class lossCalculations:
 
         # Calculate the number of sequence points to throw out.
         self.minSequencePoints = modelParameters.getExclusionSequenceCriteria()[0]  # The minimum number of sequence points to consider.
-        self.cullPercentage = 0.2  # The percentage of the data to trim from the top of the signal.
+        self.cullPercentage = 0.1  # The percentage of the data to trim from the top of the signal.
 
         # Initialize helper classes.
         self.dataInterface = emotionDataInterface()
@@ -35,7 +35,7 @@ class lossCalculations:
         #       Custom Regression Options: "R2", "pearson", "LogCoshLoss", "weightedMSE"
         # Initialize the loss function WITHOUT the class weights.
         self.meanSquaredError = pytorchLossMethods(lossType="MeanSquaredError", class_weights=None).loss_fn
-        self.smoothL1Loss = nn.SmoothL1Loss(reduction='none', beta=0.25)
+        self.smoothL1Loss = nn.SmoothL1Loss(reduction='none', beta=0.1)
 
     # -------------------------- Signal Encoder Loss Calculations ------------------------- #
 
@@ -61,9 +61,9 @@ class lossCalculations:
 
         # Calculate the minimum number of sequence points to consider.
         numMinPoints = max(validDataMask.sum(dim=-1).min().item(), self.minSequencePoints)  # The minimum number of sequence points to consider.
-        numCulledLosses = int(self.cullPercentage*numMinPoints)  # The percentage of the data to trim from the top of the signal.
+        numCulledLosses = math.ceil(self.cullPercentage*numMinPoints)  # The percentage of the data to trim from the top of the signal.
 
-        for _ in range(numCulledLosses):
+        for _ in range(3):
             # Remove the top 3 noisy points to smoothen the loss.
             findMaxLoss = torch.where(validDataMask, signalReconstructedLoss, float('-inf'))
             max_indices = findMaxLoss.argmax(dim=-1, keepdim=True).squeeze(-1)

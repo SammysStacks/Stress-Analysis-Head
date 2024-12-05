@@ -1,14 +1,14 @@
 #!/bin/bash
 
 # General parameters: 1
-numSpecificEncoderLayers_arr=(1)  # 2
-encodedDimensions_arr=(128 256)  # 2
-signalEncoderLayers_arr=(8)  # 1
-allNumEncodedWeights=(16 64)  # 3
+numSpecificEncoderLayers_arr=(2)  # 2
+encodedDimensions_arr=(256)  # 2
+signalEncoderLayers_arr=(12)  # 1
+allNumEncodedWeights=(64 128 256)  # 5
 
-# Learning rates: 8
-lrs_physio=('1e-1' '1e-2')  # 2
-lrs_general=('1e-2' '1e-3')  # 2
+# Learning rates: 18
+lrs_physio=('1e-1' '1e-2' '1e-3')  # 3
+lrs_general=('1e-2' '1e-3' '1e-4')  # 3
 lrs_shared=('1e-3' '1e-4')  # 2
 
 # Finalized parameters.
