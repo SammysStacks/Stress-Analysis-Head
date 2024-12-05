@@ -70,7 +70,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
         # Print the number of trainable parameters.
         totalParams = numParams*self.numSignals + numProfileParams*self.numExperiments
-        print(f'The model has {totalParams} trainable parameters: {numParams} per signal and {numProfileParams} per experiment.')
+        print(f'The model has {totalParams} trainable parameters: {numProfileParams + numParams} split between {numParams} per signal and {numProfileParams} per experiment.')
 
 
 if __name__ == "__main__":

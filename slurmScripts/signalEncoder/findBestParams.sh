@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # General parameters: 3
-numSpecificEncoderLayers_arr=(2)  # 1
+numSpecificEncoderLayers_arr=(1)  # 1
 encodedDimensions_arr=(256)  # 1
-signalEncoderLayers_arr=(12)  # 1
+signalEncoderLayers_arr=(8)  # 1
 allNumEncodedWeights=(32 64 128)  # 3
 
 # Learning rates: 18
