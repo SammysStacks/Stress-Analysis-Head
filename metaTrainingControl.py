@@ -71,7 +71,7 @@ if __name__ == "__main__":
     # Temporary parameters.
     parser.add_argument('--maxWaveletDecompositions', type=int, default=0, help='The maximum number of wavelet decompositions.')
     parser.add_argument('--physioLR', type=float, default=1e-2, help='The learning rate of the physiological model.')
-    parser.add_argument('--generalLR', type=float, default=1e-3, help='The learning rate of the general model.')
+    parser.add_argument('--generalLR', type=float, default=1e-4, help='The learning rate of the general model.')
     parser.add_argument('--sharedLR', type=float, default=1e-3, help='The learning rate of the shared model.')
 
     # Parse the arguments.
