@@ -35,7 +35,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2024-12-05 Loss0-04 rounded8"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2024-12-05"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Parse Model Parameters ----------------------- #
@@ -52,9 +52,9 @@ if __name__ == "__main__":
 
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model.')
-    parser.add_argument('--numSharedEncoderLayers', type=int, default=12, help='The number of layers in the model.')
+    parser.add_argument('--numSharedEncoderLayers', type=int, default=8, help='The number of layers in the model.')
     parser.add_argument('--encodedDimension', type=int, default=128, help='The dimension of the encoded signal.')
-    parser.add_argument('--numEncodedWeights', type=int, default=32, help='The number of profile weights.')
+    parser.add_argument('--numEncodedWeights', type=int, default=64, help='The number of profile weights.')
  
     # Add arguments for the neural operator.
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
@@ -70,9 +70,9 @@ if __name__ == "__main__":
 
     # Temporary parameters.
     parser.add_argument('--maxWaveletDecompositions', type=int, default=0, help='The maximum number of wavelet decompositions.')
-    parser.add_argument('--physioLR', type=float, default=1e-1, help='The learning rate of the physiological model.')
-    parser.add_argument('--generalLR', type=float, default=1e-2, help='The learning rate of the general model.')
-    parser.add_argument('--sharedLR', type=float, default=1e-4, help='The learning rate of the shared model.')
+    parser.add_argument('--physioLR', type=float, default=1e-2, help='The learning rate of the physiological model.')
+    parser.add_argument('--generalLR', type=float, default=1e-3, help='The learning rate of the general model.')
+    parser.add_argument('--sharedLR', type=float, default=1e-3, help='The learning rate of the shared model.')
 
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())

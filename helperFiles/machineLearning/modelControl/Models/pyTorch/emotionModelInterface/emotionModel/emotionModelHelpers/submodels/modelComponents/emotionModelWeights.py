@@ -80,9 +80,9 @@ class emotionModelWeights(convolutionalHelpers):
         layers = []
 
         for i in range(numUpSamples):
-            layers.append(self.convolutionalFilters_resNetBlocks(numResNets=1, numBlocks=1, numChannels=[1, 2], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False))
             layers.append(self.convolutionalFilters_resNetBlocks(numResNets=1, numBlocks=4, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False))
-        layers.append(self.convolutionalFilters_resNetBlocks(numResNets=1, numBlocks=4, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False))
+            layers.append(self.convolutionalFilters_resNetBlocks(numResNets=1, numBlocks=1, numChannels=[1, 2], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False))
+        layers.append(self.convolutionalFilters_resNetBlocks(numResNets=2, numBlocks=4, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False))
 
         return nn.Sequential(*layers)
 
