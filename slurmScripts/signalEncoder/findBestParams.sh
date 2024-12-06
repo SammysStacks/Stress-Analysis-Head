@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # General parameters: 3
+allNumEncodedWeights=(8 16 32)  # 3
 numSpecificEncoderLayers_arr=(1)  # 1
-encodedDimensions_arr=(256)  # 1
 signalEncoderLayers_arr=(4 8 12)  # 3
-allNumEncodedWeights=(8 16 32 64)  # 4
+encodedDimensions_arr=(256)  # 1
 
 # Learning rates: 12
 lrs_shared=('1e-3' '1e-4')  # 2
