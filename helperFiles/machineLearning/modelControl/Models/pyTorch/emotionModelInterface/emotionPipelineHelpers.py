@@ -50,6 +50,17 @@ class emotionPipelineHelpers:
 
     # ------------------------------------------------------------------ #
 
+    def resetInferenceTraining(self):
+        # Reset the inference weights.
+        self.model.inferenceModel.resetProfile()
+
+        # Get a set of parameters that belong to the inference model
+        inference_params = set(self.model.inferenceModel.parameters())
+
+        # Reset the optimizer state for these parameters
+        for p in list(self.optimizer.state.keys()):
+            if p in inference_params: self.optimizer.state[p] = {}
+
     def compileOptimizer(self, submodel):
         # Initialize the optimizer and scheduler.
         self.optimizer, self.scheduler = self.optimizerMethods.addOptimizer(submodel, self.model)
@@ -72,7 +83,7 @@ class emotionPipelineHelpers:
         self.setupTrainingFlags(self.model, trainingFlag=False)  # Set the model to evaluation mode.
 
         # Prepare the model for inference training.
-        if inferenceTraining: self.setupTrainingFlags(self.model.inferenceModel, trainingFlag=inferenceTraining); return None
+        self.setupTrainingFlags(self.model.inferenceModel, trainingFlag=inferenceTraining)
 
         # Emotion model training.
         if submodel == modelConstants.emotionModel:

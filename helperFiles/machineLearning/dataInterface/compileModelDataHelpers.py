@@ -42,7 +42,6 @@ class compileModelDataHelpers:
 
         # Exclusion criterion.
         self.minSequencePoints, self.minSignalPresentCount, self.minBoundaryPoints, self.maxSinglePointDiff, self.maxAverageDiff = self.modelParameters.getExclusionSequenceCriteria()
-        self.adaptiveFactor = self.modelParameters.getAdaptiveFactor()
 
     # ---------------------- Model Specific Parameters --------------------- #
 

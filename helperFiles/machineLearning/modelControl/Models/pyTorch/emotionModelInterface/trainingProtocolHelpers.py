@@ -97,7 +97,7 @@ class trainingProtocolHelpers:
             modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=False, numEpochs=1)  # Profile training.
 
             # Inference training.
-            modelPipeline.model.inferenceModel.resetProfile()
+            modelPipeline.resetInferenceTraining()
             modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=True, profileTraining=False, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=8)  # Inference training.
             self.accelerator.wait_for_everyone()
 
