@@ -3,8 +3,8 @@ import torch
 import torch.nn.functional as F
 
 # Import helper files.
-from helperFiles.machineLearning.feedbackControl.generalTherapy.helperMethods.therapyProtcols.helperTherapyMethods.generalMethods import generalMethods
-from helperFiles.machineLearning.feedbackControl.generalTherapy.helperMethods.dataInterface.dataInterface import dataInterface
+from helperFiles.machineLearning.feedbackControl.heatAndMusicTherapy.helperMethods.therapyProtcols.helperTherapyMethods.generalMethods import generalMethods
+from helperFiles.machineLearning.feedbackControl.heatAndMusicTherapy.helperMethods.dataInterface.dataInterface import dataInterface
 
 class simulationProtocols:
     def __init__(self, allParameterBins, allPredictionBins, predictionBinWidths, modelParameterBounds, numPredictions, numParameters, predictionWeights, optimalNormalizedState, initialParameterBounds, unNormalizedParameterBins, simulationParameters,

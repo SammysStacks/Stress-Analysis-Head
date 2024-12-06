@@ -1,5 +1,5 @@
 # Import the necessary libraries.
-from helperFiles.machineLearning.feedbackControl.generalTherapy.therapyHelpers import therapyHelpers
+from helperFiles.machineLearning.feedbackControl.heatAndMusicTherapy.therapyHelpers import therapyHelpers
 
 
 class heatTherapyControl(therapyHelpers):

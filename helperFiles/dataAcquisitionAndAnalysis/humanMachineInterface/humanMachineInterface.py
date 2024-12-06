@@ -9,7 +9,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionPipeline import emotionPipeline
 from helperFiles.machineLearning.featureAnalysis.compiledFeatureNames.compileFeatureNames import compileFeatureNames
 from helperFiles.machineLearning.modelControl.modelSpecifications.compileModelInfo import compileModelInfo
-from helperFiles.machineLearning.feedbackControl.generalTherapy.heatTherapyMain import heatTherapyControl
+from helperFiles.machineLearning.feedbackControl.heatAndMusicTherapy.heatTherapyMain import heatTherapyControl
 from helperFiles.machineLearning.dataInterface.compileModelDataHelpers import compileModelDataHelpers
 
 
