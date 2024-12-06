@@ -61,6 +61,12 @@ class modelVisualizations(globalPlottingProtocols):
                                                lossLabels=[f"{datasetName} Signal Encoding Inference Loss" for datasetName in datasetNames],
                                                saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Inference Losses")
 
+            # Plot inference loss.
+            self.generalViz.plotTrainingLosses([specificModel.trainingLosses_signalReconstruction for specificModel in specificModels],
+                                               [specificModel.trainingLosses_inference for specificModel in specificModels],
+                                               lossLabels=[f"{datasetName} Signal Encoding Inference Loss" for datasetName in datasetNames],
+                                               saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Losses")
+
     def plotAllTrainingEvents(self, submodel, modelPipeline, lossDataLoader, trainingDate, currentEpoch):
         self.accelerator.print(f"\nPlotting results for the {modelPipeline.model.datasetName} model")
 
