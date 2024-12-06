@@ -1,18 +1,17 @@
-from torch import nn
-
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.emotionModelWeights import emotionModelWeights
 
 
-class inferenceModel(nn.Module):
+class inferenceModel(emotionModelWeights):
 
-    def __init__(self, encodedDimension):
+    def __init__(self, numExperiments, encodedDimension):
         super(inferenceModel, self).__init__()
+        self.physiologicalProfile = self.getInitialPhysiologicalProfile(numExperiments=numExperiments)
         self.encodedDimension = encodedDimension
-        self.physiologicalProfile = None
+        self.numExperiments = numExperiments
+        self.resetProfile()
 
-    def resetInferenceModel(self, numExperiments, encodedDimension):
-        self.physiologicalProfile = emotionModelWeights.getInitialPhysiologicalProfile(numExperiments)
-        self.physiologicalProfile.requires_grad = True
+    def resetProfile(self):
+        self.physiologicalProfile = self.physiologicalInitialization(self.physiologicalProfile)
 
     def getCurrentPhysiologicalProfile(self, batchInds):
-        return self.physiologicalProfile[batchInds]
+        return self.physiologicalProfile.to(batchInds.device)[batchInds]

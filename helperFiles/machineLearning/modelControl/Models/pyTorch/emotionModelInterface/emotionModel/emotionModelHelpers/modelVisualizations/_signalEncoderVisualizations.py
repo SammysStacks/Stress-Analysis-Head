@@ -16,9 +16,10 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     # --------------------- Visualize Model Parameters --------------------- #
 
-    def plotPhysiologicalProfile(self, physiologicalTimes, physiologicalProfile, epoch=0, saveFigureLocation="", plotTitle="Signal Encoding"):
+    def plotPhysiologicalProfile(self, physiologicalTimes, physiologicalProfile, physiologicalProfileInference, epoch=0, saveFigureLocation="", plotTitle="Signal Encoding"):
         # Plot the signal reconstruction.
-        plt.plot(physiologicalTimes[64:128], physiologicalProfile[0][64:128], c=self.blackColor, label=f"Physiological profile", linewidth=2, alpha=0.8)
+        plt.plot(physiologicalTimes[64:128], physiologicalProfile[0][64:128], c=self.blackColor, label=f"Physiological profile", linewidth=1, alpha=1)
+        plt.plot(physiologicalTimes[64:128], physiologicalProfileInference[0][64:128], c=self.lightColors[1], label=f"Inference profile", linewidth=2, alpha=0.5)
 
         # Plotting aesthetics.
         plt.xlabel("Time (Seconds)")

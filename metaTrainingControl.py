@@ -53,8 +53,8 @@ if __name__ == "__main__":
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model.')
     parser.add_argument('--numSharedEncoderLayers', type=int, default=8, help='The number of layers in the model.')
-    parser.add_argument('--encodedDimension', type=int, default=128, help='The dimension of the encoded signal.')
-    parser.add_argument('--numEncodedWeights', type=int, default=64, help='The number of profile weights.')
+    parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
+    parser.add_argument('--numEncodedWeights', type=int, default=32, help='The number of profile weights.')
  
     # Add arguments for the neural operator.
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
@@ -130,30 +130,6 @@ if __name__ == "__main__":
         # Save the model sometimes (only on the main device).
         if saveFullModel and accelerator.is_local_main_process:
             trainingProtocols.saveModelState(epoch, allMetaModels, allModels, submodel, allDatasetNames, trainingDate)
-
-        # Finalize the epoch parameters.
-        accelerator.wait_for_everyone()  # Wait before continuing.
-        endEpochTime = time.time()
-
-        print("Total epoch time:", endEpochTime - startEpochTime)
-
-    # -------------------------- Physiological Training ------------------------- #
-
-    # Reset the physiological model.
-    trainingProtocols.resetPhysiologicalModel(allMetaModels, allModels)
-
-    # For each training epoch
-    for epoch in range(numEpochs + 1, numEpochs + 1 + 50):
-        print(f"\nEpoch: {epoch}")
-        startEpochTime = time.time()
-
-        # Train the model for a single epoch.
-        _, plotSteps = modelParameters.getSavingInformation(epoch, numEpoch_toSaveFull, numEpoch_toPlot)
-        trainingProtocols.retrainProfileModel(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders)
-
-        # Store the initial loss information and plot.
-        trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)
-        if plotSteps: trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate)
 
         # Finalize the epoch parameters.
         accelerator.wait_for_everyone()  # Wait before continuing.

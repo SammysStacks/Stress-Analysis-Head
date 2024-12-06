@@ -52,7 +52,7 @@ class emotionModelHead(nn.Module):
         # ------------------------ Data Compression ------------------------ #
 
         # Inference interface for the model.
-        self.inferenceModel = inferenceModel(encodedDimension=self.encodedDimension)
+        self.inferenceModel = inferenceModel(encodedDimension=self.encodedDimension, numExperiments=numExperiments)
 
         # The signal encoder model to find a common feature vector across all signals.
         self.specificSignalEncoderModel = specificSignalEncoderModel(

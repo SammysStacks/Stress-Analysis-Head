@@ -22,7 +22,7 @@ class emotionPipeline(emotionPipelineHelpers):
         # allEmotionClassWeights, activityClassWeights = self.organizeLossInfo.getClassWeights(allLabels, allTrainingMasks, allTestingMasks, self.numActivities)
         self.setupTraining(submodel, inferenceTraining=inferenceTraining, profileTraining=profileTraining, specificTraining=specificTraining, trainSharedLayers=trainSharedLayers)
         if self.model.debugging: self.accelerator.print(f"\nTraining {self.datasetName} model")
-        onlyProfileTraining = profileTraining and not (specificTraining or trainSharedLayers)
+        onlyProfileTraining = (profileTraining or inferenceTraining) and not (specificTraining or trainSharedLayers)
 
         # For each training epoch.
         for epoch in range(numEpochs):
@@ -33,8 +33,7 @@ class emotionPipeline(emotionPipelineHelpers):
                 with (self.accelerator.accumulate(self.model)):  # Accumulate the gradients.
                     with self.accelerator.autocast():  # Enable mixed precision auto-casting
                         # Extract the data, labels, and testing/training indices.
-                        if not inferenceTraining: batchSignalInfo, batchSignalLabels, batchTrainingLabelMask, batchTestingLabelMask, batchTrainingSignalMask, batchTestingSignalMask = self.extractBatchInformation(batchData)
-                        else: batchSignalInfo = batchData; batchTrainingLabelMask, batchTestingLabelMask, batchTrainingSignalMask, batchTestingSignalMask = None, None, None, None
+                        batchSignalInfo, batchSignalLabels, batchTrainingLabelMask, batchTestingLabelMask, batchTrainingSignalMask, batchTestingSignalMask = self.extractBatchInformation(batchData)
                         if onlyProfileTraining: batchTrainingLabelMask, batchTestingLabelMask, batchTrainingSignalMask, batchTestingSignalMask = None, None, None, None
 
                         # We can skip this batch, and backpropagation if necessary.

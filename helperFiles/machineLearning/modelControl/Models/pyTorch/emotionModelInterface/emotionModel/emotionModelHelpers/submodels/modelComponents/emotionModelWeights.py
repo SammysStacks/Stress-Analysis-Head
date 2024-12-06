@@ -27,12 +27,16 @@ class emotionModelWeights(convolutionalHelpers):
     def getInitialPhysiologicalProfile(numExperiments):
         # Initialize the physiological profile.
         physiologicalProfile = torch.randn(numExperiments, modelConstants.numEncodedWeights, dtype=torch.float64)
-        physiologicalProfile = nn.init.xavier_uniform_(physiologicalProfile)
+        physiologicalProfile = emotionModelWeights.physiologicalInitialization(physiologicalProfile)
 
         # Initialize the physiological profile as a parameter.
         physiologicalProfile = nn.Parameter(physiologicalProfile)
 
         return physiologicalProfile
+
+    @staticmethod
+    def physiologicalInitialization(physiologicalProfile):
+        return nn.init.xavier_uniform_(physiologicalProfile)
 
     @staticmethod
     def smoothingFilter(data, kernel=(), kernelSize=None):

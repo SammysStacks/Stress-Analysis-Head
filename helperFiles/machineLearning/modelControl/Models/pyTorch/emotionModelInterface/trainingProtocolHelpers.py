@@ -27,13 +27,6 @@ class trainingProtocolHelpers:
         self.modelHelpers = modelHelpers()
 
     @staticmethod
-    def resetPhysiologicalModel(allMetaModels, allModels):
-        # For each meta-training model.
-        for modelInd in range(len(allMetaModels) + len(allModels)):
-            modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
-            modelPipeline.model.specificSignalEncoderModel.profileModel.resetTrainingProfile(numExperiments=modelPipeline.numExperiments)
-
-    @staticmethod
     def inferenceTraining(dataLoader, modelPipeline, submodel, inputData, encodedDimension, numEpochs):
         # Prepare the model for inference training.
         inputData = torch.as_tensor(inputData, dtype=torch.float64)
@@ -100,9 +93,12 @@ class trainingProtocolHelpers:
 
             # Train the updated model.
             modelPipeline.modelHelpers.roundModelWeights(modelPipeline.model, decimals=8)
-            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=False, specificTraining=True, trainSharedLayers=False, stepScheduler=False, numEpochs=numEpochs)  # Signal-specific training: training only.
-            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=numEpochs)  # Signal-specific training: training only.
-            self.unifiedLayerData = self.modelMigration.copyModelWeights(modelPipeline, self.sharedModelWeights)
+            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=False, specificTraining=True, trainSharedLayers=False, stepScheduler=False, numEpochs=numEpochs)  # Signal-specific training.
+            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=False, numEpochs=1)  # Profile training.
+
+            # Inference training.
+            modelPipeline.model.inferenceModel.resetProfile()
+            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=True, profileTraining=False, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=8)  # Inference training.
             self.accelerator.wait_for_everyone()
 
     def calculateLossInformation(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel):

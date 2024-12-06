@@ -8,15 +8,13 @@ class trainingProfileInformation(emotionModelWeights):
 
     def __init__(self, numExperiments, encodedDimension):
         super(trainingProfileInformation, self).__init__()
+        self.physiologicalProfile = self.getInitialPhysiologicalProfile(numExperiments=numExperiments)
         self.encodedDimension = encodedDimension
         self.numExperiments = numExperiments
-        self.physiologicalProfile = None
+        self.resetProfile()
 
-        # Initialize the blank signal profile.
-        self.resetTrainingProfile(numExperiments=numExperiments, encodedDimension=encodedDimension)
-
-    def resetTrainingProfile(self, numExperiments, encodedDimension):
-        self.physiologicalProfile = self.getInitialPhysiologicalProfile(numExperiments=numExperiments)
+    def resetProfile(self):
+        self.physiologicalProfile = self.physiologicalInitialization(self.physiologicalProfile)
 
     def getCurrentPhysiologicalProfile(self, batchInds):
         return self.physiologicalProfile[batchInds]
