@@ -27,6 +27,13 @@ class trainingProtocolHelpers:
         self.modelHelpers = modelHelpers()
 
     @staticmethod
+    def resetPhysiologicalModel(allMetaModels, allModels):
+        # For each meta-training model.
+        for modelInd in range(len(allMetaModels) + len(allModels)):
+            modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
+            modelPipeline.model.specificSignalEncoderModel.profileModel.resetTrainingProfile(numExperiments=modelPipeline.numExperiments)
+
+    @staticmethod
     def inferenceTraining(dataLoader, modelPipeline, submodel, inputData, encodedDimension, numEpochs):
         # Prepare the model for inference training.
         inputData = torch.as_tensor(inputData, dtype=torch.float64)
@@ -36,6 +43,23 @@ class trainingProtocolHelpers:
         # Train the inference model.
         emotionProfile = modelPipeline.trainModel(dataLoader, submodel=submodel,  inferenceTraining=True, profileTraining=False, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=numEpochs)
         return emotionProfile
+
+    def retrainProfileModel(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders):
+        # Unify all the model weights.
+        self.unifyAllModelWeights(allMetaModels, allModels)
+
+        # For each meta-training model.
+        for modelInd in range(len(allMetaModels) + len(allModels)):
+            dataLoader = allMetadataLoaders[modelInd] if modelInd < len(allMetadataLoaders) else allDataLoaders[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
+            modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
+            if modelPipeline.datasetName.lower() == 'empatch': numEpochs = 2
+            elif modelPipeline.datasetName.lower() == 'wesad': numEpochs = 8
+            else: numEpochs = 1
+
+            # Train the updated model.
+            modelPipeline.modelHelpers.roundModelWeights(modelPipeline.model, decimals=8)
+            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=False, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=numEpochs)  # Signal-specific training: training only.
+            self.accelerator.wait_for_everyone()
 
     def trainEpoch(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders):
         # Set random order to loop through the models.

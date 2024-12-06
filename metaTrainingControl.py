@@ -137,13 +137,32 @@ if __name__ == "__main__":
 
         print("Total epoch time:", endEpochTime - startEpochTime)
 
-    # -------------------------- Empatch Training ------------------------- #
+    # -------------------------- Physiological Training ------------------------- #
 
-    # # Unify all the fixed weights in the models
-    # unifiedLayerData = modelMigration.copyModelWeights(modelPipeline, sharedModelWeights=modelConstants.sharedModelWeights)
-    # modelMigration.unifyModelWeights(allMetaModels, sharedModelWeights=modelConstants.sharedModelWeights, unifiedLayerData)
-    # modelMigration.unifyModelWeights(allModels, sharedModelWeights=modelConstants.sharedModelWeights, unifiedLayerData)
-    #
+    # Reset the physiological model.
+    trainingProtocols.resetPhysiologicalModel(allMetaModels, allModels)
+
+    # For each training epoch
+    for epoch in range(numEpochs + 1, numEpochs + 1 + 50):
+        print(f"\nEpoch: {epoch}")
+        startEpochTime = time.time()
+
+        # Train the model for a single epoch.
+        _, plotSteps = modelParameters.getSavingInformation(epoch, numEpoch_toSaveFull, numEpoch_toPlot)
+        trainingProtocols.retrainProfileModel(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders)
+
+        # Store the initial loss information and plot.
+        trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)
+        if plotSteps: trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate)
+
+        # Finalize the epoch parameters.
+        accelerator.wait_for_everyone()  # Wait before continuing.
+        endEpochTime = time.time()
+
+        print("Total epoch time:", endEpochTime - startEpochTime)
+
+    # -------------------------- SHAP Analysis ------------------------- #
+
     # # SHAP analysis on the metalearning models.
     # featureAnalysis = _featureImportance.featureImportance(modelCompiler.saveTrainingData)
     #
