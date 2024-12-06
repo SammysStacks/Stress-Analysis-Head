@@ -17,6 +17,7 @@ class trainingProtocolHelpers:
         # General parameters.
         self.submodelsSaving = modelParameters.getSubmodelsSaving(submodel)  # The submodels to save.
         self.sharedModelWeights = modelConstants.sharedModelWeights  # The shared model weights.
+        self.inferenceEpochs = modelParameters.getInferenceEpochs()  # The number of epochs for inference training.
         self.minEpochs_modelAdjustment = 1  # The minimum number of epochs before adjusting the model architecture.
         self.accelerator = accelerator
         self.unifiedLayerData = None
@@ -98,7 +99,7 @@ class trainingProtocolHelpers:
 
             # Inference training.
             modelPipeline.resetInferenceTraining()
-            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=True, profileTraining=False, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=8)  # Inference training.
+            modelPipeline.trainModel(dataLoader, submodel, inferenceTraining=True, profileTraining=False, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=self.inferenceEpochs)  # Inference training.
             self.accelerator.wait_for_everyone()
 
     def calculateLossInformation(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel):
