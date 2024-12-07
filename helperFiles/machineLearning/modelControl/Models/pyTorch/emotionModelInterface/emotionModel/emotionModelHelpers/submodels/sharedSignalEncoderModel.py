@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.generalMethods.generalMethods import generalMethods
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
@@ -81,6 +82,37 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
             if printLoss: print("\tFIRST Optimal Compression Loss STD:", pcaReconstructionLoss.mean().item())
 
             return pcaReconstructionLoss
+
+    def interpolateData(self, signalData, resampledSignalData):
+        # Extract the dimensions of the data.
+        timepoints = emotionDataInterface.getChannelData(signalData, channelName=modelConstants.timeChannel)
+        batchSize, numSignals, encodedDimension = resampledSignalData.size()
+
+        # Align the timepoints to the physiological times.
+        reversedPhysiologicalTimes = torch.flip(self.pseudoEncodedTimes, dims=[0])
+        mappedPhysiologicalTimedInds = encodedDimension - 1 - torch.searchsorted(sorted_sequence=reversedPhysiologicalTimes, input=timepoints, out=None, out_int32=False, right=False)  # timepoints <= physiologicalTimesExpanded[mappedPhysiologicalTimedInds]
+        # Ensure the indices don't exceed the size of the last dimension of reconstructedSignalData.
+        validIndsRight = torch.clamp(mappedPhysiologicalTimedInds, min=0, max=encodedDimension - 1)  # physiologicalTimesExpanded[validIndsLeft] < timepoints
+        validIndsLeft = torch.clamp(mappedPhysiologicalTimedInds + 1, min=0, max=encodedDimension - 1)  # timepoints <= physiologicalTimesExpanded[validIndsRight]
+        # mappedPhysiologicalTimedInds dimension: batchSize, numSignals, maxSequenceLength
+
+        # Get the closest physiological data to the timepoints.
+        physiologicalTimesExpanded = self.pseudoEncodedTimes.view(1, 1, -1).expand_as(resampledSignalData)
+        closestPhysiologicalTimesRight = torch.gather(input=physiologicalTimesExpanded, dim=2, index=validIndsRight)  # Initialize the tensor.
+        closestPhysiologicalTimesLeft = torch.gather(input=physiologicalTimesExpanded, dim=2, index=validIndsLeft)  # Initialize the tensor.
+        closestPhysiologicalDataRight = torch.gather(input=resampledSignalData, dim=2, index=validIndsRight)  # Initialize the tensor.
+        closestPhysiologicalDataLeft = torch.gather(input=resampledSignalData, dim=2, index=validIndsLeft)  # Initialize the tensor.
+        assert ((closestPhysiologicalTimesLeft <= timepoints + 0.1) & (timepoints - 0.1 <= closestPhysiologicalTimesRight)).all(), "The timepoints must be within the range of the closest physiological times."
+        # closestPhysiologicalData dimension: batchSize, numSignals, maxSequenceLength
+
+        # Perform linear interpolation.
+        linearSlopes = (closestPhysiologicalDataRight - closestPhysiologicalDataLeft) / (closestPhysiologicalTimesRight - closestPhysiologicalTimesLeft).clamp(min=1e-20)
+        linearSlopes[closestPhysiologicalTimesLeft == closestPhysiologicalTimesRight] = 0
+
+        # Calculate the error in signal reconstruction (encoding loss).
+        interpolatedData = closestPhysiologicalDataLeft + (timepoints - closestPhysiologicalTimesLeft) * linearSlopes
+
+        return interpolatedData
 
     def printParams(self):
         # Count the trainable parameters.

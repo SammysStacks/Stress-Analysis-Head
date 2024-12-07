@@ -52,7 +52,7 @@ class emotionPipelineHelpers:
 
     def resetInferenceTraining(self):
         # Reset the inference weights.
-        self.model.inferenceModel.resetProfile()
+        self.model.inferenceModel.resetInferenceProfile()
 
         # Get a set of parameters that belong to the inference model
         inference_params = set(self.model.inferenceModel.parameters())

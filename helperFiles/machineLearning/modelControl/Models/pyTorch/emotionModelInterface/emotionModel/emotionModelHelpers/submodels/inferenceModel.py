@@ -8,9 +8,9 @@ class inferenceModel(emotionModelWeights):
         self.physiologicalProfile = self.getInitialPhysiologicalProfile(numExperiments=numExperiments)
         self.encodedDimension = encodedDimension
         self.numExperiments = numExperiments
-        self.resetProfile()
+        self.resetInferenceProfile()
 
-    def resetProfile(self):
+    def resetInferenceProfile(self):
         self.physiologicalProfile = self.physiologicalInitialization(self.physiologicalProfile)
 
     def getCurrentPhysiologicalProfile(self, batchInds):

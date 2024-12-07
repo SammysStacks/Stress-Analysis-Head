@@ -11,9 +11,9 @@ class trainingProfileInformation(emotionModelWeights):
         self.physiologicalProfile = self.getInitialPhysiologicalProfile(numExperiments=numExperiments)
         self.encodedDimension = encodedDimension
         self.numExperiments = numExperiments
-        self.resetProfile()
+        self.resetTrainingProfile()
 
-    def resetProfile(self):
+    def resetTrainingProfile(self):
         self.physiologicalProfile = self.physiologicalInitialization(self.physiologicalProfile)
 
     def getCurrentPhysiologicalProfile(self, batchInds):

@@ -27,17 +27,6 @@ class trainingProtocolHelpers:
         self.modelMigration = modelMigration(accelerator)
         self.modelHelpers = modelHelpers()
 
-    @staticmethod
-    def inferenceTraining(dataLoader, modelPipeline, submodel, inputData, encodedDimension, numEpochs):
-        # Prepare the model for inference training.
-        inputData = torch.as_tensor(inputData, dtype=torch.float64)
-        numExperiments, numSignals, sequenceLength, numChannels = inputData.size()
-        modelPipeline.model.inferenceModel.resetInferenceModel(numExperiments, encodedDimension)
-
-        # Train the inference model.
-        emotionProfile = modelPipeline.trainModel(dataLoader, submodel=submodel,  inferenceTraining=True, profileTraining=False, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=numEpochs)
-        return emotionProfile
-
     def retrainProfileModel(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders):
         # Unify all the model weights.
         self.unifyAllModelWeights(allMetaModels, allModels)

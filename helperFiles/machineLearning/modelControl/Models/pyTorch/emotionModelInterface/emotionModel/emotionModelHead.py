@@ -149,7 +149,7 @@ class emotionModelHead(nn.Module):
         # Get the estimated physiological profiles.
         if inferenceTraining: physiologicalProfileOG = self.inferenceModel.getCurrentPhysiologicalProfile(batchInds)
         else: physiologicalProfileOG = self.specificSignalEncoderModel.profileModel.getCurrentPhysiologicalProfile(batchInds)
-        # physiologicalProfile: batchSize, encodedDimension // modelConstants.downsizingRatio
+        # physiologicalProfile: batchSize, modelConstants.numEncodedWeights
 
         # Normalize the physiological profile.
         physiologicalProfile = self.sharedSignalEncoderModel.smoothPhysiologicalProfile(physiologicalProfileOG)
@@ -159,14 +159,13 @@ class emotionModelHead(nn.Module):
 
         # ------------------- Learned Signal Mapping ------------------- #
 
-        # Perform the backward pass: physiologically -> signal data.
-        reversibleInterface.changeDirections(forwardDirection=False)
+        # Perform the backward pass: physiological profile -> signal data.
         resampledSignalData = physiologicalProfile.unsqueeze(1).repeat(repeats=(1, numSignals, 1))
-        resampledSignalData = self.coreModelPass(metaLearningData=resampledSignalData, numSpecificLayers=self.numSpecificEncoderLayers, numSharedLayers=self.numSharedEncoderLayers, specificModel=self.specificSignalEncoderModel, sharedModel=self.sharedSignalEncoderModel)
+        resampledSignalData = self.signalEncoderPass(metaLearningData=resampledSignalData, forwardPass=False)
         # resampledSignalData: batchSize, numSignals, encodedDimension
 
         # Resample the signal data.
-        reconstructedSignalData = self.interpolateData(signalData, resampledSignalData)
+        reconstructedSignalData = self.sharedSignalEncoderModel.interpolateData(signalData, resampledSignalData)
         # reconstructedSignalData: batchSize, numSignals, maxSequenceLength
 
         # Visualize the data transformations within signal encoding.
@@ -199,6 +198,8 @@ class emotionModelHead(nn.Module):
 
         return validDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile
 
+    # ------------------------- Model Components ------------------------- #
+
     @staticmethod
     def coreModelPass(metaLearningData, numSpecificLayers, numSharedLayers, specificModel, sharedModel):
         # Calculate the estimated physiological profile given each signal.
@@ -214,6 +215,14 @@ class emotionModelHead(nn.Module):
         # metaLearningData: batchSize, numSignals, finalDimension
 
         return metaLearningData
+
+    def signalEncoderPass(self, metaLearningData, forwardPass):
+        reversibleInterface.changeDirections(forwardDirection=forwardPass)
+        metaLearningData = self.coreModelPass(metaLearningData, numSpecificLayers=self.numSpecificEncoderLayers, numSharedLayers=self.numSharedEncoderLayers, specificModel=self.specificSignalEncoderModel, sharedModel=self.sharedSignalEncoderModel)
+        return metaLearningData
+
+    def reconstructPhysiologicalProfile(self, resampledSignalData):
+        return self.signalEncoderPass(metaLearningData=resampledSignalData, forwardPass=True)
 
     def fullPass(self, submodel, signalData, signalIdentifiers, metadata, device, inferenceTraining):
         # Preallocate the output tensors.
@@ -242,6 +251,8 @@ class emotionModelHead(nn.Module):
 
         return validDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile
 
+    # ------------------------- Model Visualizations ------------------------- #
+
     def visualizeSignalEncoding(self, physiologicalProfileOG, physiologicalProfile, resampledSignalData, reconstructedSignalData, signalData, validDataMask):
         # Find the first valid signal.
         validSignalMask = torch.any(validDataMask, dim=-1)
@@ -269,41 +280,3 @@ class emotionModelHead(nn.Module):
         plt.title(f"batchInd{firstBatchInd} signalInd{firstSignalInd} numPoints{len(validTimepoints)}")
         plt.legend()
         plt.show()
-
-    def interpolateData(self, signalData, resampledSignalData):
-        # Extract the dimensions of the data.
-        timepoints = emotionDataInterface.getChannelData(signalData, channelName=modelConstants.timeChannel)
-        batchSize, numSignals, encodedDimension = resampledSignalData.size()
-
-        # Align the timepoints to the physiological times.
-        reversedPhysiologicalTimes = torch.flip(self.sharedSignalEncoderModel.pseudoEncodedTimes, dims=[0])
-        mappedPhysiologicalTimedInds = encodedDimension - 1 - torch.searchsorted(sorted_sequence=reversedPhysiologicalTimes, input=timepoints, out=None, out_int32=False, right=False)  # timepoints <= physiologicalTimesExpanded[mappedPhysiologicalTimedInds]
-        # Ensure the indices don't exceed the size of the last dimension of reconstructedSignalData.
-        validIndsRight = torch.clamp(mappedPhysiologicalTimedInds, min=0, max=encodedDimension - 1)  # physiologicalTimesExpanded[validIndsLeft] < timepoints
-        validIndsLeft = torch.clamp(mappedPhysiologicalTimedInds + 1, min=0, max=encodedDimension - 1)  # timepoints <= physiologicalTimesExpanded[validIndsRight]
-        # mappedPhysiologicalTimedInds dimension: batchSize, numSignals, maxSequenceLength
-
-        # Get the closest physiological data to the timepoints.
-        physiologicalTimesExpanded = self.sharedSignalEncoderModel.pseudoEncodedTimes.view(1, 1, -1).expand_as(resampledSignalData)
-        closestPhysiologicalTimesRight = torch.gather(input=physiologicalTimesExpanded, dim=2, index=validIndsRight)  # Initialize the tensor.
-        closestPhysiologicalTimesLeft = torch.gather(input=physiologicalTimesExpanded, dim=2, index=validIndsLeft)  # Initialize the tensor.
-        closestPhysiologicalDataRight = torch.gather(input=resampledSignalData, dim=2, index=validIndsRight)  # Initialize the tensor.
-        closestPhysiologicalDataLeft = torch.gather(input=resampledSignalData, dim=2, index=validIndsLeft)  # Initialize the tensor.
-        assert ((closestPhysiologicalTimesLeft <= timepoints + 0.1) & (timepoints - 0.1 <= closestPhysiologicalTimesRight)).all(), "The timepoints must be within the range of the closest physiological times."
-        # closestPhysiologicalData dimension: batchSize, numSignals, maxSequenceLength
-
-        # Perform linear interpolation.
-        linearSlopes = (closestPhysiologicalDataRight - closestPhysiologicalDataLeft) / (closestPhysiologicalTimesRight - closestPhysiologicalTimesLeft).clamp(min=1e-20)
-        linearSlopes[closestPhysiologicalTimesLeft == closestPhysiologicalTimesRight] = 0
-
-        # Calculate the error in signal reconstruction (encoding loss).
-        interpolatedData = closestPhysiologicalDataLeft + (timepoints - closestPhysiologicalTimesLeft) * linearSlopes
-
-        return interpolatedData
-
-    def reconstructPhysiologicalProfile(self, resampledSignalData):
-        reversibleInterface.changeDirections(forwardDirection=True)
-        reconstructedPhysiologicalProfile = self.coreModelPass(metaLearningData=resampledSignalData, numSpecificLayers=self.numSpecificEncoderLayers, numSharedLayers=self.numSharedEncoderLayers, specificModel=self.specificSignalEncoderModel, sharedModel=self.sharedSignalEncoderModel)
-        reversibleInterface.changeDirections(forwardDirection=False)
-
-        return reconstructedPhysiologicalProfile
