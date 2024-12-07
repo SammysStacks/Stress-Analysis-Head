@@ -23,6 +23,7 @@ class emotionPipeline(emotionPipelineHelpers):
         self.setupTraining(submodel, inferenceTraining=inferenceTraining, profileTraining=profileTraining, specificTraining=specificTraining, trainSharedLayers=trainSharedLayers)
         if self.model.debugging: self.accelerator.print(f"\nTraining {self.datasetName} model")
         onlyProfileTraining = (profileTraining or inferenceTraining) and not (specificTraining or trainSharedLayers)
+        if onlyProfileTraining: dataLoader = (dataLoader.dataset.getAll(),)
 
         # For each training epoch.
         for epoch in range(numEpochs):

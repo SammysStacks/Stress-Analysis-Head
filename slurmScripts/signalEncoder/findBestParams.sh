@@ -1,14 +1,14 @@
 #!/bin/bash
 
-# General parameters: 3
-allNumEncodedWeights=(16 32 64)  # 3
+# General parameters: 20
+allNumEncodedWeights=(16 32 64 128 256)  # 5
 numSpecificEncoderLayers_arr=(1)  # 1
-signalEncoderLayers_arr=(4 8 12)  # 3
+signalEncoderLayers_arr=(4 6 8 10)  # 4
 encodedDimensions_arr=(256)  # 1
 
-# Learning rates: 12
-lrs_shared=('1e-3' '1e-4')  # 2
-lrs_general=('1e-3' '1e-4')  # 2
+# Learning rates: 6
+lrs_shared=('1e-3' '1e-4')  # 2 -> sqrt(2)
+lrs_general=('1e-3' '1e-4')  # 2 -> sqrt(2)
 lrs_physio=('1e-1' '1e-2' '1e-3')  # 3
 
 # Finalized parameters.
@@ -36,6 +36,11 @@ do
                   # Check if numSpecificEncoderLayers is greater than half the numSharedEncoderLayers
                   if [ $((2 * numSpecificEncoderLayers)) -gt "$numSharedEncoderLayers" ]; then
                     continue  # Skip this iteration if the condition is true
+                  fi
+
+                  # Check if lr_general and lr_shared are not the same
+                  if [ "$lr_general" != "$lr_shared" ]; then
+                    continue  # Skip this iteration if the learning rates differ
                   fi
 
                   echo "Submitting job with $numSharedEncoderLayers numSharedEncoderLayers, $numSpecificEncoderLayers numSpecificEncoderLayers, $encodedDimension encodedDimension, $waveletType waveletType, $optimizer optimizer, $lr_physio lr_physio, $lr_general lr_general"
