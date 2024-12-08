@@ -13,6 +13,8 @@ srun accelerate launch ./../../metaTrainingControl.py \
     --physioLR "$7" \
     --generalLR "$8" \
     --numEncodedWeights "$9" \
+    --generalWD "${10}" \
+    --physioWD "${11}"
 
 end=$(date +%s)
 runtime=$((end-start))

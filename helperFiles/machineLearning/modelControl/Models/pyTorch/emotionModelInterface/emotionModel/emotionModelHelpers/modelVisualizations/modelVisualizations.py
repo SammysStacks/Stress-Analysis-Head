@@ -95,6 +95,7 @@ class modelVisualizations(globalPlottingProtocols):
             physiologicalTimes = model.sharedSignalEncoderModel.pseudoEncodedTimes.detach().cpu().numpy()  # pseudoEncodedTimes: numTimePoints
             compiledSignalEncoderLayerStates = np.asarray(compiledSignalEncoderLayerStates)  # numLayers, numExperiments, numSignals, encodedDimension
             inferenceStatePath = np.asarray(model.inferenceModel.inferenceStatePath)  # numInferenceSteps, numExperiments, encodedDimension
+            globalPlottingProtocols.clearFigure(fig=None, legend=None)
 
             # Plot the loss on the primary GPU.
             if self.accelerator.is_local_main_process:

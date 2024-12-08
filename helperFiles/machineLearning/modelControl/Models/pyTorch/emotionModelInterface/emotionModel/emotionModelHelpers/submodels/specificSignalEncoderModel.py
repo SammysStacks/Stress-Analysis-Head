@@ -84,10 +84,11 @@ if __name__ == "__main__":
     _neuralOperatorParameters = modelParameters.getNeuralParameters({'waveletType': 'bior3.1'})['neuralOperatorParameters']
     _batchSize, _numSignals, _sequenceLength = 2, 128, 256
     _featureNames = [f"signal_{i}" for i in range(_numSignals)]
-    modelConstants.numEncodedWeights = 64
+    modelConstants.numEncodedWeights = 32
+    _numSpecificEncoderLayers = 1
 
     # Set up the parameters.
-    neuralLayerClass = specificSignalEncoderModel(numExperiments=_batchSize, operatorType='wavelet', encodedDimension=_sequenceLength, featureNames=_featureNames, numSpecificEncoderLayers=2, learningProtocol='rCNN', neuralOperatorParameters=_neuralOperatorParameters)
+    neuralLayerClass = specificSignalEncoderModel(numExperiments=_batchSize, operatorType='wavelet', encodedDimension=_sequenceLength, featureNames=_featureNames, numSpecificEncoderLayers=2*_numSpecificEncoderLayers, learningProtocol='rCNN', neuralOperatorParameters=_neuralOperatorParameters)
     neuralLayerClass.addLayer()
 
     # Print the number of trainable parameters.
