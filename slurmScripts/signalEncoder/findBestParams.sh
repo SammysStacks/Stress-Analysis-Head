@@ -7,7 +7,7 @@ signalEncoderLayers_arr=(8)  # 3
 encodedDimensions_arr=(256)  # 1
 
 # Learning rates: 6
-lrs_general=('1e-3' '1e-4')  # 2
+lrs_general=('1e-2' '1e-3' '1e-4')  # 2
 lrs_physio=('1e-1' '1e-2' '1e-3')  # 3
 
 # Weight decays: 6
