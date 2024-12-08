@@ -25,4 +25,4 @@ nvcc --version
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 # RUN FILE
-sh signalEncoderAnalysis.sh "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" "$9" "${10}"
+sh signalEncoderAnalysis.sh "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" "$9"

@@ -60,7 +60,7 @@ class emotionPipeline(emotionPipelineHelpers):
 
                         t11 = time.time()
                         # Perform the forward pass through the model.
-                        validDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = self.model.forward(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, inferenceTraining=inferenceTraining)
+                        validDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = self.model.forward(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, inferenceTraining=inferenceTraining, trainingFlag=True)
                         # reconstructedSignalData dimension: batchSize, numSignals, maxSequenceLength
                         # basicEmotionProfile: batchSize, numBasicEmotions, encodedDimension
                         # validDataMask dimension: batchSize, numSignals, maxSequenceLength

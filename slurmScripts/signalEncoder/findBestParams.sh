@@ -1,14 +1,13 @@
 #!/bin/bash
 
-# General parameters: 20
+# General parameters: 15
 allNumEncodedWeights=(16 32 64 128 256)  # 5
 numSpecificEncoderLayers_arr=(1)  # 1
-signalEncoderLayers_arr=(4 6 8 10 12)  # 4
+signalEncoderLayers_arr=(4 8 12)  # 3
 encodedDimensions_arr=(256)  # 1
 
 # Learning rates: 6
-lrs_shared=('1e-3' '1e-4')  # 2 -> sqrt(2)
-lrs_general=('1e-3' '1e-4')  # 2 -> sqrt(2)
+lrs_general=('1e-3' '1e-4')  # 2
 lrs_physio=('1e-1' '1e-2' '1e-3')  # 3
 
 # Finalized parameters.
@@ -19,40 +18,32 @@ for numEncodedWeights in "${allNumEncodedWeights[@]}"
 do
   for lr_physio in "${lrs_physio[@]}"
   do
-    for lr_shared in "${lrs_shared[@]}"
+    for lr_general in "${lrs_general[@]}"
     do
-      for lr_general in "${lrs_general[@]}"
+      for optimizer in "${optimizers_arr[@]}"
       do
-        for optimizer in "${optimizers_arr[@]}"
+        for waveletType in "${waveletTypes_arr[@]}"
         do
-          for waveletType in "${waveletTypes_arr[@]}"
+          for encodedDimension in "${encodedDimensions_arr[@]}"
           do
-            for encodedDimension in "${encodedDimensions_arr[@]}"
+            for numSpecificEncoderLayers in "${numSpecificEncoderLayers_arr[@]}"
             do
-              for numSpecificEncoderLayers in "${numSpecificEncoderLayers_arr[@]}"
+              for numSharedEncoderLayers in "${signalEncoderLayers_arr[@]}"
               do
-                for numSharedEncoderLayers in "${signalEncoderLayers_arr[@]}"
-                do
-                  # Check if numSpecificEncoderLayers is greater than half the numSharedEncoderLayers
-                  if [ $((2 * numSpecificEncoderLayers)) -gt "$numSharedEncoderLayers" ]; then
-                    continue  # Skip this iteration if the condition is true
-                  fi
+                # Check if numSpecificEncoderLayers is greater than half the numSharedEncoderLayers
+                if [ $((2 * numSpecificEncoderLayers)) -gt "$numSharedEncoderLayers" ]; then
+                  continue  # Skip this iteration if the condition is true
+                fi
 
-                  # Check if lr_general and lr_shared are not the same
-                  if [ "$lr_general" != "$lr_shared" ]; then
-                    continue  # Skip this iteration if the learning rates differ
-                  fi
+                echo "Submitting job with $numSharedEncoderLayers numSharedEncoderLayers, $numSpecificEncoderLayers numSpecificEncoderLayers, $encodedDimension encodedDimension, $waveletType waveletType, $optimizer optimizer, $lr_physio lr_physio, $lr_general lr_general"
 
-                  echo "Submitting job with $numSharedEncoderLayers numSharedEncoderLayers, $numSpecificEncoderLayers numSpecificEncoderLayers, $encodedDimension encodedDimension, $waveletType waveletType, $optimizer optimizer, $lr_physio lr_physio, $lr_general lr_general"
-
-                  if [ "$1" == "CPU" ]; then
-                      sbatch -J "signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_CPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$1" "$waveletType" "$optimizer" "$lr_physio" "$lr_general" "$lr_shared" "$numEncodedWeights"
-                  elif [ "$1" == "GPU" ]; then
-                      sbatch -J "signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_GPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$1" "$waveletType" "$optimizer" "$lr_physio" "$lr_general" "$lr_shared" "$numEncodedWeights"
-                  else
-                      echo "No known device listed: $1"
-                  fi
-                done
+                if [ "$1" == "CPU" ]; then
+                    sbatch -J "signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_CPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$1" "$waveletType" "$optimizer" "$lr_physio" "$lr_general" "$numEncodedWeights"
+                elif [ "$1" == "GPU" ]; then
+                    sbatch -J "signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_GPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$1" "$waveletType" "$optimizer" "$lr_physio" "$lr_general" "$numEncodedWeights"
+                else
+                    echo "No known device listed: $1"
+                fi
               done
             done
           done

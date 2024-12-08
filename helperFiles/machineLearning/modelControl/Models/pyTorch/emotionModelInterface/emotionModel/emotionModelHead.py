@@ -122,7 +122,7 @@ class emotionModelHead(nn.Module):
 
     # ------------------------- Full Forward Calls ------------------------- #
 
-    def forward(self, submodel, signalData, signalIdentifiers, metadata, device, inferenceTraining=False):
+    def forward(self, submodel, signalData, signalIdentifiers, metadata, device, inferenceTraining=False, trainingFlag=True):
         signalData, signalIdentifiers, metadata = (tensor.to(device) for tensor in (signalData, signalIdentifiers, metadata))
         signalIdentifiers, signalData, metadata = signalIdentifiers.int(), signalData.double(), metadata.int()
         batchSize, numSignals, maxSequenceLength, numChannels = signalData.size()
@@ -147,7 +147,7 @@ class emotionModelHead(nn.Module):
         # ------------------- Estimated Physiological Profile ------------------- #
 
         # Get the estimated physiological profiles.
-        if inferenceTraining: physiologicalProfileOG = self.inferenceModel.getCurrentPhysiologicalProfile(batchInds)
+        if inferenceTraining: physiologicalProfileOG = self.inferenceModel.getInferencePhysiologicalProfile(batchInds)
         else: physiologicalProfileOG = self.specificSignalEncoderModel.profileModel.getCurrentPhysiologicalProfile(batchInds)
         # physiologicalProfile: batchSize, modelConstants.numEncodedWeights
 
@@ -157,11 +157,14 @@ class emotionModelHead(nn.Module):
         physiologicalProfile = physiologicalProfile / physiologicalProfile.std(dim=-1, keepdim=True) / 3
         # physiologicalProfile: batchSize, encodedDimension
 
+        # Save the physiological profile.
+        if inferenceTraining and trainingFlag: self.inferenceModel.inferenceStatePath.append(physiologicalProfile.clone().detach().cpu().numpy())
+
         # ------------------- Learned Signal Mapping ------------------- #
 
         # Perform the backward pass: physiological profile -> signal data.
         resampledSignalData = physiologicalProfile.unsqueeze(1).repeat(repeats=(1, numSignals, 1))
-        resampledSignalData = self.signalEncoderPass(metaLearningData=resampledSignalData, forwardPass=False)
+        resampledSignalData = self.signalEncoderPass(metaLearningData=resampledSignalData, forwardPass=False, compileLayerStates=False)[0]
         # resampledSignalData: batchSize, numSignals, encodedDimension
 
         # Resample the signal data.
@@ -200,31 +203,35 @@ class emotionModelHead(nn.Module):
 
     # ------------------------- Model Components ------------------------- #
 
-    @staticmethod
-    def coreModelPass(metaLearningData, numSpecificLayers, numSharedLayers, specificModel, sharedModel):
-        # Calculate the estimated physiological profile given each signal.
-        for specificLayerInd in range(numSpecificLayers): metaLearningData = specificModel.learningInterface(layerInd=specificLayerInd, signalData=metaLearningData)
-        # metaLearningData: batchSize, numSignals, finalDimension
-
-        # Calculate the estimated physiological profile given each signal.
-        for sharedLayerInd in range(numSharedLayers): metaLearningData = sharedModel.learningInterface(layerInd=sharedLayerInd, signalData=metaLearningData)
-        # metaLearningData: batchSize, numSignals, finalDimension
-
-        # Calculate the estimated physiological profile given each signal.
-        for specificLayerInd in range(numSpecificLayers): metaLearningData = specificModel.learningInterface(layerInd=numSpecificLayers + specificLayerInd, signalData=metaLearningData)
-        # metaLearningData: batchSize, numSignals, finalDimension
-
-        return metaLearningData
-
-    def signalEncoderPass(self, metaLearningData, forwardPass):
+    def signalEncoderPass(self, metaLearningData, forwardPass, compileLayerStates=False):
+        # Initialize the model's learning interface.
+        compiledLayerStates = [metaLearningData.clone().detach().cpu().numpy()] if compileLayerStates else None
         reversibleInterface.changeDirections(forwardDirection=forwardPass)
-        metaLearningData = self.coreModelPass(metaLearningData, numSpecificLayers=self.numSpecificEncoderLayers, numSharedLayers=self.numSharedEncoderLayers, specificModel=self.specificSignalEncoderModel, sharedModel=self.sharedSignalEncoderModel)
-        return metaLearningData
+
+        # Calculate the estimated physiological profile given each signal.
+        for specificLayerInd in range(self.numSpecificEncoderLayers): 
+            metaLearningData = self.specificSignalEncoderModel.learningInterface(layerInd=specificLayerInd, signalData=metaLearningData)
+            if compileLayerStates: compiledLayerStates.append(metaLearningData.clone().detach().cpu().numpy())
+        # metaLearningData: batchSize, numSignals, finalDimension
+
+        # Calculate the estimated physiological profile given each signal.
+        for sharedLayerInd in range(self.numSharedEncoderLayers): 
+            metaLearningData = self.sharedSignalEncoderModel.learningInterface(layerInd=sharedLayerInd, signalData=metaLearningData)
+            if compileLayerStates: compiledLayerStates.append(metaLearningData.clone().detach().cpu().numpy())
+        # metaLearningData: batchSize, numSignals, finalDimension
+
+        # Calculate the estimated physiological profile given each signal.
+        for specificLayerInd in range(self.numSpecificEncoderLayers, 2*self.numSpecificEncoderLayers): 
+            metaLearningData = self.specificSignalEncoderModel.learningInterface(layerInd=specificLayerInd, signalData=metaLearningData)
+            if compileLayerStates: compiledLayerStates.append(metaLearningData.clone().detach().cpu().numpy())
+        # metaLearningData: batchSize, numSignals, finalDimension
+
+        return metaLearningData, compiledLayerStates
 
     def reconstructPhysiologicalProfile(self, resampledSignalData):
-        return self.signalEncoderPass(metaLearningData=resampledSignalData, forwardPass=True)
+        return self.signalEncoderPass(metaLearningData=resampledSignalData, forwardPass=True, compileLayerStates=True)
 
-    def fullPass(self, submodel, signalData, signalIdentifiers, metadata, device, inferenceTraining):
+    def fullPass(self, submodel, signalData, signalIdentifiers, metadata, device, inferenceTraining, trainingFlag=False):
         # Preallocate the output tensors.
         numExperiments, numSignals, maxSequenceLength, numChannels = signalData.size()
         basicEmotionProfile = torch.zeros((numExperiments, self.numBasicEmotions, self.encodedDimension), device=device, dtype=torch.float64)
@@ -244,7 +251,7 @@ class emotionModelHead(nn.Module):
             validDataMask[startBatchInd:endBatchInd], reconstructedSignalData[startBatchInd:endBatchInd], resampledSignalData[startBatchInd:endBatchInd], physiologicalProfile[startBatchInd:endBatchInd], \
                 activityProfile[startBatchInd:endBatchInd], basicEmotionProfile[startBatchInd:endBatchInd], emotionProfile[startBatchInd:endBatchInd] \
                 = self.forward(submodel=submodel, signalData=signalData[startBatchInd:endBatchInd], signalIdentifiers=signalIdentifiers[startBatchInd:endBatchInd],
-                               metadata=metadata[startBatchInd:endBatchInd], device=device, inferenceTraining=inferenceTraining)
+                               metadata=metadata[startBatchInd:endBatchInd], device=device, inferenceTraining=inferenceTraining, trainingFlag=trainingFlag)
 
             # Update the batch index.
             startBatchInd = endBatchInd

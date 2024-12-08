@@ -1,6 +1,8 @@
 # General
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colors import LinearSegmentedColormap
+from shap.plots.colors._colors import lch2rgb
 
 # Visualization protocols
 from helperFiles.globalPlottingProtocols import globalPlottingProtocols
@@ -18,8 +20,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     def plotPhysiologicalProfile(self, physiologicalTimes, physiologicalProfile, physiologicalProfileInference, epoch=0, saveFigureLocation="", plotTitle="Signal Encoding"):
         # Plot the signal reconstruction.
-        plt.plot(physiologicalTimes[64:128], physiologicalProfile[0][64:128], c=self.blackColor, label=f"Physiological profile", linewidth=1, alpha=1)
-        plt.plot(physiologicalTimes[64:128], physiologicalProfileInference[0][64:128], c=self.lightColors[1], label=f"Inference profile", linewidth=2, alpha=0.5)
+        plt.plot(physiologicalTimes, physiologicalProfile[0], c=self.blackColor, label=f"Physiological profile", linewidth=1, alpha=1)
+        plt.plot(physiologicalTimes, physiologicalProfileInference[0], c=self.lightColors[1], label=f"Inference profile", linewidth=2, alpha=0.5)
 
         # Plotting aesthetics.
         plt.xlabel("Time (Seconds)")
@@ -31,16 +33,49 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None)
 
+    def plotInferencePath(self, physiologicalTimes, physiologicalProfile, inferenceStatePath, epoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Inference State Path"):
+        # Extract the signal dimensions.
+        numInferenceSteps, numExperiments, encodedDimension = inferenceStatePath.shape
+        batchInd = 0
+
+        plt.plot(physiologicalTimes, physiologicalProfile[batchInd], c=self.blackColor, label=f"Physiological profile", linewidth=2, alpha=0.8)
+        for inferenceStep in range(numInferenceSteps - 1, -1, -1): plt.plot(physiologicalTimes, inferenceStatePath[inferenceStep, batchInd], c=self.lightColors[0], linewidth=1, alpha=0.8 - inferenceStep*0.05)
+
+        # Plotting aesthetics.
+        plt.xlabel("Time (Seconds)")
+        plt.title(f"{plotTitle} epoch{epoch}")
+        plt.ylabel("Signal (AU)")
+
+        # Save the figure.
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        else: self.clearFigure(fig=None, legend=None)
+
+    def plotPhysiologicalError(self, physiologicalTimes, physiologicalProfile, reconstructedPhysiologicalProfile, epoch=0, saveFigureLocation="", plotTitle="Signal Encoding"):
+        # Extract the signal dimensions.
+        physiologicalError = np.abs(physiologicalProfile[:, None, :] - reconstructedPhysiologicalProfile)
+        batchSize, numSignals, sequenceLength = reconstructedPhysiologicalProfile.shape
+        batchInd = 0
+
+        plt.plot(physiologicalTimes, physiologicalError[batchInd].mean(axis=0), c=self.blackColor, label=f"Physiological profile error", linewidth=2, alpha=0.8)
+        for signalInd in range(numSignals): plt.plot(physiologicalTimes, physiologicalError[batchInd, signalInd], c=self.lightColors[0], linewidth=1, alpha=0.1)
+
+        # Plotting aesthetics.
+        plt.xlabel("Time (Seconds)")
+        plt.title(f"{plotTitle} epoch{epoch}")
+        plt.ylabel("Signal error (AU)")
+
+        # Save the figure.
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        else: self.clearFigure(fig=None, legend=None)
+
     def plotPhysiologicalReconstruction(self, physiologicalTimes, physiologicalProfile, reconstructedPhysiologicalProfile, epoch=0, saveFigureLocation="", plotTitle="Signal Encoding"):
         # Extract the signal dimensions.
         batchSize, numSignals, sequenceLength = reconstructedPhysiologicalProfile.shape
         batchInd = 0
 
-        try:
-            # Plot the signal reconstruction.
-            plt.plot(physiologicalTimes, physiologicalProfile[batchInd], c=self.blackColor, label=f"Physiological profile", linewidth=2, alpha=0.8)
-            for signalInd in range(numSignals): plt.plot(physiologicalTimes, reconstructedPhysiologicalProfile[batchInd, signalInd], c=self.lightColors[1], label=f"Reconstructed Physiological profile", linewidth=1, alpha=0.1)
-        except Exception as e: print(f"Error: {e}")
+        # Plot the signal reconstruction.
+        plt.plot(physiologicalTimes, physiologicalProfile[batchInd], c=self.blackColor, label=f"Physiological profile", linewidth=2, alpha=0.8)
+        for signalInd in range(numSignals): plt.plot(physiologicalTimes, reconstructedPhysiologicalProfile[batchInd, signalInd], c=self.lightColors[1], linewidth=1, alpha=0.1)
 
         # Plotting aesthetics.
         plt.xlabel("Time (Seconds)")
@@ -69,8 +104,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         batchInd = 0
         for signalInd in plottingSignals:
             # Plot the signal reconstruction.
-            plt.plot(timepoints[batchInd, signalInd, :], datapoints[batchInd, signalInd, :], 'o', color=self.blackColor, markersize=2, alpha=0.5, label="Initial Signal")
-            plt.plot(timepoints[batchInd, signalInd, :], reconstructedSignals[batchInd, signalInd, :], 'o', color=self.lightColors[0], markersize=2, alpha=0.5, label="Reconstructed Signal")
+            plt.plot(timepoints[batchInd, signalInd, :], datapoints[batchInd, signalInd, :], 'o', color=self.blackColor, markersize=2, alpha=0.75, label="Initial Signal")
+            plt.plot(timepoints[batchInd, signalInd, :], reconstructedSignals[batchInd, signalInd, :], 'o', color=self.lightColors[0], markersize=2, alpha=0.75, label="Reconstructed Signal")
             plt.plot(comparisonTimes, comparisonSignal[batchInd, signalInd, :], self.lightColors[1], linewidth=2, alpha=0.8, label="Resampled Signal")
 
             # Plotting aesthetics.
@@ -122,7 +157,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             plt.plot(distortedSignals[i], '-', color='k', alpha=alphas[i], linewidth=1, markersize=2, zorder=0)
             plt.plot(trueSignal, 'o', color='tab:blue', linewidth=1, markersize=2, zorder=10)
             plt.plot(reconstructedDistortedSignals[i], '-', color='tab:red', linewidth=1, markersize=2, alpha=alphas[i], zorder=5)
-
+        
+        # Format the plotting
         plt.title(f"{plotTitle} epoch{epoch} signal{signalInd + 1}")
         plt.xlabel('Time (Seconds)')
         plt.ylabel("Arbitrary Axis (AU)")
@@ -132,19 +168,48 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None)
 
-    def plotSignalComparisonHeatmap(self, originalSignal, comparisonSignal):
-        # Assert the integrity of the incoming data
-        assert originalSignal.shape[0:2] == comparisonSignal.shape[0:2]
+    def plotSignalEncodingStatePath(self, physiologicalTimes, compiledSignalEncoderLayerStates, epoch, saveFigureLocation, plotTitle):
+        numLayers, numExperiments, numSignals, encodedDimension = compiledSignalEncoderLayerStates.shape
+        batchInd, signalInd = 0, 0
 
-        # Extract the shapes of the data
-        batchSize, numSignals, numTotalPoints = originalSignal.shape
-        batchSize, numSignals, numEncodedPoints = comparisonSignal.shape
+        # Define your colors (min, mean, max)
+        # colors = ["#56d0f7", "#ffffff", "#f27fb2"]  # Blue -> Purple -> Red
+        # custom_cmap = LinearSegmentedColormap.from_list("custom_diverging", colors)
 
-        # Separate out all the signals
-        signalData = originalSignal.reshape(batchSize * numSignals, numTotalPoints)
-        encodedData = comparisonSignal.reshape(batchSize * numSignals, numEncodedPoints)
+        blue_lch = [54., 70., 4.6588]
+        red_lch = [54., 90., 0.35470565 + 2 * np.pi]
+        blue_rgb = lch2rgb(blue_lch)
+        red_rgb = lch2rgb(red_lch)
+        white_rgb = np.array([1., 1., 1.])
 
-        # Plot the heatmap
-        self.heatmap(signalData[0:25], saveDataPath=None, title="Initial Signals", xlabel="Points", ylabel="Signal Index")
-        self.heatmap(encodedData[0:25], saveDataPath=None, title="Encoded Signals", xlabel="Points", ylabel="Signal Index")
+        colors = []
+        for alpha in np.linspace(1, 0, 100):
+            c = blue_rgb * alpha + (1 - alpha) * white_rgb
+            colors.append(c)
+        for alpha in np.linspace(0, 1, 100):
+            c = red_rgb * alpha + (1 - alpha) * white_rgb
+            colors.append(c)
+        custom_cmap = LinearSegmentedColormap.from_list("red_transparent_blue", colors)
 
+        # Create the heatmap
+        plt.figure(figsize=(12, 8))
+        plt.imshow(compiledSignalEncoderLayerStates[:, batchInd, signalInd, :], cmap=custom_cmap, interpolation='bilinear', extent=[physiologicalTimes.min(), physiologicalTimes.max(), 0, numLayers], aspect='auto', origin='lower')
+        # Magma is also good
+
+        # Add a colorbar
+        cbar = plt.colorbar()
+        cbar.set_label("Signal Amplitude", fontsize=12)
+
+        # Add ticks and grid for clarity
+        plt.xticks(fontsize=12)
+        plt.yticks(ticks=np.arange(numLayers), labels=np.arange(1, numLayers + 1), fontsize=12)
+        plt.grid(False)
+
+        # Format the plotting
+        plt.title(f"{plotTitle} epoch{epoch}", fontsize=16)
+        plt.xlabel("Time", fontsize=14)
+        plt.ylabel("Layer Index", fontsize=14)
+
+        # Save the plot
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        else: self.clearFigure(fig=None, legend=None)

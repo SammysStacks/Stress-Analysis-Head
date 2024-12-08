@@ -1,6 +1,7 @@
 # General
 import os
 
+import numpy as np
 import torch
 
 # Visualization protocols
@@ -65,7 +66,7 @@ class modelVisualizations(globalPlottingProtocols):
             self.generalViz.plotTrainingLosses([specificModel.trainingLosses_signalReconstruction for specificModel in specificModels],
                                                [specificModel.trainingLosses_inference for specificModel in specificModels],
                                                lossLabels=[f"{datasetName} Signal Encoding Inference Loss" for datasetName in datasetNames],
-                                               saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Losses")
+                                               saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Training Losses")
 
     def plotAllTrainingEvents(self, submodel, modelPipeline, lossDataLoader, trainingDate, currentEpoch):
         self.accelerator.print(f"\nPlotting results for the {modelPipeline.model.datasetName} model")
@@ -82,16 +83,18 @@ class modelVisualizations(globalPlottingProtocols):
 
         with torch.no_grad():
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
-            validDataMaskInference, reconstructedSignalDataInference, resampledSignalDataInference, physiologicalProfileInference, activityProfileInference, basicEmotionProfileInference, emotionProfileInference = model.forward(submodel, signalData, signalIdentifiers, metadata, device=self.accelerator.device, inferenceTraining=True)
-            validDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = model.forward(submodel, signalData, signalIdentifiers, metadata, device=self.accelerator.device, inferenceTraining=False)
-            reconstructedPhysiologicalProfile = model.reconstructPhysiologicalProfile(resampledSignalData)
+            validDataMaskInference, reconstructedSignalDataInference, resampledSignalDataInference, physiologicalProfileInference, activityProfileInference, basicEmotionProfileInference, emotionProfileInference = model.forward(submodel, signalData, signalIdentifiers, metadata, device=self.accelerator.device, inferenceTraining=True, trainingFlag=False)
+            validDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = model.forward(submodel, signalData, signalIdentifiers, metadata, device=self.accelerator.device, inferenceTraining=False, trainingFlag=False)
+            reconstructedPhysiologicalProfile, compiledSignalEncoderLayerStates = model.reconstructPhysiologicalProfile(resampledSignalData)
 
             # Detach the data from the GPU and tensor format.
             validDataMaskInference, reconstructedSignalDataInference, resampledSignalDataInference, physiologicalProfileInference = validDataMaskInference.detach().cpu().numpy(), reconstructedSignalDataInference.detach().cpu().numpy(), resampledSignalDataInference.detach().cpu().numpy(), physiologicalProfileInference.detach().cpu().numpy()
             reconstructedPhysiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = reconstructedPhysiologicalProfile.detach().cpu().numpy(), activityProfile.detach().cpu().numpy(), basicEmotionProfile.detach().cpu().numpy(), emotionProfile.detach().cpu().numpy()
             validDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile = validDataMask.detach().cpu().numpy(), reconstructedSignalData.detach().cpu().numpy(), resampledSignalData.detach().cpu().numpy(), physiologicalProfile.detach().cpu().numpy()
             activityProfileInference, basicEmotionProfileInference, emotionProfileInference = activityProfileInference.detach().cpu().numpy(), basicEmotionProfileInference.detach().cpu().numpy(), emotionProfileInference.detach().cpu().numpy()
-            physiologicalTimes = model.sharedSignalEncoderModel.pseudoEncodedTimes.detach().cpu().numpy()
+            physiologicalTimes = model.sharedSignalEncoderModel.pseudoEncodedTimes.detach().cpu().numpy()  # pseudoEncodedTimes: numTimePoints
+            compiledSignalEncoderLayerStates = np.asarray(compiledSignalEncoderLayerStates)  # numLayers, numExperiments, numSignals, encodedDimension
+            inferenceStatePath = np.asarray(model.inferenceModel.inferenceStatePath)  # numInferenceSteps, numExperiments, encodedDimension
 
             # Plot the loss on the primary GPU.
             if self.accelerator.is_local_main_process:
@@ -99,9 +102,14 @@ class modelVisualizations(globalPlottingProtocols):
                 # ------------------- Signal Encoding Plots -------------------- #
 
                 if submodel == modelConstants.signalEncoderModel:
-                    # Plot the encoding example.
+                    # Plot the physiological profile training information.
                     self.signalEncoderViz.plotPhysiologicalProfile(physiologicalTimes, physiologicalProfile, physiologicalProfileInference, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Profile")
                     self.signalEncoderViz.plotPhysiologicalReconstruction(physiologicalTimes, physiologicalProfile, reconstructedPhysiologicalProfile, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Reconstruction")
+                    self.signalEncoderViz.plotPhysiologicalError(physiologicalTimes, physiologicalProfile, reconstructedPhysiologicalProfile, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Reconstruction Error")
+                    self.signalEncoderViz.plotInferencePath(physiologicalTimes, physiologicalProfile, inferenceStatePath, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Inference State Path")
+
+                    # Plot the signal encoding training information.
+                    self.signalEncoderViz.plotSignalEncodingStatePath(physiologicalTimes, compiledSignalEncoderLayerStates, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Signal Encoding State Path")
 
                 # Plot the autoencoder results.
                 self.signalEncoderViz.plotEncoder(signalData, reconstructedSignalDataInference, physiologicalTimes, resampledSignalDataInference, epoch=currentEpoch, saveFigureLocation="signalReconstruction/", plotTitle="Signal Encoding Inference Reconstruction", numSignalPlots=1)
