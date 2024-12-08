@@ -95,6 +95,7 @@ class modelVisualizations(globalPlottingProtocols):
             physiologicalTimes = model.sharedSignalEncoderModel.pseudoEncodedTimes.detach().cpu().numpy()  # pseudoEncodedTimes: numTimePoints
             compiledSignalEncoderLayerStates = np.asarray(compiledSignalEncoderLayerStates)  # numLayers, numExperiments, numSignals, encodedDimension
             inferenceStatePath = np.asarray(model.inferenceModel.inferenceStatePath)  # numInferenceSteps, numExperiments, encodedDimension
+            print(inferenceStatePath.shape)
 
             # Plot the loss on the primary GPU.
             if self.accelerator.is_local_main_process:
@@ -106,7 +107,7 @@ class modelVisualizations(globalPlottingProtocols):
                     self.signalEncoderViz.plotPhysiologicalProfile(physiologicalTimes, physiologicalProfile, physiologicalProfileInference, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Profile")
                     self.signalEncoderViz.plotPhysiologicalReconstruction(physiologicalTimes, physiologicalProfile, reconstructedPhysiologicalProfile, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Reconstruction")
                     self.signalEncoderViz.plotPhysiologicalError(physiologicalTimes, physiologicalProfile, reconstructedPhysiologicalProfile, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Reconstruction Error")
-                    self.signalEncoderViz.plotInferencePath(physiologicalTimes, physiologicalProfile, inferenceStatePath, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Inference State Path")
+                    if inferenceStatePath.shape[0] != 0: self.signalEncoderViz.plotInferencePath(physiologicalTimes, physiologicalProfile, inferenceStatePath, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Inference State Path")
 
                     # Plot the signal encoding training information.
                     self.signalEncoderViz.plotSignalEncodingStatePath(physiologicalTimes, compiledSignalEncoderLayerStates, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Signal Encoding State Path")
