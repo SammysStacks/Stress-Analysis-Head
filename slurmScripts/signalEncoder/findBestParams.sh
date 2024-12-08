@@ -3,7 +3,7 @@
 # General parameters: 20
 allNumEncodedWeights=(16 32 64 128 256)  # 5
 numSpecificEncoderLayers_arr=(1)  # 1
-signalEncoderLayers_arr=(4 6 8 10)  # 4
+signalEncoderLayers_arr=(4 6 8 10 12)  # 4
 encodedDimensions_arr=(256)  # 1
 
 # Learning rates: 6
