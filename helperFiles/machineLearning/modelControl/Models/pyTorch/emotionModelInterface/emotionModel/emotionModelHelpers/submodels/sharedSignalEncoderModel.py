@@ -116,8 +116,13 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
 
     def printParams(self):
         # Count the trainable parameters.
-        numParams = sum(p.numel() for p in self.parameters() if p.requires_grad)
-        print(f'The model has {numParams} trainable parameters.')
+        # Count the trainable parameters.
+        numProfileParams = sum(p.numel() for name, p in self.named_parameters() if p.requires_grad and 'physiologicalGenerationModel' in name)
+        numParams = sum(p.numel() for name, p in self.named_parameters() if p.requires_grad and 'physiologicalGenerationModel' not in name)
+
+        # Print the number of trainable parameters.
+        totalParams = numParams + numProfileParams
+        print(f'The model has {totalParams} trainable parameters: {numParams} in the metamodel and {numProfileParams} for physiological generation.')
 
 
 if __name__ == "__main__":
@@ -125,10 +130,8 @@ if __name__ == "__main__":
     _neuralOperatorParameters = modelParameters.getNeuralParameters({'waveletType': 'bior3.1'})['neuralOperatorParameters']
     _batchSize, _numSignals, _sequenceLength = 2, 128, 256
     modelConstants.numEncodedWeights = 32
+    _numSharedEncoderLayers = 8
 
     # Set up the parameters.
-    neuralLayerClass = sharedSignalEncoderModel(operatorType='wavelet', encodedDimension=_sequenceLength, numSharedEncoderLayers=8, learningProtocol='rCNN', neuralOperatorParameters=_neuralOperatorParameters)
-    neuralLayerClass.addLayer()
-
-    # Print the number of trainable parameters.
+    neuralLayerClass = sharedSignalEncoderModel(operatorType='wavelet', encodedDimension=_sequenceLength, numSharedEncoderLayers=_numSharedEncoderLayers, learningProtocol='rCNN', neuralOperatorParameters=_neuralOperatorParameters)
     neuralLayerClass.printParams()

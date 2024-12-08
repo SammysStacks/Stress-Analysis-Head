@@ -20,7 +20,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         self.numSignals = len(featureNames)  # The number of signals to encode.
         self.featureNames = featureNames  # The names of the signals to encode.
 
-        # The neural layers for the signal encoder.
+        # # The neural layers for the signal encoder.
         self.profileModel = trainingProfileInformation(numExperiments, encodedDimension)
         self.processingLayers, self.neuralLayers = nn.ModuleList(), nn.ModuleList()
         for _ in range(2*self.numSpecificEncoderLayers): self.addLayer()
@@ -88,8 +88,5 @@ if __name__ == "__main__":
     _numSpecificEncoderLayers = 1
 
     # Set up the parameters.
-    neuralLayerClass = specificSignalEncoderModel(numExperiments=_batchSize, operatorType='wavelet', encodedDimension=_sequenceLength, featureNames=_featureNames, numSpecificEncoderLayers=2*_numSpecificEncoderLayers, learningProtocol='rCNN', neuralOperatorParameters=_neuralOperatorParameters)
-    neuralLayerClass.addLayer()
-
-    # Print the number of trainable parameters.
+    neuralLayerClass = specificSignalEncoderModel(numExperiments=_batchSize, operatorType='wavelet', encodedDimension=_sequenceLength, featureNames=_featureNames, numSpecificEncoderLayers=_numSpecificEncoderLayers, learningProtocol='rCNN', neuralOperatorParameters=_neuralOperatorParameters)
     neuralLayerClass.printParams()

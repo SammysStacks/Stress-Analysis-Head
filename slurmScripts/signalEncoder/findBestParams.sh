@@ -1,6 +1,12 @@
 #!/bin/bash
 
 # General parameters: 18
+allNumEncodedWeights=(1 2 4 8 16 32 64 128 256)  # 9
+numSpecificEncoderLayers_arr=(1)  # 1
+signalEncoderLayers_arr=(8)  # 3
+encodedDimensions_arr=(256)  # 1
+
+# General parameters: 18
 allNumEncodedWeights=(64)  # 6
 numSpecificEncoderLayers_arr=(1)  # 1
 signalEncoderLayers_arr=(8)  # 3
