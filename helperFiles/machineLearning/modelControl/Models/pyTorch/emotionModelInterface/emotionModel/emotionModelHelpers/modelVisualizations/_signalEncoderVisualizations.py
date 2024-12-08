@@ -52,7 +52,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     def plotPhysiologicalError(self, physiologicalTimes, physiologicalProfile, reconstructedPhysiologicalProfile, epoch=0, saveFigureLocation="", plotTitle="Signal Encoding"):
         # Extract the signal dimensions.
-        physiologicalError = np.abs(physiologicalProfile[:, None, :] - reconstructedPhysiologicalProfile)
+        physiologicalError = (physiologicalProfile[:, None, :] - reconstructedPhysiologicalProfile)
         batchSize, numSignals, sequenceLength = reconstructedPhysiologicalProfile.shape
         batchInd = 0
 
