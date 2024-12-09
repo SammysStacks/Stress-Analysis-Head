@@ -3,7 +3,6 @@ import time
 import torch
 
 from .emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
-from .emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from .emotionPipelineHelpers import emotionPipelineHelpers
 
 
@@ -44,7 +43,6 @@ class emotionPipeline(emotionPipelineHelpers):
 
                         # Set the training parameters.
                         signalBatchData, batchSignalIdentifiers, metaBatchInfo = emotionDataInterface.separateData(batchSignalInfo)
-                        batchInds = emotionDataInterface.getSignalIdentifierData(batchSignalIdentifiers, channelName=modelConstants.batchIndexSI)[:, 0]  # Dim: batchSize
                         # signalBatchData[:, :, :, 0] = timepoints: [further away from survey (300) -> closest to survey (0)]
                         # signalBatchData dimension: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
                         # batchSignalIdentifiers dimension: batchSize, numSignals, numSignalIdentifiers
@@ -110,6 +108,9 @@ class emotionPipeline(emotionPipelineHelpers):
 
     def backpropogateModel(self):
         if self.accelerator.sync_gradients:
+            # Clip the gradients to prevent them from exploding.
+            self.accelerator.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+
             # Backpropagation the gradient.
             self.optimizer.step()  # Adjust the weights.
             self.optimizer.zero_grad()  # Zero your gradients to restart the gradient tracking.

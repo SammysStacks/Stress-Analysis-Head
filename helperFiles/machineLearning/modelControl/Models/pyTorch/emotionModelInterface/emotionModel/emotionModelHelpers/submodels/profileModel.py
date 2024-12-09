@@ -15,8 +15,8 @@ class profileModel(emotionModelWeights):
         self.resetProfileWeights()
 
     def resetProfileWeights(self):
-        self.physiologicalProfile = self.physiologicalInitialization(self.physiologicalProfile)
         self.profileStateLosses, self.compiledSignalEncoderLayerStatePath = [], []
+        self.physiologicalInitialization(self.physiologicalProfile)
         self.profileStatePath, self.profileOGStatePath = [], []
 
     def getPhysiologicalProfile(self, batchInds):

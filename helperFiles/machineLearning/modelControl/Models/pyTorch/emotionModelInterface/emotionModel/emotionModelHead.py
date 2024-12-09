@@ -146,14 +146,12 @@ class emotionModelHead(nn.Module):
 
         # ------------------- Estimated Physiological Profile ------------------- #
 
-        # Get the estimated physiological profiles.
+        # Get the estimated physiological weights.
         physiologicalProfileOG = self.specificSignalEncoderModel.profileModel.getPhysiologicalProfile(batchInds)
-        physiologicalProfile = self.sharedSignalEncoderModel.smoothPhysiologicalProfile(physiologicalProfileOG)
         # physiologicalProfile: batchSize, modelConstants.numEncodedWeights
 
         # Normalize the physiological profile.
-        physiologicalProfile = physiologicalProfile - physiologicalProfile.mean(dim=-1, keepdim=True)
-        physiologicalProfile = physiologicalProfile / (physiologicalProfile.std(dim=-1, keepdim=True) + 1e-20) / 3
+        physiologicalProfile = self.sharedSignalEncoderModel.smoothPhysiologicalProfile(physiologicalProfileOG)
         # physiologicalProfile: batchSize, encodedDimension
 
         # ------------------- Learned Signal Mapping ------------------- #
@@ -258,7 +256,7 @@ class emotionModelHead(nn.Module):
 
         if onlyProfileTraining:
             with torch.no_grad():
-                self.specificSignalEncoderModel.profileModel.profileStateLosses.append(self.calculateModelLosses.calculateSignalEncodingLoss(signalData, reconstructedSignalData, validDataMask, allSignalMask=None).nanmean().item())
+                self.specificSignalEncoderModel.profileModel.profileStateLosses.append(self.calculateModelLosses.calculateSignalEncodingLoss(signalData, reconstructedSignalData, validDataMask, allSignalMask=None).clone().detach().cpu().numpy())
                 self.specificSignalEncoderModel.profileModel.profileOGStatePath.append(self.specificSignalEncoderModel.profileModel.physiologicalProfile.clone().detach().cpu().numpy())
                 self.specificSignalEncoderModel.profileModel.compiledSignalEncoderLayerStatePath.append(compiledSignalEncoderLayerStates)
                 self.specificSignalEncoderModel.profileModel.profileStatePath.append(physiologicalProfile.clone().detach().cpu().numpy())
@@ -274,23 +272,23 @@ class emotionModelHead(nn.Module):
         validPointMask = validDataMask[firstBatchInd, firstSignalInd]
 
         # Optionally, plot the physiological profile for visual comparison
-        physiologicalTimes = self.sharedSignalEncoderModel.pseudoEncodedTimes.detach().cpu().numpy()
-        plt.plot(physiologicalTimes, physiologicalProfile[firstBatchInd].detach().cpu().numpy(), 'tab:red', linewidth=1, label='Physiological Profile', alpha=2/3)
-        plt.plot(torch.linspace(start=physiologicalTimes[0], end=physiologicalTimes[-1], steps=physiologicalProfileOG.size(-1)).detach().cpu().numpy(), physiologicalProfileOG[firstBatchInd].detach().cpu().numpy(), 'k', linewidth=1, label='Original Profile', alpha=0.75)
+        physiologicalTimes = self.sharedSignalEncoderModel.pseudoEncodedTimes.clone().detach().cpu().numpy()
+        plt.plot(physiologicalTimes, physiologicalProfile[firstBatchInd].clone().detach().cpu().numpy(), 'tab:red', linewidth=1, label='Physiological Profile', alpha=2/3)
+        plt.plot(torch.linspace(start=physiologicalTimes[0], end=physiologicalTimes[-1], steps=physiologicalProfileOG.size(-1)).clone().detach().cpu().numpy(), physiologicalProfileOG[firstBatchInd].clone().detach().cpu().numpy(), 'k', linewidth=1, label='Original Profile', alpha=0.75)
         plt.title(f"batchInd{firstBatchInd}")
         plt.show()
 
         # Get the first valid signal points.
-        validReconstructedPoints = reconstructedSignalData[firstBatchInd, firstSignalInd, validPointMask].detach().cpu().numpy()
+        validReconstructedPoints = reconstructedSignalData[firstBatchInd, firstSignalInd, validPointMask].clone().detach().cpu().numpy()
         datapoints = emotionDataInterface.getChannelData(signalData, channelName=modelConstants.signalChannel)
         timepoints = emotionDataInterface.getChannelData(signalData, channelName=modelConstants.timeChannel)
-        validTimepoints = timepoints[firstBatchInd, firstSignalInd, validPointMask].detach().cpu().numpy()
-        validDatapoints = datapoints[firstBatchInd, firstSignalInd, validPointMask].detach().cpu().numpy()
+        validTimepoints = timepoints[firstBatchInd, firstSignalInd, validPointMask].clone().detach().cpu().numpy()
+        validDatapoints = datapoints[firstBatchInd, firstSignalInd, validPointMask].clone().detach().cpu().numpy()
 
         # Optionally, plot the original and reconstructed signals for visual comparison
         plt.plot(validTimepoints, validDatapoints, 'ok', markersize=3, label='Initial Signal', alpha=0.75)
         plt.plot(validTimepoints, validReconstructedPoints, 'o', color='tab:red', markersize=3, label='Reconstructed Signal', alpha=0.75)
-        plt.plot(physiologicalTimes, resampledSignalData[firstBatchInd, firstSignalInd, :].detach().cpu().numpy(), 'tab:blue', linewidth=1, label='Resampled Signal', alpha=0.75)
+        plt.plot(physiologicalTimes, resampledSignalData[firstBatchInd, firstSignalInd, :].clone().detach().cpu().numpy(), 'tab:blue', linewidth=1, label='Resampled Signal', alpha=0.75)
         plt.title(f"batchInd{firstBatchInd} signalInd{firstSignalInd} numPoints{len(validTimepoints)}")
         plt.legend()
         plt.show()

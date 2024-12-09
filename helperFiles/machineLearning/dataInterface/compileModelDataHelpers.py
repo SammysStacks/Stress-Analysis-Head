@@ -48,7 +48,7 @@ class compileModelDataHelpers:
     @staticmethod
     def embedInformation(submodel, userInputParams, trainingDate):
         # Embedded information for each model.
-        signalEncoderModelInfo = f"signalEncoder on {userInputParams['deviceListed']} {userInputParams['optimizerType']} sharedLayers{userInputParams['numSharedEncoderLayers']} specificLayers{userInputParams['numSpecificEncoderLayers']} encodedDim{userInputParams['encodedDimension']} LR-G{userInputParams['generalLR']}-P{userInputParams['physioLR']} WD-G{userInputParams['generalWD']}-P{userInputParams['physioWD']} numPParams{userInputParams['numEncodedWeights']} {userInputParams['neuralOperatorParameters']['wavelet']['waveletType']}"
+        signalEncoderModelInfo = f"signalEncoder on {userInputParams['deviceListed']} {userInputParams['optimizerType']} sharedLayers{userInputParams['numSharedEncoderLayers']} specificLayers{userInputParams['numSpecificEncoderLayers']} encodedDim{userInputParams['encodedDimension']} LR-G{userInputParams['reversibleLR']}-P{userInputParams['profileLR']} WD-G{userInputParams['reversibleWD']}-P{userInputParams['profileWD']} numPParams{userInputParams['numEncodedWeights']} {userInputParams['neuralOperatorParameters']['wavelet']['waveletType']}"
         emotionPredictionModelInfo = f"emotionPrediction on {userInputParams['deviceListed']} with {userInputParams['optimizerType']}"
 
         if submodel == modelConstants.signalEncoderModel: return f"{trainingDate} {signalEncoderModelInfo.replace('.', '-')}"

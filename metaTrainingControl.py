@@ -52,7 +52,7 @@ if __name__ == "__main__":
 
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model.')
-    parser.add_argument('--numSharedEncoderLayers', type=int, default=8, help='The number of layers in the model.')
+    parser.add_argument('--numSharedEncoderLayers', type=int, default=6, help='The number of layers in the model.')
     parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
     parser.add_argument('--numEncodedWeights', type=int, default=32, help='The number of profile weights.')
  
@@ -62,18 +62,23 @@ if __name__ == "__main__":
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions).')
-    parser.add_argument('--activityLearningRate', type=float, default=0.01, help='The learning rate of the activity model.')
+    parser.add_argument('--activityLearningRate', type=float, default=0.1, help='The learning rate of the activity model.')
     parser.add_argument('--numActivityModelLayers', type=int, default=4, help='The number of layers in the activity model.')
     parser.add_argument('--emotionLearningRate', type=float, default=0.01, help='The learning rate of the emotion model.')
     parser.add_argument('--numEmotionModelLayers', type=int, default=4, help='The number of layers in the emotion model.')
     parser.add_argument('--numActivityChannels', type=int, default=4, help='The number of activity channels.')
 
     # Temporary parameters.
-    parser.add_argument('--maxWaveletDecompositions', type=int, default=0, help='The maximum number of wavelet decompositions.')
-    parser.add_argument('--physioLR', type=float, default=0.05, help='The learning rate of the physiological model.')
-    parser.add_argument('--generalLR', type=float, default=1e-4, help='The learning rate of the general model.')
-    parser.add_argument('--generalWD', type=float, default=1e-4, help='The learning rate of the general model.')
-    parser.add_argument('--physioWD', type=float, default=1e-1, help='The learning rate of the general model.')
+    parser.add_argument('--profileLR', type=float, default=100, help='The learning rate of the physiological model.')
+    parser.add_argument('--profileWD', type=float, default=1e-2, help='The learning rate of the general model.')
+
+    # Temporary parameters.
+    parser.add_argument('--reversibleLR', type=float, default=1e-3, help='The learning rate of the general model.')
+    parser.add_argument('--reversibleWD', type=float, default=1e-4, help='The learning rate of the general model.')
+
+    # Temporary parameters.
+    parser.add_argument('--physGenLR', type=float, default=1e-5, help='The learning rate of the general model.')
+    parser.add_argument('--physGenWD', type=float, default=1e-6, help='The learning rate of the general model.')
 
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
@@ -127,6 +132,7 @@ if __name__ == "__main__":
         # Store the initial loss information and plot.
         trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)
         if plotSteps: trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate)
+        trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate)
 
         # Save the model sometimes (only on the main device).
         if saveFullModel and accelerator.is_local_main_process:

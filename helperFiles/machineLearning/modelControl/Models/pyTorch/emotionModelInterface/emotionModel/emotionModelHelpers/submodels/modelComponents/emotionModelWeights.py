@@ -27,16 +27,14 @@ class emotionModelWeights(convolutionalHelpers):
     def getInitialPhysiologicalProfile(numExperiments):
         # Initialize the physiological profile.
         physiologicalProfile = torch.randn(numExperiments, modelConstants.numEncodedWeights, dtype=torch.float64)
-        physiologicalProfile = emotionModelWeights.physiologicalInitialization(physiologicalProfile)
-
-        # Initialize the physiological profile as a parameter.
+        emotionModelWeights.physiologicalInitialization(physiologicalProfile)
         physiologicalProfile = nn.Parameter(physiologicalProfile)
 
         return physiologicalProfile
 
     @staticmethod
     def physiologicalInitialization(physiologicalProfile):
-        return nn.init.xavier_uniform_(physiologicalProfile)
+        nn.init.kaiming_normal_(physiologicalProfile.data, mode='fan_in', nonlinearity='linear')
 
     # ------------------- Neural Operator Architectures ------------------- #
 
@@ -60,18 +58,17 @@ class emotionModelWeights(convolutionalHelpers):
 
     def physiologicalGeneration(self, numOutputFeatures):
         numUpSamples = int(math.log2(numOutputFeatures // modelConstants.numEncodedWeights))
-        numEncodedWeights = modelConstants.numEncodedWeights
-        numLayersFNN, numLayersCNN = 8, 1
+        numLayersInitFNN, numLayersFinalFNN, numLayersCNN = 1, 1, 4
 
         layers = []
         # Construct the profile generation model.
-        for i in range(max(0, numLayersFNN - numUpSamples)): layers.append(self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='selu', addBias=False));
-        for i in range(numUpSamples): layers.append(self.linearModel(numInputFeatures=numEncodedWeights, numOutputFeatures=2*numEncodedWeights, activationMethod='selu', addBias=False)); numEncodedWeights *= 2
-        layers.append(self.convolutionalFilters_resNetBlocks(numResNets=numLayersCNN, numBlocks=4, numChannels=[1, 1], kernel_sizes=5, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False))
+        for i in range(numLayersInitFNN): layers.append(self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='selu', addBias=False))
+        for i in range(numUpSamples): layers.append(self.convolutionalFilters_resNetBlocks(numResNets=1, numBlocks=1, numChannels=[1, 2], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False))
+        layers.append(self.convolutionalFilters_resNetBlocks(numResNets=numLayersCNN, numBlocks=4, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False))
         return nn.Sequential(*layers)
 
     @staticmethod
-    def gradientHook(grad): return grad  # * 1e-4 / modelConstants.userInputParams['generalLR']
+    def gradientHook(grad): return grad
 
     @staticmethod
     def physiologicalNormalization(physiologicalProfile):

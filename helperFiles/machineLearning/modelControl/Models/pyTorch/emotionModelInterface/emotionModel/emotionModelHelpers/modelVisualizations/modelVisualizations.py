@@ -45,21 +45,21 @@ class modelVisualizations(globalPlottingProtocols):
         # Prepare the model/data for evaluation.
         self.setModelSavingFolder(baseSavingFolder=f"trainingFigures/{submodel}/{trainingDate}/", stringID=f"modelComparison/")  # Label the correct folder to save this analysis.
 
-        # Plot the loss on the primary GPU.
-        if self.accelerator.is_local_main_process:
-            specificModels = [modelPipeline.model.specificSignalEncoderModel for modelPipeline in allModelPipelines]
-            datasetNames = [modelPipeline.model.datasetName for modelPipeline in allModelPipelines]
+        with torch.no_grad():
+            if self.accelerator.is_local_main_process:
+                specificModels = [modelPipeline.model.specificSignalEncoderModel for modelPipeline in allModelPipelines]
+                datasetNames = [modelPipeline.model.datasetName for modelPipeline in allModelPipelines]
 
-            # Plot reconstruction loss.
-            self.generalViz.plotTrainingLosses([specificModel.trainingLosses_signalReconstruction for specificModel in specificModels],
-                                               [specificModel.testingLosses_signalReconstruction for specificModel in specificModels],
-                                               lossLabels=[f"{datasetName} Signal Encoding Reconstruction Loss" for datasetName in datasetNames],
-                                               saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Convergence Losses")
+                # Plot reconstruction loss.
+                self.generalViz.plotTrainingLosses([specificModel.trainingLosses_signalReconstruction for specificModel in specificModels],
+                                                   [specificModel.testingLosses_signalReconstruction for specificModel in specificModels],
+                                                   lossLabels=[f"{datasetName} Signal Encoding Reconstruction Loss" for datasetName in datasetNames],
+                                                   saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Convergence Losses")
 
-            # Plot profile loss.
-            self.generalViz.plotTrainingLosses([specificModel.profileModel.profileStateLosses for specificModel in specificModels], testingLosses=None,
-                                               lossLabels=[f"{datasetName} Signal Encoding Profile Loss" for datasetName in datasetNames],
-                                               saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Profile Losses")
+                # Plot profile loss.
+                self.generalViz.plotTrainingLosses([specificModel.profileModel.profileStateLosses for specificModel in specificModels], testingLosses=None,
+                                                   lossLabels=[f"{datasetName} Signal Encoding Profile Loss" for datasetName in datasetNames],
+                                                   saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Profile Losses")
 
     def plotAllTrainingEvents(self, submodel, modelPipeline, lossDataLoader, trainingDate, currentEpoch):
         self.accelerator.print(f"\nPlotting results for the {modelPipeline.model.datasetName} model")
@@ -78,6 +78,7 @@ class modelVisualizations(globalPlottingProtocols):
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
             validDataMask, reconstructedSignalData, resampledSignalData, _, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = model.forward(submodel, signalData, signalIdentifiers, metadata, device=self.accelerator.device, onlyProfileTraining=False)
             reconstructedPhysiologicalProfile, compiledSignalEncoderLayerStates = model.reconstructPhysiologicalProfile(resampledSignalData)
+            compiledSignalEncoderLayerStates = np.flip(compiledSignalEncoderLayerStates, axis=0)
 
             # Detach the data from the GPU and tensor format.
             reconstructedPhysiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = reconstructedPhysiologicalProfile.detach().cpu().numpy(), activityProfile.detach().cpu().numpy(), basicEmotionProfile.detach().cpu().numpy(), emotionProfile.detach().cpu().numpy()
@@ -106,7 +107,7 @@ class modelVisualizations(globalPlottingProtocols):
                     if compiledSignalEncoderLayerStatePath.shape[0] != 0: self.signalEncoderViz.plotProfilePath(physiologicalTimes=physiologicalTimes, physiologicalProfile=compiledSignalEncoderLayerStates[-1, :, 0, :], profileStatePath=compiledSignalEncoderLayerStatePath[:, -1, :, 0, :], epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Last Layer State Path")
 
                 # Plot the autoencoder results.
-                self.signalEncoderViz.plotEncoder(signalData, reconstructedSignalData, physiologicalTimes, resampledSignalData, epoch=currentEpoch, saveFigureLocation="signalReconstruction/", plotTitle="Signal Encoding Reconstruction", numSignalPlots=1)
+                self.signalEncoderViz.plotEncoder(signalData, reconstructedSignalData, physiologicalTimes, resampledSignalData, epoch=currentEpoch, saveFigureLocation="signalReconstruction/", plotTitle="Signal Reconstruction", numSignalPlots=1)
 
                 # Dont keep plotting untrained models.
                 if submodel == modelConstants.signalEncoderModel: return None

@@ -4,6 +4,7 @@ import time
 
 import torch
 
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
 # Helper classes.
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.generalMethods.modelHelpers import modelHelpers
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
@@ -41,10 +42,11 @@ class trainingProtocolHelpers:
 
             # Train the updated model.
             self.modelMigration.unifyModelWeights(allModels=[modelPipeline], modelWeights=self.sharedModelWeights, layerInfo=self.unifiedLayerData)
-            modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=True, trainSharedLayers=trainSharedLayers, stepScheduler=False, numEpochs=1)   # Full model training.
+            modelPipeline.trainModel(dataLoader, submodel, profileTraining=False, specificTraining=True, trainSharedLayers=trainSharedLayers, stepScheduler=False, numEpochs=1)   # Full model training.
             self.accelerator.wait_for_everyone()
 
             # Unify all the model weights and retrain the specific models.
+            modelPipeline.modelHelpers.roundModelWeights(modelPipeline.model, decimals=16)
             self.unifiedLayerData = self.modelMigration.copyModelWeights(modelPipeline, self.sharedModelWeights)
 
         # Unify all the model weights.
@@ -64,12 +66,19 @@ class trainingProtocolHelpers:
             else: numEpochs = 1
 
             # Train the updated model.
-            modelPipeline.modelHelpers.roundModelWeights(modelPipeline.model, decimals=8)
             modelPipeline.trainModel(dataLoader, submodel, profileTraining=False, specificTraining=True, trainSharedLayers=False, stepScheduler=False, numEpochs=numEpochs)  # Signal-specific training.
 
             # Physiological profile training.
             modelPipeline.resetPhysiologicalProfile()
-            modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=self.profileEpochs)  # Profile training.
+            numEpochs = modelPipeline.getTrainingEpoch(submodel)
+            modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=min(numEpochs + 1, self.profileEpochs))  # Profile training.
+            self.accelerator.wait_for_everyone()
+
+            with torch.no_grad():
+                # Record final state paths.
+                batchSignalInfo, _, _, _, _, _ = modelPipeline.extractBatchInformation(dataLoader.dataset.getAll())
+                signalBatchData, batchSignalIdentifiers, metaBatchInfo = emotionDataInterface.separateData(batchSignalInfo)
+                modelPipeline.model.fullPass(submodel, signalBatchData, batchSignalIdentifiers, metaBatchInfo, device=modelPipeline.accelerator.device, onlyProfileTraining=True)
             self.accelerator.wait_for_everyone()
 
     def calculateLossInformation(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel):
@@ -97,7 +106,7 @@ class trainingProtocolHelpers:
             with torch.no_grad():
                 numEpochs = modelPipeline.getTrainingEpoch(submodel)
                 modelPipeline.modelVisualization.plotAllTrainingEvents(submodel, modelPipeline, lossDataLoader, trainingDate, numEpochs)
-        allMetaModels[0].modelVisualization.plotDatasetComparison(submodel, allMetaModels + allModels, trainingDate)
+        with torch.no_grad(): allMetaModels[0].modelVisualization.plotDatasetComparison(submodel, allMetaModels + allModels, trainingDate)
         t2 = time.time()
         self.accelerator.print("Total plotting time:", t2 - t1)
 

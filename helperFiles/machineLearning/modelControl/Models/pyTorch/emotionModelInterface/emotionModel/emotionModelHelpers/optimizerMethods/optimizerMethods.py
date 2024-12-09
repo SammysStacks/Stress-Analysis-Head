@@ -13,10 +13,13 @@ class optimizerMethods:
 
     def getModelParams(self, submodel, model):
         modelParams = [
-            # Specify the model parameters for the signal encoding.
-            {'params': model.sharedSignalEncoderModel.parameters(), 'weight_decay': self.userInputParams['generalWD'], 'lr': self.userInputParams['generalLR']},  # 0.1 - 0.001
-            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "profileModel" not in name), 'weight_decay': self.userInputParams['generalWD'], 'lr': self.userInputParams['generalLR']},  # 0.1 - 0.001
-            {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': self.userInputParams['physioWD'], 'lr': self.userInputParams['physioLR']},  # 0.1 - 0.01
+            # Specify the model parameters for the shared signal encoding.
+            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "physiologicalGenerationModel" not in name), 'weight_decay': self.userInputParams['reversibleWD'], 'lr': self.userInputParams['reversibleLR']},  # 1e-6 - 1e-2
+            {'params': model.sharedSignalEncoderModel.physiologicalGenerationModel.parameters(), 'weight_decay': self.userInputParams['physGenWD'], 'lr': self.userInputParams['physGenLR']},  # 1e-2 - 1e2
+
+            # Specify the model parameters for the specific signal encoding.
+            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "profileModel" not in name), 'weight_decay': self.userInputParams['reversibleWD'], 'lr': self.userInputParams['reversibleLR']},  # 1e-2 - 1e2
+            {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': self.userInputParams['profileWD'], 'lr': self.userInputParams['profileLR']},  # 0.1 - 0.01
         ]
 
         if submodel == modelConstants.emotionModel:

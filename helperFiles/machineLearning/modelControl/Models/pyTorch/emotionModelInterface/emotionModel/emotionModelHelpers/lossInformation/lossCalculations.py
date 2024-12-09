@@ -74,65 +74,65 @@ class lossCalculations:
 
     # -------------------------- Loss Calculations ------------------------- #
 
-    def calculateActivityLoss(self, predictedActivityLabels, allLabels, allLabelsMask, activityClassWeights):
-        # Find the boolean flags for the data involved in the loss calculation.
-        activityDataMask = self.dataInterface.getActivityColumn(allLabelsMask, self.activityLabelInd)  # Dim: numExperiments
-        trueActivityLabels = self.dataInterface.getActivityLabels(allLabels, allLabelsMask, self.activityLabelInd)
+    # def calculateActivityLoss(self, predictedActivityLabels, allLabels, allLabelsMask, activityClassWeights):
+    #     # Find the boolean flags for the data involved in the loss calculation.
+    #     activityDataMask = self.dataInterface.getActivityColumn(allLabelsMask, self.activityLabelInd)  # Dim: numExperiments
+    #     trueActivityLabels = self.dataInterface.getActivityLabels(allLabels, allLabelsMask, self.activityLabelInd)
+    #
+    #     # Calculate the activity classification accuracy/loss and assert the integrity of the loss.
+    #     activityLosses = self.activityClassificationLoss(predictedActivityLabels[activityDataMask], trueActivityLabels.long())
+    #     activityLoss = weightLoss(activityLosses, activityClassWeights, trueActivityLabels)
+    #     assert not activityLoss.isnan().any() and not activityLoss.isinf().any(), f"Check your inputs to (or the method) self.activityClassificationLoss. Found {activityLoss} value"
+    #
+    #     return activityLoss
 
-        # Calculate the activity classification accuracy/loss and assert the integrity of the loss.
-        activityLosses = self.activityClassificationLoss(predictedActivityLabels[activityDataMask], trueActivityLabels.long())
-        activityLoss = weightLoss(activityLosses, activityClassWeights, trueActivityLabels)
-        assert not activityLoss.isnan().any() and not activityLoss.isinf().any(), f"Check your inputs to (or the method) self.activityClassificationLoss. Found {activityLoss} value"
-
-        return activityLoss
-
-    def calculateEmotionsLoss(self, emotionInd, predictedEmotionlabels, allLabels, allLabelsMask, allEmotionClassWeights):
-        # Calculate the loss from predicting similar basic emotions.
-        emotionOrthogonalityLoss = self.lossCalculations.scoreEmotionOrthonormality(allBasicEmotionDistributions)
-        assert not emotionOrthogonalityLoss.isnan().any() and not emotionOrthogonalityLoss.isinf().any()
-        # Calculate the loss from model-specific weights.
-        modelSpecificWeights = self.lossCalculations.scoreModelWeights(self.model.predictUserEmotions.allSubjectWeights)
-        assert not modelSpecificWeights.isnan().any() and not modelSpecificWeights.isinf().any()
-        # Add all the losses together into one value.
-        finalLoss = reconstructedLoss + activityLoss * 2 + emotionOrthogonalityLoss / 2  # + modelSpecificWeights*0.01
-
-        # Get the valid emotion indices (ones with training points).
-        batchEmotionTrainingMask = self.dataInterface.getEmotionMasks(batchTrainingMask)
-        validEmotionInds = self.dataInterface.getLabelInds_withPoints(batchEmotionTrainingMask)
-
-        emotionLoss = 0
-        # For each emotion we are predicting that has training data.
-        for validEmotionInd in validEmotionInds:
-            # Calculate and add the loss due to misclassifying the emotion.
-            emotionLoss = self.calculateEmotionLoss(validEmotionInd, predictedBatchEmotions, trueBatchLabels,
-                                                                     batchTrainingMask, allEmotionClassWeights)  # Calculate the error in the emotion predictions
-            emotionLoss += emotionLoss / len(validEmotionInds)  # Add all the losses together into one value.
-        # Average all the losses that were added together.
-        finalLoss += emotionLoss * 2
-
-    def calculateEmotionLoss(self, emotionInd, predictedEmotionlabels, allLabels, allLabelsMask, allEmotionClassWeights):
-        # Organize the emotion's training information.
-        emotionLabels = self.dataInterface.getEmotionLabels(emotionInd, allLabels, allLabelsMask)
-        emotionClassWeights = allEmotionClassWeights[emotionInd]
-
-        # Get the predicted and true emotion distributions.
-        predictedTrainingEmotions, trueTrainingEmotions = self.dataInterface.getEmotionDistributions(emotionInd, predictedEmotionlabels, allLabels, allLabelsMask)
-        # predictedTrainingEmotions = F.normalize(predictedTrainingEmotions, dim=1, p=1)
-        # assert (predictedTrainingEmotions >= 0).all()
-
-        # Calculate an array of possible emotion ratings.
-        numEmotionClasses = self.allEmotionClasses[emotionInd]
-        possibleEmotionRatings = torch.arange(0, numEmotionClasses, numEmotionClasses / self.emotionLength, device=allLabels.device) - 0.5
-        # Calculate the weighted prediction losses
-        mseLossDistributions = (emotionLabels[:, None] - possibleEmotionRatings) ** 2
-        emotionDistributionLosses = (mseLossDistributions * predictedTrainingEmotions).sum(dim=1)
-
-        # Calculate the error in the emotion predictions
-        # emotionDistributionLosses = self.emotionClassificationLoss(predictedTrainingEmotions, trueTrainingEmotions.float()).sum(dim=-1)
-        emotionDistributionLoss = weightLoss(emotionDistributionLosses, emotionClassWeights, emotionLabels).mean()
-        assert not emotionDistributionLoss.isnan().any().item() and not emotionDistributionLoss.isinf().any().item(), print(predictedTrainingEmotions, trueTrainingEmotions.float(), emotionDistributionLoss)
-
-        return emotionDistributionLoss
+    # def calculateEmotionsLoss(self, emotionInd, predictedEmotionlabels, allLabels, allLabelsMask, allEmotionClassWeights):
+    #     # Calculate the loss from predicting similar basic emotions.
+    #     emotionOrthogonalityLoss = self.lossCalculations.scoreEmotionOrthonormality(allBasicEmotionDistributions)
+    #     assert not emotionOrthogonalityLoss.isnan().any() and not emotionOrthogonalityLoss.isinf().any()
+    #     # Calculate the loss from model-specific weights.
+    #     modelSpecificWeights = self.lossCalculations.scoreModelWeights(self.model.predictUserEmotions.allSubjectWeights)
+    #     assert not modelSpecificWeights.isnan().any() and not modelSpecificWeights.isinf().any()
+    #     # Add all the losses together into one value.
+    #     finalLoss = reconstructedLoss + activityLoss * 2 + emotionOrthogonalityLoss / 2  # + modelSpecificWeights*0.01
+    #
+    #     # Get the valid emotion indices (ones with training points).
+    #     batchEmotionTrainingMask = self.dataInterface.getEmotionMasks(batchTrainingMask)
+    #     validEmotionInds = self.dataInterface.getLabelInds_withPoints(batchEmotionTrainingMask)
+    #
+    #     emotionLoss = 0
+    #     # For each emotion we are predicting that has training data.
+    #     for validEmotionInd in validEmotionInds:
+    #         # Calculate and add the loss due to misclassifying the emotion.
+    #         emotionLoss = self.calculateEmotionLoss(validEmotionInd, predictedBatchEmotions, trueBatchLabels,
+    #                                                                  batchTrainingMask, allEmotionClassWeights)  # Calculate the error in the emotion predictions
+    #         emotionLoss += emotionLoss / len(validEmotionInds)  # Add all the losses together into one value.
+    #     # Average all the losses that were added together.
+    #     finalLoss += emotionLoss * 2
+    #
+    # def calculateEmotionLoss(self, emotionInd, predictedEmotionlabels, allLabels, allLabelsMask, allEmotionClassWeights):
+    #     # Organize the emotion's training information.
+    #     emotionLabels = self.dataInterface.getEmotionLabels(emotionInd, allLabels, allLabelsMask)
+    #     emotionClassWeights = allEmotionClassWeights[emotionInd]
+    #
+    #     # Get the predicted and true emotion distributions.
+    #     predictedTrainingEmotions, trueTrainingEmotions = self.dataInterface.getEmotionDistributions(emotionInd, predictedEmotionlabels, allLabels, allLabelsMask)
+    #     # predictedTrainingEmotions = F.normalize(predictedTrainingEmotions, dim=1, p=1)
+    #     # assert (predictedTrainingEmotions >= 0).all()
+    #
+    #     # Calculate an array of possible emotion ratings.
+    #     numEmotionClasses = self.allEmotionClasses[emotionInd]
+    #     possibleEmotionRatings = torch.arange(0, numEmotionClasses, numEmotionClasses / self.emotionLength, device=allLabels.device) - 0.5
+    #     # Calculate the weighted prediction losses
+    #     mseLossDistributions = (emotionLabels[:, None] - possibleEmotionRatings) ** 2
+    #     emotionDistributionLosses = (mseLossDistributions * predictedTrainingEmotions).sum(dim=1)
+    #
+    #     # Calculate the error in the emotion predictions
+    #     # emotionDistributionLosses = self.emotionClassificationLoss(predictedTrainingEmotions, trueTrainingEmotions.float()).sum(dim=-1)
+    #     emotionDistributionLoss = weightLoss(emotionDistributionLosses, emotionClassWeights, emotionLabels).mean()
+    #     assert not emotionDistributionLoss.isnan().any().item() and not emotionDistributionLoss.isinf().any().item(), print(predictedTrainingEmotions, trueTrainingEmotions.float(), emotionDistributionLoss)
+    #
+    #     return emotionDistributionLoss
 
     # ---------------------------------------------------------------------- #
     # ------------------------- Loss Helper Methods ------------------------ # 

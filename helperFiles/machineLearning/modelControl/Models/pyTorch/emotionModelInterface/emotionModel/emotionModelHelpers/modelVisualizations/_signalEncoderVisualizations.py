@@ -25,8 +25,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         noTimes = physiologicalTimes is None
 
         if noTimes: physiologicalTimes = np.arange(start=0, stop=len(physiologicalProfile[batchInd]), step=1)
-        plt.plot(physiologicalTimes, physiologicalProfile[batchInd], 'o' if noTimes else '-', c=self.blackColor, label=f"Physiological profile", linewidth=2, alpha=0.8)
-        for profileStep in range(numProfileSteps - 1, -1, -1): plt.plot(physiologicalTimes, profileStatePath[profileStep, batchInd], c=self.lightColors[0], linewidth=1, alpha=1 - profileStep*0.02)
+        plt.plot(physiologicalTimes, physiologicalProfile[batchInd], 'o' if noTimes else '-', c=self.blackColor, label=f"Physiological profile", linewidth=2, markersize=5, alpha=0.8)
+        for profileStep in range(numProfileSteps - 1, -1, -1): plt.plot(physiologicalTimes, profileStatePath[profileStep, batchInd], 'o' if noTimes else '-', c=self.lightColors[0], linewidth=1, markersize=3, alpha=1 - profileStep*0.025)
 
         # Plotting aesthetics.
         plt.xlabel("Time (Seconds)")
@@ -107,8 +107,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         for signalInd in plottingSignals:
             # Plot the signal reconstruction.
             plt.plot(timepoints[batchInd, signalInd, :], datapoints[batchInd, signalInd, :], 'o', color=self.blackColor, markersize=2, alpha=0.75, label="Initial Signal")
-            plt.plot(timepoints[batchInd, signalInd, :], reconstructedSignals[batchInd, signalInd, :], 'o', color=self.lightColors[0], markersize=2, alpha=0.75, label="Reconstructed Signal")
             plt.plot(comparisonTimes, comparisonSignal[batchInd, signalInd, :], self.lightColors[1], linewidth=2, alpha=0.8, label="Resampled Signal")
+            plt.plot(timepoints[batchInd, signalInd, :], reconstructedSignals[batchInd, signalInd, :], 'o', color=self.lightColors[0], markersize=3, alpha=1, label="Reconstructed Signal")
 
             # Plotting aesthetics.
             plt.title(f"{plotTitle} epoch{epoch} signal{signalInd + 1}")
@@ -160,7 +160,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Add ticks and grid for clarity
         plt.xticks(fontsize=12)
-        plt.yticks(ticks=np.arange(numLayers), labels=np.arange(1, numLayers + 1), fontsize=12)
+        plt.yticks(ticks=np.arange(numLayers + 1), labels=np.arange(0, numLayers + 1), fontsize=12)
         plt.grid(False)
 
         # Format the plotting
