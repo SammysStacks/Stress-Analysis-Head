@@ -221,6 +221,8 @@ class emotionModelHead(nn.Module):
             if compileLayerStates: compiledLayerStates.append(metaLearningData.clone().detach().cpu().numpy())
         # metaLearningData: batchSize, numSignals, finalDimension
 
+        # Compile the layer states if necessary.
+        if compileLayerStates: compiledLayerStates = torch.tensor(compiledLayerStates, device=metaLearningData.device, dtype=torch.float64)
         return metaLearningData, compiledLayerStates
 
     def reconstructPhysiologicalProfile(self, resampledSignalData):
