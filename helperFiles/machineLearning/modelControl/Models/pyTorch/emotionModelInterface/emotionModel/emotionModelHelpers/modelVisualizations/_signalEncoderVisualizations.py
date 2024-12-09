@@ -22,9 +22,10 @@ class signalEncoderVisualizations(globalPlottingProtocols):
     def plotProfilePath(self, physiologicalTimes, physiologicalProfile, profileStatePath, epoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Profile State Path"):
         # Extract the signal dimensions.
         numProfileSteps, batchInd = len(profileStatePath), 0
+        noTimes = physiologicalTimes is None
 
-        if physiologicalTimes is None: physiologicalTimes = np.arange(start=0, stop=len(physiologicalProfile[batchInd]), step=1)
-        plt.plot(physiologicalTimes, physiologicalProfile[batchInd], 'o' if physiologicalTimes is None else '-', c=self.blackColor, label=f"Physiological profile", linewidth=2, alpha=0.8)
+        if noTimes: physiologicalTimes = np.arange(start=0, stop=len(physiologicalProfile[batchInd]), step=1)
+        plt.plot(physiologicalTimes, physiologicalProfile[batchInd], 'o' if noTimes else '-', c=self.blackColor, label=f"Physiological profile", linewidth=2, alpha=0.8)
         for profileStep in range(numProfileSteps - 1, -1, -1): plt.plot(physiologicalTimes, profileStatePath[profileStep, batchInd], c=self.lightColors[0], linewidth=1, alpha=1 - profileStep*0.02)
 
         # Plotting aesthetics.
