@@ -248,13 +248,14 @@ class emotionModelHead(nn.Module):
                 physiologicalProfile[startBatchInd:endBatchInd], activityProfile[startBatchInd:endBatchInd], basicEmotionProfile[startBatchInd:endBatchInd], emotionProfile[startBatchInd:endBatchInd] \
                 = self.forward(submodel=submodel, signalData=signalData[startBatchInd:endBatchInd], signalIdentifiers=signalIdentifiers[startBatchInd:endBatchInd],
                                metadata=metadata[startBatchInd:endBatchInd], device=device, onlyProfileTraining=onlyProfileTraining)
-            if compiledSignalEncoderLayerState is not None: compiledSignalEncoderLayerStates[startBatchInd:endBatchInd] = compiledSignalEncoderLayerState
+            if compiledSignalEncoderLayerState is not None: assert onlyProfileTraining; compiledSignalEncoderLayerStates[startBatchInd:endBatchInd] = compiledSignalEncoderLayerState
 
             # Update the batch index.
             startBatchInd = endBatchInd
 
         if onlyProfileTraining:
             with torch.no_grad():
+                assert compiledSignalEncoderLayerState is not None
                 self.specificSignalEncoderModel.profileModel.profileStateLosses.append(self.calculateModelLosses.calculateSignalEncodingLoss(signalData, reconstructedSignalData, validDataMask, allSignalMask=None).nanmean().item())
                 self.specificSignalEncoderModel.profileModel.profileOGStatePath.append(self.specificSignalEncoderModel.profileModel.physiologicalProfile.clone().detach().cpu().numpy())
                 self.specificSignalEncoderModel.profileModel.compiledSignalEncoderLayerStatePath.append(compiledSignalEncoderLayerStates)
