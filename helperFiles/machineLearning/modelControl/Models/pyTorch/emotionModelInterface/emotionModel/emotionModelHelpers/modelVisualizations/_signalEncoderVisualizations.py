@@ -195,7 +195,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Create the heatmap
         plt.figure(figsize=(12, 8))
-        plt.imshow(compiledSignalEncoderLayerStates[:, batchInd, signalInd, :], cmap=custom_cmap, interpolation='bilinear', extent=[physiologicalTimes.min(), physiologicalTimes.max(), 0, numLayers], aspect='auto', origin='lower')
+        plt.imshow(compiledSignalEncoderLayerStates[:, batchInd, signalInd, :], cmap=custom_cmap, extent=[physiologicalTimes.min(), physiologicalTimes.max(), 0, numLayers], aspect='auto', origin='lower')
         # Magma is also good
 
         # Add a colorbar
