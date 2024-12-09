@@ -20,11 +20,12 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     def plotProfilePath(self, physiologicalTimes, physiologicalProfile, profileStatePath, epoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Profile State Path"):
         # Extract the signal dimensions.
+        if physiologicalTimes is None: physiologicalTimes = np.arange(0, profileStatePath.shape[0], 1)
         numProfileSteps, numExperiments, encodedDimension = profileStatePath.shape
         batchInd = 0
 
         plt.plot(physiologicalTimes, physiologicalProfile[batchInd], c=self.blackColor, label=f"Physiological profile", linewidth=2, alpha=0.8)
-        for profileStep in range(numProfileSteps - 1, -1, -1): plt.plot(physiologicalTimes, profileStatePath[profileStep, batchInd], c=self.lightColors[0], linewidth=1, alpha=0.9 - profileStep*0.01)
+        for profileStep in range(numProfileSteps - 1, -1, -1): plt.plot(physiologicalTimes, profileStatePath[profileStep, batchInd], c=self.lightColors[0], linewidth=1, alpha=1 - profileStep*0.02)
 
         # Plotting aesthetics.
         plt.xlabel("Time (Seconds)")
@@ -120,6 +121,58 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
             else: self.clearFigure(fig=None, legend=None)
 
+    def plotSignalEncodingStatePath(self, physiologicalTimes, compiledSignalEncoderLayerStates, epoch, saveFigureLocation, plotTitle):
+        numLayers, numExperiments, numSignals, encodedDimension = compiledSignalEncoderLayerStates.shape
+        batchInd, signalInd = 0, 0
+
+        # Interpolate the states.
+        compiledSignalEncoderLayerStates = compiledSignalEncoderLayerStates[:, batchInd, signalInd, :]
+        compiledSignalEncoderLayerStates = np.interp(physiologicalTimes, np.linspace(0, physiologicalTimes.max(), num=1024), compiledSignalEncoderLayerStates)
+
+        # Define your colors (min, mean, max)
+        # colors = ["#56d0f7", "#ffffff", "#f27fb2"]  # Blue -> Purple -> Red
+        # custom_cmap = LinearSegmentedColormap.from_list("custom_diverging", colors)
+
+        blue_lch = [54., 70., 4.6588]
+        red_lch = [54., 90., 0.35470565 + 2 * np.pi]
+        blue_rgb = lch2rgb(blue_lch)
+        red_rgb = lch2rgb(red_lch)
+        white_rgb = np.array([1., 1., 1.])
+
+        colors = []
+        for alpha in np.linspace(1, 0, 100):
+            c = blue_rgb * alpha + (1 - alpha) * white_rgb
+            colors.append(c)
+        for alpha in np.linspace(0, 1, 100):
+            c = red_rgb * alpha + (1 - alpha) * white_rgb
+            colors.append(c)
+        custom_cmap = LinearSegmentedColormap.from_list("red_transparent_blue", colors)
+
+        # Create the heatmap
+        plt.figure(figsize=(12, 8))
+        plt.imshow(compiledSignalEncoderLayerStates, cmap=custom_cmap, extent=[physiologicalTimes.min(), physiologicalTimes.max(), 0, numLayers], aspect='auto', origin='lower')
+        # Magma is also good
+
+        # Add a colorbar
+        cbar = plt.colorbar()
+        cbar.set_label("Signal Amplitude", fontsize=12)
+
+        # Add ticks and grid for clarity
+        plt.xticks(fontsize=12)
+        plt.yticks(ticks=np.arange(numLayers), labels=np.arange(1, numLayers + 1), fontsize=12)
+        plt.grid(False)
+
+        # Format the plotting
+        plt.title(f"{plotTitle} epoch{epoch}", fontsize=16)
+        plt.xlabel("Time", fontsize=14)
+        plt.ylabel("Layer Index", fontsize=14)
+
+        # Save the plot
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        else: self.clearFigure(fig=None, legend=None)
+
+    # --------------------- Visualize Model Training --------------------- #
+
     def plotSignalComparison(self, originalSignal, comparisonSignal, epoch, saveFigureLocation, plotTitle, numSignalPlots=1):
         """ originalSignal dimension: batchSize, numSignals, numTotalPoints """
         # Assert the integrity of the incoming data
@@ -165,52 +218,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.xlabel('Time (Seconds)')
         plt.ylabel("Arbitrary Axis (AU)")
         plt.legend(['Noisy Signal', 'True Signal', 'Reconstructed Signal'], loc='best')
-
-        # Save the plot
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
-        else: self.clearFigure(fig=None, legend=None)
-
-    def plotSignalEncodingStatePath(self, physiologicalTimes, compiledSignalEncoderLayerStates, epoch, saveFigureLocation, plotTitle):
-        numLayers, numExperiments, numSignals, encodedDimension = compiledSignalEncoderLayerStates.shape
-        batchInd, signalInd = 0, 0
-
-        # Define your colors (min, mean, max)
-        # colors = ["#56d0f7", "#ffffff", "#f27fb2"]  # Blue -> Purple -> Red
-        # custom_cmap = LinearSegmentedColormap.from_list("custom_diverging", colors)
-
-        blue_lch = [54., 70., 4.6588]
-        red_lch = [54., 90., 0.35470565 + 2 * np.pi]
-        blue_rgb = lch2rgb(blue_lch)
-        red_rgb = lch2rgb(red_lch)
-        white_rgb = np.array([1., 1., 1.])
-
-        colors = []
-        for alpha in np.linspace(1, 0, 100):
-            c = blue_rgb * alpha + (1 - alpha) * white_rgb
-            colors.append(c)
-        for alpha in np.linspace(0, 1, 100):
-            c = red_rgb * alpha + (1 - alpha) * white_rgb
-            colors.append(c)
-        custom_cmap = LinearSegmentedColormap.from_list("red_transparent_blue", colors)
-
-        # Create the heatmap
-        plt.figure(figsize=(12, 8))
-        plt.imshow(compiledSignalEncoderLayerStates[:, batchInd, signalInd, :], cmap=custom_cmap, extent=[physiologicalTimes.min(), physiologicalTimes.max(), 0, numLayers], aspect='auto', origin='lower')
-        # Magma is also good
-
-        # Add a colorbar
-        cbar = plt.colorbar()
-        cbar.set_label("Signal Amplitude", fontsize=12)
-
-        # Add ticks and grid for clarity
-        plt.xticks(fontsize=12)
-        plt.yticks(ticks=np.arange(numLayers), labels=np.arange(1, numLayers + 1), fontsize=12)
-        plt.grid(False)
-
-        # Format the plotting
-        plt.title(f"{plotTitle} epoch{epoch}", fontsize=16)
-        plt.xlabel("Time", fontsize=14)
-        plt.ylabel("Layer Index", fontsize=14)
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
