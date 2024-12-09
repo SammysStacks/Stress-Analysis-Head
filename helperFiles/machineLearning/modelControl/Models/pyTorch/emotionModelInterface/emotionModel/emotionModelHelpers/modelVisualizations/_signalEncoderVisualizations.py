@@ -71,6 +71,23 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None)
 
+    def plotPhysiologicalOG(self, physiologicalProfileOG, epoch, saveFigureLocation, plotTitle):
+        # Extract the signal dimensions.
+        batchSize, sequenceLength = physiologicalProfileOG.shape
+        batchInd = 0
+
+        # Plot the signal reconstruction.
+        plt.plot(physiologicalProfileOG[batchInd], 'o', c=self.blackColor, label=f"Physiological profile", linewidth=1, alpha=0.8)
+
+        # Plotting aesthetics.
+        plt.xlabel("Time (Seconds)")
+        plt.title(f"{plotTitle} epoch{epoch}")
+        plt.ylabel("Signal (AU)")
+
+        # Save the figure.
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        else: self.clearFigure(fig=None, legend=None)
+
     def plotEncoder(self, initialSignalData, reconstructedSignals, comparisonTimes, comparisonSignal, epoch, saveFigureLocation="", plotTitle="Encoder Prediction", numSignalPlots=1):
         # Assert the integrity of the incoming data
         assert initialSignalData.shape[0:2] == comparisonSignal.shape[0:2], f"{initialSignalData.shape} {comparisonSignal.shape}"

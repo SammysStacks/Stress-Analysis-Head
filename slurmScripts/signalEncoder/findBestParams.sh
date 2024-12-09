@@ -12,13 +12,13 @@ numSpecificEncoderLayers_arr=(1)  # 1
 signalEncoderLayers_arr=(8)  # 3
 encodedDimensions_arr=(256)  # 1
 
-# Learning rates: 6
+# Learning rates: 15
 lrs_general=('1e-2' '1e-3' '1e-4')  # 2
-lrs_physio=('100' '10' '1' '1e-1' '1e-2' '1e-3')  # 3
+lrs_physio=('100' '10' '1' '1e-1' '1e-2')  # 3
 
-# Weight decays: 6
-wds_general=('1e-1' '1e-2' '1e-3' '1e-4' '1e-5')  # 6
-wds_physio=('1e-1' '1e-2' '1e-3' '1e-4' '1e-5')  # 6
+# Weight decays: 16
+wds_general=('1e-1' '1e-2' '1e-3' '1e-4')  # 6
+wds_physio=('1e-1' '1e-2' '1e-3' '1e-4')  # 6
 
 # Finalized parameters.
 waveletTypes_arr=('bior3.1')  # 'bior3.1' > 'bior3.3' > 'bior2.2' > 'bior3.5'

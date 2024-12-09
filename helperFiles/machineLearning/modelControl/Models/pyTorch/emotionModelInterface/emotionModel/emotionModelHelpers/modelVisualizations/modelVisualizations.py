@@ -82,9 +82,10 @@ class modelVisualizations(globalPlottingProtocols):
             # Detach the data from the GPU and tensor format.
             reconstructedPhysiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = reconstructedPhysiologicalProfile.detach().cpu().numpy(), activityProfile.detach().cpu().numpy(), basicEmotionProfile.detach().cpu().numpy(), emotionProfile.detach().cpu().numpy()
             validDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile = validDataMask.detach().cpu().numpy(), reconstructedSignalData.detach().cpu().numpy(), resampledSignalData.detach().cpu().numpy(), physiologicalProfile.detach().cpu().numpy()
+            physiologicalProfileOG = model.specificSignalEncoderModel.profileModel.physiologicalProfile.detach().cpu().numpy()  # numExperiments, numEncodedWeights
+            profileStatePath = np.asarray(model.specificSignalEncoderModel.profileModel.profileStatePath)  # numProfileSteps, numExperiments, encodedDimension
             physiologicalTimes = model.sharedSignalEncoderModel.pseudoEncodedTimes.detach().cpu().numpy()  # pseudoEncodedTimes: numTimePoints
             compiledSignalEncoderLayerStates = np.asarray(compiledSignalEncoderLayerStates)  # numLayers, numExperiments, numSignals, encodedDimension
-            profileStatePath = np.asarray(model.specificSignalEncoderModel.profileModel.profileStatePath)  # numProfileSteps, numExperiments, encodedDimension
             globalPlottingProtocols.clearFigure(fig=None, legend=None)
 
             # Plot the loss on the primary GPU.
@@ -94,6 +95,7 @@ class modelVisualizations(globalPlottingProtocols):
 
                 if submodel == modelConstants.signalEncoderModel:
                     # Plot the physiological profile training information.
+                    self.signalEncoderViz.plotPhysiologicalOG(physiologicalProfileOG, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Weights")
                     self.signalEncoderViz.plotPhysiologicalReconstruction(physiologicalTimes, physiologicalProfile, reconstructedPhysiologicalProfile, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Reconstruction")
                     self.signalEncoderViz.plotPhysiologicalError(physiologicalTimes, physiologicalProfile, reconstructedPhysiologicalProfile, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Reconstruction Error")
                     if profileStatePath.shape[0] != 0: self.signalEncoderViz.plotProfilePath(physiologicalTimes, physiologicalProfile, profileStatePath, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Profile State Path")
