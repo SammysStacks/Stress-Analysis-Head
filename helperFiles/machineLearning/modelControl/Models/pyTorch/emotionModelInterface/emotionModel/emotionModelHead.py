@@ -251,7 +251,7 @@ class emotionModelHead(nn.Module):
                 physiologicalProfile[startBatchInd:endBatchInd], activityProfile[startBatchInd:endBatchInd], basicEmotionProfile[startBatchInd:endBatchInd], emotionProfile[startBatchInd:endBatchInd] \
                 = self.forward(submodel=submodel, signalData=signalData[startBatchInd:endBatchInd], signalIdentifiers=signalIdentifiers[startBatchInd:endBatchInd],
                                metadata=metadata[startBatchInd:endBatchInd], device=device, onlyProfileTraining=onlyProfileTraining)
-            if compiledSignalEncoderLayerState is not None: assert onlyProfileTraining; compiledSignalEncoderLayerStates[:, startBatchInd:endBatchInd] = compiledSignalEncoderLayerState[:, :, 0:1, :]
+            if compiledSignalEncoderLayerState is not None: assert onlyProfileTraining; compiledSignalEncoderLayerStates[:, startBatchInd:endBatchInd, 0, :] = compiledSignalEncoderLayerState[:, :, 0, :]
 
             # Update the batch index.
             startBatchInd = endBatchInd
