@@ -76,17 +76,18 @@ class modelVisualizations(globalPlottingProtocols):
 
         with torch.no_grad():
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
-            validDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = model.forward(submodel, signalData, signalIdentifiers, metadata, device=self.accelerator.device, onlyProfileTraining=False)
+            validDataMask, reconstructedSignalData, resampledSignalData, compiledSignalEncoderLayerStates, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = model.forward(submodel, signalData, signalIdentifiers, metadata, device=self.accelerator.device, onlyProfileTraining=False)
             reconstructedPhysiologicalProfile, compiledSignalEncoderLayerStates = model.reconstructPhysiologicalProfile(resampledSignalData)
 
             # Detach the data from the GPU and tensor format.
             reconstructedPhysiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = reconstructedPhysiologicalProfile.detach().cpu().numpy(), activityProfile.detach().cpu().numpy(), basicEmotionProfile.detach().cpu().numpy(), emotionProfile.detach().cpu().numpy()
             validDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile = validDataMask.detach().cpu().numpy(), reconstructedSignalData.detach().cpu().numpy(), resampledSignalData.detach().cpu().numpy(), physiologicalProfile.detach().cpu().numpy()
+            compiledSignalEncoderLayerStatePath = np.asarray(model.specificSignalEncoderModel.profileModel.compiledSignalEncoderLayerStatePath)  # 2*numSpecific + numShared + 1, numExperiments, numSignals, encodedDimension
             physiologicalProfileOG = model.specificSignalEncoderModel.profileModel.physiologicalProfile.detach().cpu().numpy()  # numExperiments, numEncodedWeights
             profileOGStatePath = np.asarray(model.specificSignalEncoderModel.profileModel.profileOGStatePath)  # numProfileSteps, numExperiments, numEncodedWeights
             profileStatePath = np.asarray(model.specificSignalEncoderModel.profileModel.profileStatePath)  # numProfileSteps, numExperiments, encodedDimension
             physiologicalTimes = model.sharedSignalEncoderModel.pseudoEncodedTimes.detach().cpu().numpy()  # pseudoEncodedTimes: numTimePoints
-            compiledSignalEncoderLayerStates = np.asarray(compiledSignalEncoderLayerStates)  # numLayers, numExperiments, numSignals, encodedDimension
+            compiledSignalEncoderLayerStates = compiledSignalEncoderLayerStates.detach().cpu().numpy()  # numExperiments, numSignals, encodedDimension
             globalPlottingProtocols.clearFigure(fig=None, legend=None)
 
             # Plot the loss on the primary GPU.
@@ -98,11 +99,12 @@ class modelVisualizations(globalPlottingProtocols):
                     # Plot the physiological profile training information.
                     self.signalEncoderViz.plotPhysiologicalReconstruction(physiologicalTimes, physiologicalProfile, reconstructedPhysiologicalProfile, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Reconstruction")
                     self.signalEncoderViz.plotPhysiologicalError(physiologicalTimes, physiologicalProfile, reconstructedPhysiologicalProfile, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Reconstruction Error")
-                    if physiologicalProfileOG.shape[0] != 0: self.signalEncoderViz.plotProfilePath(physiologicalTimes=None, physiologicalProfile=physiologicalProfileOG, profileStatePath=profileOGStatePath, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Profile State Path")
+                    if physiologicalProfileOG.shape[0] != 0: self.signalEncoderViz.plotProfilePath(physiologicalTimes=None, physiologicalProfile=physiologicalProfileOG, profileStatePath=profileOGStatePath, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological OG Profile State Path")
                     if profileStatePath.shape[0] != 0: self.signalEncoderViz.plotProfilePath(physiologicalTimes=physiologicalTimes, physiologicalProfile=physiologicalProfile, profileStatePath=profileStatePath, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Profile State Path")
 
                     # Plot the signal encoding training information.
                     self.signalEncoderViz.plotSignalEncodingStatePath(physiologicalTimes, compiledSignalEncoderLayerStates, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Signal Encoding State Path")
+                    if compiledSignalEncoderLayerStates.shape[0] != 0: self.signalEncoderViz.plotProfilePath(physiologicalTimes=physiologicalTimes, physiologicalProfile=compiledSignalEncoderLayerStates, profileStatePath=compiledSignalEncoderLayerStatePath[:, :, 0, :], epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Layer State Path")
 
                 # Plot the autoencoder results.
                 self.signalEncoderViz.plotEncoder(signalData, reconstructedSignalData, physiologicalTimes, resampledSignalData, epoch=currentEpoch, saveFigureLocation="signalReconstruction/", plotTitle="Signal Encoding Reconstruction", numSignalPlots=1)
