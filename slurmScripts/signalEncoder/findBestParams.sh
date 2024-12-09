@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # General parameters: 320
-allNumEncodedWeights=(2 4 8 16 32 64 128 256)  # 8
+allNumEncodedWeights=(2 4 8 16 32)  # 8
 numSpecificEncoderLayers_arr=(1 2)  # 2
 signalEncoderLayers_arr=(2 4 8 12 16)  # 5
 encodedDimensions_arr=(64 128 256 512)  # 4
@@ -14,7 +14,7 @@ encodedDimensions_arr=(256)  # 1
 
 # Learning rates: 9
 lrs_general=('1e-2' '1e-3' '1e-4')  # 3
-lrs_physio=('0.1' '0.033' '0.01')  # 3
+lrs_physio=('0.1' '0.33' '0.01')  # 3
 
 # Weight decays: 25
 wds_general=('0' '1e-4' '1e-3' '1e-2' '1e-1')  # 4

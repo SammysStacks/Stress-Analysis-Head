@@ -61,12 +61,13 @@ class emotionModelWeights(convolutionalHelpers):
     def physiologicalGeneration(self, numOutputFeatures):
         numUpSamples = int(math.log2(numOutputFeatures // modelConstants.numEncodedWeights))
         numEncodedWeights = modelConstants.numEncodedWeights
+        numLayers = 6
 
         layers = []
         # Construct the profile generation model.
-        for i in range(max(0, 8 - numUpSamples)): layers.append(self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='selu', addBias=False));
+        for i in range(max(0, numLayers - numUpSamples)): layers.append(self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='selu', addBias=False));
         for i in range(numUpSamples): layers.append(self.linearModel(numInputFeatures=numEncodedWeights, numOutputFeatures=2*numEncodedWeights, activationMethod='selu', addBias=False)); numEncodedWeights *= 2
-        layers.append(self.convolutionalFilters_resNetBlocks(numResNets=8, numBlocks=4, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False))
+        layers.append(self.convolutionalFilters_resNetBlocks(numResNets=numLayers, numBlocks=4, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False))
         return nn.Sequential(*layers)
 
     @staticmethod

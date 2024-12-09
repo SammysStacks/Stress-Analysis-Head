@@ -87,7 +87,6 @@ class modelVisualizations(globalPlottingProtocols):
             profileOGStatePath = np.asarray(model.specificSignalEncoderModel.profileModel.profileOGStatePath)  # numProfileSteps, numExperiments, numEncodedWeights
             profileStatePath = np.asarray(model.specificSignalEncoderModel.profileModel.profileStatePath)  # numProfileSteps, numExperiments, encodedDimension
             physiologicalTimes = model.sharedSignalEncoderModel.pseudoEncodedTimes.detach().cpu().numpy()  # pseudoEncodedTimes: numTimePoints
-            compiledSignalEncoderLayerStates = compiledSignalEncoderLayerStates.detach().cpu().numpy()  # numExperiments, numSignals, encodedDimension
             globalPlottingProtocols.clearFigure(fig=None, legend=None)
 
             # Plot the loss on the primary GPU.
@@ -104,7 +103,7 @@ class modelVisualizations(globalPlottingProtocols):
 
                     # Plot the signal encoding training information.
                     self.signalEncoderViz.plotSignalEncodingStatePath(physiologicalTimes, compiledSignalEncoderLayerStates, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Signal Encoding State Path")
-                    if compiledSignalEncoderLayerStatePath.shape[0] != 0: self.signalEncoderViz.plotProfilePath(physiologicalTimes=physiologicalTimes, physiologicalProfile=compiledSignalEncoderLayerStates, profileStatePath=compiledSignalEncoderLayerStatePath, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Layer State Path")
+                    if compiledSignalEncoderLayerStatePath.shape[0] != 0: self.signalEncoderViz.plotProfilePath(physiologicalTimes=physiologicalTimes, physiologicalProfile=compiledSignalEncoderLayerStates[-1, :, 0, :], profileStatePath=compiledSignalEncoderLayerStatePath[:, :, 0, :], epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Layer State Path")
 
                 # Plot the autoencoder results.
                 self.signalEncoderViz.plotEncoder(signalData, reconstructedSignalData, physiologicalTimes, resampledSignalData, epoch=currentEpoch, saveFigureLocation="signalReconstruction/", plotTitle="Signal Encoding Reconstruction", numSignalPlots=1)
