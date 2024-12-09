@@ -103,6 +103,7 @@ class modelVisualizations(globalPlottingProtocols):
                     if profileStatePath.shape[0] != 0: self.signalEncoderViz.plotProfilePath(physiologicalTimes=physiologicalTimes, physiologicalProfile=physiologicalProfile, profileStatePath=profileStatePath, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Profile State Path")
 
                     # Plot the signal encoding training information.
+                    print(compiledSignalEncoderLayerStates.shape)
                     self.signalEncoderViz.plotSignalEncodingStatePath(physiologicalTimes, compiledSignalEncoderLayerStates, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Signal Encoding State Path")
                     if compiledSignalEncoderLayerStates.shape[0] != 0: self.signalEncoderViz.plotProfilePath(physiologicalTimes=physiologicalTimes, physiologicalProfile=compiledSignalEncoderLayerStates, profileStatePath=compiledSignalEncoderLayerStatePath[:, :, 0, :], epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Layer State Path")
 
