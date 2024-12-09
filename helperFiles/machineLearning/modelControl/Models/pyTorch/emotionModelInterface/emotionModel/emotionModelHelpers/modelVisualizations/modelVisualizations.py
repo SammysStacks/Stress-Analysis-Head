@@ -96,7 +96,6 @@ class modelVisualizations(globalPlottingProtocols):
 
                 if submodel == modelConstants.signalEncoderModel:
                     # Plot the physiological profile training information.
-                    self.signalEncoderViz.plotPhysiologicalOG(physiologicalProfileOG, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Weights")
                     self.signalEncoderViz.plotPhysiologicalReconstruction(physiologicalTimes, physiologicalProfile, reconstructedPhysiologicalProfile, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Reconstruction")
                     self.signalEncoderViz.plotPhysiologicalError(physiologicalTimes, physiologicalProfile, reconstructedPhysiologicalProfile, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Reconstruction Error")
                     if physiologicalProfileOG.shape[0] != 0: self.signalEncoderViz.plotProfilePath(physiologicalTimes=None, physiologicalProfile=physiologicalProfileOG, profileStatePath=profileOGStatePath, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Profile State Path")

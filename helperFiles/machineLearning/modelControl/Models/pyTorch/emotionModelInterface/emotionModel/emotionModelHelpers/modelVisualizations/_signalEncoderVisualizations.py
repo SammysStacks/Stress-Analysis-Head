@@ -21,8 +21,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
     def plotProfilePath(self, physiologicalTimes, physiologicalProfile, profileStatePath, epoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Profile State Path"):
         # Extract the signal dimensions.
         if physiologicalTimes is None: physiologicalTimes = np.arange(0, profileStatePath.shape[0], 1)
-        numProfileSteps, numExperiments, encodedDimension = profileStatePath.shape
-        batchInd = 0
+        numProfileSteps, batchInd = len(profileStatePath), 0
 
         plt.plot(physiologicalTimes, physiologicalProfile[batchInd], c=self.blackColor, label=f"Physiological profile", linewidth=2, alpha=0.8)
         for profileStep in range(numProfileSteps - 1, -1, -1): plt.plot(physiologicalTimes, profileStatePath[profileStep, batchInd], c=self.lightColors[0], linewidth=1, alpha=1 - profileStep*0.02)
