@@ -2,6 +2,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
+from scipy.interpolate import interp1d
 from shap.plots.colors._colors import lch2rgb
 
 # Visualization protocols
@@ -126,7 +127,9 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Interpolate the states.
         compiledSignalEncoderLayerStates = compiledSignalEncoderLayerStates[:, batchInd, signalInd, :]
-        compiledSignalEncoderLayerStates = np.interp(physiologicalTimes, np.linspace(0, physiologicalTimes.max(), num=1024), compiledSignalEncoderLayerStates)
+        interp_func = interp1d(physiologicalTimes, compiledSignalEncoderLayerStates, axis=-1)
+        interp_points = np.linspace(0, physiologicalTimes.max(), num=1024)
+        interpolated_states = interp_func(interp_points)
 
         # Define your colors (min, mean, max)
         # colors = ["#56d0f7", "#ffffff", "#f27fb2"]  # Blue -> Purple -> Red
@@ -149,7 +152,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Create the heatmap
         plt.figure(figsize=(12, 8))
-        plt.imshow(compiledSignalEncoderLayerStates, cmap=custom_cmap, extent=[physiologicalTimes.min(), physiologicalTimes.max(), 0, numLayers], aspect='auto', origin='lower')
+        plt.imshow(interpolated_states, cmap=custom_cmap, extent=[physiologicalTimes.min(), physiologicalTimes.max(), 0, numLayers], aspect='auto', origin='lower')
         # Magma is also good
 
         # Add a colorbar
