@@ -76,7 +76,7 @@ class modelVisualizations(globalPlottingProtocols):
 
         with torch.no_grad():
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
-            validDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = model.forward(submodel, signalData, signalIdentifiers, metadata, device=self.accelerator.device, profileTraining=False)
+            validDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = model.forward(submodel, signalData, signalIdentifiers, metadata, device=self.accelerator.device, onlyProfileTraining=False)
             reconstructedPhysiologicalProfile, compiledSignalEncoderLayerStates = model.reconstructPhysiologicalProfile(resampledSignalData)
 
             # Detach the data from the GPU and tensor format.

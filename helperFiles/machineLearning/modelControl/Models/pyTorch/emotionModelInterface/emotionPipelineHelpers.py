@@ -76,7 +76,6 @@ class emotionPipelineHelpers:
         else: raise Exception()
 
     def setupTraining(self, submodel, profileTraining, specificTraining, trainSharedLayers):
-        if profileTraining: assert not (specificTraining or trainSharedLayers), "We cannot train layers during profile training."
         self.setupTrainingFlags(self.model, trainingFlag=False)  # Set the model to evaluation mode.
 
         # Emotion model training.

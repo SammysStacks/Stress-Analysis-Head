@@ -22,9 +22,9 @@ class emotionPipeline(emotionPipelineHelpers):
         # allData, allLabels, allTrainingMasks, allTestingMasks, allSignalData, allSignalIdentifiers, allMetadata, reconstructionIndex = self.prepareInformation(dataLoader)
         # allEmotionClassWeights, activityClassWeights = self.organizeLossInfo.getClassWeights(allLabels, allTrainingMasks, allTestingMasks, self.numActivities)
         self.setupTraining(submodel, profileTraining=profileTraining, specificTraining=specificTraining, trainSharedLayers=trainSharedLayers)
-        if profileTraining: assert not (specificTraining or trainSharedLayers), "We cannot train layers during profile training."
+        onlyProfileTraining = profileTraining and not specificTraining and not trainSharedLayers
         if self.model.debugging: self.accelerator.print(f"\nTraining {self.datasetName} model")
-        if profileTraining: dataLoader = (dataLoader.dataset.getAll(),)
+        if onlyProfileTraining: dataLoader = (dataLoader.dataset.getAll(),)
 
         # For each training epoch.
         for epoch in range(numEpochs):
@@ -36,7 +36,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     with self.accelerator.autocast():  # Enable mixed precision auto-casting
                         # Extract the data, labels, and testing/training indices.
                         batchSignalInfo, batchSignalLabels, batchTrainingLabelMask, batchTestingLabelMask, batchTrainingSignalMask, batchTestingSignalMask = self.extractBatchInformation(batchData)
-                        if profileTraining: batchTrainingLabelMask, batchTestingLabelMask, batchTrainingSignalMask, batchTestingSignalMask = None, None, None, None
+                        if onlyProfileTraining: batchTrainingLabelMask, batchTestingLabelMask, batchTrainingSignalMask, batchTestingSignalMask = None, None, None, None
 
                         # We can skip this batch, and backpropagation if necessary.
                         if batchSignalInfo.size(0) == 0: self.backpropogateModel(); continue
@@ -50,7 +50,7 @@ class emotionPipeline(emotionPipelineHelpers):
                         # batchSignalIdentifiers dimension: batchSize, numSignals, numSignalIdentifiers
                         # metaBatchInfo dimension: batchSize, numMetadata
 
-                        if not profileTraining:
+                        if not onlyProfileTraining:
                             with torch.no_grad():
                                 # Augment the signals to train an arbitrary sequence length and order.
                                 augmentedBatchData = self.dataAugmentation.changeNumSignals(signalBatchData, dropoutPercent=0.05)
@@ -63,8 +63,8 @@ class emotionPipeline(emotionPipelineHelpers):
                         t11 = time.time()
                         # Perform the forward pass through the model.
                         validDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = \
-                            self.model.forward(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, profileTraining=profileTraining) if not profileTraining else \
-                            self.model.fullPass(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, profileTraining=profileTraining)
+                            self.model.forward(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, onlyProfileTraining=onlyProfileTraining) if not onlyProfileTraining else \
+                            self.model.fullPass(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, onlyProfileTraining=onlyProfileTraining)
                         # reconstructedSignalData dimension: batchSize, numSignals, maxSequenceLength
                         # basicEmotionProfile: batchSize, numBasicEmotions, encodedDimension
                         # validDataMask dimension: batchSize, numSignals, maxSequenceLength

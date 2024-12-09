@@ -121,7 +121,7 @@ class emotionModelHead(nn.Module):
 
     # ------------------------- Full Forward Calls ------------------------- #
 
-    def forward(self, submodel, signalData, signalIdentifiers, metadata, device, profileTraining=False):
+    def forward(self, submodel, signalData, signalIdentifiers, metadata, device, onlyProfileTraining=False):
         signalData, signalIdentifiers, metadata = (tensor.to(device) for tensor in (signalData, signalIdentifiers, metadata))
         signalIdentifiers, signalData, metadata = signalIdentifiers.int(), signalData.double(), metadata.int()
         batchSize, numSignals, maxSequenceLength, numChannels = signalData.size()
@@ -167,7 +167,7 @@ class emotionModelHead(nn.Module):
         # reconstructedSignalData: batchSize, numSignals, maxSequenceLength
 
         # Visualize the data transformations within signal encoding.
-        if submodel == modelConstants.signalEncoderModel and not profileTraining and random.random() < 0.01:
+        if submodel == modelConstants.signalEncoderModel and not onlyProfileTraining and random.random() < 0.01:
             with torch.no_grad(): self.visualizeSignalEncoding(physiologicalProfileOG, physiologicalProfile, resampledSignalData, reconstructedSignalData, signalData, validDataMask)
 
         # ------------------- Learned Emotion Mapping ------------------- #
@@ -226,7 +226,7 @@ class emotionModelHead(nn.Module):
     def reconstructPhysiologicalProfile(self, resampledSignalData):
         return self.signalEncoderPass(metaLearningData=resampledSignalData, forwardPass=True, compileLayerStates=True)
 
-    def fullPass(self, submodel, signalData, signalIdentifiers, metadata, device, profileTraining):
+    def fullPass(self, submodel, signalData, signalIdentifiers, metadata, device, onlyProfileTraining):
         # Preallocate the output tensors.
         numExperiments, numSignals, maxSequenceLength, numChannels = signalData.size()
         basicEmotionProfile = torch.zeros((numExperiments, self.numBasicEmotions, self.encodedDimension), device=device, dtype=torch.float64)
@@ -246,12 +246,12 @@ class emotionModelHead(nn.Module):
             validDataMask[startBatchInd:endBatchInd], reconstructedSignalData[startBatchInd:endBatchInd], resampledSignalData[startBatchInd:endBatchInd], physiologicalProfile[startBatchInd:endBatchInd], \
                 activityProfile[startBatchInd:endBatchInd], basicEmotionProfile[startBatchInd:endBatchInd], emotionProfile[startBatchInd:endBatchInd] \
                 = self.forward(submodel=submodel, signalData=signalData[startBatchInd:endBatchInd], signalIdentifiers=signalIdentifiers[startBatchInd:endBatchInd],
-                               metadata=metadata[startBatchInd:endBatchInd], device=device, profileTraining=profileTraining)
+                               metadata=metadata[startBatchInd:endBatchInd], device=device, onlyProfileTraining=onlyProfileTraining)
 
             # Update the batch index.
             startBatchInd = endBatchInd
 
-        if profileTraining:
+        if onlyProfileTraining:
             with torch.no_grad():
                 self.specificSignalEncoderModel.profileModel.profileStateLosses.append(self.calculateModelLosses.calculateSignalEncodingLoss(signalData, reconstructedSignalData, validDataMask, allSignalMask=None).nanmean().item())
                 self.specificSignalEncoderModel.profileModel.profileOGStatePath.append(self.specificSignalEncoderModel.profileModel.physiologicalProfile.clone().detach().cpu().numpy())
