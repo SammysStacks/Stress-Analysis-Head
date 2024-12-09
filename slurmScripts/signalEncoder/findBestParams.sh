@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# General parameters: 18
+# General parameters: 320
 allNumEncodedWeights=(2 4 8 16 32 64 128 256)  # 8
 numSpecificEncoderLayers_arr=(1 2)  # 2
-signalEncoderLayers_arr=(2 4 8 16 24 32)  # 6
+signalEncoderLayers_arr=(2 4 8 12 16)  # 5
 encodedDimensions_arr=(64 128 256 512)  # 4
 
 # General parameters: 18
@@ -12,13 +12,13 @@ numSpecificEncoderLayers_arr=(1)  # 1
 signalEncoderLayers_arr=(8)  # 3
 encodedDimensions_arr=(256)  # 1
 
-# Learning rates: 15
-lrs_general=('1e-2' '1e-3' '1e-4')  # 2
-lrs_physio=('100' '10' '1' '1e-1' '1e-2')  # 3
+# Learning rates: 20
+lrs_general=('1e-1' '1e-2' '1e-3' '1e-4')  # 4
+lrs_physio=('10' '1' '1e-1' '1e-2' '1e-3')  # 5
 
 # Weight decays: 16
-wds_general=('1e-1' '1e-2' '1e-3' '1e-4')  # 6
-wds_physio=('1e-1' '1e-2' '1e-3' '1e-4')  # 6
+wds_general=('1e-6' '1e-4' '1e-3' '1e-2' '1e-1')  # 4
+wds_physio=('1e-6' '1e-4' '1e-3' '1e-2' '1e-1')  # 4
 
 # Finalized parameters.
 waveletTypes_arr=('bior3.1')  # 'bior3.1' > 'bior3.3' > 'bior2.2' > 'bior3.5'

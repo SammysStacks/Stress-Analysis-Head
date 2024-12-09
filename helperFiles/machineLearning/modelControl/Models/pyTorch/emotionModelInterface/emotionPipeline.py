@@ -3,6 +3,7 @@ import time
 import torch
 
 from .emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
+from .emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from .emotionPipelineHelpers import emotionPipelineHelpers
 
 
@@ -43,6 +44,7 @@ class emotionPipeline(emotionPipelineHelpers):
 
                         # Set the training parameters.
                         signalBatchData, batchSignalIdentifiers, metaBatchInfo = emotionDataInterface.separateData(batchSignalInfo)
+                        batchInds = emotionDataInterface.getSignalIdentifierData(batchSignalIdentifiers, channelName=modelConstants.batchIndexSI)[:, 0]  # Dim: batchSize
                         # signalBatchData[:, :, :, 0] = timepoints: [further away from survey (300) -> closest to survey (0)]
                         # signalBatchData dimension: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
                         # batchSignalIdentifiers dimension: batchSize, numSignals, numSignalIdentifiers
@@ -60,7 +62,9 @@ class emotionPipeline(emotionPipelineHelpers):
 
                         t11 = time.time()
                         # Perform the forward pass through the model.
-                        validDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = self.model.forward(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, profileTraining=profileTraining)
+                        validDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = \
+                            self.model.forward(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, profileTraining=profileTraining) if not profileTraining else \
+                            self.model.fullPass(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, profileTraining=profileTraining)
                         # reconstructedSignalData dimension: batchSize, numSignals, maxSequenceLength
                         # basicEmotionProfile: batchSize, numBasicEmotions, encodedDimension
                         # validDataMask dimension: batchSize, numSignals, maxSequenceLength

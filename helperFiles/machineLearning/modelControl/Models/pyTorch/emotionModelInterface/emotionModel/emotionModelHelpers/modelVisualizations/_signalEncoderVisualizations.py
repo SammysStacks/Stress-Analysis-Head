@@ -24,7 +24,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         batchInd = 0
 
         plt.plot(physiologicalTimes, physiologicalProfile[batchInd], c=self.blackColor, label=f"Physiological profile", linewidth=2, alpha=0.8)
-        for profileStep in range(numProfileSteps - 1, -1, -1): plt.plot(physiologicalTimes, profileStatePath[profileStep, batchInd], c=self.lightColors[0], linewidth=1, alpha=0.8 - profileStep*0.05)
+        for profileStep in range(numProfileSteps - 1, -1, -1): plt.plot(physiologicalTimes, profileStatePath[profileStep, batchInd], c=self.lightColors[0], linewidth=1, alphaalpha=0.9 - profileStep*0.01)
 
         # Plotting aesthetics.
         plt.xlabel("Time (Seconds)")

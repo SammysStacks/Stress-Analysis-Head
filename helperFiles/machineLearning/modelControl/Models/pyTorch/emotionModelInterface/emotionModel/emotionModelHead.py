@@ -166,11 +166,6 @@ class emotionModelHead(nn.Module):
         reconstructedSignalData = self.sharedSignalEncoderModel.interpolateData(signalData, resampledSignalData)
         # reconstructedSignalData: batchSize, numSignals, maxSequenceLength
 
-        if profileTraining:
-            with torch.no_grad():
-                self.specificSignalEncoderModel.profileModel.profileStateLosses.append(self.calculateModelLosses.calculateSignalEncodingLoss(signalData, reconstructedSignalData, validDataMask, allSignalMask=None).nanmean().item())
-                self.specificSignalEncoderModel.profileModel.profileStatePath.append(physiologicalProfile.clone().detach().cpu().numpy())
-
         # Visualize the data transformations within signal encoding.
         if submodel == modelConstants.signalEncoderModel and not profileTraining and random.random() < 0.01:
             with torch.no_grad(): self.visualizeSignalEncoding(physiologicalProfileOG, physiologicalProfile, resampledSignalData, reconstructedSignalData, signalData, validDataMask)
@@ -255,6 +250,11 @@ class emotionModelHead(nn.Module):
 
             # Update the batch index.
             startBatchInd = endBatchInd
+
+        if profileTraining:
+            with torch.no_grad():
+                self.specificSignalEncoderModel.profileModel.profileStateLosses.append(self.calculateModelLosses.calculateSignalEncodingLoss(signalData, reconstructedSignalData, validDataMask, allSignalMask=None).nanmean().item())
+                self.specificSignalEncoderModel.profileModel.profileStatePath.append(physiologicalProfile.clone().detach().cpu().numpy())
 
         return validDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile
 
