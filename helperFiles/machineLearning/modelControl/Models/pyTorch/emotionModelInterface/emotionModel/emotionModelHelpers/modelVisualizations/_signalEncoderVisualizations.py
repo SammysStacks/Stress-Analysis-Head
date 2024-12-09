@@ -74,8 +74,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         else: self.clearFigure(fig=None, legend=None)
 
     def plotPhysiologicalOG(self, physiologicalProfileOG, epoch, saveFigureLocation, plotTitle):
-        # Extract the signal dimensions.
-        batchSize, sequenceLength = physiologicalProfileOG.shape
         batchInd = 0
 
         # Plot the signal reconstruction.
@@ -153,7 +151,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Create the heatmap
         plt.figure(figsize=(12, 8))
-        plt.imshow(interpolated_states, cmap=custom_cmap, extent=[physiologicalTimes.min(), physiologicalTimes.max(), 0, numLayers], aspect='auto', origin='lower')
+        plt.imshow(interpolated_states, cmap=custom_cmap, interpolation=None, extent=(physiologicalTimes.min(), physiologicalTimes.max(), 0, numLayers), aspect='auto', origin='lower')
         # Magma is also good
 
         # Add a colorbar
