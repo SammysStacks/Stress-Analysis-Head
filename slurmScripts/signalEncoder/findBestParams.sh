@@ -7,7 +7,7 @@ signalEncoderLayers_arr=(2 4 8 12 16)  # 5
 encodedDimensions_arr=(64 128 256 512)  # 4
 
 # General parameters: 18
-allNumEncodedWeights=(64)  # 6
+allNumEncodedWeights=(32)  # 6
 numSpecificEncoderLayers_arr=(1)  # 1
 signalEncoderLayers_arr=(8)  # 3
 encodedDimensions_arr=(256)  # 1
