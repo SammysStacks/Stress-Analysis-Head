@@ -61,7 +61,7 @@ class emotionModelWeights(convolutionalHelpers):
     def physiologicalGeneration(self, numOutputFeatures):
         numUpSamples = int(math.log2(numOutputFeatures // modelConstants.numEncodedWeights))
         numEncodedWeights = modelConstants.numEncodedWeights
-        numLayersFNN, numLayersCNN = 8, 4
+        numLayersFNN, numLayersCNN = 8, 1
 
         layers = []
         # Construct the profile generation model.
@@ -72,6 +72,12 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def gradientHook(grad): return grad  # * 1e-4 / modelConstants.userInputParams['generalLR']
+
+    @staticmethod
+    def physiologicalNormalization(physiologicalProfile):
+        physiologicalProfile = physiologicalProfile - physiologicalProfile.mean(dim=-1, keepdim=True)
+        physiologicalProfile = physiologicalProfile / (physiologicalProfile.std(dim=-1, keepdim=True) + 1e-20) / 3
+        return physiologicalProfile
 
     # ------------------- Emotion/Activity Encoding Architectures ------------------- #
 

@@ -74,7 +74,7 @@ class modelParameters:
     def getEpochInfo(): return 1000, 10, 50  # numEpochs, numEpoch_toPlot, numEpoch_toSaveFull
 
     @staticmethod
-    def getProfileEpochs(): return 20  # numEpochs
+    def getProfileEpochs(): return 10  # numEpochs
 
     # -------------------------- Compilation Parameters ------------------------- #
 
