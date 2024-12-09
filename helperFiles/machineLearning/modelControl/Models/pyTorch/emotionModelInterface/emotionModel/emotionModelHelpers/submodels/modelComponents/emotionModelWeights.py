@@ -68,7 +68,7 @@ class emotionModelWeights(convolutionalHelpers):
         return nn.Sequential(*layers)
 
     @staticmethod
-    def gradientHook(grad): return grad * 5e-5 / modelConstants.userInputParams['generalLR']
+    def gradientHook(grad): return grad * 1e-4 / modelConstants.userInputParams['generalLR']
 
     # ------------------- Emotion/Activity Encoding Architectures ------------------- #
 
