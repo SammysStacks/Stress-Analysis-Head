@@ -22,7 +22,6 @@ class modelConstants:
     specificEmotionModel = "specificEmotionModel"
     sharedActivityModel = "sharedActivityModel"
     sharedEmotionModel = "sharedEmotionModel"
-    inferenceModel = "inferenceModel"
 
     # Specify the models.
     signalEncoderModel = "signalEncoderModel"
@@ -56,7 +55,6 @@ class modelConstants:
     # Specify the saving parameters.
     specificModelWeights = [specificSignalEncoderModel, specificEmotionModel, specificActivityModel]
     sharedModelWeights = [sharedSignalEncoderModel, sharedEmotionModel, sharedActivityModel]
-    inferenceModelWeights = [inferenceModel]
     userInputParams = None
 
     @classmethod

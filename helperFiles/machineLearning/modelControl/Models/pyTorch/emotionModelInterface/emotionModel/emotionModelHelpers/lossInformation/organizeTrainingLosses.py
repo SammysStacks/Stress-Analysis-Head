@@ -34,21 +34,16 @@ class organizeTrainingLosses(lossCalculations):
         with torch.no_grad():
             t1 = time.time()
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
-            validDataMaskInference, reconstructedSignalDataInference, resampledSignalDataInference, physiologicalProfileInference, activityProfileInference, basicEmotionProfileInference, emotionProfileInference = model.fullPass(submodel, allSignalData, allSignalIdentifiers, allMetadata, device=self.accelerator.device, inferenceTraining=True, trainingFlag=False)
-            validDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = model.fullPass(submodel, allSignalData, allSignalIdentifiers, allMetadata, device=self.accelerator.device, inferenceTraining=False, trainingFlag=False)
+            validDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = model.fullPass(submodel, allSignalData, allSignalIdentifiers, allMetadata, device=self.accelerator.device, profileTraining=False)
             t2 = time.time(); self.accelerator.print("\tFull Pass", t2 - t1)
 
             # Calculate the signal encoding loss.
-            signalReconstructedInferenceTrainingLosses = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalDataInference, validDataMaskInference, allTrainingSignalMask)
-            signalReconstructedInferenceTestingLosses = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalDataInference, validDataMaskInference, allTestingSignalMask)
             signalReconstructedTrainingLosses = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, validDataMask, allTrainingSignalMask)
             signalReconstructedTestingLosses = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, validDataMask, allTestingSignalMask)
 
             # Store the signal encoder loss information.
             self.storeLossInformation(signalReconstructedTrainingLosses, signalReconstructedTestingLosses, model.specificSignalEncoderModel.trainingLosses_signalReconstruction, model.specificSignalEncoderModel.testingLosses_signalReconstruction)
-            self.storeLossInformation(signalReconstructedInferenceTrainingLosses, signalReconstructedInferenceTestingLosses, model.specificSignalEncoderModel.trainingLosses_inference, model.specificSignalEncoderModel.testingLosses_inference)
             self.accelerator.print("Reconstruction loss values:", signalReconstructedTrainingLosses.nanmean().item(), signalReconstructedTestingLosses.nanmean().item())
-            self.accelerator.print("Inference loss values:", signalReconstructedInferenceTrainingLosses.nanmean().item(), signalReconstructedInferenceTestingLosses.nanmean().item())
 
             # Calculate the activity classification accuracy/loss and assert the integrity of the loss.
             # activityTestingLoss = self.calculateActivityLoss(allActivityDistributions, allLabels, allTestingMasks, activityClassWeights)

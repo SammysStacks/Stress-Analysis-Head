@@ -18,28 +18,13 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     # --------------------- Visualize Model Parameters --------------------- #
 
-    def plotPhysiologicalProfile(self, physiologicalTimes, physiologicalProfile, physiologicalProfileInference, epoch=0, saveFigureLocation="", plotTitle="Signal Encoding"):
-        # Plot the signal reconstruction.
-        plt.plot(physiologicalTimes, physiologicalProfile[0], c=self.blackColor, label=f"Physiological profile", linewidth=1, alpha=1)
-        plt.plot(physiologicalTimes, physiologicalProfileInference[0], c=self.lightColors[1], label=f"Inference profile", linewidth=2, alpha=0.5)
-
-        # Plotting aesthetics.
-        plt.xlabel("Time (Seconds)")
-        plt.title(f"{plotTitle} epoch{epoch}")
-        plt.ylabel("Signal (AU)")
-        plt.legend()
-
-        # Save the figure.
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
-        else: self.clearFigure(fig=None, legend=None)
-
-    def plotInferencePath(self, physiologicalTimes, physiologicalProfile, inferenceStatePath, epoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Inference State Path"):
+    def plotProfilePath(self, physiologicalTimes, physiologicalProfile, profileStatePath, epoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Profile State Path"):
         # Extract the signal dimensions.
-        numInferenceSteps, numExperiments, encodedDimension = inferenceStatePath.shape
+        numProfileSteps, numExperiments, encodedDimension = profileStatePath.shape
         batchInd = 0
 
         plt.plot(physiologicalTimes, physiologicalProfile[batchInd], c=self.blackColor, label=f"Physiological profile", linewidth=2, alpha=0.8)
-        for inferenceStep in range(numInferenceSteps - 1, -1, -1): plt.plot(physiologicalTimes, inferenceStatePath[inferenceStep, batchInd], c=self.lightColors[0], linewidth=1, alpha=0.8 - inferenceStep*0.05)
+        for profileStep in range(numProfileSteps - 1, -1, -1): plt.plot(physiologicalTimes, profileStatePath[profileStep, batchInd], c=self.lightColors[0], linewidth=1, alpha=0.8 - profileStep*0.05)
 
         # Plotting aesthetics.
         plt.xlabel("Time (Seconds)")

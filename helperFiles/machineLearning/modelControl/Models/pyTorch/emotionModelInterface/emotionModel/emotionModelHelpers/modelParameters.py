@@ -71,10 +71,10 @@ class modelParameters:
         else: raise Exception()
 
     @staticmethod
-    def getEpochInfo(): return 500, 10, 50  # numEpochs, numEpoch_toPlot, numEpoch_toSaveFull
+    def getEpochInfo(): return 1000, 10, 50  # numEpochs, numEpoch_toPlot, numEpoch_toSaveFull
 
     @staticmethod
-    def getInferenceEpochs(): return 10  # numEpochs
+    def getProfileEpochs(): return 20  # numEpochs
 
     # -------------------------- Compilation Parameters ------------------------- #
 
@@ -101,7 +101,7 @@ class modelParameters:
         return loadSubmodelDate, loadSubmodelEpochs, loadSubmodel
 
     @staticmethod
-    def getSavingInformation(epoch, numEpoch_toSaveFull, numEpoch_toPlot):
+    def getEpochParameters(epoch, numEpoch_toSaveFull, numEpoch_toPlot):
         saveFullModel = (epoch % numEpoch_toSaveFull == 0)
         plotSteps = (epoch % numEpoch_toPlot == 0)
 

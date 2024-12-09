@@ -36,6 +36,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def physiologicalInitialization(physiologicalProfile):
+        physiologicalProfile = nn.init.normal_(physiologicalProfile, mean=0, std=1)
         return nn.init.xavier_uniform_(physiologicalProfile)
 
     @staticmethod
@@ -81,10 +82,10 @@ class emotionModelWeights(convolutionalHelpers):
 
     def physiologicalGeneration(self, numOutputFeatures):
         numUpSamples = int(math.log2(numOutputFeatures // modelConstants.numEncodedWeights))
-        layers = []
 
+        layers = [self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='selu', addBias=False)]
         for i in range(numUpSamples): layers.append(self.convolutionalFilters_resNetBlocks(numResNets=1, numBlocks=1, numChannels=[1, 2], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False))
-        layers.append(self.convolutionalFilters_resNetBlocks(numResNets=8, numBlocks=4, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False))
+        layers.append(self.convolutionalFilters_resNetBlocks(numResNets=12, numBlocks=4, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False))
 
         return nn.Sequential(*layers)
 

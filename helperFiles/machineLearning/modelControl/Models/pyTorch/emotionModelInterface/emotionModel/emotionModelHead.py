@@ -1,12 +1,13 @@
-from matplotlib import pyplot as plt
-from torch import nn
-import torch
 import random
 
+import torch
+from matplotlib import pyplot as plt
+from torch import nn
+
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.lossInformation.lossCalculations import lossCalculations
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.inferenceModel import inferenceModel
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.sharedActivityModel import sharedActivityModel
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.sharedEmotionModel import sharedEmotionModel
@@ -47,12 +48,10 @@ class emotionModelHead(nn.Module):
         self.numBasicEmotions = userInputParams['numBasicEmotions']  # The number of basic emotions (basis states of emotions).
 
         # Setup holder for the model's training information
+        self.calculateModelLosses = lossCalculations(accelerator=None, allEmotionClasses=None, activityLabelInd=None)
         self.reversibleInterface = reversibleInterface()
 
         # ------------------------ Data Compression ------------------------ #
-
-        # Inference interface for the model.
-        self.inferenceModel = inferenceModel(encodedDimension=self.encodedDimension, numExperiments=numExperiments)
 
         # The signal encoder model to find a common feature vector across all signals.
         self.specificSignalEncoderModel = specificSignalEncoderModel(
@@ -122,7 +121,7 @@ class emotionModelHead(nn.Module):
 
     # ------------------------- Full Forward Calls ------------------------- #
 
-    def forward(self, submodel, signalData, signalIdentifiers, metadata, device, inferenceTraining=False, trainingFlag=True):
+    def forward(self, submodel, signalData, signalIdentifiers, metadata, device, profileTraining=False):
         signalData, signalIdentifiers, metadata = (tensor.to(device) for tensor in (signalData, signalIdentifiers, metadata))
         signalIdentifiers, signalData, metadata = signalIdentifiers.int(), signalData.double(), metadata.int()
         batchSize, numSignals, maxSequenceLength, numChannels = signalData.size()
@@ -147,18 +146,14 @@ class emotionModelHead(nn.Module):
         # ------------------- Estimated Physiological Profile ------------------- #
 
         # Get the estimated physiological profiles.
-        if inferenceTraining: physiologicalProfileOG = self.inferenceModel.getInferencePhysiologicalProfile(batchInds)
-        else: physiologicalProfileOG = self.specificSignalEncoderModel.profileModel.getCurrentPhysiologicalProfile(batchInds)
+        physiologicalProfileOG = self.specificSignalEncoderModel.profileModel.getPhysiologicalProfile(batchInds)
+        physiologicalProfile = self.sharedSignalEncoderModel.smoothPhysiologicalProfile(physiologicalProfileOG)
         # physiologicalProfile: batchSize, modelConstants.numEncodedWeights
 
         # Normalize the physiological profile.
-        physiologicalProfile = self.sharedSignalEncoderModel.smoothPhysiologicalProfile(physiologicalProfileOG)
         physiologicalProfile = physiologicalProfile - physiologicalProfile.mean(dim=-1, keepdim=True)
         physiologicalProfile = physiologicalProfile / physiologicalProfile.std(dim=-1, keepdim=True) / 3
         # physiologicalProfile: batchSize, encodedDimension
-
-        # Save the physiological profile.
-        if inferenceTraining and trainingFlag: self.inferenceModel.inferenceStatePath.append(physiologicalProfile.clone().detach().cpu().numpy())
 
         # ------------------- Learned Signal Mapping ------------------- #
 
@@ -171,8 +166,13 @@ class emotionModelHead(nn.Module):
         reconstructedSignalData = self.sharedSignalEncoderModel.interpolateData(signalData, resampledSignalData)
         # reconstructedSignalData: batchSize, numSignals, maxSequenceLength
 
+        if profileTraining:
+            with torch.no_grad():
+                self.specificSignalEncoderModel.profileModel.profileStateLosses.append(self.calculateModelLosses.calculateSignalEncodingLoss(signalData, reconstructedSignalData, validDataMask, allSignalMask=None).nanmean().item())
+                self.specificSignalEncoderModel.profileModel.profileStatePath.append(physiologicalProfile.clone().detach().cpu().numpy())
+
         # Visualize the data transformations within signal encoding.
-        if submodel == modelConstants.signalEncoderModel and not inferenceTraining and random.random() < 0.01:
+        if submodel == modelConstants.signalEncoderModel and not profileTraining and random.random() < 0.01:
             with torch.no_grad(): self.visualizeSignalEncoding(physiologicalProfileOG, physiologicalProfile, resampledSignalData, reconstructedSignalData, signalData, validDataMask)
 
         # ------------------- Learned Emotion Mapping ------------------- #
@@ -231,7 +231,7 @@ class emotionModelHead(nn.Module):
     def reconstructPhysiologicalProfile(self, resampledSignalData):
         return self.signalEncoderPass(metaLearningData=resampledSignalData, forwardPass=True, compileLayerStates=True)
 
-    def fullPass(self, submodel, signalData, signalIdentifiers, metadata, device, inferenceTraining, trainingFlag=False):
+    def fullPass(self, submodel, signalData, signalIdentifiers, metadata, device, profileTraining):
         # Preallocate the output tensors.
         numExperiments, numSignals, maxSequenceLength, numChannels = signalData.size()
         basicEmotionProfile = torch.zeros((numExperiments, self.numBasicEmotions, self.encodedDimension), device=device, dtype=torch.float64)
@@ -251,7 +251,7 @@ class emotionModelHead(nn.Module):
             validDataMask[startBatchInd:endBatchInd], reconstructedSignalData[startBatchInd:endBatchInd], resampledSignalData[startBatchInd:endBatchInd], physiologicalProfile[startBatchInd:endBatchInd], \
                 activityProfile[startBatchInd:endBatchInd], basicEmotionProfile[startBatchInd:endBatchInd], emotionProfile[startBatchInd:endBatchInd] \
                 = self.forward(submodel=submodel, signalData=signalData[startBatchInd:endBatchInd], signalIdentifiers=signalIdentifiers[startBatchInd:endBatchInd],
-                               metadata=metadata[startBatchInd:endBatchInd], device=device, inferenceTraining=inferenceTraining, trainingFlag=trainingFlag)
+                               metadata=metadata[startBatchInd:endBatchInd], device=device, profileTraining=profileTraining)
 
             # Update the batch index.
             startBatchInd = endBatchInd

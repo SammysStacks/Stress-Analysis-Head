@@ -2,9 +2,9 @@ from torch import nn
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.profileModel import profileModel
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.neuralOperators.neuralOperatorInterface import neuralOperatorInterface
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.trainingProfileInformation import trainingProfileInformation
 
 
 class specificSignalEncoderModel(neuralOperatorInterface):
@@ -21,7 +21,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         self.featureNames = featureNames  # The names of the signals to encode.
 
         # The neural layers for the signal encoder.
-        self.profileModel = trainingProfileInformation(numExperiments, encodedDimension)
+        self.profileModel = profileModel(numExperiments, encodedDimension)
         self.processingLayers, self.neuralLayers = nn.ModuleList(), nn.ModuleList()
         for _ in range(2*self.numSpecificEncoderLayers): self.addLayer()
 
@@ -30,10 +30,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         assert 0 < self.encodedDimension, "The encoded dimension must be greater than 0."
 
         # Initialize loss holders.
-        self.trainingLosses_signalReconstruction = None
-        self.testingLosses_signalReconstruction = None
-        self.trainingLosses_inference = None
-        self.testingLosses_inference = None
+        self.trainingLosses_signalReconstruction, self.testingLosses_signalReconstruction = None, None
         self.resetModel()
 
     def forward(self): raise "You cannot call the dataset-specific signal encoder module."
@@ -42,10 +39,6 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         # Signal encoder reconstructed loss holders.
         self.trainingLosses_signalReconstruction = []  # List of list of data reconstruction training losses. Dim: numEpochs
         self.testingLosses_signalReconstruction = []  # List of list of data reconstruction testing losses. Dim: numEpochs
-
-        # Signal encoder inference loss holders.
-        self.trainingLosses_inference = []  # List of list of inference training losses. Dim: numEpochs
-        self.testingLosses_inference = []  # List of list of inference testing losses. Dim: numEpochs
 
     def addLayer(self):
         self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True))

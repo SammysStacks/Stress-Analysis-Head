@@ -16,14 +16,14 @@ class emotionPipeline(emotionPipelineHelpers):
         # Finish setting up the model.
         self.compileOptimizer(submodel)  # Initialize the optimizer (for back propagation)
 
-    def trainModel(self, dataLoader, submodel, inferenceTraining, profileTraining, specificTraining, trainSharedLayers, stepScheduler, numEpochs):
+    def trainModel(self, dataLoader, submodel, profileTraining, specificTraining, trainSharedLayers, stepScheduler, numEpochs):
         # Load in all the data and labels for final predictions and calculate the activity and emotion class weights.
         # allData, allLabels, allTrainingMasks, allTestingMasks, allSignalData, allSignalIdentifiers, allMetadata, reconstructionIndex = self.prepareInformation(dataLoader)
         # allEmotionClassWeights, activityClassWeights = self.organizeLossInfo.getClassWeights(allLabels, allTrainingMasks, allTestingMasks, self.numActivities)
-        self.setupTraining(submodel, inferenceTraining=inferenceTraining, profileTraining=profileTraining, specificTraining=specificTraining, trainSharedLayers=trainSharedLayers)
+        self.setupTraining(submodel, profileTraining=profileTraining, specificTraining=specificTraining, trainSharedLayers=trainSharedLayers)
+        if profileTraining: assert not (specificTraining or trainSharedLayers), "We cannot train layers during profile training."
         if self.model.debugging: self.accelerator.print(f"\nTraining {self.datasetName} model")
-        onlyProfileTraining = (profileTraining or inferenceTraining) and not (specificTraining or trainSharedLayers)
-        if onlyProfileTraining: dataLoader = (dataLoader.dataset.getAll(),)
+        if profileTraining: dataLoader = (dataLoader.dataset.getAll(),)
 
         # For each training epoch.
         for epoch in range(numEpochs):
@@ -35,7 +35,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     with self.accelerator.autocast():  # Enable mixed precision auto-casting
                         # Extract the data, labels, and testing/training indices.
                         batchSignalInfo, batchSignalLabels, batchTrainingLabelMask, batchTestingLabelMask, batchTrainingSignalMask, batchTestingSignalMask = self.extractBatchInformation(batchData)
-                        if onlyProfileTraining: batchTrainingLabelMask, batchTestingLabelMask, batchTrainingSignalMask, batchTestingSignalMask = None, None, None, None
+                        if profileTraining: batchTrainingLabelMask, batchTestingLabelMask, batchTrainingSignalMask, batchTestingSignalMask = None, None, None, None
 
                         # We can skip this batch, and backpropagation if necessary.
                         if batchSignalInfo.size(0) == 0: self.backpropogateModel(); continue
@@ -48,7 +48,7 @@ class emotionPipeline(emotionPipelineHelpers):
                         # batchSignalIdentifiers dimension: batchSize, numSignals, numSignalIdentifiers
                         # metaBatchInfo dimension: batchSize, numMetadata
 
-                        if not inferenceTraining:
+                        if not profileTraining:
                             with torch.no_grad():
                                 # Augment the signals to train an arbitrary sequence length and order.
                                 augmentedBatchData = self.dataAugmentation.changeNumSignals(signalBatchData, dropoutPercent=0.05)
@@ -60,7 +60,7 @@ class emotionPipeline(emotionPipelineHelpers):
 
                         t11 = time.time()
                         # Perform the forward pass through the model.
-                        validDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = self.model.forward(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, inferenceTraining=inferenceTraining, trainingFlag=True)
+                        validDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = self.model.forward(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, profileTraining=profileTraining)
                         # reconstructedSignalData dimension: batchSize, numSignals, maxSequenceLength
                         # basicEmotionProfile: batchSize, numBasicEmotions, encodedDimension
                         # validDataMask dimension: batchSize, numSignals, maxSequenceLength

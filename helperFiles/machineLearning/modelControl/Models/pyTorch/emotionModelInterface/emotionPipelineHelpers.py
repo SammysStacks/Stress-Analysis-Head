@@ -50,16 +50,14 @@ class emotionPipelineHelpers:
 
     # ------------------------------------------------------------------ #
 
-    def resetInferenceTraining(self):
-        # Reset the inference weights.
-        self.model.inferenceModel.resetInferenceProfile()
-
-        # Get a set of parameters that belong to the inference model
-        inference_params = set(self.model.inferenceModel.parameters())
+    def resetPhysiologicalProfile(self):
+        # Reset and get the parameters that belong to the profile model
+        self.model.specificSignalEncoderModel.profileModel.resetProfileWeights()
+        profileParams = set(self.model.specificSignalEncoderModel.profileModel.parameters())
 
         # Reset the optimizer state for these parameters
         for p in list(self.optimizer.state.keys()):
-            if p in inference_params: self.optimizer.state[p] = {}
+            if p in profileParams: self.optimizer.state[p] = {}
 
     def compileOptimizer(self, submodel):
         # Initialize the optimizer and scheduler.
@@ -78,12 +76,9 @@ class emotionPipelineHelpers:
         elif submodel == modelConstants.emotionModel: return max(0, len(self.model.specificEmotionModel.trainingLosses_signalReconstruction) - 1)
         else: raise Exception()
 
-    def setupTraining(self, submodel, inferenceTraining, profileTraining, specificTraining, trainSharedLayers):
-        if inferenceTraining: assert not (profileTraining or specificTraining or trainSharedLayers), "We cannot train layers during inference."
+    def setupTraining(self, submodel, profileTraining, specificTraining, trainSharedLayers):
+        if profileTraining: assert not (specificTraining or trainSharedLayers), "We cannot train layers during profile training."
         self.setupTrainingFlags(self.model, trainingFlag=False)  # Set the model to evaluation mode.
-
-        # Prepare the model for inference training.
-        self.setupTrainingFlags(self.model.inferenceModel, trainingFlag=inferenceTraining)
 
         # Emotion model training.
         if submodel == modelConstants.emotionModel:

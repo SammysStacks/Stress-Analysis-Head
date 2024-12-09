@@ -72,8 +72,8 @@ if __name__ == "__main__":
     parser.add_argument('--maxWaveletDecompositions', type=int, default=0, help='The maximum number of wavelet decompositions.')
     parser.add_argument('--physioLR', type=float, default=1e-1, help='The learning rate of the physiological model.')
     parser.add_argument('--generalLR', type=float, default=1e-3, help='The learning rate of the general model.')
-    parser.add_argument('--physioWD', type=float, default=1e-2, help='The learning rate of the general model.')
-    parser.add_argument('--generalWD', type=float, default=1e-4, help='The learning rate of the general model.')
+    parser.add_argument('--physioWD', type=float, default=1e-4, help='The learning rate of the general model.')
+    parser.add_argument('--generalWD', type=float, default=1e-6, help='The learning rate of the general model.')
 
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
@@ -119,7 +119,7 @@ if __name__ == "__main__":
         startEpochTime = time.time()
 
         # Get the saving information.
-        saveFullModel, plotSteps = modelParameters.getSavingInformation(epoch, numEpoch_toSaveFull, numEpoch_toPlot)
+        saveFullModel, plotSteps = modelParameters.getEpochParameters(epoch, numEpoch_toSaveFull, numEpoch_toPlot)
 
         # Train the model for a single epoch.
         trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders)

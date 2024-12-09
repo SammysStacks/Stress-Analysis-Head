@@ -15,9 +15,9 @@ class lossCalculations:
 
     def __init__(self, accelerator, allEmotionClasses, activityLabelInd):
         # General parameters
+        self.numEmotions = len(allEmotionClasses or [])  # The number of emotions to predict.
         self.allEmotionClasses = allEmotionClasses  # The number of classes (intensity levels) within each emotion to predict. Dim: numEmotions
         self.activityLabelInd = activityLabelInd  # The index of the activity label in the label tensor.
-        self.numEmotions = len(allEmotionClasses)  # The number of emotions to predict.
         self.accelerator = accelerator  # Hugging face model optimizations.
 
         # Calculate the number of sequence points to throw out.
