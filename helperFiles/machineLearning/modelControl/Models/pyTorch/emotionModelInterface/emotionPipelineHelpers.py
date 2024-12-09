@@ -53,11 +53,10 @@ class emotionPipelineHelpers:
     def resetPhysiologicalProfile(self):
         # Reset and get the parameters that belong to the profile model
         self.model.specificSignalEncoderModel.profileModel.resetProfileWeights()
-        profileParams = set(self.model.specificSignalEncoderModel.profileModel.parameters())
-
-        # Reset the optimizer state for these parameters
-        for p in list(self.optimizer.state.keys()):
-            if p in profileParams: self.optimizer.state[p] = {}
+        # profileParams = set(self.model.specificSignalEncoderModel.profileModel.parameters())
+        # # Reset the optimizer state for these parameters
+        # for p in list(self.optimizer.state.keys()):
+        #     if p in profileParams: self.optimizer.state[p] = {}
 
     def compileOptimizer(self, submodel):
         # Initialize the optimizer and scheduler.
