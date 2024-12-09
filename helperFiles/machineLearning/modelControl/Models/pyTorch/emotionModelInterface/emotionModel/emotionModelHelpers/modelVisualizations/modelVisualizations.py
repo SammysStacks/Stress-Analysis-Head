@@ -87,7 +87,6 @@ class modelVisualizations(globalPlottingProtocols):
             profileOGStatePath = np.asarray(model.specificSignalEncoderModel.profileModel.profileOGStatePath)  # numProfileSteps, numExperiments, numEncodedWeights
             profileStatePath = np.asarray(model.specificSignalEncoderModel.profileModel.profileStatePath)  # numProfileSteps, numExperiments, encodedDimension
             physiologicalTimes = model.sharedSignalEncoderModel.pseudoEncodedTimes.detach().cpu().numpy()  # pseudoEncodedTimes: numTimePoints
-            compiledSignalEncoderLayerStates = compiledSignalEncoderLayerStates.detach().cpu().numpy()  # numExperiments, numSignals, encodedDimension
             globalPlottingProtocols.clearFigure(fig=None, legend=None)
 
             # Plot the loss on the primary GPU.
