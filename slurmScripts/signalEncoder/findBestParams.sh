@@ -14,7 +14,7 @@ encodedDimensions_arr=(256)  # 1
 
 # Learning rates: 9
 lrs_general=('1e-2' '1e-3' '1e-4')  # 3
-lrs_physio=('0.1' '0.5' '1')  # 3
+lrs_physio=('0.1' '0.033' '0.01')  # 3
 
 # Weight decays: 25
 wds_general=('0' '1e-4' '1e-3' '1e-2' '1e-1')  # 4
