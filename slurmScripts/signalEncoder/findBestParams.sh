@@ -15,13 +15,17 @@ numProfileEpochs_arr=(20 10)  # 1
 
 # Learning rates: 27
 lrs_reversible=('1e-4' '1e-3' '1e-2')  # 3
-lrs_profile=('10' '100' '1')  # 3
-lrs_profileGen=('1e-4' '1e-5' '1e-3')  # 3
+lrs_profile=('10' '100' '1' '0.1')  # 3
+lrs_profileGen=('1e-4' '1e-5' '1e-3' '1e-2')  # 3
 
 # Weight decays: 27
 wds_reversible=('0' '1e-4' '1e-2')  # 4
 wds_profile=('0' '0.1' '1e-3')  # 4
 wds_profileGen=('0' '1e-4' '1e-2')  # 4
+
+wds_reversible=('0')  # 4
+wds_profile=('0')  # 4
+wds_profileGen=('0')  # 4
 
 # Finalized parameters.
 waveletTypes_arr=('bior3.1')  # 'bior3.1' > 'bior3.3' > 'bior2.2' > 'bior3.5'
