@@ -35,7 +35,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2024-12-09 CNN"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2024-12-09 CNN-FC"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Parse Model Parameters ----------------------- #
@@ -54,7 +54,7 @@ if __name__ == "__main__":
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model.')
     parser.add_argument('--numSharedEncoderLayers', type=int, default=8, help='The number of layers in the model.')
     parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
-    parser.add_argument('--numProfileEpochs', type=int, default=20, help='The epochs for profile training.')
+    parser.add_argument('--numProfileEpochs', type=int, default=30, help='The epochs for profile training.')
     parser.add_argument('--numEncodedWeights', type=int, default=32, help='The number of profile weights.')
 
     # Add arguments for the neural operator.
@@ -70,7 +70,7 @@ if __name__ == "__main__":
     parser.add_argument('--numActivityChannels', type=int, default=4, help='The number of activity channels.')
 
     # Temporary parameters.
-    parser.add_argument('--profileLR', type=float, default=1, help='The learning rate of the physiological model.')
+    parser.add_argument('--profileLR', type=float, default=2, help='The learning rate of the physiological model.')
     parser.add_argument('--profileWD', type=float, default=1e-6, help='The learning rate of the general model.')
 
     # Temporary parameters.
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     parser.add_argument('--reversibleWD', type=float, default=0, help='The learning rate of the general model.')
 
     # Temporary parameters.
-    parser.add_argument('--physGenLR', type=float, default=5e-5, help='The learning rate of the general model.')
+    parser.add_argument('--physGenLR', type=float, default=7.5e-5, help='The learning rate of the general model.')
     parser.add_argument('--physGenWD', type=float, default=0, help='The learning rate of the general model.')
 
     # Parse the arguments.

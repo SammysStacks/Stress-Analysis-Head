@@ -15,8 +15,8 @@ numProfileEpochs_arr=(20 10)  # 1
 
 # Learning rates: 27
 lrs_reversible=('1e-4' '1e-3' '1e-2')  # 3
-lrs_profile=('1' '10' '0.1')  # 3
-lrs_profileGen=('1e-4' '1e-5' '1e-3')  # 3
+lrs_profile=('1' '2' '5')  # 3
+lrs_profileGen=('1e-4' '4e-5' '1e-3')  # 3
 
 # Weight decays: 27
 wds_reversible=('0' '1e-4' '1e-2')  # 4

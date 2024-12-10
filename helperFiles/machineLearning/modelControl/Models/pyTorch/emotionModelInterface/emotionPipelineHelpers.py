@@ -56,7 +56,7 @@ class emotionPipelineHelpers:
 
         # Reset and get the parameters that belong to the profile model
         self.model.specificSignalEncoderModel.profileModel.resetProfileHolders()
-        if numEpochs < 10: return 1
+        if numEpochs <= 6: return 1
 
         # Reset and get the parameters that belong to the profile model
         self.model.specificSignalEncoderModel.profileModel.resetProfileWeights()
