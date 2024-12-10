@@ -100,7 +100,7 @@ class tempProtocol(globalProtocol):
             # ------------------- Plot Biolectric Signals ------------------- #
 
             if self.plotStreamedData:
-                # Format the raw data:.
+                # Format the raw data.
                 timepoints = timepoints[dataFinger - startFilterPointer:]  # Shared axis for all signals
                 rawData = dataBuffer[dataFinger - startFilterPointer:]
                 # Format the filtered data
@@ -116,8 +116,8 @@ class tempProtocol(globalProtocol):
 
                 # Plot a single feature.
                 if len(self.compiledFeatures[channelIndex]) != 0:
-                    self.plottingMethods.featureDataPlots[channelIndex].set_data(self.compiledFeatureTimes[channelIndex], np.asarray(self.compiledFeatures[channelIndex])[:, 9])
-                    self.plottingMethods.featureDataPlotAxes[channelIndex].legend(["Signal Slope"], loc="upper left")
+                    self.plottingMethods.featureDataPlots[channelIndex].set_data(self.compiledFeatureTimes[channelIndex], np.asarray(self.compiledFeatures[channelIndex])[:, 5])
+                    self.plottingMethods.featureDataPlotAxes[channelIndex].legend(["First Deriv Mean"], loc="upper left")
 
             # --------------------------------------------------------------- #   
 
@@ -173,7 +173,7 @@ class tempProtocol(globalProtocol):
         # Normalize the data
         standardized_data = self.universalMethods.standardizeData(data)
         if all(standardized_data == 0):
-            return [0 for _ in range(23)]
+            return [0 for _ in range(8)]
 
         # Get the baseline data
         baselineX = timepoints - timepoints[0]
