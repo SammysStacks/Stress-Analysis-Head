@@ -101,7 +101,7 @@ class empatchProtocols(extractData):
 
                     # Extract the temperature used in the experiment.
                     if self.therapyExpMethod in experimentName:
-                        print('experimentName', experimentName)
+                        # print('experimentName', experimentName)
                         experimentalTemp = int(experimentName.split("-")[-1])
                         experimentTempHolder.append(experimentalTemp)
                     else:
@@ -121,17 +121,17 @@ class empatchProtocols(extractData):
                 emotion_states = [currentPredictionStates[0][experimentalInd], currentPredictionStates[1][experimentalInd], currentPredictionStates[2][experimentalInd]]
                 experimentalTemp = experimentTempHolder[experimentalInd]
                 stateHolder.append([experimentalTemp] + emotion_states)
-                print('stateHolder', stateHolder)
+                #print('stateHolder', stateHolder)
 
         stateHolder = torch.as_tensor(stateHolder)
-        print('stateHolder', stateHolder)
+        #print('stateHolder', stateHolder)
         parameter = stateHolder[:, 0].view(1, -1)
         pa = stateHolder[:, 1].view(1, -1)
         na = stateHolder[:, 2].view(1, -1)
         sa = stateHolder[:, 3].view(1, -1)
-        print('parameter', parameter)
-        print('pa', pa)
-        print('na', na)
-        print('sa', sa)
+        # print('parameter', parameter)
+        # print('pa', pa)
+        # print('na', na)
+        # print('sa', sa)
         return parameter, pa, na, sa
 

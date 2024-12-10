@@ -123,6 +123,9 @@ class streamingProtocolHelpers(featureOrganization):
             streamingDataFinger = streamingDataFingers[analysisInd]
             analysis = self.analysisList[analysisInd]
 
+            print('numPointsPerBatch', self.numPointsPerBatch)
+            print('length of analysis timepoints', len(analysis.timepoints))
+            print('streamingDatafingers', streamingDataFingers[analysisInd])
             # Analyze the data until the minimum number of points is reached.
             while self.numPointsPerBatch <= len(analysis.timepoints) - streamingDataFingers[analysisInd]:
                 streamingDataFingers[analysisInd] += self.moveDataFinger
@@ -140,7 +143,6 @@ class streamingProtocolHelpers(featureOrganization):
                 self.therapyControl.therapyProtocol.plottingProtocolsMain.plotTherapyResults(combinedStates, allMaps)
             self.therapyControl.therapyProtocol.checkConvergence(10)
         # interface with hardware
-        exit()
         # Plot the Data
         if self.plotStreamedData: self.plottingClass.displayData()
 

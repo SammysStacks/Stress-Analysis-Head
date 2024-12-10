@@ -24,7 +24,7 @@ class adjustInputParameters:
         else:
             # Specify biomarker information.
             streamingOrder = self.compileModelInfo.streamingOrder  # A List Representing the Order of the Sensors being Streamed in: ["eog", "eeg", "eda", "temp"]
-            extractFeaturesFrom = streamingOrder if self.useModelPredictions else []  # A list with all the biomarkers from streamingOrder for feature extraction
+            extractFeaturesFrom = streamingOrder #if self.useModelPredictions else []  # A list with all the biomarkers from streamingOrder for feature extraction
             allAverageIntervals = self.compileModelInfo.featureAverageWindows  # EOG: 120-180; EEG: 60-90; EDA: ?; Temp: 30 - 60  Old: [120, 75, 90, 45]
         # Compile feature names
         featureNames, biomarkerFeatureNames, biomarkerFeatureOrder = compileFeatureNames().extractFeatureNames(extractFeaturesFrom)

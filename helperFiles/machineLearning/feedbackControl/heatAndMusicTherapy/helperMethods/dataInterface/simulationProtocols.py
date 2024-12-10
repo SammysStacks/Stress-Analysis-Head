@@ -43,7 +43,7 @@ class simulationProtocols:
 
         # ===============================================Simulated Parameters===============================================
         self.startingTimes, self.startingParams, self.startingPredictions = self.randomlySamplePoints(numPoints=self.initialPoints, lastTimePoint=self.initialTimePoint - self.timeDelay)
-        print(f'startingTimes, straringParams, startingPredictions: {self.startingTimes, self.startingParams, self.startingPredictions}')
+        # print(f'startingTimes, straringParams, startingPredictions: {self.startingTimes, self.startingParams, self.startingPredictions}')
 
         # ==============================================Uninitialize Parameters=============================================
         self.simulatedMapPA = None

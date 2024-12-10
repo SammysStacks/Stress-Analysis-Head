@@ -87,7 +87,7 @@ class humanMachineInterface:
 
             parameterBounds = self.compileModelInfo.parameterBounds
             parameterBinWdith = self.compileModelInfo.parameterBinWidth
-            self.therapyControl = heatTherapyControl(self.userName, parameterBounds, parameterBinWdith, protocolParameters, therapyMethod=self.compileModelInfo.userTherapyMethod, plotResults=self.plottingTherapyIndicator)
+            self.therapyControl = heatTherapyControl(self.userName, parameterBounds, parameterBinWdith, protocolParameters, therapyMethod=self.compileModelInfo.userTherapyMethod, plotResults=self.plottingTherapyIndicator, therapySelection='Heat')
             initialParam = self.therapyControl.therapyProtocol.boundNewTemperature(self.therapyParam, bufferZone=0.01)
             initialPredictions = self.initialPredictions
             initialTime = self.therapyStartTime

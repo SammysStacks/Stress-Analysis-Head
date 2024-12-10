@@ -55,7 +55,7 @@ class modelConstants:
     # Specify the saving parameters.
     specificModelWeights = [specificSignalEncoderModel, specificEmotionModel, specificActivityModel]
     sharedModelWeights = [sharedSignalEncoderModel, sharedEmotionModel, sharedActivityModel]
-    userInputParams = None
+    userInputParams = {'numProfileEpochs': 30}
 
     @classmethod
     def updateModelParams(cls, userInputParams):

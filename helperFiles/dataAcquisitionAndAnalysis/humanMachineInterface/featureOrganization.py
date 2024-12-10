@@ -40,7 +40,7 @@ class featureOrganization(humanMachineInterface):
         assert len(featureAverageWindows) == len(self.biomarkerFeatureOrder), f"Found {featureAverageWindows} windows for {self.biomarkerFeatureOrder} biomarkers. These must to be the same length."
 
         # Loop through each analysis requiring collecting features.
-
+        print('self.featureAnalysisOrder', self.featureAnalysisOrder)
         for biomarkerInd in range(len(self.featureAnalysisOrder)):
             biomarkerType = self.featureAnalysisOrder[biomarkerInd]
 
@@ -91,6 +91,7 @@ class featureOrganization(humanMachineInterface):
     # --------------------- Organize Incoming Features --------------------- #
 
     def compileIntervalFeaturesWithPadding(self):
+        print('self.featureAnalysisList', self.featureAnalysisList)
         # Find the number of new points.
         lastRecordedTime = self.featureAnalysisList[0].timepoints[-1]  # The last time we streamed data.
         numNewPoints = int(1 + (lastRecordedTime - self.startModelTime - self.modelTimeBuffer) // self.modelTimeGap)
