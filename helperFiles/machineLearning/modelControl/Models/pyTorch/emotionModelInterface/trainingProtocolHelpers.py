@@ -70,7 +70,7 @@ class trainingProtocolHelpers:
 
             # Physiological profile training.
             numEpochs = modelPipeline.resetPhysiologicalProfile(submodel)
-            modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=min(numEpochs + 1, self.profileEpochs))  # Profile training.
+            modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=min(numEpochs + 4, self.profileEpochs))  # Profile training.
             self.accelerator.wait_for_everyone()
 
             with torch.no_grad():
