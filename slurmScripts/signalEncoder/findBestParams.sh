@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # General parameters: 320
-allNumEncodedWeights=(2 4 8 16 32 64)  # 6
+allNumEncodedWeights=(4 8 16 32 64)  # 6
 numSpecificEncoderLayers_arr=(1 2)  # 2
 signalEncoderLayers_arr=(2 4 8 12 16)  # 5
 encodedDimensions_arr=(64 128 256 512)  # 4
@@ -19,7 +19,7 @@ lrs_profileGen=('1e-4')
 # Learning rates: 27
 wds_profileGen=('1e-6' '1e-4' '1e-2')  # 4
 lrs_reversible=('5e-3' '1e-3' '5e-4')  # 3 -> [1e-4, 1e-2] NOT Inclusive
-lrs_profile=('0.1' '0.01' '1')  # 4  -> <= 1
+lrs_profile=('0.1' '0.01' '0.3' '1')  # 4  -> <= 1
 
 # Weight decays: 27
 wds_reversible=('0' '1e-4' '1e-2')  # 4
