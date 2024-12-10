@@ -1,4 +1,6 @@
 # Import files for machine learning
+import random
+
 from .emotionModel.emotionModelHead import emotionModelHead
 from .emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
 from .emotionModel.emotionModelHelpers.generalMethods.dataAugmentation import dataAugmentation
@@ -54,6 +56,7 @@ class emotionPipelineHelpers:
     def resetPhysiologicalProfile(self, submodel):
         # Get the current number of epochs for the profile model.
         numEpochs = self.getTrainingEpoch(submodel)
+        if random.random() < 0.1: return 1
 
         # Reset and get the parameters that belong to the profile model
         self.model.specificSignalEncoderModel.profileModel.resetProfileHolders()
