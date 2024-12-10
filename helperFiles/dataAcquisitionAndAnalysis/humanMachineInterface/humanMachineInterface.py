@@ -55,9 +55,8 @@ class humanMachineInterface:
         self.featureNames, self.biomarkerFeatureNames, self.biomarkerFeatureOrder = self.compileFeatureNames.extractFeatureNames(extractFeaturesFrom)
 
         # ------------------------------ pipeline preparation for training ------------------------------
-        self.emoPipeline = emotionPipeline(accelerator, datasetName=None, allEmotionClasses=self.compileModelInfo.numQuestionOptions, numSubjects=1, userInputParams=self.compileModelInfo.getUserInputParameters(),
-                                           emotionNames=self.compileModelInfo.numQuestionOptions, activityNames=self.compileModelInfo.activityNames, featureNames=self.featureNames, submodel=self.submodel, numExperiments=6,
-                                           reconstructionIndex=None)
+        # self.emoPipeline = emotionPipeline(accelerator, datasetName=None, allEmotionClasses=self.compileModelInfo.numQuestionOptions, numSubjects=1, userInputParams=self.compileModelInfo.getUserInputParameters(),
+        #                                    emotionNames=self.compileModelInfo.numQuestionOptions, activityNames=self.compileModelInfo.activityNames, featureNames=self.featureNames, submodel=self.submodel, numExperiments=6)
         self.trainingProtocols = trainingProtocolHelpers(submodel=self.submodel, accelerator=accelerator)  # Initialize the training protocols.
         self.experimentalInds = torch.arange(0, 6, dtype=torch.int64)
 

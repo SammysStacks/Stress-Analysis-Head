@@ -2,10 +2,8 @@
 import numpy as np
 
 # Import Files for extracting model information
-from .Models.generalModels.matrixFactorization import matrixFactorization
 from .modelSpecifications.compileModelInfo import compileModelInfo
 from .Models.generalModels.generalModels import generalModel
-from .Models.tensorFlow.neuralNetwork import neuralNetwork
 
 
 class modelControl:
@@ -33,14 +31,9 @@ class modelControl:
         for modelInd in range(len(self.modelTypes)):
             modelType = self.modelTypes[modelInd]
             modelPath = self.modelPaths[modelInd]
-                                    
-            # Call the correct model class
-            if modelType == "NN":
-                modelClasses.append(neuralNetwork(modelPath, modelType, self.allFeatureNames, overwriteModel))
-            elif modelType == "MF":
-                modelClasses.append(matrixFactorization(modelPath, modelType, self.allFeatureNames, overwriteModel))
-            else:
-                modelClasses.append(generalModel(modelPath, modelType, self.allFeatureNames, overwriteModel))
+
+            # Create the model class
+            modelClasses.append(generalModel(modelPath, modelType, self.allFeatureNames, overwriteModel))
             
             # Transfer any standardization info over.
             if len(self.modelClasses) == len(modelTypes) and len(self.modelClasses) != 0:

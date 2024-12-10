@@ -53,7 +53,7 @@ class matrixFactorization(nn.Module):
         ----------------------------------------------------------------------
             𝑅 is the predicted rating of an item by a user. Each row is one user with all item ratings. Dim: numUsers x numItems.
             𝜇 is the overall average rating across all users, biological features, and items. Set to zero if no information. Dim: scalar.
-            𝛽_𝑢  is the user-specific deviation from the average rating. Each element is one user's average rating. Dim: 1 x numUsers.
+            𝛽_𝑢 is the user-specific deviation from the average rating. Each element is one user's average rating. Dim: 1 x numUsers.
             𝛽_b is the feature-specific baseline for each user. Each row is one user with all the feature's baselines. Dim: numUsers x numFeatures.
             𝛽_𝑣 is the item-specific deviation from the average rating. Each element is one item's average rating. Dim: 1 x numItems.
             𝑈 is a matrix representing the user's biological state. Each row is one user with all biological features (at time t). Dim: numUsers x numFeatures.

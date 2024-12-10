@@ -35,7 +35,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2024-12-09 CNN-FC"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2024-12-10"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Parse Model Parameters ----------------------- #
@@ -71,7 +71,7 @@ if __name__ == "__main__":
 
     # Temporary parameters.
     parser.add_argument('--profileLR', type=float, default=2, help='The learning rate of the physiological model.')
-    parser.add_argument('--profileWD', type=float, default=1e-6, help='The learning rate of the general model.')
+    parser.add_argument('--profileWD', type=float, default=1e-4, help='The learning rate of the general model.')
 
     # Temporary parameters.
     parser.add_argument('--reversibleLR', type=float, default=1e-3, help='The learning rate of the general model.')

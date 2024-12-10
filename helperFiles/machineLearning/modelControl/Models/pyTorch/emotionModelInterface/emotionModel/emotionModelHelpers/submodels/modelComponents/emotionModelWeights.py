@@ -34,7 +34,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def physiologicalInitialization(physiologicalProfile):
-        nn.init.normal_(physiologicalProfile.data, mean=0, std=1/2)
+        nn.init.normal_(physiologicalProfile.data, mean=0, std=1)
 
     # ------------------- Neural Operator Architectures ------------------- #
 
@@ -58,13 +58,11 @@ class emotionModelWeights(convolutionalHelpers):
 
     def physiologicalGeneration(self, numOutputFeatures):
         numUpSamples = int(math.log2(numOutputFeatures // modelConstants.numEncodedWeights))
-        numLayersCNN = 4
 
-        # layers = []
         # Construct the profile generation model.
         layers = [self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='selu', addBias=False)]
         for i in range(numUpSamples): layers.append(self.convolutionalFilters_resNetBlocks(numResNets=1, numBlocks=1, numChannels=[1, 2], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False))
-        layers.append(self.convolutionalFilters_resNetBlocks(numResNets=numLayersCNN, numBlocks=4, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False))
+        layers.append(self.convolutionalFilters_resNetBlocks(numResNets=4, numBlocks=4, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False))
         return nn.Sequential(*layers)
 
     @staticmethod

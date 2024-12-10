@@ -10,7 +10,10 @@ class generalModel(nn.Module):
 
     def __init__(self, modelPath, modelType, allFeatureNames, overwriteModel):
         # Initialize common model class
-        super().__init__(modelPath, modelType, allFeatureNames, overwriteModel)
+        super().__init__()
+        self.allFeatureNames = allFeatureNames
+        self.modelPath = modelPath
+        self.modelType = modelType
         self.model = None
 
     def createModel(self):
