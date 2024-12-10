@@ -5,6 +5,7 @@ from .emotionModel.emotionModelHelpers.generalMethods.dataAugmentation import da
 from .emotionModel.emotionModelHelpers.generalMethods.modelHelpers import modelHelpers
 from .emotionModel.emotionModelHelpers.lossInformation.organizeTrainingLosses import organizeTrainingLosses
 from .emotionModel.emotionModelHelpers.modelConstants import modelConstants
+from .emotionModel.emotionModelHelpers.modelParameters import modelParameters
 from .emotionModel.emotionModelHelpers.modelVisualizations.modelVisualizations import modelVisualizations
 from .emotionModel.emotionModelHelpers.optimizerMethods.optimizerMethods import optimizerMethods
 
@@ -56,7 +57,7 @@ class emotionPipelineHelpers:
 
         # Reset and get the parameters that belong to the profile model
         self.model.specificSignalEncoderModel.profileModel.resetProfileHolders()
-        if numEpochs <= 6: return 1
+        if numEpochs <= modelParameters.getEpochWarmups(): return 1
 
         # Reset and get the parameters that belong to the profile model
         self.model.specificSignalEncoderModel.profileModel.resetProfileWeights()

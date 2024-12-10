@@ -76,6 +76,9 @@ class modelParameters:
     @staticmethod
     def getProfileEpochs(): return modelConstants.userInputParams['numProfileEpochs']  # numEpochs
 
+    @staticmethod
+    def getEpochWarmups(): return 6
+
     # -------------------------- Compilation Parameters ------------------------- #
 
     @staticmethod
