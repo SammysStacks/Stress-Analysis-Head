@@ -11,7 +11,7 @@ allNumEncodedWeights=(32)  # 6
 numSpecificEncoderLayers_arr=(1)  # 1
 signalEncoderLayers_arr=(8)  # 3
 encodedDimensions_arr=(256)  # 1
-numProfileEpochs_arr=(20 10)  # 1
+numProfileEpochs_arr=(30 50)  # 1
 
 # Learning rates: 27
 lrs_reversible=('1e-4' '1e-3' '1e-2')  # 3
