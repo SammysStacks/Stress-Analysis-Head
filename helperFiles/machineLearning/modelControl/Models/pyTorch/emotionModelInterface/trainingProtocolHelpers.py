@@ -71,7 +71,7 @@ class trainingProtocolHelpers:
             profileEpochs = 1
             # Physiological profile training.
             numEpochs = modelPipeline.getTrainingEpoch(submodel)
-            if 5 < numEpochs: modelPipeline.resetPhysiologicalProfile(); profileEpochs = self.profileEpochs
+            if 10 <= numEpochs: modelPipeline.resetPhysiologicalProfile(); profileEpochs = self.profileEpochs
             modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=min(numEpochs + 1, profileEpochs))  # Profile training.
             self.accelerator.wait_for_everyone()
 
