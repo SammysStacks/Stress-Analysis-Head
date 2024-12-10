@@ -23,7 +23,6 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
 
         # Initialize the pseudo-encoded times for the fourier data.
         hyperSampledTimes = torch.linspace(start=0, end=self.encodedTimeWindow, steps=self.encodedDimension).flip(dims=[0])
-        self.register_buffer(name='hyperNormalizedSampledTimes', tensor=2 * hyperSampledTimes / self.encodedTimeWindow - 1)  # Non-learnable parameter.
         self.register_buffer(name='hyperSampledTimes', tensor=hyperSampledTimes)  # Non-learnable parameter.
         deltaTimes = torch.unique(self.hyperSampledTimes.diff().round(decimals=4))
         assert len(deltaTimes) == 1, f"The time gaps are not similar: {deltaTimes}"

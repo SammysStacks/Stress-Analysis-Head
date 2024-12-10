@@ -77,7 +77,6 @@ class modelVisualizations(globalPlottingProtocols):
         with torch.no_grad():
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
             validDataMask, reconstructedSignalData, resampledSignalData, _, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = model.forward(submodel, signalData, signalIdentifiers, metadata, device=self.accelerator.device, onlyProfileTraining=False)
-            # physiologicalTimes, compiledTimeEncoderLayerStates = model.reconstructPhysiologicalProfile(model.sharedSignalEncoderModel.hyperNormalizedSampledTimes.expand_as(resampledSignalData))
             reconstructedPhysiologicalProfile, compiledSignalEncoderLayerStates = model.reconstructPhysiologicalProfile(resampledSignalData)
             compiledSignalEncoderLayerStates = np.flip(compiledSignalEncoderLayerStates, axis=0)
 

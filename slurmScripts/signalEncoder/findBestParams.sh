@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # General parameters: 320
-allNumEncodedWeights=(2 4 8 16 32)  # 8
+allNumEncodedWeights=(2 4 8 16 32 64)  # 6
 numSpecificEncoderLayers_arr=(1 2)  # 2
 signalEncoderLayers_arr=(2 4 8 12 16)  # 5
 encodedDimensions_arr=(64 128 256 512)  # 4
@@ -17,20 +17,21 @@ numProfileEpochs_arr=(5 10 20)  # 3
 lrs_profileGen=('1e-4')
 
 # Learning rates: 27
+wds_profileGen=('1e-6' '1e-4' '1e-2')  # 4
 lrs_reversible=('5e-3' '1e-3' '5e-4')  # 3 -> [1e-4, 1e-2] NOT Inclusive
-lrs_profile=('0.1' '0.5' '1')  # 3  -> <= 1
+lrs_profile=('0.1' '0.01' '1')  # 4  -> <= 1
 
 # Weight decays: 27
 wds_reversible=('0' '1e-4' '1e-2')  # 4
 wds_profile=('0' '0.1' '1e-3')  # 4
-wds_profileGen=('0' '1e-6' '1e-4' '1e-2')  # 4
 
-wds_reversible=('0')  # 4
+wds_reversible=('1e-6')  # 4
 wds_profile=('1e-4')  # 4
+wds_profileGen=('1e-6')  # 4
 
 # Finalized parameters.
 waveletTypes_arr=('bior3.1')  # 'bior3.1' > 'bior3.3' > 'bior2.2' > 'bior3.5'
-optimizers_arr=('RAdam')
+optimizers_arr=('RAdam' 'AdamW' 'NAdam')
 
 for numEncodedWeights in "${allNumEncodedWeights[@]}"
 do
