@@ -61,12 +61,10 @@ class emotionModelWeights(convolutionalHelpers):
         numEncodedWeights = modelConstants.numEncodedWeights
         numLayersInitFNN, numLayersCNN = 1, 6
 
-        layers = []
-        # Construct the profile generation model.
-        for i in range(max(0, numLayersInitFNN - numUpSamples)): layers.append(self.linearModel(numInputFeatures=numEncodedWeights, numOutputFeatures=numEncodedWeights, activationMethod='selu', addBias=False))
-        for i in range(numUpSamples): layers.append(self.linearModel(numInputFeatures=numEncodedWeights, numOutputFeatures=2*numEncodedWeights, activationMethod='selu', addBias=False)); numEncodedWeights *= 2
-        layers.append(self.convolutionalFilters_resNetBlocks(numResNets=numLayersCNN, numBlocks=4, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False))
-        return nn.Sequential(*layers)
+        return nn.Sequential(
+            self.linearModel(numInputFeatures=numEncodedWeights, numOutputFeatures=numOutputFeatures, activationMethod='selu', addBias=False),
+            self.convolutionalFilters_resNetBlocks(numResNets=numLayersCNN, numBlocks=4, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False)
+        )
 
     @staticmethod
     def gradientHook(grad): return grad
