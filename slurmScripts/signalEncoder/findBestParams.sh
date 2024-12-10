@@ -11,54 +11,65 @@ allNumEncodedWeights=(32)  # 6
 numSpecificEncoderLayers_arr=(1)  # 1
 signalEncoderLayers_arr=(8)  # 3
 encodedDimensions_arr=(256)  # 1
+numProfileEpochs_arr=(15 5 10)  # 1
 
-# Learning rates: 9
-lrs_general=('1e-4' '1e-3' '1e-2')  # 3
-lrs_physio=('0.1' '0.01' '1')  # 3
+# Learning rates: 27
+lrs_reversible=('1e-4' '1e-3' '1e-2')  # 3
+lrs_profile=('10' '100' '1')  # 3
+lrs_profileGen=('1e-4' '1e-5' '1e-3')  # 3
 
-# Weight decays: 25
-wds_general=('1e-4' '0' '1e-3' '1e-2' '1e-1')  # 4
-wds_physio=('0.1' '0' '1e-4' '1e-3' '1e-2')  # 4
+# Weight decays: 27
+wds_reversible=('0' '1e-4' '1e-2')  # 4
+wds_profile=('0' '0.1' '1e-3')  # 4
+wds_profileGen=('0' '1e-4' '1e-2')  # 4
 
 # Finalized parameters.
 waveletTypes_arr=('bior3.1')  # 'bior3.1' > 'bior3.3' > 'bior2.2' > 'bior3.5'
 optimizers_arr=('RAdam')
 
-
 for numEncodedWeights in "${allNumEncodedWeights[@]}"
 do
-  for lr_physio in "${lrs_physio[@]}"
+  for numProfileEpochs in "${numProfileEpochs_arr[@]}"
   do
-    for wd_general in "${wds_general[@]}"
+    for lr_profile in "${lrs_profile[@]}"
     do
-      for wd_physio in "${wds_physio[@]}"
+      for wd_reversible in "${wds_reversible[@]}"
       do
-        for lr_general in "${lrs_general[@]}"
+        for wd_profile in "${wds_profile[@]}"
         do
-          for optimizer in "${optimizers_arr[@]}"
+          for lr_reversible in "${lrs_reversible[@]}"
           do
-            for waveletType in "${waveletTypes_arr[@]}"
+            for wd_profileGen in "${wds_profileGen[@]}"
             do
-              for encodedDimension in "${encodedDimensions_arr[@]}"
+              for lr_profileGen in "${lrs_profileGen[@]}"
               do
-                for numSpecificEncoderLayers in "${numSpecificEncoderLayers_arr[@]}"
+                for optimizer in "${optimizers_arr[@]}"
                 do
-                  for numSharedEncoderLayers in "${signalEncoderLayers_arr[@]}"
+                  for waveletType in "${waveletTypes_arr[@]}"
                   do
-                    # Check if numSpecificEncoderLayers is greater than half the numSharedEncoderLayers
-                    if [ $((2 * numSpecificEncoderLayers)) -gt "$numSharedEncoderLayers" ]; then
-                      continue  # Skip this iteration if the condition is true
-                    fi
+                    for encodedDimension in "${encodedDimensions_arr[@]}"
+                    do
+                      for numSpecificEncoderLayers in "${numSpecificEncoderLayers_arr[@]}"
+                      do
+                        for numSharedEncoderLayers in "${signalEncoderLayers_arr[@]}"
+                        do
+                          # Check if numSpecificEncoderLayers is greater than half the numSharedEncoderLayers
+                          if [ $((2 * numSpecificEncoderLayers)) -gt "$numSharedEncoderLayers" ]; then
+                            continue  # Skip this iteration if the condition is true
+                          fi
 
-                    echo "Submitting job with $numSharedEncoderLayers numSharedEncoderLayers, $numSpecificEncoderLayers numSpecificEncoderLayers, $encodedDimension encodedDimension, $waveletType waveletType, $optimizer optimizer, $lr_physio lr_physio, $lr_general lr_general"
+                          echo "Submitting job with $numSharedEncoderLayers numSharedEncoderLayers, $numSpecificEncoderLayers numSpecificEncoderLayers, $encodedDimension encodedDimension, $waveletType waveletType, $optimizer optimizer, $lr_profile lr_profile, $lr_reversible lr_reversible"
 
-                    if [ "$1" == "CPU" ]; then
-                        sbatch -J "signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_CPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$1" "$waveletType" "$optimizer" "$lr_physio" "$lr_general" "$numEncodedWeights" "$wd_general" "$wd_physio"
-                    elif [ "$1" == "GPU" ]; then
-                        sbatch -J "signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_GPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$1" "$waveletType" "$optimizer" "$lr_physio" "$lr_general" "$numEncodedWeights" "$wd_general" "$wd_physio"
-                    else
-                        echo "No known device listed: $1"
-                    fi
+                          if [ "$1" == "CPU" ]; then
+                              sbatch -J "signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_CPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$numProfileEpochs" "$1" "$waveletType" "$optimizer" "$lr_profile" "$lr_reversible" "$lr_profileGen" "$numEncodedWeights" "$wd_profile" "$wd_reversible" "$wd_profileGen"
+                          elif [ "$1" == "GPU" ]; then
+                              sbatch -J "signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_GPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$numProfileEpochs" "$1" "$waveletType" "$optimizer" "$lr_profile" "$lr_reversible" "$lr_profileGen" "$numEncodedWeights" "$wd_profile" "$wd_reversible" "$wd_profileGen"
+                          else
+                              echo "No known device listed: $1"
+                          fi
+                        done
+                      done
+                    done
                   done
                 done
               done

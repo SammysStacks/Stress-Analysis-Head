@@ -6,15 +6,18 @@ srun accelerate launch ./../../metaTrainingControl.py \
     --numSharedEncoderLayers "$1" \
     --numSpecificEncoderLayers "$2" \
     --encodedDimension "$3" \
-    --deviceListed "HPC-$4" \
+    --numProfileEpochs "$4" \
+    --deviceListed "HPC-$5" \
     --submodel "signalEncoderModel" \
-    --waveletType "$5" \
-    --optimizerType "$6" \
-    --profileLR "$7" \
-    --reversibleLR "$8" \
-    --numEncodedWeights "$9" \
-    --reversibleWD "${10}" \
-    --profileWD "${11}"
+    --waveletType "$6" \
+    --optimizerType "$7" \
+    --profileLR "$8" \
+    --reversibleLR "$9" \
+    --physGenLR "${10}" \
+    --numEncodedWeights "${11}" \
+    --profileWD "${12}" \
+    --reversibleWD "${13}" \
+    --physGenWD "${14}" \
 
 end=$(date +%s)
 runtime=$((end-start))

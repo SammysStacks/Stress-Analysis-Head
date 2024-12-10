@@ -34,7 +34,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def physiologicalInitialization(physiologicalProfile):
-        nn.init.kaiming_normal_(physiologicalProfile.data, mode='fan_in', nonlinearity='linear')
+        nn.init.normal_(physiologicalProfile.data, mean=0, std=0.2)
 
     # ------------------- Neural Operator Architectures ------------------- #
 
@@ -58,12 +58,13 @@ class emotionModelWeights(convolutionalHelpers):
 
     def physiologicalGeneration(self, numOutputFeatures):
         numUpSamples = int(math.log2(numOutputFeatures // modelConstants.numEncodedWeights))
-        numLayersInitFNN, numLayersFinalFNN, numLayersCNN = 1, 1, 4
+        numEncodedWeights = modelConstants.numEncodedWeights
+        numLayersInitFNN, numLayersCNN = 1, 6
 
         layers = []
         # Construct the profile generation model.
-        for i in range(numLayersInitFNN): layers.append(self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='selu', addBias=False))
-        for i in range(numUpSamples): layers.append(self.convolutionalFilters_resNetBlocks(numResNets=1, numBlocks=1, numChannels=[1, 2], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False))
+        for i in range(max(0, numLayersInitFNN - numUpSamples)): layers.append(self.linearModel(numInputFeatures=numEncodedWeights, numOutputFeatures=numEncodedWeights, activationMethod='selu', addBias=False))
+        for i in range(numUpSamples): layers.append(self.linearModel(numInputFeatures=numEncodedWeights, numOutputFeatures=2*numEncodedWeights, activationMethod='selu', addBias=False)); numEncodedWeights *= 2
         layers.append(self.convolutionalFilters_resNetBlocks(numResNets=numLayersCNN, numBlocks=4, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="selu", numLayers=None, addBias=False))
         return nn.Sequential(*layers)
 
