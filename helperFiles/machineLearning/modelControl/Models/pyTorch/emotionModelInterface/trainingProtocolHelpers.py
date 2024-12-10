@@ -68,10 +68,11 @@ class trainingProtocolHelpers:
             # Train the updated model.
             modelPipeline.trainModel(dataLoader, submodel, profileTraining=False, specificTraining=True, trainSharedLayers=False, stepScheduler=False, numEpochs=numEpochs)  # Signal-specific training.
 
+            profileEpochs = 1
             # Physiological profile training.
-            modelPipeline.resetPhysiologicalProfile()
             numEpochs = modelPipeline.getTrainingEpoch(submodel)
-            modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=min(numEpochs + 1, self.profileEpochs))  # Profile training.
+            if 5 < numEpochs: modelPipeline.resetPhysiologicalProfile(); profileEpochs = self.profileEpochs
+            modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=min(numEpochs + 1, profileEpochs))  # Profile training.
             self.accelerator.wait_for_everyone()
 
             with torch.no_grad():
