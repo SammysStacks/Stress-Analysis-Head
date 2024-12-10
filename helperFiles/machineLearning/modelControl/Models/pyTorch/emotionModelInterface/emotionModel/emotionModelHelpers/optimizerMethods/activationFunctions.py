@@ -25,6 +25,8 @@ def getActivationMethod(activationMethod):
         activationFunction = nn.GELU()
     elif activationMethod == 'relu':
         activationFunction = nn.ReLU()
+    elif activationMethod == 'SoftSign':
+        activationFunction = nn.Softsign()
     else: raise ValueError("Activation type must be in ['Tanhshrink', 'none', 'boundedExp', 'reversibleLinearSoftSign', 'boundedS', 'PReLU', 'selu', 'gelu', 'relu']")
 
     return activationFunction
