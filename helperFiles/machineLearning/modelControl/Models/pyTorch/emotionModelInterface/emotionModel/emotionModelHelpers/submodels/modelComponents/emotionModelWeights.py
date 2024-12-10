@@ -59,7 +59,7 @@ class emotionModelWeights(convolutionalHelpers):
     def physiologicalGeneration(self, numOutputFeatures):
         numUpSamples = int(math.log2(numOutputFeatures // modelConstants.numEncodedWeights))
         numEncodedWeights = modelConstants.numEncodedWeights
-        numLayersInitFNN, numLayersCNN = 1, 6
+        numLayersInitFNN, numLayersCNN = 1, 4
 
         return nn.Sequential(
             self.linearModel(numInputFeatures=numEncodedWeights, numOutputFeatures=numOutputFeatures, activationMethod='selu', addBias=False),
