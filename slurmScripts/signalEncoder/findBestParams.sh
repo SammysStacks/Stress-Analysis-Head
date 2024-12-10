@@ -24,7 +24,7 @@ wds_profile=('0' '0.1' '1e-3')  # 4
 wds_profileGen=('0' '1e-4' '1e-2')  # 4
 
 wds_reversible=('0')  # 4
-wds_profile=('0')  # 4
+wds_profile=('1e-6')  # 4
 wds_profileGen=('0')  # 4
 
 # Finalized parameters.
