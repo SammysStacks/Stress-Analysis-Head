@@ -70,8 +70,8 @@ if __name__ == "__main__":
     parser.add_argument('--numActivityChannels', type=int, default=4, help='The number of activity channels.')
 
     # Temporary parameters.
-    parser.add_argument('--profileLR', type=float, default=2, help='The learning rate of the physiological model.')
-    parser.add_argument('--profileWD', type=float, default=1e-4, help='The learning rate of the general model.')
+    parser.add_argument('--profileLR', type=float, default=10, help='The learning rate of the physiological model.')
+    parser.add_argument('--profileWD', type=float, default=1e-3, help='The learning rate of the general model.')
 
     # Temporary parameters.
     parser.add_argument('--reversibleLR', type=float, default=1e-3, help='The learning rate of the general model.')
@@ -133,7 +133,7 @@ if __name__ == "__main__":
         # Store the initial loss information and plot.
         trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)
         if plotSteps: trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate)
-        # trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate)
+        trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate)
 
         # Save the model sometimes (only on the main device).
         if saveFullModel and accelerator.is_local_main_process:

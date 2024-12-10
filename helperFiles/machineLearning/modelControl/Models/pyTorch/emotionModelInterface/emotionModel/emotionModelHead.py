@@ -272,9 +272,9 @@ class emotionModelHead(nn.Module):
         validPointMask = validDataMask[firstBatchInd, firstSignalInd]
 
         # Optionally, plot the physiological profile for visual comparison
-        physiologicalTimes = self.sharedSignalEncoderModel.pseudoEncodedTimes.clone().detach().cpu().numpy()
-        plt.plot(physiologicalTimes, physiologicalProfile[firstBatchInd].clone().detach().cpu().numpy(), 'tab:red', linewidth=1, label='Physiological Profile', alpha=2/3)
-        plt.plot(torch.linspace(start=physiologicalTimes[0], end=physiologicalTimes[-1], steps=physiologicalProfileOG.size(-1)).clone().detach().cpu().numpy(), physiologicalProfileOG[firstBatchInd].clone().detach().cpu().numpy(), 'k', linewidth=1, label='Original Profile', alpha=0.75)
+        resampledBiomarkerTimes = self.sharedSignalEncoderModel.hyperSampledTimes.clone().detach().cpu().numpy()
+        plt.plot(resampledBiomarkerTimes, physiologicalProfile[firstBatchInd].clone().detach().cpu().numpy(), 'tab:red', linewidth=1, label='Physiological Profile', alpha=2/3)
+        plt.plot(torch.linspace(start=resampledBiomarkerTimes[0], end=resampledBiomarkerTimes[-1], steps=physiologicalProfileOG.size(-1)).clone().detach().cpu().numpy(), physiologicalProfileOG[firstBatchInd].clone().detach().cpu().numpy(), 'k', linewidth=1, label='Original Profile', alpha=0.75)
         plt.title(f"batchInd{firstBatchInd}")
         plt.show()
 
@@ -288,7 +288,7 @@ class emotionModelHead(nn.Module):
         # Optionally, plot the original and reconstructed signals for visual comparison
         plt.plot(validTimepoints, validDatapoints, 'ok', markersize=3, label='Initial Signal', alpha=0.75)
         plt.plot(validTimepoints, validReconstructedPoints, 'o', color='tab:red', markersize=3, label='Reconstructed Signal', alpha=0.75)
-        plt.plot(physiologicalTimes, resampledSignalData[firstBatchInd, firstSignalInd, :].clone().detach().cpu().numpy(), 'tab:blue', linewidth=1, label='Resampled Signal', alpha=0.75)
+        plt.plot(resampledBiomarkerTimes, resampledSignalData[firstBatchInd, firstSignalInd, :].clone().detach().cpu().numpy(), 'tab:blue', linewidth=1, label='Resampled Signal', alpha=0.75)
         plt.title(f"batchInd{firstBatchInd} signalInd{firstSignalInd} numPoints{len(validTimepoints)}")
         plt.legend()
         plt.show()

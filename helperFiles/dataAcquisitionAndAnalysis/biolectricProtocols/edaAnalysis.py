@@ -125,7 +125,7 @@ class edaProtocol(globalProtocol):
 
             # ------------------- Plot Biolectric Signals ------------------ #
             if self.plotStreamedData:
-                # Format the raw data:.
+                # Format the raw data.
                 timepoints = timepoints[dataFinger - startFilterPointer:]  # Shared axis for all signals
                 rawData = dataBuffer[dataFinger - startFilterPointer:]
                 # Format the filtered data
@@ -141,7 +141,7 @@ class edaProtocol(globalProtocol):
 
                 # Plot a single feature.
                 if len(self.compiledFeatures[channelIndex]) != 0:
-                    self.plottingMethods.featureDataPlots[channelIndex].set_data(self.compiledFeatureTimes[channelIndex], np.asarray(self.compiledFeatures[channelIndex])[:, 19])
+                    self.plottingMethods.featureDataPlots[channelIndex].set_data(self.compiledFeatureTimes[channelIndex], np.asarray(self.compiledFeatures[channelIndex])[:, 9])
                     self.plottingMethods.featureDataPlotAxes[channelIndex].legend(["Hjorth Activity"], loc="upper left")
 
             # -------------------------------------------------------------- #   

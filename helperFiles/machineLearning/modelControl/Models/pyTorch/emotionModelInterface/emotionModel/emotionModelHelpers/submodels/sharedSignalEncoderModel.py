@@ -22,9 +22,10 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
 
         # Initialize the pseudo-encoded times for the fourier data.
-        pseudoEncodedTimes = torch.linspace(start=0, end=self.encodedTimeWindow, steps=self.encodedDimension).flip(dims=[0])
-        self.register_buffer(name='pseudoEncodedTimes', tensor=pseudoEncodedTimes)  # Non-learnable parameter.
-        deltaTimes = torch.unique(self.pseudoEncodedTimes.diff().round(decimals=4))
+        hyperSampledTimes = torch.linspace(start=0, end=self.encodedTimeWindow, steps=self.encodedDimension).flip(dims=[0])
+        self.register_buffer(name='hyperNormalizedSampledTimes', tensor=2 * hyperSampledTimes / self.encodedTimeWindow - 1)  # Non-learnable parameter.
+        self.register_buffer(name='hyperSampledTimes', tensor=hyperSampledTimes)  # Non-learnable parameter.
+        deltaTimes = torch.unique(self.hyperSampledTimes.diff().round(decimals=4))
         assert len(deltaTimes) == 1, f"The time gaps are not similar: {deltaTimes}"
 
         # The neural layers for the signal encoder.
@@ -91,7 +92,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         batchSize, numSignals, encodedDimension = resampledSignalData.size()
 
         # Align the timepoints to the physiological times.
-        reversedPhysiologicalTimes = torch.flip(self.pseudoEncodedTimes, dims=[0])
+        reversedPhysiologicalTimes = torch.flip(self.hyperSampledTimes, dims=[0])
         mappedPhysiologicalTimedInds = encodedDimension - 1 - torch.searchsorted(sorted_sequence=reversedPhysiologicalTimes, input=timepoints, out=None, out_int32=False, right=False)  # timepoints <= physiologicalTimesExpanded[mappedPhysiologicalTimedInds]
         # Ensure the indices don't exceed the size of the last dimension of reconstructedSignalData.
         validIndsRight = torch.clamp(mappedPhysiologicalTimedInds, min=0, max=encodedDimension - 1)  # physiologicalTimesExpanded[validIndsLeft] < timepoints
@@ -99,11 +100,11 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         # mappedPhysiologicalTimedInds dimension: batchSize, numSignals, maxSequenceLength
 
         # Get the closest physiological data to the timepoints.
-        physiologicalTimesExpanded = self.pseudoEncodedTimes.view(1, 1, -1).expand_as(resampledSignalData)
-        closestPhysiologicalTimesRight = torch.gather(input=physiologicalTimesExpanded, dim=2, index=validIndsRight)  # Initialize the tensor.
-        closestPhysiologicalTimesLeft = torch.gather(input=physiologicalTimesExpanded, dim=2, index=validIndsLeft)  # Initialize the tensor.
-        closestPhysiologicalDataRight = torch.gather(input=resampledSignalData, dim=2, index=validIndsRight)  # Initialize the tensor.
-        closestPhysiologicalDataLeft = torch.gather(input=resampledSignalData, dim=2, index=validIndsLeft)  # Initialize the tensor.
+        physiologicalTimesExpanded = self.hyperSampledTimes.view(1, 1, -1).expand_as(resampledSignalData)
+        closestPhysiologicalDataLeft = torch.gather(input=resampledSignalData, dim=2, index=validIndsLeft)
+        closestPhysiologicalDataRight = torch.gather(input=resampledSignalData, dim=2, index=validIndsRight)
+        closestPhysiologicalTimesLeft = torch.gather(input=physiologicalTimesExpanded, dim=2, index=validIndsLeft)
+        closestPhysiologicalTimesRight = torch.gather(input=physiologicalTimesExpanded, dim=2, index=validIndsRight)
         assert ((closestPhysiologicalTimesLeft <= timepoints + 0.1) & (timepoints - 0.1 <= closestPhysiologicalTimesRight)).all(), "The timepoints must be within the range of the closest physiological times."
         # closestPhysiologicalData dimension: batchSize, numSignals, maxSequenceLength
 
