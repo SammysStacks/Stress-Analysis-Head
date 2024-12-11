@@ -35,7 +35,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2024-12-11"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2024-12-11 STD-1-5"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Parse Model Parameters ----------------------- #
@@ -133,7 +133,7 @@ if __name__ == "__main__":
         # Store the initial loss information and plot.
         trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)
         if plotSteps: trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate)
-        # trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate)
+        trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate)
 
         # Save the model sometimes (only on the main device).
         if saveFullModel and accelerator.is_local_main_process:
