@@ -131,6 +131,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         interp_func = interp1d(physiologicalTimes, compiledSignalEncoderLayerStates, axis=-1)
         interp_points = np.linspace(0, physiologicalTimes.max(), num=1024)
         interpolated_states = interp_func(interp_points)
+        numSpecificLayers = 1
 
         # Define your colors (min, mean, max)
         # colors = ["#56d0f7", "#ffffff", "#f27fb2"]  # Blue -> Purple -> Red
