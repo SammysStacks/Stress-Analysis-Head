@@ -75,7 +75,7 @@ if __name__ == "__main__":
 
     # Temporary parameters.
     parser.add_argument('--reversibleLR', type=float, default=5e-4, help='The learning rate of the general model.')
-    parser.add_argument('--reversibleWD', type=float, default=1e-6, help='The learning rate of the general model.')
+    parser.add_argument('--reversibleWD', type=float, default=1e-4, help='The learning rate of the general model.')
 
     # Temporary parameters.
     parser.add_argument('--physGenLR', type=float, default=5e-5, help='The learning rate of the general model.')
