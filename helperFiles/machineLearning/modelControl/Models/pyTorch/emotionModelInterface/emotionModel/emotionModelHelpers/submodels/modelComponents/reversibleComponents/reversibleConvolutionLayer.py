@@ -117,8 +117,8 @@ if __name__ == "__main__":
             plt.title(f'Fin', fontsize=14)  # Increase title font size for readability
             plt.legend()
 
-            # plt.xlim(0.98, 1.02)
-            os.mkdir('_lipshitz/')
+            plt.xlim(0.98, 1.02)
+            os.makedirs('_lipshitz/', exist_ok=True)
             plt.savefig(f'_lipshitz/len{sequenceLength2}_layers={layers}')
             plt.show()
-    except Exception as e: pass
+    except Exception as e: print(f"Error: {e}")
