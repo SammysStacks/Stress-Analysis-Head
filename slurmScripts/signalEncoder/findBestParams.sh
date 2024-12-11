@@ -11,27 +11,23 @@ allNumEncodedWeights=(32)  # 6
 numSpecificEncoderLayers_arr=(1)  # 1
 signalEncoderLayers_arr=(8)  # 3
 encodedDimensions_arr=(256)  # 1
-numProfileEpochs_arr=(5 10 20)  # 3
+numProfileEpochs_arr=(25)  # 3
 
 # Finalized parameters.
-lrs_profileGen=('5e-5')
+lrs_reversible=('1e-3')  # 5e-4 <= x <= 5e-3
+lrs_profileGen=('1e-4' '5e-5')  # 5e-5 <= x <= 1e-4
 
 # Learning rates: 27
-wds_profileGen=('1e-6' '1e-4' '1e-2')  # 4
-lrs_reversible=('5e-3' '1e-3' '5e-4')  # 3 -> [1e-4, 1e-2] NOT Inclusive
-lrs_profile=('0.1' '0.01' '0.3' '1')  # 4  -> <= 1
+lrs_profile=('0.1' '0.3' '0.05' '1' '1.3')  # 0.01 <= x <= 2
 
 # Weight decays: 27
+wds_profileGen=('1e-6' '1e-4' '1e-2')  #
 wds_reversible=('0' '1e-4' '1e-2')  # 4
 wds_profile=('0' '0.1' '1e-3')  # 4
 
-wds_reversible=('1e-6')  # 4
-wds_profile=('1e-4')  # 4
-wds_profileGen=('1e-6')  # 4
-
 # Finalized parameters.
 waveletTypes_arr=('bior3.1')  # 'bior3.1' > 'bior3.3' > 'bior2.2' > 'bior3.5'
-optimizers_arr=('RAdam' 'AdamW' 'NAdam')
+optimizers_arr=('AdamW' 'NAdam' 'RAdam')
 
 for numEncodedWeights in "${allNumEncodedWeights[@]}"
 do
