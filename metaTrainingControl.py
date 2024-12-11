@@ -70,7 +70,7 @@ if __name__ == "__main__":
     parser.add_argument('--numActivityChannels', type=int, default=4, help='The number of activity channels.')
 
     # Temporary parameters.
-    parser.add_argument('--profileLR', type=float, default=0.1, help='The learning rate of the physiological model.')
+    parser.add_argument('--profileLR', type=float, default=0.25, help='The learning rate of the physiological model.')
     parser.add_argument('--profileWD', type=float, default=1e-6, help='The learning rate of the general model.')
 
     # Temporary parameters.
