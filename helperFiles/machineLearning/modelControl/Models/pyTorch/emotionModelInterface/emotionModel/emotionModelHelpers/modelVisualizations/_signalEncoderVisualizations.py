@@ -154,6 +154,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Create the heatmap
         plt.figure(figsize=(12, 8))
         plt.imshow(interpolated_states, cmap=custom_cmap, interpolation=None, extent=(physiologicalTimes.min(), physiologicalTimes.max(), 0, numLayers), aspect='auto', origin='lower')
+        plt.hlines(y=1+numSpecificLayers, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
+        plt.hlines(y=numLayers-numSpecificLayers, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
         # Magma is also good
 
         # Add a colorbar
