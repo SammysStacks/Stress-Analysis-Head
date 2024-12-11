@@ -1,3 +1,5 @@
+import os
+
 import torch
 import torch.fft
 import torch.nn as nn
@@ -116,6 +118,7 @@ if __name__ == "__main__":
             plt.legend()
 
             # plt.xlim(0.98, 1.02)
+            os.mkdir('_lipshitz/')
             plt.savefig(f'_lipshitz/len{sequenceLength2}_layers={layers}')
             plt.show()
     except Exception as e: pass
