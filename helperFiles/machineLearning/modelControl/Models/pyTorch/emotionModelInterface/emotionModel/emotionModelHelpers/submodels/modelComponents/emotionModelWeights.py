@@ -56,6 +56,13 @@ class emotionModelWeights(convolutionalHelpers):
     def postProcessingLayerRCNN(numSignals, sequenceLength, numLayers=1):
         return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=numLayers, activationMethod=f"{emotionModelWeights.getReversibleActivation()}")
 
+    def postProcessingLayerCNN(self, numSignals):
+        return self.convolutionalFilters_resNetBlocks(numResNets=1, numBlocks=4, numChannels=[numSignals, numSignals], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False)
+
+    @staticmethod
+    def postProcessingLayerFC(sequenceLength):
+        return emotionModelWeights.linearModel(numInputFeatures=sequenceLength, numOutputFeatures=sequenceLength, activationMethod="SoftSign", addBias=False)
+
     def physiologicalGeneration(self, numOutputFeatures):
         numUpSamples = int(math.log2(numOutputFeatures // modelConstants.numEncodedWeights))
 
@@ -71,10 +78,10 @@ class emotionModelWeights(convolutionalHelpers):
     # ------------------- Emotion/Activity Encoding Architectures ------------------- #
 
     @staticmethod
-    def postProcessingLayerFC(sequenceLength):
+    def postProcessingLayerFC___(sequenceLength):
         return emotionModelWeights.linearModel(numInputFeatures=sequenceLength, numOutputFeatures=sequenceLength, activationMethod="boundedExp", addBias=False)
 
-    def postProcessingLayerCNN(self, numSignals):
+    def postProcessingLayerCNN___(self, numSignals):
         return self.convolutionalFiltersBlocks(numBlocks=4, numChannels=[numSignals, numSignals], kernel_sizes=3, dilations=1, groups=numSignals, strides=1, convType='conv1D', activationMethod="boundedExp", numLayers=None, addBias=False)
 
     def skipConnectionCNN(self, numSignals):
