@@ -56,7 +56,7 @@ class trainingProtocolHelpers:
     def datasetSpecificTraining(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders):
         # Unify all the model weights.
         self.unifyAllModelWeights(allMetaModels, allModels)
-        noReset = random.random() < 0.1
+        noReset = random.random() < 0.25
 
         # For each meta-training model.
         for modelInd in range(len(allMetaModels) + len(allModels)):
@@ -71,7 +71,7 @@ class trainingProtocolHelpers:
 
             # Physiological profile training.
             numEpochs = modelPipeline.resetPhysiologicalProfile(submodel, noReset=noReset)
-            modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=min(numEpochs + 4, self.profileEpochs))  # Profile training.
+            modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=min(numEpochs + 3, self.profileEpochs))  # Profile training.
             self.accelerator.wait_for_everyone()
 
             with torch.no_grad():
