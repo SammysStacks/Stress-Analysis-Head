@@ -26,7 +26,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         if noTimes: physiologicalTimes = np.arange(start=0, stop=len(physiologicalProfile[batchInd]), step=1)
         plt.plot(physiologicalTimes, physiologicalProfile[batchInd], 'o--' if noTimes else '-', c=self.blackColor, label=f"Physiological profile", linewidth=1 if noTimes else 2, markersize=5, alpha=0.5 if noTimes else 0.8)
-        for profileStep in range(numProfileSteps): plt.plot(physiologicalTimes, profileStatePath[profileStep, batchInd], 'o' if noTimes else '-', c=self.lightColors[0], linewidth=1, markersize=3, alpha=1 - 0.8*(numProfileSteps - profileStep)/numProfileSteps)
+        for profileStep in range(numProfileSteps): plt.plot(physiologicalTimes, profileStatePath[profileStep, batchInd], 'o' if noTimes else '-', c=self.lightColors[1], linewidth=1, markersize=3, alpha=0.4*(numProfileSteps - profileStep)/numProfileSteps)
+        for profileStep in range(numProfileSteps): plt.plot(physiologicalTimes, profileStatePath[profileStep, batchInd], 'o' if noTimes else '-', c=self.lightColors[0], linewidth=1, markersize=3, alpha=0.8*(1 - (numProfileSteps - profileStep)/numProfileSteps))
         plt.hlines(y=0, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors='k', linestyles='dashed', linewidth=1)
 
         # Plotting aesthetics.
