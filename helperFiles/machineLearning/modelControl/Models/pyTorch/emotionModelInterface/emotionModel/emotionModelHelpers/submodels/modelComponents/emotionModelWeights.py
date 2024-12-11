@@ -34,7 +34,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def physiologicalInitialization(physiologicalProfile):
-        nn.init.normal_(physiologicalProfile.data, mean=0, std=1/4)
+        nn.init.normal_(physiologicalProfile.data, mean=0, std=1/2)
 
     # ------------------- Neural Operator Architectures ------------------- #
 
