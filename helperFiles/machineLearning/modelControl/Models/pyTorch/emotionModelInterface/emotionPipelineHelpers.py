@@ -1,5 +1,4 @@
 # Import files for machine learning
-import random
 
 from .emotionModel.emotionModelHead import emotionModelHead
 from .emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
@@ -56,13 +55,14 @@ class emotionPipelineHelpers:
     def resetPhysiologicalProfile(self, submodel, noReset=False):
         # Get the current number of epochs for the profile model.
         numEpochs = self.getTrainingEpoch(submodel) + 1
-        if noReset: return min(numEpochs, 4)
+        if numEpochs == 1: return 2
+
+        # Reset and get the parameters that belong to the profile model
+        if numEpochs <= modelParameters.getEpochWarmups(): return 1
+        if noReset: return min(numEpochs, 3)
 
         # Reset and get the parameters that belong to the profile model
         self.model.specificSignalEncoderModel.profileModel.resetProfileHolders()
-        if numEpochs <= modelParameters.getEpochWarmups(): return 1
-
-        # Reset and get the parameters that belong to the profile model
         self.model.specificSignalEncoderModel.profileModel.resetProfileWeights()
         profileParams = set(self.model.specificSignalEncoderModel.profileModel.parameters())
 
@@ -70,7 +70,7 @@ class emotionPipelineHelpers:
         for p in list(self.optimizer.state.keys()):
             if p in profileParams: self.optimizer.state[p] = {}
 
-        return numEpochs
+        return numEpochs + 1
 
     def compileOptimizer(self, submodel):
         # Initialize the optimizer and scheduler.

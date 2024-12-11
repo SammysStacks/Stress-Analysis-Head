@@ -69,12 +69,6 @@ class emotionModelWeights(convolutionalHelpers):
     @staticmethod
     def gradientHook(grad): return grad
 
-    @staticmethod
-    def physiologicalNormalization(physiologicalProfile):
-        physiologicalProfile = physiologicalProfile - physiologicalProfile.mean(dim=-1, keepdim=True)
-        physiologicalProfile = physiologicalProfile / (physiologicalProfile.std(dim=-1, keepdim=True) + 1e-20) / 3
-        return physiologicalProfile
-
     # ------------------- Emotion/Activity Encoding Architectures ------------------- #
 
     @staticmethod

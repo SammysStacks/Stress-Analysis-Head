@@ -14,20 +14,20 @@ encodedDimensions_arr=(256)  # 1
 numProfileEpochs_arr=(25)  # 3
 
 # Finalized parameters.
-lrs_reversible=('1e-3')  # 5e-4 <= x <= 5e-3
-lrs_profileGen=('1e-4' '5e-5')  # 5e-5 <= x <= 1e-4
+lrs_reversible=('1e-3')  # 5e-4 <= x <= 2e-3
+lrs_profileGen=('1e-4') # '5e-5')  # 5e-5 <= x <= 1e-4
 
 # Learning rates: 27
-lrs_profile=('0.1' '0.3' '0.05' '1' '1.3')  # 0.01 <= x <= 2
+lrs_profile=('0.1' '0.25' '0.05')  # 0.01 <= x <= 2
 
 # Weight decays: 27
 wds_profileGen=('1e-6' '1e-4' '1e-2')  #
-wds_reversible=('0' '1e-4' '1e-2')  # 4
-wds_profile=('0' '0.1' '1e-3')  # 4
+wds_reversible=('1e-6' '1e-4' '1e-2')  # 4
+wds_profile=('1e-6' '1e-4' '1e-2')  # 4
 
 # Finalized parameters.
 waveletTypes_arr=('bior3.1')  # 'bior3.1' > 'bior3.3' > 'bior2.2' > 'bior3.5'
-optimizers_arr=('AdamW' 'NAdam' 'RAdam')
+optimizers_arr=('AdamW') # 'NAdam' 'RAdam')
 
 for numEncodedWeights in "${allNumEncodedWeights[@]}"
 do
