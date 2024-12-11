@@ -131,7 +131,7 @@ class CosineAnnealingLR_customized(LRScheduler):
         _warn_get_lr_called_within_step(self)
 
         # Base case: learning rate is constant.
-        if self.last_epoch == 0: return [group["lr"] for group in self.optimizer.param_groups]
+        if self.last_epoch == 0: return [self.absolute_min_lr for _ in self.optimizer.param_groups]
 
         # Apply decay to each base learning rate
         decay_factor = self.multiplicativeFactor ** -((self.T_max - self.last_epoch) % self.T_max)
