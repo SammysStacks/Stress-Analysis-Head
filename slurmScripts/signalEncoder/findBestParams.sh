@@ -14,7 +14,7 @@ encodedDimensions_arr=(256)  # 1
 numProfileEpochs_arr=(5 10 20)  # 3
 
 # Finalized parameters.
-lrs_profileGen=('1e-4')
+lrs_profileGen=('5e-5')
 
 # Learning rates: 27
 wds_profileGen=('1e-6' '1e-4' '1e-2')  # 4
