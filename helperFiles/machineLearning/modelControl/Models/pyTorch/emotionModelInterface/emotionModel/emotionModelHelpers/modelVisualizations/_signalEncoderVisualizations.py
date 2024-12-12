@@ -131,12 +131,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         interp_func = interp1d(physiologicalTimes, compiledSignalEncoderLayerStates, axis=-1)
         interp_points = np.linspace(0, physiologicalTimes.max(), num=1024)
         interpolated_states = interp_func(interp_points)
-        numSpecificLayers = 1
 
-        # Define your colors (min, mean, max)
-        # colors = ["#56d0f7", "#ffffff", "#f27fb2"]  # Blue -> Purple -> Red
-        # custom_cmap = LinearSegmentedColormap.from_list("custom_diverging", colors)
-
+        # Create custom colormap (as in your original code)
         blue_lch = [54., 70., 4.6588]
         red_lch = [54., 90., 0.35470565 + 2 * np.pi]
         blue_rgb = lch2rgb(blue_lch)
@@ -152,31 +148,60 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             colors.append(c)
         custom_cmap = LinearSegmentedColormap.from_list("red_transparent_blue", colors)
 
-        # Create the heatmap
+        # Set your desired normalization ranges
+        # These should be chosen based on your data and how you want to "zoom"
+        first_layer_vmin = interpolated_states[0, :].min()
+        first_layer_vmax = interpolated_states[0, :].max()
+        rest_vmin = interpolated_states[1:, :].min()
+        rest_vmax = interpolated_states[1:, :].max()
+
         plt.figure(figsize=(12, 8))
-        plt.imshow(interpolated_states, cmap=custom_cmap, interpolation=None, extent=(physiologicalTimes.min(), physiologicalTimes.max(), 0, numLayers), aspect='auto', origin='lower')
-        plt.hlines(y=1+numSpecificLayers, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
-        plt.hlines(y=numLayers-numSpecificLayers, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
+
+        # Plot the first layer (layer=0) with its own normalization and colorbar
+        im0 = plt.imshow(interpolated_states[0:1, :],
+                         cmap=custom_cmap,
+                         interpolation=None,
+                         extent=(physiologicalTimes.min(), physiologicalTimes.max(), 0, 1),
+                         aspect='auto',
+                         origin='lower',
+                         vmin=first_layer_vmin,
+                         vmax=first_layer_vmax)
+
+        cbar0 = plt.colorbar(im0, fraction=0.046, pad=0.04)
+        cbar0.set_label("Signal Amplitude (Layer 0)", fontsize=12)
+
+        # Plot the remaining layers separately on the same axes but with a different normalization
+        im_rest = plt.imshow(interpolated_states[1:, :],
+                             cmap=custom_cmap,
+                             interpolation=None,
+                             extent=(physiologicalTimes.min(), physiologicalTimes.max(), 1, numLayers),
+                             aspect='auto',
+                             origin='lower',
+                             vmin=rest_vmin,
+                             vmax=rest_vmax)
+
+        cbar_rest = plt.colorbar(im_rest, fraction=0.046, pad=0.04)
+        cbar_rest.set_label("Signal Amplitude (Other Layers)", fontsize=12)
+
+        # Add horizontal lines to mark layer boundaries
         plt.hlines(y=1, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='-', linewidth=2)
-        # Magma is also good
+        plt.hlines(y=numLayers - 1, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
 
-        # Add a colorbar
-        cbar = plt.colorbar()
-        cbar.set_label("Signal Amplitude", fontsize=12)
-
-        # Add ticks and grid for clarity
+        # Ticks, labels, and formatting
         plt.xticks(fontsize=12)
         plt.yticks(ticks=np.arange(numLayers + 1), labels=np.arange(0, numLayers + 1), fontsize=12)
         plt.grid(False)
-
-        # Format the plotting
         plt.title(f"{plotTitle} epoch{epoch}", fontsize=16)
         plt.xlabel("Time", fontsize=14)
         plt.ylabel("Layer Index", fontsize=14)
 
-        # Save the plot
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
-        else: self.clearFigure(fig=None, legend=None)
+        # Save or clear figure
+        if self.saveDataFolder:
+            self.displayFigure(saveFigureLocation=saveFigureLocation,
+                               saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf",
+                               baseSaveFigureName=f"{plotTitle}.pdf")
+        else:
+            self.clearFigure(fig=None, legend=None)
 
     # --------------------- Visualize Model Training --------------------- #
 
