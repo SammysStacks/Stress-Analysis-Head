@@ -52,9 +52,9 @@ if __name__ == "__main__":
 
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model.')
-    parser.add_argument('--numSharedEncoderLayers', type=int, default=8, help='The number of layers in the model.')
+    parser.add_argument('--numSharedEncoderLayers', type=int, default=12, help='The number of layers in the model.')
     parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
-    parser.add_argument('--numProfileEpochs', type=int, default=25, help='The epochs for profile training.')
+    parser.add_argument('--numProfileEpochs', type=int, default=30, help='The epochs for profile training.')
     parser.add_argument('--numEncodedWeights', type=int, default=32, help='The number of profile weights.')
 
     # Add arguments for the neural operator.
@@ -71,11 +71,11 @@ if __name__ == "__main__":
 
     # Temporary parameters.
     parser.add_argument('--profileLR', type=float, default=0.25, help='The learning rate of the physiological model.')
-    parser.add_argument('--profileWD', type=float, default=1e-6, help='The learning rate of the general model.')
+    parser.add_argument('--profileWD', type=float, default=1e-4, help='The learning rate of the general model.')
 
     # Temporary parameters.
     parser.add_argument('--reversibleLR', type=float, default=1e-3, help='The learning rate of the general model.')
-    parser.add_argument('--reversibleWD', type=float, default=1e-6, help='The learning rate of the general model.')
+    parser.add_argument('--reversibleWD', type=float, default=0, help='The learning rate of the general model.')
 
     # Temporary parameters.
     parser.add_argument('--physGenLR', type=float, default=1e-4, help='The learning rate of the general model.')
