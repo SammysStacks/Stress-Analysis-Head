@@ -167,8 +167,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
                          vmin=first_layer_vmin,
                          vmax=first_layer_vmax)
 
-        cbar0 = plt.colorbar(im0, fraction=0.046, pad=0.04)
-        cbar0.set_label("L0", fontsize=12)
 
         im1 = plt.imshow(interpolated_states[1:2, :],
                          cmap=custom_cmap,
@@ -179,8 +177,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
                          vmin=first_layer_vmin,
                          vmax=first_layer_vmax)
 
-        cbar1 = plt.colorbar(im1, fraction=0.046, pad=0.04)
-        cbar1.set_label("L1", fontsize=12)
+        cbar0 = plt.colorbar(im0, fraction=0.046, pad=0.04)
 
         # Plot the remaining layers separately on the same axes but with a different normalization
         im_rest = plt.imshow(interpolated_states[1:-1, :],
@@ -193,7 +190,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
                              vmax=rest_vmax)
 
         cbar_rest = plt.colorbar(im_rest, fraction=0.046, pad=0.04)
-        cbar_rest.set_label("L2*", fontsize=12)
 
         # Add horizontal lines to mark layer boundaries
         plt.hlines(y=1, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='-', linewidth=2)
