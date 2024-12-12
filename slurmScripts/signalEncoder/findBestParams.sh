@@ -17,7 +17,7 @@ numProfileEpochs_arr=(25 35 15 45)  # 3
 lrs_reversible=('1e-3')  # 5e-4 <= x <= 2e-3
 lrs_profileGen=('1e-4') # '5e-5')  # 5e-5 <= x <= 1e-4
 
-lrs_profile=('0.25' '0.1' '0.05' '1/3')  # 0.01 <= x <= 2
+lrs_profile=('1/5' '1/10' '1/4' '1/3' '1/2')  # 0.01 <= x <= 2
 
 
 # Weight decays: 27
@@ -27,7 +27,7 @@ wds_profile=('0')  # 4
 
 # Finalized parameters.
 waveletTypes_arr=('bior3.1')  # 'bior3.1' > 'bior3.3' > 'bior2.2' > 'bior3.5'
-optimizers_arr=('AdamW' 'NAdam' 'RAdam')
+optimizers_arr=('NAdam' 'AdamW')  # RAdam was bad for retraining profile.
 
 for numEncodedWeights in "${allNumEncodedWeights[@]}"
 do
