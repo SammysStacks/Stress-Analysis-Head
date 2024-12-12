@@ -170,7 +170,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         cbar0 = plt.colorbar(im0, fraction=0.046, pad=0.04)
         cbar0.set_label("L0", fontsize=12)
 
-        im2 = plt.imshow(interpolated_states[-2:-1, :],
+        im1 = plt.imshow(interpolated_states[-2:-1, :],
                          cmap=custom_cmap,
                          interpolation=None,
                          extent=(physiologicalTimes.min(), physiologicalTimes.max(), 0, 1),
@@ -179,7 +179,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
                          vmin=first_layer_vmin,
                          vmax=first_layer_vmax)
 
-        cbar1 = plt.colorbar(im0, fraction=0.046, pad=0.04)
+        cbar1 = plt.colorbar(im1, fraction=0.046, pad=0.04)
         cbar1.set_label("L1", fontsize=12)
 
         # Plot the remaining layers separately on the same axes but with a different normalization
@@ -198,7 +198,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Add horizontal lines to mark layer boundaries
         plt.hlines(y=1, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='-', linewidth=2)
         plt.hlines(y=numLayers - 1, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
-        plt.hlines(y=1, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
+        plt.hlines(y=1 + numLayers, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
 
         # Ticks, labels, and formatting
         plt.xticks(fontsize=12)
