@@ -198,7 +198,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Add horizontal lines to mark layer boundaries
         plt.hlines(y=1, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='-', linewidth=2)
         plt.hlines(y=numLayers - 1, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
-        plt.hlines(y=1 + numLayers, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
+        plt.hlines(y=2, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
 
         # Ticks, labels, and formatting
         plt.xticks(fontsize=12)
