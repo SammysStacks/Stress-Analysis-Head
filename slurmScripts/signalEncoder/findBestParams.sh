@@ -27,7 +27,7 @@ wds_profile=('1e-4')  # 4
 
 # Finalized parameters.
 waveletTypes_arr=('bior3.1')  # 'bior3.1' > 'bior3.3' > 'bior2.2' > 'bior3.5'
-optimizers_arr=('AdamW') # 'NAdam' 'RAdam')
+optimizers_arr=('AdamW' 'NAdam' 'RAdam')
 
 for numEncodedWeights in "${allNumEncodedWeights[@]}"
 do
