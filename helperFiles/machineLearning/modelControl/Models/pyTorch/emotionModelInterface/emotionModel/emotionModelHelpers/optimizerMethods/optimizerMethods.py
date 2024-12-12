@@ -56,7 +56,7 @@ class optimizerMethods:
         # Reduce on plateau (need further editing of loop): optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=0.5, patience=10, threshold=1e-4, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08)
         # Defined lambda function: optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda=lambda_function); lambda_function = lambda epoch: (epoch/50) if epoch < -1 else 1
         # torch.optim.lr_scheduler.constrainedLR(optimizer, start_factor=0.3333333333333333, end_factor=1.0, total_iters=5, last_epoch=-1)
-        return CosineAnnealingLR_customized(optimizer, T_max=1, absolute_min_lr=1e-5, multiplicativeFactor=10, last_epoch=-1)
+        return CosineAnnealingLR_customized(optimizer, T_max=1, absolute_min_lr=5e-5, multiplicativeFactor=10, last_epoch=-1, numWarmupEpochs=1)
 
     @staticmethod
     def getOptimizer(optimizerType, params, lr, weight_decay, momentum=0.9):
@@ -117,9 +117,10 @@ class optimizerMethods:
 
 
 class CosineAnnealingLR_customized(LRScheduler):
-    def __init__(self, optimizer: Optimizer, T_max: int, absolute_min_lr: float, multiplicativeFactor: int, last_epoch: int = -1):
+    def __init__(self, optimizer: Optimizer, T_max: int, absolute_min_lr: float, multiplicativeFactor: int, last_epoch: int = -1, numWarmupEpochs=0):
         self.multiplicativeFactor = multiplicativeFactor  # The multiplicative factor for the learning rate decay.
         self.absolute_min_lr = absolute_min_lr  # The absolute minimum learning rate to use.
+        self.numWarmupEpochs = numWarmupEpochs  # The number of epochs to warm up the learning rate.
         self.T_max = T_max  # The number of iterations before resetting the learning rate.
 
         # Call the parent class constructor
@@ -131,7 +132,7 @@ class CosineAnnealingLR_customized(LRScheduler):
         _warn_get_lr_called_within_step(self)
 
         # Base case: learning rate is constant.
-        if self.last_epoch == 0: return [self.absolute_min_lr for _ in self.optimizer.param_groups]
+        if self.last_epoch <= self.numWarmupEpochs: return [self.absolute_min_lr for _ in self.optimizer.param_groups]
 
         # Apply decay to each base learning rate
         decay_factor = self.multiplicativeFactor ** -((self.T_max - self.last_epoch) % self.T_max)
