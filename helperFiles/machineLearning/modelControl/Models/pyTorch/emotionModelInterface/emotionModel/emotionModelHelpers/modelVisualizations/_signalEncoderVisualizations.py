@@ -156,28 +156,18 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.figure(figsize=(12, 8))
 
         # Plot the first layer (layer=0) with its own normalization and colorbar
-        im0 = plt.imshow(interpolated_states[0:1, :],
+        im0 = plt.imshow(interpolated_states[0:2, :],
                          cmap=custom_cmap,
                          interpolation=None,
-                         extent=(physiologicalTimes.min(), physiologicalTimes.max(), 0, 1),
+                         extent=(physiologicalTimes.min(), physiologicalTimes.max(), 0, 2),
                          aspect='auto',
                          origin='lower',
                          vmin=first_layer_vmin,
                          vmax=first_layer_vmax)
-
-        im1 = plt.imshow(interpolated_states[1:2, :],
-                         cmap=custom_cmap,
-                         interpolation=None,
-                         extent=(physiologicalTimes.min(), physiologicalTimes.max(), 1, 2),
-                         aspect='auto',
-                         origin='lower',
-                         vmin=first_layer_vmin,
-                         vmax=first_layer_vmax)
-
-        cbar0 = plt.colorbar(im0, fraction=0.046, pad=0.04)
+        plt.colorbar(im0, fraction=0.046, pad=0.04)
 
         # Plot the remaining layers separately on the same axes but with a different normalization
-        im_rest = plt.imshow(interpolated_states[1:-1, :],
+        im_rest = plt.imshow(interpolated_states[2:, :],
                              cmap=custom_cmap,
                              interpolation=None,
                              extent=(physiologicalTimes.min(), physiologicalTimes.max(), 2, numLayers),
@@ -185,8 +175,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
                              origin='lower',
                              vmin=rest_vmin,
                              vmax=rest_vmax)
-
-        cbar_rest = plt.colorbar(im_rest, fraction=0.046, pad=0.04)
+        plt.colorbar(im_rest, fraction=0.046, pad=0.04)
 
         # Add horizontal lines to mark layer boundaries
         plt.hlines(y=1, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='-', linewidth=2)
