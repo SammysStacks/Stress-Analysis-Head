@@ -170,7 +170,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         cbar0 = plt.colorbar(im0, fraction=0.046, pad=0.04)
         cbar0.set_label("L0", fontsize=12)
 
-        im1 = plt.imshow(interpolated_states[-2:-1, :],
+        im1 = plt.imshow(interpolated_states[1:2, :],
                          cmap=custom_cmap,
                          interpolation=None,
                          extent=(physiologicalTimes.min(), physiologicalTimes.max(), 0, 1),
