@@ -150,11 +150,10 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Set your desired normalization ranges
         # These should be chosen based on your data and how you want to "zoom"
-        first_layer_vmin = interpolated_states[0, :].min()
-        first_layer_vmax = interpolated_states[0, :].max()
-        second_layer_vmin = interpolated_states[1, :].min()
+        first_layer_vmin = interpolated_states[0:2, :].min()
+        first_layer_vmax = interpolated_states[0:2, :].max()
         rest_vmin = interpolated_states[2:, :].min()
-        rest_vmax = interpolated_states[3:, :].max()
+        rest_vmax = interpolated_states[2:, :].max()
 
         plt.figure(figsize=(12, 8))
 
