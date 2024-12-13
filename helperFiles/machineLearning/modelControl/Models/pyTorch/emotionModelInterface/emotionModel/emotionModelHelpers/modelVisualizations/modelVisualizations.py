@@ -88,7 +88,7 @@ class modelVisualizations(globalPlottingProtocols):
             profileOGStatePath = np.asarray(model.specificSignalEncoderModel.profileModel.profileOGStatePath)  # numProfileSteps, numExperiments, numEncodedWeights
             profileStatePath = np.asarray(model.specificSignalEncoderModel.profileModel.profileStatePath)  # numProfileSteps, numExperiments, encodedDimension
             resampledBiomarkerTimes = model.sharedSignalEncoderModel.hyperSampledTimes.detach().cpu().numpy()  # numTimePoints
-            globalPlottingProtocols.clearFigure(fig=None, legend=None)
+            globalPlottingProtocols.clearFigure(fig=None, legend=None, showPlot=False)
 
             # Plot the loss on the primary GPU.
             if self.accelerator.is_local_main_process:

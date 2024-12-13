@@ -55,18 +55,17 @@ class emotionPipelineHelpers:
     def resetPhysiologicalProfile(self, submodel):
         # Get the current number of epochs for the profile model.
         numEpochs = self.getTrainingEpoch(submodel) + 1
-        if numEpochs < 4: return 2
+        if numEpochs == 1: return 0
 
         # Reset and get the parameters that belong to the profile model
+        profileParams = set(self.model.specificSignalEncoderModel.profileModel.parameters())
         self.model.specificSignalEncoderModel.profileModel.resetProfileHolders()
         self.model.specificSignalEncoderModel.profileModel.resetProfileWeights()
-        profileParams = set(self.model.specificSignalEncoderModel.profileModel.parameters())
 
         # Reset the optimizer state for these parameters
         for p in list(self.optimizer.state.keys()):
             if p in profileParams: self.optimizer.state[p] = {}
-
-        return numEpochs + 1
+        return max(1, numEpochs - 10)  # TODO:
 
     def compileOptimizer(self, submodel):
         # Initialize the optimizer and scheduler.
@@ -75,7 +74,6 @@ class emotionPipelineHelpers:
     def acceleratorInterface(self, dataLoader=None):
         if dataLoader is None: self.optimizer, self.scheduler, self.model = self.accelerator.prepare(self.optimizer, self.scheduler, self.model)
         else: self.optimizer, self.scheduler, self.model, dataLoader = self.accelerator.prepare(self.optimizer, self.scheduler, self.model, dataLoader)
-
         return dataLoader
 
     # ------------------------------------------------------------------ #

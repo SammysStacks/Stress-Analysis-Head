@@ -35,28 +35,23 @@ class globalPlottingProtocols:
         if filePath: os.makedirs(os.path.dirname(filePath), exist_ok=True)
 
     @staticmethod
-    def clearFigure(fig=None, legend=None):
-        plt.show()  # Ensure the plot is displayed
+    def clearFigure(fig=None, legend=None, showPlot=True):
+        if showPlot: plt.show()  # Ensure the plot is displayed
 
         # Clear and close the figure/legend if provided
         if legend is not None: legend.remove()
-        if fig: fig.clear(); plt.close(fig)
+        if fig: fig.clear();  plt.close(fig)
+        else: plt.cla(); plt.clf()
+        plt.close('all')
 
-        # Clear all figures and plots
-        plt.rcdefaults()  # Reset Matplotlib settings to the defaults.
-        plt.close('all')  # Close all open figures
-        plt.cla()  # Clear the current axes
-        plt.clf()  # Clear the current figure
-
-    def displayFigure(self, saveFigureLocation, saveFigureName, baseSaveFigureName=None):
+    def displayFigure(self, saveFigureLocation, saveFigureName, baseSaveFigureName=None, fig=None):
         self._createFolder(self.saveDataFolder + saveFigureLocation)
+        if fig is None: fig = plt.gcf()
 
-        # Save the figure to the desired location.
-        plt.savefig(self.saveDataFolder + saveFigureLocation + saveFigureName)
-
-        # Save the figure to the base folder if desired.
-        if baseSaveFigureName is not None: plt.savefig(self.baseSavingDataFolder + f"{self.datasetName} {baseSaveFigureName}")
-        self.clearFigure()
+        # Save to base location if specified
+        if baseSaveFigureName is not None: fig.savefig(os.path.join(self.baseSavingDataFolder, f"{self.datasetName} {baseSaveFigureName}"))
+        fig.savefig(os.path.join(self.saveDataFolder, f"{saveFigureLocation}{saveFigureName}"))
+        self.clearFigure(fig)  # Clear the figure after saving
 
     def heatmap(self, data, saveDataPath=None, title=None, xlabel=None, ylabel=None):
         # Plot the heatmap
@@ -70,5 +65,5 @@ class globalPlottingProtocols:
         if self.saveDataFolder and saveDataPath:
             fig.savefig(f"{saveDataPath}.pdf", dpi=500, bbox_inches='tight')
             fig.savefig(f"{saveDataPath}.png", dpi=500, bbox_inches='tight')
-        self.clearFigure(fig, legend=None)
+        self.clearFigure(fig, legend=None, showPlot=True)
         plt.rcdefaults()

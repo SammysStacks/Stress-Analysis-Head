@@ -104,8 +104,6 @@ class emotionPipeline(emotionPipelineHelpers):
         self.setupTrainingFlags(self.model, trainingFlag=False)  # Turn off training flags.
         self.accelerator.wait_for_everyone()  # Wait before continuing.
 
-        return emotionProfile
-
     def backpropogateModel(self):
         if self.accelerator.sync_gradients:
             # Clip the gradients to prevent them from exploding.

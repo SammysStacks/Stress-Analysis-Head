@@ -40,7 +40,7 @@ class optimizerMethods:
         modelParams = self.getModelParams(submodel, model)
 
         # Set the optimizer and scheduler.
-        optimizer = self.setOptimizer(modelParams, lr=1e-4, weight_decay=1e-6, optimizerType=self.userInputParams["optimizerType"])
+        optimizer = self.setOptimizer(modelParams, lr=1e-5, weight_decay=1e-6, optimizerType=self.userInputParams["optimizerType"])
         scheduler = self.getLearningRateScheduler(optimizer)
 
         return optimizer, scheduler
@@ -56,7 +56,7 @@ class optimizerMethods:
         # Reduce on plateau (need further editing of loop): optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=0.5, patience=10, threshold=1e-4, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08)
         # Defined lambda function: optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda=lambda_function); lambda_function = lambda epoch: (epoch/50) if epoch < -1 else 1
         # torch.optim.lr_scheduler.constrainedLR(optimizer, start_factor=0.3333333333333333, end_factor=1.0, total_iters=5, last_epoch=-1)
-        return CosineAnnealingLR_customized(optimizer, T_max=1, absolute_min_lr=5e-5, multiplicativeFactor=10, last_epoch=-1, numWarmupEpochs=1)
+        return CosineAnnealingLR_customized(optimizer, numWarmupEpochs=10,  T_max=1, absolute_min_lr=1e-4, multiplicativeFactor=10, warmupFactor=2, last_epoch=-1)  # TODO:
 
     @staticmethod
     def getOptimizer(optimizerType, params, lr, weight_decay, momentum=0.9):
@@ -75,25 +75,37 @@ class optimizerMethods:
         elif optimizerType == 'Adam':
             # Adam is a first-order gradient-based optimization of stochastic objective functions, based on adaptive estimates.
             # It's broadly used and suitable for most problems without much hyperparameter tuning.
-            return optim.Adam(params, lr=lr, betas=(0.7, 0.9), eps=1e-08, weight_decay=weight_decay, amsgrad=False, maximize=False)
+            return optim.Adam(params, lr=lr, betas=(0.7, 0.9), weight_decay=weight_decay, amsgrad=False, maximize=False)
         elif optimizerType == 'AdamW':
             # AdamW modifies the way Adam implements weight decay, decoupling it from the gradient updates, leading to a more effective use of L2 regularization.
             # Use when regularization is a priority and particularly when fine-tuning pre-trained models.
-            return optim.AdamW(params, lr=lr, betas=(0.7, 0.9), eps=1e-08, weight_decay=weight_decay, amsgrad=False, maximize=False)
-        elif optimizerType == 'NAdam':
+            return optim.AdamW(params, lr=lr, betas=(0.7, 0.9), weight_decay=weight_decay, amsgrad=False, maximize=False)
+        elif optimizerType == 'NAdam':  # TODO:
             # NAdam combines Adam with Nesterov momentum, aiming to combine the benefits of Nesterov and Adam.
             # Use in deep architectures where fine control over convergence is needed.
-            # return optim.NAdam(params, lr=lr, betas=(0.7, 0.9), eps=1e-08, weight_decay=weight_decay, momentum_decay=0.01, decoupled_weight_decay=True)
-            return optim.NAdam(params, lr=lr, betas=(0.7, 0.97), eps=1e-08, weight_decay=weight_decay, momentum_decay=0.004, decoupled_weight_decay=True)
-            # return optim.NAdam(params, lr=lr, betas=(0.7, 0.97), eps=1e-08, weight_decay=weight_decay, momentum_decay=0.004, decoupled_weight_decay=True)
+
+            # return optim.NAdam(params, lr=lr, betas=(0.95, 0.999), weight_decay=weight_decay, momentum_decay=0.004, decoupled_weight_decay=True)
+
+            # return optim.NAdam(params, lr=lr, betas=(0.9, 0.999), weight_decay=weight_decay, momentum_decay=0.004, decoupled_weight_decay=True)
+            # return optim.NAdam(params, lr=lr, betas=(0.7, 0.97), weight_decay=weight_decay, momentum_decay=0.001, decoupled_weight_decay=True)
+
+            # return optim.NAdam(params, lr=lr, betas=(0.7, 0.9), weight_decay=weight_decay, momentum_decay=0.004, decoupled_weight_decay=True)
+            return optim.NAdam(params, lr=lr, betas=(0.7, 0.97), weight_decay=weight_decay, momentum_decay=0.001, decoupled_weight_decay=True)
+
+            # return optim.NAdam(params, lr=lr, betas=(0.8, 0.9), weight_decay=weight_decay, momentum_decay=0.001, decoupled_weight_decay=True)
+            # return optim.NAdam(params, lr=lr, betas=(0.9, 0.9), weight_decay=weight_decay, momentum_decay=0.001, decoupled_weight_decay=True)
+            # return optim.NAdam(params, lr=lr, betas=(0.95, 0.9), weight_decay=weight_decay, momentum_decay=0.001, decoupled_weight_decay=True)
+
+
+            # return optim.NAdam(params, lr=lr, betas=(0.95, 0.97), weight_decay=weight_decay, momentum_decay=0.001, decoupled_weight_decay=True)
         elif optimizerType == 'RAdam':
             # RAdam (Rectified Adam) is an Adam variant that introduces a term to rectify the variance of the adaptive learning rate.
             # Use it when facing unstable or poor training results with Adam, especially in smaller sample sizes.
-            return optim.RAdam(params, lr=lr, betas=(0.7, 0.9), eps=1e-08, weight_decay=weight_decay, decoupled_weight_decay=True)
+            return optim.RAdam(params, lr=lr, betas=(0.7, 0.9), weight_decay=weight_decay, decoupled_weight_decay=True)
         elif optimizerType == 'Adamax':
             # Adamax is a variant of Adam based on the infinity norm, proposed as a more stable alternative.
-            # Suitable for embeddings and sparse gradients.
-            return optim.Adamax(params, lr=lr, betas=(0.7, 0.9), eps=1e-08, weight_decay=weight_decay)
+            # Suitable for embeddings and sparse graients.
+            return optim.Adamax(params, lr=lr, betas=(0.7, 0.9), weight_decay=weight_decay)
         elif optimizerType == 'ASGD':
             # ASGD (Averaged Stochastic Gradient Descent) is used when you require robustness over a large number of epochs.
             # Suitable for larger-scale and less well-behaved problems; often used in place of SGD when training for a very long time.
@@ -105,7 +117,7 @@ class optimizerMethods:
         elif optimizerType == 'RMSprop':
             # RMSprop is an adaptive learning rate method designed to solve Adagrad's radically diminishing learning rates.
             # It is well-suited to handle non-stationary data as in training neural networks.
-            return optim.RMSprop(params, lr=lr, alpha=0.99, eps=1e-08, weight_decay=weight_decay, momentum=momentum, centered=False)
+            return optim.RMSprop(params, lr=lr, alpha=0.99, weight_decay=weight_decay, momentum=momentum, centered=False)
         elif optimizerType == 'Rprop':
             # Rprop (Resilient Propagation) uses only the signs of the gradients, disregarding their magnitude.
             # Suitable for batch training, where the robustness of noisy gradients and the size of updates matters.
@@ -114,15 +126,15 @@ class optimizerMethods:
             # SGD (Stochastic Gradient Descent) is simple yet effective, suitable for large datasets.
             # Use with momentum for non-convex optimization; ideal for most cases unless complexities require adaptive learning rates.
             return optim.SGD(params, lr=lr, momentum=momentum, dampening=0, weight_decay=weight_decay, nesterov=True)
-        else:
-            assert False, "No optimizer initialized"
+        else: assert False, f"No optimizer initialized: {optimizerType}"
 
 
 class CosineAnnealingLR_customized(LRScheduler):
-    def __init__(self, optimizer: Optimizer, T_max: int, absolute_min_lr: float, multiplicativeFactor: int, last_epoch: int = -1, numWarmupEpochs=0):
+    def __init__(self, optimizer: Optimizer, T_max: int, absolute_min_lr: float, multiplicativeFactor: int, warmupFactor: int,  last_epoch: int = -1, numWarmupEpochs=0):
         self.multiplicativeFactor = multiplicativeFactor  # The multiplicative factor for the learning rate decay.
         self.absolute_min_lr = absolute_min_lr  # The absolute minimum learning rate to use.
         self.numWarmupEpochs = numWarmupEpochs  # The number of epochs to warm up the learning rate.
+        self.warmupFactor = warmupFactor  # The factor to increase the learning rate during warmup.
         self.T_max = T_max  # The number of iterations before resetting the learning rate.
 
         # Call the parent class constructor
@@ -134,8 +146,10 @@ class CosineAnnealingLR_customized(LRScheduler):
         _warn_get_lr_called_within_step(self)
 
         # Base case: learning rate is constant.
-        if self.last_epoch <= self.numWarmupEpochs: return [self.absolute_min_lr for _ in self.optimizer.param_groups]
+        if self.last_epoch <= self.numWarmupEpochs: self.updateStep(self.warmupFactor, self.base_lrs)
+        return self.updateStep(self.multiplicativeFactor, self.base_lrs)
 
+    def updateStep(self, multiplicativeFactor, base_lrs):
         # Apply decay to each base learning rate
-        decay_factor = self.multiplicativeFactor ** -((self.T_max - self.last_epoch) % self.T_max)
-        return [max(self.absolute_min_lr, base_lr * decay_factor) for base_lr in self.base_lrs]
+        decay_factor = multiplicativeFactor ** -((self.T_max - self.last_epoch) % self.T_max)
+        return [max(self.absolute_min_lr, base_lr * decay_factor) for base_lr in base_lrs]

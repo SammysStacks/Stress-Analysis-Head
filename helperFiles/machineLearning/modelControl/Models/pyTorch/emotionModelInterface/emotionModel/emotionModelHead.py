@@ -274,7 +274,7 @@ class emotionModelHead(nn.Module):
         # Optionally, plot the physiological profile for visual comparison
         resampledBiomarkerTimes = self.sharedSignalEncoderModel.hyperSampledTimes.clone().detach().cpu().numpy()
         plt.plot(resampledBiomarkerTimes, physiologicalProfile[firstBatchInd].clone().detach().cpu().numpy(), 'tab:red', linewidth=1, label='Physiological Profile', alpha=2/3)
-        plt.plot(torch.linspace(start=resampledBiomarkerTimes[0], end=resampledBiomarkerTimes[-1], steps=physiologicalProfileOG.size(-1)).clone().detach().cpu().numpy(), physiologicalProfileOG[firstBatchInd].clone().detach().cpu().numpy(), 'k', linewidth=1, label='Original Profile', alpha=0.75)
+        plt.plot(torch.linspace(start=resampledBiomarkerTimes[0], end=resampledBiomarkerTimes[-1], steps=physiologicalProfileOG.size(-1)).clone().detach().cpu().numpy(), physiologicalProfileOG[firstBatchInd].clone().detach().cpu().numpy(), 'ok', linewidth=1, markersize=3,  label='Original Profile', alpha=0.75)
         plt.title(f"batchInd{firstBatchInd}")
         plt.show()
 

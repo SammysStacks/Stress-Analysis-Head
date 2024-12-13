@@ -37,7 +37,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Save the figure.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
-        else: self.clearFigure(fig=None, legend=None)
+        else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def plotPhysiologicalError(self, physiologicalTimes, physiologicalProfile, reconstructedPhysiologicalProfile, epoch=0, saveFigureLocation="", plotTitle="Signal Encoding"):
         # Extract the signal dimensions.
@@ -55,7 +55,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Save the figure.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
-        else: self.clearFigure(fig=None, legend=None)
+        else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def plotPhysiologicalReconstruction(self, physiologicalTimes, physiologicalProfile, reconstructedPhysiologicalProfile, epoch=0, saveFigureLocation="", plotTitle="Signal Encoding"):
         # Extract the signal dimensions.
@@ -73,7 +73,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Save the figure.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
-        else: self.clearFigure(fig=None, legend=None)
+        else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def plotPhysiologicalOG(self, physiologicalProfileOG, epoch, saveFigureLocation, plotTitle):
         batchInd = 0
@@ -88,7 +88,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Save the figure.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
-        else: self.clearFigure(fig=None, legend=None)
+        else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def plotEncoder(self, initialSignalData, reconstructedSignals, comparisonTimes, comparisonSignal, epoch, saveFigureLocation="", plotTitle="Encoder Prediction", numSignalPlots=1):
         # Assert the integrity of the incoming data
@@ -120,7 +120,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
             # Save the figure.
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
-            else: self.clearFigure(fig=None, legend=None)
+            else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def plotSignalEncodingStatePath(self, physiologicalTimes, compiledSignalEncoderLayerStates, epoch, saveFigureLocation, plotTitle):
         numLayers, numExperiments, numSignals, encodedDimension = compiledSignalEncoderLayerStates.shape
@@ -138,6 +138,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         blue_rgb = lch2rgb(blue_lch)
         red_rgb = lch2rgb(red_lch)
         white_rgb = np.array([1., 1., 1.])
+        numInitLayers = 2
 
         colors = []
         for alpha in np.linspace(1, 0, 100):
@@ -149,54 +150,36 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         custom_cmap = LinearSegmentedColormap.from_list("red_transparent_blue", colors)
 
         # These should be chosen based on your data and how you want to "zoom"
-        first_layer_vmin = interpolated_states[0:2, :].min()
-        first_layer_vmax = interpolated_states[0:2, :].max()
-        rest_vmin = interpolated_states[2:, :].min()
-        rest_vmax = interpolated_states[2:, :].max()
+        physiologicalTimes_finalExtent = (physiologicalTimes.min(), physiologicalTimes.max(), numInitLayers, numLayers)
+        physiologicalTimes_initExtent = (physiologicalTimes.min(), physiologicalTimes.max(), 0, numInitLayers)
+        first_layer_vmin = interpolated_states[0:numInitLayers, :].min()
+        first_layer_vmax = interpolated_states[0:numInitLayers, :].max()
+        rest_vmin = interpolated_states[numInitLayers:, :].min()
+        rest_vmax = interpolated_states[numInitLayers:, :].max()
         plt.figure(figsize=(12, 8))
-
+        
         # Plot the first layer (layer=0) with its own normalization and colorbar
-        im0 = plt.imshow(interpolated_states[0:2, :],
-                         cmap=custom_cmap,
-                         interpolation=None,
-                         extent=(physiologicalTimes.min(), physiologicalTimes.max(), 0, 2),
-                         aspect='auto',
-                         origin='lower',
-                         vmin=first_layer_vmin,
-                         vmax=first_layer_vmax)
+        im0 = plt.imshow(interpolated_states[0:numInitLayers, :], cmap=custom_cmap, interpolation=None,  extent=physiologicalTimes_initExtent, aspect='auto', origin='lower',  vmin=first_layer_vmin, vmax=first_layer_vmax)
+        im_rest = plt.imshow(interpolated_states[numInitLayers:, :],  cmap=custom_cmap, interpolation=None, extent=physiologicalTimes_finalExtent,  aspect='auto', origin='lower', vmin=rest_vmin, vmax=rest_vmax)
+        plt.colorbar(im_rest, fraction=0.046, pad=0.04)
         plt.colorbar(im0, fraction=0.046, pad=0.04)
 
-        # Plot the remaining layers separately on the same axes but with a different normalization
-        im_rest = plt.imshow(interpolated_states[2:, :],
-                             cmap=custom_cmap,
-                             interpolation=None,
-                             extent=(physiologicalTimes.min(), physiologicalTimes.max(), 2, numLayers),
-                             aspect='auto',
-                             origin='lower',
-                             vmin=rest_vmin,
-                             vmax=rest_vmax)
-        plt.colorbar(im_rest, fraction=0.046, pad=0.04)
-
         # Add horizontal lines to mark layer boundaries
-        plt.hlines(y=1, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='-', linewidth=2)
         plt.hlines(y=numLayers - 1, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
         plt.hlines(y=2, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
+        plt.hlines(y=1, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='-', linewidth=2)
 
         # Ticks, labels, and formatting
-        plt.xticks(fontsize=12)
         plt.yticks(ticks=np.arange(numLayers + 1), labels=np.arange(0, numLayers + 1), fontsize=12)
+        plt.title(label=f"{plotTitle} epoch{epoch}", fontsize=16)
+        plt.ylabel(ylabel="Layer Index", fontsize=14)
+        plt.xlabel(xlabel="Time", fontsize=14)
+        plt.xticks(fontsize=12)
         plt.grid(False)
-        plt.title(f"{plotTitle} epoch{epoch}", fontsize=16)
-        plt.xlabel("Time", fontsize=14)
-        plt.ylabel("Layer Index", fontsize=14)
 
         # Save or clear figure
-        if self.saveDataFolder:
-            self.displayFigure(saveFigureLocation=saveFigureLocation,
-                               saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf",
-                               baseSaveFigureName=f"{plotTitle}.pdf")
-        else:
-            self.clearFigure(fig=None, legend=None)
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        else: self.clearFigure(fig=None, legend=None, showPlot=False)  # TODO: 
 
     # --------------------- Visualize Model Training --------------------- #
 
@@ -208,7 +191,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Extract the shapes of the data
         batchSize, numSignals, numTotalPoints = originalSignal.shape
         batchSize, numSignals, numEncodedPoints = comparisonSignal.shape
-
         if batchSize == 0: return None
 
         batchInd = 0
@@ -225,9 +207,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
             # Save the plot
             if self.saveDataFolder: self.displayFigure(saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
-            else: self.clearFigure(fig=None, legend=None)
-
-            # There are too many signals to plot.
+            else: self.clearFigure(fig=None, legend=None, showPlot=True)
             if signalInd + 1 == numSignalPlots: break
 
     def plotAllSignalComparisons(self, distortedSignals, reconstructedDistortedSignals, trueSignal, epoch, signalInd, saveFigureLocation, plotTitle):
@@ -248,4 +228,4 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
-        else: self.clearFigure(fig=None, legend=None)
+        else: self.clearFigure(fig=None, legend=None, showPlot=True)
