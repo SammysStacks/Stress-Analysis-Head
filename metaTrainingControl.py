@@ -35,7 +35,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2024-12-12 (0o9 0o999) 0o004"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2024-12-12"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Parse Model Parameters ----------------------- #
@@ -80,6 +80,11 @@ if __name__ == "__main__":
     # Temporary parameters.
     parser.add_argument('--physGenLR', type=float, default=1e-4, help='The learning rate of the general model.')
     parser.add_argument('--physGenWD', type=float, default=0, help='The learning rate of the general model.')
+
+    # Add arguments for the emotion and activity architecture.
+    parser.add_argument('--momentum_decay', type=int, default=6, help='Momentum decay for the optimizer.')
+    parser.add_argument('--beta1', type=float, default=0.7, help='Beta1 for the optimizer.')
+    parser.add_argument('--beta2', type=float, default=0.999, help='Beta2 for the optimizer.')
 
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())

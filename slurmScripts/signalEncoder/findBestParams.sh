@@ -21,6 +21,10 @@ lrs_profile=('0.25' '0.1' '0.2' '0.333' '0.5')  # 0.01 <= x <= 2
 wds_profile=('0' '1e-4' '1e-6' '1e-2')  # 4
 numProfileEpochs_arr=(30)  # 3
 
+beta1s=('0.9' '0.95' '0.8' '0.7' '0.6' '0.5')  # 0.5 <= x <= 0.95
+beta2s=('0.999' '0.99' '0.9' '0.94')  # 0.9 <= x <= 0.999
+momentums=('0.004' '0.01' '0.001' '0')  # 0.9 <= x <= 0.999
+
 wds_profile=('0')  #
 lrs_profile=('0.25')  #
 
@@ -32,6 +36,11 @@ wds_reversible=('0')  # 4
 waveletTypes_arr=('bior3.1')  # 'bior3.1' > 'bior3.3' > 'bior2.2' > 'bior3.5'
 optimizers_arr=('NAdam')  # 'AdamW'; RAdam was bad for retraining profile.
 
+for beta1s in "${beta1s[@]}"
+do
+for beta2s in "${beta2s[@]}"
+do
+for momentums in "${momentums[@]}"
 for numEncodedWeights in "${allNumEncodedWeights[@]}"
 do
   for numProfileEpochs in "${numProfileEpochs_arr[@]}"

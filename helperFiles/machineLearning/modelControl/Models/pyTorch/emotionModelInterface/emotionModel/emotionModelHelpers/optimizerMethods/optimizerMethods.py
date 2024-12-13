@@ -56,7 +56,7 @@ class optimizerMethods:
         # Reduce on plateau (need further editing of loop): optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=0.5, patience=10, threshold=1e-4, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08)
         # Defined lambda function: optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda=lambda_function); lambda_function = lambda epoch: (epoch/50) if epoch < -1 else 1
         # torch.optim.lr_scheduler.constrainedLR(optimizer, start_factor=0.3333333333333333, end_factor=1.0, total_iters=5, last_epoch=-1)
-        return CosineAnnealingLR_customized(optimizer, numWarmupEpochs=4,  T_max=1, absolute_min_lr=1e-5, multiplicativeFactor=10, warmupFactor=2, last_epoch=-1)  # TODO:
+        return CosineAnnealingLR_customized(optimizer=optimizer,  T_max=1, absolute_min_lr=5e-5, multiplicativeFactor=10, numWarmupEpochs=modelConstants.numWarmups, warmupFactor=2, last_epoch=-1)
 
     @staticmethod
     def getOptimizer(optimizerType, params, lr, weight_decay, momentum=0.9):
@@ -84,7 +84,11 @@ class optimizerMethods:
             # NAdam combines Adam with Nesterov momentum, aiming to combine the benefits of Nesterov and Adam.
             # Use in deep architectures where fine control over convergence is needed.
             # return optim.NAdam(params, lr=lr, betas=(0.95, 0.999), weight_decay=weight_decay, momentum_decay=0.004, decoupled_weight_decay=True)
-            return optim.NAdam(params, lr=lr, betas=(0.9, 0.999), weight_decay=weight_decay, momentum_decay=0.004, decoupled_weight_decay=True)
+            momentum_decay = modelConstants.userInputParams["momentum_decay"]
+            beta1 = modelConstants.userInputParams["beta1"]
+            beta2 = modelConstants.userInputParams["beta2"]
+
+            return optim.NAdam(params, lr=lr, betas=(beta1, beta2), weight_decay=weight_decay, momentum_decay=momentum_decay, decoupled_weight_decay=True)
 
         elif optimizerType == 'RAdam':
             # RAdam (Rectified Adam) is an Adam variant that introduces a term to rectify the variance of the adaptive learning rate.
@@ -118,7 +122,7 @@ class optimizerMethods:
 
 
 class CosineAnnealingLR_customized(LRScheduler):
-    def __init__(self, optimizer: Optimizer, T_max: int, absolute_min_lr: float, multiplicativeFactor: int, warmupFactor: int,  last_epoch: int = -1, numWarmupEpochs=0):
+    def __init__(self, optimizer: Optimizer, T_max: int, absolute_min_lr: float, multiplicativeFactor: int, numWarmupEpochs: int, warmupFactor: int,  last_epoch: int = -1):
         self.multiplicativeFactor = multiplicativeFactor  # The multiplicative factor for the learning rate decay.
         self.absolute_min_lr = absolute_min_lr  # The absolute minimum learning rate to use.
         self.numWarmupEpochs = numWarmupEpochs  # The number of epochs to warm up the learning rate.
@@ -134,8 +138,8 @@ class CosineAnnealingLR_customized(LRScheduler):
         _warn_get_lr_called_within_step(self)
 
         # Base case: learning rate is constant.
-        if self.last_epoch <= self.numWarmupEpochs: self.updateStep(self.warmupFactor, self.base_lrs)
-        return self.updateStep(self.multiplicativeFactor, self.base_lrs)
+        if self.last_epoch <= self.numWarmupEpochs: return [self.absolute_min_lr for _ in self.base_lrs]
+        return self.updateStep(multiplicativeFactor=self.multiplicativeFactor, base_lrs=self.base_lrs)
 
     def updateStep(self, multiplicativeFactor, base_lrs):
         # Apply decay to each base learning rate

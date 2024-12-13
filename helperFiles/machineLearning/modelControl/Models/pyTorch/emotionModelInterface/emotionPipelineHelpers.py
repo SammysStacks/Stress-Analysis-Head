@@ -6,7 +6,6 @@ from .emotionModel.emotionModelHelpers.generalMethods.dataAugmentation import da
 from .emotionModel.emotionModelHelpers.generalMethods.modelHelpers import modelHelpers
 from .emotionModel.emotionModelHelpers.lossInformation.organizeTrainingLosses import organizeTrainingLosses
 from .emotionModel.emotionModelHelpers.modelConstants import modelConstants
-from .emotionModel.emotionModelHelpers.modelParameters import modelParameters
 from .emotionModel.emotionModelHelpers.modelVisualizations.modelVisualizations import modelVisualizations
 from .emotionModel.emotionModelHelpers.optimizerMethods.optimizerMethods import optimizerMethods
 
@@ -65,7 +64,7 @@ class emotionPipelineHelpers:
         # Reset the optimizer state for these parameters
         for p in list(self.optimizer.state.keys()):
             if p in profileParams: self.optimizer.state[p] = {}
-        return max(3, numEpochs - 4)  # TODO:
+        return max(3, min(2, numEpochs - modelConstants.numWarmups))
 
     def compileOptimizer(self, submodel):
         # Initialize the optimizer and scheduler.
