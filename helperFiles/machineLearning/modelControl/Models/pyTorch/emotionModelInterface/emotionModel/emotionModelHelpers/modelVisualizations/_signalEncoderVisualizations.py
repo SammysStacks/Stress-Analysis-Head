@@ -128,9 +128,10 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Interpolate the states.
         compiledSignalEncoderLayerStates = compiledSignalEncoderLayerStates[:, batchInd, signalInd, :]
-        interp_func = interp1d(physiologicalTimes, compiledSignalEncoderLayerStates, axis=-1)
-        interp_points = np.linspace(0, physiologicalTimes.max(), num=1024)
-        interpolated_states = interp_func(interp_points)
+        # interp_func = interp1d(physiologicalTimes, compiledSignalEncoderLayerStates, axis=-1)
+        # interp_points = np.linspace(start=0, stop=physiologicalTimes.max(), num=1024)
+        # interpolated_states = interp_func(interp_points)
+        interpolated_states = compiledSignalEncoderLayerStates
 
         # Create custom colormap (as in your original code)
         blue_lch = [54., 70., 4.6588]

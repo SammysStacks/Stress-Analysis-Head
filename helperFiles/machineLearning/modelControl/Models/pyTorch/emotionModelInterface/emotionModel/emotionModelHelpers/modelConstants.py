@@ -48,7 +48,7 @@ class modelConstants:
     numEncodedWeights = None  # The number of encoded weights.
     minMaxScale = 1  # The maximum value for the min-max scaling.
     numBatches = 16  # The number of batches to use in the model.
-    numWarmups = 6  # The number of warmup epochs.
+    numWarmups = 5  # The number of warmup epochs.
 
     # Specify the data interface parameter names.
     signalChannelNames = [timeChannel, signalChannel]
@@ -56,7 +56,7 @@ class modelConstants:
     # Specify the saving parameters.
     specificModelWeights = [specificSignalEncoderModel, specificEmotionModel, specificActivityModel]
     sharedModelWeights = [sharedSignalEncoderModel, sharedEmotionModel, sharedActivityModel]
-    userInputParams = {'numProfileEpochs': 30}
+    userInputParams = {}
 
     @classmethod
     def updateModelParams(cls, userInputParams):

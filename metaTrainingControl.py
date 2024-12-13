@@ -82,21 +82,18 @@ if __name__ == "__main__":
     parser.add_argument('--physGenWD', type=float, default=0, help='The learning rate of the general model.')
 
     # Add arguments for the emotion and activity architecture.
-    parser.add_argument('--momentum_decay', type=int, default=0.001, help='Momentum decay for the optimizer.')
-    parser.add_argument('--beta1', type=float, default=0.7, help='Beta1 for the optimizer.')
-    parser.add_argument('--beta2', type=float, default=0.97, help='Beta2 for the optimizer.')
+    parser.add_argument('--momentum_decay', type=int, default=0.01, help='Momentum decay for the optimizer.')
+    parser.add_argument('--beta1', type=float, default=0.5, help='Beta1 for the optimizer.')
+    parser.add_argument('--beta2', type=float, default=0.9, help='Beta2 for the optimizer.')
 
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
-    submodel = userInputParams['submodel']
 
     # Compile additional input parameters.
-    print("Frequency resolution:", modelConstants.timeWindows[-1]/userInputParams['encodedDimension'])
     userInputParams = modelParameters.getNeuralParameters(userInputParams)
-    print("Arguments:", userInputParams)
-
-    # Update the model parameters.
     modelConstants.updateModelParams(userInputParams)
+    submodel = userInputParams['submodel']
+    print("Arguments:", userInputParams)
 
     # --------------------------- Setup Training --------------------------- #
 
