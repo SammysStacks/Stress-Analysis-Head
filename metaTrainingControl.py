@@ -82,7 +82,7 @@ if __name__ == "__main__":
     parser.add_argument('--physGenWD', type=float, default=0, help='The learning rate of the general model.')
 
     # Add arguments for the emotion and activity architecture.
-    parser.add_argument('--momentum_decay', type=int, default=0.01, help='Momentum decay for the optimizer.')
+    parser.add_argument('--momentum_decay', type=float, default=0.01, help='Momentum decay for the optimizer.')
     parser.add_argument('--beta1', type=float, default=0.5, help='Beta1 for the optimizer.')
     parser.add_argument('--beta2', type=float, default=0.9, help='Beta2 for the optimizer.')
 
