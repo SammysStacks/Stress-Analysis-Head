@@ -38,49 +38,53 @@ optimizers_arr=('NAdam')  # 'AdamW'; RAdam was bad for retraining profile.
 
 for beta1s in "${beta1s[@]}"
 do
-for beta2s in "${beta2s[@]}"
-do
-for momentums in "${momentums[@]}"
-for numEncodedWeights in "${allNumEncodedWeights[@]}"
-do
-  for numProfileEpochs in "${numProfileEpochs_arr[@]}"
+  for beta2s in "${beta2s[@]}"
   do
-    for lr_profile in "${lrs_profile[@]}"
+    for momentums in "${momentums[@]}"
     do
-      for wd_reversible in "${wds_reversible[@]}"
+      for numEncodedWeights in "${allNumEncodedWeights[@]}"
       do
-        for wd_profile in "${wds_profile[@]}"
+        for numProfileEpochs in "${numProfileEpochs_arr[@]}"
         do
-          for lr_reversible in "${lrs_reversible[@]}"
+          for lr_profile in "${lrs_profile[@]}"
           do
-            for wd_profileGen in "${wds_profileGen[@]}"
+            for wd_reversible in "${wds_reversible[@]}"
             do
-              for lr_profileGen in "${lrs_profileGen[@]}"
+              for wd_profile in "${wds_profile[@]}"
               do
-                for optimizer in "${optimizers_arr[@]}"
+                for lr_reversible in "${lrs_reversible[@]}"
                 do
-                  for waveletType in "${waveletTypes_arr[@]}"
+                  for wd_profileGen in "${wds_profileGen[@]}"
                   do
-                    for encodedDimension in "${encodedDimensions_arr[@]}"
+                    for lr_profileGen in "${lrs_profileGen[@]}"
                     do
-                      for numSpecificEncoderLayers in "${numSpecificEncoderLayers_arr[@]}"
+                      for optimizer in "${optimizers_arr[@]}"
                       do
-                        for numSharedEncoderLayers in "${signalEncoderLayers_arr[@]}"
+                        for waveletType in "${waveletTypes_arr[@]}"
                         do
-                          # Check if numSpecificEncoderLayers is greater than half the numSharedEncoderLayers
-                          if [ $((2 * numSpecificEncoderLayers)) -gt "$numSharedEncoderLayers" ]; then
-                            continue  # Skip this iteration if the condition is true
-                          fi
+                          for encodedDimension in "${encodedDimensions_arr[@]}"
+                          do
+                            for numSpecificEncoderLayers in "${numSpecificEncoderLayers_arr[@]}"
+                            do
+                              for numSharedEncoderLayers in "${signalEncoderLayers_arr[@]}"
+                              do
+                                # Check if numSpecificEncoderLayers is greater than half the numSharedEncoderLayers
+                                if [ $((2 * numSpecificEncoderLayers)) -gt "$numSharedEncoderLayers" ]; then
+                                  continue  # Skip this iteration if the condition is true
+                                fi
 
-                          echo "Submitting job with $numSharedEncoderLayers numSharedEncoderLayers, $numSpecificEncoderLayers numSpecificEncoderLayers, $encodedDimension encodedDimension, $waveletType waveletType, $optimizer optimizer, $lr_profile lr_profile, $lr_reversible lr_reversible"
+                                echo "Submitting job with $numSharedEncoderLayers numSharedEncoderLayers, $numSpecificEncoderLayers numSpecificEncoderLayers, $encodedDimension encodedDimension, $waveletType waveletType, $optimizer optimizer, $lr_profile lr_profile, $lr_reversible lr_reversible"
 
-                          if [ "$1" == "CPU" ]; then
-                              sbatch -J "signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_CPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$numProfileEpochs" "$1" "$waveletType" "$optimizer" "$lr_profile" "$lr_reversible" "$lr_profileGen" "$numEncodedWeights" "$wd_profile" "$wd_reversible" "$wd_profileGen"
-                          elif [ "$1" == "GPU" ]; then
-                              sbatch -J "signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_GPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$numProfileEpochs" "$1" "$waveletType" "$optimizer" "$lr_profile" "$lr_reversible" "$lr_profileGen" "$numEncodedWeights" "$wd_profile" "$wd_reversible" "$wd_profileGen"
-                          else
-                              echo "No known device listed: $1"
-                          fi
+                                if [ "$1" == "CPU" ]; then
+                                    sbatch -J "signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_CPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$numProfileEpochs" "$1" "$waveletType" "$optimizer" "$lr_profile" "$lr_reversible" "$lr_profileGen" "$numEncodedWeights" "$wd_profile" "$wd_reversible" "$wd_profileGen"
+                                elif [ "$1" == "GPU" ]; then
+                                    sbatch -J "signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_GPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$numProfileEpochs" "$1" "$waveletType" "$optimizer" "$lr_profile" "$lr_reversible" "$lr_profileGen" "$numEncodedWeights" "$wd_profile" "$wd_reversible" "$wd_profileGen"
+                                else
+                                    echo "No known device listed: $1"
+                                fi
+                              done
+                            done
+                          done
                         done
                       done
                     done
@@ -91,6 +95,6 @@ do
           done
         done
       done
-    done
-  done
-done
+      done
+
+      
