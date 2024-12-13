@@ -17,8 +17,12 @@ numProfileEpochs_arr=(30 10 40)  # 3
 lrs_reversible=('1e-3')  # 5e-4 <= x <= 2e-3
 lrs_profileGen=('1e-4') # '5e-5')  # 5e-5 <= x <= 1e-4
 
-lrs_profile=('1/5' '1/10' '1/4' '1/3' '1/2')  # 0.01 <= x <= 2
+lrs_profile=('0.25' '0.1' '0.2' '0.333' '0.5')  # 0.01 <= x <= 2
 wds_profile=('0' '1e-4' '1e-6' '1e-2')  # 4
+numProfileEpochs_arr=(30)  # 3
+
+wds_profile=('0')  #
+lrs_profile=('0.25')  #
 
 # Weight decays: 27
 wds_profileGen=('0')  #
