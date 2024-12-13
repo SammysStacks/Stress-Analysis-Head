@@ -56,7 +56,7 @@ class optimizerMethods:
         # Reduce on plateau (need further editing of loop): optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=0.5, patience=10, threshold=1e-4, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08)
         # Defined lambda function: optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda=lambda_function); lambda_function = lambda epoch: (epoch/50) if epoch < -1 else 1
         # torch.optim.lr_scheduler.constrainedLR(optimizer, start_factor=0.3333333333333333, end_factor=1.0, total_iters=5, last_epoch=-1)
-        return CosineAnnealingLR_customized(optimizer, numWarmupEpochs=10,  T_max=1, absolute_min_lr=1e-4, multiplicativeFactor=10, warmupFactor=2, last_epoch=-1)  # TODO:
+        return CosineAnnealingLR_customized(optimizer, numWarmupEpochs=6,  T_max=1, absolute_min_lr=1e-4, multiplicativeFactor=10, warmupFactor=2, last_epoch=-1)  # TODO:
 
     @staticmethod
     def getOptimizer(optimizerType, params, lr, weight_decay, momentum=0.9):
@@ -90,7 +90,7 @@ class optimizerMethods:
             # return optim.NAdam(params, lr=lr, betas=(0.7, 0.97), weight_decay=weight_decay, momentum_decay=0.001, decoupled_weight_decay=True)
 
             # return optim.NAdam(params, lr=lr, betas=(0.7, 0.9), weight_decay=weight_decay, momentum_decay=0.004, decoupled_weight_decay=True)
-            return optim.NAdam(params, lr=lr, betas=(0.7, 0.97), weight_decay=weight_decay, momentum_decay=0.001, decoupled_weight_decay=True)
+            return optim.NAdam(params, lr=lr, betas=(0.9, 0.97), weight_decay=weight_decay, momentum_decay=0.004, decoupled_weight_decay=True)
 
             # return optim.NAdam(params, lr=lr, betas=(0.8, 0.9), weight_decay=weight_decay, momentum_decay=0.001, decoupled_weight_decay=True)
             # return optim.NAdam(params, lr=lr, betas=(0.9, 0.9), weight_decay=weight_decay, momentum_decay=0.001, decoupled_weight_decay=True)

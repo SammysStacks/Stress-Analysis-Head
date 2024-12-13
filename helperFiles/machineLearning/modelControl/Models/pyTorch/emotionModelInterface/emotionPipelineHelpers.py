@@ -65,7 +65,7 @@ class emotionPipelineHelpers:
         # Reset the optimizer state for these parameters
         for p in list(self.optimizer.state.keys()):
             if p in profileParams: self.optimizer.state[p] = {}
-        return max(1, numEpochs - 10)  # TODO:
+        return max(4, numEpochs - 6)  # TODO:
 
     def compileOptimizer(self, submodel):
         # Initialize the optimizer and scheduler.
