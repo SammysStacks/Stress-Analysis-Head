@@ -159,7 +159,7 @@ class featurePlotting(globalPlottingProtocols):
                 legend = ax.legend(legendAxes[0:10], legendLabels[0:10], loc=9, bbox_to_anchor=(1.35, 1.02))
                 # Save and clear the figure
                 fig.savefig(saveDataFolder + plotTitles[plotInd] + "_" + biomarkerName + ".png", dpi=300, bbox_extra_artists=(legend,), bbox_inches='tight')
-                self.clearFigure(fig, legend=legend, showPlot=True); plt.show()
+                self.clearFigure(fig, legend=legend, showPlot=True)
 
     def plotPredictedScores(self, timepoints, predictedLabels, recordedScores, surveyCollectionTimes, experimentTimes, experimentNames, predictionType="Stress", folderName="realTimePredictions/"):
         if len(predictedLabels) == 0:
@@ -200,7 +200,7 @@ class featurePlotting(globalPlottingProtocols):
         legend = ax.legend(legendAxes[0:10], legendLabels[0:10], loc=9, bbox_to_anchor=(1.35, 1.02))
         # Save and clear the figure
         fig.savefig(saveDataFolder + predictionType + ".png", dpi=300, bbox_extra_artists=(legend,), bbox_inches='tight')
-        self.clearFigure(fig, legend=legend, showPlot=True); plt.show()
+        self.clearFigure(fig, legend=legend, showPlot=True)
 
     def singleFeatureAnalysis(self, readData, timepoints, featureList, featureNames, preAveragingSeconds=0, averageIntervalList=(0, 30),
                               surveyCollectionTimes=np.asarray([]), experimentTimes=(), experimentNames=(), folderName="singleFeatureAnalysis/"):
@@ -256,7 +256,7 @@ class featurePlotting(globalPlottingProtocols):
             legend = ax.legend(legendAxes[0:10], legendLabels[0:10], loc=9, bbox_to_anchor=(1.35, 1.02))
             # Save and clear the figure
             fig.savefig(saveDataFolder + featureNames[featureInd] + ".png", dpi=300, bbox_extra_artists=(legend,), bbox_inches='tight')
-            self.clearFigure(fig, legend=legend, showPlot=True); plt.show()
+            self.clearFigure(fig, legend=legend, showPlot=True)
 
     def plotEmotionCorrelation(self, allFinalFeatures, currentSurveyAnswersList, surveyQuestions, featureNames, folderName, subjectOrder=()):
         print("\tPlotting emotion correlation in folder:", folderName)
