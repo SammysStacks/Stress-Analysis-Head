@@ -18,6 +18,9 @@ srun accelerate launch ./../../metaTrainingControl.py \
     --profileWD "${12}" \
     --reversibleWD "${13}" \
     --physGenWD "${14}" \
+    --beta1 "${15}" \
+    --beta2 "${16}" \
+    --momentum_decay "${17}" \
 
 end=$(date +%s)
 runtime=$((end-start))
