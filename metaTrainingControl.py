@@ -35,7 +35,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2024-12-12 (0o7 0o97) 0o001"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2024-12-12 (0o7 0o9) 0o001"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Parse Model Parameters ----------------------- #
@@ -52,9 +52,9 @@ if __name__ == "__main__":
 
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model.')
-    parser.add_argument('--numSharedEncoderLayers', type=int, default=12, help='The number of layers in the model.')
+    parser.add_argument('--numSharedEncoderLayers', type=int, default=8, help='The number of layers in the model.')
     parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
-    parser.add_argument('--numProfileEpochs', type=int, default=16, help='The epochs for profile training.')
+    parser.add_argument('--numProfileEpochs', type=int, default=30, help='The epochs for profile training.')
     parser.add_argument('--numEncodedWeights', type=int, default=16, help='The number of profile weights.')
 
     # Add arguments for the neural operator.

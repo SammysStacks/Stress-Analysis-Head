@@ -90,7 +90,7 @@ class optimizerMethods:
             # return optim.NAdam(params, lr=lr, betas=(0.7, 0.97), weight_decay=weight_decay, momentum_decay=0.001, decoupled_weight_decay=True)
 
             # return optim.NAdam(params, lr=lr, betas=(0.7, 0.9), weight_decay=weight_decay, momentum_decay=0.004, decoupled_weight_decay=True)
-            return optim.NAdam(params, lr=lr, betas=(0.9, 0.97), weight_decay=weight_decay, momentum_decay=0.004, decoupled_weight_decay=True)
+            return optim.NAdam(params, lr=lr, betas=(0.7, 0.9), weight_decay=weight_decay, momentum_decay=0.001, decoupled_weight_decay=True)
 
             # return optim.NAdam(params, lr=lr, betas=(0.8, 0.9), weight_decay=weight_decay, momentum_decay=0.001, decoupled_weight_decay=True)
             # return optim.NAdam(params, lr=lr, betas=(0.9, 0.9), weight_decay=weight_decay, momentum_decay=0.001, decoupled_weight_decay=True)
