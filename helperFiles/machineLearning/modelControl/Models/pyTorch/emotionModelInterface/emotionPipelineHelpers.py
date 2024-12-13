@@ -55,10 +55,7 @@ class emotionPipelineHelpers:
     def resetPhysiologicalProfile(self, submodel):
         # Get the current number of epochs for the profile model.
         numEpochs = self.getTrainingEpoch(submodel) + 1
-        if numEpochs == 1: return numEpochs + 1
-
-        # Reset and get the parameters that belong to the profile model
-        if numEpochs <= modelParameters.getEpochWarmups(): return 1
+        if numEpochs < 4: return 2
 
         # Reset and get the parameters that belong to the profile model
         self.model.specificSignalEncoderModel.profileModel.resetProfileHolders()

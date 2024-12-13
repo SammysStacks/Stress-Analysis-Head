@@ -77,7 +77,11 @@ class modelParameters:
     def getProfileEpochs(): return modelConstants.userInputParams['numProfileEpochs']  # numEpochs
 
     @staticmethod
-    def getEpochWarmups(): return 2
+    def getEpochParameters(epoch, numEpoch_toSaveFull, numEpoch_toPlot):
+        saveFullModel = (epoch % numEpoch_toSaveFull == 0)
+        plotSteps = (epoch % numEpoch_toPlot == 0)
+
+        return saveFullModel, plotSteps
 
     # -------------------------- Compilation Parameters ------------------------- #
 
@@ -102,13 +106,6 @@ class modelParameters:
         #     loadSubmodelEpochs = -1  # The # of epochs to load from the trained model.
 
         return loadSubmodelDate, loadSubmodelEpochs, loadSubmodel
-
-    @staticmethod
-    def getEpochParameters(epoch, numEpoch_toSaveFull, numEpoch_toPlot):
-        saveFullModel = (epoch % numEpoch_toSaveFull == 0)
-        plotSteps = (epoch % numEpoch_toPlot == 0)
-
-        return saveFullModel, plotSteps
 
     @staticmethod
     def getSubmodelsSaving(submodel):
