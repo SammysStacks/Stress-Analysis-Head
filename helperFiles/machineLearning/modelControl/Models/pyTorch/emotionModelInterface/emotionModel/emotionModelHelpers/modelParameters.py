@@ -71,7 +71,7 @@ class modelParameters:
         else: raise Exception()
 
     @staticmethod
-    def getEpochInfo(): return 1000, 10, 50  # numEpochs, numEpoch_toPlot, numEpoch_toSaveFull
+    def getEpochInfo(): return 250, 10, 50  # numEpochs, numEpoch_toPlot, numEpoch_toSaveFull
 
     @staticmethod
     def getProfileEpochs(): return modelConstants.userInputParams['numProfileEpochs']  # numEpochs
