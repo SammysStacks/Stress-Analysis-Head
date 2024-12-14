@@ -139,7 +139,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         blue_rgb = lch2rgb(blue_lch)
         red_rgb = lch2rgb(red_lch)
         white_rgb = np.array([1., 1., 1.])
-        numInitLayers = 2
 
         colors = []
         for alpha in np.linspace(1, 0, 100):
@@ -151,17 +150,14 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         custom_cmap = LinearSegmentedColormap.from_list("red_transparent_blue", colors)
 
         # These should be chosen based on your data and how you want to "zoom"
-        physiologicalTimes_finalExtent = (physiologicalTimes.min(), physiologicalTimes.max(), 0, numLayers)
-        # physiologicalTimes_initExtent = (physiologicalTimes.min(), physiologicalTimes.max(), 0, numInitLayers)
-        # first_layer_vmin = interpolated_states[0:numInitLayers, :].min()
-        # first_layer_vmax = interpolated_states[0:numInitLayers, :].max()
-        rest_vmin = interpolated_states.min()
-        rest_vmax = interpolated_states.max()
+        physiologicalTimes_initExtent = (physiologicalTimes.min(), physiologicalTimes.max(), 0, numLayers)
+        first_layer_vmin = interpolated_states.min()
+        first_layer_vmax = interpolated_states.max()
         plt.figure(figsize=(12, 8))
-        
+
         # Plot the first layer (layer=0) with its own normalization and colorbar
-        im_rest = plt.imshow(interpolated_states,  cmap=custom_cmap, interpolation=None, extent=physiologicalTimes_finalExtent,  aspect='auto', origin='lower', vmin=rest_vmin, vmax=rest_vmax)
-        plt.colorbar(im_rest, fraction=0.046, pad=0.04)
+        im0 = plt.imshow(interpolated_states, cmap=custom_cmap, interpolation=None, extent=physiologicalTimes_initExtent, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
+        plt.colorbar(im0, fraction=0.046, pad=0.04)
 
         # Add horizontal lines to mark layer boundaries
         plt.hlines(y=numLayers - 1, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
@@ -177,7 +173,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.grid(False)
 
         # Save or clear figure
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", showPlot=False)
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", showPlot=True)
         else: self.clearFigure(fig=None, legend=None, showPlot=False)
 
     # --------------------- Visualize Model Training --------------------- #
