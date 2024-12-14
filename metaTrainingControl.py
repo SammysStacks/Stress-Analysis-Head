@@ -35,7 +35,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2024-12-12"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2024-12-13"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Parse Model Parameters ----------------------- #
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     parser.add_argument('--physGenWD', type=float, default=0, help='The learning rate of the general model.')
 
     # Add arguments for the emotion and activity architecture.
-    parser.add_argument('--momentum_decay', type=float, default=0.01, help='Momentum decay for the optimizer.')
+    parser.add_argument('--momentum_decay', type=float, default=0.004, help='Momentum decay for the optimizer.')
     parser.add_argument('--beta1', type=float, default=0.7, help='Beta1 for the optimizer.')
     parser.add_argument('--beta2', type=float, default=0.9, help='Beta2 for the optimizer.')
 
@@ -93,7 +93,6 @@ if __name__ == "__main__":
     userInputParams = modelParameters.getNeuralParameters(userInputParams)
     modelConstants.updateModelParams(userInputParams)
     submodel = userInputParams['submodel']
-    print("Arguments:", userInputParams)
 
     # --------------------------- Setup Training --------------------------- #
 
@@ -107,6 +106,7 @@ if __name__ == "__main__":
     trainingDate = modelCompiler.embedInformation(submodel, userInputParams, trainingDate)  # Embed training information into the name.
     numEpochs, numEpoch_toPlot, numEpoch_toSaveFull = modelParameters.getEpochInfo()  # The number of epochs to plot and save the model.
     datasetNames, metaDatasetNames = modelParameters.compileModelNames()  # Compile the model names.
+    print("Arguments:", userInputParams)
     print(trainingDate, "\n")
 
     # Compile the final modules.

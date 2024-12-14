@@ -150,14 +150,22 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         custom_cmap = LinearSegmentedColormap.from_list("red_transparent_blue", colors)
 
         # These should be chosen based on your data and how you want to "zoom"
-        physiologicalTimes_initExtent = (physiologicalTimes.min(), physiologicalTimes.max(), 0, numLayers)
+        physiologicalTimes_finalExtent = (physiologicalTimes.min(), physiologicalTimes.max(), numLayers - 1, numLayers)
+        physiologicalTimes_initExtent1 = (physiologicalTimes.min(), physiologicalTimes.max(), 0, 1)
+        physiologicalTimes_initExtent2 = (physiologicalTimes.min(), physiologicalTimes.max(), 1, 2)
+        physiologicalTimes = (physiologicalTimes.min(), physiologicalTimes.max(), 2, numLayers)
         first_layer_vmin = interpolated_states.min()
         first_layer_vmax = interpolated_states.max()
         plt.figure(figsize=(12, 8))
 
-        # Plot the first layer (layer=0) with its own normalization and colorbar
-        im0 = plt.imshow(interpolated_states, cmap=custom_cmap, interpolation=None, extent=physiologicalTimes_initExtent, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
+        # Plot the last layer with its own normalization and colorbar
+        plt.imshow(interpolated_states[2:-1], cmap=custom_cmap, interpolation='bilinear', extent=physiologicalTimes, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
+        im0 = plt.imshow(interpolated_states[-1:], cmap=custom_cmap, interpolation=None, extent=physiologicalTimes_finalExtent, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
         plt.colorbar(im0, fraction=0.046, pad=0.04)
+
+        # Plot the rest of the layers with the same normalization.
+        plt.imshow(interpolated_states[0:1], cmap=custom_cmap, interpolation=None, extent=physiologicalTimes_initExtent1, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
+        plt.imshow(interpolated_states[1:2], cmap=custom_cmap, interpolation=None, extent=physiologicalTimes_initExtent2, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
 
         # Add horizontal lines to mark layer boundaries
         plt.hlines(y=numLayers - 1, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
@@ -165,7 +173,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.hlines(y=1, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='-', linewidth=2)
 
         # Ticks, labels, and formatting
-        plt.yticks(ticks=np.arange(numLayers + 1), labels=np.arange(0, numLayers + 1), fontsize=12)
+        yticks = np.array([0, 1, 1] + list(range(2, numLayers - 2)) + [1])
+        plt.yticks(ticks=np.arange(start=0.5, stop=numLayers, step=1), labels=yticks, fontsize=12)
         plt.title(label=f"{plotTitle} epoch{epoch}", fontsize=16)
         plt.ylabel(ylabel="Layer Index", fontsize=14)
         plt.xlabel(xlabel="Time", fontsize=14)
