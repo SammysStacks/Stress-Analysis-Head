@@ -152,18 +152,16 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # These should be chosen based on your data and how you want to "zoom"
         physiologicalTimes_finalExtent = (physiologicalTimes.min(), physiologicalTimes.max(), numInitLayers, numLayers)
-        physiologicalTimes_initExtent = (physiologicalTimes.min(), physiologicalTimes.max(), 0, numInitLayers)
-        first_layer_vmin = interpolated_states[0:numInitLayers, :].min()
-        first_layer_vmax = interpolated_states[0:numInitLayers, :].max()
+        # physiologicalTimes_initExtent = (physiologicalTimes.min(), physiologicalTimes.max(), 0, numInitLayers)
+        # first_layer_vmin = interpolated_states[0:numInitLayers, :].min()
+        # first_layer_vmax = interpolated_states[0:numInitLayers, :].max()
         rest_vmin = interpolated_states[numInitLayers:, :].min()
         rest_vmax = interpolated_states[numInitLayers:, :].max()
         plt.figure(figsize=(12, 8))
         
         # Plot the first layer (layer=0) with its own normalization and colorbar
-        im0 = plt.imshow(interpolated_states[0:numInitLayers, :], cmap=custom_cmap, interpolation=None,  extent=physiologicalTimes_initExtent, aspect='auto', origin='lower',  vmin=first_layer_vmin, vmax=first_layer_vmax)
-        im_rest = plt.imshow(interpolated_states[numInitLayers:, :],  cmap=custom_cmap, interpolation=None, extent=physiologicalTimes_finalExtent,  aspect='auto', origin='lower', vmin=rest_vmin, vmax=rest_vmax)
+        im_rest = plt.imshow(interpolated_states,  cmap=custom_cmap, interpolation=None, extent=physiologicalTimes_finalExtent,  aspect='auto', origin='lower', vmin=rest_vmin, vmax=rest_vmax)
         plt.colorbar(im_rest, fraction=0.046, pad=0.04)
-        plt.colorbar(im0, fraction=0.046, pad=0.04)
 
         # Add horizontal lines to mark layer boundaries
         plt.hlines(y=numLayers - 1, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
