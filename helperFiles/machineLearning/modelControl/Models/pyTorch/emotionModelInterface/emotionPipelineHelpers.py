@@ -1,4 +1,5 @@
 # Import files for machine learning
+import math
 
 from .emotionModel.emotionModelHead import emotionModelHead
 from .emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
@@ -67,7 +68,7 @@ class emotionPipelineHelpers:
 
         # Return the number of epochs for the profile model
         if numEpochs < modelConstants.numWarmups: return min(3, numEpochs)
-        elif numEpochs < 2*modelConstants.numWarmups: return numEpochs + int(modelConstants.numWarmups * (numEpochs - modelConstants.numWarmups) / modelConstants.numWarmups)
+        elif numEpochs < 2*modelConstants.numWarmups: return numEpochs + math.ceil(modelConstants.numWarmups * (numEpochs - modelConstants.numWarmups) / modelConstants.numWarmups)
         else: return numEpochs + modelConstants.numWarmups
 
     def compileOptimizer(self, submodel):
