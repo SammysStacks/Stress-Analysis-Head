@@ -151,12 +151,12 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         custom_cmap = LinearSegmentedColormap.from_list("red_transparent_blue", colors)
 
         # These should be chosen based on your data and how you want to "zoom"
-        physiologicalTimes_finalExtent = (physiologicalTimes.min(), physiologicalTimes.max(), numInitLayers, numLayers)
+        physiologicalTimes_finalExtent = (physiologicalTimes.min(), physiologicalTimes.max(), 0, numLayers)
         # physiologicalTimes_initExtent = (physiologicalTimes.min(), physiologicalTimes.max(), 0, numInitLayers)
         # first_layer_vmin = interpolated_states[0:numInitLayers, :].min()
         # first_layer_vmax = interpolated_states[0:numInitLayers, :].max()
-        rest_vmin = interpolated_states[numInitLayers:, :].min()
-        rest_vmax = interpolated_states[numInitLayers:, :].max()
+        rest_vmin = interpolated_states.min()
+        rest_vmax = interpolated_states.max()
         plt.figure(figsize=(12, 8))
         
         # Plot the first layer (layer=0) with its own normalization and colorbar
