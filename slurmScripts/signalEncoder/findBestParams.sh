@@ -17,19 +17,18 @@ numProfileEpochs_arr=(30 10 40)  # 3
 lrs_reversible=('1e-3')  # 5e-4 <= x <= 2e-3
 lrs_profileGen=('1e-4') # '5e-5')  # 5e-5 <= x <= 1e-4
 
-lrs_profile=('0.25' '0.1' '0.2' '0.333' '0.5')  # 0.01 <= x <= 2
 wds_profile=('0' '1e-4' '1e-6' '1e-2')  # 4
-numProfileEpochs_arr=(30)  # 3
+numProfileEpochs_arr=(15 )  # 3
 
 beta1s=('0.8' '0.85' '0.75' '0.9')  # 0.5 <= x <= 0.95
-beta2s=('0.999' '0.99' '0.95' '0.9')  # 0.9 <= x <= 0.999
+beta2s=('0.999' '0.95')  # 0.9 <= x <= 0.999
 momentums=('0.004' '0.01' '0.007' '0.001' '0')  # 0.9 <= x <= 0.999
-
-wds_profile=('0')  #
+lrs_profile=('0.25' '0.1' '0.2' '0.333' '0.5')  # 0.01 <= x <= 2
 
 # Weight decays: 27
 wds_profileGen=('0')  #
 wds_reversible=('0')  # 4
+wds_profile=('0')  #
 
 # Finalized parameters.
 waveletTypes_arr=('bior3.1')  # 'bior3.1' > 'bior3.3' > 'bior2.2' > 'bior3.5'
