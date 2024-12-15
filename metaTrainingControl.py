@@ -52,9 +52,9 @@ if __name__ == "__main__":
 
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model.')
-    parser.add_argument('--numSharedEncoderLayers', type=int, default=8, help='The number of layers in the model.')
+    parser.add_argument('--numSharedEncoderLayers', type=int, default=25, help='The number of layers in the model.')
     parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
-    parser.add_argument('--numProfileEpochs', type=int, default=10, help='The epochs for profile training.')
+    parser.add_argument('--numProfileEpochs', type=int, default=25, help='The epochs for profile training.')
     parser.add_argument('--numEncodedWeights', type=int, default=32, help='The number of profile weights.')
 
     # Add arguments for the neural operator.
@@ -70,7 +70,7 @@ if __name__ == "__main__":
     parser.add_argument('--numActivityChannels', type=int, default=4, help='The number of activity channels.')
 
     # Temporary parameters.
-    parser.add_argument('--profileLR', type=float, default=0.25, help='The learning rate of the physiological model.')
+    parser.add_argument('--profileLR', type=float, default=0.1, help='The learning rate of the physiological model.')
     parser.add_argument('--profileWD', type=float, default=0, help='The learning rate of the general model.')
 
     # Temporary parameters.
@@ -82,9 +82,9 @@ if __name__ == "__main__":
     parser.add_argument('--physGenWD', type=float, default=0, help='The learning rate of the general model.')
 
     # Add arguments for the emotion and activity architecture.
-    parser.add_argument('--momentum_decay', type=float, default=0.007, help='Momentum decay for the optimizer.')
-    parser.add_argument('--beta1', type=float, default=0.99, help='Beta1 for the optimizer: 0.94 -> 0.999')
-    parser.add_argument('--beta2', type=float, default=0.8, help='Beta2 for the optimizer: 0.7 -> 0.9')
+    parser.add_argument('--momentum_decay', type=float, default=0.01, help='Momentum decay for the optimizer.')
+    parser.add_argument('--beta1', type=float, default=0.95, help='Beta1 for the optimizer: 0.94 -> 0.999')
+    parser.add_argument('--beta2', type=float, default=0.75, help='Beta2 for the optimizer: 0.7 -> 0.9')
 
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
