@@ -10,8 +10,6 @@ class modelParameters:
     def __init__(self, accelerator=None):
         # General parameters
         self.accelerator = accelerator  # The single-instance accelerator for the model.
-
-        # Helper classes.
         self.generalMethods = generalMethods()
 
     # -------------------------- Training Parameters ------------------------- #
@@ -123,7 +121,7 @@ class modelParameters:
     @staticmethod
     def compileModelNames():
         # Specify which metadata analyses to compile
-        metaDatasetNames = [modelConstants.wesadDatasetName, modelConstants.emognitionDatasetName, modelConstants.amigosDatasetName, modelConstants.dapperDatasetName, modelConstants.caseDatasetName]
+        metaDatasetNames = [modelConstants.wesadDatasetName, modelConstants.amigosDatasetName, modelConstants.dapperDatasetName, modelConstants.caseDatasetName, modelConstants.emognitionDatasetName]
         datasetNames = [modelConstants.empatchDatasetName]
 
         # Assert the integrity of dataset collection.

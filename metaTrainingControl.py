@@ -35,7 +35,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2024-12-14 XN FNN-0 CNN-4"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2024-12-14 3 Norm-1-10 FNN-1 CNN-1-1"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Parse Model Parameters ----------------------- #
@@ -70,7 +70,7 @@ if __name__ == "__main__":
     parser.add_argument('--numActivityChannels', type=int, default=4, help='The number of activity channels.')
 
     # Temporary parameters.
-    parser.add_argument('--profileLR', type=float, default=0.2, help='The learning rate of the physiological model.')
+    parser.add_argument('--profileLR', type=float, default=0.25, help='The learning rate of the physiological model.')
     parser.add_argument('--profileWD', type=float, default=0, help='The learning rate of the general model.')
 
     # Temporary parameters.
