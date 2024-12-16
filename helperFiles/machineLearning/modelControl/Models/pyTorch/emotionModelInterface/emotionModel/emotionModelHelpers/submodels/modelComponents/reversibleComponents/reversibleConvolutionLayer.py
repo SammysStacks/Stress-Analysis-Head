@@ -1,9 +1,11 @@
 import os
 
+import numpy as np
 import torch
 import torch.fft
 import torch.nn as nn
 from matplotlib import pyplot as plt
+import scipy
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
@@ -92,33 +94,43 @@ if __name__ == "__main__":
     reconstructionFlag = False
 
     try:
-        for layers, sequenceLength2 in [(2, 256), (2, 128), (2, 64), (2, 32), (2, 16), (2, 8), (2, 4), (2, 2)]:
-            for _layerInd in range(1, layers + 1):
-                # General parameters.
-                _batchSize, _numSignals, _sequenceLength = 512, 512, sequenceLength2
-                _kernelSize = 2*_sequenceLength - 1
-                _numLayers = _layerInd
+        # for layers, sequenceLength2 in [(2, 256), (2, 128), (2, 64), (2, 32), (2, 16), (2, 8), (2, 4), (2, 2)]:
+        for _layerInd, sequenceLength2 in [(1, 256)]:
+            # General parameters.
+            _batchSize, _numSignals, _sequenceLength = 256, 256, sequenceLength2
+            _kernelSize = 2*_sequenceLength - 1
+            _numLayers = _layerInd
 
-                # Set up the parameters.
-                neuralLayerClass = reversibleConvolutionLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod='reversibleLinearSoftSign')
-                physiologicalProfile = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float64)
-                physiologicalProfile = physiologicalProfile - physiologicalProfile.mean(dim=-1, keepdim=True)
-                physiologicalProfile = physiologicalProfile / physiologicalProfile.std(dim=-1, keepdim=True)
-                physiologicalProfile = physiologicalProfile / 6
+            # Set up the parameters.
+            neuralLayerClass = reversibleConvolutionLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod='reversibleLinearSoftSign')
+            physiologicalProfile = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float64)
+            physiologicalProfile = physiologicalProfile - physiologicalProfile.mean(dim=-1, keepdim=True)
+            physiologicalProfile = physiologicalProfile / physiologicalProfile.std(dim=-1, keepdim=True)
+            physiologicalProfile = physiologicalProfile / 3
 
-                # Perform the convolution in the fourier and spatial domains.
-                if reconstructionFlag: _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(physiologicalProfile, atol=1e-6, numLayers=1, plotResults=False)
-                else: _forwardData = neuralLayerClass.forward(physiologicalProfile)
-                neuralLayerClass.printParams()
+            # Perform the convolution in the fourier and spatial domains.
+            if reconstructionFlag: _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(physiologicalProfile, atol=1e-6, numLayers=1, plotResults=False)
+            else: _forwardData = neuralLayerClass.forward(physiologicalProfile)
+            neuralLayerClass.printParams()
 
-                ratio = (_forwardData.norm(dim=-1) / physiologicalProfile.norm(dim=-1)).view(-1).detach().numpy()
-                if abs(ratio.mean() - 1) < 0.1: plt.hist(ratio, bins=150, alpha=0.2, label=f'len{_sequenceLength}_layers={_layerInd}')
-                print(ratio.mean())
+            ratio = (_forwardData.norm(dim=-1) / physiologicalProfile.norm(dim=-1)).view(-1).detach().numpy()
+            if abs(ratio.mean() - 1) < 0.1: plt.hist(ratio, bins=150, alpha=0.2, label=f'len{_sequenceLength}_layers={_layerInd}', density=True)
+            print(ratio.mean())
+
+            # Plot the Gaussian fit
+            xmin, xmax = plt.xlim()
+            x = np.linspace(xmin, xmax, num=1000)
+            mu, std = scipy.stats.norm.fit(ratio)
+            p = scipy.stats.norm.pdf(x, mu, std)
+            plt.plot(x, p, 'k', linewidth=2, label=f'Gaussian fit: mu={mu:.8f}$, sigma={std:.8f}$')
+
+            # Figure settings.
             plt.title(f'Fin', fontsize=14)  # Increase title font size for readability
+            plt.xlim(0.98, 1.02)
             plt.legend()
 
-            plt.xlim(0.98, 1.02)
+            # Save the plot.
             os.makedirs('_lipshitz/', exist_ok=True)
-            plt.savefig(f'_lipshitz/len{sequenceLength2}_layers={layers}')
+            plt.savefig(f'_lipshitz/len{sequenceLength2}_layers={_numLayers}')
             plt.show()
     except Exception as e: print(f"Error: {e}")
