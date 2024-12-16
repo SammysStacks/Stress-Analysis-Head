@@ -79,7 +79,7 @@ if __name__ == "__main__":
 
     # Temporary parameters.
     parser.add_argument('--physGenLR', type=float, default=1e-4, help='The learning rate of the general model.')
-    parser.add_argument('--physGenWD', type=float, default=0, help='The learning rate of the general model.')
+    parser.add_argument('--physGenWD', type=float, default=1e-10, help='The learning rate of the general model.')
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--momentum_decay', type=float, default=0.001, help='Momentum decay for the optimizer.')

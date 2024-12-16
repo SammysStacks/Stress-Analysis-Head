@@ -48,7 +48,7 @@ class modelConstants:
     numEncodedWeights = None  # The number of encoded weights.
     minMaxScale = 1  # The maximum value for the min-max scaling.
     numBatches = 16  # The number of batches to use in the model.
-    numWarmups = 3  # The number of warmup epochs.
+    numWarmups = 10  # The number of warmup epochs. TODO
 
     # Specify the data interface parameter names.
     signalChannelNames = [timeChannel, signalChannel]
