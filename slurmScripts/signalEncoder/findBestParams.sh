@@ -12,6 +12,10 @@ numSpecificEncoderLayers_arr=(1)  # 1
 encodedDimensions_arr=(256)  # 1
 
 # Finalized parameters.
+waveletTypes_arr=('bior3.1' 'bior3.3' 'bior2.2' 'bior3.5')  # 'bior3.1' > 'bior3.3' > 'bior2.2' > 'bior3.5'
+optimizers_arr=('NAdam' 'RAdam' 'Adam' 'AdamW' 'Adamax')  # 'AdamW'; RAdam was bad for retraining profile.
+
+# Finalized parameters.
 lrs_profile=('0.2' '0.1' '0.3' '0.4' '0.5' '0.6' '0.7' '0.8' '0.9' '1' '1.5' '2' '5')  # 0.05 <= x <= 2
 lrs_profileGen=('1e-4' '1e-2' '1e-3' '3e-4') # '5e-5')  # 5e-5 <= x <= 1e-4
 lrs_reversible=('1e-3' '1e-2' '1e-4' '3e-3')  # 5e-4 <= x <= 2e-3
@@ -47,9 +51,7 @@ lrs_reversible=('0.0011')
 lrs_profileGen=('0.00011')
 lrs_profile=('0.21')
 
-
-# Finalized parameters.
-waveletTypes_arr=('bior3.1')  # 'bior3.1' > 'bior3.3' > 'bior2.2' > 'bior3.5'
+waveletTypes_arr=('bior3.1')
 optimizers_arr=('NAdam')  # 'AdamW'; RAdam was bad for retraining profile.
 
 for beta1s in "${beta1s[@]}"
