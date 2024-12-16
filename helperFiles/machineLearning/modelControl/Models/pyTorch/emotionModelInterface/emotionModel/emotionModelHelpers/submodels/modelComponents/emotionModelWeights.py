@@ -34,7 +34,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def physiologicalInitialization(physiologicalProfile):
-        nn.init.uniform_(physiologicalProfile, a=-0.5, b=0.5)  # TODO
+        nn.init.uniform_(physiologicalProfile, a=-modelConstants.uniformWeightLimits, b=modelConstants.uniformWeightLimits)  # TODO
 
     # ------------------- Neural Operator Architectures ------------------- #
 
