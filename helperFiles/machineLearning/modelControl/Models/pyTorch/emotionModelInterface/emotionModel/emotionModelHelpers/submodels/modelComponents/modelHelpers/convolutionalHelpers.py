@@ -38,7 +38,7 @@ class convolutionalHelpers(abnormalConvolutions):
 
     def convolutionalFilters_resNetBlocks(self, numResNets, numBlocks, numChannels, kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod='selu', numLayers=None, addBias=False):
         if not isinstance(numChannels, list): assert numLayers is not None
-        else: assert len(numChannels) == 2; assert numChannels[0] == numChannels[1] or numChannels[1] % numChannels[0] == 0
+        else: assert numChannels[0] == numChannels[-1] or numChannels[-1] % numChannels[0] == 0
 
         layers = []
         for i in range(numResNets):
