@@ -46,7 +46,7 @@ class trainingProtocolHelpers:
             self.accelerator.wait_for_everyone()
 
             # Unify all the model weights and retrain the specific models.
-            modelPipeline.modelHelpers.roundModelWeights(modelPipeline.model, decimals=16)
+            modelPipeline.modelHelpers.roundModelWeights(modelPipeline.model, decimals=8)
             self.unifiedLayerData = self.modelMigration.copyModelWeights(modelPipeline, self.sharedModelWeights)
 
         # Unify all the model weights.

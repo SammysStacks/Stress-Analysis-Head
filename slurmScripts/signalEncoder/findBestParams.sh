@@ -9,38 +9,44 @@ encodedDimensions_arr=(64 128 256 512)  # 4
 # General parameters: 18
 allNumEncodedWeights=(32)  # 6
 numSpecificEncoderLayers_arr=(1)  # 1
-signalEncoderLayers_arr=(8)  # 3
 encodedDimensions_arr=(256)  # 1
 
 # Finalized parameters.
-lrs_reversible=('1e-3')  # 5e-4 <= x <= 2e-3
-lrs_profileGen=('1e-4') # '5e-5')  # 5e-5 <= x <= 1e-4
+lrs_profile=('0.2' '0.1' '0.3' '0.4' '0.5' '0.6' '0.7' '0.8' '0.9' '1' '1.5' '2' '5')  # 0.05 <= x <= 2
+lrs_profileGen=('1e-4' '1e-2' '1e-3' '3e-4') # '5e-5')  # 5e-5 <= x <= 1e-4
+lrs_reversible=('1e-3' '1e-2' '1e-4' '3e-3')  # 5e-4 <= x <= 2e-3
 
+# Finalized parameters.
+beta2s=('0.9' '0.8' '0.7' '0.6' '0.5' '0.4' '0.3' '0.2' '0.1' '0.99' '0.999' '0' '1')  # 0.9 <= x <= 0.999
+beta1s=('0.7' '0.8' '0.6' '0.5' '0.4' '0.3' '0.2' '0.1' '0.9' '0' '0.95' '1')  # 0.5 <= x <= 0.95
+momentums=('0' '1e-8' '1e-7' '1e-6' '1e-5' '1e-4' '1e-3' '1e-2' '1e-1' '1')  # 0.9 <= x <= 0.999
 
-momentums=('1e-3' '1e-5' '1e-4' '1e-2' '1e-1' '0')  # 0.9 <= x <= 0.999
+# Finalized parameters.
+wds_profileGen=('0' '1e-6' '1e-4' '1e-2' '1e-1' '1')  # 10
+wds_reversible=('0' '1e-6' '1e-4' '1e-2' '1e-1' '1')  # 10
+wds_profile=('0' '1e-6' '1e-4' '1e-2' '1e-1' '1' '2')  # 10
 
-
-lrs_profile=('0.2' '0.1' '0.15' '0.3' '0.4' '0.5' '0.6' '0.7' '0.8' '0.9' '1')  # 0.05 <= x <= 2
-wds_profileGen=('0' '1e-8' '1e-7' '1e-6' '1e-5' '1e-4' '1e-3' '1e-2' '1e-1' '1')  # 10
-wds_reversible=('0' '1e-8' '1e-7' '1e-6' '1e-5' '1e-4' '1e-3' '1e-2' '1e-1' '1')  # 10
-wds_profile=('0' '1e-8' '1e-7' '1e-6' '1e-5' '1e-4' '1e-3' '1e-2' '1e-1' '1')  # 10
-
-uniformWeightLimits_arr=('0.1' '0.2' '0.3' '0.4' '0.5' '0.6' '0.7' '0.8' '0.9' '1.0')  # 10
-beta1s=('0.7' '0.8' '0.6' '0.5' '0.4' '0.3' '0.2' '0.1' '0.9')  # 0.5 <= x <= 0.95
-beta2s=('0.9' '0.8' '0.7' '0.6' '0.5' '0.4' '0.3' '0.2' '0.1' '0.99')  # 0.9 <= x <= 0.999
-numProfileEpochs_arr=(15 10 5 20 25 30 35 40 45 50)  # 3
+# Finalized parameters.
+uniformWeightLimits_arr=('0.1' '0.2' '0.3' '0.4' '0.5' '0.6' '0.7' '0.8' '0.9' '1.0' '1.5' '2')  # 10
+numProfileEpochs_arr=(5 6 7 8 9 10 12 14 16 18 20 25)  # 3
+signalEncoderLayers_arr=(2 4 6 8 10 12 14 16 18 20 22 24)
 
 # Weight decays: 27
-wds_profileGen=('0')  #
-wds_reversible=('0')  # 4
-wds_profile=('0')  #
+wds_profileGen=('0')
+wds_reversible=('0') 
+wds_profile=('0')
+
+signalEncoderLayers_arr=(6 12)
+uniformWeightLimits_arr=('0.25') 
+numProfileEpochs_arr=(20)  
+momentums=('1e-10')
+beta1s=('0.51')
+beta2s=('0.91')  
+
+lrs_reversible=('0.0011') 
+lrs_profileGen=('0.00011')
 lrs_profile=('0.21')
 
-uniformWeightLimits_arr=('0.5')  # 10
-beta1s=('0.71')  # 0.5 <= x <= 0.95
-beta2s=('0.91')  # 0.9 <= x <= 0.999
-momentums=('0.0011')  # 0.9 <= x <= 0.999
-numProfileEpochs_arr=(12)  # 3
 
 # Finalized parameters.
 waveletTypes_arr=('bior3.1')  # 'bior3.1' > 'bior3.3' > 'bior2.2' > 'bior3.5'
