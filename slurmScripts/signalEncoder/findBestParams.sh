@@ -33,10 +33,10 @@ wds_reversible=('0' '1e-8' '1e-7' '1e-6' '1e-5' '1e-4' '1e-3' '1e-2' '1e-1' '1')
 wds_profile=('0' '1e-8' '1e-7' '1e-6' '1e-5' '1e-4' '1e-3' '1e-2' '1e-1' '1')  # 4
 
 # Weight decays: 27
-# wds_profileGen=('0')  #
+wds_profileGen=('0')  #
 wds_reversible=('0')  # 4
 wds_profile=('0')  #
-lrs_profile=('0.25')
+lrs_profile=('0.2')
 
 # Finalized parameters.
 waveletTypes_arr=('bior3.1')  # 'bior3.1' > 'bior3.3' > 'bior2.2' > 'bior3.5'
