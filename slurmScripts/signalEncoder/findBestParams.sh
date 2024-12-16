@@ -52,7 +52,7 @@ lrs_profileGen=('0.00011')
 lrs_profile=('0.21')
 
 waveletTypes_arr=('bior3.1')
-optimizers_arr=('NAdam')  # 'AdamW'; RAdam was bad for retraining profile.
+# optimizers_arr=('NAdam')  # 'AdamW'; RAdam was bad for retraining profile.
 
 for beta1s in "${beta1s[@]}"
 do
