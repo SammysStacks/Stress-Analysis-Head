@@ -11,23 +11,22 @@ allNumEncodedWeights=(32)  # 6
 numSpecificEncoderLayers_arr=(1)  # 1
 signalEncoderLayers_arr=(8)  # 3
 encodedDimensions_arr=(256)  # 1
-numProfileEpochs_arr=(15 10 5 20)  # 3
+numProfileEpochs_arr=(15 10 5 20 25 30 35 40 45 50)  # 3
 
 # Finalized parameters.
 lrs_reversible=('1e-3')  # 5e-4 <= x <= 2e-3
 lrs_profileGen=('1e-4') # '5e-5')  # 5e-5 <= x <= 1e-4
 
+beta1s=('0.7' '0.8' '0.6' '0.5' '0.4' '0.3' '0.2' '0.1' '0.9')  # 0.5 <= x <= 0.95
+beta2s=('0.9' '0.8' '0.7' '0.6' '0.5' '0.4' '0.3' '0.2' '0.1' '0.99')  # 0.9 <= x <= 0.999
+momentums=('1e-3' '1e-5' '1e-4' '1e-2' '1e-1' '0')  # 0.9 <= x <= 0.999
 
-beta1s=('0.8' '0.85' '0.75' '0.9')  # 0.5 <= x <= 0.95
-beta2s=('0.999' '0.95')  # 0.9 <= x <= 0.999
-momentums=('0.004' '0.01' '0.007' '0.001' '0')  # 0.9 <= x <= 0.999
-
-beta1s=('0.8')  # 0.5 <= x <= 0.95
-beta2s=('0.999')  # 0.9 <= x <= 0.999
-momentums=('0.004')  # 0.9 <= x <= 0.999
+beta1s=('0.71')  # 0.5 <= x <= 0.95
+beta2s=('0.91')  # 0.9 <= x <= 0.999
+momentums=('0.0011')  # 0.9 <= x <= 0.999
 numProfileEpochs_arr=(12)  # 3
 
-lrs_profile=('0.25' '0.1' '0.15' '0.2' '0.333' '0.4' '0.5')  # 0.01 <= x <= 2
+lrs_profile=('0.2' '0.1' '0.15' '0.3' '0.4' '0.5' '0.6' '0.7' '0.8' '0.9' '1')  # 0.05 <= x <= 2
 wds_profileGen=('0' '1e-8' '1e-7' '1e-6' '1e-5' '1e-4' '1e-3' '1e-2' '1e-1' '1')  # 4
 wds_reversible=('0' '1e-8' '1e-7' '1e-6' '1e-5' '1e-4' '1e-3' '1e-2' '1e-1' '1')  # 4
 wds_profile=('0' '1e-8' '1e-7' '1e-6' '1e-5' '1e-4' '1e-3' '1e-2' '1e-1' '1')  # 4
