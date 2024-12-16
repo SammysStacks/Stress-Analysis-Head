@@ -31,7 +31,7 @@ if __name__ == "__main__":
         cpu=torch.backends.mps.is_available(),  # Whether to use the CPU. MPS is NOT fully compatible yet.
         step_scheduler_with_optimizer=False,  # Whether to wrap the optimizer in a scheduler.
         gradient_accumulation_steps=1,  # The number of gradient accumulation steps.
-        mixed_precision="fp16",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"
+        mixed_precision="no",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"
     )
 
     # General model parameters.
@@ -53,7 +53,7 @@ if __name__ == "__main__":
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model.')
     parser.add_argument('--numSharedEncoderLayers', type=int, default=8, help='The number of layers in the model.')
-    parser.add_argument('--uniformWeightLimits', type=float, default=0.5, help='The limits for profile initialization.')
+    parser.add_argument('--uniformWeightLimits', type=float, default=1/4, help='The limits for profile initialization.')
     parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
     parser.add_argument('--numProfileEpochs', type=int, default=25, help='The epochs for profile training.')
     parser.add_argument('--numEncodedWeights', type=int, default=32, help='The number of profile weights.')
@@ -84,7 +84,7 @@ if __name__ == "__main__":
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--momentum_decay', type=float, default=0.001, help='Momentum decay for the optimizer.')
-    parser.add_argument('--beta1', type=float, default=0.7, help='Beta1 for the optimizer: 0.7 -> 0.9')
+    parser.add_argument('--beta1', type=float, default=0.5, help='Beta1 for the optimizer: 0.7 -> 0.9')
     parser.add_argument('--beta2', type=float, default=0.9, help='Beta2 for the optimizer: 0.9 -> 0.999')
 
     # Parse the arguments.

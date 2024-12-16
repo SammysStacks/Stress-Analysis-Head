@@ -67,8 +67,8 @@ class emotionPipelineHelpers:
             if p in profileParams: self.optimizer.state[p] = {}
 
         # Return the number of epochs for the profile model
-        if numEpochs < modelConstants.numWarmups: return min(4, numEpochs)
-        else: return max(5, numEpochs - modelConstants.numWarmups)
+        if numEpochs < modelConstants.numWarmups: return min(0, numEpochs)
+        else: return max(1, numEpochs - modelConstants.numWarmups)
 
     def compileOptimizer(self, submodel):
         # Initialize the optimizer and scheduler.

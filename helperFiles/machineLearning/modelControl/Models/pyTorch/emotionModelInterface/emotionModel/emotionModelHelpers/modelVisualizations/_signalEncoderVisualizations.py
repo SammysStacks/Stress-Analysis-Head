@@ -161,7 +161,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Plot the last layer with its own normalization and colorbar
         plt.imshow(interpolated_states[2:-1], cmap=custom_cmap, interpolation='bilinear', extent=physiologicalTimes, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
         im0 = plt.imshow(interpolated_states[-1:], cmap=custom_cmap, interpolation=None, extent=physiologicalTimes_finalExtent, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
-        plt.colorbar(im0, fraction=0.046, pad=0.04)
+        plt.colorbar(im0, fraction=0.046, pad=0.04, boundaries=[-modelConstants.minMaxScale*1.1, modelConstants.minMaxScale*1.1])
 
         # Plot the rest of the layers with the same normalization.
         plt.imshow(interpolated_states[0:1], cmap=custom_cmap, interpolation=None, extent=physiologicalTimes_initExtent1, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)

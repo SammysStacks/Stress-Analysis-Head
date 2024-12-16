@@ -51,7 +51,7 @@ class modelConstants:
     # Specify the model parameters.
     uniformWeightLimits = None  # The limits for the uniform initialization.
     numEncodedWeights = None  # The number of encoded weights.
-    numWarmups = 10  # The number of warmup epochs. TODO
+    numWarmups = 2  # The number of warmup epochs. TODO
 
     # Specify the data interface parameter names.
     signalChannelNames = [timeChannel, signalChannel]
