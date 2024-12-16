@@ -37,7 +37,7 @@ wds_profileGen=('0')  #
 wds_reversible=('0')  # 4
 wds_profile=('0')  #
 lrs_profile=('0.21')
-uniformWeightLimits_arr=('0.5')  # 10
+# uniformWeightLimits_arr=('0.5')  # 10
 
 # Finalized parameters.
 waveletTypes_arr=('bior3.1')  # 'bior3.1' > 'bior3.3' > 'bior2.2' > 'bior3.5'
