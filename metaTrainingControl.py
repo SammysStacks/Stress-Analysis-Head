@@ -31,11 +31,11 @@ if __name__ == "__main__":
         cpu=torch.backends.mps.is_available(),  # Whether to use the CPU. MPS is NOT fully compatible yet.
         step_scheduler_with_optimizer=False,  # Whether to wrap the optimizer in a scheduler.
         gradient_accumulation_steps=1,  # The number of gradient accumulation steps.
-        mixed_precision="no",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"
+        mixed_precision="no",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"  TODO
     )
 
     # General model parameters.
-    trainingDate = "2024-12-15 2"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2024-12-16"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Parse Model Parameters ----------------------- #
@@ -56,7 +56,7 @@ if __name__ == "__main__":
     parser.add_argument('--uniformWeightLimits', type=float, default=1/4, help='The limits for profile initialization.')
     parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
     parser.add_argument('--numProfileEpochs', type=int, default=20, help='The epochs for profile training.')
-    parser.add_argument('--numEncodedWeights', type=int, default=16, help='The number of profile weights.')
+    parser.add_argument('--numEncodedWeights', type=int, default=32, help='The number of profile weights.')
 
     # Add arguments for the neural operator.
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     parser.add_argument('--numActivityChannels', type=int, default=4, help='The number of activity channels.')
 
     # Temporary parameters.
-    parser.add_argument('--profileLR', type=float, default=0.5, help='The learning rate of the physiological model.')
+    parser.add_argument('--profileLR', type=float, default=0.25, help='The learning rate of the physiological model.')
     parser.add_argument('--profileWD', type=float, default=1e-3, help='The learning rate of the general model: [1e-2, 1e-4]')
 
     # Temporary parameters.

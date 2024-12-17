@@ -56,7 +56,7 @@ class optimizerMethods:
         # Reduce on plateau (need further editing of loop): optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=0.5, patience=10, threshold=1e-4, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08)
         # Defined lambda function: optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda=lambda_function); lambda_function = lambda epoch: (epoch/50) if epoch < -1 else 1
         # torch.optim.lr_scheduler.constrainedLR(optimizer, start_factor=0.3333333333333333, end_factor=1.0, total_iters=5, last_epoch=-1)
-        return CosineAnnealingLR_customized(optimizer=optimizer,  T_max=1, absolute_min_lr=5e-5, multiplicativeFactor=10, numWarmupEpochs=modelConstants.numWarmups, warmupFactor=2, last_epoch=-1)
+        return CosineAnnealingLR_customized(optimizer=optimizer,  T_max=1, absolute_min_lr=1e-5, multiplicativeFactor=10, numWarmupEpochs=modelConstants.numEpochs_minLR, warmupFactor=2, last_epoch=-1)
 
     @staticmethod
     def getOptimizer(optimizerType, params, lr, weight_decay, momentum=0.9):
@@ -122,7 +122,7 @@ class optimizerMethods:
 
 
 class CosineAnnealingLR_customized(LRScheduler):
-    def __init__(self, optimizer: Optimizer, T_max: int, absolute_min_lr: float, multiplicativeFactor: int, numWarmupEpochs: int, warmupFactor: int,  last_epoch: int = -1):
+    def __init__(self, optimizer: Optimizer, T_max: int, absolute_min_lr: float, multiplicativeFactor: float, numWarmupEpochs: int, warmupFactor: float,  last_epoch: int = -1):
         self.multiplicativeFactor = multiplicativeFactor  # The multiplicative factor for the learning rate decay.
         self.absolute_min_lr = absolute_min_lr  # The absolute minimum learning rate to use.
         self.numWarmupEpochs = numWarmupEpochs  # The number of epochs to warm up the learning rate.
@@ -138,7 +138,7 @@ class CosineAnnealingLR_customized(LRScheduler):
         _warn_get_lr_called_within_step(self)
 
         # Base case: learning rate is constant.
-        if self.last_epoch <= self.numWarmupEpochs: return [self.absolute_min_lr for _ in self.base_lrs]
+        if self.last_epoch <= self.numWarmupEpochs: return self.updateStep(multiplicativeFactor=self.warmupFactor, base_lrs=self.base_lrs)
         return self.updateStep(multiplicativeFactor=self.multiplicativeFactor, base_lrs=self.base_lrs)
 
     def updateStep(self, multiplicativeFactor, base_lrs):

@@ -34,12 +34,12 @@ class modelParameters:
         return userInputParams
 
     def getTrainingBatchSize(self, submodel, numExperiments, datasetName):
-        # Wesad: Found 32 (out of 32) emotions across 60 experiments for 32 signals with 1.875 batches of 32 experiments
-        # Emognition: Found 12 (out of 12) emotions across 407 experiments for 38 signals with 15.654 batches of 26 experiments
-        # Amigos: Found 12 (out of 12) emotions across 673 experiments for 66 signals with 15.651 batches of 43 experiments
+        # Wesad: Found 32 (out of 32) emotions across 60 experiments for 31 signals with 4.0 batches of 15 experiments
+        # Amigos: Found 12 (out of 12) emotions across 673 experiments for 65 signals with 15.651 batches of 43 experiments
         # Dapper: Found 12 (out of 12) emotions across 364 experiments for 15 signals with 15.167 batches of 24 experiments
         # Case: Found 2 (out of 2) emotions across 1442 experiments for 35 signals with 15.846 batches of 91 experiments
-        # Empatch: Found 30 (out of 30) emotions across 165 experiments for 55 signals with 7.5 batches of 22 experiments
+        # Emognition: Found 12 (out of 12) emotions across 407 experiments for 38 signals with 15.654 batches of 26 experiments
+        # Empatch: Found 30 (out of 30) emotions across 165 experiments for 54 signals with 7.5 batches of 22 experiments
         if submodel == modelConstants.signalEncoderModel: effectiveMinBatchSize, effectiveMaxBatchSize = 24, 96
         elif submodel == modelConstants.emotionModel: effectiveMinBatchSize, effectiveMaxBatchSize = 24, 96
         else: raise Exception()
@@ -84,7 +84,7 @@ class modelParameters:
     # -------------------------- Compilation Parameters ------------------------- #
 
     @staticmethod
-    def getExclusionSequenceCriteria(): return 30, 30, 2, 0.2, 0.2  # minSequencePoints, minSignalPresentCount, minBoundaryPoints, maxSinglePointDiff, maxAverageDiff
+    def getExclusionSequenceCriteria(): return 32, 32, 2, 0.2, 0.2  # minSequencePoints, minSignalPresentCount, minBoundaryPoints, maxSinglePointDiff, maxAverageDiff
 
     # -------------------------- Saving/Loading Parameters ------------------------- #
 

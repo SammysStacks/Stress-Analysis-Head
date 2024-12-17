@@ -22,8 +22,8 @@ class lossCalculations:
 
         # Calculate the number of sequence points to throw out.
         self.minSequencePoints = modelParameters.getExclusionSequenceCriteria()[0]  # The minimum number of sequence points to consider.
-        self.numCulledLosses = int(self.minSequencePoints*0.1)  # The percentage of the data to trim from the top of the signal.
-        assert self.numCulledLosses == 3, "Hardcoded: The number of culled losses was optimized to 2-3."
+        self.numCulledLosses = max(2, min(4, int(self.minSequencePoints*0.125)))  # The percentage of the data to trim from the top of the signal.
+        assert self.numCulledLosses == 4, f"Hardcoded: The number of culled losses was optimized to 2-4, not {self.numCulledLosses}."
 
         # Initialize helper classes.
         self.dataInterface = emotionDataInterface()
