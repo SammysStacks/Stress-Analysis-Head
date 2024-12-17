@@ -24,12 +24,12 @@ waveletTypes_arr=('bior3.1')  # 'bior3.1' > 'bior3.3' > 'bior2.2' > 'bior3.5'
 # Learning parameters.
 optimizers_arr=('NAdam' 'RAdam' 'Adam' 'AdamW' 'Adamax')  # 'AdamW'; RAdam was bad for retraining profile.
 lrs_profile=('0.2' '0.1' '0.05' '0.3' '0.4')  # 0.05 <= x <= 0.4
-lrs_profileGen=('1e-4' '1e-2' '1e-3' '3e-4') # '5e-5')  # 5e-5 <= x <= 1e-4
-lrs_reversible=('1e-3' '1e-2' '1e-4' '3e-3')  # 5e-4 <= x <= 2e-3
+lrs_profileGen=('1e-4' '1e-2' '1e-3') # '5e-5')  # 5e-5 <= x <= 1e-4
+lrs_reversible=('1e-3' '1e-2' '1e-4')  # 5e-4 <= x <= 2e-3
 
 
-optimizers_arr=('NAdam' 'Adam' 'AdamW')  # 'AdamW'; RAdam was bad for retraining profile.
-lrs_profile=('0.2' '0.1' '0.05' '0.3')  # 0.05 <= x <= 0.4
+optimizers_arr=('NAdam' 'Adam')  # 'AdamW'; RAdam was bad for retraining profile.
+lrs_profile=('0.2')  # 0.05 <= x <= 0.4
 lrs_profileGen=('1e-4') # '5e-5')  # 5e-5 <= x <= 1e-4
 lrs_reversible=('1e-3')  # 5e-4 <= x <= 2e-3
 wds_profile=('1e-3')
