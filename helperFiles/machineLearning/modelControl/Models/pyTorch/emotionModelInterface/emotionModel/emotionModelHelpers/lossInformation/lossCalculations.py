@@ -5,7 +5,7 @@ from torch import nn
 
 # Helper classes
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.generalMethods.modelHelpers import modelHelpers
-from helperFiles.machineLearning.modelControl.Models.pyTorch.lossFunctions import pytorchLossMethods, weightLoss
+from helperFiles.machineLearning.modelControl.Models.pyTorch.lossFunctions import pytorchLossMethods
 from ..emotionDataInterface import emotionDataInterface
 from ..modelConstants import modelConstants
 from ..modelParameters import modelParameters

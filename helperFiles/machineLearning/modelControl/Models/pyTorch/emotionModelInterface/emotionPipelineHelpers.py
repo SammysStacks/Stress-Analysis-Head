@@ -1,6 +1,3 @@
-# Import files for machine learning
-import math
-
 from .emotionModel.emotionModelHead import emotionModelHead
 from .emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
 from .emotionModel.emotionModelHelpers.generalMethods.dataAugmentation import dataAugmentation
@@ -63,8 +60,8 @@ class emotionPipelineHelpers:
         self.model.specificSignalEncoderModel.profileModel.resetProfileWeights()
 
         # Reset the optimizer state for these parameters
-        # for p in list(self.optimizer.state.keys()):
-        #     if p in profileParams: self.optimizer.state[p] = {}  # TODO
+        for p in list(self.optimizer.state.keys()):
+            if p in profileParams: self.optimizer.state[p] = {}  # TODO
 
         # Return the number of epochs for the profile model
         if numEpochs < modelConstants.numWarmups: return 1
