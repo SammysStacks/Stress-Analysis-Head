@@ -36,11 +36,11 @@ numProfileEpochs_arr=(5 6 7 8 9 10 12 14 16 18 20 25)  # 3
 signalEncoderLayers_arr=(2 4 6 8 10 12 14 16 18 20 22 24)
 
 # Weight decays: 27
-wds_profileGen=('0')
-wds_reversible=('0') 
-wds_profile=('0')
+wds_profileGen=('1e-4')
+wds_reversible=(1e-3') 
+wds_profile=('1e-3')
 
-signalEncoderLayers_arr=(6 12)
+signalEncoderLayers_arr=(4 8 12)
 uniformWeightLimits_arr=('0.25') 
 numProfileEpochs_arr=(20)  
 momentums=('1e-10')
