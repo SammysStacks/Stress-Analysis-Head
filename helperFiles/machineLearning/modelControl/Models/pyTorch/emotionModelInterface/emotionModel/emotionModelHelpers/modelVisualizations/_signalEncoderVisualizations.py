@@ -2,7 +2,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
-from scipy.interpolate import interp1d
 from shap.plots.colors._colors import lch2rgb
 
 # Visualization protocols
