@@ -5,9 +5,9 @@ class profileModel(emotionModelWeights):
 
     def __init__(self, numExperiments, encodedDimension):
         super(profileModel, self).__init__()
+        self.profileStatePath, self.profileOGStatePath, self.lastLayerStatePath = None, None, None
         self.physiologicalProfile = self.getInitialPhysiologicalProfile(numExperiments)
         self.profileStateLosses, self.compiledSignalEncoderLayerStatePath = None, None
-        self.profileStatePath, self.profileOGStatePath = None, None
         self.encodedDimension = encodedDimension
         self.numExperiments = numExperiments
 
@@ -19,8 +19,8 @@ class profileModel(emotionModelWeights):
         self.physiologicalInitialization(self.physiologicalProfile)
 
     def resetProfileHolders(self):
+        self.profileStatePath, self.profileOGStatePath, self.lastLayerStatePath = [], [], []
         self.profileStateLosses, self.compiledSignalEncoderLayerStatePath = [], []
-        self.profileStatePath, self.profileOGStatePath = [], []
 
     def getPhysiologicalProfile(self, batchInds):
         return self.physiologicalProfile.to(batchInds.device)[batchInds]

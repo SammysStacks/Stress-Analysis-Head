@@ -258,6 +258,7 @@ class emotionModelHead(nn.Module):
             with torch.no_grad():
                 self.specificSignalEncoderModel.profileModel.profileStateLosses.append(self.calculateModelLosses.calculateSignalEncodingLoss(signalData, reconstructedSignalData, validDataMask, allSignalMask=None).clone().detach().cpu().numpy())
                 self.specificSignalEncoderModel.profileModel.profileOGStatePath.append(self.specificSignalEncoderModel.profileModel.physiologicalProfile.clone().detach().cpu().numpy())
+                self.specificSignalEncoderModel.profileModel.lastLayerStatePath.append(resampledSignalData[:, -1, :].clone().detach().cpu().numpy())
                 self.specificSignalEncoderModel.profileModel.compiledSignalEncoderLayerStatePath.append(compiledSignalEncoderLayerStates)
                 self.specificSignalEncoderModel.profileModel.profileStatePath.append(physiologicalProfile.clone().detach().cpu().numpy())
 

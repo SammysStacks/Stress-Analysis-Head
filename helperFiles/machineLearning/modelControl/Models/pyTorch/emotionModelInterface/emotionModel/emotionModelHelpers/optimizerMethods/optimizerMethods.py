@@ -63,6 +63,9 @@ class optimizerMethods:
         # General guidelines:
         #     Common WD values: 1E-2 to 1E-6
         #     Common LR values: 1E-6 to 1
+        momentum_decay = modelConstants.userInputParams["momentum_decay"]
+        beta1 = modelConstants.userInputParams["beta1"]
+        beta2 = modelConstants.userInputParams["beta2"]
 
         if optimizerType == 'Adadelta':
             # Adadelta is an extension of Adagrad that seeks to reduce its aggressive, monotonically decreasing learning rate.
@@ -75,29 +78,24 @@ class optimizerMethods:
         elif optimizerType == 'Adam':
             # Adam is a first-order gradient-based optimization of stochastic objective functions, based on adaptive estimates.
             # It's broadly used and suitable for most problems without much hyperparameter tuning.
-            return optim.Adam(params, lr=lr, betas=(0.5, 0.9), weight_decay=weight_decay, amsgrad=False, maximize=False)
+            return optim.Adam(params, lr=lr, betas=(beta1, beta2), weight_decay=weight_decay, amsgrad=False, maximize=False)
         elif optimizerType == 'AdamW':
             # AdamW modifies the way Adam implements weight decay, decoupling it from the gradient updates, leading to a more effective use of L2 regularization.
             # Use when regularization is a priority and particularly when fine-tuning pre-trained models.
-            return optim.AdamW(params, lr=lr, betas=(0.5, 0.9), weight_decay=weight_decay, amsgrad=False, maximize=False)
-        elif optimizerType == 'NAdam':  # TODO:
+            return optim.AdamW(params, lr=lr, betas=(beta1, beta2), weight_decay=weight_decay, amsgrad=False, maximize=False)
+        elif optimizerType == 'NAdam':
             # NAdam combines Adam with Nesterov momentum, aiming to combine the benefits of Nesterov and Adam.
             # Use in deep architectures where fine control over convergence is needed.
             # return optim.NAdam(params, lr=lr, betas=(0.95, 0.999), weight_decay=weight_decay, momentum_decay=0.004, decoupled_weight_decay=True)
-            momentum_decay = modelConstants.userInputParams["momentum_decay"]
-            beta1 = modelConstants.userInputParams["beta1"]
-            beta2 = modelConstants.userInputParams["beta2"]
-
             return optim.NAdam(params, lr=lr, betas=(beta1, beta2), weight_decay=weight_decay, momentum_decay=momentum_decay, decoupled_weight_decay=True)
-
         elif optimizerType == 'RAdam':
             # RAdam (Rectified Adam) is an Adam variant that introduces a term to rectify the variance of the adaptive learning rate.
             # Use it when facing unstable or poor training results with Adam, especially in smaller sample sizes.
-            return optim.RAdam(params, lr=lr, betas=(0.5, 0.9), weight_decay=weight_decay, decoupled_weight_decay=True)
+            return optim.RAdam(params, lr=lr, betas=(beta1, beta2), weight_decay=weight_decay, decoupled_weight_decay=True)
         elif optimizerType == 'Adamax':
             # Adamax is a variant of Adam based on the infinity norm, proposed as a more stable alternative.
             # Suitable for embeddings and sparse gradients.
-            return optim.Adamax(params, lr=lr, betas=(0.5, 0.9), weight_decay=weight_decay)
+            return optim.Adamax(params, lr=lr, betas=(beta1, beta2), weight_decay=weight_decay)
         elif optimizerType == 'ASGD':
             # ASGD (Averaged Stochastic Gradient Descent) is used when you require robustness over a large number of epochs.
             # Suitable for larger-scale and less well-behaved problems; often used in place of SGD when training for a very long time.

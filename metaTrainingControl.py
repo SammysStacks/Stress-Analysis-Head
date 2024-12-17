@@ -36,7 +36,7 @@ if __name__ == "__main__":
 
     # General model parameters.
     trainingDate = "2024-12-16"  # The current date we are training the model. Unique identifier of this training set.
-    testSplitRatio = 0.1  # The percentage of testing points.
+    testSplitRatio = 0.2  # The percentage of testing points.
 
     # ----------------------- Parse Model Parameters ----------------------- #
 
@@ -45,22 +45,22 @@ if __name__ == "__main__":
 
     # Add arguments for the general model
     parser.add_argument('--submodel', type=str, default=modelConstants.signalEncoderModel, help='The component of the model we are training. Options: signalEncoderModel, emotionModel')
-    parser.add_argument('--optimizerType', type=str, default='AdamW', help='The optimizerType used during training convergence: Options: RMSprop, Adam, AdamW, SGD, etc.')
+    parser.add_argument('--optimizerType', type=str, default='Adam', help='The optimizerType used during training convergence: Options: RMSprop, Adam, AdamW, SGD, etc.')
     parser.add_argument('--reversibleLearningProtocol', type=str, default='rCNN', help='The learning protocol for the model: rCNN')
     parser.add_argument('--irreversibleLearningProtocol', type=str, default='FC', help='The learning protocol for the model: CNN, FC')
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are using: cpu, cuda')
 
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model.')
-    parser.add_argument('--numSharedEncoderLayers', type=int, default=12, help='The number of layers in the model.')
-    parser.add_argument('--uniformWeightLimits', type=float, default=1/4, help='The limits for profile initialization.')
+    parser.add_argument('--numSharedEncoderLayers', type=int, default=6, help='The number of layers in the model.')
+    parser.add_argument('--uniformWeightLimits', type=float, default=1/3, help='The limits for profile initialization.')
     parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
-    parser.add_argument('--numProfileEpochs', type=int, default=20, help='The epochs for profile training.')
+    parser.add_argument('--numProfileEpochs', type=int, default=16, help='The epochs for profile training.')
     parser.add_argument('--numEncodedWeights', type=int, default=32, help='The number of profile weights.')
 
     # Add arguments for the neural operator.
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
-    parser.add_argument('--waveletType', type=str, default='bior3.3', help='The wavelet type for the wavelet transform: bior3.1, db3, dmey, etc')
+    parser.add_argument('--waveletType', type=str, default='bior3.1', help='The wavelet type for the wavelet transform: bior3.1, db3, dmey, etc')
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions).')
@@ -70,21 +70,19 @@ if __name__ == "__main__":
     parser.add_argument('--numEmotionModelLayers', type=int, default=4, help='The number of layers in the emotion model.')
     parser.add_argument('--numActivityChannels', type=int, default=4, help='The number of activity channels.')
 
-    # Temporary parameters.
-    parser.add_argument('--profileLR', type=float, default=0.25, help='The learning rate of the physiological model.')
-    parser.add_argument('--profileWD', type=float, default=1e-3, help='The learning rate of the general model: [1e-2, 1e-4]')
-
-    # Temporary parameters.
+    # Signal encoder learning rates.
+    parser.add_argument('--profileLR', type=float, default=0.2, help='The learning rate of the physiological model.')
     parser.add_argument('--reversibleLR', type=float, default=1e-3, help='The learning rate of the general model.')
-    parser.add_argument('--reversibleWD', type=float, default=1e-3, help='The learning rate of the general model.')
-
-    # Temporary parameters.
     parser.add_argument('--physGenLR', type=float, default=1e-4, help='The learning rate of the general model.')
-    parser.add_argument('--physGenWD', type=float, default=1e-4, help='The learning rate of the general model.')
+
+    # Signal encoder weight decays.
+    parser.add_argument('--profileWD', type=float, default=1e-3, help='The learning rate of the general model: [1e-2, 1e-4]')
+    parser.add_argument('--reversibleWD', type=float, default=1e-4, help='The learning rate of the general model.')
+    parser.add_argument('--physGenWD', type=float, default=1e-5, help='The learning rate of the general model.')
 
     # Add arguments for the emotion and activity architecture.
-    parser.add_argument('--momentum_decay', type=float, default=0, help='Momentum decay for the optimizer.')
-    parser.add_argument('--beta1', type=float, default=0.5, help='Beta1 for the optimizer: 0.7 -> 0.9')
+    parser.add_argument('--momentum_decay', type=float, default=0.01, help='Momentum decay for the optimizer.')
+    parser.add_argument('--beta1', type=float, default=0.7, help='Beta1 for the optimizer: 0.7 -> 0.9')
     parser.add_argument('--beta2', type=float, default=0.9, help='Beta2 for the optimizer: 0.9 -> 0.999')
 
     # Parse the arguments.

@@ -1,58 +1,31 @@
 #!/bin/bash
 
+# Optimizer parameters.
+momentums=('0.004')
+beta1s=('0.7')
+beta2s=('0.9')
+
+# Weight decay parameters.
+wds_profile=('1e-4' '1e-3' '1e-2')
+wds_profileGen=('1e-5')
+wds_reversible=('1e-4')
+
 # General parameters: 320
-allNumEncodedWeights=(4 8 16 32 64)  # 6
-numSpecificEncoderLayers_arr=(1 2)  # 2
-signalEncoderLayers_arr=(2 4 8 12 16)  # 5
-encodedDimensions_arr=(64 128 256 512)  # 4
+uniformWeightLimits_arr=('0.1' '0.25' '0.5' '0.75' '1')  # 10
+signalEncoderLayers_arr=(3 4 5 6 8)  # 1 2 3 4 5 6 7 8
+encodedDimensions_arr=(64 128 256 512)  # 64 128 256 512
+allNumEncodedWeights=(4 8 16 32 64)  # 4 8 16 32 64
+numSpecificEncoderLayers_arr=(1 2)  # 1 2
+numProfileEpochs_arr=(12)  # 3
 
-# General parameters: 18
-allNumEncodedWeights=(32)  # 6
-numSpecificEncoderLayers_arr=(1)  # 1
-encodedDimensions_arr=(256)  # 1
+# Neural operator parameters.
+waveletTypes_arr=('bior3.1')  # 'bior3.1' > 'bior3.3' > 'bior2.2' > 'bior3.5'
 
-# Finalized parameters.
-waveletTypes_arr=('bior3.1' 'bior3.3' 'bior2.2' 'bior3.5')  # 'bior3.1' > 'bior3.3' > 'bior2.2' > 'bior3.5'
+# Learning parameters.
 optimizers_arr=('NAdam' 'RAdam' 'Adam' 'AdamW' 'Adamax')  # 'AdamW'; RAdam was bad for retraining profile.
-
-# Finalized parameters.
-lrs_profile=('0.2' '0.1' '0.3' '0.4' '0.5' '0.6' '0.7' '0.8' '0.9' '1' '1.5' '2' '5')  # 0.05 <= x <= 2
+lrs_profile=('0.2' '0.1' '0.05' '0.3' '0.4')  # 0.05 <= x <= 0.4
 lrs_profileGen=('1e-4' '1e-2' '1e-3' '3e-4') # '5e-5')  # 5e-5 <= x <= 1e-4
 lrs_reversible=('1e-3' '1e-2' '1e-4' '3e-3')  # 5e-4 <= x <= 2e-3
-
-# Finalized parameters.
-beta2s=('0.9' '0.8' '0.7' '0.6' '0.5' '0.4' '0.3' '0.2' '0.1' '0.99' '0.999' '0' '1')  # 0.9 <= x <= 0.999
-beta1s=('0.7' '0.8' '0.6' '0.5' '0.4' '0.3' '0.2' '0.1' '0.9' '0' '0.95' '1')  # 0.5 <= x <= 0.95
-momentums=('0' '1e-8' '1e-7' '1e-6' '1e-5' '1e-4' '1e-3' '1e-2' '1e-1' '1')  # 0.9 <= x <= 0.999
-
-# Finalized parameters.
-wds_profileGen=('0' '1e-6' '1e-4' '1e-2' '1e-1' '1')  # 10
-wds_reversible=('0' '1e-6' '1e-4' '1e-2' '1e-1' '1')  # 10
-wds_profile=('0' '1e-6' '1e-4' '1e-2' '1e-1' '1' '2')  # 10
-
-# Finalized parameters.
-uniformWeightLimits_arr=('0.1' '0.2' '0.3' '0.4' '0.5' '0.6' '0.7' '0.8' '0.9' '1.0' '1.5' '2')  # 10
-numProfileEpochs_arr=(5 6 7 8 9 10 12 14 16 18 20 25)  # 3
-signalEncoderLayers_arr=(2 4 6 8 10 12 14 16 18 20 22 24)
-
-# Weight decays: 27
-wds_profileGen=('1e-4')
-wds_reversible=(1e-3') 
-wds_profile=('1e-3')
-
-signalEncoderLayers_arr=(4 8 12)
-uniformWeightLimits_arr=('0.25') 
-numProfileEpochs_arr=(20)  
-momentums=('1e-10')
-beta1s=('0.51')
-beta2s=('0.91')  
-
-lrs_reversible=('0.0011') 
-lrs_profileGen=('0.00011')
-lrs_profile=('0.21')
-
-waveletTypes_arr=('bior3.1')
-optimizers_arr=('NAdam')  # 'AdamW'; RAdam was bad for retraining profile.
 
 for beta1s in "${beta1s[@]}"
 do
