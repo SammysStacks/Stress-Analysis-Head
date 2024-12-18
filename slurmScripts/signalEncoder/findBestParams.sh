@@ -12,7 +12,7 @@ wds_reversible=('1e-4')
 
 # General parameters: 320
 uniformWeightLimits_arr=('0.2' '0.25' '1/3'  '0.5' '0.75' '1')  # 10
-signalEncoderLayers_arr=(2 4 6 8)  # 1 2 3 4 5 6 7 8
+signalEncoderLayers_arr=(6 8 10)  # 1 2 3 4 5 6 7 8
 encodedDimensions_arr=(128 256 512)  # 64 128 256 512
 allNumEncodedWeights=(32 64 128 256)  # 4 8 16 32 64
 numSpecificEncoderLayers_arr=(1 2)  # 1 2
