@@ -202,10 +202,10 @@ class emotionModelHead(nn.Module):
         compiledLayerStates = [metaLearningData.clone().detach().cpu().numpy()] if compileLayerStates else None
         reversibleInterface.changeDirections(forwardDirection=forwardPass)
 
-        # Calculate the estimated physiological profile given each signal.
-        for specificLayerInd in range(self.numSpecificEncoderLayers): 
-            metaLearningData = self.specificSignalEncoderModel.learningInterface(layerInd=specificLayerInd, signalData=metaLearningData)
-            if compileLayerStates: compiledLayerStates.append(metaLearningData.clone().detach().cpu().numpy())
+        # # Calculate the estimated physiological profile given each signal.
+        # for specificLayerInd in range(self.numSpecificEncoderLayers):
+        #     metaLearningData = self.specificSignalEncoderModel.learningInterface(layerInd=specificLayerInd, signalData=metaLearningData)
+        #     if compileLayerStates: compiledLayerStates.append(metaLearningData.clone().detach().cpu().numpy())
         # metaLearningData: batchSize, numSignals, finalDimension
 
         # Calculate the estimated physiological profile given each signal.
@@ -230,7 +230,7 @@ class emotionModelHead(nn.Module):
     def fullPass(self, submodel, signalData, signalIdentifiers, metadata, device, onlyProfileTraining):
         # Preallocate the output tensors.
         numExperiments, numSignals, maxSequenceLength, numChannels = signalData.size()
-        compiledSignalEncoderLayerStates = np.zeros(shape=(2*self.numSpecificEncoderLayers + self.numSharedEncoderLayers + 1, numExperiments, 1, self.encodedDimension))
+        compiledSignalEncoderLayerStates = np.zeros(shape=(self.numSpecificEncoderLayers + self.numSharedEncoderLayers + 1, numExperiments, 1, self.encodedDimension))
         basicEmotionProfile = torch.zeros((numExperiments, self.numBasicEmotions, self.encodedDimension), device=device, dtype=torch.float64)
         emotionProfile = torch.zeros((numExperiments, self.numEmotions, self.encodedDimension), device=device, dtype=torch.float64)
         reconstructedSignalData = torch.zeros((numExperiments, numSignals, maxSequenceLength), device=device, dtype=torch.float64)
@@ -249,7 +249,7 @@ class emotionModelHead(nn.Module):
                 physiologicalProfile[startBatchInd:endBatchInd], activityProfile[startBatchInd:endBatchInd], basicEmotionProfile[startBatchInd:endBatchInd], emotionProfile[startBatchInd:endBatchInd] \
                 = self.forward(submodel=submodel, signalData=signalData[startBatchInd:endBatchInd], signalIdentifiers=signalIdentifiers[startBatchInd:endBatchInd],
                                metadata=metadata[startBatchInd:endBatchInd], device=device, onlyProfileTraining=onlyProfileTraining)
-            if compiledSignalEncoderLayerState is not None: assert onlyProfileTraining; compiledSignalEncoderLayerStates[:, startBatchInd:endBatchInd, 0, :] = compiledSignalEncoderLayerState[:, :, 0, :]
+            if compiledSignalEncoderLayerState is not None: assert onlyProfileTraining; compiledSignalEncoderLayerStates[:, startBatchInd:endBatchInd, -1, :] = compiledSignalEncoderLayerState[:, :, -1, :]
 
             # Update the batch index.
             startBatchInd = endBatchInd
