@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
     # Add arguments for the general model
     parser.add_argument('--submodel', type=str, default=modelConstants.signalEncoderModel, help='The component of the model we are training. Options: signalEncoderModel, emotionModel')
-    parser.add_argument('--optimizerType', type=str, default='Adam', help='The optimizerType used during training convergence: Options: RMSprop, Adam, AdamW, SGD, etc.')
+    parser.add_argument('--optimizerType', type=str, default='NAdam', help='The optimizerType used during training convergence: Options: RMSprop, Adam, AdamW, SGD, etc.')
     parser.add_argument('--reversibleLearningProtocol', type=str, default='rCNN', help='The learning protocol for the model: rCNN')
     parser.add_argument('--irreversibleLearningProtocol', type=str, default='FC', help='The learning protocol for the model: CNN, FC')
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are using: cpu, cuda')
@@ -53,10 +53,10 @@ if __name__ == "__main__":
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model.')
     parser.add_argument('--numSharedEncoderLayers', type=int, default=4, help='The number of layers in the model.')
-    parser.add_argument('--uniformWeightLimits', type=float, default=0.28, help='The limits for profile initialization.')
+    parser.add_argument('--uniformWeightLimits', type=float, default=0.1, help='The limits for profile initialization.')
     parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
-    parser.add_argument('--numProfileEpochs', type=int, default=40, help='The epochs for profile training.')
-    parser.add_argument('--numEncodedWeights', type=int, default=128, help='The number of profile weights.')
+    parser.add_argument('--numProfileEpochs', type=int, default=30, help='The epochs for profile training.')
+    parser.add_argument('--numEncodedWeights', type=int, default=64, help='The number of profile weights.')
 
     # Add arguments for the neural operator.
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     parser.add_argument('--numActivityChannels', type=int, default=4, help='The number of activity channels.')
 
     # Signal encoder learning rates.
-    parser.add_argument('--profileLR', type=float, default=0.3, help='The learning rate of the physiological model.')
+    parser.add_argument('--profileLR', type=float, default=0.25, help='The learning rate of the physiological model.')
     parser.add_argument('--reversibleLR', type=float, default=1e-3, help='The learning rate of the general model.')
     parser.add_argument('--physGenLR', type=float, default=1e-4, help='The learning rate of the general model.')
 
