@@ -16,7 +16,7 @@ signalEncoderLayers_arr=(4 8)  # 1 2 3 4 5 6 7 8
 encodedDimensions_arr=(256)  # 64 128 256 512
 allNumEncodedWeights=(32 64 128 256)  # 4 8 16 32 64
 numSpecificEncoderLayers_arr=(1)  # 1 2
-numProfileEpochs_arr=(30)  # 3
+numProfileEpochs_arr=(40)  # 3
 
 # Neural operator parameters.
 waveletTypes_arr=('bior3.1')  # 'bior3.1' > 'bior3.3' > 'bior2.2' > 'bior3.5'
