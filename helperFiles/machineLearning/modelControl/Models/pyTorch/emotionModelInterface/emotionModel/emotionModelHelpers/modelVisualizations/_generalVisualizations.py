@@ -122,6 +122,10 @@ class generalVisualizations(globalPlottingProtocols):
                 testingLoss = np.asarray(testingLosses[modelInd])
                 testingLoss[np.isnan(testingLoss)] = None
                 plt.plot(testingLoss, '--', color=self.darkColors[modelInd], linewidth=1, alpha=0.025)
+        plt.hlines(y=0.01, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
+        plt.hlines(y=0.1, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
+        plt.hlines(y=0.07, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.5)
+        plt.hlines(y=0.02, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.5)
 
         # Label the plot.
         if logY: plt.yscale('log')
