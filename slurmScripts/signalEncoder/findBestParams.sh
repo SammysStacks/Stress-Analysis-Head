@@ -11,7 +11,7 @@ wds_profileGen=('1e-5')
 wds_reversible=('1e-4')
 
 # General parameters: 320
-uniformWeightLimits_arr=('0.2' '0.3' '0.75' '1.5')  # 10
+uniformWeightLimits_arr=('0.1' '0.2' '0.3' '0.75' '1.5')  # 10
 signalEncoderLayers_arr=(4 8)  # 1 2 3 4 5 6 7 8
 encodedDimensions_arr=(256)  # 64 128 256 512
 allNumEncodedWeights=(32 64 128 256)  # 4 8 16 32 64
