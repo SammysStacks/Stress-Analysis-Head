@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Optimizer parameters.
-momentums=('0.004')
+momentums=('0.004' '0.1' '0.01')
 beta1s=('0.7')
 beta2s=('0.9')
 
@@ -11,25 +11,24 @@ wds_profileGen=('1e-5')
 wds_reversible=('1e-4')
 
 # General parameters: 320
-uniformWeightLimits_arr=('0.2' '0.25' '1/3'  '0.5' '0.75' '1')  # 10
-signalEncoderLayers_arr=(6 8 10)  # 1 2 3 4 5 6 7 8
-encodedDimensions_arr=(128 256 512)  # 64 128 256 512
+uniformWeightLimits_arr=('0.2' '0.3' '0.75' '1.5')  # 10
+signalEncoderLayers_arr=(4 8)  # 1 2 3 4 5 6 7 8
+encodedDimensions_arr=(256)  # 64 128 256 512
 allNumEncodedWeights=(32 64 128 256)  # 4 8 16 32 64
-numSpecificEncoderLayers_arr=(1 2)  # 1 2
-numProfileEpochs_arr=(16 25)  # 3
+numSpecificEncoderLayers_arr=(1)  # 1 2
+numProfileEpochs_arr=(30)  # 3
 
 # Neural operator parameters.
 waveletTypes_arr=('bior3.1')  # 'bior3.1' > 'bior3.3' > 'bior2.2' > 'bior3.5'
 
 # Learning parameters.
 optimizers_arr=('NAdam' 'RAdam' 'Adam' 'AdamW' 'Adamax')  # 'AdamW'; RAdam was bad for retraining profile.
-lrs_profile=('0.2' '0.1' '0.05' '0.3' '0.4')  # 0.05 <= x <= 0.4
+lrs_profile=('0.2' '0.1' '0.3')  # 0.05 <= x <= 0.4
 lrs_profileGen=('1e-4' '1e-2' '1e-3') # '5e-5')  # 5e-5 <= x <= 1e-4
 lrs_reversible=('1e-3' '1e-2' '1e-4')  # 5e-4 <= x <= 2e-3
 
 
-optimizers_arr=('NAdam' 'Adam')  # 'AdamW'; RAdam was bad for retraining profile.
-lrs_profile=('0.2')  # 0.05 <= x <= 0.4
+optimizers_arr=('NAdam')  # 'AdamW'; RAdam was bad for retraining profile.
 lrs_profileGen=('1e-4') # '5e-5')  # 5e-5 <= x <= 1e-4
 lrs_reversible=('1e-3')  # 5e-4 <= x <= 2e-3
 wds_profile=('1e-3')
