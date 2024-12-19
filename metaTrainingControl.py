@@ -55,7 +55,7 @@ if __name__ == "__main__":
     parser.add_argument('--numSharedEncoderLayers', type=int, default=4, help='The number of layers in the model.')
     parser.add_argument('--uniformWeightLimits', type=float, default=0.28, help='The limits for profile initialization.')
     parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
-    parser.add_argument('--numProfileEpochs', type=int, default=30, help='The epochs for profile training.')
+    parser.add_argument('--numProfileEpochs', type=int, default=40, help='The epochs for profile training.')
     parser.add_argument('--numEncodedWeights', type=int, default=128, help='The number of profile weights.')
 
     # Add arguments for the neural operator.
