@@ -125,7 +125,9 @@ class generalVisualizations(globalPlottingProtocols):
         plt.hlines(y=0.01, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2)
         plt.hlines(y=0.1, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2)
         plt.hlines(y=0.07, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.5)
+        plt.hlines(y=0.06, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.25)
         plt.hlines(y=0.02, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.5)
+        plt.hlines(y=0.03, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.25)
         plt.xlim((0, len(trainingLosses[0])))
 
         # Label the plot.
