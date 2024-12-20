@@ -230,17 +230,20 @@ class emotionModelHead(nn.Module):
     def fullPass(self, submodel, signalData, signalIdentifiers, metadata, device, onlyProfileTraining):
         # Preallocate the output tensors.
         numExperiments, numSignals, maxSequenceLength, numChannels = signalData.size()
-        compiledSignalEncoderLayerStates = np.zeros(shape=(2*self.numSpecificEncoderLayers + self.numSharedEncoderLayers + 1, numExperiments, 1, self.encodedDimension))
-        basicEmotionProfile = torch.zeros((numExperiments, self.numBasicEmotions, self.encodedDimension), device=device, dtype=torch.float64)
-        emotionProfile = torch.zeros((numExperiments, self.numEmotions, self.encodedDimension), device=device, dtype=torch.float64)
-        reconstructedSignalData = torch.zeros((numExperiments, numSignals, maxSequenceLength), device=device, dtype=torch.float64)
-        resampledSignalData = torch.zeros((numExperiments, numSignals, self.encodedDimension), device=device, dtype=torch.float64)
-        validDataMask = torch.zeros((numExperiments, numSignals, maxSequenceLength), device=device, dtype=torch.bool)
-        physiologicalProfile = torch.zeros((numExperiments, self.encodedDimension), device=device, dtype=torch.float64)
-        activityProfile = torch.zeros((numExperiments, self.encodedDimension), device=device, dtype=torch.float64)
         testingBatchSize = modelParameters.getInferenceBatchSize(submodel, device)
-        startBatchInd = 0
 
+        with torch.no_grad():
+            # Initialize the output tensors.
+            compiledSignalEncoderLayerStates = np.zeros(shape=(2*self.numSpecificEncoderLayers + self.numSharedEncoderLayers + 1, numExperiments, 1, self.encodedDimension))
+            basicEmotionProfile = torch.zeros((numExperiments, self.numBasicEmotions, self.encodedDimension), device=device)
+            validDataMask = torch.zeros((numExperiments, numSignals, maxSequenceLength), device=device, dtype=torch.bool)
+            emotionProfile = torch.zeros((numExperiments, self.numEmotions, self.encodedDimension), device=device)
+            reconstructedSignalData = torch.zeros((numExperiments, numSignals, maxSequenceLength), device=device)
+            resampledSignalData = torch.zeros((numExperiments, numSignals, self.encodedDimension), device=device)
+            physiologicalProfile = torch.zeros((numExperiments, self.encodedDimension), device=device)
+            activityProfile = torch.zeros((numExperiments, self.encodedDimension), device=device)
+
+        startBatchInd = 0
         while startBatchInd < numExperiments:
             endBatchInd = startBatchInd + testingBatchSize
 

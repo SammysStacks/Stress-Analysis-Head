@@ -31,11 +31,11 @@ if __name__ == "__main__":
         cpu=torch.backends.mps.is_available(),  # Whether to use the CPU. MPS is NOT fully compatible yet.
         step_scheduler_with_optimizer=False,  # Whether to wrap the optimizer in a scheduler.
         gradient_accumulation_steps=1,  # The number of gradient accumulation steps.
-        mixed_precision="no",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"  TODO
+        mixed_precision="fp16",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"  TODO
     )
 
     # General model parameters.
-    trainingDate = "2024-12-18"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2024-12-20"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Parse Model Parameters ----------------------- #
