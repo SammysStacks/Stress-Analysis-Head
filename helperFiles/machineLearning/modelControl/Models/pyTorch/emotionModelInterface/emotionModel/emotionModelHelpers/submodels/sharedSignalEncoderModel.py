@@ -15,9 +15,8 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         super(sharedSignalEncoderModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numInputSignals=1, numOutputSignals=1, addBiasTerm=False)
         # General model parameters.
         self.neuralOperatorParameters = neuralOperatorParameters  # The parameters for the neural operator.
-        self.encodedTimeWindow = modelConstants.timeWindows[-1]  # The time window for the encoded signal.
+        self.encodedTimeWindow = modelConstants.modelTimeWindow  # The time window for the encoded signal.
         self.numSharedEncoderLayers = numSharedEncoderLayers  # The number of shared encoder layers.
-        self.fourierDimension = encodedDimension // 2 + 1  # The dimension of the fourier data.
         self.learningProtocol = learningProtocol  # The learning protocol for the model.
         self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
 

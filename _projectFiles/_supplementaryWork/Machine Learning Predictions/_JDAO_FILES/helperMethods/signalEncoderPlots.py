@@ -91,11 +91,11 @@ class signalEncoderPlots(trainingPlots):
         numLiftedChannelsTestbed = numLiftedChannels
 
         trainingLossHolders = np.zeros(
-            (len(modelConstants.timeWindows), len(self.datasetNames), len(numLiftedChannelsTestbed), encodedSamplingFreqTested, numEncodingLayersTested))
+            (len(modelConstants.modelTimeWindow), len(self.datasetNames), len(numLiftedChannelsTestbed), encodedSamplingFreqTested, numEncodingLayersTested))
         testingLossHolders = np.zeros(
-            (len(modelConstants.timeWindows), len(self.datasetNames), len(numLiftedChannelsTestbed), encodedSamplingFreqTested, numEncodingLayersTested))
+            (len(modelConstants.modelTimeWindow), len(self.datasetNames), len(numLiftedChannelsTestbed), encodedSamplingFreqTested, numEncodingLayersTested))
         optimalLossHolders = np.zeros(
-            (len(modelConstants.timeWindows), len(self.datasetNames), len(numLiftedChannelsTestbed), encodedSamplingFreqTested, numEncodingLayersTested))
+            (len(modelConstants.modelTimeWindow), len(self.datasetNames), len(numLiftedChannelsTestbed), encodedSamplingFreqTested, numEncodingLayersTested))
 
         # Dimension: (numTimeWindows, numDatasets, encodedSamplingFreqTested, numEncodingLayersTested)
 
@@ -122,13 +122,13 @@ class signalEncoderPlots(trainingPlots):
                     print(numLiftedChannels, encodedSamplingFreq, numEncodingLayers)
 
                     # For each model, get the losses.
-                    lossCurves = np.empty((len(modelConstants.timeWindows), len(self.datasetNames)), dtype=object)
-                    smoothedLossCurves = np.empty((len(modelConstants.timeWindows), len(self.datasetNames)), dtype=object)
+                    lossCurves = np.empty((len(modelConstants.modelTimeWindow), len(self.datasetNames)), dtype=object)
+                    smoothedLossCurves = np.empty((len(modelConstants.modelTimeWindow), len(self.datasetNames)), dtype=object)
                     fig, axs = plt.subplots(1, 2, figsize=(15, 5), sharex=True, sharey=True)
                     for modelInd in range(len(allDummyModelPipelines)):
                         currentModel = self.getSubmodel(allDummyModelPipelines[modelInd], submodel=modelConstants.signalEncoderModel)
 
-                        for timeWindowInd in range(len(modelConstants.timeWindows)):
+                        for timeWindowInd in range(len(modelConstants.modelTimeWindow)):
                             trainLoss = currentModel.trainingLosses_signalReconstruction[timeWindowInd]
                             smoothedTrainLoss = self.getSmoothedLosses(currentModel.trainingLosses_signalReconstruction[timeWindowInd])
 
@@ -204,17 +204,17 @@ class signalEncoderPlots(trainingPlots):
 
         plt.subplot(121)
         plt.title('Train Loss', fontsize=18)
-        for timeWindowInd in range(len(modelConstants.timeWindows)):
+        for timeWindowInd in range(len(modelConstants.modelTimeWindow)):
             plt.bar(x + width / len(self.datasetNames) * timeWindowInd,
                     np.asarray(trainingLoss_plotting)[:, 0, timeWindowInd], width / len(self.datasetNames),
                     yerr=np.asarray(trainingLoss_plotting)[:, 1, timeWindowInd],
-                    label=f'{modelConstants.timeWindows[timeWindowInd]}s Time Window',
+                    label=f'{modelConstants.modelTimeWindow}s Time Window',
                     color=self.timeWindowColors[timeWindowInd])
         plt.xticks([i + width / 2 for i in range(len(self.datasetNames))], self.datasetNames, fontsize=15)
 
         plt.subplot(122)
         plt.title('Test Loss', fontsize=18)
-        for timeWindowInd in range(len(modelConstants.timeWindows)):
+        for timeWindowInd in range(len(modelConstants.modelTimeWindow)):
             plt.bar(x + width / len(self.datasetNames) * timeWindowInd,
                     np.asarray(trainingLoss_plotting)[:, 0, timeWindowInd], width / len(self.datasetNames),
                     yerr=np.asarray(trainingLoss_plotting)[:, 1, timeWindowInd],
@@ -247,7 +247,7 @@ class signalEncoderPlots(trainingPlots):
         # SVD: 2; Training: 3; Testing: 4
 
         # Plot the heatmaps for each combination of losses
-        for time_index, time_window in enumerate(modelConstants.timeWindows):
+        for time_index, time_window in enumerate(modelConstants.modelTimeWindow):
             for param_pair in combinationLosses:
                 fig, axs = plt.subplots(nrows=1, ncols=len(self.datasetNames), figsize=(15, 5))
                 fig.suptitle(f"Accuracy Heatmaps for Time Window: {time_window}")
@@ -291,7 +291,7 @@ class signalEncoderPlots(trainingPlots):
         lossHolders = []
         for _ in lossStrings:
             # Initialize the holders.
-            lossHolders.append(np.zeros((len(modelConstants.timeWindows), len(self.datasetNames), numLiftedChannelsTested, encodedSamplingFreqTested, numEncodingLayersTested)))
+            lossHolders.append(np.zeros((len(modelConstants.modelTimeWindow), len(self.datasetNames), numLiftedChannelsTested, encodedSamplingFreqTested, numEncodingLayersTested)))
             # Dimension: (len(lossStrings), numTimeWindows, numDatasets, numLiftedChannelsTested, encodedSamplingFreqTested, numEncodingLayersTested)
 
         allDummyModelPipelines = []
@@ -315,7 +315,7 @@ class signalEncoderPlots(trainingPlots):
                     # For each model, get the losses.
                     for modelInd in range(len(allDummyModelPipelines)):
                         currentModel = self.getSubmodel(allDummyModelPipelines[modelInd], submodel=modelConstants.signalEncoderModel)
-                        assert modelConstants.timeWindows == modelConstants.timeWindows, f"Time windows do not match: {modelConstants.timeWindows} != {modelConstants.timeWindows}"
+                        assert modelConstants.modelTimeWindow == modelConstants.modelTimeWindow, f"Time windows do not match: {modelConstants.modelTimeWindow} != {modelConstants.modelTimeWindow}"
 
                         # For each loss value we want:
                         for lossInd, lossString in enumerate(lossStrings):

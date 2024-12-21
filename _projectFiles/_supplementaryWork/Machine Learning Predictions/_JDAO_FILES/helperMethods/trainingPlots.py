@@ -62,7 +62,7 @@ class trainingPlots(globalPlottingProtocols):
         # Update the compiler information for this model.
         self.modelCompiler.addSubmodelParameters(loadSubmodel, userInputParams)
 
-        timeWindows = modelConstants.timeWindows
+        timeWindows = modelConstants.modelTimeWindow
 
         # Initialize saving folder
         saveAutoencoderLossPlots = "/Time Analysis Plots/"
@@ -129,7 +129,7 @@ class trainingPlots(globalPlottingProtocols):
         # Update the compiler information for this model.
         self.modelCompiler.addSubmodelParameters(loadSubmodel, userInputParams)
 
-        timeWindows = modelConstants.timeWindows
+        timeWindows = modelConstants.modelTimeWindow
 
         # Initialize saving folder
         saveAutoencoderLossPlots = self.savingFolder + "/Time Analysis Plots/"

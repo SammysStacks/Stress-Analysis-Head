@@ -64,8 +64,8 @@ class organizeTrainingLosses(lossCalculations):
             # return None
 
             # # For each time window analysis.
-            # for timeWindowInd in range(len(modelConstants.timeWindows)):
-            #     timeWindow = modelConstants.timeWindows[timeWindowInd]
+            # for timeWindowInd in range(len(modelConstants.modelTimeWindow)):
+            #     timeWindow = modelConstants.modelTimeWindow
             #     # If we are debugging and do not need to store all the loss values.
             #     if fastPass and timeWindow != self.generalTimeWindow: continue
             #

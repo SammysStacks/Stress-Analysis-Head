@@ -41,7 +41,7 @@ class signalEncoderPlots(trainingPlots):
         numLiftedChannelsTested, encodedSamplingFreqTested, numEncodingLayersTested = trainingLossHolders[0][0].shape
 
         # Plot the heatmaps for each combination of losses
-        for time_index, time_window in enumerate(modelConstants.timeWindows):
+        for time_index, time_window in enumerate(modelConstants.modelTimeWindow):
             for dataset_index, dataset_name in enumerate(self.datasetNames):
                 data = trainingLossHolders[time_index, dataset_index, :, :, :]
 
@@ -93,12 +93,6 @@ class signalEncoderPlots(trainingPlots):
         encodedSamplingFreqTested = numExpandedSignalBounds[1] - numExpandedSignalBounds[0] + 1  # Boundary inclusive
         numEncodingLayersTested = numEncodingLayerBounds[1] - numEncodingLayerBounds[0] + 1  # Boundary inclusive
 
-        lossHolders = []
-        for _ in lossStrings:
-            # Initialize the holders.
-            lossHolders.append(np.zeros((len(modelConstants.timeWindows), len(self.datasetNames), numLiftedChannelsTested, encodedSamplingFreqTested, numEncodingLayersTested)))
-            # Dimension: (len(lossStrings), numTimeWindows, numDatasets, numLiftedChannelsTested, encodedSamplingFreqTested, numEncodingLayersTested)
-
         allDummyModelPipelines = []
         # For each lifted channel value.
         for numLiftedChannelInd in range(numLiftedChannelsTested):
@@ -119,7 +113,6 @@ class signalEncoderPlots(trainingPlots):
                     # For each model, get the losses.
                     for modelInd in range(len(allDummyModelPipelines)):
                         currentModel = self.getSubmodel(allDummyModelPipelines[modelInd], submodel=modelConstants.signalEncoderModel)
-                        assert modelConstants.timeWindows == modelConstants.timeWindows, f"Time windows do not match: {modelConstants.timeWindows} != {modelConstants.timeWindows}"
 
                         # For each loss value we want:
                         for lossInd, lossString in enumerate(lossStrings):

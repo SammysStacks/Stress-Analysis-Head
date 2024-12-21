@@ -43,15 +43,13 @@ class modelConstants:
     signalIdentifiers = [signalIndexSI, batchIndexSI]
     metadata = [datasetIndexMD, subjectIndexMD]
 
-    timeWindows = [90, 120]
-    # Specify the data interface parameters.
-    minMaxScale = 1  # The maximum value for the min-max scaling.
-    numBatches = 16  # The number of batches to use in the model.
-
     # Specify the model parameters.
     uniformWeightLimits = None  # The limits for the uniform initialization.
     numEncodedWeights = None  # The number of encoded weights.
+    modelTimeWindow = 120  # The time window for the model.
     numEpochs_minLR = 4  # The number of warmup epochs.
+    minMaxScale = 1  # The maximum value for the min-max scaling.
+    numBatches = 16  # The number of batches to use in the model.
     numWarmups = 5  # The number of warmup epochs.
 
     # Specify the data interface parameter names.
@@ -79,4 +77,3 @@ class modelConstants:
     }
 
     # -------------------------------------------------------------------- #
-

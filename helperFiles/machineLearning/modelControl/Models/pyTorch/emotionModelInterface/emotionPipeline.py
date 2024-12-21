@@ -1,9 +1,9 @@
 import time
-
 import torch
 
-from .emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
-from .emotionPipelineHelpers import emotionPipelineHelpers
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionPipelineHelpers import emotionPipelineHelpers
 
 
 class emotionPipeline(emotionPipelineHelpers):
@@ -23,7 +23,10 @@ class emotionPipeline(emotionPipelineHelpers):
         self.setupTraining(submodel, profileTraining=profileTraining, specificTraining=specificTraining, trainSharedLayers=trainSharedLayers)
         onlyProfileTraining = profileTraining and not specificTraining and not trainSharedLayers
         if self.model.debugging: self.accelerator.print(f"\nTraining {self.datasetName} model")
-        if onlyProfileTraining: dataLoader = (dataLoader.dataset.getAll(),)
+        if onlyProfileTraining:
+            dataLoader = dataLoader.dataset.getAll()
+            testSize = modelParameters.getInferenceBatchSize(submodel, self.accelerator.device)
+            dataLoader = dataLoader.chunk(dataLoader.size(0) // testSize)
 
         # For each training epoch.
         for epoch in range(numEpochs):
@@ -73,6 +76,7 @@ class emotionPipeline(emotionPipelineHelpers):
                         t22 = time.time()
 
                         # Assert that nothing is wrong with the predictions.
+                        self.modelHelpers.assertVariableIntegrity(compiledSignalEncoderLayerStates, variableName="compiled signal encoder layer states", assertGradient=False)
                         self.modelHelpers.assertVariableIntegrity(reconstructedSignalData, variableName="reconstructed signal data", assertGradient=False)
                         self.modelHelpers.assertVariableIntegrity(physiologicalProfile, variableName="physiological profile", assertGradient=False)
                         self.modelHelpers.assertVariableIntegrity(resampledSignalData, variableName="resampled signal data", assertGradient=False)

@@ -5,6 +5,7 @@ from torch import nn
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.modelHelpers.abnormalConvolutions import subPixelUpsampling1D
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.modelHelpers.convolutionalHelpers import convolutionalHelpers, ResNet
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleConvolutionLayer import reversibleConvolutionLayer
 
@@ -20,7 +21,10 @@ class emotionModelWeights(convolutionalHelpers):
         if activationMethod == 'none': return linearLayer
 
         linearLayer = nn.Sequential(linearLayer, activationFunctions.getActivationMethod(activationMethod))
-        if addResidualConnection: return ResNet(module=linearLayer)
+        if addResidualConnection:
+            if numOutputFeatures == numOutputFeatures: return ResNet(module=linearLayer)
+            linearLayer.append(subPixelUpsampling1D(upscale_factor=numOutputFeatures // numInputFeatures))
+        return linearLayer
 
     # ------------------- Physiological Profile ------------------- #
 
@@ -67,11 +71,21 @@ class emotionModelWeights(convolutionalHelpers):
     def physiologicalGeneration(self, numOutputFeatures):
         numUpSamples = int(math.log2(numOutputFeatures // modelConstants.numEncodedWeights))
         layers = [
+            # Linear model with residual connection.
             self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
             self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
+
+            ResNet(module=nn.Sequential(
+                # Linear model with overall residual connection.
+                self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=numOutputFeatures, activationMethod='SoftSign', addBias=False, addResidualConnection=False),
+                self.linearModel(numInputFeatures=numOutputFeatures, numOutputFeatures=numOutputFeatures, activationMethod='SoftSign', addBias=False, addResidualConnection=False),
+                self.linearModel(numInputFeatures=numOutputFeatures, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=False),
+            )),
+
+            # Linear model with residual connection.
             self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
             self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
-            self.convolutionalFilters_resNetBlocks(numResNets=2, numBlocks=4, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False),
+            self.convolutionalFilters_resNetBlocks(numResNets=1, numBlocks=4, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False),
         ]
 
         # Construct the profile generation model.

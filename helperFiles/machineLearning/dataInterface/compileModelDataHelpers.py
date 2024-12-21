@@ -186,7 +186,7 @@ class compileModelDataHelpers:
                 biomarkerTimes = surveyAnswerTime - biomarkerTimes
 
                 # Remove data outside the time window.
-                timeWindowMask = (biomarkerTimes <= modelConstants.timeWindows[-1]).to(torch.bool)
+                timeWindowMask = (biomarkerTimes <= modelConstants.modelTimeWindow).to(torch.bool)
                 biomarkerData = biomarkerData[:, timeWindowMask]
                 biomarkerTimes = biomarkerTimes[timeWindowMask]
 

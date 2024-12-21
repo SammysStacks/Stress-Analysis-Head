@@ -26,7 +26,7 @@ class humanMachineInterface:
         )
 
         # General parameters.
-        self.modelTimeWindow = modelConstants.timeWindows[-1]
+        self.modelTimeWindow = modelConstants.modelTimeWindow
         self.submodel = modelConstants.emotionModel
         self.startModelTime = self.modelTimeWindow
         self.actionControl = actionControl

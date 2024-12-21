@@ -156,7 +156,7 @@ class trainingProtocols(extractData):
             finalSurveyAnswerTimes, finalSurveyAnswerList = [], []
             # For each experiment performed in the trial.
             for experimentInd in range(len(experimentTimes)):
-                startIntervalTime = max(0, currentSurveyAnswerTimes[experimentInd] - modelConstants.timeWindows[-1])
+                startIntervalTime = max(0, currentSurveyAnswerTimes[experimentInd] - modelConstants.modelTimeWindow)
                 startSurveyTime = currentSurveyAnswerTimes[experimentInd]
 
                 # Calculate the feature intervals
