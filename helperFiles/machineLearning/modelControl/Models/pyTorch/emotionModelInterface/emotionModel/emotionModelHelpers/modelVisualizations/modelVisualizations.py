@@ -86,7 +86,6 @@ class modelVisualizations(globalPlottingProtocols):
             compiledSignalEncoderLayerStatePath = np.asarray(model.specificSignalEncoderModel.profileModel.compiledSignalEncoderLayerStatePath)  # 2*numSpecific + numShared + 1, numExperiments, numSignals, encodedDimension
             embeddedProfile = model.specificSignalEncoderModel.profileModel.embeddedPhysiologicalProfile.detach().cpu().numpy()  # numExperiments, numEncodedWeights
             embeddedProfileStatePath = np.asarray(model.specificSignalEncoderModel.profileModel.embeddedProfileStatePath)  # numProfileSteps, numExperiments, numEncodedWeights
-            lastLayerStatePath = np.asarray(model.specificSignalEncoderModel.profileModel.lastLayerStatePath)  # numProfileSteps, numExperiments, numEncodedWeights
             profileStatePath = np.asarray(model.specificSignalEncoderModel.profileModel.profileStatePath)  # numProfileSteps, numExperiments, encodedDimension
             resampledBiomarkerTimes = model.sharedSignalEncoderModel.hyperSampledTimes.detach().cpu().numpy()  # numTimePoints
             globalPlottingProtocols.clearFigure(fig=None, legend=None, showPlot=False)

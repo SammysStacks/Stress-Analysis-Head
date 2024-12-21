@@ -77,7 +77,7 @@ class trainingProtocolHelpers:
                 # Record final state paths.
                 batchSignalInfo, _, _, _, _, _ = modelPipeline.extractBatchInformation(dataLoader.dataset.getAll())
                 signalBatchData, batchSignalIdentifiers, metaBatchInfo = emotionDataInterface.separateData(batchSignalInfo)
-                modelPipeline.model.fullPass(submodel, signalBatchData, batchSignalIdentifiers, metaBatchInfo, device=modelPipeline.accelerator.device, onlyProfileTraining=True)
+                modelPipeline.model.fullPass(submodel, signalBatchData, batchSignalIdentifiers, metaBatchInfo, device=modelPipeline.accelerator.device, profileEpoch=numEpochs)
             self.accelerator.wait_for_everyone()
 
     def calculateLossInformation(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel):

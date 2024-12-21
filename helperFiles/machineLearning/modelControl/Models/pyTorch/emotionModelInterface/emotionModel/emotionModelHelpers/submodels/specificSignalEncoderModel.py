@@ -21,7 +21,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         self.featureNames = featureNames  # The names of the signals to encode.
 
         # The neural layers for the signal encoder.
-        self.profileModel = profileModel(numExperiments, encodedDimension)
+        self.profileModel = profileModel(numExperiments=numExperiments, numSignals=self.numSignals, encodedDimension=encodedDimension)
         self.processingLayers, self.neuralLayers = nn.ModuleList(), nn.ModuleList()
         for _ in range(2*self.numSpecificEncoderLayers): self.addLayer()
 

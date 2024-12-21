@@ -26,7 +26,7 @@ class emotionPipeline(emotionPipelineHelpers):
         if onlyProfileTraining:
             dataLoader = dataLoader.dataset.getAll()
             testSize = modelParameters.getInferenceBatchSize(submodel, self.accelerator.device)
-            dataLoader = dataLoader.chunk(dataLoader.size(0) // testSize)
+            dataLoader = (dataLoaderObj.chunk(dataLoader.size(0) // testSize) for dataLoaderObj in dataLoader)
 
         # For each training epoch.
         for epoch in range(numEpochs):
@@ -39,6 +39,7 @@ class emotionPipeline(emotionPipelineHelpers):
                         # Extract the data, labels, and testing/training indices.
                         batchSignalInfo, batchSignalLabels, batchTrainingLabelMask, batchTestingLabelMask, batchTrainingSignalMask, batchTestingSignalMask = self.extractBatchInformation(batchData)
                         if onlyProfileTraining: batchTrainingLabelMask, batchTestingLabelMask, batchTrainingSignalMask, batchTestingSignalMask = None, None, None, None
+                        if onlyProfileTraining: print(batchSignalInfo.size(), batchSignalLabels.size())
 
                         # We can skip this batch, and backpropagation if necessary.
                         if batchSignalInfo.size(0) == 0: self.backpropogateModel(); continue
@@ -65,7 +66,7 @@ class emotionPipeline(emotionPipelineHelpers):
                         # Perform the forward pass through the model.
                         validDataMask, reconstructedSignalData, resampledSignalData, compiledSignalEncoderLayerStates, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = \
                             self.model.forward(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, onlyProfileTraining=onlyProfileTraining) if not onlyProfileTraining else \
-                            self.model.fullPass(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, onlyProfileTraining=onlyProfileTraining)
+                            self.model.fullPass(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, profileEpoch=epoch)
                         # reconstructedSignalData dimension: batchSize, numSignals, maxSequenceLength
                         # basicEmotionProfile: batchSize, numBasicEmotions, encodedDimension
                         # validDataMask dimension: batchSize, numSignals, maxSequenceLength

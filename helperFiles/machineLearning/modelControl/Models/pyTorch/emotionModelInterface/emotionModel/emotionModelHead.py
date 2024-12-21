@@ -225,10 +225,11 @@ class emotionModelHead(nn.Module):
     def reconstructPhysiologicalProfile(self, resampledSignalData):
         return self.signalEncoderPass(metaLearningData=resampledSignalData, forwardPass=True, compileLayerStates=True)
 
-    def fullPass(self, submodel, signalData, signalIdentifiers, metadata, device, onlyProfileTraining):
+    def fullPass(self, submodel, signalData, signalIdentifiers, metadata, device, profileEpoch=None):
         # Preallocate the output tensors.
         numExperiments, numSignals, maxSequenceLength, numChannels = signalData.size()
         testingBatchSize = modelParameters.getInferenceBatchSize(submodel, device)
+        onlyProfileTraining = profileEpoch is not None
 
         with torch.no_grad():
             # Initialize the output tensors.
@@ -257,9 +258,9 @@ class emotionModelHead(nn.Module):
 
         if onlyProfileTraining:
             with torch.no_grad():
-                batchInds = emotionDataInterface.getSignalIdentifierData(signalIdentifiers, channelName=modelConstants.batchIndexSI)[:, 0]  # Dim: batchSize
+                batchInds = emotionDataInterface.getSignalIdentifierData(signalIdentifiers, channelName=modelConstants.batchIndexSI)[:, 0].long()  # Dim: batchSize
                 batchLossValues = self.calculateModelLosses.calculateSignalEncodingLoss(signalData, reconstructedSignalData, validDataMask, allSignalMask=None)
-                self.specificSignalEncoderModel.profileModel.populateProfileState(batchInds, batchLossValues, physiologicalProfile, compiledSignalEncoderLayerStates)
+                self.specificSignalEncoderModel.profileModel.populateProfileState(profileEpoch, batchInds, batchLossValues, physiologicalProfile, compiledSignalEncoderLayerStates)
 
         return validDataMask, reconstructedSignalData, resampledSignalData, compiledSignalEncoderLayerStates, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile
 

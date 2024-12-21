@@ -51,21 +51,22 @@ class emotionPipelineHelpers:
 
     def resetPhysiologicalProfile(self, submodel):
         # Get the current number of epochs for the profile model.
-        numEpochs = self.getTrainingEpoch(submodel) + 1
-        if numEpochs <= 1: return 0
+        numProfileEpochs = self.getTrainingEpoch(submodel) + 1
+        if numProfileEpochs <= 1: return 0
+
+        # Find the number of epochs for the profile model.
+        if numProfileEpochs < modelConstants.numWarmups: numProfileEpochs = 1
+        else: numProfileEpochs = max(1, numProfileEpochs - modelConstants.numWarmups)
 
         # Reset and get the parameters that belong to the profile model
         profileParams = set(self.model.specificSignalEncoderModel.profileModel.parameters())
-        self.model.specificSignalEncoderModel.profileModel.resetProfileHolders()
+        self.model.specificSignalEncoderModel.profileModel.resetProfileHolders(numProfileEpochs)
         self.model.specificSignalEncoderModel.profileModel.resetProfileWeights()
 
         # Reset the optimizer state for these parameters
         for p in list(self.optimizer.state.keys()):
             if p in profileParams: self.optimizer.state[p] = {}
-
-        # Return the number of epochs for the profile model
-        if numEpochs < modelConstants.numWarmups: return 1
-        else: return max(1, numEpochs - modelConstants.numWarmups)
+        return numProfileEpochs
 
     def compileOptimizer(self, submodel):
         # Initialize the optimizer and scheduler.
@@ -136,8 +137,8 @@ class emotionPipelineHelpers:
         # Extract the data, labels, and testing/training indices.
         batchSignalInfo, batchSignalLabels, batchTrainingMask, batchTestingMask = batchData
         # Add the data, labels, and training/testing indices to the device (GPU/CPU)
-        batchTrainingMask, batchTestingMask = batchTrainingMask.to(self.accelerator.device), batchTestingMask.to(self.accelerator.device)
-        batchSignalInfo, batchSignalLabels = batchSignalInfo.to(self.accelerator.device), batchSignalLabels.to(self.accelerator.device)
+        batchTrainingMask, batchTestingMask = batchTrainingMask.clone().to(self.accelerator.device), batchTestingMask.clone().to(self.accelerator.device)
+        batchSignalInfo, batchSignalLabels = batchSignalInfo.clone().to(self.accelerator.device), batchSignalLabels.clone().to(self.accelerator.device)
 
         # Separate the mask information.
         batchTrainingLabelMask, batchTrainingSignalMask = emotionDataInterface.separateMaskInformation(batchTrainingMask, batchSignalLabels.size(-1))
