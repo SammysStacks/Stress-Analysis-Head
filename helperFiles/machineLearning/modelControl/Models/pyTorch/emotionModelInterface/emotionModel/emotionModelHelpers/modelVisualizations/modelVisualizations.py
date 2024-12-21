@@ -1,14 +1,10 @@
-# General
-import os
-
 import numpy as np
 import torch
+import os
 
-# Visualization protocols
 from helperFiles.globalPlottingProtocols import globalPlottingProtocols
 from ._generalVisualizations import generalVisualizations
 from ._signalEncoderVisualizations import signalEncoderVisualizations
-# Import files for machine learning
 from ..modelConstants import modelConstants
 
 
