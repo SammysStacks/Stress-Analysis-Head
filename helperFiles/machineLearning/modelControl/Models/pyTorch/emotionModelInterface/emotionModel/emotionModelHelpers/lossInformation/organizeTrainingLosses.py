@@ -38,8 +38,8 @@ class organizeTrainingLosses(lossCalculations):
             t2 = time.time(); self.accelerator.print("\tFull Pass", t2 - t1)
 
             # Calculate the signal encoding loss.
-            signalReconstructedTrainingLosses = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, validDataMask, allTrainingSignalMask)
-            signalReconstructedTestingLosses = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, validDataMask, allTestingSignalMask)
+            signalReconstructedTrainingLosses = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, validDataMask, allTrainingSignalMask, averageBatches=True)
+            signalReconstructedTestingLosses = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, validDataMask, allTestingSignalMask, averageBatches=True)
 
             # Store the signal encoder loss information.
             self.storeLossInformation(signalReconstructedTrainingLosses, signalReconstructedTestingLosses, model.specificSignalEncoderModel.trainingLosses_signalReconstruction, model.specificSignalEncoderModel.testingLosses_signalReconstruction)

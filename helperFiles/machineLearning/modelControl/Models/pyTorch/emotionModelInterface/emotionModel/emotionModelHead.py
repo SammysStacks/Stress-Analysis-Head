@@ -259,7 +259,7 @@ class emotionModelHead(nn.Module):
         if onlyProfileTraining:
             with torch.no_grad():
                 batchInds = emotionDataInterface.getSignalIdentifierData(signalIdentifiers, channelName=modelConstants.batchIndexSI)[:, 0].long()  # Dim: batchSize
-                batchLossValues = self.calculateModelLosses.calculateSignalEncodingLoss(signalData, reconstructedSignalData, validDataMask, allSignalMask=None)
+                batchLossValues = self.calculateModelLosses.calculateSignalEncodingLoss(signalData, reconstructedSignalData, validDataMask, allSignalMask=None, averageBatches=False)
                 self.specificSignalEncoderModel.profileModel.populateProfileState(profileEpoch, batchInds, batchLossValues, physiologicalProfile, compiledSignalEncoderLayerStates)
 
         return validDataMask, reconstructedSignalData, resampledSignalData, compiledSignalEncoderLayerStates, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile

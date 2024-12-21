@@ -40,7 +40,7 @@ class lossCalculations:
 
     # -------------------------- Signal Encoder Loss Calculations ------------------------- #
 
-    def calculateSignalEncodingLoss(self, allInitialSignalData, allReconstructedSignalData, allValidDataMask, allSignalMask):
+    def calculateSignalEncodingLoss(self, allInitialSignalData, allReconstructedSignalData, allValidDataMask, allSignalMask, averageBatches=True):
         # Get the relevant data for the loss calculation.
         allDatapoints = emotionDataInterface.getChannelData(allInitialSignalData, channelName=modelConstants.signalChannel)
         validDataMask = allValidDataMask.clone()  # Masks out missing data points: batchSize, numSignals, sequenceLength
@@ -68,7 +68,7 @@ class lossCalculations:
         # Calculate the mean loss across all signals.
         signalReconstructedLoss[~validDataMask] = torch.nan  # Zero out the loss for invalid data points.
         signalReconstructedLoss = signalReconstructedLoss.nanmean(dim=-1)  # Dim: batchSize, numSignals
-        signalReconstructedLoss = signalReconstructedLoss.nanmean(dim=0)   # Dim: numSignals
+        if averageBatches: signalReconstructedLoss = signalReconstructedLoss.nanmean(dim=0)   # Dim: numSignals
         # signalReconstructedLoss: numSignals
 
         return signalReconstructedLoss

@@ -26,7 +26,7 @@ class emotionPipeline(emotionPipelineHelpers):
         if onlyProfileTraining:
             dataLoader = dataLoader.dataset.getAll()
             testSize = modelParameters.getInferenceBatchSize(submodel, self.accelerator.device)
-            dataLoader = (dataLoaderObj.chunk(dataLoader.size(0) // testSize) for dataLoaderObj in dataLoader)
+            dataLoader = zip(*[t.chunk(1 + t.size(0) // testSize, dim=0) for t in dataLoader])
 
         # For each training epoch.
         for epoch in range(numEpochs):
@@ -39,7 +39,6 @@ class emotionPipeline(emotionPipelineHelpers):
                         # Extract the data, labels, and testing/training indices.
                         batchSignalInfo, batchSignalLabels, batchTrainingLabelMask, batchTestingLabelMask, batchTrainingSignalMask, batchTestingSignalMask = self.extractBatchInformation(batchData)
                         if onlyProfileTraining: batchTrainingLabelMask, batchTestingLabelMask, batchTrainingSignalMask, batchTestingSignalMask = None, None, None, None
-                        if onlyProfileTraining: print(batchSignalInfo.size(), batchSignalLabels.size())
 
                         # We can skip this batch, and backpropagation if necessary.
                         if batchSignalInfo.size(0) == 0: self.backpropogateModel(); continue
@@ -77,7 +76,6 @@ class emotionPipeline(emotionPipelineHelpers):
                         t22 = time.time()
 
                         # Assert that nothing is wrong with the predictions.
-                        self.modelHelpers.assertVariableIntegrity(compiledSignalEncoderLayerStates, variableName="compiled signal encoder layer states", assertGradient=False)
                         self.modelHelpers.assertVariableIntegrity(reconstructedSignalData, variableName="reconstructed signal data", assertGradient=False)
                         self.modelHelpers.assertVariableIntegrity(physiologicalProfile, variableName="physiological profile", assertGradient=False)
                         self.modelHelpers.assertVariableIntegrity(resampledSignalData, variableName="resampled signal data", assertGradient=False)
@@ -87,7 +85,7 @@ class emotionPipeline(emotionPipelineHelpers):
                         self.modelHelpers.assertVariableIntegrity(validDataMask, variableName="valid data mask", assertGradient=False)
 
                         # Calculate the error in signal compression (signal encoding loss).
-                        trainingSignalReconstructedLosses = self.organizeLossInfo.calculateSignalEncodingLoss(augmentedBatchData, reconstructedSignalData, validDataMask, batchTrainingSignalMask)
+                        trainingSignalReconstructedLosses = self.organizeLossInfo.calculateSignalEncodingLoss(augmentedBatchData, reconstructedSignalData, validDataMask, batchTrainingSignalMask, averageBatches=True)
                         if trainingSignalReconstructedLosses is None: self.accelerator.print("Not useful loss"); continue
                         finalTrainingLoss = trainingSignalReconstructedLosses.nanmean()
 
