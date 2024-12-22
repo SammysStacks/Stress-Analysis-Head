@@ -70,6 +70,7 @@ class trainingProtocolHelpers:
 
             # Physiological profile training.
             numProfileEpochs = modelPipeline.resetPhysiologicalProfile(submodel)
+            print("numProfileEpochs Total", numProfileEpochs)
             modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=numProfileEpochs)  # Profile training.
             self.accelerator.wait_for_everyone()
 

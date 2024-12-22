@@ -53,7 +53,6 @@ class modelVisualizations(globalPlottingProtocols):
                                                    saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Convergence Losses")
 
                 # Plot profile loss.
-                print(specificModels[0].profileModel.profileStateLosses.shape)
                 self.generalViz.plotTrainingLosses([specificModel.profileModel.profileStateLosses for specificModel in specificModels], testingLosses=None,
                                                    lossLabels=[f"{datasetName} Signal Encoding Profile Loss" for datasetName in datasetNames],
                                                    saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Profile Losses")

@@ -31,6 +31,7 @@ class emotionPipeline(emotionPipelineHelpers):
         # For each training epoch.
         for epoch in range(numEpochs):
             numPointsAnalyzed = 0
+            print("Epoch:", epoch)
 
             # For each data batch in the epoch.
             for batchDataInd, batchData in enumerate(dataLoader):

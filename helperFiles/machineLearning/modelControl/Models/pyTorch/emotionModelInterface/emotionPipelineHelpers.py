@@ -140,8 +140,8 @@ class emotionPipelineHelpers:
         # Extract the data, labels, and testing/training indices.
         batchSignalInfo, batchSignalLabels, batchTrainingMask, batchTestingMask = batchData
         # Add the data, labels, and training/testing indices to the device (GPU/CPU)
-        batchTrainingMask, batchTestingMask = batchTrainingMask.clone().to(self.accelerator.device), batchTestingMask.clone().to(self.accelerator.device)
-        batchSignalInfo, batchSignalLabels = batchSignalInfo.clone().to(self.accelerator.device), batchSignalLabels.clone().to(self.accelerator.device)
+        batchTrainingMask, batchTestingMask = batchTrainingMask.to(self.accelerator.device), batchTestingMask.to(self.accelerator.device)
+        batchSignalInfo, batchSignalLabels = batchSignalInfo.to(self.accelerator.device), batchSignalLabels.to(self.accelerator.device)
 
         # Separate the mask information.
         batchTrainingLabelMask, batchTrainingSignalMask = emotionDataInterface.separateMaskInformation(batchTrainingMask, batchSignalLabels.size(-1))
