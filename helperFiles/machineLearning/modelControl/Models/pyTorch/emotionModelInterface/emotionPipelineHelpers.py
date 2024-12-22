@@ -56,7 +56,7 @@ class emotionPipelineHelpers:
 
         # Find the number of epochs for the profile model.
         if numProfileEpochs < modelConstants.numWarmups: numProfileEpochs = 1
-        else: numProfileEpochs = max(1, numProfileEpochs - modelConstants.numWarmups)
+        else: numProfileEpochs = max(2, numProfileEpochs - modelConstants.numWarmups)
 
         # Reset and get the parameters that belong to the profile model
         profileParams = set(self.model.specificSignalEncoderModel.profileModel.parameters())
