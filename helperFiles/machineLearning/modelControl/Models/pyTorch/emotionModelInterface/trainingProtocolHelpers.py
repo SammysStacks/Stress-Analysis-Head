@@ -79,7 +79,7 @@ class trainingProtocolHelpers:
                 batchSignalInfo, _, _, _, _, _ = modelPipeline.extractBatchInformation(dataLoader.dataset.getAll())
                 signalBatchData, batchSignalIdentifiers, metaBatchInfo = emotionDataInterface.separateData(batchSignalInfo)
                 modelPipeline.model.fullPass(submodel, signalBatchData, batchSignalIdentifiers, metaBatchInfo, device=modelPipeline.accelerator.device, profileEpoch=numEpochs)
-                modelPipeline.model.specificSignalEncoderModel.profileModel.profileStateLosses = np.nanmean(modelPipeline.model.specificSignalEncoderModel.profileModel.profileStateLosses, axis=-1)
+                modelPipeline.model.specificSignalEncoderModel.profileModel.profileStateLosses = np.nanmean(modelPipeline.model.specificSignalEncoderModel.profileModel.profileStateLosses, axis=1)
             self.accelerator.wait_for_everyone()
 
     def calculateLossInformation(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel):
