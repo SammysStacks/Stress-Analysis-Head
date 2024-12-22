@@ -63,11 +63,6 @@ do
                               do
                                 for numSharedEncoderLayers in "${signalEncoderLayers_arr[@]}"
                                 do
-                                  # Check if numSpecificEncoderLayers is greater than half the numSharedEncoderLayers
-                                  if [ $((2 * numSpecificEncoderLayers)) -gt "$numSharedEncoderLayers" ]; then
-                                    continue  # Skip this iteration if the condition is true
-                                  fi
-
                                   echo "Submitting job with $numSharedEncoderLayers numSharedEncoderLayers, $numSpecificEncoderLayers numSpecificEncoderLayers, $encodedDimension encodedDimension, $waveletType waveletType, $optimizer optimizer, $lr_profile lr_profile, $lr_reversible lr_reversible"
 
                                   if [ "$1" == "CPU" ]; then
