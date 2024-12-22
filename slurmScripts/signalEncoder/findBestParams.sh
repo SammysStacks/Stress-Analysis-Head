@@ -27,7 +27,7 @@ lrs_profile=('0.01' '0.05' '0.1')  # 0.05 <= x <= 0.4
 lrs_profileGen=('1e-4') # '5e-5')  # 5e-5 <= x <= 1e-4
 lrs_reversible=('1e-3')  # 5e-4 <= x <= 2e-3
 
-optimizers_arr=('NAdam')  # 'AdamW'; RAdam was bad for retraining profile.
+optimizers_arr=('NAdam' 'Adamax')  # 'AdamW'; RAdam was bad for retraining profile.
 encodedDimensions_arr=(256)  # 64 128 256 512
 
 for beta1s in "${beta1s_arr[@]}"
