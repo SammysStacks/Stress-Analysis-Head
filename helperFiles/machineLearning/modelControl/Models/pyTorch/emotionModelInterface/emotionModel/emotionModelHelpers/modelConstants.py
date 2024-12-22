@@ -47,10 +47,10 @@ class modelConstants:
     uniformWeightLimits = None  # The limits for the uniform initialization.
     numEncodedWeights = None  # The number of encoded weights.
     modelTimeWindow = 120  # The time window for the model.
-    numEpochs_minLR = 4  # The number of warmup epochs.
+    numEpochs_minLR = 1  # The number of warmup epochs.
     minMaxScale = 1  # The maximum value for the min-max scaling.
     numBatches = 16  # The number of batches to use in the model.
-    numWarmups = 5  # The number of warmup epochs.
+    numWarmups = 1  # The number of warmup epochs.
 
     # Specify the data interface parameter names.
     signalChannelNames = [timeChannel, signalChannel]

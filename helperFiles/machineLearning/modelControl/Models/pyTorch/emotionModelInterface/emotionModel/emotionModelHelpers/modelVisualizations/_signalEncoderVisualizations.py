@@ -24,9 +24,9 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         noTimes = physiologicalTimes is None
 
         if noTimes: physiologicalTimes = np.arange(start=0, stop=len(physiologicalProfile[batchInd]), step=1)
-        for profileStep in range(numProfileSteps): plt.plot(physiologicalTimes, profileStatePath[profileStep, batchInd], 'o--' if noTimes else '-', c=self.lightColors[1], linewidth=1, markersize=2, alpha=0.3*(numProfileSteps - profileStep)/numProfileSteps)
-        for profileStep in range(numProfileSteps): plt.plot(physiologicalTimes, profileStatePath[profileStep, batchInd], 'o--' if noTimes else '-', c=self.lightColors[0], linewidth=1, markersize=2, alpha=0.6*(1 - (numProfileSteps - profileStep)/numProfileSteps))
-        plt.plot(physiologicalTimes, physiologicalProfile[batchInd], 'o-' if noTimes else '-', c=self.blackColor, label=f"Physiological profile", linewidth=1 if noTimes else 2, markersize=5, alpha=0.4 if noTimes else 0.25)
+        for profileStep in range(numProfileSteps): plt.plot(physiologicalTimes, profileStatePath[profileStep, batchInd], 'o--' if noTimes else '-', c=self.lightColors[1], linewidth=0.25 if noTimes else 1, markersize=4, alpha=0.3*(numProfileSteps - profileStep)/numProfileSteps)
+        for profileStep in range(numProfileSteps): plt.plot(physiologicalTimes, profileStatePath[profileStep, batchInd], 'o--' if noTimes else '-', c=self.lightColors[0], linewidth=0.25 if noTimes else 1, markersize=4, alpha=0.6*(1 - (numProfileSteps - profileStep)/numProfileSteps))
+        plt.plot(physiologicalTimes, physiologicalProfile[batchInd], 'o-' if noTimes else '-', c=self.blackColor, label=f"Physiological profile", linewidth=1 if noTimes else 2, markersize=5, alpha=0.6 if noTimes else 0.25)
         plt.hlines(y=0, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors='k', linestyles='dashed', linewidth=1)
 
         # Plotting aesthetics.
@@ -158,7 +158,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.figure(figsize=(12, 8))
 
         # Plot the last layer with its own normalization and colorbar
-        plt.imshow(interpolated_states[2:-1], cmap=custom_cmap, interpolation='bilinear', extent=physiologicalTimes, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
+        plt.imshow(interpolated_states[2:-1], cmap=custom_cmap, interpolation=None, extent=physiologicalTimes, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
         im0 = plt.imshow(interpolated_states[-1:], cmap=custom_cmap, interpolation=None, extent=physiologicalTimes_finalExtent, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
         plt.colorbar(im0, fraction=0.046, pad=0.04)
 
