@@ -42,7 +42,7 @@ class profileModel(emotionModelWeights):
         self.compiledSignalEncoderLayerStatePath[profileEpoch][:, batchInds] = compiledSignalEncoderLayerStatePath
         self.profileStateLosses[profileEpoch][batchInds] = profileStateLoss.clone().detach().cpu().numpy()
         self.profileStatePath[profileEpoch][batchInds] = profileStatePath.clone().detach().cpu().numpy()
-        print("profileEpoch:", profileEpoch, self.profileStateLosses.shape)
+        print("profileEpoch:", profileEpoch, self.profileStateLosses.shape, profileStateLoss.shape)
 
     def getPhysiologicalProfile(self, batchInds):
         return self.embeddedPhysiologicalProfile.to(batchInds.device)[batchInds]
