@@ -28,7 +28,6 @@ class profileModel(emotionModelWeights):
         # Get the model information.
         numSpecificEncoderLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
         numSharedEncoderLayers = modelConstants.userInputParams['numSharedEncoderLayers']
-        numProfileEpochs = min(numProfileEpochs, modelParameters.getProfileEpochs())
 
         # Pre-allocate each parameter.
         self.compiledSignalEncoderLayerStatePath = np.zeros(shape=(numProfileEpochs + 1, 2*numSpecificEncoderLayers + numSharedEncoderLayers + 1, self.numExperiments, 1, self.encodedDimension))

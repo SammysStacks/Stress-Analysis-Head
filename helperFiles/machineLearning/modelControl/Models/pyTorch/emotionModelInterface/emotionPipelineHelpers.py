@@ -4,6 +4,7 @@ from .emotionModel.emotionModelHelpers.generalMethods.dataAugmentation import da
 from .emotionModel.emotionModelHelpers.generalMethods.modelHelpers import modelHelpers
 from .emotionModel.emotionModelHelpers.lossInformation.organizeTrainingLosses import organizeTrainingLosses
 from .emotionModel.emotionModelHelpers.modelConstants import modelConstants
+from .emotionModel.emotionModelHelpers.modelParameters import modelParameters
 from .emotionModel.emotionModelHelpers.modelVisualizations.modelVisualizations import modelVisualizations
 from .emotionModel.emotionModelHelpers.optimizerMethods.optimizerMethods import optimizerMethods
 
@@ -19,6 +20,7 @@ class emotionPipelineHelpers:
         self.model = None  # The model being used for the training process.
 
         # Dataset-specific parameters.
+        self.numProfileEpochs = modelParameters.getProfileEpochs()  # The number of epochs to train the profile model.
         self.allEmotionClasses = allEmotionClasses  # The number of classes (intensity levels) within each emotion to predict. Dim: [numEmotions]
         self.activityLabelInd = len(emotionNames)  # The index of the activity label in the label array.
         self.numActivities = len(activityNames)  # The number of activities we are predicting. Type: int
@@ -57,6 +59,7 @@ class emotionPipelineHelpers:
         # Find the number of epochs for the profile model.
         if numProfileEpochs < modelConstants.numWarmups: numProfileEpochs = 1
         else: numProfileEpochs = max(2, numProfileEpochs - modelConstants.numWarmups)
+        numProfileEpochs = min(numProfileEpochs, self.numProfileEpochs)
 
         # Reset and get the parameters that belong to the profile model
         profileParams = set(self.model.specificSignalEncoderModel.profileModel.parameters())

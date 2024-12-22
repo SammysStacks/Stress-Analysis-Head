@@ -19,7 +19,6 @@ class trainingProtocolHelpers:
         # General parameters.
         self.submodelsSaving = modelParameters.getSubmodelsSaving(submodel)  # The submodels to save.
         self.sharedModelWeights = modelConstants.sharedModelWeights  # The shared model weights.
-        self.profileEpochs = modelParameters.getProfileEpochs()  # The number of epochs for profile training.
         self.minEpochs_modelAdjustment = 1  # The minimum number of epochs before adjusting the model architecture.
         self.accelerator = accelerator
         self.unifiedLayerData = None
@@ -70,15 +69,15 @@ class trainingProtocolHelpers:
             modelPipeline.trainModel(dataLoader, submodel, profileTraining=False, specificTraining=True, trainSharedLayers=False, stepScheduler=False, numEpochs=numEpochs)  # Signal-specific training.
 
             # Physiological profile training.
-            numEpochs = modelPipeline.resetPhysiologicalProfile(submodel)
-            modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=min(numEpochs, self.profileEpochs))  # Profile training.
+            numProfileEpochs = modelPipeline.resetPhysiologicalProfile(submodel)
+            modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=numProfileEpochs)  # Profile training.
             self.accelerator.wait_for_everyone()
 
             with torch.no_grad():
                 # Record final state paths.
                 batchSignalInfo, _, _, _, _, _ = modelPipeline.extractBatchInformation(dataLoader.dataset.getAll())
                 signalBatchData, batchSignalIdentifiers, metaBatchInfo = emotionDataInterface.separateData(batchSignalInfo)
-                modelPipeline.model.fullPass(submodel, signalBatchData, batchSignalIdentifiers, metaBatchInfo, device=modelPipeline.accelerator.device, profileEpoch=numEpochs)
+                modelPipeline.model.fullPass(submodel, signalBatchData, batchSignalIdentifiers, metaBatchInfo, device=modelPipeline.accelerator.device, profileEpoch=numProfileEpochs)
                 modelPipeline.model.specificSignalEncoderModel.profileModel.profileStateLosses = np.nanmean(modelPipeline.model.specificSignalEncoderModel.profileModel.profileStateLosses, axis=1)
             self.accelerator.wait_for_everyone()
 
