@@ -31,13 +31,10 @@ class emotionPipeline(emotionPipelineHelpers):
         # For each training epoch.
         for epoch in range(numEpochs):
             numPointsAnalyzed = 0
-            print("Epoch:", epoch, numEpochs)
 
             # For each data batch in the epoch.
             for batchDataInd, batchData in enumerate(dataLoader):
                 batchData = (element.clone() for element in batchData)
-                print("HI")
-
                 with (self.accelerator.accumulate(self.model)):  # Accumulate the gradients.
                     with self.accelerator.autocast():  # Enable mixed precision auto-casting
                         # Extract the data, labels, and testing/training indices.
