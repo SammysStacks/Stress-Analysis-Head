@@ -36,12 +36,12 @@ class emotionPipeline(emotionPipelineHelpers):
 
             # For each data batch in the epoch.
             for batchDataInd, batchData in enumerate(dataLoader):
+                batchData = (element.clone() for element in batchData)
                 with (self.accelerator.accumulate(self.model)):  # Accumulate the gradients.
                     with self.accelerator.autocast():  # Enable mixed precision auto-casting
                         # Extract the data, labels, and testing/training indices.
                         batchSignalInfo, batchSignalLabels, batchTrainingLabelMask, batchTestingLabelMask, batchTrainingSignalMask, batchTestingSignalMask = self.extractBatchInformation(batchData)
                         if onlyProfileTraining: batchTrainingLabelMask, batchTestingLabelMask, batchTrainingSignalMask, batchTestingSignalMask = None, None, None, None
-                        if onlyProfileTraining: print(batchSignalInfo.size())
 
                         # We can skip this batch, and backpropagation if necessary.
                         if batchSignalInfo.size(0) == 0: self.backpropogateModel(); continue
