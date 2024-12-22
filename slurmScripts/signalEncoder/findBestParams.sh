@@ -12,7 +12,7 @@ wds_profileGen=('1e-5')  # 1e-5 <= x <= 1e-4
 wds_reversible=('1e-4')  # 1e-4 <= x <= 1e-3
 
 # General parameters: 320
-uniformWeightLimits_arr=('0.1' '0.05' '0.2' '0.01' '0.005' '0.001')  #
+uniformWeightLimits_arr=('0.01' '0.2' '0.1' '0.005' '0.001')  #
 signalEncoderLayers_arr=(6)  # 1 2 3 4 5 6 7 8
 encodedDimensions_arr=(32 64 128 256)  # 64 128 256 512
 allNumEncodedWeights=(64 128 256)  # 4 8 16 32 64
@@ -27,7 +27,7 @@ lrs_profile=('0.01' '0.05' '0.1')  # 0.05 <= x <= 0.4
 lrs_profileGen=('1e-4') # '5e-5')  # 5e-5 <= x <= 1e-4
 lrs_reversible=('1e-3')  # 5e-4 <= x <= 2e-3
 
-optimizers_arr=('NAdam' 'Adamax')  # 'AdamW'; RAdam was bad for retraining profile.
+optimizers_arr=('NAdam' 'RAdam' 'Adamax')  # 'AdamW'; RAdam was bad for retraining profile.
 encodedDimensions_arr=(256)  # 64 128 256 512
 
 for beta1s in "${beta1s_arr[@]}"
