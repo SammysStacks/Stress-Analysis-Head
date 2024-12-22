@@ -91,7 +91,6 @@ class emotionPipeline(emotionPipelineHelpers):
 
                         # Initialize basic core loss value.
                         if self.model.debugging: self.accelerator.print("Final encoder loss:", finalTrainingLoss.item())
-                        if onlyProfileTraining: print(finalTrainingLoss)
 
                         # ------------------- Update the Model  -------------------- #
 
