@@ -71,7 +71,7 @@ if __name__ == "__main__":
     parser.add_argument('--numActivityChannels', type=int, default=4, help='The number of activity channels.')
 
     # Signal encoder learning rates.
-    parser.add_argument('--profileLR', type=float, default=0.05, help='The learning rate of the physiological model.')
+    parser.add_argument('--profileLR', type=float, default=0.01, help='The learning rate of the physiological model.')
     parser.add_argument('--reversibleLR', type=float, default=1e-3, help='The learning rate of the general model.')
     parser.add_argument('--physGenLR', type=float, default=1e-4, help='The learning rate of the general model.')
 
