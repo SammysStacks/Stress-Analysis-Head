@@ -2,6 +2,7 @@ import numpy as np
 import torch
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.emotionModelWeights import emotionModelWeights
 
 
@@ -27,6 +28,7 @@ class profileModel(emotionModelWeights):
         # Get the model information.
         numSpecificEncoderLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
         numSharedEncoderLayers = modelConstants.userInputParams['numSharedEncoderLayers']
+        numProfileEpochs = min(numProfileEpochs, modelParameters.getProfileEpochs())
 
         # Pre-allocate each parameter.
         self.compiledSignalEncoderLayerStatePath = np.zeros(shape=(numProfileEpochs + 1, 2*numSpecificEncoderLayers + numSharedEncoderLayers + 1, self.numExperiments, 1, self.encodedDimension))
@@ -40,6 +42,7 @@ class profileModel(emotionModelWeights):
         self.compiledSignalEncoderLayerStatePath[profileEpoch][:, batchInds] = compiledSignalEncoderLayerStatePath
         self.profileStateLosses[profileEpoch][batchInds] = profileStateLoss.clone().detach().cpu().numpy()
         self.profileStatePath[profileEpoch][batchInds] = profileStatePath.clone().detach().cpu().numpy()
+        print("profileEpoch:", profileEpoch, self.profileStateLosses.shape)
 
     def getPhysiologicalProfile(self, batchInds):
         return self.embeddedPhysiologicalProfile.to(batchInds.device)[batchInds]
