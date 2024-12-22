@@ -32,6 +32,7 @@ class emotionPipeline(emotionPipelineHelpers):
         for epoch in range(numEpochs):
             numPointsAnalyzed = 0
             print("Epoch:", epoch)
+            if onlyProfileTraining: print(dataLoader[0].size())
 
             # For each data batch in the epoch.
             for batchDataInd, batchData in enumerate(dataLoader):
