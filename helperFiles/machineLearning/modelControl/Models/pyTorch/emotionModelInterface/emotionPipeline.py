@@ -26,7 +26,7 @@ class emotionPipeline(emotionPipelineHelpers):
         if onlyProfileTraining:
             dataLoader = dataLoader.dataset.getAll()
             testSize = modelParameters.getInferenceBatchSize(submodel, self.accelerator.device)
-            dataLoader = zip(*[t.clone().chunk(1 + t.size(0) // testSize, dim=0) for t in dataLoader])
+            dataLoader = tuple(zip(*[t.clone().chunk(1 + t.size(0) // testSize, dim=0) for t in dataLoader]))
 
         # For each training epoch.
         for epoch in range(numEpochs):
