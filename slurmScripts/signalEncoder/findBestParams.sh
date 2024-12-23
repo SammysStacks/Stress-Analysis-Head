@@ -12,7 +12,7 @@ wds_profileGen=('1e-5')  # 1e-5 <= x <= 1e-4
 wds_reversible=('1e-4')  # 1e-4 <= x <= 1e-3
 
 # General parameters: 320
-uniformWeightLimits_arr=('0.01' '0.1' '0.005' '0.001')  #
+uniformWeightLimits_arr=('0.01' '0.1' '0.005' '0.001' '0.25')  #
 signalEncoderLayers_arr=(6 10)  # 1 2 3 4 5 6 7 8
 encodedDimensions_arr=(32 64 128 256)  # 64 128 256 512
 allNumEncodedWeights=(128)  # 4 8 16 32 64
@@ -23,7 +23,7 @@ numProfileEpochs_arr=(16 32)  # 3
 waveletTypes_arr=('bior3.1')  # 'bior3.1' > 'bior3.3' > 'bior2.2' > 'bior3.5'
 
 # Learning parameters.
-lrs_profile=('0.01' '0.1' '0.25')  # 0.05 <= x <= 0.4
+lrs_profile=('0.01' '0.2')  # 0.05 <= x <= 0.4
 lrs_profileGen=('1e-4') # '5e-5')  # 5e-5 <= x <= 1e-4
 lrs_reversible=('1e-3')  # 5e-4 <= x <= 2e-3
 
