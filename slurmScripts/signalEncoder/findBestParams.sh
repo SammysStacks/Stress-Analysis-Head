@@ -16,7 +16,7 @@ uniformWeightLimits_arr=('0.01' '0.005' '0.05')  #
 signalEncoderLayers_arr=(6)  # 1 2 3 4 5 6 7 8
 encodedDimensions_arr=(32 64 128 256)  # 64 128 256 512
 allNumEncodedWeights=(128)  # 4 8 16 32 64
-numSpecificEncoderLayers_arr=(1)  # 1 2
+numSpecificEncoderLayers_arr=(1 2)  # 1 2
 numProfileEpochs_arr=(16 8)  # 3
 
 # Neural operator parameters.
@@ -27,7 +27,7 @@ lrs_profile=('0.01')  # 0.05 <= x <= 0.4
 lrs_profileGen=('1e-4') # '5e-5')  # 5e-5 <= x <= 1e-4
 lrs_reversible=('1e-3')  # 5e-4 <= x <= 2e-3
 
-encodedDimensions_arr=(256)  # 64 128 256 512
+encodedDimensions_arr=(128)  # 64 128 256 512
 
 for beta1s in "${beta1s_arr[@]}"
 do

@@ -1,7 +1,7 @@
 import torch
 
-class modelConstants:
 
+class modelConstants:
     # -------------------------- Dataset Constants ------------------------- #
 
     # Specify the dataset names
