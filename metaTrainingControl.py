@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
     # Add arguments for the general model
     parser.add_argument('--submodel', type=str, default=modelConstants.signalEncoderModel, help='The component of the model we are training. Options: signalEncoderModel, emotionModel')
-    parser.add_argument('--optimizerType', type=str, default='NAdam', help='The optimizerType used during training convergence: Options: RMSprop, Adam, AdamW, SGD, etc.')
+    parser.add_argument('--optimizerType', type=str, default='AdamW', help='The optimizerType used during training convergence: Options: RMSprop, Adam, AdamW, SGD, etc.')
     parser.add_argument('--reversibleLearningProtocol', type=str, default='rCNN', help='The learning protocol for the model: rCNN')
     parser.add_argument('--irreversibleLearningProtocol', type=str, default='FC', help='The learning protocol for the model: CNN, FC')
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are using: cpu, cuda')
@@ -76,7 +76,7 @@ if __name__ == "__main__":
     parser.add_argument('--physGenLR', type=float, default=1e-4, help='The learning rate of the general model.')
 
     # Signal encoder weight decays.
-    parser.add_argument('--profileWD', type=float, default=1e-6, help='The learning rate of the general model: [1e-2, 1e-4]')
+    parser.add_argument('--profileWD', type=float, default=1e-3, help='The learning rate of the general model: [1e-2, 1e-4]')
     parser.add_argument('--reversibleWD', type=float, default=1e-4, help='The learning rate of the general model.')
     parser.add_argument('--physGenWD', type=float, default=1e-5, help='The learning rate of the general model.')
 

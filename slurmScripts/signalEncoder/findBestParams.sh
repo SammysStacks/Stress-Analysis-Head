@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Optimizer parameters.
-optimizers_arr=('NAdam' 'RAdam' 'Adam' 'AdamW' 'Adamax')  # 'AdamW'; RAdam was bad for retraining profile.
+optimizers_arr=('NAdam' 'RAdam' 'AdamW')  # 'AdamW'; RAdam was bad for retraining profile. AdamW == NAdam > RAdam > Adam > Adamax
 momentums_arr=('0.004')
 beta1s_arr=('0.7')
 beta2s_arr=('0.9')
@@ -23,7 +23,7 @@ numProfileEpochs_arr=(16 32)  # 3
 waveletTypes_arr=('bior3.1')  # 'bior3.1' > 'bior3.3' > 'bior2.2' > 'bior3.5'
 
 # Learning parameters.
-lrs_profile=('0.01' '0.05' '0.1')  # 0.05 <= x <= 0.4
+lrs_profile=('0.01' '0.1' '0.25')  # 0.05 <= x <= 0.4
 lrs_profileGen=('1e-4') # '5e-5')  # 5e-5 <= x <= 1e-4
 lrs_reversible=('1e-3')  # 5e-4 <= x <= 2e-3
 
