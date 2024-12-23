@@ -54,7 +54,7 @@ class emotionPipelineHelpers:
     def resetPhysiologicalProfile(self, submodel):
         # Get the current number of epochs for the profile model.
         numProfileEpochs = self.getTrainingEpoch(submodel) + 1
-        if numProfileEpochs <= 1: return 0
+        if numProfileEpochs <= 1: return 1
 
         # Find the number of epochs for the profile model.
         if numProfileEpochs < modelConstants.numWarmups: numProfileEpochs = 1
