@@ -18,7 +18,7 @@ class profileModel(emotionModelWeights):
         self.numSignals = numSignals
 
         # Initialize the physiological profile.
-        self.resetProfileHolders(numProfileEpochs=0)
+        self.resetProfileHolders(numProfileEpochs=1)
         self.resetProfileWeights()
 
     def resetProfileWeights(self):
