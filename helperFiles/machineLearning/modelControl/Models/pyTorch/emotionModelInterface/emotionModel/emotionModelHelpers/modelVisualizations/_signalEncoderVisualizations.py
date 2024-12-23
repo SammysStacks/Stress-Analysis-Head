@@ -33,6 +33,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.xlabel("Time (Seconds)")
         plt.title(f"{plotTitle} epoch{epoch}")
         plt.ylabel("Signal (AU)")
+        plt.ylim((-1, 1))
 
         # Save the figure.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
@@ -69,6 +70,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.xlabel("Time (Seconds)")
         plt.title(f"{plotTitle} epoch{epoch}")
         plt.ylabel("Signal (AU)")
+        plt.ylim((-1.5, 1.5))
 
         # Save the figure.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
@@ -84,6 +86,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.xlabel("Time (Seconds)")
         plt.title(f"{plotTitle} epoch{epoch}")
         plt.ylabel("Signal (AU)")
+        plt.ylim((-1, 1))
 
         # Save the figure.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
@@ -116,6 +119,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             plt.ylabel("Signal (AU)")
             plt.legend(loc="best")
             plt.xlabel("Points")
+            plt.ylim((-1.5, 1.5))
 
             # Save the figure.
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
@@ -207,6 +211,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             plt.ylabel("Arbitrary Axis (AU)")
             plt.xlabel("Points")
             plt.title(f"{plotTitle} epoch{epoch} signal{signalInd + 1}")
+            plt.ylim((-1.5, 1.5))
 
             # Save the plot
             if self.saveDataFolder: self.displayFigure(saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
