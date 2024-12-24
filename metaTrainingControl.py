@@ -120,7 +120,7 @@ if __name__ == "__main__":
     # -------------------------- Meta-model Training ------------------------- #
 
     # Calculate the initial loss.
-    trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate)
+    # trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate)
     trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)  # Calculate the initial loss.
 
     # For each training epoch

@@ -21,7 +21,7 @@ class lossCalculations:
         self.accelerator = accelerator  # Hugging face model optimizations.
 
         # Calculate the number of sequence points to throw out.
-        self.scaledLossPercent = 6.25  # The percentage of points to remove from the loss calculation.
+        self.scaledLossPercent = 5  # The percentage of points to remove from the loss calculation.
         self.lossScaleFactor = 10  # The factor to scale the loss by when removing points.
 
         # Initialize helper classes.
@@ -35,7 +35,7 @@ class lossCalculations:
         #       Custom Regression Options: "R2", "pearson", "LogCoshLoss", "weightedMSE"
         # Initialize the loss function WITHOUT the class weights.
         self.meanSquaredError = pytorchLossMethods(lossType="MeanSquaredError", class_weights=None).loss_fn
-        self.smoothL1Loss = nn.SmoothL1Loss(reduction='none', beta=3/2)  # NEVER MAKE IT LESS THAN 1, its just MAE for outliers.
+        self.smoothL1Loss = nn.SmoothL1Loss(reduction='none', beta=1)  # NEVER MAKE IT LESS THAN 1, its just MAE for outliers.
 
     # -------------------------- Signal Encoder Loss Calculations ------------------------- #
 
@@ -60,9 +60,10 @@ class lossCalculations:
         # Get the number of signal points to remove from the loss calculation.
         numBatchSignalPoints = validDataMask.sum(dim=-1)  # Dim: batchSize, numSignals
         numRemovalPoints = torch.ceil(self.scaledLossPercent * numBatchSignalPoints / 100)  # Dim: batchSize, numSignals
-        numRemovalPoints[numRemovalPoints < 2] = 2  # Ensure that at least 2 points are removed.
+        numRemovalPoints[numRemovalPoints < 1] = 1  # Ensure that at least 2 points are removed.
+        numRemovalPoints[3 < numRemovalPoints] = 3  # Ensure that at least 2 points are removed.
 
-        for numPointsRemoved in range(numRemovalPoints.max().item()):
+        for numPointsRemoved in range(numRemovalPoints.max().int().item()):
             # Find the current most noisy points within each signal's batch.
             findMaxLoss = torch.where(validDataMask, signalReconstructedLoss, float('-inf'))
             max_indices = findMaxLoss.argmax(dim=-1, keepdim=True).squeeze(-1)
@@ -75,7 +76,7 @@ class lossCalculations:
 
             # Remove the top noisy points from the loss calculation.
             signalReconstructedLoss[validBatchIndices, validSignalIndices, validMaxIndices] /= self.lossScaleFactor
-            print(len(validSignalIndices))
+            print(numPointsRemoved, batchSize*numSignals - len(validSignalIndices))
 
         # Calculate the mean loss across all signals.
         signalReconstructedLoss[~validDataMask] = torch.nan  # Zero out the loss for invalid data points.
