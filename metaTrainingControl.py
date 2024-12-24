@@ -51,8 +51,8 @@ if __name__ == "__main__":
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are using: cpu, cuda')
 
     # Add arguments for the signal encoder architecture.
-    parser.add_argument('--numSpecificEncoderLayers', type=int, default=6, help='The number of layers in the model.')
-    parser.add_argument('--numSharedEncoderLayers', type=int, default=6, help='The number of layers in the model.')
+    parser.add_argument('--numSpecificEncoderLayers', type=int, default=4, help='The number of layers in the model.')
+    parser.add_argument('--numSharedEncoderLayers', type=int, default=4, help='The number of layers in the model.')
     parser.add_argument('--uniformWeightLimit', type=float, default=0.05, help='The limits for profile initialization.')
     parser.add_argument('--encodedDimension', type=int, default=128, help='The dimension of the encoded signal.')
     parser.add_argument('--numProfileEpochs', type=int, default=25, help='The epochs for profile training.')
