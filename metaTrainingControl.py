@@ -25,6 +25,9 @@ torch.autograd.set_detect_anomaly(False)  # If True: detect NaN values in the ou
 torch.backends.cudnn.benchmark = False  # Enable cuDNN's auto-tuner to find the most efficient algorithm. Keep true for fixed input sizes.
 
 if __name__ == "__main__":
+    # Read in any user input parameters.
+    parser = argparse.ArgumentParser(description='Specify model parameters.')
+
     # Define the accelerator parameters.
     accelerator = accelerate.Accelerator(
         dataloader_config=accelerate.DataLoaderConfiguration(split_batches=True),  # Whether to split batches across devices or not.
@@ -38,29 +41,27 @@ if __name__ == "__main__":
     trainingDate = "2024-12-22"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
-    # ----------------------- Parse Model Parameters ----------------------- #
-
-    # Create the parser
-    parser = argparse.ArgumentParser(description='Specify model parameters.')
+    # ----------------------- Architecture Parameters ----------------------- #
 
     # Add arguments for the general model
     parser.add_argument('--submodel', type=str, default=modelConstants.signalEncoderModel, help='The component of the model we are training. Options: signalEncoderModel, emotionModel')
     parser.add_argument('--optimizerType', type=str, default='AdamW', help='The optimizerType used during training convergence: Options: RMSprop, Adam, AdamW, SGD, etc.')
-    parser.add_argument('--reversibleLearningProtocol', type=str, default='rCNN', help='The learning protocol for the model: rCNN')
     parser.add_argument('--irreversibleLearningProtocol', type=str, default='FC', help='The learning protocol for the model: CNN, FC')
+    parser.add_argument('--reversibleLearningProtocol', type=str, default='rCNN', help='The learning protocol for the model: rCNN')
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are using: cpu, cuda')
-
-    # Add arguments for the signal encoder architecture.
-    parser.add_argument('--numSpecificEncoderLayers', type=int, default=4, help='The number of layers in the model.')
-    parser.add_argument('--numSharedEncoderLayers', type=int, default=4, help='The number of layers in the model.')
-    parser.add_argument('--uniformWeightLimit', type=float, default=0.05, help='The limits for profile initialization.')
     parser.add_argument('--encodedDimension', type=int, default=128, help='The dimension of the encoded signal.')
-    parser.add_argument('--numProfileEpochs', type=int, default=25, help='The epochs for profile training.')
-    parser.add_argument('--numEncodedWeights', type=int, default=128, help='The number of profile weights.')
 
     # Add arguments for the neural operator.
+    parser.add_argument('--waveletType', type=str, default='bior3.1', help='The wavelet type for the wavelet transform: bior3.1, bior3.3, bior2.2, bior3.5')
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
-    parser.add_argument('--waveletType', type=str, default='bior3.1', help='The wavelet type for the wavelet transform: bior3.1, db3, dmey, etc')
+
+    # Add arguments for the signal encoder architecture.
+    parser.add_argument('--uniformWeightLimit', type=float, default=0.05, help='The limits for profile initialization.')
+    parser.add_argument('--numSpecificEncoderLayers', type=int, default=4, help='The number of layers in the model.')
+    parser.add_argument('--numSharedEncoderLayers', type=int, default=4, help='The number of layers in the model.')
+    parser.add_argument('--numEncodedWeights', type=int, default=256, help='The number of profile weights.')
+
+    parser.add_argument('--numProfileEpochs', type=int, default=25, help='The epochs for profile training.')
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions).')
@@ -69,6 +70,8 @@ if __name__ == "__main__":
     parser.add_argument('--emotionLearningRate', type=float, default=0.01, help='The learning rate of the emotion model.')
     parser.add_argument('--numEmotionModelLayers', type=int, default=4, help='The number of layers in the emotion model.')
     parser.add_argument('--numActivityChannels', type=int, default=4, help='The number of activity channels.')
+
+    # ----------------------- Training Parameters ----------------------- #
 
     # Signal encoder learning rates.
     parser.add_argument('--profileLR', type=float, default=0.05, help='The learning rate of the physiological model.')
@@ -85,6 +88,8 @@ if __name__ == "__main__":
     parser.add_argument('--beta1', type=float, default=0.7, help='Beta1 for the optimizer: 0.7 -> 0.9')
     parser.add_argument('--beta2', type=float, default=0.9, help='Beta2 for the optimizer: 0.9 -> 0.999')
 
+    # ----------------------- Compile Parameters ----------------------- #
+
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
 
@@ -92,8 +97,6 @@ if __name__ == "__main__":
     userInputParams = modelParameters.getNeuralParameters(userInputParams)
     modelConstants.updateModelParams(userInputParams)
     submodel = userInputParams['submodel']
-
-    # --------------------------- Setup Training --------------------------- #
 
     # Initialize the model information classes.
     modelCompiler = compileModelData(submodel, userInputParams, useTherapyData=False, accelerator=accelerator)  # Initialize the model compiler.
