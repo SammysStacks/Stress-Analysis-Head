@@ -34,7 +34,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.title(f"{plotTitle} epoch{epoch}")
         plt.ylabel("Signal (AU)")
         if not noTimes: plt.ylim((-1.5, 1.5))
-        else: plt.ylim((-1/2, 1/2))
+        else: plt.ylim((-1.5, 1.5))
 
         # Save the figure.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
