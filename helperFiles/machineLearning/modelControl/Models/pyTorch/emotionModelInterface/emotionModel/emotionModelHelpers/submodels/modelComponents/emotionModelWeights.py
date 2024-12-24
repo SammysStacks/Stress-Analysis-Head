@@ -39,7 +39,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def physiologicalInitialization(physiologicalProfile):
-        nn.init.uniform_(physiologicalProfile, a=-modelConstants.uniformWeightLimit, b=modelConstants.uniformWeightLimit)
+        nn.init.uniform_(physiologicalProfile, a=-modelConstants.initialProfileAmp, b=modelConstants.initialProfileAmp)
 
     # ------------------- Neural Operator Architectures ------------------- #
 
@@ -69,7 +69,9 @@ class emotionModelWeights(convolutionalHelpers):
         return emotionModelWeights.linearModel(numInputFeatures=sequenceLength, numOutputFeatures=sequenceLength, activationMethod="SoftSign", addBias=False)
 
     def physiologicalGeneration(self, numOutputFeatures):
+        if numOutputFeatures < modelConstants.numEncodedWeights: raise ValueError(f"Number of outputs ({numOutputFeatures}) must be greater than inputs ({modelConstants.numEncodedWeights})")
         numUpSamples = int(math.log2(numOutputFeatures // modelConstants.numEncodedWeights))
+
         layers = [
             # Linear model with residual connection.
             self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),

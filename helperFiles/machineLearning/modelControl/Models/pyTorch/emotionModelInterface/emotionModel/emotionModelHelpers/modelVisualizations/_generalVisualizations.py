@@ -137,7 +137,7 @@ class generalVisualizations(globalPlottingProtocols):
         plt.xlabel("Training Epoch")
         plt.ylabel("Loss Values")
         plt.title(f"{plotTitle}")
-        plt.legend(loc="upper right", bbox_to_anchor=(1.35, 1))  # Move legend off to the right, level with the top
+        plt.legend(loc="upper right", bbox_to_anchor=(1.35, 1), borderaxespad=0)
 
         # Save the figure if desired.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(trainingLosses[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")

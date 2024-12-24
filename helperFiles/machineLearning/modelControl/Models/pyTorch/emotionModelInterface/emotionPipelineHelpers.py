@@ -20,7 +20,7 @@ class emotionPipelineHelpers:
         self.model = None  # The model being used for the training process.
 
         # Dataset-specific parameters.
-        self.numProfileEpochs = modelParameters.getProfileEpochs()  # The number of epochs to train the profile model.
+        self.numProfileShots = modelParameters.getProfileEpochs()  # The number of epochs to train the profile model.
         self.allEmotionClasses = allEmotionClasses  # The number of classes (intensity levels) within each emotion to predict. Dim: [numEmotions]
         self.activityLabelInd = len(emotionNames)  # The index of the activity label in the label array.
         self.numActivities = len(activityNames)  # The number of activities we are predicting. Type: int
@@ -53,23 +53,23 @@ class emotionPipelineHelpers:
 
     def resetPhysiologicalProfile(self, submodel):
         # Get the current number of epochs for the profile model.
-        numProfileEpochs = self.getTrainingEpoch(submodel) + 1
-        if numProfileEpochs <= 1: return 1
+        numProfileShots = self.getTrainingEpoch(submodel) + 1
+        if numProfileShots <= 1: return 1
 
         # Find the number of epochs for the profile model.
-        if numProfileEpochs < modelConstants.numWarmups: numProfileEpochs = 1
-        else: numProfileEpochs = max(2, numProfileEpochs - modelConstants.numWarmups)
-        numProfileEpochs = min(numProfileEpochs, self.numProfileEpochs)
+        if numProfileShots < modelConstants.numWarmups: numProfileShots = 1
+        else: numProfileShots = max(2, numProfileShots - modelConstants.numWarmups)
+        numProfileShots = min(numProfileShots, self.numProfileShots)
 
         # Reset and get the parameters that belong to the profile model
         profileParams = set(self.model.specificSignalEncoderModel.profileModel.parameters())
-        self.model.specificSignalEncoderModel.profileModel.resetProfileHolders(numProfileEpochs)
+        self.model.specificSignalEncoderModel.profileModel.resetProfileHolders(numProfileShots)
         self.model.specificSignalEncoderModel.profileModel.resetProfileWeights()
 
         # Reset the optimizer state for these parameters
         for p in list(self.optimizer.state.keys()):
             if p in profileParams: self.optimizer.state[p] = {}
-        return numProfileEpochs
+        return numProfileShots
 
     def compileOptimizer(self, submodel):
         # Initialize the optimizer and scheduler.

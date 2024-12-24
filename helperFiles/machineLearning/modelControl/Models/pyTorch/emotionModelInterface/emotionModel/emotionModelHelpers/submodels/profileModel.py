@@ -17,22 +17,22 @@ class profileModel(emotionModelWeights):
         self.numSignals = numSignals
 
         # Initialize the physiological profile.
-        self.resetProfileHolders(numProfileEpochs=1)
+        self.resetProfileHolders(numProfileShots=1)
         self.resetProfileWeights()
 
     def resetProfileWeights(self):
         self.physiologicalInitialization(self.embeddedPhysiologicalProfile)
 
-    def resetProfileHolders(self, numProfileEpochs):
+    def resetProfileHolders(self, numProfileShots):
         # Get the model information.
         numSpecificEncoderLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
         numSharedEncoderLayers = modelConstants.userInputParams['numSharedEncoderLayers']
 
         # Pre-allocate each parameter.
-        self.compiledSignalEncoderLayerStatePath = np.zeros(shape=(numProfileEpochs + 1, 2*numSpecificEncoderLayers + numSharedEncoderLayers + 1, self.numExperiments, 1, self.encodedDimension))
-        self.embeddedProfileStatePath = np.zeros(shape=(numProfileEpochs + 1, self.numExperiments, modelConstants.numEncodedWeights))
-        self.profileStatePath = np.zeros(shape=(numProfileEpochs + 1, self.numExperiments, self.encodedDimension))
-        self.profileStateLosses = np.zeros(shape=(numProfileEpochs + 1, self.numExperiments, self.numSignals))
+        self.compiledSignalEncoderLayerStatePath = np.zeros(shape=(numProfileShots + 1, 2*numSpecificEncoderLayers + numSharedEncoderLayers + 1, self.numExperiments, 1, self.encodedDimension))
+        self.embeddedProfileStatePath = np.zeros(shape=(numProfileShots + 1, self.numExperiments, modelConstants.numEncodedWeights))
+        self.profileStatePath = np.zeros(shape=(numProfileShots + 1, self.numExperiments, self.encodedDimension))
+        self.profileStateLosses = np.zeros(shape=(numProfileShots + 1, self.numExperiments, self.numSignals))
 
     def populateProfileState(self, profileEpoch, batchInds, profileStateLoss, profileStatePath, compiledSignalEncoderLayerStatePath):
         if isinstance(batchInds, torch.Tensor): batchInds = batchInds.detach().cpu().numpy()

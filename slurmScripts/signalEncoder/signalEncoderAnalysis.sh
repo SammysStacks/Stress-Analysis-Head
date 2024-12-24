@@ -6,7 +6,7 @@ srun accelerate launch ./../../metaTrainingControl.py \
     --numSharedEncoderLayers "$1" \
     --numSpecificEncoderLayers "$2" \
     --encodedDimension "$3" \
-    --numProfileEpochs "$4" \
+    --numProfileShots "$4" \
     --deviceListed "HPC-$5" \
     --submodel "signalEncoderModel" \
     --waveletType "$6" \
@@ -21,7 +21,7 @@ srun accelerate launch ./../../metaTrainingControl.py \
     --beta1 "${15}" \
     --beta2 "${16}" \
     --momentum_decay "${17}" \
-    --uniformWeightLimit "${18}" \
+    --initialProfileAmp "${18}" \
 
 end=$(date +%s)
 runtime=$((end-start))
