@@ -49,7 +49,7 @@ class compileModelDataHelpers:
     def embedInformation(submodel, userInputParams, trainingDate):
         # Embedded information for each model.
         if userInputParams['encodedDimension'] < userInputParams['numEncodedWeights']: raise Exception("The number of encoded weights must be less than the encoded dimension.")
-        userInputParams['profileLR'] = userInputParams['initialProfileAmp']
+        userInputParams['profileLR'] = userInputParams['initialProfileAmp']  # TODO
 
         signalEncoderModelInfo = f"signalEncoder on {userInputParams['deviceListed']} {userInputParams['optimizerType']} shared-specific{userInputParams['numSharedEncoderLayers']}-{userInputParams['numSpecificEncoderLayers']} numShots{userInputParams['numProfileShots']} encodedDim{userInputParams['encodedDimension']} opt{userInputParams['beta1']}-{userInputParams['beta2']}-{userInputParams['momentum_decay']} LR-G{userInputParams['physGenLR']}-R{userInputParams['reversibleLR']}-P{userInputParams['profileLR']} WD-G{userInputParams['physGenWD']}-R{userInputParams['reversibleWD']}-P{userInputParams['profileWD']} pParams{userInputParams['numEncodedWeights']} weightLim{userInputParams['initialProfileAmp']} {userInputParams['neuralOperatorParameters']['wavelet']['waveletType']}"
         emotionPredictionModelInfo = f"emotionPrediction on {userInputParams['deviceListed']} with {userInputParams['optimizerType']}"
