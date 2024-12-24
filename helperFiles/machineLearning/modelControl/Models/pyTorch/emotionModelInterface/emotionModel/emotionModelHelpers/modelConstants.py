@@ -44,10 +44,10 @@ class modelConstants:
     metadata = [datasetIndexMD, subjectIndexMD]
 
     # Specify the model parameters.
-    uniformWeightLimits = None  # The limits for the uniform initialization.
+    uniformWeightLimit = None  # The limits for the uniform initialization.
     numEncodedWeights = None  # The number of encoded weights.
     modelTimeWindow = 120  # The time window for the model.
-    numEpochs_minLR = 1  # The number of warmup epochs. 4
+    numEpochs_minLR = 0  # The number of warmup epochs. 4
     minMaxScale = 1  # The maximum value for the min-max scaling.
     numBatches = 16  # The number of batches to use in the model.
     numWarmups = 0  # The number of warmup epochs. 5
@@ -65,7 +65,7 @@ class modelConstants:
         cls.userInputParams = userInputParams
 
         # Update the model constants.
-        modelConstants.uniformWeightLimits = userInputParams['uniformWeightLimits']
+        modelConstants.uniformWeightLimit = userInputParams['uniformWeightLimit']
         modelConstants.numEncodedWeights = userInputParams['numEncodedWeights']
 
     # ---------------- Hard-coded therapy parameters --------------------- #

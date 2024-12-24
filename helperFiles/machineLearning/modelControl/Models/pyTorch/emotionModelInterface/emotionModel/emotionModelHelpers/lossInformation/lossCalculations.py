@@ -24,6 +24,7 @@ class lossCalculations:
         self.minSequencePoints = modelParameters.getExclusionSequenceCriteria()[0]  # The minimum number of sequence points to consider.
         self.numCulledLosses = max(2, min(4, int(self.minSequencePoints*0.0625)))  # The percentage of the data to trim from the top of the signal.
         assert self.numCulledLosses == 2, f"The number of culled losses was optimized to 2-4, not {self.numCulledLosses}."
+        self.numCulledLosses = 4
 
         # Initialize helper classes.
         self.dataInterface = emotionDataInterface()
@@ -36,7 +37,7 @@ class lossCalculations:
         #       Custom Regression Options: "R2", "pearson", "LogCoshLoss", "weightedMSE"
         # Initialize the loss function WITHOUT the class weights.
         self.meanSquaredError = pytorchLossMethods(lossType="MeanSquaredError", class_weights=None).loss_fn
-        self.smoothL1Loss = nn.SmoothL1Loss(reduction='none', beta=0.1)
+        self.smoothL1Loss = nn.SmoothL1Loss(reduction='none', beta=3/2)  # NEVER MAKE IT LESS THAN 1, its just MAE for outliers.
 
     # -------------------------- Signal Encoder Loss Calculations ------------------------- #
 
@@ -62,7 +63,7 @@ class lossCalculations:
             # Remove the top 3 noisy points to smoothen the loss.
             findMaxLoss = torch.where(validDataMask, signalReconstructedLoss, float('-inf'))
             max_indices = findMaxLoss.argmax(dim=-1, keepdim=True).squeeze(-1)
-            signalReconstructedLoss[batch_indices, signal_indices, max_indices] = signalReconstructedLoss[batch_indices, signal_indices, max_indices] / 5
+            signalReconstructedLoss[batch_indices, signal_indices, max_indices] = signalReconstructedLoss[batch_indices, signal_indices, max_indices] / 10
 
         # Calculate the mean loss across all signals.
         signalReconstructedLoss[~validDataMask] = torch.nan  # Zero out the loss for invalid data points.

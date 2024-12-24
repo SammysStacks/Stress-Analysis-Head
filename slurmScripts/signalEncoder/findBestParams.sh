@@ -12,7 +12,7 @@ wds_profileGen=('1e-5')  # 1e-5 <= x <= 1e-4
 wds_reversible=('1e-4')  # 1e-4 <= x <= 1e-3
 
 # General parameters: 320
-uniformWeightLimits_arr=('0.01' '0.005' '0.05')  #
+uniformWeightLimit_arr=('0.01' '0.005' '0.05')  #
 signalEncoderLayers_arr=(6)  # 1 2 3 4 5 6 7 8
 encodedDimensions_arr=(32 64 128 256)  # 64 128 256 512
 allNumEncodedWeights=(128)  # 4 8 16 32 64
@@ -37,7 +37,7 @@ do
     do
       for numEncodedWeights in "${allNumEncodedWeights[@]}"
       do
-        for uniformWeightLimits in "${uniformWeightLimits_arr[@]}"
+        for uniformWeightLimit in "${uniformWeightLimit_arr[@]}"
         do
           for numProfileEpochs in "${numProfileEpochs_arr[@]}"
           do
@@ -66,9 +66,9 @@ do
                                   echo "Submitting job with $numSharedEncoderLayers numSharedEncoderLayers, $numSpecificEncoderLayers numSpecificEncoderLayers, $encodedDimension encodedDimension, $waveletType waveletType, $optimizer optimizer, $lr_profile lr_profile, $lr_reversible lr_reversible"
 
                                   if [ "$1" == "CPU" ]; then
-                                      sbatch -J "signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_CPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$numProfileEpochs" "$1" "$waveletType" "$optimizer" "$lr_profile" "$lr_reversible" "$lr_profileGen" "$numEncodedWeights" "$wd_profile" "$wd_reversible" "$wd_profileGen" "$beta1s" "$beta2s" "$momentums" "$uniformWeightLimits"
+                                      sbatch -J "signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_CPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$numProfileEpochs" "$1" "$waveletType" "$optimizer" "$lr_profile" "$lr_reversible" "$lr_profileGen" "$numEncodedWeights" "$wd_profile" "$wd_reversible" "$wd_profileGen" "$beta1s" "$beta2s" "$momentums" "$uniformWeightLimit"
                                   elif [ "$1" == "GPU" ]; then
-                                      sbatch -J "signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_GPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$numProfileEpochs" "$1" "$waveletType" "$optimizer" "$lr_profile" "$lr_reversible" "$lr_profileGen" "$numEncodedWeights" "$wd_profile" "$wd_reversible" "$wd_profileGen" "$beta1s" "$beta2s" "$momentums" "$uniformWeightLimits"
+                                      sbatch -J "signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_GPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$numProfileEpochs" "$1" "$waveletType" "$optimizer" "$lr_profile" "$lr_reversible" "$lr_profileGen" "$numEncodedWeights" "$wd_profile" "$wd_reversible" "$wd_profileGen" "$beta1s" "$beta2s" "$momentums" "$uniformWeightLimit"
                                   else
                                       echo "No known device listed: $1"
                                   fi
