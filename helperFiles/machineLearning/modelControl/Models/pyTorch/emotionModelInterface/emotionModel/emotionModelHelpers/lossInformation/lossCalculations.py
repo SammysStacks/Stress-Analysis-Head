@@ -75,6 +75,7 @@ class lossCalculations:
 
             # Remove the top noisy points from the loss calculation.
             signalReconstructedLoss[validBatchIndices, validSignalIndices, validMaxIndices] /= self.lossScaleFactor
+            print(len(validSignalIndices))
 
         # Calculate the mean loss across all signals.
         signalReconstructedLoss[~validDataMask] = torch.nan  # Zero out the loss for invalid data points.
