@@ -57,8 +57,8 @@ if __name__ == "__main__":
 
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--uniformWeightLimit', type=float, default=0.05, help='The limits for profile initialization.')
-    parser.add_argument('--numSpecificEncoderLayers', type=int, default=4, help='The number of layers in the model.')
-    parser.add_argument('--numSharedEncoderLayers', type=int, default=4, help='The number of layers in the model.')
+    parser.add_argument('--numSpecificEncoderLayers', type=int, default=6, help='The number of layers in the model.')
+    parser.add_argument('--numSharedEncoderLayers', type=int, default=6, help='The number of layers in the model.')
     parser.add_argument('--numEncodedWeights', type=int, default=128, help='The number of profile weights.')
     parser.add_argument('--numProfileEpochs', type=int, default=25, help='The epochs for profile training.')
 
