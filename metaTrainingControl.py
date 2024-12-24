@@ -38,14 +38,14 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2024-12-22"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2024-12-24"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Architecture Parameters ----------------------- #
 
     # Add arguments for the general model
     parser.add_argument('--submodel', type=str, default=modelConstants.signalEncoderModel, help='The component of the model we are training. Options: signalEncoderModel, emotionModel')
-    parser.add_argument('--optimizerType', type=str, default='AdamW', help='The optimizerType used during training convergence: Options: RMSprop, Adam, AdamW, SGD, etc.')
+    parser.add_argument('--optimizerType', type=str, default='NAdam', help='The optimizerType used during training convergence: Options: RMSprop, Adam, AdamW, SGD, etc.')
     parser.add_argument('--irreversibleLearningProtocol', type=str, default='FC', help='The learning protocol for the model: CNN, FC')
     parser.add_argument('--reversibleLearningProtocol', type=str, default='rCNN', help='The learning protocol for the model: rCNN')
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are using: cpu, cuda')
@@ -60,7 +60,7 @@ if __name__ == "__main__":
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=6, help='The number of layers in the model.')
     parser.add_argument('--numSharedEncoderLayers', type=int, default=6, help='The number of layers in the model.')
     parser.add_argument('--numEncodedWeights', type=int, default=128, help='The number of profile weights.')
-    parser.add_argument('--numProfileShots', type=int, default=25, help='The epochs for profile training.')
+    parser.add_argument('--numProfileShots', type=int, default=16, help='The epochs for profile training.')
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions).')
