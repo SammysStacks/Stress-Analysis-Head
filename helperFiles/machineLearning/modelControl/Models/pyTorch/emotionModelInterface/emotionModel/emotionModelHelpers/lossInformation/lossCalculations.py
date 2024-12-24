@@ -23,6 +23,8 @@ class lossCalculations:
         # Calculate the number of sequence points to throw out.
         self.scaledLossPercent = 5  # The percentage of points to remove from the loss calculation.
         self.lossScaleFactor = 10  # The factor to scale the loss by when removing points.
+        self.minRemovalPoints = 2  # The minimum number of points to remove from the loss calculation.
+        self.maxRemovalPoints = 4  # The maximum number of points to remove from the loss calculation.
 
         # Initialize helper classes.
         self.dataInterface = emotionDataInterface()
@@ -60,8 +62,7 @@ class lossCalculations:
         # Get the number of signal points to remove from the loss calculation.
         numBatchSignalPoints = validDataMask.sum(dim=-1)  # Dim: batchSize, numSignals
         numRemovalPoints = torch.ceil(self.scaledLossPercent * numBatchSignalPoints / 100)  # Dim: batchSize, numSignals
-        numRemovalPoints[numRemovalPoints < 1] = 1  # Ensure that at least 2 points are removed.
-        numRemovalPoints[3 < numRemovalPoints] = 3  # Ensure that at least 2 points are removed.
+        numRemovalPoints.clamp(self.minRemovalPoints, self.maxRemovalPoints)  # Ensure that at most 4 points are removed.
 
         for numPointsRemoved in range(numRemovalPoints.max().int().item()):
             # Find the current most noisy points within each signal's batch.
