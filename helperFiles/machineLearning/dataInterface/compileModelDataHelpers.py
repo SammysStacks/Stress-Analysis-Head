@@ -267,8 +267,13 @@ class compileModelDataHelpers:
 
         # Filter out the invalid signals
         allSignalData[~validSignalMask.unsqueeze(-1).unsqueeze(-1).expand_as(allSignalData)] = 0
+        allSignalData = allSignalData[:, validSignalInds, :, :]
+        featureNames = featureNames[validSignalInds]
 
-        return allSignalData[:, validSignalInds, :, :], featureNames[validSignalInds]
+        # Assert that the data is valid.
+        if metadatasetName.lower() in ['empatch']: assert any('eog' in featureName.lower() for featureName in featureNames), f"EOG not found in {featureNames}"
+
+        return allSignalData, featureNames
 
     def normalizeSignals(self, allSignalData, missingDataMask):
         # signalBatchData dimension: numExperiments, numSignals, maxSequenceLength, [timeChannel, signalChannel]
