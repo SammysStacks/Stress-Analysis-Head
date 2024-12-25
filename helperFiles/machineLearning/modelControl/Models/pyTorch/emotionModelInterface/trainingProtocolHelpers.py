@@ -19,14 +19,12 @@ class trainingProtocolHelpers:
         # General parameters.
         self.submodelsSaving = modelParameters.getSubmodelsSaving(submodel)  # The submodels to save.
         self.sharedModelWeights = modelConstants.sharedModelWeights  # The shared model weights.
-        self.minEpochs_modelAdjustment = 1  # The minimum number of epochs before adjusting the model architecture.
         self.accelerator = accelerator
         self.unifiedLayerData = None
-        self.numTrailingLosses = 2
 
         # Helper classes.
         self.modelMigration = modelMigration(accelerator)
-        self.modelHelpers = modelHelpers()
+        self.modelHelpers = modelHelpers
 
     def trainEpoch(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders):
         # Set random order to loop through the models.

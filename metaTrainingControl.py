@@ -38,7 +38,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2024-12-24"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2024-12-25"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Architecture Parameters ----------------------- #
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     parser.add_argument('--irreversibleLearningProtocol', type=str, default='FC', help='The learning protocol for the model: CNN, FC')
     parser.add_argument('--reversibleLearningProtocol', type=str, default='rCNN', help='The learning protocol for the model: rCNN')
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are using: cpu, cuda')
-    parser.add_argument('--encodedDimension', type=int, default=128, help='The dimension of the encoded signal.')
+    parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
 
     # Add arguments for the neural operator.
     parser.add_argument('--waveletType', type=str, default='bior3.1', help='The wavelet type for the wavelet transform: bior3.1, bior3.3, bior2.2, bior3.5')
@@ -59,8 +59,8 @@ if __name__ == "__main__":
     parser.add_argument('--initialProfileAmp', type=float, default=0.01, help='The limits for profile initialization.')
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model.')
     parser.add_argument('--numSharedEncoderLayers', type=int, default=8, help='The number of layers in the model.')
-    parser.add_argument('--numEncodedWeights', type=int, default=64, help='The number of profile weights.')
-    parser.add_argument('--numProfileShots', type=int, default=16, help='The epochs for profile training.')
+    parser.add_argument('--numEncodedWeights', type=int, default=128, help='The number of profile weights.')
+    parser.add_argument('--numProfileShots', type=int, default=24, help='The epochs for profile training.')
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions).')
@@ -120,7 +120,7 @@ if __name__ == "__main__":
     # -------------------------- Meta-model Training ------------------------- #
 
     # Calculate the initial loss.
-    # trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate)
+    trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate)
     trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)  # Calculate the initial loss.
 
     # For each training epoch
