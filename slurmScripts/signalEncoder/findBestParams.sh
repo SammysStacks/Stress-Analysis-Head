@@ -35,7 +35,7 @@ encodedDimensions_arr=(256)
 allNumEncodedWeights=(128)
 numProfileShots_arr=(16)
 optimizers_arr=('NAdam')
-lrs_profile=('0.01')
+# lrs_profile=('0.01')
 
 for beta1s in "${beta1s_arr[@]}"
 do
