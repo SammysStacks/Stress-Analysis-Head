@@ -217,6 +217,7 @@ class compileModelDataHelpers:
         # Ensure the feature names match the number of signals
         assert len(allSignalData) == 0 or len(featureNames) == allSignalData.shape[1], \
             f"Feature names do not match data dimensions. {len(featureNames)} != {allSignalData.shape[1]}"
+        eogFeatureInds = [featureInd for featureInd, featureName in enumerate(featureNames) if 'eog' in featureName.lower()]
 
         for _ in range(4):
             # Standardize all signals at once for the entire batch
@@ -228,8 +229,8 @@ class compileModelDataHelpers:
             # biomarkerData: batchSize, numSignals, maxSequenceLength
 
             # Find single point differences
-            if metadatasetName.lower() not in ['empatch']: badSinglePointMaxDiff = self.maxSinglePointDiff < biomarkerData.diff(dim=-1).abs()  # Maximum difference between consecutive points: batchSize, numSignals, maxSequenceLength-1
-            else: badSinglePointMaxDiff = 2/3 < biomarkerData.diff(dim=-1).abs()  # Maximum difference between consecutive points: batchSize, numSignals, maxSequenceLength-1
+            badSinglePointMaxDiff = self.maxSinglePointDiff < biomarkerData.diff(dim=-1).abs()  # Maximum difference between consecutive points: batchSize, numSignals, maxSequenceLength-1
+            if len(eogFeatureInds) != 0: badSinglePointMaxDiff[:, eogFeatureInds, :] = 2/3 < biomarkerData[:, eogFeatureInds, :].diff(dim=-1).abs()
             allSignalData[:, :, :-1][badSinglePointMaxDiff] = 0  # Remove small errors.
             allSignalData[:, :, 1:][badSinglePointMaxDiff] = 0  # Remove small errors.
 
@@ -255,17 +256,19 @@ class compileModelDataHelpers:
         # Create boolean masks for signals that don’t meet the requirements
         minLowerBoundaryMask = self.minBoundaryPoints <= (biomarkerData[:, :, 1:-1] < -modelConstants.minMaxScale + 0.25).sum(dim=-1)  # Number of points below -0.95: batchSize, numSignals
         minUpperBoundaryMask = self.minBoundaryPoints <= (modelConstants.minMaxScale - 0.25 < biomarkerData[:, :, 1:-1]).sum(dim=-1)  # Number of points above 0.95: batchSize, numSignals
-        if metadatasetName.lower() not in ['empatch']: averageDiff = biomarkerDiffs.nanmean(dim=-1) < self.maxAverageDiff  # Average difference between consecutive points: batchSize, numSignals
-        else: averageDiff = biomarkerDiffs.nanmean(dim=-1) < 2/3  # Average difference between consecutive points: batchSize, numSignals
+        averageDiff = biomarkerDiffs.nanmean(dim=-1) < self.maxAverageDiff  # Average difference between consecutive points: batchSize, numSignals
         minPointsMask = self.minSequencePoints <= validDataMask.sum(dim=-1)  # Minimum number of points: batchSize, numSignals
         validSignalMask = validDataMask.any(dim=-1)  # Missing data: batchSize, numSignals
 
+        # EOG correction.
+        if len(eogFeatureInds) != 0: averageDiff[:, eogFeatureInds] = biomarkerDiffs[:, eogFeatureInds].nanmean(dim=-1) < 2/3
+
         # Combine all masks into a single mask and expand to match dimensions.
         validSignalMask = minPointsMask & minLowerBoundaryMask & minUpperBoundaryMask & averageDiff & validSignalMask
-        if metadatasetName.lower() not in ['empatch']: validSignalInds = self.minSignalPresentCount < validSignalMask.sum(dim=0)
-        else: validSignalInds = 12 < validSignalMask.sum(dim=0)
+        validSignalInds = self.minSignalPresentCount < validSignalMask.sum(dim=0)
 
-        if metadatasetName.lower() in ['empatch']: print(sum('eog' in featureName.lower() for featureName in featureNames[validSignalInds]))
+        if len(eogFeatureInds) != 0: validSignalInds[eogFeatureInds] = 12 < validSignalMask[:, eogFeatureInds].sum(dim=0)
+        print(sum('eog' in featureName.lower() for featureName in featureNames[validSignalInds]))
 
         # Filter out the invalid signals
         allSignalData[~validSignalMask.unsqueeze(-1).unsqueeze(-1).expand_as(allSignalData)] = 0
