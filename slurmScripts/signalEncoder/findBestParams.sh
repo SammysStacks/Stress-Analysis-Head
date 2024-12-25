@@ -11,9 +11,9 @@ wds_profile=('1e-3')  # 1e-6 ==> x <== 1e-3
 wds_profileGen=('1e-5')  # 1e-5 == x <= 1e-4
 wds_reversible=('1e-4')  # 1e-4 == x <= 1e-3
 
-# Always interesting parameters: 320
-initialProfileAmp_arr=('0.01' '0.025' '0.05' '0.005')  # 4
-numSpecificEncoderLayers_arr=(1 2 3)  # 3
+# Always interesting parameters: 18
+initialProfileAmp_arr=('0.01' '0.025' '0.05')  # 3
+numSpecificEncoderLayers_arr=(1 2 3 4 5 6)  # 6
 
 # Known interesting parameters: 320
 signalEncoderLayers_arr=(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16)  # 16
@@ -24,22 +24,20 @@ numProfileShots_arr=(2 4 8 16 32 64)  # 6
 # Neural operator parameters.
 waveletTypes_arr=('bior3.1' 'bior3.3' 'bior3.5' 'bior2.2')  # 'bior3.1' > 'bior3.3' > 'bior2.2' > 'bior3.5'
 
-# Learning parameters.
-lrs_profile=('0.01')  # 0.05 <= x <= 0.4
+# Learning parameters: 3
+lrs_profile=('0.01' '0.025' '0.05')  # 0.01 <= x <= 0.05
 lrs_profileGen=('1e-4') # # 5e-5 <= x == 1e-4
 lrs_reversible=('1e-3')  # 1e-4 <= x == 1e-3
 
 # Single Switchable.
+numSpecificEncoderLayers_arr=(1)
 waveletTypes_arr=('bior3.1')
 signalEncoderLayers_arr=(6)
-encodedDimensions_arr=(256)
-allNumEncodedWeights=(128)
-numProfileShots_arr=(16)
+encodedDimensions_arr=(128)
+allNumEncodedWeights=(32 128)
+numProfileShots_arr=(8 16 32)
 optimizers_arr=('NAdam')
-
-# Switchable tests.
-# initialProfileAmp_arr=('0.05' '0.1')  # 2
-# numSpecificEncoderLayers_arr=(1 2 4 6)  # 4
+lrs_profile=('0.01')
 
 for beta1s in "${beta1s_arr[@]}"
 do
@@ -79,7 +77,7 @@ do
                                       continue
                                   fi
 
-                                  if (( numSharedEncoderLayers < numSpecificEncoderLayers )); then
+                                  if (( numSharedEncoderLayers < 2*numSpecificEncoderLayers )); then
                                       continue
                                   fi
 
