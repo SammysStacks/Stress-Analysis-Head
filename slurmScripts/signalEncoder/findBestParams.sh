@@ -23,7 +23,7 @@ initialProfileAmp_arr=('0.01')  # 0.005 <= x <= 0.05
 waveletTypes_arr=('bior3.1' 'bior3.3' 'bior3.5' 'bior2.2')  # 'bior3.1' > 'bior3.3' > 'bior2.2' > 'bior3.5'
 
 # Learning parameters: 3
-lrs_profile=('0.001' '0.005' '0.01' '0.02' '0.03' '0.04' '0.05' '0.06' '0.07' '0.08' '0.09' '0.1')  # 0.01 <= x <= 0.05
+lrs_profile=('0.005' '0.01' '0.02' '0.03' '0.04' '0.05' '0.06' '0.07' '0.08' '0.09')  # 0.005 <= x <= 0.09
 lrs_profileGen=('1e-4') # # 5e-5 <= x == 1e-4
 lrs_reversible=('1e-3')  # 1e-4 <= x == 1e-3
 
