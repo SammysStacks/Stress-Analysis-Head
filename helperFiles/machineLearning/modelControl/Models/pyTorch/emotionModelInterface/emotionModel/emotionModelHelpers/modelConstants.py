@@ -47,7 +47,7 @@ class modelConstants:
     initialProfileAmp = None  # The limits for the uniform initialization.
     numEncodedWeights = None  # The number of encoded weights.
     modelTimeWindow = 120  # The time window for the model.
-    numEpochs_minLR = 0  # The number of warmup epochs. 4
+    numEpochs_minLR = 2  # The number of warmup epochs. 4
     minMaxScale = 1  # The maximum value for the min-max scaling.
     numBatches = 16  # The number of batches to use in the model.
 
