@@ -218,7 +218,6 @@ class compileModelDataHelpers:
         assert len(allSignalData) == 0 or len(featureNames) == allSignalData.shape[1], \
             f"Feature names do not match data dimensions. {len(featureNames)} != {allSignalData.shape[1]}"
         eogFeatureInds = [featureInd for featureInd, featureName in enumerate(featureNames) if 'eog' in featureName.lower()]
-        print(len(eogFeatureInds))
 
         for _ in range(4):
             # Standardize all signals at once for the entire batch
