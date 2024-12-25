@@ -256,7 +256,7 @@ class compileModelDataHelpers:
         minLowerBoundaryMask = self.minBoundaryPoints <= (biomarkerData[:, :, 1:-1] < -modelConstants.minMaxScale + 0.25).sum(dim=-1)  # Number of points below -0.95: batchSize, numSignals
         minUpperBoundaryMask = self.minBoundaryPoints <= (modelConstants.minMaxScale - 0.25 < biomarkerData[:, :, 1:-1]).sum(dim=-1)  # Number of points above 0.95: batchSize, numSignals
         if metadatasetName.lower() not in ['empatch']: averageDiff = biomarkerDiffs.nanmean(dim=-1) < self.maxAverageDiff  # Average difference between consecutive points: batchSize, numSignals
-        else: averageDiff = biomarkerDiffs.nanmean(dim=-1) < 1/2  # Average difference between consecutive points: batchSize, numSignals
+        else: averageDiff = biomarkerDiffs.nanmean(dim=-1) < 2/3  # Average difference between consecutive points: batchSize, numSignals
         minPointsMask = self.minSequencePoints <= validDataMask.sum(dim=-1)  # Minimum number of points: batchSize, numSignals
         validSignalMask = validDataMask.any(dim=-1)  # Missing data: batchSize, numSignals
 
