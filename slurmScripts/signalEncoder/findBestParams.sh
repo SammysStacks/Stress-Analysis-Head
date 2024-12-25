@@ -12,8 +12,8 @@ wds_profileGen=('1e-5')  # 1e-5 == x <= 1e-4
 wds_reversible=('1e-4')  # 1e-4 == x <= 1e-3
 
 # Always interesting parameters: 320
-initialProfileAmp_arr=('0.01' '0.025' '0.05' '0.075' '0.1' '0.25' '0.5' '1')  # 8
-numSpecificEncoderLayers_arr=(1 2 3 4 5 6)  # 6
+initialProfileAmp_arr=('0.01' '0.025' '0.05' '0.005')  # 4
+numSpecificEncoderLayers_arr=(1 2 3)  # 3
 
 # Known interesting parameters: 320
 signalEncoderLayers_arr=(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16)  # 16
