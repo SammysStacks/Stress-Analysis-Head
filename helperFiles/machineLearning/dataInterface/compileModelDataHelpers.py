@@ -260,10 +260,14 @@ class compileModelDataHelpers:
         minPointsMask = self.minSequencePoints <= validDataMask.sum(dim=-1)  # Minimum number of points: batchSize, numSignals
         validSignalMask = validDataMask.any(dim=-1)  # Missing data: batchSize, numSignals
 
+        if metadatasetName.lower() in ['empatch']: print(sum('eog' in featureName.lower() for featureName in featureNames[16 < validSignalMask.sum(dim=0)]))
+
         # Combine all masks into a single mask and expand to match dimensions.
         validSignalMask = minPointsMask & minLowerBoundaryMask & minUpperBoundaryMask & averageDiff & validSignalMask
         if metadatasetName.lower() not in ['empatch']: validSignalInds = self.minSignalPresentCount < validSignalMask.sum(dim=0)
         else: validSignalInds = 16 < validSignalMask.sum(dim=0)
+        
+        if metadatasetName.lower() in ['empatch']: print(sum('eog' in featureName.lower() for featureName in featureNames[validSignalInds]))
 
         # Filter out the invalid signals
         allSignalData[~validSignalMask.unsqueeze(-1).unsqueeze(-1).expand_as(allSignalData)] = 0
