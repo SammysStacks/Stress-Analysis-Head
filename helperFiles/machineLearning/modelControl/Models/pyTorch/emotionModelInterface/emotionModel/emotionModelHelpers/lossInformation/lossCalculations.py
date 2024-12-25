@@ -23,8 +23,8 @@ class lossCalculations:
         # Calculate the number of sequence points to throw out.
         self.scaledLossPercent = 10  # The percentage of points to remove from the loss calculation.
         self.lossScaleFactor = 10  # The factor to scale the loss by when removing points.
-        self.minRemovalPoints = 3  # The minimum number of points to remove from the loss calculation.
-        self.maxRemovalPoints = 10  # The maximum number of points to remove from the loss calculation.
+        self.minRemovalPoints = 4  # The minimum number of points to remove from the loss calculation.
+        self.maxRemovalPoints = 4  # The maximum number of points to remove from the loss calculation.
 
         # Initialize helper classes.
         self.dataInterface = emotionDataInterface()

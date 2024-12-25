@@ -49,11 +49,12 @@ class compileModelDataHelpers:
     def embedInformation(submodel, userInputParams, trainingDate):
         # Embedded information for each model.
         if userInputParams['encodedDimension'] < userInputParams['numEncodedWeights']: raise Exception("The number of encoded weights must be less than the encoded dimension.")
-        userInputParams['profileLR'] = userInputParams['initialProfileAmp']  # TODO
 
+        # Get the model information.
         signalEncoderModelInfo = f"signalEncoder on {userInputParams['deviceListed']} {userInputParams['optimizerType']} shared-specific{userInputParams['numSharedEncoderLayers']}-{userInputParams['numSpecificEncoderLayers']} numShots{userInputParams['numProfileShots']} encodedDim{userInputParams['encodedDimension']} opt{userInputParams['beta1']}-{userInputParams['beta2']}-{userInputParams['momentum_decay']} LR-G{userInputParams['physGenLR']}-R{userInputParams['reversibleLR']}-P{userInputParams['profileLR']} WD-G{userInputParams['physGenWD']}-R{userInputParams['reversibleWD']}-P{userInputParams['profileWD']} pParams{userInputParams['numEncodedWeights']} weightLim{userInputParams['initialProfileAmp']} {userInputParams['neuralOperatorParameters']['wavelet']['waveletType']}"
         emotionPredictionModelInfo = f"emotionPrediction on {userInputParams['deviceListed']} with {userInputParams['optimizerType']}"
 
+        # Return the model information.
         if submodel == modelConstants.signalEncoderModel: return f"{trainingDate} {signalEncoderModelInfo.replace('.', '-')}"
         elif submodel == modelConstants.emotionModel: return f"{trainingDate} {emotionPredictionModelInfo.replace('.', '-')}"
         else: raise Exception()
@@ -228,7 +229,7 @@ class compileModelDataHelpers:
 
             # Find single point differences
             if metadatasetName.lower() not in ['empatch']: badSinglePointMaxDiff = self.maxSinglePointDiff < biomarkerData.diff(dim=-1).abs()  # Maximum difference between consecutive points: batchSize, numSignals, maxSequenceLength-1
-            else: badSinglePointMaxDiff = 0.75 < biomarkerData.diff(dim=-1).abs()  # Maximum difference between consecutive points: batchSize, numSignals, maxSequenceLength-1
+            else: badSinglePointMaxDiff = 2/3 < biomarkerData.diff(dim=-1).abs()  # Maximum difference between consecutive points: batchSize, numSignals, maxSequenceLength-1
             allSignalData[:, :, :-1][badSinglePointMaxDiff] = 0  # Remove small errors.
             allSignalData[:, :, 1:][badSinglePointMaxDiff] = 0  # Remove small errors.
 
@@ -262,7 +263,7 @@ class compileModelDataHelpers:
         # Combine all masks into a single mask and expand to match dimensions.
         validSignalMask = minPointsMask & minLowerBoundaryMask & minUpperBoundaryMask & averageDiff & validSignalMask
         if metadatasetName.lower() not in ['empatch']: validSignalInds = self.minSignalPresentCount < validSignalMask.sum(dim=0)
-        else: validSignalInds = 10 < validSignalMask.sum(dim=0)
+        else: validSignalInds = 12 < validSignalMask.sum(dim=0)
 
         # Filter out the invalid signals
         allSignalData[~validSignalMask.unsqueeze(-1).unsqueeze(-1).expand_as(allSignalData)] = 0
