@@ -263,7 +263,7 @@ class compileModelDataHelpers:
         # Combine all masks into a single mask and expand to match dimensions.
         validSignalMask = minPointsMask & minLowerBoundaryMask & minUpperBoundaryMask & averageDiff & validSignalMask
         if metadatasetName.lower() not in ['empatch']: validSignalInds = self.minSignalPresentCount < validSignalMask.sum(dim=0)
-        else: validSignalInds = 8 < validSignalMask.sum(dim=0)
+        else: validSignalInds = 12 < validSignalMask.sum(dim=0)
 
         if metadatasetName.lower() in ['empatch']: print(sum('eog' in featureName.lower() for featureName in featureNames[validSignalInds]))
 
