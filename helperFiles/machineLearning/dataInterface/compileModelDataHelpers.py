@@ -267,6 +267,7 @@ class compileModelDataHelpers:
         validSignalMask = minPointsMask & minLowerBoundaryMask & minUpperBoundaryMask & averageDiff & validSignalMask
         validSignalInds = self.minSignalPresentCount < validSignalMask.sum(dim=0)
 
+        print(sum('eog' in featureName.lower() for featureName in featureNames[validSignalInds]))
         if len(eogFeatureInds) != 0: validSignalInds[eogFeatureInds] = 8 < validSignalMask[:, eogFeatureInds].sum(dim=0)
         print(sum('eog' in featureName.lower() for featureName in featureNames[validSignalInds]))
 
