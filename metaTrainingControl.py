@@ -73,7 +73,7 @@ if __name__ == "__main__":
     # ----------------------- Training Parameters ----------------------- #
 
     # Signal encoder learning rates.
-    parser.add_argument('--profileLR', type=float, default=0.075, help='The learning rate of the physiological model.')
+    parser.add_argument('--profileLR', type=float, default=0.05, help='The learning rate of the physiological model.')
     parser.add_argument('--reversibleLR', type=float, default=1e-3, help='The learning rate of the general model.')
     parser.add_argument('--physGenLR', type=float, default=1e-4, help='The learning rate of the general model.')
 
@@ -121,7 +121,7 @@ if __name__ == "__main__":
 
     # Calculate the initial loss.
     # trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate)
-    trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)  # Calculate the initial loss.
+    # trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)  # Calculate the initial loss.
 
     # For each training epoch
     for epoch in range(1, numEpochs + 1):
