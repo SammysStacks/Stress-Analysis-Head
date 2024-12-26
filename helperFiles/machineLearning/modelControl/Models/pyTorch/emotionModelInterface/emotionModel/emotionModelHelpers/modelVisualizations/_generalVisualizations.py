@@ -103,7 +103,7 @@ class generalVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{emotionName} epochs{epoch}.pdf", baseSaveFigureName=f"{emotionName}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotTrainingLosses(self, trainingLosses, testingLosses, lossLabels, saveFigureLocation="", plotTitle="Model Convergence Loss", logY=True):
+    def plotTrainingLosses(self, trainingLosses, testingLosses, lossLabels, saveFigureLocation="", plotTitle="Model Convergence Loss", logY=True, offset=0):
         # Assert the validity of the input data.
         assert len(trainingLosses) == len(lossLabels), "Number of loss labels must match the number of loss indices."
         if len(trainingLosses[0]) == 0: return None
@@ -128,7 +128,7 @@ class generalVisualizations(globalPlottingProtocols):
         plt.hlines(y=0.06, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.25)
         plt.hlines(y=0.02, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.5)
         plt.hlines(y=0.03, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.25)
-        plt.xlim((0, len(trainingLosses[0]) - 1))
+        plt.xlim((offset, len(trainingLosses[0])))
         plt.ylim((0.01, 1))
         plt.grid(True)
 
