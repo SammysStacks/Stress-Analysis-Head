@@ -6,6 +6,7 @@ from sklearn.metrics import confusion_matrix
 
 # Visualization protocols
 from helperFiles.globalPlottingProtocols import globalPlottingProtocols
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
 
 class generalVisualizations(globalPlottingProtocols):
@@ -106,6 +107,7 @@ class generalVisualizations(globalPlottingProtocols):
     def plotTrainingLosses(self, trainingLosses, testingLosses, lossLabels, saveFigureLocation="", plotTitle="Model Convergence Loss", logY=True, offset=0):
         # Assert the validity of the input data.
         assert len(trainingLosses) == len(lossLabels), "Number of loss labels must match the number of loss indices."
+        lossEpochOffset = int(not modelConstants.useInitialLoss)
         if len(trainingLosses[0]) == 0: return None
 
         # Plot the losses
@@ -128,7 +130,7 @@ class generalVisualizations(globalPlottingProtocols):
         plt.hlines(y=0.06, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.25)
         plt.hlines(y=0.02, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.5)
         plt.hlines(y=0.03, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.25)
-        plt.xlim((offset, len(trainingLosses[0])))
+        plt.xlim((lossEpochOffset, len(trainingLosses[0]) + 1 + lossEpochOffset))
         plt.ylim((0.005, 2))
         plt.grid(True)
 

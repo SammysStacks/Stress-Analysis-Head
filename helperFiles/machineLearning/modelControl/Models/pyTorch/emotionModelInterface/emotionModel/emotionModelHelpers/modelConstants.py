@@ -50,6 +50,7 @@ class modelConstants:
     numEpochs_minLR = 1  # The number of warmup epochs. 4
     minMaxScale = 1  # The maximum value for the min-max scaling.
     numBatches = 16  # The number of batches to use in the model.
+    useInitialLoss = False  # Use the initial loss.
 
     # Specify the data interface parameter names.
     signalChannelNames = [timeChannel, signalChannel]
