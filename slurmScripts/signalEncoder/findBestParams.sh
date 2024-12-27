@@ -12,9 +12,9 @@ wds_profileGen=('1e-5')  # 1e-5 == x <= 1e-4
 wds_reversible=('1e-4')  # 1e-4 == x <= 1e-3
 
 # Known interesting parameters: 320
-signalEncoderLayers_arr=(2 3 4 5 6 7 8 9 10 11 12 13 14 15 16)  # 16
+signalEncoderLayers_arr=(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16)  # 16
 allNumEncodedWeights=(4 8 16 32 64 128 256 512)  # 5
-numSpecificEncoderLayers_arr=(1 2 3 4)  # 4
+numSpecificEncoderLayers_arr=(1 2 3 4 5 6 7 8)  # 8
 encodedDimensions_arr=(64 128 256 512)  # 4
 numProfileShots_arr=(1 2 3 4 8 16 24 32)  # 7
 initialProfileAmp_arr=('0.01')  # 0.005 <= x <= 0.05
@@ -28,14 +28,14 @@ lrs_profileGen=('1e-4') # # 5e-5 <= x == 1e-4
 lrs_reversible=('1e-3')  # 1e-4 <= x == 1e-3
 
 # Single Switchable.
-numSpecificEncoderLayers_arr=(1)
+#numSpecificEncoderLayers_arr=(1)
 waveletTypes_arr=('bior3.1')
-signalEncoderLayers_arr=(8)
+# signalEncoderLayers_arr=(8)
 encodedDimensions_arr=(256)
 allNumEncodedWeights=(128)
-numProfileShots_arr=(16)
+numProfileShots_arr=(24)
 optimizers_arr=('NAdam')
-lrs_profile=('0.02')
+lrs_profile=('0.01')
 
 for beta1s in "${beta1s_arr[@]}"
 do
