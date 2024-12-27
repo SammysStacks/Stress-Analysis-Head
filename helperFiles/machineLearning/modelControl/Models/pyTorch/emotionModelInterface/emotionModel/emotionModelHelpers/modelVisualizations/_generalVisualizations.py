@@ -107,7 +107,6 @@ class generalVisualizations(globalPlottingProtocols):
     def plotTrainingLosses(self, trainingLosses, testingLosses, lossLabels, saveFigureLocation="", plotTitle="Model Convergence Loss", logY=True):
         # Assert the validity of the input data.
         assert len(trainingLosses) == len(lossLabels), "Number of loss labels must match the number of loss indices."
-        lossEpochOffset = int(not modelConstants.useInitialLoss)
         if len(trainingLosses[0]) == 0: return None
 
         # Plot the losses
