@@ -22,8 +22,9 @@ class emotionModelWeights(convolutionalHelpers):
 
         linearLayer = nn.Sequential(linearLayer, activationFunctions.getActivationMethod(activationMethod))
         if addResidualConnection:
-            if numOutputFeatures == numOutputFeatures: return ResNet(module=linearLayer)
+            if numInputFeatures == numOutputFeatures: return ResNet(module=linearLayer)
             linearLayer.append(subPixelUpsampling1D(upscale_factor=numOutputFeatures // numInputFeatures))
+            assert False
         return linearLayer
 
     # ------------------- Physiological Profile ------------------- #
@@ -73,22 +74,25 @@ class emotionModelWeights(convolutionalHelpers):
         numUpSamples = int(math.log2(numOutputFeatures // modelConstants.numEncodedWeights))
 
         layers = [
-            # Linear model with residual connection.
-            self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
-
             ResNet(module=nn.Sequential(
-                # Linear model with overall residual connection.
-                self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=numOutputFeatures, activationMethod='SoftSign', addBias=False, addResidualConnection=False),
-                self.linearModel(numInputFeatures=numOutputFeatures, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=False),
-            )),
+                # Linear model with residual connection.
+                self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
+                self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
 
-            # Linear model with residual connection.
-            self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
-        ]
+                ResNet(module=nn.Sequential(
+                    # Linear model with overall residual connection.
+                    self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=numOutputFeatures, activationMethod='SoftSign', addBias=False, addResidualConnection=False),
+                    self.linearModel(numInputFeatures=numOutputFeatures, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=False),
+                )),
+
+                # Linear model with residual connection.
+                self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
+                self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
+            ))]
 
         # Construct the profile generation model.
-        for i in range(numUpSamples): layers.append(self.convolutionalFilters_resNetBlocks(numResNets=1, numBlocks=1, numChannels=[1, 2, 2], kernel_sizes=[[3, 3]], dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
-        self.convolutionalFilters_resNetBlocks(numResNets=2, numBlocks=1, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False),
+        for i in range(numUpSamples): layers.append(self.convolutionalFilters_resNetBlocks(numResNets=1, numBlocks=1, numChannels=[1, 1, 2, 2], kernel_sizes=[[3, 3, 3]], dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
+        self.convolutionalFilters_resNetBlocks(numResNets=4, numBlocks=4, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False),
         return nn.Sequential(*layers)
 
     @staticmethod
