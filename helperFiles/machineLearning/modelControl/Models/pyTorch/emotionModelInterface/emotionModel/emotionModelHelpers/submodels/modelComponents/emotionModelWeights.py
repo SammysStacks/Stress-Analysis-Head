@@ -75,7 +75,6 @@ class emotionModelWeights(convolutionalHelpers):
         layers = [
             # Linear model with residual connection.
             self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
-            self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
 
             ResNet(module=nn.Sequential(
                 # Linear model with overall residual connection.
@@ -84,7 +83,6 @@ class emotionModelWeights(convolutionalHelpers):
             )),
 
             # Linear model with residual connection.
-            self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
             self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
         ]
 
