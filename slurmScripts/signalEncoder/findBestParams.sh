@@ -23,6 +23,11 @@ initialProfileAmp_arr=('0.01')  # 0.005 <= x <= 0.05
 
 # Neural operator parameters.
 waveletTypes_arr=('bior3.1' 'bior3.3' 'bior3.5' 'bior2.2')  # 'bior3.1' > 'bior3.3' > 'bior2.2' > 'bior3.5'
+waveletTypes_arr=(
+    # 15 bior wavelets
+    'bior1.1' 'bior1.3' 'bior1.5' 'bior2.2' 'bior2.4' 'bior2.6' 'bior2.8' \
+    'bior3.1' 'bior3.3' 'bior3.5' 'bior3.7' 'bior3.9' 'bior4.4' 'bior5.5' 'bior6.8' \
+)
 
 # Learning parameters.
 lrs_profile=('0.005' '0.0075' '0.01' '0.02' '0.03' '0.04' '0.05')  # 0.005 <= x <= 0.05
@@ -36,7 +41,7 @@ numSharedEncoderLayers_arr=(8)
 # Collective Switchables: 256
 encodedDimensions_arr=(256)
 allNumEncodedWeights=(128)
-numProfileShots_arr=(24)
+numProfileShots_arr=(16)
 
 # Single Switchables.
 waveletTypes_arr=('bior3.1')
