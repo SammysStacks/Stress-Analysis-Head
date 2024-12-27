@@ -50,7 +50,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         physiologicalProfile = physiologicalProfile - physiologicalProfile.min(dim=-1, keepdim=True).values
         physiologicalProfile = physiologicalProfile / (physiologicalProfile.max(dim=-1, keepdim=True).values + 1e-20)
         physiologicalProfile = physiologicalProfile * 2 - 1
-        physiologicalProfile = physiologicalProfile / 3
+        physiologicalProfile = physiologicalProfile / 4
 
         return physiologicalProfile
 
