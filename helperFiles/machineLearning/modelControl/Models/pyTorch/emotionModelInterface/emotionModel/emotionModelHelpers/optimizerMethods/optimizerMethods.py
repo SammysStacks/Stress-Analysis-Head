@@ -136,7 +136,7 @@ class CosineAnnealingLR_customized(LRScheduler):
         _warn_get_lr_called_within_step(self)
 
         # Base case: learning rate is constant.
-        if self.last_epoch <= self.numWarmupEpochs: return self.updateStep(multiplicativeFactor=self.warmupFactor, base_lrs=[max(self.absolute_min_lr, base_lr / 100) for base_lr in self.base_lrs])
+        if self.last_epoch <= self.numWarmupEpochs: return self.updateStep(multiplicativeFactor=self.warmupFactor, base_lrs=[max(self.absolute_min_lr, base_lr / 10) for base_lr in self.base_lrs])
         return self.updateStep(multiplicativeFactor=self.multiplicativeFactor, base_lrs=self.base_lrs)
 
     def updateStep(self, multiplicativeFactor, base_lrs):
