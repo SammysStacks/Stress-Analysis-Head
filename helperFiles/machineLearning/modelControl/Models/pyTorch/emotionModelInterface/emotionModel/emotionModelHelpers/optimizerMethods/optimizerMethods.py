@@ -14,7 +14,7 @@ class optimizerMethods:
     def getModelParams(self, submodel, model):
         modelParams = [
             # Specify the model parameters for the shared signal encoding.
-            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "healthGenerationModel" not in name and "jacobianParameter" not in name), 'weight_decay': self.userInputParams['reversibleWD'], 'lr': self.userInputParams['reversibleLR']},  # 1e-6 - 1e-2
+            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "healthGenerationModel" not in name), 'weight_decay': self.userInputParams['reversibleWD'], 'lr': self.userInputParams['reversibleLR']},  # 1e-6 - 1e-2
             {'params': model.sharedSignalEncoderModel.healthGenerationModel.parameters(), 'weight_decay': self.userInputParams['physGenWD'], 'lr': self.userInputParams['physGenLR']},  # 1e-2 - 1e2
 
             # Specify the model parameters for the specific signal encoding.

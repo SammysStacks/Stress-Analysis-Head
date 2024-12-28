@@ -129,8 +129,8 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
     def printParams(self):
         # Count the trainable parameters.
         # Count the trainable parameters.
-        numProfileParams = sum(p.numel() for name, p in self.named_parameters() if p.requires_grad and ('healthGenerationModel' in name or 'jacobianParameter' in name))
-        numParams = sum(p.numel() for name, p in self.named_parameters() if p.requires_grad and ('healthGenerationModel' in name or 'jacobianParameter' in name))
+        numProfileParams = sum(p.numel() for name, p in self.named_parameters() if p.requires_grad and 'healthGenerationModel' in name)
+        numParams = sum(p.numel() for name, p in self.named_parameters() if p.requires_grad and 'healthGenerationModel' in name )
 
         # Print the number of trainable parameters.
         totalParams = numParams + numProfileParams
