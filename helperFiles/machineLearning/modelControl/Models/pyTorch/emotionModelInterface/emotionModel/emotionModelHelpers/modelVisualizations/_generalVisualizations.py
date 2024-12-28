@@ -130,7 +130,8 @@ class generalVisualizations(globalPlottingProtocols):
         plt.hlines(y=0.02, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.5)
         plt.hlines(y=0.03, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.25)
         plt.xlim((0, len(trainingLosses[0]) + 1))
-        plt.ylim((0.001, 2))
+        if logY: plt.ylim((0.001, 2))
+        else: plt.ylim((0.9, 3.1))
         plt.grid(True)
 
         # Label the plot.
