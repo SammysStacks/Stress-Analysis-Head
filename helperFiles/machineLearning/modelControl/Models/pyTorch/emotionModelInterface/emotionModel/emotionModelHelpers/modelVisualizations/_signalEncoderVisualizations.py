@@ -164,7 +164,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Plot the last layer with its own normalization and colorbar
 
         # Plot the rest of the layers with the same normalization.
-        im0 = plt.imshow(interpolated_states, cmap=custom_cmap, interpolation=None, extent=relativeTimesExtent, aspect='auto', origin='lower', vmin=-1.25, vmax=1.25)
+        im0 = plt.imshow(interpolated_states, cmap=custom_cmap, interpolation=None, extent=relativeTimesExtent, aspect='auto', origin='lower', vmin=-1.1, vmax=1.1)
         plt.colorbar(im0, fraction=0.046, pad=0.04)
 
         # # Plot the last layer with its own normalization and colorbar
