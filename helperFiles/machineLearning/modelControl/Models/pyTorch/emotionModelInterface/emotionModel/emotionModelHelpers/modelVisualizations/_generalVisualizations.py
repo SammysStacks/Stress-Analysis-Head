@@ -144,19 +144,6 @@ class generalVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(trainingLosses[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotSinglaParameterFlow(self, yValues, plotTitle, saveFigureLocation):
-        plt.plot(yValues, color=self.darkColors, linewidth=2)
-
-        # Label the plot.
-        plt.xlabel("Training Epoch")
-        plt.ylabel("Loss Values")
-        plt.title(f"{plotTitle}")
-        plt.ylim((0.9, 3.1))
-
-        # Save the figure if desired.
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(yValues)}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
-        else: self.clearFigure(fig=None, legend=None, showPlot=True)
-
     def generalDataPlotting(self, plottingData, plottingLabels, saveFigureLocation, plotTitle="Model Convergence Loss"):
         # Plot the training path.
         for plottingDataInd in range(len(plottingData)):

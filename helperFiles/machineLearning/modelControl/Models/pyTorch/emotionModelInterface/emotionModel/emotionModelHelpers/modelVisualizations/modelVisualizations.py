@@ -50,16 +50,17 @@ class modelVisualizations(globalPlottingProtocols):
                 # Plot reconstruction loss.
                 self.generalViz.plotTrainingLosses([specificModel.trainingLosses_signalReconstruction for specificModel in specificModels],
                                                    [specificModel.testingLosses_signalReconstruction for specificModel in specificModels],
-                                                   lossLabels=[f"{datasetName} Signal Encoding Reconstruction Loss" for datasetName in datasetNames],
+                                                   lossLabels=[f"{datasetName}" for datasetName in datasetNames],
                                                    saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Convergence Losses")
 
                 # Plot profile loss.
                 self.generalViz.plotTrainingLosses([specificModel.profileModel.profileStateLosses for specificModel in specificModels], testingLosses=None,
-                                                   lossLabels=[f"{datasetName} Signal Encoding Profile Loss" for datasetName in datasetNames],
+                                                   lossLabels=[f"{datasetName}" for datasetName in datasetNames],
                                                    saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Profile Losses")
 
-                self.generalViz.plotSinglaParameterFlow([sharedModel.trainingJacobianParameterFlow for sharedModel in sharedModels],
-                                                        saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Health Jacobian Convergence")
+                self.generalViz.plotTrainingLosses([sharedModel.trainingJacobianParameterFlow for sharedModel in sharedModels], testingLosses=None,
+                                                   lossLabels=[f"{datasetName}" for datasetName in datasetNames],
+                                                   saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Health Jacobian Convergence")
 
     def plotAllTrainingEvents(self, submodel, modelPipeline, lossDataLoader, trainingDate, currentEpoch):
         self.accelerator.print(f"\nPlotting results for the {modelPipeline.model.datasetName} model")
@@ -99,12 +100,15 @@ class modelVisualizations(globalPlottingProtocols):
                     # Plot the health profile training information.
                     self.signalEncoderViz.plotPhysiologicalReconstruction(resampledBiomarkerTimes, healthProfile, reconstructedPhysiologicalProfile, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Reconstruction")
                     self.signalEncoderViz.plotPhysiologicalError(resampledBiomarkerTimes, healthProfile, reconstructedPhysiologicalProfile, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Reconstruction Error")
-                    if embeddedProfile.shape[0] != 0: self.signalEncoderViz.plotProfilePath(relativeTimes=None, healthProfile=embeddedProfile, profileStatePath=embeddedProfileStatePath, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Embedded Profile Generation")
-                    if profileStatePath.shape[0] != 0: self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, healthProfile=healthProfile, profileStatePath=profileStatePath, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Profile Generation")
+                    if embeddedProfile.shape[0] != 0: self.signalEncoderViz.plotProfilePath(relativeTimes=None, healthProfile=embeddedProfile, profileStatePath=embeddedProfileStatePath, epoch=currentEpoch, saveFigureLocation="signalEncoding/",
+                                                                                            plotTitle="Embedded Profile Generation")
+                    if profileStatePath.shape[0] != 0: self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, healthProfile=healthProfile, profileStatePath=profileStatePath, epoch=currentEpoch, saveFigureLocation="signalEncoding/",
+                                                                                             plotTitle="Physiological Profile Generation")
 
                     # Plot the signal encoding training information.
                     self.signalEncoderViz.plotSignalEncodingStatePath(resampledBiomarkerTimes, compiledSignalEncoderLayerStates, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Final Model Flow")
-                    if compiledSignalEncoderLayerStatePath.shape[0] != 0: self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, healthProfile=compiledSignalEncoderLayerStates[-1, :, -1, :], profileStatePath=compiledSignalEncoderLayerStatePath[:, -1, :, -1, :], epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Model Flow")
+                    if compiledSignalEncoderLayerStatePath.shape[0] != 0: self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, healthProfile=compiledSignalEncoderLayerStates[-1, :, -1, :],
+                                                                                                                profileStatePath=compiledSignalEncoderLayerStatePath[:, -1, :, -1, :], epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Model Flow")
 
                 # Plot the autoencoder results.
                 self.signalEncoderViz.plotEncoder(signalData, reconstructedSignalData, resampledBiomarkerTimes, resampledSignalData, epoch=currentEpoch, saveFigureLocation="signalReconstruction/", plotTitle="Signal Reconstruction", numSignalPlots=1)
