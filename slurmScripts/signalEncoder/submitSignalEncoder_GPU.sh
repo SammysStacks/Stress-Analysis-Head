@@ -14,9 +14,6 @@
 # Specify dynamic paths for output and error files
 #SBATCH --output="slurmOutputs/%x-%j.out"  # Standard output file
 
-# Notify at the beginning, end of job and on failure.
-#SBATCH --mail-type=BEGIN,END,FAIL
-
 # Load in your modules
 module load python/3.10.12-gcc-11.3.1-n4zmj3v
 nvcc --version
