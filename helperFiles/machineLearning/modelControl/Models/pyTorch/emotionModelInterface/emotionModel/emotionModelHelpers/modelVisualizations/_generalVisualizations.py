@@ -130,8 +130,7 @@ class generalVisualizations(globalPlottingProtocols):
         plt.hlines(y=0.02, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.5)
         plt.hlines(y=0.03, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.25)
         plt.xlim((0, len(trainingLosses[0]) + 1))
-        if logY: plt.ylim((0.001, 2))
-        else: plt.ylim((0.9, 3.1))
+        plt.ylim((0.001, 2))
         plt.grid(True)
 
         # Label the plot.
@@ -143,6 +142,24 @@ class generalVisualizations(globalPlottingProtocols):
 
         # Save the figure if desired.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(trainingLosses[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        else: self.clearFigure(fig=None, legend=None, showPlot=True)
+
+    def plotSinglaParameterFlow(self, trainingValues, testingValues, labels, saveFigureLocation="", plotTitle="Model Convergence Loss", logY=False):
+        for modelInd in range(len(trainingValues)):
+            plt.plot(trainingValues[modelInd], axis=-1, label=f'{labels[modelInd]} (Train)', color=self.darkColors[modelInd], linewidth=2)
+            if testingValues is not None: plt.plot(testingValues[modelInd], color=self.darkColors[modelInd], linewidth=2, alpha=0.75)
+        plt.xlim((0, len(trainingValues[0]) + 1))
+        plt.grid(True)
+
+        # Label the plot.
+        plt.xlabel("Training Epoch")
+        plt.ylabel("Values")
+        plt.title(f"{plotTitle}")
+        plt.ylim((0.9, 3.1))
+        plt.legend(loc="upper right", bbox_to_anchor=(1.35, 1), borderaxespad=0)
+
+        # Save the figure if desired.
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(yValues)}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def generalDataPlotting(self, plottingData, plottingLabels, saveFigureLocation, plotTitle="Model Convergence Loss"):
