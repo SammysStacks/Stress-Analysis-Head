@@ -33,7 +33,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.xlabel("Time (Seconds)")
         plt.title(f"{plotTitle} epoch{epoch}")
         plt.ylabel("Signal (AU)")
-        if not noTimes: plt.ylim((-1.5, 1.5))
+        if not noTimes: plt.ylim((-1, 1))
         else: plt.ylim((-1.5, 1.5))
 
         # Save the figure.
