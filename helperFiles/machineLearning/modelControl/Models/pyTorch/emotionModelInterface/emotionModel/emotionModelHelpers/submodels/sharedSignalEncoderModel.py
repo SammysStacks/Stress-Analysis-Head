@@ -47,7 +47,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
     # Learned up-sampling of the physiological profile.
     def smoothPhysiologicalProfile(self, physiologicalProfile):
         physiologicalProfile = self.physiologicalGenerationModel(physiologicalProfile.unsqueeze(1)).squeeze(1)
-        # physiologicalProfile = physiologicalProfile * 2
+        physiologicalProfile = physiologicalProfile * 2
 
         return physiologicalProfile
 
