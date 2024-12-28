@@ -46,7 +46,7 @@ numProfileShots_arr=(16)
 # Single Switchables.
 waveletTypes_arr=('bior3.1')
 optimizers_arr=('NAdam')
-lrs_profile=('0.01')
+lirs_profile=('0.01')
 
 for beta1s in "${beta1s_arr[@]}"
 do
