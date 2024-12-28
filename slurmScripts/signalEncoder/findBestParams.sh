@@ -12,7 +12,7 @@ wds_profileGen=('1e-5')  # 1e-5 == x <= 1e-4; Removed from filename
 wds_reversible=('1e-4')  # 1e-4 == x <= 1e-3; Removed from filename
 
 # Known interesting parameters: 128
-numSharedEncoderLayers_arr=(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16)  # 16
+numSharedEncoderLayers_arr=(1 2 3 4 5 6 7 8 9 10 11 12 13 14)  # 14
 numSpecificEncoderLayers_arr=(1 2 3 4 5 6 7 8)  # 8
 
 # Known interesting parameters: 256
