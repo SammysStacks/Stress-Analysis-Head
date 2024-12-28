@@ -85,11 +85,7 @@ do
                                   if (( encodedDimension < numEncodedWeights )); then
                                       continue
                                   fi
-
-                                  if (( numSharedEncoderLayers < 2*numSpecificEncoderLayers )); then
-                                      continue
-                                  fi
-
+                                  
                                   if [ "$1" == "CPU" ]; then
                                       sbatch -J "signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_CPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$numProfileShots" "$1" "$waveletType" "$optimizer" "$lr_profile" "$lr_reversible" "$lr_profileGen" "$numEncodedWeights" "$wd_profile" "$wd_reversible" "$wd_profileGen" "$beta1s" "$beta2s" "$momentums" "$initialProfileAmp"
                                   elif [ "$1" == "GPU" ]; then
