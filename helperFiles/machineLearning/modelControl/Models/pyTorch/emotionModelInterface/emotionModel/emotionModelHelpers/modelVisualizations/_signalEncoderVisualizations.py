@@ -177,8 +177,9 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # plt.imshow(interpolated_states[1:2], cmap=custom_cmap, interpolation=None, extent=relativeTimes_initExtent2, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
 
         # Add horizontal lines to mark layer boundaries
-        plt.hlines(y=numLayers - 1, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
-        plt.hlines(y=2, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
+        numSpecificEncoderLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
+        plt.hlines(y=numLayers - numSpecificEncoderLayers, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
+        plt.hlines(y=1 + numSpecificEncoderLayers, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
         plt.hlines(y=1, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='-', linewidth=2)
 
         # Ticks, labels, and formatting
