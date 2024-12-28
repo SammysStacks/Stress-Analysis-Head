@@ -27,12 +27,13 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         assert len(deltaTimes) == 1, f"The time gaps are not similar: {deltaTimes}"
 
         # The neural layers for the signal encoder.
-        self.physiologicalGenerationModel = self.physiologicalGeneration(numOutputFeatures=encodedDimension)
+        self.healthGenerationModel = self.healthGeneration(numOutputFeatures=encodedDimension)
         self.processingLayers, self.neuralLayers = nn.ModuleList(), nn.ModuleList()
         for _ in range(self.numSharedEncoderLayers): self.addLayer()
+        self.jacobianParameter = self.initializeJacobianParam()
 
         # Register gradient hook for the weights.
-        for param in self.physiologicalGenerationModel.parameters(): param.register_hook(self.gradientHook)
+        for param in self.healthGenerationModel.parameters(): param.register_hook(self.gradientHook)
 
     def forward(self):
         raise "You cannot call the dataset-specific signal encoder module."
@@ -44,12 +45,12 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         elif self.learningProtocol == 'CNN': self.processingLayers.append(self.postProcessingLayerCNN(numSignals=self.numSignals))
         else: raise "The learning protocol is not yet implemented."
 
-    # Learned up-sampling of the physiological profile.
-    def smoothPhysiologicalProfile(self, physiologicalProfile):
-        physiologicalProfile = self.physiologicalGenerationModel(physiologicalProfile.unsqueeze(1)).squeeze(1)
-        physiologicalProfile = physiologicalProfile * 2
+    # Learned up-sampling of the health profile.
+    def smoothPhysiologicalProfile(self, healthProfile):
+        healthProfile = self.healthGenerationModel(healthProfile.unsqueeze(1)).squeeze(1)
+        healthProfile = self.healthJacobian(healthProfile, self.jacobianParameter)
 
-        return physiologicalProfile
+        return healthProfile
 
     def learningInterface(self, layerInd, signalData):
         # Extract the signal data parameters.
@@ -94,18 +95,18 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
 
         # Align the timepoints to the physiological times.
         reversedPhysiologicalTimes = torch.flip(self.hyperSampledTimes, dims=[0])
-        mappedPhysiologicalTimedInds = encodedDimension - 1 - torch.searchsorted(sorted_sequence=reversedPhysiologicalTimes, input=timepoints, out=None, out_int32=False, right=False)  # timepoints <= physiologicalTimesExpanded[mappedPhysiologicalTimedInds]
+        mappedPhysiologicalTimedInds = encodedDimension - 1 - torch.searchsorted(sorted_sequence=reversedPhysiologicalTimes, input=timepoints, out=None, out_int32=False, right=False)  # timepoints <= relativeTimesExpanded[mappedPhysiologicalTimedInds]
         # Ensure the indices don't exceed the size of the last dimension of reconstructedSignalData.
-        validIndsRight = torch.clamp(mappedPhysiologicalTimedInds, min=0, max=encodedDimension - 1)  # physiologicalTimesExpanded[validIndsLeft] < timepoints
-        validIndsLeft = torch.clamp(mappedPhysiologicalTimedInds + 1, min=0, max=encodedDimension - 1)  # timepoints <= physiologicalTimesExpanded[validIndsRight]
+        validIndsRight = torch.clamp(mappedPhysiologicalTimedInds, min=0, max=encodedDimension - 1)  # relativeTimesExpanded[validIndsLeft] < timepoints
+        validIndsLeft = torch.clamp(mappedPhysiologicalTimedInds + 1, min=0, max=encodedDimension - 1)  # timepoints <= relativeTimesExpanded[validIndsRight]
         # mappedPhysiologicalTimedInds dimension: batchSize, numSignals, maxSequenceLength
 
         # Get the closest physiological data to the timepoints.
-        physiologicalTimesExpanded = self.hyperSampledTimes.view(1, 1, -1).expand_as(resampledSignalData)
+        relativeTimesExpanded = self.hyperSampledTimes.view(1, 1, -1).expand_as(resampledSignalData)
         closestPhysiologicalDataLeft = torch.gather(input=resampledSignalData, dim=2, index=validIndsLeft)
         closestPhysiologicalDataRight = torch.gather(input=resampledSignalData, dim=2, index=validIndsRight)
-        closestPhysiologicalTimesLeft = torch.gather(input=physiologicalTimesExpanded, dim=2, index=validIndsLeft)
-        closestPhysiologicalTimesRight = torch.gather(input=physiologicalTimesExpanded, dim=2, index=validIndsRight)
+        closestPhysiologicalTimesLeft = torch.gather(input=relativeTimesExpanded, dim=2, index=validIndsLeft)
+        closestPhysiologicalTimesRight = torch.gather(input=relativeTimesExpanded, dim=2, index=validIndsRight)
         assert ((closestPhysiologicalTimesLeft <= timepoints + 0.1) & (timepoints - 0.1 <= closestPhysiologicalTimesRight)).all(), "The timepoints must be within the range of the closest physiological times."
         # closestPhysiologicalData dimension: batchSize, numSignals, maxSequenceLength
 
@@ -121,12 +122,12 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
     def printParams(self):
         # Count the trainable parameters.
         # Count the trainable parameters.
-        numProfileParams = sum(p.numel() for name, p in self.named_parameters() if p.requires_grad and 'physiologicalGenerationModel' in name)
-        numParams = sum(p.numel() for name, p in self.named_parameters() if p.requires_grad and 'physiologicalGenerationModel' not in name)
+        numProfileParams = sum(p.numel() for name, p in self.named_parameters() if p.requires_grad and 'healthGenerationModel' in name)
+        numParams = sum(p.numel() for name, p in self.named_parameters() if p.requires_grad and 'healthGenerationModel' not in name)
 
         # Print the number of trainable parameters.
         totalParams = numParams + numProfileParams
-        print(f'The model has {totalParams} trainable parameters: {numParams} in the metamodel and {numProfileParams} for physiological generation.')
+        print(f'The model has {totalParams} trainable parameters: {numParams} in the metamodel and {numProfileParams} for health generation.')
 
 
 if __name__ == "__main__":

@@ -64,13 +64,13 @@ class emotionPipeline(emotionPipelineHelpers):
 
                         t11 = time.time()
                         # Perform the forward pass through the model.
-                        validDataMask, reconstructedSignalData, resampledSignalData, compiledSignalEncoderLayerStates, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = \
+                        validDataMask, reconstructedSignalData, resampledSignalData, compiledSignalEncoderLayerStates, healthProfile, activityProfile, basicEmotionProfile, emotionProfile = \
                             self.model.forward(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, onlyProfileTraining=onlyProfileTraining) if not onlyProfileTraining else \
                             self.model.fullPass(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, profileEpoch=epoch)
                         # reconstructedSignalData dimension: batchSize, numSignals, maxSequenceLength
                         # basicEmotionProfile: batchSize, numBasicEmotions, encodedDimension
                         # validDataMask dimension: batchSize, numSignals, maxSequenceLength
-                        # physiologicalProfile dimension: batchSize, encodedDimension
+                        # healthProfile dimension: batchSize, encodedDimension
                         # resampledSignalData dimension: batchSize, encodedDimension
                         # activityProfile: batchSize, numActivities, encodedDimension
                         # emotionProfile: batchSize, numEmotions, encodedDimension
@@ -78,7 +78,7 @@ class emotionPipeline(emotionPipelineHelpers):
 
                         # Assert that nothing is wrong with the predictions.
                         self.modelHelpers.assertVariableIntegrity(reconstructedSignalData, variableName="reconstructed signal data", assertGradient=False)
-                        self.modelHelpers.assertVariableIntegrity(physiologicalProfile, variableName="physiological profile", assertGradient=False)
+                        self.modelHelpers.assertVariableIntegrity(healthProfile, variableName="health profile", assertGradient=False)
                         self.modelHelpers.assertVariableIntegrity(resampledSignalData, variableName="resampled signal data", assertGradient=False)
                         self.modelHelpers.assertVariableIntegrity(basicEmotionProfile, variableName="basic emotion profile", assertGradient=False)
                         self.modelHelpers.assertVariableIntegrity(activityProfile, variableName="activity profile", assertGradient=False)

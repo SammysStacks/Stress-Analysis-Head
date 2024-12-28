@@ -73,7 +73,7 @@ class fourierNeuralOperatorWeights(emotionModelWeights):
         fourierData = realFourierData + 1j * imaginaryFourierData
         # fourierData: batchSize, numSignals, fourierDimension
 
-        # Reconstruct the data based on the physiological times.
+        # Reconstruct the data based on the health times.
         if resampledTimes is None: return torch.fft.irfft(fourierData, n=self.sequenceLength, dim=-1, norm='ortho')
         print("Resampling the data: Review the code as it will not be perfect interpolation.")
 

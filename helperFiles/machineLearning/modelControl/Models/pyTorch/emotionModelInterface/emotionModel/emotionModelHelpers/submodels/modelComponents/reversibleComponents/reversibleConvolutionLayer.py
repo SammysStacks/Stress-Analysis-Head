@@ -103,17 +103,17 @@ if __name__ == "__main__":
 
             # Set up the parameters.
             neuralLayerClass = reversibleConvolutionLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod='reversibleLinearSoftSign')
-            physiologicalProfile = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float64)
-            physiologicalProfile = physiologicalProfile - physiologicalProfile.mean(dim=-1, keepdim=True)
-            physiologicalProfile = physiologicalProfile / physiologicalProfile.std(dim=-1, keepdim=True)
-            physiologicalProfile = physiologicalProfile / 3
+            healthProfile = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float64)
+            healthProfile = healthProfile - healthProfile.mean(dim=-1, keepdim=True)
+            healthProfile = healthProfile / healthProfile.std(dim=-1, keepdim=True)
+            healthProfile = healthProfile / 3
 
             # Perform the convolution in the fourier and spatial domains.
-            if reconstructionFlag: _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(physiologicalProfile, atol=1e-6, numLayers=1, plotResults=False)
-            else: _forwardData = neuralLayerClass.forward(physiologicalProfile)
+            if reconstructionFlag: _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(healthProfile, atol=1e-6, numLayers=1, plotResults=False)
+            else: _forwardData = neuralLayerClass.forward(healthProfile)
             neuralLayerClass.printParams()
 
-            ratio = (_forwardData.norm(dim=-1) / physiologicalProfile.norm(dim=-1)).view(-1).detach().numpy()
+            ratio = (_forwardData.norm(dim=-1) / healthProfile.norm(dim=-1)).view(-1).detach().numpy()
             if abs(ratio.mean() - 1) < 0.1: plt.hist(ratio, bins=150, alpha=0.2, label=f'len{_sequenceLength}_layers={_layerInd}', density=True)
             print(ratio.mean())
 

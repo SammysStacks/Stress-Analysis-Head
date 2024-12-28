@@ -34,7 +34,7 @@ class organizeTrainingLosses(lossCalculations):
         with torch.no_grad():
             t1 = time.time()
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
-            validDataMask, reconstructedSignalData, resampledSignalData, compiledSignalEncoderLayerStates, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = model.fullPass(submodel, allSignalData, allSignalIdentifiers, allMetadata, device=self.accelerator.device, profileEpoch=None)
+            validDataMask, reconstructedSignalData, resampledSignalData, compiledSignalEncoderLayerStates, healthProfile, activityProfile, basicEmotionProfile, emotionProfile = model.fullPass(submodel, allSignalData, allSignalIdentifiers, allMetadata, device=self.accelerator.device, profileEpoch=None)
             t2 = time.time(); self.accelerator.print("\tFull Pass", t2 - t1)
 
             # Calculate the signal encoding loss.

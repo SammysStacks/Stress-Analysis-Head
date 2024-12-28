@@ -18,15 +18,15 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     # --------------------- Visualize Model Parameters --------------------- #
 
-    def plotProfilePath(self, physiologicalTimes, physiologicalProfile, profileStatePath, epoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Profile State Path"):
+    def plotProfilePath(self, relativeTimes, healthProfile, profileStatePath, epoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Profile State Path"):
         # Extract the signal dimensions.
         numProfileSteps, batchInd = len(profileStatePath), 0
-        noTimes = physiologicalTimes is None
+        noTimes = relativeTimes is None
 
-        if noTimes: physiologicalTimes = np.arange(start=0, stop=len(physiologicalProfile[batchInd]), step=1)
-        for profileStep in range(numProfileSteps): plt.plot(physiologicalTimes, profileStatePath[profileStep, batchInd], 'o--' if noTimes else '-', c=self.lightColors[1], linewidth=0.25 if noTimes else 1, markersize=4, alpha=0.3*(numProfileSteps - profileStep)/numProfileSteps)
-        for profileStep in range(numProfileSteps): plt.plot(physiologicalTimes, profileStatePath[profileStep, batchInd], 'o--' if noTimes else '-', c=self.lightColors[0], linewidth=0.25 if noTimes else 1, markersize=4, alpha=0.6*(1 - (numProfileSteps - profileStep)/numProfileSteps))
-        plt.plot(physiologicalTimes, physiologicalProfile[batchInd], 'o-' if noTimes else '-', c=self.blackColor, label=f"Physiological profile", linewidth=1 if noTimes else 2, markersize=5, alpha=0.6 if noTimes else 0.25)
+        if noTimes: relativeTimes = np.arange(start=0, stop=len(healthProfile[batchInd]), step=1)
+        for profileStep in range(numProfileSteps): plt.plot(relativeTimes, profileStatePath[profileStep, batchInd], 'o--' if noTimes else '-', c=self.lightColors[1], linewidth=0.25 if noTimes else 1, markersize=4, alpha=0.3*(numProfileSteps - profileStep)/numProfileSteps)
+        for profileStep in range(numProfileSteps): plt.plot(relativeTimes, profileStatePath[profileStep, batchInd], 'o--' if noTimes else '-', c=self.lightColors[0], linewidth=0.25 if noTimes else 1, markersize=4, alpha=0.6*(1 - (numProfileSteps - profileStep)/numProfileSteps))
+        plt.plot(relativeTimes, healthProfile[batchInd], 'o-' if noTimes else '-', c=self.blackColor, label=f"Physiological profile", linewidth=1 if noTimes else 2, markersize=5, alpha=0.6 if noTimes else 0.25)
         plt.hlines(y=0, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors='k', linestyles='dashed', linewidth=1)
 
         # Plotting aesthetics.
@@ -40,14 +40,14 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotPhysiologicalError(self, physiologicalTimes, physiologicalProfile, reconstructedPhysiologicalProfile, epoch=0, saveFigureLocation="", plotTitle="Signal Encoding"):
+    def plotPhysiologicalError(self, relativeTimes, healthProfile, reconstructedPhysiologicalProfile, epoch=0, saveFigureLocation="", plotTitle="Signal Encoding"):
         # Extract the signal dimensions.
-        physiologicalError = (physiologicalProfile[:, None, :] - reconstructedPhysiologicalProfile)
+        healthError = (healthProfile[:, None, :] - reconstructedPhysiologicalProfile)
         batchSize, numSignals, sequenceLength = reconstructedPhysiologicalProfile.shape
         batchInd = 0
 
-        plt.plot(physiologicalTimes, physiologicalError[batchInd].mean(axis=0), c=self.blackColor, label=f"Physiological profile error", linewidth=2, alpha=0.8)
-        for signalInd in range(numSignals): plt.plot(physiologicalTimes, physiologicalError[batchInd, signalInd], c=self.lightColors[0], linewidth=1, alpha=0.1)
+        plt.plot(relativeTimes, healthError[batchInd].mean(axis=0), c=self.blackColor, label=f"Physiological profile error", linewidth=2, alpha=0.8)
+        for signalInd in range(numSignals): plt.plot(relativeTimes, healthError[batchInd, signalInd], c=self.lightColors[0], linewidth=1, alpha=0.1)
 
         # Plotting aesthetics.
         plt.xlabel("Time (Seconds)")
@@ -58,14 +58,14 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotPhysiologicalReconstruction(self, physiologicalTimes, physiologicalProfile, reconstructedPhysiologicalProfile, epoch=0, saveFigureLocation="", plotTitle="Signal Encoding"):
+    def plotPhysiologicalReconstruction(self, relativeTimes, healthProfile, reconstructedPhysiologicalProfile, epoch=0, saveFigureLocation="", plotTitle="Signal Encoding"):
         # Extract the signal dimensions.
         batchSize, numSignals, sequenceLength = reconstructedPhysiologicalProfile.shape
         batchInd = 0
 
         # Plot the signal reconstruction.
-        plt.plot(physiologicalTimes, physiologicalProfile[batchInd], c=self.blackColor, label=f"Physiological profile", linewidth=2, alpha=0.8)
-        for signalInd in range(numSignals): plt.plot(physiologicalTimes, reconstructedPhysiologicalProfile[batchInd, signalInd], c=self.lightColors[1], linewidth=1, alpha=0.1)
+        plt.plot(relativeTimes, healthProfile[batchInd], c=self.blackColor, label=f"Physiological profile", linewidth=2, alpha=0.8)
+        for signalInd in range(numSignals): plt.plot(relativeTimes, reconstructedPhysiologicalProfile[batchInd, signalInd], c=self.lightColors[1], linewidth=1, alpha=0.1)
 
         # Plotting aesthetics.
         plt.xlabel("Time (Seconds)")
@@ -126,14 +126,14 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
             else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotSignalEncodingStatePath(self, physiologicalTimes, compiledSignalEncoderLayerStates, epoch, saveFigureLocation, plotTitle):
+    def plotSignalEncodingStatePath(self, relativeTimes, compiledSignalEncoderLayerStates, epoch, saveFigureLocation, plotTitle):
         numLayers, numExperiments, numSignals, encodedDimension = compiledSignalEncoderLayerStates.shape
         batchInd, signalInd = 0, 0
 
         # Interpolate the states.
         compiledSignalEncoderLayerStates = compiledSignalEncoderLayerStates[:, batchInd, signalInd, :]
-        # interp_func = interp1d(physiologicalTimes, compiledSignalEncoderLayerStates, axis=-1)
-        # interp_points = np.linspace(start=0, stop=physiologicalTimes.max(), num=1024)
+        # interp_func = interp1d(relativeTimes, compiledSignalEncoderLayerStates, axis=-1)
+        # interp_points = np.linspace(start=0, stop=relativeTimes.max(), num=1024)
         # interpolated_states = interp_func(interp_points)
         interpolated_states = compiledSignalEncoderLayerStates
 
@@ -154,22 +154,22 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         custom_cmap = LinearSegmentedColormap.from_list("red_transparent_blue", colors)
 
         # These should be chosen based on your data and how you want to "zoom"
-        physiologicalTimes_finalExtent = (physiologicalTimes.min(), physiologicalTimes.max(), numLayers - 1, numLayers)
-        physiologicalTimes_initExtent1 = (physiologicalTimes.min(), physiologicalTimes.max(), 0, 1)
-        physiologicalTimes_initExtent2 = (physiologicalTimes.min(), physiologicalTimes.max(), 1, 2)
-        physiologicalTimes = (physiologicalTimes.min(), physiologicalTimes.max(), 2, numLayers)
+        relativeTimes_finalExtent = (relativeTimes.min(), relativeTimes.max(), numLayers - 1, numLayers)
+        relativeTimes_initExtent1 = (relativeTimes.min(), relativeTimes.max(), 0, 1)
+        relativeTimes_initExtent2 = (relativeTimes.min(), relativeTimes.max(), 1, 2)
+        relativeTimes = (relativeTimes.min(), relativeTimes.max(), 2, numLayers)
         first_layer_vmin = interpolated_states.min()
         first_layer_vmax = interpolated_states.max()
         plt.figure(figsize=(12, 8))
 
         # Plot the last layer with its own normalization and colorbar
-        plt.imshow(interpolated_states[2:-1], cmap=custom_cmap, interpolation=None, extent=physiologicalTimes, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
-        im0 = plt.imshow(interpolated_states[-1:], cmap=custom_cmap, interpolation=None, extent=physiologicalTimes_finalExtent, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
+        plt.imshow(interpolated_states[2:-1], cmap=custom_cmap, interpolation=None, extent=relativeTimes, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
+        im0 = plt.imshow(interpolated_states[-1:], cmap=custom_cmap, interpolation=None, extent=relativeTimes_finalExtent, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
         plt.colorbar(im0, fraction=0.046, pad=0.04)
 
         # Plot the rest of the layers with the same normalization.
-        plt.imshow(interpolated_states[0:1], cmap=custom_cmap, interpolation=None, extent=physiologicalTimes_initExtent1, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
-        plt.imshow(interpolated_states[1:2], cmap=custom_cmap, interpolation=None, extent=physiologicalTimes_initExtent2, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
+        plt.imshow(interpolated_states[0:1], cmap=custom_cmap, interpolation=None, extent=relativeTimes_initExtent1, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
+        plt.imshow(interpolated_states[1:2], cmap=custom_cmap, interpolation=None, extent=relativeTimes_initExtent2, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
 
         # Add horizontal lines to mark layer boundaries
         plt.hlines(y=numLayers - 1, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)

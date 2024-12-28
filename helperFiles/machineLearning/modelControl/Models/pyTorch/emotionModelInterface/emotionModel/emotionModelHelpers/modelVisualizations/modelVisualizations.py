@@ -72,13 +72,13 @@ class modelVisualizations(globalPlottingProtocols):
 
         with torch.no_grad():
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
-            validDataMask, reconstructedSignalData, resampledSignalData, _, physiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = model.forward(submodel, signalData, signalIdentifiers, metadata, device=self.accelerator.device, onlyProfileTraining=False)
+            validDataMask, reconstructedSignalData, resampledSignalData, _, healthProfile, activityProfile, basicEmotionProfile, emotionProfile = model.forward(submodel, signalData, signalIdentifiers, metadata, device=self.accelerator.device, onlyProfileTraining=False)
             reconstructedPhysiologicalProfile, compiledSignalEncoderLayerStates = model.reconstructPhysiologicalProfile(resampledSignalData)
             compiledSignalEncoderLayerStates = np.flip(compiledSignalEncoderLayerStates, axis=0)
 
             # Detach the data from the GPU and tensor format.
             reconstructedPhysiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = reconstructedPhysiologicalProfile.detach().cpu().numpy(), activityProfile.detach().cpu().numpy(), basicEmotionProfile.detach().cpu().numpy(), emotionProfile.detach().cpu().numpy()
-            validDataMask, reconstructedSignalData, resampledSignalData, physiologicalProfile = validDataMask.detach().cpu().numpy(), reconstructedSignalData.detach().cpu().numpy(), resampledSignalData.detach().cpu().numpy(), physiologicalProfile.detach().cpu().numpy()
+            validDataMask, reconstructedSignalData, resampledSignalData, healthProfile = validDataMask.detach().cpu().numpy(), reconstructedSignalData.detach().cpu().numpy(), resampledSignalData.detach().cpu().numpy(), healthProfile.detach().cpu().numpy()
             compiledSignalEncoderLayerStatePath = np.asarray(model.specificSignalEncoderModel.profileModel.compiledSignalEncoderLayerStatePath)  # 2*numSpecific + numShared + 1, numExperiments, numSignals, encodedDimension
             embeddedProfile = model.specificSignalEncoderModel.profileModel.embeddedPhysiologicalProfile.detach().cpu().numpy()  # numExperiments, numEncodedWeights
             embeddedProfileStatePath = np.asarray(model.specificSignalEncoderModel.profileModel.embeddedProfileStatePath)  # numProfileSteps, numExperiments, numEncodedWeights
@@ -92,15 +92,15 @@ class modelVisualizations(globalPlottingProtocols):
                 # ------------------- Signal Encoding Plots -------------------- #
 
                 if submodel == modelConstants.signalEncoderModel:
-                    # Plot the physiological profile training information.
-                    self.signalEncoderViz.plotPhysiologicalReconstruction(resampledBiomarkerTimes, physiologicalProfile, reconstructedPhysiologicalProfile, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Reconstruction")
-                    self.signalEncoderViz.plotPhysiologicalError(resampledBiomarkerTimes, physiologicalProfile, reconstructedPhysiologicalProfile, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Reconstruction Error")
-                    if embeddedProfile.shape[0] != 0: self.signalEncoderViz.plotProfilePath(physiologicalTimes=None, physiologicalProfile=embeddedProfile, profileStatePath=embeddedProfileStatePath, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Embedded Profile Generation")
-                    if profileStatePath.shape[0] != 0: self.signalEncoderViz.plotProfilePath(physiologicalTimes=resampledBiomarkerTimes, physiologicalProfile=physiologicalProfile, profileStatePath=profileStatePath, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Profile Generation")
+                    # Plot the health profile training information.
+                    self.signalEncoderViz.plotPhysiologicalReconstruction(resampledBiomarkerTimes, healthProfile, reconstructedPhysiologicalProfile, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Reconstruction")
+                    self.signalEncoderViz.plotPhysiologicalError(resampledBiomarkerTimes, healthProfile, reconstructedPhysiologicalProfile, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Reconstruction Error")
+                    if embeddedProfile.shape[0] != 0: self.signalEncoderViz.plotProfilePath(relativeTimes=None, healthProfile=embeddedProfile, profileStatePath=embeddedProfileStatePath, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Embedded Profile Generation")
+                    if profileStatePath.shape[0] != 0: self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, healthProfile=healthProfile, profileStatePath=profileStatePath, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Profile Generation")
 
                     # Plot the signal encoding training information.
                     self.signalEncoderViz.plotSignalEncodingStatePath(resampledBiomarkerTimes, compiledSignalEncoderLayerStates, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Final Model Flow")
-                    if compiledSignalEncoderLayerStatePath.shape[0] != 0: self.signalEncoderViz.plotProfilePath(physiologicalTimes=resampledBiomarkerTimes, physiologicalProfile=compiledSignalEncoderLayerStates[-1, :, -1, :], profileStatePath=compiledSignalEncoderLayerStatePath[:, -1, :, -1, :], epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Model Flow")
+                    if compiledSignalEncoderLayerStatePath.shape[0] != 0: self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, healthProfile=compiledSignalEncoderLayerStates[-1, :, -1, :], profileStatePath=compiledSignalEncoderLayerStatePath[:, -1, :, -1, :], epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Model Flow")
 
                 # Plot the autoencoder results.
                 self.signalEncoderViz.plotEncoder(signalData, reconstructedSignalData, resampledBiomarkerTimes, resampledSignalData, epoch=currentEpoch, saveFigureLocation="signalReconstruction/", plotTitle="Signal Reconstruction", numSignalPlots=1)

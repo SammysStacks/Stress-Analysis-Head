@@ -31,16 +31,16 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def getInitialPhysiologicalProfile(numExperiments):
-        # Initialize the physiological profile.
-        physiologicalProfile = torch.randn(numExperiments, modelConstants.numEncodedWeights, dtype=torch.float64)
-        emotionModelWeights.physiologicalInitialization(physiologicalProfile)
-        physiologicalProfile = nn.Parameter(physiologicalProfile)
+        # Initialize the health profile.
+        healthProfile = torch.randn(numExperiments, modelConstants.numEncodedWeights, dtype=torch.float64)
+        emotionModelWeights.healthInitialization(healthProfile)
+        healthProfile = nn.Parameter(healthProfile)
 
-        return physiologicalProfile
+        return healthProfile
 
     @staticmethod
-    def physiologicalInitialization(physiologicalProfile):
-        nn.init.uniform_(physiologicalProfile, a=-modelConstants.initialProfileAmp, b=modelConstants.initialProfileAmp)
+    def healthInitialization(healthProfile):
+        nn.init.uniform_(healthProfile, a=-modelConstants.initialProfileAmp, b=modelConstants.initialProfileAmp)
 
     # ------------------- Neural Operator Architectures ------------------- #
 
@@ -69,7 +69,11 @@ class emotionModelWeights(convolutionalHelpers):
     def postProcessingLayerFC(sequenceLength):
         return emotionModelWeights.linearModel(numInputFeatures=sequenceLength, numOutputFeatures=sequenceLength, activationMethod="SoftSign", addBias=False)
 
-    def physiologicalGeneration(self, numOutputFeatures):
+    @staticmethod
+    def initializeJacobianParam():
+        return nn.Parameter(torch.zeros(1))
+
+    def healthGeneration(self, numOutputFeatures):
         if numOutputFeatures < modelConstants.numEncodedWeights: raise ValueError(f"Number of outputs ({numOutputFeatures}) must be greater than inputs ({modelConstants.numEncodedWeights})")
         numUpSamples = int(math.log2(numOutputFeatures // modelConstants.numEncodedWeights))
 
@@ -84,6 +88,11 @@ class emotionModelWeights(convolutionalHelpers):
         # Construct the profile generation model.
         for i in range(numUpSamples): layers.append(self.convolutionalFilters_resNetBlocks(numResNets=1, numBlocks=1, numChannels=[1, 2, 2], kernel_sizes=[[3, 3]], dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
         return nn.Sequential(*layers)
+
+    @staticmethod
+    def healthJacobian(x, jacobianParameter):
+        jacobianMatrix = 1.0 + 2.0 * torch.sigmoid(jacobianParameter)
+        return jacobianMatrix * x
 
     @staticmethod
     def gradientHook(grad): return grad

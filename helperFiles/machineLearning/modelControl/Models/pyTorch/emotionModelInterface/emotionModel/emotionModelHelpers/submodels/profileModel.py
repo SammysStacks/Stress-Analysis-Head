@@ -16,12 +16,12 @@ class profileModel(emotionModelWeights):
         self.numExperiments = numExperiments
         self.numSignals = numSignals
 
-        # Initialize the physiological profile.
+        # Initialize the health profile.
         self.resetProfileHolders(numProfileShots=int(modelConstants.useInitialLoss))
         self.resetProfileWeights()
 
     def resetProfileWeights(self):
-        self.physiologicalInitialization(self.embeddedPhysiologicalProfile)
+        self.healthInitialization(self.embeddedPhysiologicalProfile)
 
     def resetProfileHolders(self, numProfileShots):
         # Get the model information.
