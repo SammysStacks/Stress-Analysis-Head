@@ -163,13 +163,19 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.figure(figsize=(12, 8))
 
         # Plot the last layer with its own normalization and colorbar
-        plt.imshow(interpolated_states[2:-1], cmap=custom_cmap, interpolation=None, extent=relativeTimes, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
-        im0 = plt.imshow(interpolated_states[-1:], cmap=custom_cmap, interpolation=None, extent=relativeTimes_finalExtent, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
-        plt.colorbar(im0, fraction=0.046, pad=0.04)
 
         # Plot the rest of the layers with the same normalization.
-        plt.imshow(interpolated_states[0:1], cmap=custom_cmap, interpolation=None, extent=relativeTimes_initExtent1, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
-        plt.imshow(interpolated_states[1:2], cmap=custom_cmap, interpolation=None, extent=relativeTimes_initExtent2, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
+        im0 = plt.imshow(interpolated_states, cmap=custom_cmap, interpolation=None, extent=relativeTimes_initExtent2, aspect='auto', origin='lower', vmin=-1.25, vmax=1.25)
+        plt.colorbar(im0, fraction=0.046, pad=0.04)
+
+        # # Plot the last layer with its own normalization and colorbar
+        # plt.imshow(interpolated_states[2:-1], cmap=custom_cmap, interpolation=None, extent=relativeTimes, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
+        # im0 = plt.imshow(interpolated_states[-1:], cmap=custom_cmap, interpolation=None, extent=relativeTimes_finalExtent, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
+        # plt.colorbar(im0, fraction=0.046, pad=0.04)
+        #
+        # # Plot the rest of the layers with the same normalization.
+        # plt.imshow(interpolated_states[0:1], cmap=custom_cmap, interpolation=None, extent=relativeTimes_initExtent1, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
+        # plt.imshow(interpolated_states[1:2], cmap=custom_cmap, interpolation=None, extent=relativeTimes_initExtent2, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
 
         # Add horizontal lines to mark layer boundaries
         plt.hlines(y=numLayers - 1, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
