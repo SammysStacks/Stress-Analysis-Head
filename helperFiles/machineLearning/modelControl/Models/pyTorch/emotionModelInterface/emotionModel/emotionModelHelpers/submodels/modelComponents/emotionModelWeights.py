@@ -92,9 +92,9 @@ class emotionModelWeights(convolutionalHelpers):
         return nn.Sequential(*layers)
 
     @staticmethod
-    def healthJacobian(x, jacobianParameter):
+    def healthJacobian(jacobianParameter):
         jacobianMatrix = 1.0 + 2.0 * torch.sigmoid(jacobianParameter)
-        return jacobianMatrix * x
+        return jacobianMatrix
 
     @staticmethod
     def gradientHook(grad): return grad

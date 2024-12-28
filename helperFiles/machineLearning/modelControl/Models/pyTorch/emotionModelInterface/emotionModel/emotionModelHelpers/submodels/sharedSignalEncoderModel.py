@@ -55,7 +55,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
     # Learned up-sampling of the health profile.
     def smoothPhysiologicalProfile(self, healthProfile):
         healthProfile = self.healthGenerationModel(healthProfile.unsqueeze(1)).squeeze(1)
-        healthProfile = self.healthJacobian(healthProfile, self.jacobianParameter)
+        healthProfile = healthProfile * self.healthJacobian(self.jacobianParameter)
 
         return healthProfile
 
