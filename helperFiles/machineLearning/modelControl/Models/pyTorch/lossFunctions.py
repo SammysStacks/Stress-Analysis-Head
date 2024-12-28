@@ -136,8 +136,7 @@ class customLossMethods(nn.Module):
 
         # ------------------------------------------------------------------ #
 
-        else:
-            assert False, f"Unknown loss requested: {lossType}"
+        else: assert False, f"Unknown loss requested: {lossType}"
 
     def forward(self, predictedVals, targetVals, class_weights=None, targets=None):
         if self.lossType == "weightedKLDiv":

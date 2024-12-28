@@ -33,12 +33,9 @@ class CustomDataset(Dataset):
         if data is None: return None
 
         # Read in the feature labels.
-        if isinstance(data, torch.Tensor):
-            return data.clone()
-        elif isinstance(data, (list, np.ndarray)):
-            return torch.tensor(data)
-        else:
-            assert False, f"Unknown  instance type: {type(data)}"
+        if isinstance(data, torch.Tensor): return data.clone()
+        elif isinstance(data, (list, np.ndarray)): return torch.tensor(data)
+        else: assert False, f"Unknown  instance type: {type(data)}"
 
     def getSignalInfo(self):
         return self.features.size()
