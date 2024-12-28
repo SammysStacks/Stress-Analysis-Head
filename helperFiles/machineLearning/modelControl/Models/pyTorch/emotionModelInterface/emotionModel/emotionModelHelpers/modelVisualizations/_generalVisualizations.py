@@ -152,6 +152,7 @@ class generalVisualizations(globalPlottingProtocols):
         plt.grid(True)
 
         # Label the plot.
+        if logY: plt.yscale('log')
         plt.xlabel("Training Epoch")
         plt.ylabel("Values")
         plt.title(f"{plotTitle}")
@@ -159,7 +160,7 @@ class generalVisualizations(globalPlottingProtocols):
         plt.legend(loc="upper right", bbox_to_anchor=(1.35, 1), borderaxespad=0)
 
         # Save the figure if desired.
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(yValues)}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(trainingValues[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def generalDataPlotting(self, plottingData, plottingLabels, saveFigureLocation, plotTitle="Model Convergence Loss"):

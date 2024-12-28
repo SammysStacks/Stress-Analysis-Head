@@ -58,9 +58,9 @@ class modelVisualizations(globalPlottingProtocols):
                                                    lossLabels=[f"{datasetName}" for datasetName in datasetNames],
                                                    saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Profile Losses")
 
-                self.generalViz.plotTrainingLosses([sharedModel.trainingJacobianParameterFlow for sharedModel in sharedModels], testingLosses=None,
-                                                   lossLabels=[f"{datasetName}" for datasetName in datasetNames],
-                                                   saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Health Jacobian Convergence")
+                self.generalViz.plotSinglaParameterFlow([sharedModel.trainingJacobianParameterFlow for sharedModel in sharedModels], testingValues=None,
+                                                        labels=[f"{datasetName}" for datasetName in datasetNames],
+                                                        saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Health Jacobian Convergence")
 
     def plotAllTrainingEvents(self, submodel, modelPipeline, lossDataLoader, trainingDate, currentEpoch):
         self.accelerator.print(f"\nPlotting results for the {modelPipeline.model.datasetName} model")
