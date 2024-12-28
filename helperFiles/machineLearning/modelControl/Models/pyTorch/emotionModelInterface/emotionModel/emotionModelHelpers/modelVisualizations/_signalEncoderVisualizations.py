@@ -154,18 +154,17 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         custom_cmap = LinearSegmentedColormap.from_list("red_transparent_blue", colors)
 
         # These should be chosen based on your data and how you want to "zoom"
-        relativeTimes_finalExtent = (relativeTimes.min(), relativeTimes.max(), numLayers - 1, numLayers)
-        relativeTimes_initExtent1 = (relativeTimes.min(), relativeTimes.max(), 0, 1)
-        relativeTimes_initExtent2 = (relativeTimes.min(), relativeTimes.max(), 1, 2)
-        relativeTimes = (relativeTimes.min(), relativeTimes.max(), 2, numLayers)
-        first_layer_vmin = interpolated_states.min()
-        first_layer_vmax = interpolated_states.max()
+        # relativeTimes_finalExtent = (relativeTimes.min(), relativeTimes.max(), numLayers - 1, numLayers)
+        # relativeTimes_initExtent1 = (relativeTimes.min(), relativeTimes.max(), 0, 1)
+        # relativeTimes_initExtent2 = (relativeTimes.min(), relativeTimes.max(), 1, 2)
+        # relativeTimes = (relativeTimes.min(), relativeTimes.max(), 2, numLayers)
+        relativeTimesExtent = (relativeTimes.min(), relativeTimes.max(), 0, numLayers)
         plt.figure(figsize=(12, 8))
 
         # Plot the last layer with its own normalization and colorbar
 
         # Plot the rest of the layers with the same normalization.
-        im0 = plt.imshow(interpolated_states, cmap=custom_cmap, interpolation=None, extent=relativeTimes_initExtent2, aspect='auto', origin='lower', vmin=-1.25, vmax=1.25)
+        im0 = plt.imshow(interpolated_states, cmap=custom_cmap, interpolation=None, extent=relativeTimesExtent, aspect='auto', origin='lower', vmin=-1.25, vmax=1.25)
         plt.colorbar(im0, fraction=0.046, pad=0.04)
 
         # # Plot the last layer with its own normalization and colorbar
