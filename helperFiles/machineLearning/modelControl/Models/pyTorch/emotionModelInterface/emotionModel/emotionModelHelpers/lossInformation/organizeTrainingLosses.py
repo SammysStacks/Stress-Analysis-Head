@@ -42,6 +42,7 @@ class organizeTrainingLosses(lossCalculations):
             signalReconstructedTestingLosses = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, validDataMask, allTestingSignalMask, averageBatches=True)
 
             # Store the signal encoder loss information.
+            model.sharedSignalEncoderModel.trainingJacobianParameterFlow.append(model.sharedSignalEncoderModel.jacobianParameter.detach().cpu().item())
             self.storeLossInformation(signalReconstructedTrainingLosses, signalReconstructedTestingLosses, model.specificSignalEncoderModel.trainingLosses_signalReconstruction, model.specificSignalEncoderModel.testingLosses_signalReconstruction)
             self.accelerator.print("Reconstruction loss values:", signalReconstructedTrainingLosses.nanmean().item(), signalReconstructedTestingLosses.nanmean().item())
 

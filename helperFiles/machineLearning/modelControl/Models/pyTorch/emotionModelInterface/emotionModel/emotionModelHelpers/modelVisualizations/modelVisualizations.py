@@ -44,6 +44,7 @@ class modelVisualizations(globalPlottingProtocols):
         with torch.no_grad():
             if self.accelerator.is_local_main_process:
                 specificModels = [modelPipeline.model.specificSignalEncoderModel for modelPipeline in allModelPipelines]
+                sharedModels = [modelPipeline.model.sharedSignalEncoderModel for modelPipeline in allModelPipelines]
                 datasetNames = [modelPipeline.model.datasetName for modelPipeline in allModelPipelines]
 
                 # Plot reconstruction loss.
@@ -56,6 +57,9 @@ class modelVisualizations(globalPlottingProtocols):
                 self.generalViz.plotTrainingLosses([specificModel.profileModel.profileStateLosses for specificModel in specificModels], testingLosses=None,
                                                    lossLabels=[f"{datasetName} Signal Encoding Profile Loss" for datasetName in datasetNames],
                                                    saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Profile Losses")
+
+                self.generalViz.plotSinglaParameterFlow([sharedModel.trainingJacobianParameterFlow for sharedModel in sharedModels],
+                                                        saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Health Jacobian Convergence")
 
     def plotAllTrainingEvents(self, submodel, modelPipeline, lossDataLoader, trainingDate, currentEpoch):
         self.accelerator.print(f"\nPlotting results for the {modelPipeline.model.datasetName} model")
