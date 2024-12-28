@@ -35,8 +35,8 @@ lrs_profileGen=('1e-4') # # 5e-5 <= x == 1e-4
 lrs_reversible=('1e-3')  # 1e-4 <= x == 1e-3
 
 # Collective Switchables: 128
-numSpecificEncoderLayers_arr=(1)
-numSharedEncoderLayers_arr=(8)
+#numSpecificEncoderLayers_arr=(1)
+#numSharedEncoderLayers_arr=(8)
 
 # Collective Switchables: 256
 encodedDimensions_arr=(256)
