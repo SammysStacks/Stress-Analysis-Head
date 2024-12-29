@@ -15,7 +15,7 @@ wds_reversible=('1e-4')  # 1e-4 == x <= 1e-3; Removed from filename
 numSharedEncoderLayers_arr=(1 2 3 4 5 6 7 8 9 10 11 12 13 14)  # 14
 numSpecificEncoderLayers_arr=(1 2 3 4 5 6 7 8)  # 8
 
-# Known interesting parameters: 256
+# Known interesting parameters: 256 -> 208
 allNumEncodedWeights=(4 8 16 32 64 128 256 512)  # 8
 numProfileShots_arr=(1 2 3 4 8 16 24 32)  # 8
 encodedDimensions_arr=(64 128 256 512)  # 4
