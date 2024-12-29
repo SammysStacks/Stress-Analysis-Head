@@ -83,6 +83,8 @@ class emotionModelWeights(convolutionalHelpers):
             self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
             self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
             self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
+            self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
+            self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
         ]
 
         # Construct the profile generation model.
@@ -92,7 +94,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def healthJacobian(jacobianParameter):
-        jacobianMatrix = 1.5 + 1.0 * torch.sigmoid(jacobianParameter)
+        jacobianMatrix = 1.0 + 4.0 * torch.sigmoid(jacobianParameter)
         return jacobianMatrix
 
     @staticmethod
