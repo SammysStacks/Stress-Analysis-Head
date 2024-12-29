@@ -36,7 +36,7 @@ lrs_reversible=('1e-3')  # 1e-4 <= x == 1e-3; Removed from filename
 
 # Collective Switchables: 128
 numSpecificEncoderLayers_arr=(1)
-numSharedEncoderLayers_arr=(8)
+numSharedEncoderLayers_arr=(6)
 
 # Collective Switchables: 256
 encodedDimensions_arr=(256)
