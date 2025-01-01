@@ -194,8 +194,8 @@ class emotionModelHead(nn.Module):
     # ------------------------- Model Components ------------------------- #
 
     def getJacobianFullPassPath(self, device):
-        specificSignalJacobianPath = np.asarray([self.specificSignalEncoderModel.processingLayers[layerInd].getAllEigenvalues(device=device) for layerInd in range(2*modelConstants.userInputParams['numSpecificEncoderLayers'])])  # 2*numSpecificEncoderLayers, numSpecificEncoderLayers, numSignals, encodedDimension
-        sharedSignalJacobianPath = np.asarray([self.sharedSignalEncoderModel.processingLayers[layerInd].getAllEigenvalues(device=device) for layerInd in range(modelConstants.userInputParams['numSharedEncoderLayers'])])  # numProcessingLayers, numSharedEncoderLayers, numSignals=1, encodedDimension
+        specificSignalJacobianPath = np.asarray([self.specificSignalEncoderModel.processingLayers[layerInd].getLayerEigenvalues(device=device) for layerInd in range(2*modelConstants.userInputParams['numSpecificEncoderLayers'])])  # 2*numSpecificEncoderLayers, numSpecificEncoderLayers, numSignals, encodedDimension
+        sharedSignalJacobianPath = np.asarray([self.sharedSignalEncoderModel.processingLayers[layerInd].getLayerEigenvalues(device=device) for layerInd in range(modelConstants.userInputParams['numSharedEncoderLayers'])])  # numSharedEncoderLayers, numSharedEncoderLayers, numSignals=1, encodedDimension
         jacobianFullPassPath = np.asarray([*[specificSignalJacobianPath[specificEigenvalueInd] for specificEigenvalueInd in range(0, specificSignalJacobianPath.shape[0] // 2, 1)],
                                            *[np.broadcast_to(sharedSignalJacobianPath[sharedEigenvalueInd], specificSignalJacobianPath[0].shape) for sharedEigenvalueInd in range(sharedSignalJacobianPath.shape[0])],
                                            *[specificSignalJacobianPath[specificEigenvalueInd] for specificEigenvalueInd in range(specificSignalJacobianPath.shape[0] // 2, specificSignalJacobianPath.shape[0], 1)]])

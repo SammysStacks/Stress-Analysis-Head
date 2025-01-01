@@ -7,6 +7,7 @@ import torch.nn as nn
 from matplotlib import pyplot as plt
 import scipy
 
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.generalMethods.modelHelpers import modelHelpers
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
 
@@ -92,15 +93,12 @@ class reversibleConvolutionLayer(reversibleInterface):
         for layerInd in range(self.numLayers): allEigenvalues[layerInd] = self.getEigenvalues(layerInd, device)
         return allEigenvalues
 
-    def getAllLayerEigenvalues(self, numModelLayers, device):
-        identityMatrix = torch.eye(self.sequenceLength, dtype=torch.float64, device=device).expand(1, 1, self.sequenceLength)
-        allEigenvalues = np.zeros(shape=(self.numLayers, numModelLayers, self.sequenceLength), dtype=np.complex128)
-        for layerInd in range(self.numLayers): allEigenvalues[layerInd] = self.signalEncoderPass(metaLearningData=identityMatrix, forwardPass=True, compileLayerStates=True)
-        return allEigenvalues
+    def getLayerEigenvalues(self, layerInd, device):
+        return self.getEigenvalues(layerInd=-layerInd, device=device)
 
     def getEigenvalues(self, layerInd, device):
-        neuralWeights = self.getTransformationMatrix(layerInd, device).detach()
-        return torch.linalg.eigvals(neuralWeights).detach().cpu().numpy()
+        neuralWeights = self.getTransformationMatrix(layerInd, device).detach()  # Dim: numSignals, sequenceLength, sequenceLength
+        return torch.linalg.eigvals(neuralWeights).detach().cpu().numpy()  # Dim: numSignals, sequenceLength
 
     def printParams(self):
         # Count the trainable parameters.
