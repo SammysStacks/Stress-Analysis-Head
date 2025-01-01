@@ -325,7 +325,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             # Customize subplot title and axes
             ax.set_title(f"Layer {layerInd + 1}")
             ax.set_xlabel("Angle (degrees)")
-            ax.set_xlim((-3.25, 3.25))
+            ax.set_xlim((-200, 200))
             ax.set_ylim((0, 1))
             ax.set_ylabel("Density")
 
@@ -365,7 +365,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Create the scatter plot
         surf = ax.scatter(
-            x_data.flatten(), y_data.flatten(), np.real(jacobianFullPassPath.flatten()),  # Use z-values for coloring
+            x_data.flatten(), y_data.flatten(), np.imag(jacobianFullPassPath.flatten()),  # Use z-values for coloring
             c=jacobianFullPassPath,  # Use z-values for coloring
             cmap='viridis',  # Colormap for the points
             alpha=0.7,  # Transparency for the points
