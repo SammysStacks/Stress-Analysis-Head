@@ -364,7 +364,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         surf = ax.plot_wireframe(
             x_data, y_data, jacobianFullPassPath,
-            color='blue',  # Wireframe color
+            cmap='viridis',  # Colormap for the surface
             alpha=0.7,  # Transparency
             linewidth=0.5  # Thin lines for linear interpolation
         )
