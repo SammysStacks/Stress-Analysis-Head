@@ -99,7 +99,7 @@ class modelVisualizations(globalPlottingProtocols):
             embeddedProfile = model.specificSignalEncoderModel.profileModel.embeddedHealthProfiles.detach().cpu().numpy()  # numProfileShots, numExperiments, numEncodedWeights
             retrainingEmbeddedProfilePath = np.asarray(model.specificSignalEncoderModel.profileModel.retrainingEmbeddedProfilePath)  # numProfileShots, numExperiments, numEncodedWeights
             resampledBiomarkerTimes = model.sharedSignalEncoderModel.hyperSampledTimes.detach().cpu().numpy()  # numTimePoints
-            jacobianFullPassPath = model.getJacobianFullPassPath()  # 2*numSpecific + numShared, numSignals, encodedDimension
+            jacobianFullPassPath = model.getJacobianFullPassPath(device=self.accelerator.device)  # 2*numSpecific + numShared, numSignals, encodedDimension
             globalPlottingProtocols.clearFigure(fig=None, legend=None, showPlot=False)
             batchInd, signalInd = -1, -1
 
