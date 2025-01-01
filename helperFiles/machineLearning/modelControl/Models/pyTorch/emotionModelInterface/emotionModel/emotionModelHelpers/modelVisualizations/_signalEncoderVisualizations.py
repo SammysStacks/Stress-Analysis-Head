@@ -353,19 +353,16 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Create a figure
         fig = plt.figure(figsize=(14, 10))
         ax = fig.add_subplot(111, projection='3d')
-        surf = None
 
         # Plot each model layer as a separate surface
-        for layer in range(numModelLayers):
-            z_data = jacobianFullPassPath[layer]  # Data for the current layer
-            surf = ax.plot_surface(
-                x_data, y_data, z_data,
-                cmap='viridis',  # Colormap for the surface
-                alpha=0.7,  # Transparency for overlapping layers
-                edgecolor='none',
-                rstride=1,
-                cstride=1
-            )
+        surf = ax.plot_surface(
+            x_data, y_data, jacobianFullPassPath,
+            cmap='viridis',  # Colormap for the surface
+            alpha=0.7,  # Transparency for overlapping layers
+            edgecolor='none',
+            rstride=1,
+            cstride=1
+        )
 
         # Customize the view angle
         ax.view_init(elev=30, azim=135)
@@ -373,7 +370,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Add labels and title
         ax.set_title(f"3D Visualization of Jacobian Full Pass Path", fontsize=16, weight='bold', pad=20)
         ax.set_xlabel("Encoded Dimension", fontsize=12, labelpad=10)
-        ax.set_ylabel("Signals", fontsize=12, labelpad=10)
+        ax.set_ylabel("Eigenvalue Index", fontsize=12, labelpad=10)
         ax.set_zlabel("Jacobian Value", fontsize=12, labelpad=10)
 
         # Add a color bar for the last surface
