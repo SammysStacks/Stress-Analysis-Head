@@ -131,13 +131,13 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     def plotSignalEncodingStatePath(self, relativeTimes, compiledSignalEncoderLayerStates, epoch, saveFigureLocation, plotTitle):
         numLayers, numExperiments, numSignals, encodedDimension = compiledSignalEncoderLayerStates.shape
-        if relativeTimes is None: relativeTimes = np.arange(start=0, stop=encodedDimension, step=1)
+        if relativeTimes is None: relativeTimes = np.arange(start=1, stop=1 + encodedDimension, step=1)
         batchInd, signalInd = 0, 0
 
         # Interpolate the states.
         compiledSignalEncoderLayerStates = compiledSignalEncoderLayerStates[:, batchInd, signalInd, :]
         numSpecificEncoderLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
-        interpolated_states = compiledSignalEncoderLayerStates
+        interpolated_states = compiledSignalEncoderLayerStates.real
 
         # Create custom colormap (as in your original code)
         blue_lch = [54., 70., 4.6588]
@@ -159,8 +159,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         relativeTimesExtentInterp = (relativeTimes.min(), relativeTimes.max(), numSpecificEncoderLayers, numLayers - numSpecificEncoderLayers)
         relativeTimesExtent = (relativeTimes.min(), relativeTimes.max(), 0, numLayers)
         plt.figure(figsize=(12, 8))
-
-        # Plot the last layer with its own normalization and colorbar
 
         # Plot the rest of the layers with the same normalization.
         im0 = plt.imshow(interpolated_states, cmap=custom_cmap, interpolation=None, extent=relativeTimesExtent, aspect='auto', origin='lower', vmin=-1.1, vmax=1.1)
