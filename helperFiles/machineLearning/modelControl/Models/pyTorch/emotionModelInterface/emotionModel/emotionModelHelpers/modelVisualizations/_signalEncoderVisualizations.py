@@ -343,10 +343,12 @@ class signalEncoderVisualizations(globalPlottingProtocols):
     def modelPropagation3D(self, jacobianFullPassPath, epoch, batchInd, signalInd, saveFigureLocation, plotTitle):
         # jacobianFullPassPath: numModelLayers, numSignals, encodedDimension
         jacobianFullPassPath = np.asarray(jacobianFullPassPath)  # Ensure input is a NumPy array
-        numModelLayers, numSignals, encodedDimension = jacobianFullPassPath.shape
+        numModelLayers, _, encodedDimension = jacobianFullPassPath.shape
+        jacobianFullPassPath = jacobianFullPassPath[:, signalInd]
+        # jacobianFullPassPath: numModelLayers, encodedDimension
 
-        # Create a meshgrid for encodedDimension and numSignals
-        x_data, y_data = np.meshgrid(np.arange(encodedDimension), np.arange(numSignals))
+        # Create a meshgrid for encodedDimension and numModelLayers
+        x_data, y_data = np.meshgrid(np.arange(encodedDimension), np.arange(numModelLayers))
 
         # Create a figure
         fig = plt.figure(figsize=(14, 10))
@@ -370,8 +372,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Add labels and title
         ax.set_title(f"3D Visualization of Jacobian Full Pass Path", fontsize=16, weight='bold', pad=20)
-        ax.set_ylabel("Encoded Dimension", fontsize=12, labelpad=10)
-        ax.set_xlabel("Signals", fontsize=12, labelpad=10)
+        ax.set_xlabel("Encoded Dimension", fontsize=12, labelpad=10)
+        ax.set_ylabel("Signals", fontsize=12, labelpad=10)
         ax.set_zlabel("Jacobian Value", fontsize=12, labelpad=10)
 
         # Add a color bar for the last surface

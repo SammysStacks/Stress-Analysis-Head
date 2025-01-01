@@ -86,7 +86,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         if self.forwardDirection: neuralWeights = neuralWeights.transpose(-2, -1)  # Ensure the neural weights are symmetric.
         # For orthogonal matrices: A.exp().inverse() = A.exp().transpose() = (-A).exp()
 
-        return neuralWeights
+        return neuralWeights  # exp(A)
     
     def getAllEigenvalues(self, device):
         allEigenvalues = np.zeros(shape=(self.numLayers, self.numSignals, self.sequenceLength), dtype=np.complex128)
