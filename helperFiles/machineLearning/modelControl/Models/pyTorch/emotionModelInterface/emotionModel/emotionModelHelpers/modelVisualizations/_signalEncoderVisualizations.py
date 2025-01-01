@@ -351,8 +351,9 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         ax = fig.add_subplot(111, projection='3d')
 
         # Create the scatter plot
+        maxHalfAngle = 200 if degreesFlag else 3.25
         surf = ax.scatter(x_data.flatten(), y_data.flatten(), np.imag(jacobianFullPassPath.flatten()),  # Use z-values for coloring
-                          c=np.abs(np.angle(jacobianFullPassPath, deg=degreesFlag)), cmap=self.custom_cmap, alpha=0.7, s=10)
+                          c=np.abs(np.angle(jacobianFullPassPath, deg=degreesFlag)), cmap=self.custom_cmap, alpha=0.7, s=10, vmin=-maxHalfAngle, vmax=maxHalfAngle)
 
         # Customize the view angle
         ax.view_init(elev=30, azim=135)
