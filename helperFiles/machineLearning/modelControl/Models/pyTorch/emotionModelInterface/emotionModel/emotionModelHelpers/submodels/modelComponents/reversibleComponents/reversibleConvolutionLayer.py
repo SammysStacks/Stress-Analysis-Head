@@ -94,7 +94,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         return allEigenvalues
 
     def getLayerEigenvalues(self, layerInd, device):
-        return self.getEigenvalues(layerInd=-layerInd, device=device)
+        return self.getEigenvalues(layerInd=layerInd, device=device)
 
     def getEigenvalues(self, layerInd, device):
         neuralWeights = self.getTransformationMatrix(layerInd, device).detach()  # Dim: numSignals, sequenceLength, sequenceLength

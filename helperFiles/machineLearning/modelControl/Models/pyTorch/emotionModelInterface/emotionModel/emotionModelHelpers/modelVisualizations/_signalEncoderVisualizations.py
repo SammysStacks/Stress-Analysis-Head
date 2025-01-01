@@ -346,7 +346,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         numModelLayers, numSignals, encodedDimension = jacobianFullPassPath.shape
 
         # Create a meshgrid for encodedDimension and numSignals
-        y_data, x_data = np.meshgrid(np.arange(encodedDimension), np.arange(numSignals))
+        x_data, y_data = np.meshgrid(np.arange(encodedDimension), np.arange(numSignals))
 
         # Create a figure
         fig = plt.figure(figsize=(14, 10))
