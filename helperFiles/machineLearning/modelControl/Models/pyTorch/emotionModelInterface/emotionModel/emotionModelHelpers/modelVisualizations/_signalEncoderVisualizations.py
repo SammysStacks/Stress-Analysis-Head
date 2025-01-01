@@ -354,14 +354,19 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         fig = plt.figure(figsize=(14, 10))
         ax = fig.add_subplot(111, projection='3d')
 
-        # Plot each model layer as a separate surface
-        surf = ax.plot_surface(
+        # # Plot each model layer as a separate surface
+        # surf = ax.plot_surface(
+        #     x_data, y_data, jacobianFullPassPath,
+        #     cmap='viridis',  # Colormap for the surface
+        #     alpha=0.7,  # Transparency for overlapping layers
+        #     edgecolor='none',  # No edges for the surface
+        # )
+
+        surf = ax.plot_wireframe(
             x_data, y_data, jacobianFullPassPath,
-            cmap='viridis',  # Colormap for the surface
-            alpha=0.7,  # Transparency for overlapping layers
-            edgecolor='none',
-            rstride=1,
-            cstride=1
+            color='blue',  # Wireframe color
+            alpha=0.7,  # Transparency
+            linewidth=0.5  # Thin lines for linear interpolation
         )
 
         # Customize the view angle
