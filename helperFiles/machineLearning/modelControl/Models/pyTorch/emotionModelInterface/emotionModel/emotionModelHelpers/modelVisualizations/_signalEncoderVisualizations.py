@@ -19,6 +19,22 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         super(signalEncoderVisualizations, self).__init__()
         self.setSavingFolder(baseSavingFolder, stringID, datasetName)
 
+        # Create custom colormap (as in your original code)
+        blue_lch = [54., 70., 4.6588]
+        red_lch = [54., 90., 0.35470565 + 2 * np.pi]
+        blue_rgb = lch2rgb(blue_lch)
+        red_rgb = lch2rgb(red_lch)
+        white_rgb = np.asarray([1., 1., 1.])
+
+        colors = []
+        for alpha in np.linspace(1, 0, 100):
+            c = blue_rgb * alpha + (1 - alpha) * white_rgb
+            colors.append(c)
+        for alpha in np.linspace(0, 1, 100):
+            c = red_rgb * alpha + (1 - alpha) * white_rgb
+            colors.append(c)
+        self.custom_cmap = LinearSegmentedColormap.from_list("red_transparent_blue", colors)
+
     # --------------------- Visualize Model Parameters --------------------- #
 
     def plotProfilePath(self, relativeTimes, healthProfile, retrainingProfilePath, epoch, saveFigureLocation="signalEncoding/", plotTitle="Health Profile State Path"):
@@ -139,30 +155,14 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         numSpecificEncoderLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
         interpolated_states = compiledSignalEncoderLayerStates.real
 
-        # Create custom colormap (as in your original code)
-        blue_lch = [54., 70., 4.6588]
-        red_lch = [54., 90., 0.35470565 + 2 * np.pi]
-        blue_rgb = lch2rgb(blue_lch)
-        red_rgb = lch2rgb(red_lch)
-        white_rgb = np.asarray([1., 1., 1.])
-
-        colors = []
-        for alpha in np.linspace(1, 0, 100):
-            c = blue_rgb * alpha + (1 - alpha) * white_rgb
-            colors.append(c)
-        for alpha in np.linspace(0, 1, 100):
-            c = red_rgb * alpha + (1 - alpha) * white_rgb
-            colors.append(c)
-        custom_cmap = LinearSegmentedColormap.from_list("red_transparent_blue", colors)
-
         # These should be chosen based on your data and how you want to "zoom"
         relativeTimesExtentInterp = (relativeTimes.min(), relativeTimes.max(), hiddenLayers + numSpecificEncoderLayers, numLayers - numSpecificEncoderLayers)
         relativeTimesExtent = (relativeTimes.min(), relativeTimes.max(), 0, numLayers)
         plt.figure(figsize=(12, 8))
 
         # Plot the rest of the layers with the same normalization.
-        im0 = plt.imshow(interpolated_states, cmap=custom_cmap, interpolation=None, extent=relativeTimesExtent, aspect='auto', origin='lower', vmin=-1.1, vmax=1.1)
-        plt.imshow(interpolated_states[hiddenLayers + numSpecificEncoderLayers:numLayers - numSpecificEncoderLayers + 1], cmap=custom_cmap, interpolation='bilinear', extent=relativeTimesExtentInterp, aspect='auto', origin='lower', vmin=-1.1, vmax=1.1)
+        im0 = plt.imshow(interpolated_states, cmap=self.custom_cmap, interpolation=None, extent=relativeTimesExtent, aspect='auto', origin='lower', vmin=-1.1, vmax=1.1)
+        plt.imshow(interpolated_states[hiddenLayers + numSpecificEncoderLayers:numLayers - numSpecificEncoderLayers + 1], cmap=self.custom_cmap, interpolation='bilinear', extent=relativeTimesExtentInterp, aspect='auto', origin='lower', vmin=-1.1, vmax=1.1)
         plt.colorbar(im0, fraction=0.046, pad=0.04)
 
         # # Plot the last layer with its own normalization and colorbar
@@ -345,6 +345,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Create a meshgrid for encodedDimension and numModelLayers
         x_data, y_data = np.meshgrid(np.arange(encodedDimension), np.arange(1, 1 + numModelLayers))
+        extent = (x_data.min(), x_data.max(), y_data.min(), y_data.max())
 
         # Create a figure
         fig = plt.figure(figsize=(14, 10))
@@ -352,7 +353,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Create the scatter plot
         surf = ax.scatter(x_data.flatten(), y_data.flatten(), np.imag(jacobianFullPassPath.flatten()),  # Use z-values for coloring
-                          c=np.angle(jacobianFullPassPath, deg=degreesFlag), cmap='viridis', alpha=0.7, s=10)
+                          c=np.angle(jacobianFullPassPath, deg=degreesFlag), cmap=self.custom_cmap, alpha=0.7, s=10,
+                          interpolation=None, extent=extent, aspect='auto', origin='lower', vmin=-1.1, vmax=1.1)
 
         # Customize the view angle
         ax.view_init(elev=30, azim=135)
