@@ -344,34 +344,39 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # retrainingProfile2D: numProfileShots, encodedDimension
         # physiologicalTimes: encodedDimension
 
-        # Create a meshgrid for plotting
-        x_data, y_data = np.meshgrid(physiologicalTimes, np.arange(retrainingProfile2D.shape[0]))
+        # Create a finer meshgrid for smoother surfaces
+        y = np.arange(retrainingProfile2D.shape[0])
+        physiologicalTimes = np.asarray(physiologicalTimes)
+        x = np.linspace(physiologicalTimes.min(), physiologicalTimes.max(), 500)  # Increase resolution for smoothness
+        x_data, y_data = np.meshgrid(x, y)
 
         # Plotting the 3D surface
-        fig = plt.figure(figsize=(12, 8))
+        fig = plt.figure(figsize=(14, 10))
         ax = fig.add_subplot(111, projection='3d')
 
-        # Surface plot
-        surf = ax.plot_surface(
-            x_data, y_data, retrainingProfile2D,
-            cmap='viridis', edgecolor='k', alpha=0.8
-        )
+        # Surface plot with lighting effects
+        surf = ax.plot_surface(x_data, y_data, retrainingProfile2D, cmap='coolwarm', edgecolor='none', alpha=0.9, antialiased=True, shade=True)
 
-        # Customize view angle
-        # ax.view_init(*view_angle)
+        # Customize the view angle for a more 3D feel
+        ax.view_init(elev=30, azim=135)
 
-        # Labels and title
-        ax.set_title("3D Flow: Signal Progression Over Time and Profile Epochs", fontsize=14)
-        ax.set_xlabel("Physiological Times", fontsize=12)
-        ax.set_ylabel("Profile Epochs", fontsize=12)
-        ax.set_zlabel("Signal Value", fontsize=12)
+        # Add lighting for depth effect
+        ax.set_box_aspect([2, 1, 1])  # Better aspect ratio
+        ax.dist = 8  # Adjust distance for perspective
 
-        # Add a color bar
+        # Add labels and title
+        ax.set_title("3D Signal Progression Over Time and Profile Epochs", fontsize=16, weight='bold', pad=20)
+        ax.set_xlabel("Physiological Times", fontsize=14, labelpad=10)
+        ax.set_ylabel("Profile Epochs", fontsize=14, labelpad=10)
+        ax.set_zlabel("Signal Value", fontsize=14, labelpad=10)
+
+        # Add color bar
         cbar = fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10)
-        cbar.set_label('Signal Value', fontsize=12)
+        cbar.set_label('Signal Value', fontsize=14)
 
-        # Adjust layout
-        plt.tight_layout()
+        # Add subtle gridlines and ticks
+        ax.grid(True, linestyle='--', linewidth=0.5, alpha=0.7)
+        plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} batchInd{batchInd} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
