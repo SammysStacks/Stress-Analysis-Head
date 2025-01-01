@@ -64,8 +64,9 @@ class reversibleConvolutionLayer(reversibleInterface):
         assert numSignals == self.numSignals, f"The number of signals is not correct: {numSignals}, {self.numSignals}"
 
         # Apply the neural weights to the input data.
-        neuralWeights = self.getTransformationMatrix(layerInd, inputData.device)
-        outputData = torch.einsum('bns,nsi->bni', inputData, neuralWeights)
+        neuralWeights = self.getTransformationMatrix(layerInd, inputData.device)  # = exp(A)
+        outputData = torch.einsum('bns,nsi->bni', inputData, neuralWeights)  # -> exp(A) @ f(x)
+        # THe inverse would be f-1[exp(A) @ f(x)]
 
         return outputData
 
