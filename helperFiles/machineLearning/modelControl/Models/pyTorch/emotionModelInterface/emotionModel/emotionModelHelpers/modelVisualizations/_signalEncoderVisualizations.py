@@ -143,7 +143,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         red_lch = [54., 90., 0.35470565 + 2 * np.pi]
         blue_rgb = lch2rgb(blue_lch)
         red_rgb = lch2rgb(red_lch)
-        white_rgb = np.array([1., 1., 1.])
+        white_rgb = np.asarray([1., 1., 1.])
 
         colors = []
         for alpha in np.linspace(1, 0, 100):
@@ -181,7 +181,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.hlines(y=1, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='-', linewidth=2)
 
         # Ticks, labels, and formatting
-        yticks = np.array([0, 1, 1] + list(range(2, numLayers - 2)) + [1])
+        yticks = np.asarray([0, 1, 1] + list(range(2, numLayers - 2)) + [1])
         plt.yticks(ticks=np.arange(start=0.5, stop=numLayers, step=1), labels=yticks, fontsize=12)
         plt.title(label=f"{plotTitle} epoch{epoch}", fontsize=16)
         plt.ylabel(ylabel="Layer Index", fontsize=14)
@@ -338,4 +338,36 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        else: self.clearFigure(fig=None, legend=None, showPlot=True)
+
+    def modelPropagation3D(self, retrainingProfile2D, physiologicalTimes, epoch, batchInd, signalInd, saveFigureLocation, plotTitle):
+        # retrainingProfile2D: numProfileShots, encodedDimension
+        # physiologicalTimes: encodedDimension
+        physiologicalTimes = np.asarray(physiologicalTimes)
+
+        # Create a meshgrid for plotting
+        x_data, y_data = np.meshgrid(physiologicalTimes, np.arange(retrainingProfile2D.shape[0] + 1))
+
+        # Plotting the 3D surface
+        fig = plt.figure(figsize=(12, 8))
+        ax = fig.add_subplot(111, projection='3d')
+
+        # Surface plot
+        surf = ax.plot_surface(
+            x_data, y_data, retrainingProfile2D,
+            cmap='viridis', edgecolor='k', alpha=0.8
+        )
+
+        # Labels and title
+        ax.set_title("3D Flow: Signal Progression Over Time and Profile Epochs", fontsize=14)
+        ax.set_xlabel("Physiological Times", fontsize=12)
+        ax.set_ylabel("Profile Epochs", fontsize=12)
+        ax.set_zlabel("Mean Signal Value", fontsize=12)
+
+        # Add a color bar
+        fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10, label='Signal Value')
+        plt.tight_layout()
+
+        # Save the plot
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} batchInd{batchInd} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)

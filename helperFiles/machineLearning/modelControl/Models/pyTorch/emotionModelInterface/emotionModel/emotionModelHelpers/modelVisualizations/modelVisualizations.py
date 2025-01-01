@@ -93,17 +93,14 @@ class modelVisualizations(globalPlottingProtocols):
             # Detach the data from the GPU and tensor format.
             reconstructedPhysiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = reconstructedPhysiologicalProfile.detach().cpu().numpy(), activityProfile.detach().cpu().numpy(), basicEmotionProfile.detach().cpu().numpy(), emotionProfile.detach().cpu().numpy()
             validDataMask, reconstructedSignalData, resampledSignalData, healthProfile = validDataMask.detach().cpu().numpy(), reconstructedSignalData.detach().cpu().numpy(), resampledSignalData.detach().cpu().numpy(), healthProfile.detach().cpu().numpy()
-            sharedEigenvalues = np.asarray([modelLayer.getAllEigenvalues(device=self.accelerator.device) for modelLayer in model.sharedSignalEncoderModel.processingLayers])  # numProcessingLayers, numLayers=1, numSignals=1, encodedDimension
             specificEigenvalues = np.asarray([modelLayer.getAllEigenvalues(device=self.accelerator.device) for modelLayer in model.specificSignalEncoderModel.processingLayers])  # numProcessingLayers, numLayers=1, numSignals, encodedDimension
+            sharedEigenvalues = np.asarray([modelLayer.getAllEigenvalues(device=self.accelerator.device) for modelLayer in model.sharedSignalEncoderModel.processingLayers])  # numProcessingLayers, numLayers=1, numSignals=1, encodedDimension
             signalEncoderLayerTransforms = np.asarray(model.specificSignalEncoderModel.profileModel.signalEncoderLayerTransforms)  # numProfileShots, 2*numSpecific + numShared + 1, numExperiments, numSignals, encodedDimension
+            retrainingProfile3D = model.specificSignalEncoderModel.profileModel.retrainingProfile3D.detach().cpu().numpy()  # numProfileShots, 2*numSpecific + numShared + 1, numSignals, encodedDimension
             embeddedProfile = model.specificSignalEncoderModel.profileModel.embeddedHealthProfiles.detach().cpu().numpy()  # numProfileShots, numExperiments, numEncodedWeights
             retrainingEmbeddedProfilePath = np.asarray(model.specificSignalEncoderModel.profileModel.retrainingEmbeddedProfilePath)  # numProfileShots, numExperiments, numEncodedWeights
             resampledBiomarkerTimes = model.sharedSignalEncoderModel.hyperSampledTimes.detach().cpu().numpy()  # numTimePoints
             globalPlottingProtocols.clearFigure(fig=None, legend=None, showPlot=False)
-            retrainingEigenvalues = np.asarray([*[specificEigenvalues[specificEigenvalueInd] for specificEigenvalueInd in range(0, specificEigenvalues.shape[0] // 2)],
-                                                *[np.broadcast_to(sharedEigenvalues[sharedEigenvalueInd], specificEigenvalues[0].shape) for sharedEigenvalueInd in range(sharedEigenvalues.shape[0])],
-                                                *[specificEigenvalues[specificEigenvalueInd] for specificEigenvalueInd in range(specificEigenvalues.shape[0] // 2, specificEigenvalues.shape[0])]]),
-            # retrainingEigenvalues: numAllProcessingLayers, numLayers=1, numSignals, encodedDimension  TODO: collect for every profile epoch? Memory?
             batchInd, signalInd = -1, -1
 
             # Plot the loss on the primary GPU.
@@ -117,6 +114,9 @@ class modelVisualizations(globalPlottingProtocols):
                     self.signalEncoderViz.plotPhysiologicalError(resampledBiomarkerTimes, healthProfile, reconstructedPhysiologicalProfile, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Reconstruction Error")
                     if embeddedProfile.shape[0] != 0: self.signalEncoderViz.plotProfilePath(relativeTimes=None, healthProfile=embeddedProfile, retrainingProfilePath=retrainingEmbeddedProfilePath, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Embedded Profile Generation")
                     if signalEncoderLayerTransforms.shape[0] != 0: self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, healthProfile=healthProfile, retrainingProfilePath=signalEncoderLayerTransforms[:, 0, :, signalInd, :], epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Health Profile Generation")
+
+                    # Plotting 3D flow of the health profile.
+                    self.signalEncoderViz.modelPropogation3D(retrainingProfile2D=retrainingProfile3D[:, -1, batchInd, signalInd, :], physiologicalTimes=resampledBiomarkerTimes, numProfileShots=numProfileShots, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="3D Profile Path")
 
                     # Plot the signal encoding training information.
                     self.signalEncoderViz.plotEigenValueLocations(specificEigenvalues[:, 0, allTrainingSignalMask[batchInd], :], testingEigenValues=specificEigenvalues[:, 0, allTestingSignalMask[batchInd], :], epoch=currentEpoch, signalInd=0, saveFigureLocation="signalEncoding/", plotTitle="Specific Eigenvalues")

@@ -259,9 +259,16 @@ class emotionModelHead(nn.Module):
 
         if onlyProfileTraining:
             with torch.no_grad():
+                specificEigenvalues = np.asarray([modelLayer.getAllEigenvalues(device=self.accelerator.device) for modelLayer in modelConstants.userInputParams['numSpecificEncoderLayers']])  # numProcessingLayers, numLayers=1, numSignals, encodedDimension
+                sharedEigenvalues = np.asarray([modelLayer.getAllEigenvalues(device=self.accelerator.device) for modelLayer in self.sharedSignalEncoderModel.processingLayers])  # numProcessingLayers, numLayers=1, numSignals=1, encodedDimension
+                retrainingEigenvalues = np.asarray([*[specificEigenvalues[specificEigenvalueInd] for specificEigenvalueInd in range(0, specificEigenvalues.shape[0] // 2)],
+                                                    *[np.broadcast_to(sharedEigenvalues[sharedEigenvalueInd], specificEigenvalues[0].shape) for sharedEigenvalueInd in range(sharedEigenvalues.shape[0])],
+                                                    *[specificEigenvalues[specificEigenvalueInd] for specificEigenvalueInd in range(specificEigenvalues.shape[0] // 2, specificEigenvalues.shape[0])]]),
+                # retrainingEigenvalues: 2 * numSpecificEncoderLayers + numSharedEncoderLayers, numLayers=1, numSignals, encodedDimension  TODO: collect for every profile epoch? Memory?
+
                 batchInds = emotionDataInterface.getSignalIdentifierData(signalIdentifiers, channelName=modelConstants.batchIndexSI)[:, 0].long()  # Dim: batchSize
                 batchLossValues = self.calculateModelLosses.calculateSignalEncodingLoss(signalData, reconstructedSignalData, validDataMask, allSignalMask=None, averageBatches=False)
-                self.specificSignalEncoderModel.profileModel.populateProfileState(profileEpoch, batchInds, batchLossValues, compiledSignalEncoderLayerStates)
+                self.specificSignalEncoderModel.profileModel.populateProfileState(profileEpoch, batchInds, batchLossValues, compiledSignalEncoderLayerStates, retrainingEigenvalues)
 
         return validDataMask, reconstructedSignalData, resampledSignalData, compiledSignalEncoderLayerStates, healthProfile, activityProfile, basicEmotionProfile, emotionProfile
 
