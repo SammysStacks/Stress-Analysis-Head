@@ -100,9 +100,10 @@ class modelVisualizations(globalPlottingProtocols):
             retrainingEmbeddedProfilePath = np.asarray(model.specificSignalEncoderModel.profileModel.retrainingEmbeddedProfilePath)  # numProfileShots, numExperiments, numEncodedWeights
             resampledBiomarkerTimes = model.sharedSignalEncoderModel.hyperSampledTimes.detach().cpu().numpy()  # numTimePoints
             globalPlottingProtocols.clearFigure(fig=None, legend=None, showPlot=False)
-            retrainingEigenvalues = np.asarray([*[specificEigenvalues[specificEigenvalueInd] for specificEigenvalueInd in range(specificEigenvalues.shape[0] // 2)],
-                                                *[sharedEigenvalues[sharedEigenvalueInd] for sharedEigenvalueInd in range(sharedEigenvalues.shape[0])],
+            retrainingEigenvalues = np.asarray([*[specificEigenvalues[specificEigenvalueInd] for specificEigenvalueInd in range(0, specificEigenvalues.shape[0] // 2)],
+                                                *[np.broadcast_to(sharedEigenvalues[sharedEigenvalueInd], specificEigenvalues[0].shape) for sharedEigenvalueInd in range(sharedEigenvalues.shape[0])],
                                                 *[specificEigenvalues[specificEigenvalueInd] for specificEigenvalueInd in range(specificEigenvalues.shape[0] // 2, specificEigenvalues.shape[0])]]),
+            # retrainingEigenvalues: numAllProcessingLayers, numLayers=1, numSignals, encodedDimension  TODO: collect for every profile epoch? Memory?
             batchInd, signalInd = -1, -1
 
             # Plot the loss on the primary GPU.
