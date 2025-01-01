@@ -305,7 +305,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         nrows = math.ceil(numLayers / ncols)
 
         # Create figure and axes array
-        fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(nrows * ncols * 4, nrows * nrows * 4), squeeze=False)  # squeeze=False ensures axes is 2D
+        fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(8 * ncols, 8 * nrows), squeeze=False)  # squeeze=False ensures axes is 2D
 
         # Flatten axes for easy indexing if you prefer
         axes = axes.flatten()
