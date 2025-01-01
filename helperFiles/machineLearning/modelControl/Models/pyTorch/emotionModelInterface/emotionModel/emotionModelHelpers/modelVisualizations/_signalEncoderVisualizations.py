@@ -369,7 +369,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Add labels and title
         ax.set_title(f"3D Visualization of Jacobian Full Pass Path", fontsize=16, weight='bold', pad=20)
-        ax.set_xlabel("Eigenvalue Index", fontsize=12, labelpad=10)
+        ax.set_xlabel("Amplitude", fontsize=12, labelpad=10)
         ax.set_ylabel("Model Layer Index", fontsize=12, labelpad=10)
         ax.set_zlabel("Eigenvalue", fontsize=12, labelpad=10)
 
