@@ -30,7 +30,7 @@ class profileModel(emotionModelWeights):
 
         # Pre-allocate each parameter.
         self.signalEncoderLayerTransforms = np.zeros(shape=(numProfileShots + 1, 2 * numSpecificEncoderLayers + numSharedEncoderLayers, self.numExperiments, self.numSignals, self.encodedDimension))
-        self.retrainingProfile3D = np.zeros(shape=(numProfileShots + 1, 2*self.numSpecificEncoderLayers + self.numSharedEncoderLayers + 1, self.numSignals, self.encodedDimension))
+        self.retrainingProfile3D = np.zeros(shape=(numProfileShots + 1, 2*numSpecificEncoderLayers + numSharedEncoderLayers + 1, self.numSignals, self.encodedDimension))
         self.retrainingEmbeddedProfilePath = np.zeros(shape=(numProfileShots + 1, self.numExperiments, modelConstants.numEncodedWeights))
         self.retrainingProfileLosses = np.zeros(shape=(numProfileShots + 1, self.numExperiments, self.numSignals))
 
