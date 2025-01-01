@@ -131,6 +131,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     def plotSignalEncodingStatePath(self, relativeTimes, compiledSignalEncoderLayerStates, epoch, saveFigureLocation, plotTitle):
         numLayers, numExperiments, numSignals, encodedDimension = compiledSignalEncoderLayerStates.shape
+        if relativeTimes is None: relativeTimes = np.arange(start=0, stop=encodedDimension, step=1)
         batchInd, signalInd = 0, 0
 
         # Interpolate the states.
