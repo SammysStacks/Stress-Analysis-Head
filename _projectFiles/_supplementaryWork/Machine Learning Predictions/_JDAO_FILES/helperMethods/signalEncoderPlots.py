@@ -249,7 +249,7 @@ class signalEncoderPlots(trainingPlots):
         # Plot the heatmaps for each combination of losses
         for time_index, time_window in enumerate(modelConstants.modelTimeWindow):
             for param_pair in combinationLosses:
-                fig, axs = plt.subplots(nrows=1, ncols=len(self.datasetNames), figsize=(15, 5))
+                fig, axs = plt.subplots(nRows=1, nCols=len(self.datasetNames), figsize=(15, 5))
                 fig.suptitle(f"Accuracy Heatmaps for Time Window: {time_window}")
 
                 heatmap = None

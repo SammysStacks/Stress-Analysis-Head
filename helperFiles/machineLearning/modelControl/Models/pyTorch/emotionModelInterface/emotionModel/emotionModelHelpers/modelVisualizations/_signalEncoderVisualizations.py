@@ -247,7 +247,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         nRows, layerInd = math.ceil(numLayers / nCols), 0
 
         # Create the figure and axes
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(5 * nCols, 5 * nRows), squeeze=False)
+        fig, axes = plt.subplots(nRows=nRows, nCols=nCols, figsize=(5 * nCols, 5 * nRows), squeeze=False)
         axes = axes.flatten()
 
         for layerInd, ax in enumerate(axes[:numLayers]):
@@ -296,11 +296,11 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def plotEigenvalueAngles(self, trainingEigenValues, testingEigenValues, epoch, degreesFlag, signalInd, saveFigureLocation, plotTitle):
-        numLayers, ncols = trainingEigenValues.shape[0], min(4, trainingEigenValues.shape[0])
-        nrows = math.ceil(numLayers / ncols)
+        numLayers, nCols = trainingEigenValues.shape[0], min(4, trainingEigenValues.shape[0])
+        nRows = math.ceil(numLayers / nCols)
 
-        # Create figure and axes array
-        fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(8 * ncols, 8 * nrows), squeeze=False)  # squeeze=False ensures axes is 2D
+        # Create a figure and axes array
+        fig, axes = plt.subplots(nRows=nRows, nCols=nCols, figsize=(8 * nCols, 8 * nRows), squeeze=False)  # squeeze=False ensures axes is 2D
 
         # Flatten axes for easy indexing if you prefer
         axes = axes.flatten()
@@ -316,15 +316,16 @@ class signalEncoderVisualizations(globalPlottingProtocols):
                 angles_testing = np.angle(testingEigenValues[layerInd, signalInd, :], deg=degreesFlag)
                 ax.hist(angles_testing, bins=32, alpha=0.5, density=True, color=self.lightColors[0], label="Testing")
 
+            units = "degrees" if degreesFlag else "radians"
+            degrees = 200 if degreesFlag else 3.25
             # Customize subplot title and axes
             ax.set_title(f"Layer {layerInd + 1}")
-            ax.set_xlabel("Angle (degrees)")
-            ax.set_xlim((-200, 200))
-            ax.set_ylim((0, 1))
+            ax.set_xlabel(f"Angle ({units})")
+            ax.set_xlim((-degrees, degrees))
             ax.set_ylabel("Density")
 
-        # Hide any extra subplots if numLayers < nrows * ncols
-        for idx in range(numLayers, nrows * ncols):
+        # Hide any extra subplots if numLayers < nRows * nCols
+        for idx in range(numLayers, nRows * nCols):
             fig.delaxes(axes[idx])  # remove unused axes
 
         # Adjust layout to prevent overlapping titles/labels
