@@ -365,7 +365,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Add a color bar for the last surface
         cbar = fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10, pad=0.1)
-        cbar.set_label("Rotation Angle", fontsize=12)
+        cbar.set_label("Rotation Angle Mag", fontsize=12)
 
         # Adjust layout and aspect ratio
         ax.set_box_aspect([2, 1, 1])
