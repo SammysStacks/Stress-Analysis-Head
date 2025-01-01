@@ -352,7 +352,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Create the scatter plot
         surf = ax.scatter(x_data.flatten(), y_data.flatten(), np.abs(np.angle(jacobianFullPassPath, deg=degreesFlag)),  # Use z-values for coloring
-                          c=np.imag(jacobianFullPassPath.flatten()), cmap=self.custom_cmap, alpha=0.7, s=10, vmin=-1.1, vmax=1.1)
+                          c=np.imag(jacobianFullPassPath.flatten()), cmap=self.custom_cmap, alpha=0.7, s=10)
 
         # Customize the view angle
         ax.view_init(elev=30, azim=135)
