@@ -345,7 +345,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Create a meshgrid for encodedDimension and numModelLayers
         x_data, y_data = np.meshgrid(np.arange(encodedDimension), np.arange(1, 1 + numModelLayers))
-        extent = (x_data.min(), x_data.max(), y_data.min(), y_data.max())
 
         # Create a figure
         fig = plt.figure(figsize=(14, 10))
@@ -353,8 +352,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Create the scatter plot
         surf = ax.scatter(x_data.flatten(), y_data.flatten(), np.imag(jacobianFullPassPath.flatten()),  # Use z-values for coloring
-                          c=np.angle(jacobianFullPassPath, deg=degreesFlag), cmap=self.custom_cmap, alpha=0.7, s=10,
-                          interpolation=None, extent=extent, aspect='auto', origin='lower', vmin=-1.1, vmax=1.1)
+                          c=np.abs(np.angle(jacobianFullPassPath, deg=degreesFlag)), cmap=self.custom_cmap, alpha=0.7, s=10, vmin=-1.1, vmax=1.1)
 
         # Customize the view angle
         ax.view_init(elev=30, azim=135)
