@@ -277,6 +277,9 @@ class compileModelDataHelpers:
 
         # Assert that the data is valid.
         if metadatasetName.lower() in ['empatch']: assert any('eog' in featureName.lower() for featureName in featureNames), f"EOG not found in {featureNames}"
+        if metadatasetName.lower() in ['empatch']: assert any('eeg' in featureName.lower() for featureName in featureNames), f"EEG not found in {featureNames}"
+        if metadatasetName.lower() in ['empatch']: assert any('eda' in featureName.lower() for featureName in featureNames), f"EDA not found in {featureNames}"
+        if metadatasetName.lower() in ['empatch']: assert any('temp' in featureName.lower() for featureName in featureNames), f"TEMP not found in {featureNames}"
 
         return allSignalData, featureNames
 

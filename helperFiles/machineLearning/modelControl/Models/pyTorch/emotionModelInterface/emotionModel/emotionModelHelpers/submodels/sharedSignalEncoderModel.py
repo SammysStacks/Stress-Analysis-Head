@@ -29,18 +29,11 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         # The neural layers for the signal encoder.
         self.healthGenerationModel = self.healthGeneration(numOutputFeatures=encodedDimension)
         self.processingLayers, self.neuralLayers = nn.ModuleList(), nn.ModuleList()
+        self.healthProfileJacobian = self.initializeJacobianParams(1)
         for _ in range(self.numSharedEncoderLayers): self.addLayer()
-        self.jacobianParameter = self.initializeJacobianParam()
 
         # Register gradient hook for the weights.
         for param in self.healthGenerationModel.parameters(): param.register_hook(self.gradientHook)
-
-        # Initialize loss holders.
-        self.trainingJacobianParameterFlow = None
-        self.resetModel()
-
-    def resetModel(self):
-        self.trainingJacobianParameterFlow = []  # List of jacobian parameters. Dim: numEpochs
 
     def forward(self):
         raise "You cannot call the dataset-specific signal encoder module."
@@ -53,9 +46,9 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         else: raise "The learning protocol is not yet implemented."
 
     # Learned up-sampling of the health profile.
-    def smoothPhysiologicalProfile(self, healthProfile):
+    def generateHealthProfile(self, healthProfile):
         healthProfile = self.healthGenerationModel(healthProfile.unsqueeze(1)).squeeze(1)
-        healthProfile = healthProfile * self.healthJacobian(self.jacobianParameter)
+        healthProfile = self.applyManifoldScale(healthProfile, self.healthProfileJacobian)
 
         return healthProfile
 
@@ -95,7 +88,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
 
             return pcaReconstructionLoss
 
-    def interpolateData(self, signalData, resampledSignalData):
+    def interpolateOriginalSignals(self, signalData, resampledSignalData):
         # Extract the dimensions of the data.
         timepoints = emotionDataInterface.getChannelData(signalData, channelName=modelConstants.timeChannel)
         batchSize, numSignals, encodedDimension = resampledSignalData.size()
@@ -128,9 +121,8 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
 
     def printParams(self):
         # Count the trainable parameters.
-        # Count the trainable parameters.
         numProfileParams = sum(p.numel() for name, p in self.named_parameters() if p.requires_grad and 'healthGenerationModel' in name)
-        numParams = sum(p.numel() for name, p in self.named_parameters() if p.requires_grad and 'healthGenerationModel' in name )
+        numParams = sum(p.numel() for name, p in self.named_parameters() if p.requires_grad and 'healthGenerationModel' in name)
 
         # Print the number of trainable parameters.
         totalParams = numParams + numProfileParams

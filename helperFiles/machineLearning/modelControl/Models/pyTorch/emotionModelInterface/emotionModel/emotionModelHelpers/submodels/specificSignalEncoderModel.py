@@ -22,6 +22,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
         # The neural layers for the signal encoder.
         self.profileModel = profileModel(numExperiments=numExperiments, numSignals=self.numSignals, encodedDimension=encodedDimension)
+        self.healthProfileJacobians = self.initializeJacobianParams(self.numSignals)
         self.processingLayers, self.neuralLayers = nn.ModuleList(), nn.ModuleList()
         for _ in range(2*self.numSpecificEncoderLayers): self.addLayer()
 
@@ -31,6 +32,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
         # Initialize loss holders.
         self.trainingLosses_signalReconstruction, self.testingLosses_signalReconstruction = None, None
+        self.specificJacobianFlow, self.sharedJacobianFlow = None, None
         self.resetModel()
 
     def forward(self): raise "You cannot call the dataset-specific signal encoder module."
@@ -39,6 +41,10 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         # Signal encoder reconstructed loss holders.
         self.trainingLosses_signalReconstruction = []  # List of list of data reconstruction training losses. Dim: numEpochs
         self.testingLosses_signalReconstruction = []  # List of list of data reconstruction testing losses. Dim: numEpochs
+
+        # Jacobian parameter flow holders.
+        self.specificJacobianFlow = []  # List of jacobian parameters. Dim: numEpochs
+        self.sharedJacobianFlow = []  # List of jacobian parameters. Dim: numEpochs
 
     def addLayer(self):
         self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True))
@@ -53,10 +59,14 @@ class specificSignalEncoderModel(neuralOperatorInterface):
             # Apply the neural operator layer with activation.
             signalData = self.neuralLayers[layerInd](signalData)
             signalData = self.processingLayers[layerInd](signalData)
+
+            # Allow the signals to be scaled once.
+            if layerInd == 0: signalData = self.applyManifoldScale(signalData, self.healthProfileJacobians)
         else:
             # Get the reverse layer index.
             pseudoLayerInd = len(self.neuralLayers) - layerInd - 1
             assert 0 <= pseudoLayerInd < len(self.neuralLayers), f"The pseudo layer index is out of bounds: {pseudoLayerInd}, {len(self.neuralLayers)}, {layerInd}"
+            if pseudoLayerInd == 0: signalData = self.applyManifoldScale(signalData, self.healthProfileJacobians)
 
             # Apply the neural operator layer with activation.
             signalData = self.processingLayers[pseudoLayerInd](signalData)

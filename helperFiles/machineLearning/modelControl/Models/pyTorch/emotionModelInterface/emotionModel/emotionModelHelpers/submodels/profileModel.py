@@ -9,9 +9,9 @@ class profileModel(emotionModelWeights):
 
     def __init__(self, numExperiments, numSignals, encodedDimension):
         super(profileModel, self).__init__()
-        self.embeddedPhysiologicalProfile = self.getInitialPhysiologicalProfile(numExperiments)
-        self.profileStateLosses, self.compiledSignalEncoderLayerStatePath = None, None
-        self.profileStatePath, self.embeddedProfileStatePath = None, None
+        self.embeddedHealthProfiles = self.getInitialPhysiologicalProfile(numExperiments)
+        self.retrainingProfileLosses, self.signalEncoderLayerTransforms = None, None
+        self.retrainingProfilePath, self.retrainingEmbeddedProfilePath = None, None
         self.encodedDimension = encodedDimension
         self.numExperiments = numExperiments
         self.numSignals = numSignals
@@ -21,7 +21,7 @@ class profileModel(emotionModelWeights):
         self.resetProfileWeights()
 
     def resetProfileWeights(self):
-        self.healthInitialization(self.embeddedPhysiologicalProfile)
+        self.healthInitialization(self.embeddedHealthProfiles)
 
     def resetProfileHolders(self, numProfileShots):
         # Get the model information.
@@ -29,17 +29,15 @@ class profileModel(emotionModelWeights):
         numSharedEncoderLayers = modelConstants.userInputParams['numSharedEncoderLayers']
 
         # Pre-allocate each parameter.
-        self.compiledSignalEncoderLayerStatePath = np.zeros(shape=(numProfileShots + 1, 2*numSpecificEncoderLayers + numSharedEncoderLayers + 1, self.numExperiments, 1, self.encodedDimension))
-        self.embeddedProfileStatePath = np.zeros(shape=(numProfileShots + 1, self.numExperiments, modelConstants.numEncodedWeights))
-        self.profileStatePath = np.zeros(shape=(numProfileShots + 1, self.numExperiments, self.encodedDimension))
-        self.profileStateLosses = np.zeros(shape=(numProfileShots + 1, self.numExperiments, self.numSignals))
+        self.signalEncoderLayerTransforms = np.zeros(shape=(numProfileShots + 1, 2 * numSpecificEncoderLayers + numSharedEncoderLayers + 1, self.numExperiments, self.numSignals, self.encodedDimension))
+        self.retrainingEmbeddedProfilePath = np.zeros(shape=(numProfileShots + 1, self.numExperiments, modelConstants.numEncodedWeights))
+        self.retrainingProfileLosses = np.zeros(shape=(numProfileShots + 1, self.numExperiments, self.numSignals))
 
-    def populateProfileState(self, profileEpoch, batchInds, profileStateLoss, profileStatePath, compiledSignalEncoderLayerStatePath):
+    def populateProfileState(self, profileEpoch, batchInds, profileStateLoss, signalEncoderLayerTransforms):
         if isinstance(batchInds, torch.Tensor): batchInds = batchInds.detach().cpu().numpy()
-        self.embeddedProfileStatePath[profileEpoch][batchInds] = self.embeddedPhysiologicalProfile[batchInds].clone().detach().cpu().numpy()
-        self.compiledSignalEncoderLayerStatePath[profileEpoch][:, batchInds] = compiledSignalEncoderLayerStatePath
-        self.profileStateLosses[profileEpoch][batchInds] = profileStateLoss.clone().detach().cpu().numpy()
-        self.profileStatePath[profileEpoch][batchInds] = profileStatePath.clone().detach().cpu().numpy()
+        self.retrainingEmbeddedProfilePath[profileEpoch][batchInds] = self.embeddedHealthProfiles[batchInds].clone().detach().cpu().numpy()
+        self.signalEncoderLayerTransforms[profileEpoch][:, batchInds] = signalEncoderLayerTransforms
+        self.retrainingProfileLosses[profileEpoch][batchInds] = profileStateLoss.clone().detach().cpu().numpy()
 
-    def getPhysiologicalProfile(self, batchInds):
-        return self.embeddedPhysiologicalProfile.to(batchInds.device)[batchInds]
+    def getHealthEmbedding(self, batchInds):
+        return self.embeddedHealthProfiles.to(batchInds.device)[batchInds]

@@ -38,14 +38,12 @@ class modelHelpers:
     @staticmethod
     def getLastActivationLayer(lossType, predictingProb=False):
         # Predict probabilities for classification problems
-        if lossType in ["weightedKLDiv", "NLLLoss", "KLDivLoss"]:
-            return "logSoftmax"
+        if lossType in ["weightedKLDiv", "NLLLoss", "KLDivLoss"]: return "logSoftmax"
         elif lossType in ["diceLoss", "FocalLoss"] or predictingProb:
             # For CrossEntropyLoss, no activation function is needed as it applies softmax internally
             # For diceLoss and FocalLoss, you might use sigmoid or softmax based on the problem (binary/multi-class)
             return "softmax"
-        else:
-            return None
+        else: return None
 
     # -------------------------- Model Updates -------------------------- #
 

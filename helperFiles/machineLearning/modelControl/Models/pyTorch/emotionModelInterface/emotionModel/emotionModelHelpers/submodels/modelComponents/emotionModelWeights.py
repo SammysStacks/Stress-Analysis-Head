@@ -8,6 +8,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.modelHelpers.abnormalConvolutions import subPixelUpsampling1D
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.modelHelpers.convolutionalHelpers import convolutionalHelpers, ResNet
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleConvolutionLayer import reversibleConvolutionLayer
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
 
 
 class emotionModelWeights(convolutionalHelpers):
@@ -27,7 +28,7 @@ class emotionModelWeights(convolutionalHelpers):
             assert False
         return linearLayer
 
-    # ------------------- Physiological Profile ------------------- #
+    # ------------------- Health Profile ------------------- #
 
     @staticmethod
     def getInitialPhysiologicalProfile(numExperiments):
@@ -70,8 +71,9 @@ class emotionModelWeights(convolutionalHelpers):
         return emotionModelWeights.linearModel(numInputFeatures=sequenceLength, numOutputFeatures=sequenceLength, activationMethod="SoftSign", addBias=False)
 
     @staticmethod
-    def initializeJacobianParam():
-        return nn.Parameter(torch.zeros(1))
+    def initializeJacobianParams(numSignals):
+        if numSignals == 1: return nn.Parameter(torch.zeros((1, numSignals)))
+        else: return nn.Parameter(torch.zeros((1, numSignals, 1)))
 
     def healthGeneration(self, numOutputFeatures):
         if numOutputFeatures < modelConstants.numEncodedWeights: raise ValueError(f"Number of outputs ({numOutputFeatures}) must be greater than inputs ({modelConstants.numEncodedWeights})")
@@ -87,16 +89,21 @@ class emotionModelWeights(convolutionalHelpers):
 
         # Construct the profile generation model.
         for i in range(numUpSamples): layers.append(self.convolutionalFilters_resNetBlocks(numResNets=1, numBlocks=1, numChannels=[1, 2, 2, 2], kernel_sizes=[[3, 3, 3]], dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
-        layers.append(self.convolutionalFilters_resNetBlocks(numResNets=4, numBlocks=1, numChannels=[1, 2, 2, 1], kernel_sizes=[[3, 3, 3]], dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
+        layers.append(self.convolutionalFilters_resNetBlocks(numResNets=4, numBlocks=1, numChannels=[1, 2, 2, 2, 1], kernel_sizes=[[3, 3, 3, 3]], dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
         return nn.Sequential(*layers)
 
     @staticmethod
-    def healthJacobian(jacobianParameter):
+    def getJacobianScalar(jacobianParameter):
         jacobianMatrix = 1.0 + 1.0 * torch.sigmoid(jacobianParameter)
         return jacobianMatrix
 
     @staticmethod
     def gradientHook(grad): return grad
+
+    def applyManifoldScale(self, healthProfile, healthProfileJacobians):
+        if not reversibleInterface.forwardDirection:
+            return healthProfile / self.getJacobianScalar(healthProfileJacobians).expand_as(healthProfile)
+        else: return healthProfile * self.getJacobianScalar(healthProfileJacobians).expand_as(healthProfile)
 
     # ------------------- Emotion/Activity Encoding Architectures ------------------- #
 
@@ -124,7 +131,7 @@ class emotionModelWeights(convolutionalHelpers):
     # ------------------- Universal Architectures ------------------- #
 
     @staticmethod
-    def getReversibleActivation(): return 'reversibleLinearSoftSign'
+    def getReversibleActivation(): return 'none'  # reversibleLinearSoftSign
 
     @staticmethod
     def getIrreversibleActivation(): return 'boundedExp'

@@ -5,6 +5,7 @@ import torch
 
 # Helper classes
 from .lossCalculations import lossCalculations
+from ..submodels.modelComponents.emotionModelWeights import emotionModelWeights
 
 
 class organizeTrainingLosses(lossCalculations):
@@ -41,10 +42,15 @@ class organizeTrainingLosses(lossCalculations):
             signalReconstructedTrainingLosses = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, validDataMask, allTrainingSignalMask, averageBatches=True)
             signalReconstructedTestingLosses = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, validDataMask, allTestingSignalMask, averageBatches=True)
 
+            # Get the encoder information.
+            specificJacobians, sharedJacobians = model.specificSignalEncoderModel.healthProfileJacobians[0, :, 0], model.sharedSignalEncoderModel.healthProfileJacobian[0, :]
+            specificJacobians, sharedJacobians = emotionModelWeights.getJacobianScalar(specificJacobians), emotionModelWeights.getJacobianScalar(sharedJacobians)
+
             # Store the signal encoder loss information.
-            model.sharedSignalEncoderModel.trainingJacobianParameterFlow.append(model.sharedSignalEncoderModel.healthJacobian(model.sharedSignalEncoderModel.jacobianParameter).detach().cpu().item())
+            self.storeLossInformation(specificJacobians, sharedJacobians, model.specificSignalEncoderModel.specificJacobianFlow, model.specificSignalEncoderModel.sharedJacobianFlow)
             self.storeLossInformation(signalReconstructedTrainingLosses, signalReconstructedTestingLosses, model.specificSignalEncoderModel.trainingLosses_signalReconstruction, model.specificSignalEncoderModel.testingLosses_signalReconstruction)
             self.accelerator.print("Reconstruction loss values:", signalReconstructedTrainingLosses.nanmean().item(), signalReconstructedTestingLosses.nanmean().item())
+            self.accelerator.print("Average Jacobians (Shared-Specific):", sharedJacobians.nanmean().item(), specificJacobians.nanmean().item())
 
             # Calculate the activity classification accuracy/loss and assert the integrity of the loss.
             # activityTestingLoss = self.calculateActivityLoss(allActivityDistributions, allLabels, allTestingMasks, activityClassWeights)
