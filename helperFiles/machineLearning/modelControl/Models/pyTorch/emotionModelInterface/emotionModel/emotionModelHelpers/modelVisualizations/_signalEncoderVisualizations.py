@@ -366,7 +366,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             x_data, y_data, jacobianFullPassPath,
             cmap='viridis',  # Colormap for the surface
             alpha=0.7,  # Transparency
-            linewidth=0.5  # Thin lines for linear interpolation
+            linewidth=0.5,  # Thin lines for linear interpolation
+            rstride = 1, cstride = 1,
         )
 
         # Customize the view angle
