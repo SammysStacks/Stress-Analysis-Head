@@ -365,7 +365,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Create the scatter plot
         surf = ax.scatter(
-            x_data.flatten(), y_data.flatten(), jacobianFullPassPath.flatten(),  # Use z-values for coloring
+            x_data.flatten(), y_data.flatten(), np.real(jacobianFullPassPath.flatten()),  # Use z-values for coloring
             c=jacobianFullPassPath,  # Use z-values for coloring
             cmap='viridis',  # Colormap for the points
             alpha=0.7,  # Transparency for the points
