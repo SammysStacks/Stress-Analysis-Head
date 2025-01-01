@@ -66,7 +66,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         # Apply the neural weights to the input data.
         neuralWeights = self.getTransformationMatrix(layerInd, inputData.device)  # = exp(A)
         outputData = torch.einsum('bns,nsi->bni', inputData, neuralWeights)  # -> exp(A) @ f(x)
-        # THe inverse would be f-1[exp(A) @ f(x)]
+        # The inverse would be f-1(exp(-A) @ [exp(A) @ f(x)]) = X
 
         return outputData
 
