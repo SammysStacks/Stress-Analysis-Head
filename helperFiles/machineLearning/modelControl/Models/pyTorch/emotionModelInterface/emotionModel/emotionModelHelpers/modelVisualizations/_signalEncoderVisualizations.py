@@ -129,7 +129,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
             else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotSignalEncodingStatePath(self, relativeTimes, compiledSignalEncoderLayerStates, epoch, saveFigureLocation, plotTitle):
+    def plotSignalEncodingStatePath(self, relativeTimes, compiledSignalEncoderLayerStates, epoch, hiddenLayers, saveFigureLocation, plotTitle):
         numLayers, numExperiments, numSignals, encodedDimension = compiledSignalEncoderLayerStates.shape
         if relativeTimes is None: relativeTimes = np.arange(start=1, stop=1 + encodedDimension, step=1)
         batchInd, signalInd = 0, 0
@@ -156,13 +156,13 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         custom_cmap = LinearSegmentedColormap.from_list("red_transparent_blue", colors)
 
         # These should be chosen based on your data and how you want to "zoom"
-        relativeTimesExtentInterp = (relativeTimes.min(), relativeTimes.max(), numSpecificEncoderLayers, numLayers - numSpecificEncoderLayers)
+        relativeTimesExtentInterp = (relativeTimes.min(), relativeTimes.max(), hiddenLayers + numSpecificEncoderLayers, hiddenLayers + numLayers - numSpecificEncoderLayers)
         relativeTimesExtent = (relativeTimes.min(), relativeTimes.max(), 0, numLayers)
         plt.figure(figsize=(12, 8))
 
         # Plot the rest of the layers with the same normalization.
         im0 = plt.imshow(interpolated_states, cmap=custom_cmap, interpolation=None, extent=relativeTimesExtent, aspect='auto', origin='lower', vmin=-1.1, vmax=1.1)
-        plt.imshow(interpolated_states[numSpecificEncoderLayers:numLayers - numSpecificEncoderLayers + 1], cmap=custom_cmap, interpolation='bilinear', extent=relativeTimesExtentInterp, aspect='auto', origin='lower', vmin=-1.1, vmax=1.1)
+        plt.imshow(interpolated_states[hiddenLayers + numSpecificEncoderLayers:hiddenLayers + numLayers - numSpecificEncoderLayers + 1], cmap=custom_cmap, interpolation='bilinear', extent=relativeTimesExtentInterp, aspect='auto', origin='lower', vmin=-1.1, vmax=1.1)
         plt.colorbar(im0, fraction=0.046, pad=0.04)
 
         # # Plot the last layer with its own normalization and colorbar
@@ -176,8 +176,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Add horizontal lines to mark layer boundaries
         plt.hlines(y=numLayers - numSpecificEncoderLayers, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
-        plt.hlines(y=1 + numSpecificEncoderLayers, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
-        plt.hlines(y=1, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='-', linewidth=2)
+        plt.hlines(y=hiddenLayers + numSpecificEncoderLayers, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
+        plt.hlines(y=hiddenLayers, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='-', linewidth=2)
 
         # Ticks, labels, and formatting
         yticks = np.asarray([0, 1, 1] + list(range(2, numLayers - 2)) + [1])
