@@ -156,13 +156,13 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         interpolated_states = compiledSignalEncoderLayerStates.real
 
         # These should be chosen based on your data and how you want to "zoom"
-        relativeTimesExtentInterp = (relativeTimes.min(), relativeTimes.max(), hiddenLayers + numSpecificEncoderLayers, numLayers - numSpecificEncoderLayers)
+        # relativeTimesExtentInterp = (relativeTimes.min(), relativeTimes.max(), hiddenLayers + numSpecificEncoderLayers, numLayers - numSpecificEncoderLayers)
         relativeTimesExtent = (relativeTimes.min(), relativeTimes.max(), 0, numLayers)
         plt.figure(figsize=(12, 8))
 
         # Plot the rest of the layers with the same normalization.
         im0 = plt.imshow(interpolated_states, cmap=self.custom_cmap, interpolation=None, extent=relativeTimesExtent, aspect='auto', origin='lower', vmin=-1.1, vmax=1.1)
-        plt.imshow(interpolated_states[hiddenLayers + numSpecificEncoderLayers:numLayers - numSpecificEncoderLayers + 1], cmap=self.custom_cmap, interpolation='bilinear', extent=relativeTimesExtentInterp, aspect='auto', origin='lower', vmin=-1.1, vmax=1.1)
+        # plt.imshow(interpolated_states[hiddenLayers + numSpecificEncoderLayers:numLayers - numSpecificEncoderLayers + 1], cmap=self.custom_cmap, interpolation='nearest', extent=relativeTimesExtentInterp, aspect='auto', origin='lower', vmin=-1.1, vmax=1.1)
         plt.colorbar(im0, fraction=0.046, pad=0.04)
 
         # # Plot the last layer with its own normalization and colorbar
@@ -353,7 +353,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Create the scatter plot
         maxHalfAngle = 180 if degreesFlag else np.pi
         surf = ax.scatter(x_data.flatten(), y_data.flatten(), np.imag(jacobianFullPassPath.flatten()),  # Use z-values for coloring
-                          c=np.abs(np.angle(jacobianFullPassPath, deg=degreesFlag)), cmap=self.custom_cmap, alpha=0.7, s=10, vmin=0, vmax=maxHalfAngle)
+                          c=np.angle(jacobianFullPassPath, deg=degreesFlag), cmap=self.custom_cmap, alpha=0.7, s=10, vmin=-maxHalfAngle, vmax=maxHalfAngle)
 
         # Customize the view angle
         ax.view_init(elev=30, azim=135)

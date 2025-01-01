@@ -97,13 +97,12 @@ class modelVisualizations(globalPlottingProtocols):
             validDataMask, reconstructedSignalData, resampledSignalData, healthProfile = validDataMask.detach().cpu().numpy(), reconstructedSignalData.detach().cpu().numpy(), resampledSignalData.detach().cpu().numpy(), healthProfile.detach().cpu().numpy()
             specificEigenvalues = np.asarray([modelLayer.getAllEigenvalues(device=self.accelerator.device) for modelLayer in model.specificSignalEncoderModel.processingLayers])  # numProcessingLayers, numLayers=1, numSignals, encodedDimension
             sharedEigenvalues = np.asarray([modelLayer.getAllEigenvalues(device=self.accelerator.device) for modelLayer in model.sharedSignalEncoderModel.processingLayers])  # numProcessingLayers, numLayers=1, numSignals=1, encodedDimension
-            signalEncoderLayerTransforms = np.asarray(model.specificSignalEncoderModel.profileModel.signalEncoderLayerTransforms)  # numProfileShots, 2*numSpecific + numShared + 1, numExperiments, numSignals, encodedDimension
+            signalEncoderLayerTransforms = np.asarray(model.specificSignalEncoderModel.profileModel.signalEncoderLayerTransforms)  # numProfileShots, 2*numSpecific + numShared + 1, numExperiments, numSignals=1***, encodedDimension
             embeddedProfile = model.specificSignalEncoderModel.profileModel.embeddedHealthProfiles.detach().cpu().numpy()  # numProfileShots, numExperiments, numEncodedWeights
             retrainingEmbeddedProfilePath = np.asarray(model.specificSignalEncoderModel.profileModel.retrainingEmbeddedProfilePath)  # numProfileShots, numExperiments, numEncodedWeights
             resampledBiomarkerTimes = model.sharedSignalEncoderModel.hyperSampledTimes.detach().cpu().numpy()  # numTimePoints
             jacobianFullPassPath = model.getJacobianFullPassPath(device=self.accelerator.device)  # 2*numSpecific + numShared, numSignals, encodedDimension
             globalPlottingProtocols.clearFigure(fig=None, legend=None, showPlot=False)
-            numModelLayers, numSignals, encodedDimension = jacobianFullPassPath.shape
             batchInd, signalInd = -1, -1
 
             # Plot the loss on the primary GPU.

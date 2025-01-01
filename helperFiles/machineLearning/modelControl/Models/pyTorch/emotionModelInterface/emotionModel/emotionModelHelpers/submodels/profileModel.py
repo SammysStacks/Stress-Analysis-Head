@@ -29,14 +29,14 @@ class profileModel(emotionModelWeights):
         numSharedEncoderLayers = modelConstants.userInputParams['numSharedEncoderLayers']
 
         # Pre-allocate each parameter.
-        self.signalEncoderLayerTransforms = np.zeros(shape=(numProfileShots + 1, 2 * numSpecificEncoderLayers + numSharedEncoderLayers + 1, self.numExperiments, self.numSignals, self.encodedDimension))
+        self.signalEncoderLayerTransforms = np.zeros(shape=(numProfileShots + 1, 2 * numSpecificEncoderLayers + numSharedEncoderLayers + 1, self.numExperiments, 1, self.encodedDimension))
         self.retrainingEmbeddedProfilePath = np.zeros(shape=(numProfileShots + 1, self.numExperiments, modelConstants.numEncodedWeights))
         self.retrainingProfileLosses = np.zeros(shape=(numProfileShots + 1, self.numExperiments, self.numSignals))
 
     def populateProfileState(self, profileEpoch, batchInds, profileStateLoss, signalEncoderLayerTransforms):
         if isinstance(batchInds, torch.Tensor): batchInds = batchInds.detach().cpu().numpy()
         self.retrainingEmbeddedProfilePath[profileEpoch][batchInds] = self.embeddedHealthProfiles[batchInds].clone().detach().cpu().numpy()
-        self.signalEncoderLayerTransforms[profileEpoch][:, batchInds] = signalEncoderLayerTransforms
+        self.signalEncoderLayerTransforms[profileEpoch][:, batchInds] = signalEncoderLayerTransforms[:, :, 0:1, :]
         self.retrainingProfileLosses[profileEpoch][batchInds] = profileStateLoss.clone().detach().cpu().numpy()
 
     def getHealthEmbedding(self, batchInds):
