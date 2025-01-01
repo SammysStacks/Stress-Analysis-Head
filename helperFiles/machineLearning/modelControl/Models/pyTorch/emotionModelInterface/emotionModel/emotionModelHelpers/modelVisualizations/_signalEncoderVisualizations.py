@@ -335,7 +335,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def modelPropagation3D(self, jacobianFullPassPath, epoch, deg, batchInd, signalInd, saveFigureLocation, plotTitle):
+    def modelPropagation3D(self, jacobianFullPassPath, epoch, degreesFlag, batchInd, signalInd, saveFigureLocation, plotTitle):
         # jacobianFullPassPath: numModelLayers, numSignals, encodedDimension
         jacobianFullPassPath = np.asarray(jacobianFullPassPath)  # Ensure input is a NumPy array
         numModelLayers, numSignals, encodedDimension = jacobianFullPassPath.shape
@@ -350,8 +350,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         ax = fig.add_subplot(111, projection='3d')
 
         # Create the scatter plot
-        surf = ax.scatter(x_data.flatten(), y_data.flatten(), np.imag(jacobianFullPassPath.flatten()),  # Use z-values for coloring
-                          c=np.real(jacobianFullPassPath.flatten()), cmap='viridis', alpha=0.7, s=10)
+        surf = ax.scatter(x_data.flatten(), y_data.flatten(), np.real(jacobianFullPassPath.flatten()),  # Use z-values for coloring
+                          c=np.angle(jacobianFullPassPath, deg=degreesFlag), cmap='viridis', alpha=0.7, s=10)
 
         # Customize the view angle
         ax.view_init(elev=30, azim=135)
@@ -360,11 +360,11 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         ax.set_title(plotTitle, fontsize=16, weight='bold', pad=20)
         ax.set_xlabel("Eigenvalue Index", fontsize=12, labelpad=10)
         ax.set_ylabel("Model Layer Index", fontsize=12, labelpad=10)
-        ax.set_zlabel("Imaginary Domain", fontsize=12, labelpad=10)
+        ax.set_zlabel("Spatial Scalar", fontsize=12, labelpad=10)
 
         # Add a color bar for the last surface
         cbar = fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10, pad=0.1)
-        cbar.set_label("Real Domain", fontsize=12)
+        cbar.set_label("Rotation Angle", fontsize=12)
 
         # Adjust layout and aspect ratio
         ax.set_box_aspect([2, 1, 1])
