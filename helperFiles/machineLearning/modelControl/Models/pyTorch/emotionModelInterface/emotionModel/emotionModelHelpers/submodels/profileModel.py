@@ -11,7 +11,7 @@ class profileModel(emotionModelWeights):
         super(profileModel, self).__init__()
         self.embeddedHealthProfiles = self.getInitialPhysiologicalProfile(numExperiments)
         self.retrainingProfileLosses, self.signalEncoderLayerTransforms = None, None
-        self.retrainingProfile3D, self.retrainingEmbeddedProfilePath = None, None
+        self.retrainingSpecificEigenvalues_in3D, self.retrainingEmbeddedProfilePath = None, None
         self.encodedDimension = encodedDimension
         self.numExperiments = numExperiments
         self.numSignals = numSignals
@@ -30,7 +30,7 @@ class profileModel(emotionModelWeights):
 
         # Pre-allocate each parameter.
         self.signalEncoderLayerTransforms = np.zeros(shape=(numProfileShots + 1, 2 * numSpecificEncoderLayers + numSharedEncoderLayers, self.numExperiments, self.numSignals, self.encodedDimension))
-        self.retrainingProfile3D = np.zeros(shape=(numProfileShots + 1, 2*numSpecificEncoderLayers + numSharedEncoderLayers + 1, self.numSignals, self.encodedDimension))
+        self.retrainingSpecificEigenvalues_in3D = np.zeros(shape=(numProfileShots + 1, 2 * numSpecificEncoderLayers + numSharedEncoderLayers + 1, self.numSignals, self.encodedDimension))
         self.retrainingEmbeddedProfilePath = np.zeros(shape=(numProfileShots + 1, self.numExperiments, modelConstants.numEncodedWeights))
         self.retrainingProfileLosses = np.zeros(shape=(numProfileShots + 1, self.numExperiments, self.numSignals))
 
@@ -39,7 +39,7 @@ class profileModel(emotionModelWeights):
         self.retrainingEmbeddedProfilePath[profileEpoch][batchInds] = self.embeddedHealthProfiles[batchInds].clone().detach().cpu().numpy()
         self.signalEncoderLayerTransforms[profileEpoch][:, batchInds] = signalEncoderLayerTransforms
         self.retrainingProfileLosses[profileEpoch][batchInds] = profileStateLoss.clone().detach().cpu().numpy()
-        self.retrainingProfile3D[profileEpoch, :, :, :] = retrainingEigenvalues[:, 0]
+        self.retrainingSpecificEigenvalues_in3D[profileEpoch, :, :, :] = retrainingEigenvalues[:, 0]
 
     def getHealthEmbedding(self, batchInds):
         return self.embeddedHealthProfiles.to(batchInds.device)[batchInds]

@@ -259,8 +259,8 @@ class emotionModelHead(nn.Module):
 
         if onlyProfileTraining:
             with torch.no_grad():
-                specificEigenvalues = np.asarray([modelLayer.getAllEigenvalues(device=self.accelerator.device) for modelLayer in modelConstants.userInputParams['numSpecificEncoderLayers']])  # numProcessingLayers, numLayers=1, numSignals, encodedDimension
-                sharedEigenvalues = np.asarray([modelLayer.getAllEigenvalues(device=self.accelerator.device) for modelLayer in self.sharedSignalEncoderModel.processingLayers])  # numProcessingLayers, numLayers=1, numSignals=1, encodedDimension
+                specificEigenvalues = np.asarray([self.specificSignalEncoderModel.processingLayers[layerInd].getAllEigenvalues(device=self.accelerator.device) for layerInd in range(modelConstants.userInputParams['numSpecificEncoderLayers'])])  # numProcessingLayers, numSpecificEncoderLayers, numSignals, encodedDimension
+                sharedEigenvalues = np.asarray([self.sharedSignalEncoderModel.processingLayers[layerInd].getAllEigenvalues(device=self.accelerator.device) for layerInd in range(modelConstants.userInputParams['numSharedEncoderLayers'])])  # numProcessingLayers, numSharedEncoderLayers, numSignals=1, encodedDimension
                 retrainingEigenvalues = np.asarray([*[specificEigenvalues[specificEigenvalueInd] for specificEigenvalueInd in range(0, specificEigenvalues.shape[0] // 2)],
                                                     *[np.broadcast_to(sharedEigenvalues[sharedEigenvalueInd], specificEigenvalues[0].shape) for sharedEigenvalueInd in range(sharedEigenvalues.shape[0])],
                                                     *[specificEigenvalues[specificEigenvalueInd] for specificEigenvalueInd in range(specificEigenvalues.shape[0] // 2, specificEigenvalues.shape[0])]]),
