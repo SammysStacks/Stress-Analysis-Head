@@ -295,7 +295,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} layerInd{layerInd} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotEigenvalueAngles(self, trainingEigenValues, testingEigenValues, epoch, signalInd, saveFigureLocation, plotTitle):
+    def plotEigenvalueAngles(self, trainingEigenValues, testingEigenValues, epoch, degreesFlag, signalInd, saveFigureLocation, plotTitle):
         numLayers, ncols = trainingEigenValues.shape[0], min(4, trainingEigenValues.shape[0])
         nrows = math.ceil(numLayers / ncols)
 
@@ -308,12 +308,12 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         for layerInd in range(numLayers):
             ax = axes[layerInd]  # which subplot to use
             # Plot training eigenvalue angles
-            angles_training = np.angle(trainingEigenValues[layerInd, signalInd, :], deg=deg)
+            angles_training = np.angle(trainingEigenValues[layerInd, signalInd, :], deg=degreesFlag)
             ax.hist(angles_training, bins=32, alpha=0.75, density=True, color=self.lightColors[1], label="Training")
 
             # Plot testing angles if provided
             if testingEigenValues is not None and testingEigenValues.shape[1] > 0:
-                angles_testing = np.angle(testingEigenValues[layerInd, signalInd, :], deg=deg)
+                angles_testing = np.angle(testingEigenValues[layerInd, signalInd, :], deg=degreesFlag)
                 ax.hist(angles_testing, bins=32, alpha=0.5, density=True, color=self.lightColors[0], label="Testing")
 
             # Customize subplot title and axes
