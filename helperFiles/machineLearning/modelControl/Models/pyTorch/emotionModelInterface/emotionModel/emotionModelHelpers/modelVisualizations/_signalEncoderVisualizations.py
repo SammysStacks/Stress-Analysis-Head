@@ -343,10 +343,9 @@ class signalEncoderVisualizations(globalPlottingProtocols):
     def modelPropagation3D(self, retrainingProfile2D, physiologicalTimes, epoch, batchInd, signalInd, saveFigureLocation, plotTitle):
         # retrainingProfile2D: numProfileShots, encodedDimension
         # physiologicalTimes: encodedDimension
-        physiologicalTimes = np.asarray(physiologicalTimes)
 
         # Create a meshgrid for plotting
-        x_data, y_data = np.meshgrid(physiologicalTimes, np.arange(retrainingProfile2D.shape[0] + 1))
+        x_data, y_data = np.meshgrid(np.asarray(physiologicalTimes), np.arange(retrainingProfile2D.shape[0] + 1))
 
         # Plotting the 3D surface
         fig = plt.figure(figsize=(12, 8))
@@ -358,14 +357,20 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             cmap='viridis', edgecolor='k', alpha=0.8
         )
 
+        # Customize view angle
+        # ax.view_init(*view_angle)
+
         # Labels and title
         ax.set_title("3D Flow: Signal Progression Over Time and Profile Epochs", fontsize=14)
         ax.set_xlabel("Physiological Times", fontsize=12)
         ax.set_ylabel("Profile Epochs", fontsize=12)
-        ax.set_zlabel("Mean Signal Value", fontsize=12)
+        ax.set_zlabel("Signal Value", fontsize=12)
 
         # Add a color bar
-        fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10, label='Signal Value')
+        cbar = fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10)
+        cbar.set_label('Signal Value', fontsize=12)
+
+        # Adjust layout
         plt.tight_layout()
 
         # Save the plot
