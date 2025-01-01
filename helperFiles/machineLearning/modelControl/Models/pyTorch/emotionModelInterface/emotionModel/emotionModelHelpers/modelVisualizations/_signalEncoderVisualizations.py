@@ -1,4 +1,6 @@
 # General
+import math
+
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
@@ -241,32 +243,94 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def plotEigenValueLocations(self, trainingEigenValues, testingEigenValues, epoch, signalInd, saveFigureLocation, plotTitle):
-        plt.figure(figsize=(5, 5))
-        plt.scatter(trainingEigenValues[signalInd].real.detach().cpu().numpy(), trainingEigenValues[signalInd].imag.detach().cpu().numpy(), color=self.lightColors[1], alpha=0.75)
-        plt.scatter(testingEigenValues[signalInd].real.detach().cpu().numpy(), testingEigenValues[signalInd].imag.detach().cpu().numpy(), color=self.lightColors[0], alpha=0.75)
-        plt.axhline(0, color='black', linewidth=0.5)
-        plt.axvline(0, color='black', linewidth=0.5)
+        numLayers = trainingEigenValues.shape[0]
+        # We'll create subplots with 4 columns and enough rows to fit all layers
+        ncols = 4
+        nrows = math.ceil(numLayers / ncols)
 
-        # Draw the unit circle for reference
-        circle = plt.Circle((0, 0), 1.0, color='gray', fill=False, linestyle='--')
-        plt.title("Complex Eigenvalues from Layer {}")
-        plt.gca().add_patch(circle)
-        plt.xlabel("Real part")
-        plt.ylabel("Imag part")
-        plt.axis('equal')  # make x and y scales the same
+        # Create the figure and subplots array
+        fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(5 * ncols, 5 * nrows), squeeze=False)  # keep axes in 2D form
+        axes = axes.flatten()  # flatten to 1D for easy indexing
+
+        for layerInd in range(numLayers):
+            ax = axes[layerInd]
+
+            # 1) Scatter the training eigenvalues in the real-imag plane
+            ev_train = trainingEigenValues[layerInd, signalInd, :]
+            # Convert to NumPy if needed (in case it's a torch.Tensor):
+            ax.scatter(ev_train.real, ev_train.imag, color=self.lightColors[1], alpha=0.75, s=5, label="Training")
+
+            # 2) Optionally, scatter the testing eigenvalues
+            if testingEigenValues is not None:
+                ev_test = testingEigenValues[layerInd, signalInd, :]
+                ax.scatter(ev_test.real, ev_test.imag, color=self.lightColors[0], alpha=0.75, s=5, label="Testing")
+
+            # 3) Draw coordinate lines
+            ax.axhline(0, color='black', linewidth=0.5)
+            ax.axvline(0, color='black', linewidth=0.5)
+
+            # 4) Draw the unit circle for reference
+            circle = plt.Circle((0, 0), 1.0, color='gray', fill=False, linestyle='--')
+            ax.add_patch(circle)
+
+            # 5) Customize subplot appearance
+            ax.set_title(f"{plotTitle}\nEpoch {epoch}, Signal {signalInd + 1}, Layer {layerInd + 1}")
+            ax.set_xlabel("Real part")
+            ax.set_ylabel("Imag part")
+            ax.axis('equal')  # make x and y scales the same
+
+            # If you want a legend per-subplot (training vs. testing):
+            ax.legend(loc='upper right')
+
+        # Hide any empty subplots if numLayers < nrows*ncols
+        for idx in range(numLayers, nrows * ncols):
+            fig.delaxes(axes[idx])
+
+        # Tight layout to avoid overlaps
+        plt.tight_layout()
 
         # Save the plot
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} layerInd{layerInd + 1} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def plotEigenvalueAngles(self, trainingEigenValues, testingEigenValues, epoch, signalInd, saveFigureLocation, plotTitle):
-        trainingAngles, testingAngles = trainingEigenValues.angle().detach().cpu().numpy(), testingEigenValues.angle().detach().cpu().numpy()
+        numLayers = trainingEigenValues.shape[0]
+        # Number of rows needed so that we have 4 columns
+        ncols = 4
+        nrows = math.ceil(numLayers / ncols)
 
-        plt.hist(trainingAngles, bins=20, color=self.lightColors[1], alpha=0.75)
-        plt.hist(testingAngles, bins=20, color=self.lightColors[0], alpha=0.75)
-        plt.title("Distribution of Eigenvalue Angles")
-        plt.xlabel("Angle (radians)")
-        plt.ylabel("Count")
+        # Create figure and axes array
+        fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(5 * ncols, 5 * nrows), squeeze=False)  # squeeze=False ensures axes is 2D
+
+        # Flatten axes for easy indexing if you prefer
+        axes = axes.flatten()
+
+        for layerInd in range(numLayers):
+            ax = axes[layerInd]  # which subplot to use
+            # Plot training eigenvalue angles
+            angles_training = np.angle(trainingEigenValues[layerInd, signalInd, :])
+            ax.hist(angles_training, bins=64, alpha=0.75, density=True, color=self.lightColors[1], label="Training")
+
+            # Plot testing angles if provided
+            if testingEigenValues is not None:
+                angles_testing = np.angle(testingEigenValues[layerInd, signalInd, :])
+                ax.hist(angles_testing, bins=20, alpha=0.25, density=True, color=self.lightColors[0], label="Testing")
+
+            # Customize subplot title and axes
+            ax.set_title(f"Layer {layerInd + 1}")
+            ax.set_xlabel("Angle (radians)")
+            ax.set_xlim((-3.25, 3.25))
+            ax.set_ylim((0, 1))
+            ax.set_ylabel("Density")
+            ax.legend(loc='upper right')
+
+        # Hide any extra subplots if numLayers < nrows * ncols
+        for idx in range(numLayers, nrows * ncols):
+            fig.delaxes(axes[idx])  # remove unused axes
+
+        # Adjust layout to prevent overlapping titles/labels
+        plt.suptitle(f"{plotTitle}\nEpoch {epoch}, Signal {signalInd+1}", fontsize=16)
+        plt.tight_layout()
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")

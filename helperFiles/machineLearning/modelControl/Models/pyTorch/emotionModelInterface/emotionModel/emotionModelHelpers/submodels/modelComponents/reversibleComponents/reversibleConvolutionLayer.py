@@ -58,21 +58,21 @@ class reversibleConvolutionLayer(reversibleInterface):
         return inputData
 
     def applyLayer(self, inputData, layerInd):
+        # Assert the validity of the input parameters.
+        batchSize, numSignals, sequenceLength = inputData.size()
+        assert sequenceLength == self.sequenceLength, f"The sequence length is not correct: {sequenceLength}, {self.sequenceLength}"
+        assert numSignals == self.numSignals, f"The number of signals is not correct: {numSignals}, {self.numSignals}"
+
         # Apply the neural weights to the input data.
-        neuralWeights = self.getTransformationMatrix(inputData, layerInd)
+        neuralWeights = self.getTransformationMatrix(layerInd, inputData.device)
         outputData = torch.einsum('bns,nsi->bni', inputData, neuralWeights)
 
         return outputData
 
-    def getTransformationMatrix(self, inputData, layerInd):
+    def getTransformationMatrix(self, layerInd, device):
         # Unpack the dimensions.
-        batchSize, numSignals, sequenceLength = inputData.size()
-        neuralWeights = torch.zeros(numSignals, sequenceLength, sequenceLength, dtype=torch.float64, device=inputData.device)
+        neuralWeights = torch.zeros(self.numSignals, self.sequenceLength, self.sequenceLength, dtype=torch.float64, device=device)
         # neuralWeight: numSignals, sequenceLength, sequenceLength
-
-        # Assert the validity of the input parameters.
-        assert sequenceLength == self.sequenceLength, f"The sequence length is not correct: {sequenceLength}, {self.sequenceLength}"
-        assert numSignals == self.numSignals, f"The number of signals is not correct: {numSignals}, {self.numSignals}"
 
         # Gather the corresponding kernel values for each position for a skewed symmetric matrix.
         neuralWeights[:, self.rowInds, self.colInds] = -self.linearOperators[layerInd][:, self.kernelInds]
@@ -85,14 +85,19 @@ class reversibleConvolutionLayer(reversibleInterface):
         # For orthogonal matrices: A.exp().inverse() = A.exp().transpose() = (-A).exp()
 
         return neuralWeights
+    
+    def getAllEigenvalues(self, device):
+        allEigenvalues = np.zeros(shape=(self.numLayers, self.numSignals, self.sequenceLength), dtype=np.complex128)
+        for layerInd in range(self.numLayers): allEigenvalues[layerInd] = self.getEigenvalues(layerInd, device)
+        return allEigenvalues
 
-    def getEigenvalues(self, inputData, layerInd):
-        neuralWeights = self.getTransformationMatrix(inputData, layerInd)
-        return torch.linalg.eigvals(neuralWeights)
+    def getEigenvalues(self, layerInd, device):
+        neuralWeights = self.getTransformationMatrix(layerInd, device).detach()
+        return torch.linalg.eigvals(neuralWeights).detach().cpu().numpy()
 
     def printParams(self):
         # Count the trainable parameters.
-        numParams = sum(p.numel() for p in self.parameters() if p.requires_grad) / self.numSignals
+        numParams = sum(_p.numel() for _p in self.parameters() if _p.requires_grad) / self.numSignals
         print(f'The model has {numParams} trainable parameters.')
 
 

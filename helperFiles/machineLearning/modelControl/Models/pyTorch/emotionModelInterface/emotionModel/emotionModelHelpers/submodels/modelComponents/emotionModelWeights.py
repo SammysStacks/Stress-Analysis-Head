@@ -56,12 +56,12 @@ class emotionModelWeights(convolutionalHelpers):
     # ------------------- Signal Encoding Architectures ------------------- #
 
     @staticmethod
-    def reversibleNeuralWeightRCNN(numSignals, sequenceLength, numLayers=1):
-        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=numLayers, activationMethod=f"{emotionModelWeights.getReversibleActivation()}")
+    def reversibleNeuralWeightRCNN(numSignals, sequenceLength):
+        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=1, activationMethod=f"{emotionModelWeights.getReversibleActivation()}")
 
     @staticmethod
-    def postProcessingLayerRCNN(numSignals, sequenceLength, numLayers=1):
-        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=numLayers, activationMethod=f"{emotionModelWeights.getReversibleActivation()}")
+    def postProcessingLayerRCNN(numSignals, sequenceLength):
+        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=1, activationMethod=f"{emotionModelWeights.getReversibleActivation()}")
 
     def postProcessingLayerCNN(self, numSignals):
         return self.convolutionalFilters_resNetBlocks(numResNets=1, numBlocks=4, numChannels=[numSignals, numSignals], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False)

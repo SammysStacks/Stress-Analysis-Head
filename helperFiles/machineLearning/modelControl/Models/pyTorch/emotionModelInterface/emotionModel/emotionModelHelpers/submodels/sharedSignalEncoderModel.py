@@ -128,6 +128,10 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         totalParams = numParams + numProfileParams
         print(f'The model has {totalParams} trainable parameters: {numParams} in the metamodel and {numProfileParams} for health generation.')
 
+    def getEigenvalues(self, inputData, layerInd):
+        neuralWeights = self.getTransformationMatrix(inputData, layerInd)
+        return torch.linalg.eigvals(neuralWeights)
+
 
 if __name__ == "__main__":
     # General parameters.
