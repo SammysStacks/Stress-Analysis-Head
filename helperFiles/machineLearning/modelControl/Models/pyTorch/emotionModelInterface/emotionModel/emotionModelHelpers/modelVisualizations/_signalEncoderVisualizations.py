@@ -348,7 +348,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # jacobianFullPassPath: numModelLayers, encodedDimension
 
         # Create a meshgrid for encodedDimension and numModelLayers
-        x_data, y_data = np.meshgrid(np.arange(encodedDimension), np.arange(numModelLayers))
+        x_data, y_data = np.meshgrid(np.arange(encodedDimension), np.arange(1, 1 + numModelLayers))
 
         # Create a figure
         fig = plt.figure(figsize=(14, 10))
@@ -369,8 +369,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Add labels and title
         ax.set_title(f"3D Visualization of Jacobian Full Pass Path", fontsize=16, weight='bold', pad=20)
-        ax.set_xlabel("Encoded Dimension", fontsize=12, labelpad=10)
-        ax.set_ylabel("Eigenvalue Index", fontsize=12, labelpad=10)
+        ax.set_xlabel("Eigenvalue Index", fontsize=12, labelpad=10)
+        ax.set_ylabel("Model Layer Index", fontsize=12, labelpad=10)
         ax.set_zlabel("Jacobian Value", fontsize=12, labelpad=10)
 
         # Add a color bar for the last surface
