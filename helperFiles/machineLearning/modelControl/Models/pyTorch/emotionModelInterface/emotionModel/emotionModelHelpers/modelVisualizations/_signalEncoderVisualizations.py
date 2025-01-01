@@ -362,12 +362,13 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         #     edgecolor='none',  # No edges for the surface
         # )
 
-        surf = ax.plot_wireframe(
-            x_data, y_data, jacobianFullPassPath,
-            cmap='viridis',  # Colormap for the surface
-            alpha=0.7,  # Transparency
-            linewidth=0.5,  # Thin lines for linear interpolation
-            rstride = 1, cstride = 1,
+        # Create the scatter plot
+        surf = ax.scatter(
+            x_data.flatten(), y_data.flatten(), jacobianFullPassPath.flatten(),  # Use z-values for coloring
+            c=jacobianFullPassPath,  # Use z-values for coloring
+            cmap='viridis',  # Colormap for the points
+            alpha=0.7,  # Transparency for the points
+            s=10  # Size of each point
         )
 
         # Customize the view angle
