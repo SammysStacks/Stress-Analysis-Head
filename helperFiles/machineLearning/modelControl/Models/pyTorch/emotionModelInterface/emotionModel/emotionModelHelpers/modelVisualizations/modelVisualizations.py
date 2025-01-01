@@ -119,7 +119,7 @@ class modelVisualizations(globalPlottingProtocols):
                     if signalEncoderLayerTransforms.shape[0] != 0: self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, healthProfile=healthProfile, retrainingProfilePath=signalEncoderLayerTransforms[:, 0, :, signalInd, :], epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Health Profile Generation")
 
                     # Plotting 3D flow of the health profile.
-                    self.signalEncoderViz.modelPropagation3D(jacobianFullPassPath=jacobianFullPassPath, epoch=currentEpoch, degreesFlag=Trye, saveFigureLocation="signalEncoding/", plotTitle="3D Eigenvalues Path", batchInd=0, signalInd=0)
+                    self.signalEncoderViz.modelPropagation3D(jacobianFullPassPath=jacobianFullPassPath, epoch=currentEpoch, degreesFlag=True, saveFigureLocation="signalEncoding/", plotTitle="3D Eigenvalues Path", batchInd=0, signalInd=0)
 
                     # Plot the signal encoding training information.
                     self.signalEncoderViz.plotEigenValueLocations(specificEigenvalues[:, 0, allTrainingSignalMask[batchInd], :], testingEigenValues=specificEigenvalues[:, 0, allTestingSignalMask[batchInd], :], epoch=currentEpoch, signalInd=0, saveFigureLocation="signalEncoding/", plotTitle="Specific Eigenvalues")
