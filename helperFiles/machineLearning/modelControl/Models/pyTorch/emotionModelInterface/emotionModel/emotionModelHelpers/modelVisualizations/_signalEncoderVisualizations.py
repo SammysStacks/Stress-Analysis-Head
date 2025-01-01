@@ -343,7 +343,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
     def modelPropagation3D(self, jacobianFullPassPath, epoch, batchInd, signalInd, saveFigureLocation, plotTitle):
         # jacobianFullPassPath: numModelLayers, numSignals, encodedDimension
         jacobianFullPassPath = np.asarray(jacobianFullPassPath)  # Ensure input is a NumPy array
-        numModelLayers, _, encodedDimension = jacobianFullPassPath.shape
+        numModelLayers, numSignals, encodedDimension = jacobianFullPassPath.shape
         jacobianFullPassPath = jacobianFullPassPath[:, signalInd]
         # jacobianFullPassPath: numModelLayers, encodedDimension
 
