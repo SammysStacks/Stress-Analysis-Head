@@ -117,7 +117,7 @@ class modelVisualizations(globalPlottingProtocols):
 
                     # Plotting 3D flow of the health profile.
                     self.signalEncoderViz.modelPropagation3D(jacobianFullPassPath=jacobianFullPassPath, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="3D Eigenvalues Path", batchInd=0, signalInd=0)
-                    self.signalEncoderViz.modelPropagation3D(jacobianFullPassPath=np.angle(jacobianFullPassPath), epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="3D Angles Path", batchInd=0, signalInd=0)
+                    self.signalEncoderViz.modelPropagation3D(jacobianFullPassPath=np.angle(jacobianFullPassPath, deg=True), epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="3D Angles Path", batchInd=0, signalInd=0)
 
                     # Plot the signal encoding training information.
                     self.signalEncoderViz.plotEigenValueLocations(specificEigenvalues[:, 0, allTrainingSignalMask[batchInd], :], testingEigenValues=specificEigenvalues[:, 0, allTestingSignalMask[batchInd], :], epoch=currentEpoch, signalInd=0, saveFigureLocation="signalEncoding/", plotTitle="Specific Eigenvalues")

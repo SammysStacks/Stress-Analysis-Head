@@ -313,17 +313,17 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         for layerInd in range(numLayers):
             ax = axes[layerInd]  # which subplot to use
             # Plot training eigenvalue angles
-            angles_training = np.angle(trainingEigenValues[layerInd, signalInd, :])
+            angles_training = np.angle(trainingEigenValues[layerInd, signalInd, :], deg=True)
             ax.hist(angles_training, bins=32, alpha=0.75, density=True, color=self.lightColors[1], label="Training")
 
             # Plot testing angles if provided
             if testingEigenValues is not None and testingEigenValues.shape[1] > 0:
-                angles_testing = np.angle(testingEigenValues[layerInd, signalInd, :])
+                angles_testing = np.angle(testingEigenValues[layerInd, signalInd, :], deg=True)
                 ax.hist(angles_testing, bins=32, alpha=0.5, density=True, color=self.lightColors[0], label="Testing")
 
             # Customize subplot title and axes
             ax.set_title(f"Layer {layerInd + 1}")
-            ax.set_xlabel("Angle (radians)")
+            ax.set_xlabel("Angle (degrees)")
             ax.set_xlim((-3.25, 3.25))
             ax.set_ylim((0, 1))
             ax.set_ylabel("Density")
