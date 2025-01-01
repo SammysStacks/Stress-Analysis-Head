@@ -145,7 +145,7 @@ class generalVisualizations(globalPlottingProtocols):
 
     def plotSinglaParameterFlow(self, trainingValues, testingValues, labels, saveFigureLocation="", plotTitle="Model Convergence Loss", logY=False):
         for modelInd in range(len(trainingValues)):
-            plt.plot(trainingValues[modelInd], label=f'{labels[modelInd]} (Train)', color=self.darkColors[modelInd], linewidth=0.25, alpha=0.75)
+            plt.plot(trainingValues[modelInd], label=f'{labels[modelInd]} (Train)', color=self.darkColors[modelInd], linewidth=0.1, alpha=0.75)
             if testingValues is not None: plt.plot(testingValues[modelInd], color=self.darkColors[modelInd], linewidth=0.1, alpha=0.25)
         plt.xlim((0, len(trainingValues[0]) + 1))
         plt.grid(True)
