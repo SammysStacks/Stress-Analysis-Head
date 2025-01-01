@@ -230,7 +230,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Plot all signals in 'distortedSignals'
         for i in range(numSignals):
             plt.plot(distortedSignals[i], '-', color='k', alpha=alphas[i], linewidth=1, markersize=2, zorder=0)
-            plt.plot(trueSignal, 'o', color='tab:blue', linewidth=1, markersize=2, zorder=10)
+            plt.plot(trueSignal, 'o', color=self.darkColors[1], linewidth=1, markersize=2, zorder=10)
             plt.plot(reconstructedDistortedSignals[i], '-', color='tab:red', linewidth=1, markersize=2, alpha=alphas[i], zorder=5)
         
         # Format the plotting
