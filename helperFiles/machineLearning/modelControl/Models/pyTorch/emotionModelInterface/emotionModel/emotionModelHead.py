@@ -195,8 +195,8 @@ class emotionModelHead(nn.Module):
 
     def getJacobianFullPassPath(self, device, domain):
         specificLinearModels, sharedLinearModels = getattr(self.specificSignalEncoderModel, domain), getattr(self.sharedSignalEncoderModel, domain)
-        if domain == 'neuralLayers': specificLinearModels = [_linearModel.lowFrequencyWeights for _linearModel in specificLinearModels]
-        if domain == 'neuralLayers': sharedLinearModels = [_linearModel.lowFrequencyWeights for _linearModel in sharedLinearModels]
+        if domain == 'neuralLayers': specificLinearModels = [_linearModel.highFrequenciesWeights[0] for _linearModel in specificLinearModels]
+        if domain == 'neuralLayers': sharedLinearModels = [_linearModel.highFrequenciesWeights[0] for _linearModel in sharedLinearModels]
 
         specificSignalJacobianPath = np.asarray([specificLinearModels[layerInd].getLayerEigenvalues(layerInd=-1, device=device) for layerInd in range(2*modelConstants.userInputParams['numSpecificEncoderLayers'])])  # 2*numSpecificEncoderLayers, numSpecificEncoderLayers, numSignals, encodedDimension
         sharedSignalJacobianPath = np.asarray([sharedLinearModels[layerInd].getLayerEigenvalues(layerInd=-1, device=device) for layerInd in range(modelConstants.userInputParams['numSharedEncoderLayers'])])  # numSharedEncoderLayers, numSharedEncoderLayers, numSignals=1, encodedDimension
