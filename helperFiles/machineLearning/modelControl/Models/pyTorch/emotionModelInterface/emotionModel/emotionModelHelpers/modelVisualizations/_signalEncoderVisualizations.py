@@ -155,7 +155,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         custom_cmap = LinearSegmentedColormap.from_list("red_transparent_blue", colors)
 
         # These should be chosen based on your data and how you want to "zoom"
-        relativeTimesExtentInterp = (relativeTimes.min(), relativeTimes.max(), 1 + numSpecificEncoderLayers, numLayers - numSpecificEncoderLayers)
+        relativeTimesExtentInterp = (relativeTimes.min(), relativeTimes.max(), numSpecificEncoderLayers, numLayers - numSpecificEncoderLayers)
         relativeTimesExtent = (relativeTimes.min(), relativeTimes.max(), 0, numLayers)
         plt.figure(figsize=(12, 8))
 
@@ -163,7 +163,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Plot the rest of the layers with the same normalization.
         im0 = plt.imshow(interpolated_states, cmap=custom_cmap, interpolation=None, extent=relativeTimesExtent, aspect='auto', origin='lower', vmin=-1.1, vmax=1.1)
-        plt.imshow(interpolated_states[1 + numSpecificEncoderLayers:numLayers - numSpecificEncoderLayers + 1], cmap=custom_cmap, interpolation='bilinear', extent=relativeTimesExtentInterp, aspect='auto', origin='lower', vmin=-1.1, vmax=1.1)
+        plt.imshow(interpolated_states[numSpecificEncoderLayers:numLayers - numSpecificEncoderLayers + 1], cmap=custom_cmap, interpolation='bilinear', extent=relativeTimesExtentInterp, aspect='auto', origin='lower', vmin=-1.1, vmax=1.1)
         plt.colorbar(im0, fraction=0.046, pad=0.04)
 
         # # Plot the last layer with its own normalization and colorbar
@@ -254,11 +254,11 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         for layerInd, ax in enumerate(axes[:numLayers]):
             # Scatter training eigenvalues
             ev_train = trainingEigenValues[layerInd, signalInd, :]
-            ax.scatter(ev_train.real, ev_train.imag, color=self.darkColors[1], label="Training", linewidth=0.2, alpha=0.8)
+            ax.scatter(ev_train.real, ev_train.imag, color=self.lightColors[1], label="Training", linewidth=0.2, alpha=0.25)
 
             # Connect points to the origin
             for xi, yi in zip(ev_train.real.flatten(), ev_train.imag.flatten()):
-                ax.plot([0, xi], [0, yi], color=self.darkColors[1], linestyle='-', linewidth=0.2)
+                ax.plot([0, xi], [0, yi], color=self.lightColors[1], linestyle='-', linewidth=0.2)
 
             # Highlight the origin
             ax.scatter(0, 0, color=self.blackColor, label='Origin', linewidth=1)
@@ -266,7 +266,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             # Scatter testing eigenvalues if provided
             if testingEigenValues is not None and testingEigenValues.shape[1] > 0:
                 ev_test = testingEigenValues[layerInd, signalInd, :]
-                ax.scatter(ev_test.real, ev_test.imag, color=self.lightColors[0], label="Testing", linewidth=0.2, alpha=0.8)
+                ax.scatter(ev_test.real, ev_test.imag, color=self.lightColors[0], label="Testing", linewidth=0.2, alpha=0.25)
 
                 for xi, yi in zip(ev_test.real.flatten(), ev_test.imag.flatten()):
                     ax.plot([0, xi], [0, yi], color=self.lightColors[0], linestyle='-', linewidth=0.1)
@@ -305,7 +305,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         nrows = math.ceil(numLayers / ncols)
 
         # Create figure and axes array
-        fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(5 * ncols, 5 * nrows), squeeze=False)  # squeeze=False ensures axes is 2D
+        fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(nrows * ncols * 4, nrows * nrows * 4), squeeze=False)  # squeeze=False ensures axes is 2D
 
         # Flatten axes for easy indexing if you prefer
         axes = axes.flatten()
@@ -314,12 +314,12 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax = axes[layerInd]  # which subplot to use
             # Plot training eigenvalue angles
             angles_training = np.angle(trainingEigenValues[layerInd, signalInd, :])
-            ax.hist(angles_training, bins=128, alpha=0.75, density=True, color=self.darkColors[1], label="Training")
+            ax.hist(angles_training, bins=32, alpha=0.75, density=True, color=self.lightColors[1], label="Training")
 
             # Plot testing angles if provided
             if testingEigenValues is not None and testingEigenValues.shape[1] > 0:
                 angles_testing = np.angle(testingEigenValues[layerInd, signalInd, :])
-                ax.hist(angles_testing, bins=128, alpha=0.5, density=True, color=self.darkColors[0], label="Testing")
+                ax.hist(angles_testing, bins=32, alpha=0.5, density=True, color=self.lightColors[0], label="Testing")
 
             # Customize subplot title and axes
             ax.set_title(f"Layer {layerInd + 1}")
