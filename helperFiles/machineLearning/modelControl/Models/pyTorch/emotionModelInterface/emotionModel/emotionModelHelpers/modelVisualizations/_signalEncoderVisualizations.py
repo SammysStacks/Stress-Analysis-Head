@@ -353,22 +353,9 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         fig = plt.figure(figsize=(14, 10))
         ax = fig.add_subplot(111, projection='3d')
 
-        # # Plot each model layer as a separate surface
-        # surf = ax.plot_surface(
-        #     x_data, y_data, jacobianFullPassPath,
-        #     cmap='viridis',  # Colormap for the surface
-        #     alpha=0.7,  # Transparency for overlapping layers
-        #     edgecolor='none',  # No edges for the surface
-        # )
-
         # Create the scatter plot
-        surf = ax.scatter(
-            x_data.flatten(), y_data.flatten(), np.imag(jacobianFullPassPath.flatten()),  # Use z-values for coloring
-            c=jacobianFullPassPath,  # Use z-values for coloring
-            cmap='viridis',  # Colormap for the points
-            alpha=0.7,  # Transparency for the points
-            s=10  # Size of each point
-        )
+        surf = ax.scatter(x_data.flatten(), y_data.flatten(), np.imag(jacobianFullPassPath.flatten()),  # Use z-values for coloring
+                          c=jacobianFullPassPath, cmap='viridis', alpha=0.7, s=10)
 
         # Customize the view angle
         ax.view_init(elev=30, azim=135)
