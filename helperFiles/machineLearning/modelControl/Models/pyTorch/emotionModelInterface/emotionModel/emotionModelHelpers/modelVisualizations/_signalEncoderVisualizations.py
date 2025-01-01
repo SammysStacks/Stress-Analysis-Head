@@ -243,11 +243,11 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def plotEigenValueLocations(self, trainingEigenValues, testingEigenValues, epoch, signalInd, saveFigureLocation, plotTitle):
-        numLayers, ncols = trainingEigenValues.shape[0], min(4, trainingEigenValues.shape[0])
-        nrows = math.ceil(numLayers / ncols)
+        numLayers, nCols = trainingEigenValues.shape[0], min(4, trainingEigenValues.shape[0])
+        nRows, layerInd = math.ceil(numLayers / nCols), 0
 
         # Create the figure and axes
-        fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(5 * ncols, 5 * nrows), squeeze=False)
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(5 * nCols, 5 * nRows), squeeze=False)
         axes = axes.flatten()
 
         for layerInd, ax in enumerate(axes[:numLayers]):
@@ -285,19 +285,15 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.axis('equal')
 
         # Remove unused subplots
-        for idx in range(numLayers, nrows * ncols):
+        for idx in range(numLayers, nRows * nCols):
             fig.delaxes(axes[idx])
 
         # Adjust layout with padding
         plt.tight_layout(pad=2.0)
 
-        # Save or display the plot
-        if self.saveDataFolder:
-            self.displayFigure(saveFigureLocation=saveFigureLocation,
-                               saveFigureName=f"{plotTitle} epochs{epoch} layerInd{layerInd + 1} signalInd{signalInd}.pdf",
-                               baseSaveFigureName=f"{plotTitle}.pdf")
-        else:
-            self.clearFigure(fig=None, legend=None, showPlot=True)
+        # Save the plot
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} layerInd{layerInd} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def plotEigenvalueAngles(self, trainingEigenValues, testingEigenValues, epoch, signalInd, saveFigureLocation, plotTitle):
         numLayers, ncols = trainingEigenValues.shape[0], min(4, trainingEigenValues.shape[0])
@@ -312,12 +308,12 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         for layerInd in range(numLayers):
             ax = axes[layerInd]  # which subplot to use
             # Plot training eigenvalue angles
-            angles_training = np.angle(trainingEigenValues[layerInd, signalInd, :], deg=True)
+            angles_training = np.angle(trainingEigenValues[layerInd, signalInd, :], deg=deg)
             ax.hist(angles_training, bins=32, alpha=0.75, density=True, color=self.lightColors[1], label="Training")
 
             # Plot testing angles if provided
             if testingEigenValues is not None and testingEigenValues.shape[1] > 0:
-                angles_testing = np.angle(testingEigenValues[layerInd, signalInd, :], deg=True)
+                angles_testing = np.angle(testingEigenValues[layerInd, signalInd, :], deg=deg)
                 ax.hist(angles_testing, bins=32, alpha=0.5, density=True, color=self.lightColors[0], label="Testing")
 
             # Customize subplot title and axes
@@ -339,7 +335,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def modelPropagation3D(self, jacobianFullPassPath, epoch, batchInd, signalInd, saveFigureLocation, plotTitle):
+    def modelPropagation3D(self, jacobianFullPassPath, epoch, deg, batchInd, signalInd, saveFigureLocation, plotTitle):
         # jacobianFullPassPath: numModelLayers, numSignals, encodedDimension
         jacobianFullPassPath = np.asarray(jacobianFullPassPath)  # Ensure input is a NumPy array
         numModelLayers, numSignals, encodedDimension = jacobianFullPassPath.shape
