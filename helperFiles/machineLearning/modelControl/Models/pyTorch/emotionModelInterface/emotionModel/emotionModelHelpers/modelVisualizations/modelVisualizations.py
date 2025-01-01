@@ -96,10 +96,10 @@ class modelVisualizations(globalPlottingProtocols):
             specificEigenvalues = np.asarray([modelLayer.getAllEigenvalues(device=self.accelerator.device) for modelLayer in model.specificSignalEncoderModel.processingLayers])  # numProcessingLayers, numLayers=1, numSignals, encodedDimension
             sharedEigenvalues = np.asarray([modelLayer.getAllEigenvalues(device=self.accelerator.device) for modelLayer in model.sharedSignalEncoderModel.processingLayers])  # numProcessingLayers, numLayers=1, numSignals=1, encodedDimension
             signalEncoderLayerTransforms = np.asarray(model.specificSignalEncoderModel.profileModel.signalEncoderLayerTransforms)  # numProfileShots, 2*numSpecific + numShared + 1, numExperiments, numSignals, encodedDimension
-            retrainingProfile3D = model.specificSignalEncoderModel.profileModel.retrainingSpecificEigenvalues_in3D  # numProfileShots, 2*numSpecific + numShared + 1, numSignals, encodedDimension
             embeddedProfile = model.specificSignalEncoderModel.profileModel.embeddedHealthProfiles.detach().cpu().numpy()  # numProfileShots, numExperiments, numEncodedWeights
             retrainingEmbeddedProfilePath = np.asarray(model.specificSignalEncoderModel.profileModel.retrainingEmbeddedProfilePath)  # numProfileShots, numExperiments, numEncodedWeights
             resampledBiomarkerTimes = model.sharedSignalEncoderModel.hyperSampledTimes.detach().cpu().numpy()  # numTimePoints
+            jacobianFullPassPath = model.getJacobianFullPassPath()  # 2*numSpecific + numShared, numSignals, encodedDimension
             globalPlottingProtocols.clearFigure(fig=None, legend=None, showPlot=False)
             batchInd, signalInd = -1, -1
 
@@ -116,7 +116,7 @@ class modelVisualizations(globalPlottingProtocols):
                     if signalEncoderLayerTransforms.shape[0] != 0: self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, healthProfile=healthProfile, retrainingProfilePath=signalEncoderLayerTransforms[:, 0, :, signalInd, :], epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Health Profile Generation")
 
                     # Plotting 3D flow of the health profile.
-                    self.signalEncoderViz.modelPropagation3D(retrainingProfile2D=retrainingProfile3D[:, -1, signalInd, :], physiologicalTimes=resampledBiomarkerTimes, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="3D Profile Path", batchInd=0, signalInd=0)
+                    self.signalEncoderViz.modelPropagation3D(jacobianFullPassPath=jacobianFullPassPath, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="3D Profile Path", batchInd=0, signalInd=0)
 
                     # Plot the signal encoding training information.
                     self.signalEncoderViz.plotEigenValueLocations(specificEigenvalues[:, 0, allTrainingSignalMask[batchInd], :], testingEigenValues=specificEigenvalues[:, 0, allTestingSignalMask[batchInd], :], epoch=currentEpoch, signalInd=0, saveFigureLocation="signalEncoding/", plotTitle="Specific Eigenvalues")

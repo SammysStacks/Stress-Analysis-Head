@@ -340,43 +340,47 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def modelPropagation3D(self, retrainingProfile2D, physiologicalTimes, epoch, batchInd, signalInd, saveFigureLocation, plotTitle):
-        # retrainingProfile2D: numProfileShots, encodedDimension
-        # physiologicalTimes: encodedDimension
+    def modelPropagation3D(self, jacobianFullPassPath, epoch, batchInd, signalInd, saveFigureLocation, plotTitle):
+        # jacobianFullPassPath: numModelLayers, numSignals, encodedDimension
+        jacobianFullPassPath = np.asarray(jacobianFullPassPath)  # Ensure input is a NumPy array
+        numModelLayers, numSignals, encodedDimension = jacobianFullPassPath.shape
 
-        # Create a finer meshgrid for smoother surfaces
-        y = np.arange(retrainingProfile2D.shape[0])
-        physiologicalTimes = np.asarray(physiologicalTimes)
-        x = np.linspace(physiologicalTimes.min(), physiologicalTimes.max(), 500)  # Increase resolution for smoothness
-        x_data, y_data = np.meshgrid(x, y)
+        # Create a meshgrid for encodedDimension and numSignals
+        x_data, y_data = np.meshgrid(np.arange(encodedDimension), np.arange(numSignals))
 
-        # Plotting the 3D surface
+        # Create a figure
         fig = plt.figure(figsize=(14, 10))
         ax = fig.add_subplot(111, projection='3d')
+        surf = None
 
-        # Surface plot with lighting effects
-        surf = ax.plot_surface(x_data, y_data, retrainingProfile2D, cmap='coolwarm', edgecolor='none', alpha=0.9, antialiased=True, shade=True)
+        # Plot each model layer as a separate surface
+        for layer in range(numModelLayers):
+            z_data = jacobianFullPassPath[layer]  # Data for the current layer
+            surf = ax.plot_surface(
+                x_data, y_data, z_data,
+                cmap='viridis',  # Colormap for the surface
+                alpha=0.7,  # Transparency for overlapping layers
+                edgecolor='none',
+                rstride=1,
+                cstride=1
+            )
 
-        # Customize the view angle for a more 3D feel
+        # Customize the view angle
         ax.view_init(elev=30, azim=135)
 
-        # Add lighting for depth effect
-        ax.set_box_aspect([2, 1, 1])  # Better aspect ratio
-        ax.dist = 8  # Adjust distance for perspective
-
         # Add labels and title
-        ax.set_title("3D Signal Progression Over Time and Profile Epochs", fontsize=16, weight='bold', pad=20)
-        ax.set_xlabel("Physiological Times", fontsize=14, labelpad=10)
-        ax.set_ylabel("Profile Epochs", fontsize=14, labelpad=10)
-        ax.set_zlabel("Signal Value", fontsize=14, labelpad=10)
+        ax.set_title(f"3D Visualization of Jacobian Full Pass Path", fontsize=16, weight='bold', pad=20)
+        ax.set_xlabel("Encoded Dimension", fontsize=12, labelpad=10)
+        ax.set_ylabel("Signals", fontsize=12, labelpad=10)
+        ax.set_zlabel("Jacobian Value", fontsize=12, labelpad=10)
 
-        # Add color bar
-        cbar = fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10)
-        cbar.set_label('Signal Value', fontsize=14)
+        # Add a color bar for the last surface
+        cbar = fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10, pad=0.1)
+        cbar.set_label("Jacobian Value", fontsize=12)
 
-        # Add subtle gridlines and ticks
-        ax.grid(True, linestyle='--', linewidth=0.5, alpha=0.7)
-        plt.subplots_adjust(left=0.1, right=0.9, top=0.9, bottom=0.1)
+        # Adjust layout and aspect ratio
+        ax.set_box_aspect([2, 1, 1])
+        plt.tight_layout()
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} batchInd{batchInd} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")

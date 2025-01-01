@@ -193,6 +193,18 @@ class emotionModelHead(nn.Module):
 
     # ------------------------- Model Components ------------------------- #
 
+    def getJacobianFullPassPath(self):
+        specificSignalJacobianPath = np.asarray([self.specificSignalEncoderModel.processingLayers[layerInd].getAllEigenvalues(device=self.accelerator.device) for layerInd in
+                                                 range(modelConstants.userInputParams['numSpecificEncoderLayers'])])  # numProcessingLayers, numSpecificEncoderLayers, numSignals, encodedDimension
+        sharedSignalJacobianPath = np.asarray([self.sharedSignalEncoderModel.processingLayers[layerInd].getAllEigenvalues(device=self.accelerator.device) for layerInd in
+                                               range(modelConstants.userInputParams['numSharedEncoderLayers'])])  # numProcessingLayers, numSharedEncoderLayers, numSignals=1, encodedDimension
+        jacobianFullPassPath = np.asarray([*[specificSignalJacobianPath[specificEigenvalueInd] for specificEigenvalueInd in range(0, specificSignalJacobianPath.shape[0] // 2)],
+                                           *[np.broadcast_to(sharedSignalJacobianPath[sharedEigenvalueInd], specificSignalJacobianPath[0].shape) for sharedEigenvalueInd in range(sharedSignalJacobianPath.shape[0])],
+                                           *[specificSignalJacobianPath[specificEigenvalueInd] for specificEigenvalueInd in range(specificSignalJacobianPath.shape[0] // 2, specificSignalJacobianPath.shape[0])]]),
+        # jacobianFullPassPath: 2 * numSpecificEncoderLayers + numSharedEncoderLayers, numLayers=1, numSignals, encodedDimension  TODO: collect for every profile epoch? Memory?
+
+        return jacobianFullPassPath
+
     def signalEncoderPass(self, metaLearningData, forwardPass, compileLayerStates=False):
         reversibleInterface.changeDirections(forwardDirection=forwardPass)
         compiledLayerIndex = 0; compiledLayerStates = None
@@ -259,16 +271,9 @@ class emotionModelHead(nn.Module):
 
         if onlyProfileTraining:
             with torch.no_grad():
-                specificSignalJacobianPath = np.asarray([self.specificSignalEncoderModel.processingLayers[layerInd].getAllEigenvalues(device=self.accelerator.device) for layerInd in range(modelConstants.userInputParams['numSpecificEncoderLayers'])])  # numProcessingLayers, numSpecificEncoderLayers, numSignals, encodedDimension
-                sharedSignalJacobianPath = np.asarray([self.sharedSignalEncoderModel.processingLayers[layerInd].getAllEigenvalues(device=self.accelerator.device) for layerInd in range(modelConstants.userInputParams['numSharedEncoderLayers'])])  # numProcessingLayers, numSharedEncoderLayers, numSignals=1, encodedDimension
-                jacobianFullPassPath = np.asarray([*[specificSignalJacobianPath[specificEigenvalueInd] for specificEigenvalueInd in range(0, specificSignalJacobianPath.shape[0] // 2)],
-                                                  *[np.broadcast_to(sharedSignalJacobianPath[sharedEigenvalueInd], specificSignalJacobianPath[0].shape) for sharedEigenvalueInd in range(sharedSignalJacobianPath.shape[0])],
-                                                  *[specificSignalJacobianPath[specificEigenvalueInd] for specificEigenvalueInd in range(specificSignalJacobianPath.shape[0] // 2, specificSignalJacobianPath.shape[0])]]),
-                # jacobianFullPassPath: 2 * numSpecificEncoderLayers + numSharedEncoderLayers, numLayers=1, numSignals, encodedDimension  TODO: collect for every profile epoch? Memory?
-
                 batchInds = emotionDataInterface.getSignalIdentifierData(signalIdentifiers, channelName=modelConstants.batchIndexSI)[:, 0].long()  # Dim: batchSize
                 batchLossValues = self.calculateModelLosses.calculateSignalEncodingLoss(signalData, reconstructedSignalData, validDataMask, allSignalMask=None, averageBatches=False)
-                self.specificSignalEncoderModel.profileModel.populateProfileState(profileEpoch, batchInds, batchLossValues, compiledSignalEncoderLayerStates, jacobianFullPassPath)
+                self.specificSignalEncoderModel.profileModel.populateProfileState(profileEpoch, batchInds, batchLossValues, compiledSignalEncoderLayerStates)
 
         return validDataMask, reconstructedSignalData, resampledSignalData, compiledSignalEncoderLayerStates, healthProfile, activityProfile, basicEmotionProfile, emotionProfile
 
