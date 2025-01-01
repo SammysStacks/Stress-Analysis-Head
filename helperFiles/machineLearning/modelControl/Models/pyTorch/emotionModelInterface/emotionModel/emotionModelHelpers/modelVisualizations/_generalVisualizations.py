@@ -128,7 +128,7 @@ class generalVisualizations(globalPlottingProtocols):
         plt.hlines(y=0.06, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.25)
         plt.hlines(y=0.02, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.5)
         plt.hlines(y=0.03, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.25)
-        plt.xlim((0, len(trainingLosses[0]) + 1))
+        plt.xlim((0, max(50, len(trainingLosses[0]) + 1)))
         plt.ylim((0.001, 1))
         plt.grid(True)
 

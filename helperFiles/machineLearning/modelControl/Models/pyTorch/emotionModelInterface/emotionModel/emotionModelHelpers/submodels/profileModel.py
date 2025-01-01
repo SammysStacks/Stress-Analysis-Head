@@ -36,8 +36,8 @@ class profileModel(emotionModelWeights):
     def populateProfileState(self, profileEpoch, batchInds, profileStateLoss, signalEncoderLayerTransforms):
         if isinstance(batchInds, torch.Tensor): batchInds = batchInds.detach().cpu().numpy()
         self.retrainingEmbeddedProfilePath[profileEpoch][batchInds] = self.embeddedHealthProfiles[batchInds].clone().detach().cpu().numpy()
-        self.signalEncoderLayerTransforms[profileEpoch][:, batchInds] = signalEncoderLayerTransforms[:, :, 0:1, :]
         self.retrainingProfileLosses[profileEpoch][batchInds] = profileStateLoss.clone().detach().cpu().numpy()
+        self.signalEncoderLayerTransforms[profileEpoch][:, batchInds] = signalEncoderLayerTransforms
 
     def getHealthEmbedding(self, batchInds):
         return self.embeddedHealthProfiles.to(batchInds.device)[batchInds]

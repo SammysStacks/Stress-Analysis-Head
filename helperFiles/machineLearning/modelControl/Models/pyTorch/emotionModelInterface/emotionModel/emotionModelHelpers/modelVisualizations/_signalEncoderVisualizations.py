@@ -353,7 +353,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Create the scatter plot
         maxHalfAngle = 180 if degreesFlag else np.pi
         surf = ax.scatter(x_data.flatten(), y_data.flatten(), np.imag(jacobianPath.flatten()),  # Use z-values for coloring
-                          c=np.angle(jacobianPath.flatten(), deg=degreesFlag), cmap=self.custom_cmap, alpha=0.5, s=10, vmin=-maxHalfAngle, vmax=maxHalfAngle)
+                          c=np.angle(jacobianPath.flatten(), deg=degreesFlag), cmap=self.custom_cmap, alpha=0.75, s=10, vmin=-maxHalfAngle, vmax=maxHalfAngle)
 
         # Customize the view angle
         ax.view_init(elev=30, azim=135)

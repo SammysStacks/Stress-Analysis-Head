@@ -248,7 +248,7 @@ class emotionModelHead(nn.Module):
 
         with torch.no_grad():
             # Initialize the output tensors.
-            compiledSignalEncoderLayerStates = np.zeros(shape=(2*self.numSpecificEncoderLayers + self.numSharedEncoderLayers + 1, numExperiments, numSignals, self.encodedDimension))
+            compiledSignalEncoderLayerStates = np.zeros(shape=(2*self.numSpecificEncoderLayers + self.numSharedEncoderLayers + 1, numExperiments, 1, self.encodedDimension))
             basicEmotionProfile = torch.zeros((numExperiments, self.numBasicEmotions, self.encodedDimension), device=device)
             validDataMask = torch.zeros((numExperiments, numSignals, maxSequenceLength), device=device, dtype=torch.bool)
             emotionProfile = torch.zeros((numExperiments, self.numEmotions, self.encodedDimension), device=device)
@@ -266,7 +266,7 @@ class emotionModelHead(nn.Module):
                 healthProfile[startBatchInd:endBatchInd], activityProfile[startBatchInd:endBatchInd], basicEmotionProfile[startBatchInd:endBatchInd], emotionProfile[startBatchInd:endBatchInd] \
                 = self.forward(submodel=submodel, signalData=signalData[startBatchInd:endBatchInd], signalIdentifiers=signalIdentifiers[startBatchInd:endBatchInd],
                                metadata=metadata[startBatchInd:endBatchInd], device=device, onlyProfileTraining=onlyProfileTraining)
-            if compiledSignalEncoderLayerState is not None: assert onlyProfileTraining; compiledSignalEncoderLayerStates[:, startBatchInd:endBatchInd] = compiledSignalEncoderLayerState
+            if compiledSignalEncoderLayerState is not None: assert onlyProfileTraining; compiledSignalEncoderLayerStates[:, startBatchInd:endBatchInd, 0:1] = compiledSignalEncoderLayerState[:, :, 0:1, :]
 
             # Update the batch index.
             startBatchInd = endBatchInd
