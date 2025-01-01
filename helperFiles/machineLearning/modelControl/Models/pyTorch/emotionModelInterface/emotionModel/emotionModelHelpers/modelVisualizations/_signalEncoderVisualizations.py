@@ -336,12 +336,12 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def modelPropagation3D(self, jacobianFullPassPath, epoch, degreesFlag, batchInd, signalInd, saveFigureLocation, plotTitle):
-        # jacobianFullPassPath: numModelLayers, numSignals, encodedDimension
-        jacobianFullPassPath = np.asarray(jacobianFullPassPath)  # Ensure input is a NumPy array
-        numModelLayers, numSignals, encodedDimension = jacobianFullPassPath.shape
-        jacobianFullPassPath = jacobianFullPassPath[:, signalInd]
-        # jacobianFullPassPath: numModelLayers, encodedDimension
+    def modelPropagation3D(self, jacobianPath, epoch, degreesFlag, batchInd, signalInd, saveFigureLocation, plotTitle):
+        # jacobianPath: numModelLayers, numSignals, encodedDimension
+        jacobianPath = np.asarray(jacobianPath)
+        jacobianPath = jacobianPath[:, signalInd]
+        numModelLayers, encodedDimension = jacobianPath.shape
+        # jacobianPath: numModelLayers, encodedDimension
 
         # Create a meshgrid for encodedDimension and numModelLayers
         x_data, y_data = np.meshgrid(np.arange(encodedDimension), np.arange(1, 1 + numModelLayers))
@@ -352,8 +352,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Create the scatter plot
         maxHalfAngle = 180 if degreesFlag else np.pi
-        surf = ax.scatter(x_data.flatten(), y_data.flatten(), np.imag(jacobianFullPassPath.flatten()),  # Use z-values for coloring
-                          c=np.angle(jacobianFullPassPath, deg=degreesFlag), cmap=self.custom_cmap, alpha=0.7, s=10, vmin=-maxHalfAngle, vmax=maxHalfAngle)
+        surf = ax.scatter(x_data.flatten(), y_data.flatten(), np.imag(jacobianPath.flatten()),  # Use z-values for coloring
+                          c=np.angle(jacobianPath.flatten(), deg=degreesFlag), cmap=self.custom_cmap, alpha=0.5, s=10, vmin=-maxHalfAngle, vmax=maxHalfAngle)
 
         # Customize the view angle
         ax.view_init(elev=30, azim=135)
@@ -362,11 +362,11 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         ax.set_title(plotTitle, fontsize=16, weight='bold', pad=20)
         ax.set_xlabel("Eigenvalue Index", fontsize=12, labelpad=10)
         ax.set_ylabel("Model Layer Index", fontsize=12, labelpad=10)
-        ax.set_zlabel("Spatial Scalar", fontsize=12, labelpad=10)
+        ax.set_zlabel("Complex Domain", fontsize=12, labelpad=10)
 
         # Add a color bar for the last surface
         cbar = fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10, pad=0.1)
-        cbar.set_label("Rotation Angle Mag", fontsize=12)
+        cbar.set_label("Spatial Domain", fontsize=12)
 
         # Adjust layout and aspect ratio
         ax.set_box_aspect([2, 1, 1])

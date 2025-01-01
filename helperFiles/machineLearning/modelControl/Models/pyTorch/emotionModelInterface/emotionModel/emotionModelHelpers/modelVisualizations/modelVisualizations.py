@@ -101,7 +101,8 @@ class modelVisualizations(globalPlottingProtocols):
             embeddedProfile = model.specificSignalEncoderModel.profileModel.embeddedHealthProfiles.detach().cpu().numpy()  # numProfileShots, numExperiments, numEncodedWeights
             retrainingEmbeddedProfilePath = np.asarray(model.specificSignalEncoderModel.profileModel.retrainingEmbeddedProfilePath)  # numProfileShots, numExperiments, numEncodedWeights
             resampledBiomarkerTimes = model.sharedSignalEncoderModel.hyperSampledTimes.detach().cpu().numpy()  # numTimePoints
-            jacobianFullPassPath = model.getJacobianFullPassPath(device=self.accelerator.device)  # 2*numSpecific + numShared, numSignals, encodedDimension
+            jacobianSpatialPath = model.getJacobianFullPassPath(device=self.accelerator.device, domain='processingLayers')  # 2*numSpecific + numShared, numSignals, encodedDimension
+            jacobianNeuralPath = model.getJacobianFullPassPath(device=self.accelerator.device, domain='neuralLayers')  # 2*numSpecific + numShared, numSignals, encodedDimension
             globalPlottingProtocols.clearFigure(fig=None, legend=None, showPlot=False)
             batchInd, signalInd = -1, -1
 
@@ -118,7 +119,8 @@ class modelVisualizations(globalPlottingProtocols):
                     if signalEncoderLayerTransforms.shape[0] != 0: self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, healthProfile=healthProfile, retrainingProfilePath=signalEncoderLayerTransforms[:, 0, :, signalInd, :], epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Health Profile Generation")
 
                     # Plotting 3D flow of the health profile.
-                    self.signalEncoderViz.modelPropagation3D(jacobianFullPassPath=jacobianFullPassPath, epoch=currentEpoch, degreesFlag=True, saveFigureLocation="signalEncoding/", plotTitle="3D Eigenvalues Path", batchInd=0, signalInd=0)
+                    self.signalEncoderViz.modelPropagation3D(jacobianPath=jacobianSpatialPath, epoch=currentEpoch, degreesFlag=True, saveFigureLocation="signalEncoding/", plotTitle="3D Spatial Eigenvalues Path", batchInd=0, signalInd=0)
+                    self.signalEncoderViz.modelPropagation3D(jacobianPath=jacobianNeuralPath, epoch=currentEpoch, degreesFlag=True, saveFigureLocation="signalEncoding/", plotTitle="3D Neural Eigenvalues Path", batchInd=0, signalInd=0)
 
                     # Plot the signal encoding training information.
                     self.signalEncoderViz.plotEigenValueLocations(specificEigenvalues[:, 0, allTrainingSignalMask[batchInd], :], testingEigenValues=specificEigenvalues[:, 0, allTestingSignalMask[batchInd], :], epoch=currentEpoch, signalInd=0, saveFigureLocation="signalEncoding/", plotTitle="Specific Eigenvalues")
@@ -126,7 +128,7 @@ class modelVisualizations(globalPlottingProtocols):
                     self.signalEncoderViz.plotEigenvalueAngles(specificEigenvalues[:, 0, allTrainingSignalMask[batchInd], :], testingEigenValues=specificEigenvalues[:, 0, allTestingSignalMask[batchInd], :], epoch=currentEpoch, degreesFlag=True, signalInd=0, saveFigureLocation="signalEncoding/", plotTitle="Specific Eigenvalue Angles")
                     self.signalEncoderViz.plotEigenvalueAngles(sharedEigenvalues[:, 0, :, :], testingEigenValues=None, epoch=currentEpoch, degreesFlag=True, signalInd=0, saveFigureLocation="signalEncoding/", plotTitle="Shared Eigenvalue Angles")
 
-                    self.signalEncoderViz.plotSignalEncodingStatePath(relativeTimes=None, compiledSignalEncoderLayerStates=np.expand_dims(jacobianFullPassPath, axis=1), epoch=currentEpoch, hiddenLayers=0, saveFigureLocation="signalEncoding/", plotTitle="Jacobian Flow")
+                    self.signalEncoderViz.plotSignalEncodingStatePath(relativeTimes=None, compiledSignalEncoderLayerStates=np.expand_dims(jacobianSpatialPath, axis=1), epoch=currentEpoch, hiddenLayers=0, saveFigureLocation="signalEncoding/", plotTitle="Jacobian Flow")
                     self.signalEncoderViz.plotSignalEncodingStatePath(relativeTimes=resampledBiomarkerTimes, compiledSignalEncoderLayerStates=compiledSignalEncoderLayerStates, epoch=currentEpoch, hiddenLayers=1, saveFigureLocation="signalEncoding/", plotTitle="Final Model Flow")
                     if signalEncoderLayerTransforms.shape[0] != 0: self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, healthProfile=healthProfile, retrainingProfilePath=signalEncoderLayerTransforms[:, -1, :, signalInd, :], epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Reconstructing Signal")
                     if signalEncoderLayerTransforms.shape[0] != 0: self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, healthProfile=healthProfile, retrainingProfilePath=signalEncoderLayerTransforms[-1, :, :, signalInd, :], epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Model Flow Curves")

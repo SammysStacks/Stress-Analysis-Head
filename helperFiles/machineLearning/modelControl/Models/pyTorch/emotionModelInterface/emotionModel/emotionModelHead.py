@@ -193,15 +193,19 @@ class emotionModelHead(nn.Module):
 
     # ------------------------- Model Components ------------------------- #
 
-    def getJacobianFullPassPath(self, device):
-        specificSignalJacobianPath = np.asarray([self.specificSignalEncoderModel.processingLayers[layerInd].getLayerEigenvalues(layerInd=-1, device=device) for layerInd in range(2*modelConstants.userInputParams['numSpecificEncoderLayers'])])  # 2*numSpecificEncoderLayers, numSpecificEncoderLayers, numSignals, encodedDimension
-        sharedSignalJacobianPath = np.asarray([self.sharedSignalEncoderModel.processingLayers[layerInd].getLayerEigenvalues(layerInd=-1, device=device) for layerInd in range(modelConstants.userInputParams['numSharedEncoderLayers'])])  # numSharedEncoderLayers, numSharedEncoderLayers, numSignals=1, encodedDimension
-        jacobianFullPassPath = np.asarray([*[specificSignalJacobianPath[specificEigenvalueInd] for specificEigenvalueInd in range(0, specificSignalJacobianPath.shape[0] // 2, 1)],
-                                           *[np.broadcast_to(sharedSignalJacobianPath[sharedEigenvalueInd], specificSignalJacobianPath[0].shape) for sharedEigenvalueInd in range(sharedSignalJacobianPath.shape[0])],
-                                           *[specificSignalJacobianPath[specificEigenvalueInd] for specificEigenvalueInd in range(specificSignalJacobianPath.shape[0] // 2, specificSignalJacobianPath.shape[0], 1)]])
-        # jacobianFullPassPath: 2 * numSpecificEncoderLayers + numSharedEncoderLayers, numSignals, encodedDimension  TODO: collect for every profile epoch? Memory?
+    def getJacobianFullPassPath(self, device, domain):
+        specificLinearModels, sharedLinearModels = getattr(self.specificSignalEncoderModel, domain), getattr(self.sharedSignalEncoderModel, domain)
+        if domain == 'neuralLayers': specificLinearModels = [_linearModel.lowFrequencyWeights for _linearModel in specificLinearModels]
+        if domain == 'neuralLayers': sharedLinearModels = [_linearModel.lowFrequencyWeights for _linearModel in sharedLinearModels]
 
-        return jacobianFullPassPath
+        specificSignalJacobianPath = np.asarray([specificLinearModels[layerInd].getLayerEigenvalues(layerInd=-1, device=device) for layerInd in range(2*modelConstants.userInputParams['numSpecificEncoderLayers'])])  # 2*numSpecificEncoderLayers, numSpecificEncoderLayers, numSignals, encodedDimension
+        sharedSignalJacobianPath = np.asarray([sharedLinearModels[layerInd].getLayerEigenvalues(layerInd=-1, device=device) for layerInd in range(modelConstants.userInputParams['numSharedEncoderLayers'])])  # numSharedEncoderLayers, numSharedEncoderLayers, numSignals=1, encodedDimension
+        jacobianSpatialPath = np.asarray([*[specificSignalJacobianPath[specificEigenvalueInd] for specificEigenvalueInd in range(0, specificSignalJacobianPath.shape[0] // 2, 1)],
+                                          *[np.broadcast_to(sharedSignalJacobianPath[sharedEigenvalueInd], specificSignalJacobianPath[0].shape) for sharedEigenvalueInd in range(sharedSignalJacobianPath.shape[0])],
+                                          *[specificSignalJacobianPath[specificEigenvalueInd] for specificEigenvalueInd in range(specificSignalJacobianPath.shape[0] // 2, specificSignalJacobianPath.shape[0], 1)]])
+        # jacobianSpatialPath: 2 * numSpecificEncoderLayers + numSharedEncoderLayers, numSignals, encodedDimension  TODO: collect for every profile epoch? Memory?
+
+        return jacobianSpatialPath
 
     def signalEncoderPass(self, metaLearningData, forwardPass, compileLayerStates=False):
         reversibleInterface.changeDirections(forwardDirection=forwardPass)
