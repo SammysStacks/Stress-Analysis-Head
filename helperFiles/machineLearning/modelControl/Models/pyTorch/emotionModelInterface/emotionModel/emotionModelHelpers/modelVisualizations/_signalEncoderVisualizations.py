@@ -352,6 +352,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Create the scatter plot
         maxHalfAngle = 180 if degreesFlag else np.pi
+        if "3D Data Flow" in plotTitle: maxHalfAngle = 2*modelConstants.minMaxScale
         surf = ax.scatter(x_data.flatten(), y_data.flatten(), np.imag(jacobianPath.flatten()),  # Use z-values for coloring
                           c=np.angle(jacobianPath.flatten(), deg=degreesFlag), cmap=self.custom_cmap, alpha=0.75, s=10, vmin=-maxHalfAngle, vmax=maxHalfAngle)
 
@@ -361,7 +362,44 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Add labels and title
         ax.set_title(plotTitle, fontsize=16, weight='bold', pad=20)
         ax.set_xlabel("Eigenvalue Index", fontsize=12, labelpad=10)
-        ax.set_ylabel("Model Layer Index", fontsize=12, labelpad=10)
+        ax.set_ylabel("Model Layer", fontsize=12, labelpad=10)
+        ax.set_zlabel("Complex Domain", fontsize=12, labelpad=10)
+
+        # Add a color bar for the last surface
+        cbar = fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10, pad=0.1)
+        cbar.set_label("Spatial Domain", fontsize=12)
+
+        # Adjust layout and aspect ratio
+        ax.set_box_aspect([2, 1, 1])
+        plt.tight_layout()
+
+        # Save the plot
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} batchInd{batchInd} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        else: self.clearFigure(fig=None, legend=None, showPlot=True)
+
+    def modelFlow3d(self, dataTimes, dataStates, epoch, batchInd, signalInd, saveFigureLocation, plotTitle):
+        dataStates = np.asarray(dataStates)
+        dataStates = dataStates[:, signalInd]
+        numModelLayers, encodedDimension = dataStates.shape
+        # dataStates: numModelLayers, encodedDimension
+
+        # Create a meshgrid for encodedDimension and numModelLayers
+        x_data, y_data = np.meshgrid(dataTimes, np.arange(1, 1 + numModelLayers))
+
+        # Create a figure
+        fig = plt.figure(figsize=(14, 10))
+        ax = fig.add_subplot(111, projection='3d')
+
+        # Create the scatter plot
+        surf = ax.scatter(x_data.flatten(), y_data.flatten(), dataStates.flatten(), c=dataStates.flatten(), cmap=self.custom_cmap, alpha=0.75, s=10, vmin=-2*modelConstants.minMaxScale, vmax=2*modelConstants.minMaxScale)
+
+        # Customize the view angle
+        ax.view_init(elev=30, azim=135)
+
+        # Add labels and title
+        ax.set_title(plotTitle, fontsize=16, weight='bold', pad=20)
+        ax.set_xlabel("Time (Sec)", fontsize=12, labelpad=10)
+        ax.set_ylabel("Model Layer", fontsize=12, labelpad=10)
         ax.set_zlabel("Complex Domain", fontsize=12, labelpad=10)
 
         # Add a color bar for the last surface

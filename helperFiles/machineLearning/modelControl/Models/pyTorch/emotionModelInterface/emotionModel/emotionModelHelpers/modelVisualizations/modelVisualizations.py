@@ -1,8 +1,7 @@
-import numpy as np
-import torch
 import os
 
-from numpy.ma.core import shape
+import numpy as np
+import torch
 
 from helperFiles.globalPlottingProtocols import globalPlottingProtocols
 from ._generalVisualizations import generalVisualizations
@@ -91,6 +90,7 @@ class modelVisualizations(globalPlottingProtocols):
             validDataMask, reconstructedSignalData, resampledSignalData, _, healthProfile, activityProfile, basicEmotionProfile, emotionProfile = model.forward(submodel, signalData, signalIdentifiers, metadata, device=self.accelerator.device, onlyProfileTraining=False)
             reconstructedPhysiologicalProfile, compiledSignalEncoderLayerStates = model.reconstructPhysiologicalProfile(resampledSignalData)
             compiledSignalEncoderLayerStates = np.flip(compiledSignalEncoderLayerStates, axis=0)
+            # compiledSignalEncoderLayerStates: numProcessingLayers, numLayers=1, numSignals, encodedDimension
 
             # Detach the data from the GPU and tensor format.
             reconstructedPhysiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = reconstructedPhysiologicalProfile.detach().cpu().numpy(), activityProfile.detach().cpu().numpy(), basicEmotionProfile.detach().cpu().numpy(), emotionProfile.detach().cpu().numpy()
@@ -119,6 +119,7 @@ class modelVisualizations(globalPlottingProtocols):
                     if signalEncoderLayerTransforms.shape[0] != 0: self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, healthProfile=healthProfile, retrainingProfilePath=signalEncoderLayerTransforms[:, 0, :, signalInd, :], epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Health Profile Generation")
 
                     # Plotting 3D flow of the health profile.
+                    self.signalEncoderViz.modelFlow3d(dataTimes=resampledBiomarkerTimes, dataStates=compiledSignalEncoderLayerStates[:, 0], epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="3D Data Flow", batchInd=0, signalInd=0)
                     self.signalEncoderViz.modelPropagation3D(jacobianPath=jacobianSpatialPath, epoch=currentEpoch, degreesFlag=True, saveFigureLocation="signalEncoding/", plotTitle="3D Spatial Eigenvalues Path", batchInd=0, signalInd=0)
                     self.signalEncoderViz.modelPropagation3D(jacobianPath=jacobianNeuralPath, epoch=currentEpoch, degreesFlag=True, saveFigureLocation="signalEncoding/", plotTitle="3D Neural Eigenvalues Path", batchInd=0, signalInd=0)
 
