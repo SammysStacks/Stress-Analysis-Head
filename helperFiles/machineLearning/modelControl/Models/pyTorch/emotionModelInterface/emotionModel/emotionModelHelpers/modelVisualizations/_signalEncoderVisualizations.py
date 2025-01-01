@@ -345,7 +345,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # physiologicalTimes: encodedDimension
 
         # Create a meshgrid for plotting
-        x_data, y_data = np.meshgrid(np.asarray(physiologicalTimes), np.arange(retrainingProfile2D.shape[0] + 1))
+        x_data, y_data = np.meshgrid(physiologicalTimes, np.arange(retrainingProfile2D.shape[0]))
 
         # Plotting the 3D surface
         fig = plt.figure(figsize=(12, 8))
