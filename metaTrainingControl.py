@@ -38,7 +38,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2024-12-31"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2024-12-31 with non-linearity"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Architecture Parameters ----------------------- #
@@ -58,7 +58,7 @@ if __name__ == "__main__":
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--initialProfileAmp', type=float, default=0.01, help='The limits for profile initialization, [0.005, 0.05]')
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model.')
-    parser.add_argument('--numSharedEncoderLayers', type=int, default=6, help='The number of layers in the model.')
+    parser.add_argument('--numSharedEncoderLayers', type=int, default=8, help='The number of layers in the model.')
     parser.add_argument('--numEncodedWeights', type=int, default=128, help='The number of profile weights.')
     parser.add_argument('--numProfileShots', type=int, default=16, help='The epochs for profile training.')
 

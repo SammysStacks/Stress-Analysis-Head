@@ -1,12 +1,11 @@
 # General
-import numpy as np
-from torchviz import make_dot
 import matplotlib.pyplot as plt
+import numpy as np
 from sklearn.metrics import confusion_matrix
+from torchviz import make_dot
 
 # Visualization protocols
 from helperFiles.globalPlottingProtocols import globalPlottingProtocols
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
 
 class generalVisualizations(globalPlottingProtocols):
@@ -146,8 +145,8 @@ class generalVisualizations(globalPlottingProtocols):
 
     def plotSinglaParameterFlow(self, trainingValues, testingValues, labels, saveFigureLocation="", plotTitle="Model Convergence Loss", logY=False):
         for modelInd in range(len(trainingValues)):
-            plt.plot(trainingValues[modelInd], label=f'{labels[modelInd]} (Train)', color=self.darkColors[modelInd], linewidth=2)
-            if testingValues is not None: plt.plot(testingValues[modelInd], color=self.darkColors[modelInd], linewidth=2, alpha=0.75)
+            plt.plot(trainingValues[modelInd], label=f'{labels[modelInd]} (Train)', color=self.darkColors[modelInd], linewidth=0.25, alpha=0.75)
+            if testingValues is not None: plt.plot(testingValues[modelInd], color=self.darkColors[modelInd], linewidth=0.1, alpha=0.25)
         plt.xlim((0, len(trainingValues[0]) + 1))
         plt.grid(True)
 
@@ -156,7 +155,7 @@ class generalVisualizations(globalPlottingProtocols):
         plt.xlabel("Training Epoch")
         plt.ylabel("Values")
         plt.title(f"{plotTitle}")
-        plt.ylim((0.9, 2.1))
+        plt.ylim((0.4, 2.1))
         plt.legend(loc="upper right", bbox_to_anchor=(1.35, 1), borderaxespad=0)
 
         # Save the figure if desired.

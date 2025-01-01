@@ -94,7 +94,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def getJacobianScalar(jacobianParameter):
-        jacobianMatrix = 1.0 + 1.0 * torch.sigmoid(jacobianParameter)
+        jacobianMatrix = 0.5 + 1.5 * torch.sigmoid(jacobianParameter)
         return jacobianMatrix
 
     @staticmethod
@@ -131,7 +131,7 @@ class emotionModelWeights(convolutionalHelpers):
     # ------------------- Universal Architectures ------------------- #
 
     @staticmethod
-    def getReversibleActivation(): return 'none'  # reversibleLinearSoftSign
+    def getReversibleActivation(): return 'reversibleLinearSoftSign'  # reversibleLinearSoftSign
 
     @staticmethod
     def getIrreversibleActivation(): return 'boundedExp'

@@ -4,6 +4,7 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
+from matplotlib.patches import Circle
 from shap.plots.colors._colors import lch2rgb
 
 # Visualization protocols
@@ -243,60 +244,64 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def plotEigenValueLocations(self, trainingEigenValues, testingEigenValues, epoch, signalInd, saveFigureLocation, plotTitle):
-        numLayers = trainingEigenValues.shape[0]
-        # We'll create subplots with 4 columns and enough rows to fit all layers
-        ncols = 4
+        numLayers, ncols = trainingEigenValues.shape[0], min(4, trainingEigenValues.shape[0])
         nrows = math.ceil(numLayers / ncols)
 
-        # Create the figure and subplots array
-        fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(5 * ncols, 5 * nrows), squeeze=False)  # keep axes in 2D form
-        axes = axes.flatten()  # flatten to 1D for easy indexing
+        # Create the figure and axes
+        fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(5 * ncols, 5 * nrows), squeeze=False)
+        axes = axes.flatten()
 
-        for layerInd in range(numLayers):
-            ax = axes[layerInd]
-
-            # 1) Scatter the training eigenvalues in the real-imag plane
+        for layerInd, ax in enumerate(axes[:numLayers]):
+            # Scatter training eigenvalues
             ev_train = trainingEigenValues[layerInd, signalInd, :]
-            # Convert to NumPy if needed (in case it's a torch.Tensor):
-            ax.scatter(ev_train.real, ev_train.imag, color=self.lightColors[1], alpha=0.75, s=5, label="Training")
+            ax.scatter(ev_train.real, ev_train.imag, color=self.darkColors[1], label="Training", linewidth=0.2, alpha=0.8)
 
-            # 2) Optionally, scatter the testing eigenvalues
-            if testingEigenValues is not None:
+            # Connect points to the origin
+            for xi, yi in zip(ev_train.real.flatten(), ev_train.imag.flatten()):
+                ax.plot([0, xi], [0, yi], color=self.darkColors[1], linestyle='-', linewidth=0.2)
+
+            # Highlight the origin
+            ax.scatter(0, 0, color=self.blackColor, label='Origin', linewidth=1)
+
+            # Scatter testing eigenvalues if provided
+            if testingEigenValues is not None and testingEigenValues.shape[1] > 0:
                 ev_test = testingEigenValues[layerInd, signalInd, :]
-                ax.scatter(ev_test.real, ev_test.imag, color=self.lightColors[0], alpha=0.75, s=5, label="Testing")
+                ax.scatter(ev_test.real, ev_test.imag, color=self.lightColors[0], label="Testing", linewidth=0.2, alpha=0.8)
 
-            # 3) Draw coordinate lines
-            ax.axhline(0, color='black', linewidth=0.5)
-            ax.axvline(0, color='black', linewidth=0.5)
+                for xi, yi in zip(ev_test.real.flatten(), ev_test.imag.flatten()):
+                    ax.plot([0, xi], [0, yi], color=self.lightColors[0], linestyle='-', linewidth=0.1)
 
-            # 4) Draw the unit circle for reference
-            circle = plt.Circle((0, 0), 1.0, color='gray', fill=False, linestyle='--')
+            # Draw coordinate lines
+            ax.axhline(0, color=self.blackColor, linewidth=0.5, alpha=0.25)
+            ax.axvline(0, color=self.blackColor, linewidth=0.5, alpha=0.25)
+
+            # Draw unit circle for reference
+            circle = Circle((0, 0), 1.0, color=self.blackColor, fill=False, linestyle='-')
             ax.add_patch(circle)
 
-            # 5) Customize subplot appearance
+            # Customize appearance
             ax.set_title(f"{plotTitle}\nEpoch {epoch}, Signal {signalInd + 1}, Layer {layerInd + 1}")
             ax.set_xlabel("Real part")
             ax.set_ylabel("Imag part")
-            ax.axis('equal')  # make x and y scales the same
+            ax.axis('equal')
 
-            # If you want a legend per-subplot (training vs. testing):
-            ax.legend(loc='upper right')
-
-        # Hide any empty subplots if numLayers < nrows*ncols
+        # Remove unused subplots
         for idx in range(numLayers, nrows * ncols):
             fig.delaxes(axes[idx])
 
-        # Tight layout to avoid overlaps
-        plt.tight_layout()
+        # Adjust layout with padding
+        plt.tight_layout(pad=2.0)
 
-        # Save the plot
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} layerInd{layerInd + 1} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
-        else: self.clearFigure(fig=None, legend=None, showPlot=True)
+        # Save or display the plot
+        if self.saveDataFolder:
+            self.displayFigure(saveFigureLocation=saveFigureLocation,
+                               saveFigureName=f"{plotTitle} epochs{epoch} layerInd{layerInd + 1} signalInd{signalInd}.pdf",
+                               baseSaveFigureName=f"{plotTitle}.pdf")
+        else:
+            self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def plotEigenvalueAngles(self, trainingEigenValues, testingEigenValues, epoch, signalInd, saveFigureLocation, plotTitle):
-        numLayers = trainingEigenValues.shape[0]
-        # Number of rows needed so that we have 4 columns
-        ncols = 4
+        numLayers, ncols = trainingEigenValues.shape[0], min(4, trainingEigenValues.shape[0])
         nrows = math.ceil(numLayers / ncols)
 
         # Create figure and axes array
@@ -309,12 +314,12 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax = axes[layerInd]  # which subplot to use
             # Plot training eigenvalue angles
             angles_training = np.angle(trainingEigenValues[layerInd, signalInd, :])
-            ax.hist(angles_training, bins=64, alpha=0.75, density=True, color=self.lightColors[1], label="Training")
+            ax.hist(angles_training, bins=128, alpha=0.75, density=True, color=self.darkColors[1], label="Training")
 
             # Plot testing angles if provided
-            if testingEigenValues is not None:
+            if testingEigenValues is not None and testingEigenValues.shape[1] > 0:
                 angles_testing = np.angle(testingEigenValues[layerInd, signalInd, :])
-                ax.hist(angles_testing, bins=20, alpha=0.25, density=True, color=self.lightColors[0], label="Testing")
+                ax.hist(angles_testing, bins=128, alpha=0.5, density=True, color=self.darkColors[0], label="Testing")
 
             # Customize subplot title and axes
             ax.set_title(f"Layer {layerInd + 1}")
@@ -322,7 +327,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.set_xlim((-3.25, 3.25))
             ax.set_ylim((0, 1))
             ax.set_ylabel("Density")
-            ax.legend(loc='upper right')
 
         # Hide any extra subplots if numLayers < nrows * ncols
         for idx in range(numLayers, nrows * ncols):

@@ -44,7 +44,7 @@ class modelVisualizations(globalPlottingProtocols):
         with torch.no_grad():
             if self.accelerator.is_local_main_process:
                 specificModels = [modelPipeline.model.specificSignalEncoderModel for modelPipeline in allModelPipelines]
-                sharedModels = [modelPipeline.model.sharedSignalEncoderModel for modelPipeline in allModelPipelines]
+                # sharedModels = [modelPipeline.model.sharedSignalEncoderModel for modelPipeline in allModelPipelines]
                 datasetNames = [modelPipeline.model.datasetName for modelPipeline in allModelPipelines]
                 if allModelPipelines[0].getTrainingEpoch(submodel) == 0: return None
 
@@ -72,11 +72,17 @@ class modelVisualizations(globalPlottingProtocols):
         self.setModelSavingFolder(baseSavingFolder=f"trainingFigures/{submodel}/{trainingDate}/", stringID=f"{modelPipeline.model.datasetName}/")
         modelPipeline.setupTrainingFlags(modelPipeline.model, trainingFlag=False)  # Set all models into evaluation mode.
         model = modelPipeline.model
-        numPlottingPoints = 12
+        numPlottingPoints = 8
 
         # Load in all the data and labels for final predictions and calculate the activity and emotion class weights.
         allLabels, allSignalData, allSignalIdentifiers, allMetadata, allTrainingLabelMask, allTrainingSignalMask, allTestingLabelMask, allTestingSignalMask = modelPipeline.prepareInformation(lossDataLoader)
         signalData, signalIdentifiers, metadata = allSignalData[:numPlottingPoints], allSignalIdentifiers[:numPlottingPoints], allMetadata[:numPlottingPoints]
+        # allSignalData: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
+        # allTrainingLabelMask, allTestingLabelMask: batchSize, numEmotions + 1 (activity)
+        # allTrainingSignalMask, allTestingSignalMask: batchSize, numSignals
+        # allSignalIdentifiers: batchSize, numSignals, numSignalIdentifiers
+        # allLabels: batchSize, numEmotions + 1 (activity) + numSignals
+        # allMetadata: batchSize, numMetadata
 
         with torch.no_grad():
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
@@ -87,13 +93,14 @@ class modelVisualizations(globalPlottingProtocols):
             # Detach the data from the GPU and tensor format.
             reconstructedPhysiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = reconstructedPhysiologicalProfile.detach().cpu().numpy(), activityProfile.detach().cpu().numpy(), basicEmotionProfile.detach().cpu().numpy(), emotionProfile.detach().cpu().numpy()
             validDataMask, reconstructedSignalData, resampledSignalData, healthProfile = validDataMask.detach().cpu().numpy(), reconstructedSignalData.detach().cpu().numpy(), resampledSignalData.detach().cpu().numpy(), healthProfile.detach().cpu().numpy()
-            sharedEigenvalues = np.asarray([modelLayer.getAllEigenvalues(device=self.accelerator.device) for modelLayer in model.sharedSignalEncoderModel.processingLayers])  # numProcessingLayers, numLayers=1, numSignals, encodedDimension
+            sharedEigenvalues = np.asarray([modelLayer.getAllEigenvalues(device=self.accelerator.device) for modelLayer in model.sharedSignalEncoderModel.processingLayers])  # numProcessingLayers, numLayers=1, numSignals=1, encodedDimension
+            specificEigenvalues = np.asarray([modelLayer.getAllEigenvalues(device=self.accelerator.device) for modelLayer in model.specificSignalEncoderModel.processingLayers])  # numProcessingLayers, numLayers=1, numSignals, encodedDimension
             signalEncoderLayerTransforms = np.asarray(model.specificSignalEncoderModel.profileModel.signalEncoderLayerTransforms)  # numProfileShots, 2*numSpecific + numShared + 1, numExperiments, numSignals, encodedDimension
             embeddedProfile = model.specificSignalEncoderModel.profileModel.embeddedHealthProfiles.detach().cpu().numpy()  # numProfileShots, numExperiments, numEncodedWeights
             retrainingEmbeddedProfilePath = np.asarray(model.specificSignalEncoderModel.profileModel.retrainingEmbeddedProfilePath)  # numProfileShots, numExperiments, numEncodedWeights
             resampledBiomarkerTimes = model.sharedSignalEncoderModel.hyperSampledTimes.detach().cpu().numpy()  # numTimePoints
             globalPlottingProtocols.clearFigure(fig=None, legend=None, showPlot=False)
-            batchInd, signalInd = -2, -2
+            batchInd, signalInd = -1, -1
 
             # Plot the loss on the primary GPU.
             if self.accelerator.is_local_main_process:
@@ -108,7 +115,9 @@ class modelVisualizations(globalPlottingProtocols):
                     if signalEncoderLayerTransforms.shape[0] != 0: self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, healthProfile=healthProfile, retrainingProfilePath=signalEncoderLayerTransforms[:, 0, :, signalInd, :], epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Health Profile Generation")
 
                     # Plot the signal encoding training information.
+                    self.signalEncoderViz.plotEigenValueLocations(specificEigenvalues[:, 0, allTrainingSignalMask[batchInd], :], testingEigenValues=specificEigenvalues[:, 0, allTestingSignalMask[batchInd], :], epoch=currentEpoch, signalInd=0, saveFigureLocation="signalEncoding/", plotTitle="Specific Eigenvalues")
                     self.signalEncoderViz.plotEigenValueLocations(sharedEigenvalues[:, 0, :, :], testingEigenValues=None, epoch=currentEpoch, signalInd=0, saveFigureLocation="signalEncoding/", plotTitle="Shared Eigenvalues")
+                    self.signalEncoderViz.plotEigenvalueAngles(specificEigenvalues[:, 0, allTrainingSignalMask[batchInd], :], testingEigenValues=specificEigenvalues[:, 0, allTestingSignalMask[batchInd], :], epoch=currentEpoch, signalInd=0, saveFigureLocation="signalEncoding/", plotTitle="Specific Eigenvalue Angles")
                     self.signalEncoderViz.plotEigenvalueAngles(sharedEigenvalues[:, 0, :, :], testingEigenValues=None, epoch=currentEpoch, signalInd=0, saveFigureLocation="signalEncoding/", plotTitle="Shared Eigenvalue Angles")
 
                     self.signalEncoderViz.plotSignalEncodingStatePath(resampledBiomarkerTimes, compiledSignalEncoderLayerStates, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Final Model Flow")
