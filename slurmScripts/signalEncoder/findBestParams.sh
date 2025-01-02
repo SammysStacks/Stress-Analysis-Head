@@ -11,13 +11,13 @@ wds_profile=('1e-6')  # 1e-6 ==> x <== 1e-3; Removed from filename
 wds_profileGen=('1e-5')  # 1e-5 == x <= 1e-4; Removed from filename
 wds_reversible=('1e-4')  # 1e-4 == x <= 1e-3; Removed from filename
 
-# Known interesting parameters: 128
+# Known interesting parameters: 256
 numSharedEncoderLayers_arr=(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16)  # 16
-numSpecificEncoderLayers_arr=(1 2 3 4 5 6 7 8)  # 8
+numSpecificEncoderLayers_arr=(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16)  # 16
 
-# Known interesting parameters: 256 -> 208
-allNumEncodedWeights=(4 8 16 32 64 128 256 512)  # 8
-numProfileShots_arr=(1 2 3 4 8 16 24 32)  # 8
+# Known interesting parameters: 144
+allNumEncodedWeights=(16 32 64 128 256 512)  # 6
+numProfileShots_arr=(4 8 16 24 32 48)  # 6
 encodedDimensions_arr=(64 128 256 512)  # 4
 initialProfileAmp_arr=('0.01')  # 0.005 <= x <= 0.05
 
@@ -30,7 +30,7 @@ waveletTypes_arr=(
 )
 
 # Learning parameters.
-lrs_profile=('0.001' '0.0025' '0.005' '0.0075' '0.01' '0.02' '0.03' '0.04' '0.05')  # 0.005 <= x <= 0.05
+lrs_profile=('0.001' '0.0025' '0.005' '0.0075' '0.01' '0.02' '0.03' '0.04' '0.05' '0.075' '0.1')  # 0.005 <= x <= 0.05
 lrs_profileGen=('1e-4') # # 5e-5 <= x == 1e-4; Removed from filename
 lrs_reversible=('1e-3')  # 1e-4 <= x == 1e-3; Removed from filename
 
@@ -41,7 +41,7 @@ numSharedEncoderLayers_arr=(8)
 # Collective Switchables: 256
 encodedDimensions_arr=(256)
 allNumEncodedWeights=(128)
-numProfileShots_arr=(24)
+numProfileShots_arr=(32)
 
 # Single Switchables.
 waveletTypes_arr=('bior3.1')
