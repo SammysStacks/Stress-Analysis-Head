@@ -219,7 +219,7 @@ class emotionModelHead(nn.Module):
 
         # Calculate the estimated health profile given each signal.
         for specificLayerInd in range(self.numSpecificEncoderLayers):
-            metaLearningData = self.specificSignalEncoderModel.learningInterface(layerInd=specificLayerInd, signalData=metaLearningData)
+            # metaLearningData = self.specificSignalEncoderModel.learningInterface(layerInd=specificLayerInd, signalData=metaLearningData)
             if compileLayerStates: compiledLayerStates[compiledLayerIndex] = metaLearningData.clone().detach().cpu().numpy() if compileLayerStates else 0; compiledLayerIndex += 1
         # metaLearningData: batchSize, numSignals, finalDimension
 

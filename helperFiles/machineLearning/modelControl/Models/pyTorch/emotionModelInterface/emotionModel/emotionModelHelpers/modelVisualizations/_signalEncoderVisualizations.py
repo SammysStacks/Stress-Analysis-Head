@@ -253,7 +253,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         for layerInd, ax in enumerate(axes[:numLayers]):
             # Scatter training eigenvalues
             ev_train = trainingEigenValues[layerInd, signalInd, :]
-            ax.scatter(ev_train.real, ev_train.imag, color=self.lightColors[1], label="Training", linewidth=0.2, alpha=0.25)
+            ax.scatter(ev_train.real, ev_train.imag, color=self.lightColors[1], label="Training", linewidth=0.2, alpha=0.5)
 
             # Connect points to the origin
             for xi, yi in zip(ev_train.real.flatten(), ev_train.imag.flatten()):
@@ -265,7 +265,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             # Scatter testing eigenvalues if provided
             if testingEigenValues is not None and testingEigenValues.shape[1] > 0:
                 ev_test = testingEigenValues[layerInd, signalInd, :]
-                ax.scatter(ev_test.real, ev_test.imag, color=self.lightColors[0], label="Testing", linewidth=0.2, alpha=0.25)
+                ax.scatter(ev_test.real, ev_test.imag, color=self.lightColors[0], label="Testing", linewidth=0.2, alpha=0.5)
 
                 for xi, yi in zip(ev_test.real.flatten(), ev_test.imag.flatten()):
                     ax.plot([0, xi], [0, yi], color=self.lightColors[0], linestyle='-', linewidth=0.1)
@@ -309,12 +309,12 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax = axes[layerInd]  # which subplot to use
             # Plot training eigenvalue angles
             angles_training = np.angle(trainingEigenValues[layerInd, signalInd, :], deg=degreesFlag)
-            ax.hist(angles_training, bins=32, alpha=0.75, density=True, color=self.lightColors[1], label="Training")
+            ax.hist(angles_training, bins=64, alpha=0.75, density=True, color=self.lightColors[1], label="Training")
 
             # Plot testing angles if provided
             if testingEigenValues is not None and testingEigenValues.shape[1] > 0:
                 angles_testing = np.angle(testingEigenValues[layerInd, signalInd, :], deg=degreesFlag)
-                ax.hist(angles_testing, bins=32, alpha=0.5, density=True, color=self.lightColors[0], label="Testing")
+                ax.hist(angles_testing, bins=64, alpha=0.5, density=True, color=self.lightColors[0], label="Testing")
 
             units = "degrees" if degreesFlag else "radians"
             degrees = 200 if degreesFlag else 3.25
@@ -354,7 +354,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         maxHalfAngle = 180 if degreesFlag else np.pi
         if "3D Data Flow" in plotTitle: maxHalfAngle = 2*modelConstants.minMaxScale
         surf = ax.scatter(x_data.flatten(), y_data.flatten(), np.imag(jacobianPath.flatten()),  # Use z-values for coloring
-                          c=np.angle(jacobianPath.flatten(), deg=degreesFlag), cmap=self.custom_cmap, alpha=0.75, s=10, vmin=-maxHalfAngle, vmax=maxHalfAngle)
+                          c=np.angle(jacobianPath.flatten(), deg=degreesFlag), cmap=self.custom_cmap, alpha=1, s=10, vmin=0, vmax=maxHalfAngle)
 
         # Customize the view angle
         ax.view_init(elev=30, azim=135)
@@ -391,7 +391,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         ax = fig.add_subplot(111, projection='3d')
 
         # Create the scatter plot
-        surf = ax.scatter(x_data.flatten(), y_data.flatten(), dataStates.flatten(), c=dataStates.flatten(), cmap=self.custom_cmap, alpha=0.75, s=10, vmin=-2*modelConstants.minMaxScale, vmax=2*modelConstants.minMaxScale)
+        surf = ax.scatter(x_data.flatten(), y_data.flatten(), dataStates.flatten(), c=dataStates.flatten(), linewidths=2,  cmap=self.custom_cmap, alpha=1, s=10, vmin=-1.5*modelConstants.minMaxScale, vmax=1.5*modelConstants.minMaxScale)
 
         # Customize the view angle
         ax.view_init(elev=30, azim=135)
