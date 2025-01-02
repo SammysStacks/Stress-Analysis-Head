@@ -354,7 +354,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         maxHalfAngle = 180 if degreesFlag else np.pi
         if "3D Data Flow" in plotTitle: maxHalfAngle = 2*modelConstants.minMaxScale
         surf = ax.scatter(x_data.flatten(), y_data.flatten(), np.imag(jacobianPath.flatten()),  # Use z-values for coloring
-                          c=np.angle(jacobianPath.flatten(), deg=degreesFlag), cmap=self.custom_cmap, alpha=1, s=10, vmin=0, vmax=maxHalfAngle)
+                          c=np.angle(jacobianPath.flatten(), deg=degreesFlag), cmap='viridis', alpha=1, s=10, vmin=-maxHalfAngle, vmax=maxHalfAngle)
 
         # Customize the view angle
         ax.view_init(elev=30, azim=135)
