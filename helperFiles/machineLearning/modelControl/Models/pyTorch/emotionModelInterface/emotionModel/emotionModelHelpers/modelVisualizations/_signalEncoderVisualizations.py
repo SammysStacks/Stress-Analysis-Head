@@ -387,10 +387,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         ax.set_box_aspect([2, 1, 1])
         plt.tight_layout()
 
-        # Optionally, save or show the figure
-        plt.savefig(saveFigureLocation, dpi=300)
-        plt.show()
-
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} batchInd{batchInd} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
