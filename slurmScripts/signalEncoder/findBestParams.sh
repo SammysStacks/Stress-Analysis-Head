@@ -41,7 +41,7 @@ numSharedEncoderLayers_arr=(8)
 # Collective Switchables: 256
 encodedDimensions_arr=(256)
 allNumEncodedWeights=(128)
-numProfileShots_arr=(32)
+numProfileShots_arr=(16)
 
 # Single Switchables.
 waveletTypes_arr=('bior3.1')
