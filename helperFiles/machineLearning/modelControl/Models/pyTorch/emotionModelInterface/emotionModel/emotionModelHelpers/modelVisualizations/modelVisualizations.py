@@ -88,12 +88,12 @@ class modelVisualizations(globalPlottingProtocols):
         with torch.no_grad():
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
             validDataMask, reconstructedSignalData, resampledSignalData, _, healthProfile, activityProfile, basicEmotionProfile, emotionProfile = model.forward(submodel, signalData, signalIdentifiers, metadata, device=self.accelerator.device, onlyProfileTraining=False)
-            reconstructedPhysiologicalProfile, compiledSignalEncoderLayerStates = model.reconstructPhysiologicalProfile(resampledSignalData)
+            reconstructedHealthProfile, compiledSignalEncoderLayerStates = model.reconstructPhysiologicalProfile(resampledSignalData)
             compiledSignalEncoderLayerStates = np.flip(compiledSignalEncoderLayerStates, axis=0)
             # compiledSignalEncoderLayerStates: numProcessingLayers, numLayers=1, numSignals, encodedDimension
 
             # Detach the data from the GPU and tensor format.
-            reconstructedPhysiologicalProfile, activityProfile, basicEmotionProfile, emotionProfile = reconstructedPhysiologicalProfile.detach().cpu().numpy(), activityProfile.detach().cpu().numpy(), basicEmotionProfile.detach().cpu().numpy(), emotionProfile.detach().cpu().numpy()
+            reconstructedHealthProfile, activityProfile, basicEmotionProfile, emotionProfile = reconstructedHealthProfile.detach().cpu().numpy(), activityProfile.detach().cpu().numpy(), basicEmotionProfile.detach().cpu().numpy(), emotionProfile.detach().cpu().numpy()
             validDataMask, reconstructedSignalData, resampledSignalData, healthProfile = validDataMask.detach().cpu().numpy(), reconstructedSignalData.detach().cpu().numpy(), resampledSignalData.detach().cpu().numpy(), healthProfile.detach().cpu().numpy()
             specificEigenvalues = np.asarray([modelLayer.getAllEigenvalues(device=self.accelerator.device) for modelLayer in model.specificSignalEncoderModel.processingLayers])  # numProcessingLayers, numLayers=1, numSignals, encodedDimension
             sharedEigenvalues = np.asarray([modelLayer.getAllEigenvalues(device=self.accelerator.device) for modelLayer in model.sharedSignalEncoderModel.processingLayers])  # numProcessingLayers, numLayers=1, numSignals=1, encodedDimension
@@ -113,8 +113,8 @@ class modelVisualizations(globalPlottingProtocols):
 
                 if submodel == modelConstants.signalEncoderModel:
                     # Plot the health profile training information.
-                    self.signalEncoderViz.plotProfileReconstruction(resampledBiomarkerTimes, healthProfile, reconstructedPhysiologicalProfile, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Reconstruction")
-                    self.signalEncoderViz.plotProfileReconstructionError(resampledBiomarkerTimes, healthProfile, reconstructedPhysiologicalProfile, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Reconstruction Error")
+                    self.signalEncoderViz.plotProfileReconstruction(resampledBiomarkerTimes, healthProfile, reconstructedHealthProfile, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Reconstruction")
+                    self.signalEncoderViz.plotProfileReconstructionError(resampledBiomarkerTimes, healthProfile, reconstructedHealthProfile, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Reconstruction Error")
                     if embeddedProfile.shape[0] != 0: self.signalEncoderViz.plotProfilePath(relativeTimes=None, healthProfile=embeddedProfile, retrainingProfilePath=retrainingEmbeddedProfilePath, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Embedded Profile Generation")
                     if signalEncoderLayerTransforms.shape[0] != 0: self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, healthProfile=healthProfile, retrainingProfilePath=signalEncoderLayerTransforms[:, 0, :, signalInd, :], epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Health Profile Generation")
 

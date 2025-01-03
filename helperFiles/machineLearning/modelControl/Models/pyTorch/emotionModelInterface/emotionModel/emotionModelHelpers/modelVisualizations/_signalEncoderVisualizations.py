@@ -59,10 +59,10 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotProfileReconstructionError(self, relativeTimes, healthProfile, reconstructedPhysiologicalProfile, epoch=0, saveFigureLocation="", plotTitle="Signal Encoding"):
+    def plotProfileReconstructionError(self, relativeTimes, healthProfile, reconstructedHealthProfile, epoch=0, saveFigureLocation="", plotTitle="Signal Encoding"):
         # Extract the signal dimensions.
-        healthError = (healthProfile[:, None, :] - reconstructedPhysiologicalProfile)
-        batchSize, numSignals, sequenceLength = reconstructedPhysiologicalProfile.shape
+        healthError = (healthProfile[:, None, :] - reconstructedHealthProfile)
+        batchSize, numSignals, sequenceLength = reconstructedHealthProfile.shape
         batchInd = 0
 
         plt.plot(relativeTimes, healthError[batchInd].mean(axis=0), c=self.blackColor, label=f"Health profile error", linewidth=2, alpha=0.8)
@@ -77,36 +77,25 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotProfileReconstruction(self, relativeTimes, healthProfile, reconstructedPhysiologicalProfile, epoch=0, saveFigureLocation="", plotTitle="Signal Encoding"):
-        # Extract the signal dimensions.
-        batchSize, numSignals, sequenceLength = reconstructedPhysiologicalProfile.shape
+    def plotProfileReconstruction(self, relativeTimes, healthProfile, reconstructedHealthProfile, epoch=0, saveFigureLocation="", plotTitle="Signal Encoding"):
         batchInd = 0
+
+        # Extract the signal dimensions.
+        reconstructionError = np.square(healthProfile[:, None, :] - reconstructedHealthProfile)[batchInd]
+        batchSize, numSignals, sequenceLength = reconstructedHealthProfile.shape
 
         # Plot the signal reconstruction.
         plt.plot(relativeTimes, healthProfile[batchInd], c=self.blackColor, label=f"Health profile", linewidth=2, alpha=0.8)
-        for signalInd in range(numSignals): plt.plot(relativeTimes, reconstructedPhysiologicalProfile[batchInd, signalInd], c=self.lightColors[1], linewidth=1, alpha=0.1)
+        plt.errorbar(x=None, y=reconstructionError.mean(axis= -1), yerr=reconstructionError.std(axis=-1), color=self.darkColors[1], capsize=3, linewidth=2)
+
+        # Plot the signal reconstruction.
+        for signalInd in range(numSignals): plt.plot(relativeTimes, reconstructedHealthProfile[batchInd, signalInd], c=self.lightColors[1], linewidth=1, alpha=0.1)
 
         # Plotting aesthetics.
         plt.xlabel("Time (Seconds)")
         plt.title(f"{plotTitle} epoch{epoch}")
         plt.ylabel("Signal (AU)")
         plt.ylim((-1.5, 1.5))
-
-        # Save the figure.
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
-        else: self.clearFigure(fig=None, legend=None, showPlot=True)
-
-    def plotPhysiologicalOG(self, embeddedProfile, epoch, saveFigureLocation, plotTitle):
-        batchInd = 0
-
-        # Plot the signal reconstruction.
-        plt.plot(embeddedProfile[batchInd], 'o', c=self.blackColor, label=f"Health profile", linewidth=1, alpha=0.8)
-
-        # Plotting aesthetics.
-        plt.xlabel("Time (Seconds)")
-        plt.title(f"{plotTitle} epoch{epoch}")
-        plt.ylabel("Signal (AU)")
-        plt.ylim((-0.75, 0.75))
 
         # Save the figure.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")

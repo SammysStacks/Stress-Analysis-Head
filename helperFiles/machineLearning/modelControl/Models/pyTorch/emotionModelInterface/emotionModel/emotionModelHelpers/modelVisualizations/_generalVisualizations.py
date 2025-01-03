@@ -110,10 +110,14 @@ class generalVisualizations(globalPlottingProtocols):
 
         # Plot the losses
         for modelInd in range(len(trainingLosses)):
-            plt.plot(np.nanmean(trainingLosses[modelInd], axis=-1), label=f'{lossLabels[modelInd]} (Train)', color=self.darkColors[modelInd], linewidth=2)
+            trainingSTD = np.nanstd(trainingLosses[modelInd], axis=-1)
+            trainingLoss = np.nanmean(trainingLosses[modelInd], axis=-1)
+            plt.errorbar(x=None, y=trainingLoss, yerr=trainingSTD, color=self.darkColors[modelInd], capsize=3, linewidth=2)
             if testingLosses is not None:
+                testingStd = np.nanstd(testingLosses[modelInd], axis=-1)
                 testingLoss = np.nanmean(testingLosses[modelInd], axis=-1)
                 plt.plot(testingLoss, color=self.darkColors[modelInd], linewidth=2, alpha=0.75)
+                plt.errorbar(x=None, y=testingLoss, yerr=testingStd, color=self.darkColors[modelInd], capsize=3, linewidth=2)
 
         # Plot the losses
         for modelInd in range(len(trainingLosses)):
@@ -121,15 +125,15 @@ class generalVisualizations(globalPlottingProtocols):
             if testingLosses is not None:
                 testingLoss = np.asarray(testingLosses[modelInd])
                 testingLoss[np.isnan(testingLoss)] = None
-                plt.plot(testingLoss, '--', color=self.darkColors[modelInd], linewidth=1, alpha=0.025)
-        plt.hlines(y=0.01, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2)
+                plt.plot(testingLoss, '--', color=self.darkColors[modelInd], capsize=3, linewidth=1, alpha=0.025)
         plt.hlines(y=0.1, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2)
-        plt.hlines(y=0.07, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.5)
-        plt.hlines(y=0.06, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.25)
-        plt.hlines(y=0.02, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.5)
+        plt.hlines(y=0.05, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.5)
+        plt.hlines(y=0.04, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.25)
         plt.hlines(y=0.03, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.25)
-        plt.xlim((0, max(24, len(trainingLosses[0]) + 1)))
-        plt.ylim((0.0025, 0.5))
+        plt.hlines(y=0.02, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.25)
+        plt.hlines(y=0.01, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2)
+        plt.xlim((0, max(32, len(trainingLosses[0]) + 1)))
+        plt.ylim((0.0025, 1))
         plt.grid(True)
 
         # Label the plot.
@@ -145,8 +149,11 @@ class generalVisualizations(globalPlottingProtocols):
 
     def plotSinglaParameterFlow(self, trainingValues, testingValues, labels, saveFigureLocation="", plotTitle="Model Convergence Loss", logY=False):
         for modelInd in range(len(trainingValues)):
-            plt.plot(trainingValues[modelInd], label=f'{labels[modelInd]} (Train)', color=self.darkColors[modelInd], linewidth=0.2, alpha=0.8)
+            plt.plot(trainingValues[modelInd], color=self.darkColors[modelInd], linewidth=0.2, alpha=0.8)
             if testingValues is not None: plt.plot(testingValues[modelInd], color=self.darkColors[modelInd], linewidth=0.2, alpha=0.5)
+
+            plt.plot(trainingValues[modelInd].mean(axis=-1), color=self.darkColors[modelInd], linewidth=1, alpha=0.8)
+            if testingValues is not None: plt.plot(testingValues[modelInd].mean(axis=-1), color=self.darkColors[modelInd], linewidth=1, alpha=0.5)
         plt.xlim((0, len(trainingValues[0]) + 1))
         plt.grid(True)
 
