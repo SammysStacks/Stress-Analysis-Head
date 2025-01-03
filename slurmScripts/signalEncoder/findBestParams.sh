@@ -50,9 +50,9 @@ lrs_profile=('0.01')
 
 
 lrs_profile=('0.01' '0.025' '0.05' '0.1')  # 0.005 <= x <= 0.05
-numSharedEncoderLayers_arr=(4 6 8 10 12)  # 5
-numSpecificEncoderLayers_arr=(1 2 3 4 5 6)  # 6
-numProfileShots_arr=(16 24 32)  # 3
+numSharedEncoderLayers_arr=(4 6 8 12)  # 4
+numSpecificEncoderLayers_arr=(1 2 3 4 5 6)  # 4
+numProfileShots_arr=(24)  # 2
 
 for beta1s in "${beta1s_arr[@]}"
 do
