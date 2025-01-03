@@ -125,7 +125,7 @@ class generalVisualizations(globalPlottingProtocols):
             if testingLosses is not None:
                 testingLoss = np.asarray(testingLosses[modelInd])
                 testingLoss[np.isnan(testingLoss)] = None
-                plt.plot(testingLoss, '--', color=self.darkColors[modelInd], capsize=3, linewidth=1, alpha=0.025)
+                plt.plot(testingLoss, '-', color=self.darkColors[modelInd], linewidth=1, alpha=0.025)
         plt.hlines(y=0.1, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2)
         plt.hlines(y=0.05, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.5)
         plt.hlines(y=0.04, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.25)
