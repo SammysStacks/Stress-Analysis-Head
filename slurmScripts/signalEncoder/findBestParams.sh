@@ -48,6 +48,11 @@ waveletTypes_arr=('bior3.1')
 optimizers_arr=('Adam')
 lrs_profile=('0.01')
 
+
+numSharedEncoderLayers_arr=(4 6 8 10 12)  # 5
+numSpecificEncoderLayers_arr=(1 2 3 4 5 6)  # 6
+numProfileShots_arr=(16 24 32)  # 3
+
 for beta1s in "${beta1s_arr[@]}"
 do
   for beta2s in "${beta2s_arr[@]}"
