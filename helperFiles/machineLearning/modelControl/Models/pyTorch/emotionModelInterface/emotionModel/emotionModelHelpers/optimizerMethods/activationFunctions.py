@@ -32,7 +32,7 @@ def getActivationMethod(activationMethod):
     return activationFunction
 
 class reversibleLinearSoftSign(reversibleInterface):
-    def __init__(self, infiniteBound=3/4, linearity=4):
+    def __init__(self, infiniteBound=3/4, linearity=4/3):  # 3/4, 4 TODO
         super(reversibleLinearSoftSign, self).__init__()
         self.infiniteBound = infiniteBound  # This controls how the activation converges at +/- infinity; Ex: 0.5, 13/21, 33/49
         self.linearity = linearity  # Corresponds to `r` in the equation
@@ -40,9 +40,12 @@ class reversibleLinearSoftSign(reversibleInterface):
 
     def forward(self, x, linearModel, forwardFirst=True):
         # forwardPass: Increase the signal below inversion point; decrease above.
-        # inversePass: Decrease the signal below inversion point; increase above.
         x = self.forwardPass(x) if forwardFirst else self.inversePass(x)
-        x = linearModel(x)  # Learn in the scaled domain.
+
+        # Rotate the signal through the linear model.
+        x = linearModel(x)
+
+        # inversePass: Decrease the signal below inversion point; increase above.
         x = self.inversePass(x) if forwardFirst else self.forwardPass(x)
 
         return x

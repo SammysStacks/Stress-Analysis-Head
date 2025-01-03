@@ -293,8 +293,6 @@ class ecgProtocol(globalProtocol):
 
     @staticmethod
     def extractPeakFeatures(timepoints, data, Q, R, S, QRSWave):
-        # TODO: T not done, P needs improvement
-
         # Find the indices of the Q, R, and S points, and the start and end of the QRS wave
         QIndex = np.where(timepoints == Q)[0][0]
         RIndex = np.where(timepoints == R)[0][0]

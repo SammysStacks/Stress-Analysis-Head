@@ -403,7 +403,6 @@ class gsrProtocol:
                 # If we truely found the peak maximum, record it; If not, ignore this extrema.
                 if self.isExtremaGood(data, extremaPointer, nextExtremaPointer):
                     
-                    ## TODO:CLEAN UP WHATEVER THIS IS
                     if lastpeakMaxPointer <= lastbaselinePointer:
                         peakMaxPointers.append(nextExtremaPointer) 
                         lastpeakMaxPointer = nextExtremaPointer

@@ -129,7 +129,7 @@ class generalVisualizations(globalPlottingProtocols):
         plt.hlines(y=0.02, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.5)
         plt.hlines(y=0.03, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.25)
         plt.xlim((0, max(24, len(trainingLosses[0]) + 1)))
-        plt.ylim((0.001, 1))
+        plt.ylim((0.0025, 0.5))
         plt.grid(True)
 
         # Label the plot.
@@ -145,8 +145,8 @@ class generalVisualizations(globalPlottingProtocols):
 
     def plotSinglaParameterFlow(self, trainingValues, testingValues, labels, saveFigureLocation="", plotTitle="Model Convergence Loss", logY=False):
         for modelInd in range(len(trainingValues)):
-            plt.plot(trainingValues[modelInd], label=f'{labels[modelInd]} (Train)', color=self.darkColors[modelInd], linewidth=0.2, alpha=0.75)
-            if testingValues is not None: plt.plot(testingValues[modelInd], color=self.darkColors[modelInd], linewidth=0.2, alpha=0.25)
+            plt.plot(trainingValues[modelInd], label=f'{labels[modelInd]} (Train)', color=self.darkColors[modelInd], linewidth=0.2, alpha=0.8)
+            if testingValues is not None: plt.plot(testingValues[modelInd], color=self.darkColors[modelInd], linewidth=0.2, alpha=0.5)
         plt.xlim((0, len(trainingValues[0]) + 1))
         plt.grid(True)
 
@@ -155,7 +155,7 @@ class generalVisualizations(globalPlottingProtocols):
         plt.xlabel("Training Epoch")
         plt.ylabel("Values")
         plt.title(f"{plotTitle}")
-        plt.ylim((0.4, 2.1))
+        # plt.ylim((0.4, 2.1))
 
         # Save the figure if desired.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(trainingValues[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")

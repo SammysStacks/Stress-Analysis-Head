@@ -13,7 +13,6 @@ import matplotlib.pyplot as plt
 from scipy import stats
 from pathlib import Path
 import torch.nn.functional as F
-import convolutionalHelpers # todo import convolutionalHelpers
 
 class blinkIdentificationModel(convolutionalHelpers):
     def __init__(self):

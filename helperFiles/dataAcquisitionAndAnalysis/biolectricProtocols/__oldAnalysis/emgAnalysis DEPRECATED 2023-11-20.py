@@ -46,8 +46,7 @@ class emgProtocol(_globalProtocol.globalProtocol):
         # Initialize common model class
         super().__init__("emg", numPointsPerBatch, moveDataFinger, channelIndices, plottingClass, readData)
     
-    # TODO: [0 for _ in range(self.numChannels)] FOR CERTAIN VARIABLES
-    def resetAnalysisVariables(self):        
+    def resetAnalysisVariables(self):
         # Reset Mutable Variables
         self.xDataRMS = []              # Holder for Most Recent RMS Data
         self.groupWidthRMS = None       # The Number of Seconds for 1 Group

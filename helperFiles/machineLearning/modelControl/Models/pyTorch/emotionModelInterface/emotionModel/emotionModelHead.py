@@ -50,7 +50,6 @@ class emotionModelHead(nn.Module):
 
         # Setup holder for the model's training information
         self.calculateModelLosses = lossCalculations(accelerator=None, allEmotionClasses=None, activityLabelInd=None)
-        self.reversibleInterface = reversibleInterface()
 
         # ------------------------ Data Compression ------------------------ #
 
@@ -198,12 +197,12 @@ class emotionModelHead(nn.Module):
         if domain == 'neuralLayers': specificLinearModels = [_linearModel.highFrequenciesWeights[0] for _linearModel in specificLinearModels]
         if domain == 'neuralLayers': sharedLinearModels = [_linearModel.highFrequenciesWeights[0] for _linearModel in sharedLinearModels]
 
-        specificSignalJacobianPath = np.asarray([specificLinearModels[layerInd].getLayerEigenvalues(layerInd=-1, device=device) for layerInd in range(2*modelConstants.userInputParams['numSpecificEncoderLayers'])])  # 2*numSpecificEncoderLayers, numSpecificEncoderLayers, numSignals, encodedDimension
+        specificSignalJacobianPath = np.asarray([specificLinearModels[layerInd].getLayerEigenvalues(layerInd=-1, device=device) for layerInd in range(modelConstants.userInputParams['numSpecificEncoderLayers'])])  # numSpecificEncoderLayers, numSpecificEncoderLayers, numSignals, encodedDimension
         sharedSignalJacobianPath = np.asarray([sharedLinearModels[layerInd].getLayerEigenvalues(layerInd=-1, device=device) for layerInd in range(modelConstants.userInputParams['numSharedEncoderLayers'])])  # numSharedEncoderLayers, numSharedEncoderLayers, numSignals=1, encodedDimension
         jacobianSpatialPath = np.asarray([*[specificSignalJacobianPath[specificEigenvalueInd] for specificEigenvalueInd in range(0, specificSignalJacobianPath.shape[0] // 2, 1)],
                                           *[np.broadcast_to(sharedSignalJacobianPath[sharedEigenvalueInd], specificSignalJacobianPath[0].shape) for sharedEigenvalueInd in range(sharedSignalJacobianPath.shape[0])],
                                           *[specificSignalJacobianPath[specificEigenvalueInd] for specificEigenvalueInd in range(specificSignalJacobianPath.shape[0] // 2, specificSignalJacobianPath.shape[0], 1)]])
-        # jacobianSpatialPath: 2 * numSpecificEncoderLayers + numSharedEncoderLayers, numSignals, encodedDimension  TODO: collect for every profile epoch? Memory?
+        # jacobianSpatialPath: numSpecificEncoderLayers + numSharedEncoderLayers, numSignals, encodedDimension  TODO: collect for every profile epoch? Memory?
 
         return jacobianSpatialPath
 
@@ -213,25 +212,19 @@ class emotionModelHead(nn.Module):
 
         if compileLayerStates:
             # Initialize the model's learning interface.
-            compiledLayerStates = np.zeros(shape=(2*self.numSpecificEncoderLayers + self.numSharedEncoderLayers + 1, metaLearningData.size(0), metaLearningData.size(1), metaLearningData.size(2)))
+            compiledLayerStates = np.zeros(shape=(self.numSpecificEncoderLayers + self.numSharedEncoderLayers + 1, metaLearningData.size(0), metaLearningData.size(1), metaLearningData.size(2)))
             compiledLayerStates[compiledLayerIndex] = metaLearningData.clone().detach().cpu().numpy() if compileLayerStates else 0; compiledLayerIndex += 1
         # metaLearningData: batchSize, numSignals, finalDimension
 
-        # Calculate the estimated health profile given each signal.
-        for specificLayerInd in range(self.numSpecificEncoderLayers):
-            metaLearningData = self.specificSignalEncoderModel.learningInterface(layerInd=specificLayerInd, signalData=metaLearningData)
+        # Specific signal encoder layers.
+        for layerInd in range(self.numSpecificEncoderLayers):
+            metaLearningData = self.specificSignalEncoderModel.learningInterface(layerInd=layerInd, signalData=metaLearningData)
             if compileLayerStates: compiledLayerStates[compiledLayerIndex] = metaLearningData.clone().detach().cpu().numpy() if compileLayerStates else 0; compiledLayerIndex += 1
         # metaLearningData: batchSize, numSignals, finalDimension
 
-        # Calculate the estimated health profile given each signal.
-        for sharedLayerInd in range(self.numSharedEncoderLayers): 
-            metaLearningData = self.sharedSignalEncoderModel.learningInterface(layerInd=sharedLayerInd, signalData=metaLearningData)
-            if compileLayerStates: compiledLayerStates[compiledLayerIndex] = metaLearningData.clone().detach().cpu().numpy() if compileLayerStates else 0; compiledLayerIndex += 1
-        # metaLearningData: batchSize, numSignals, finalDimension
-
-        # Calculate the estimated health profile given each signal.
-        for specificLayerInd in range(self.numSpecificEncoderLayers, 2*self.numSpecificEncoderLayers): 
-            # metaLearningData = self.specificSignalEncoderModel.learningInterface(layerInd=specificLayerInd, signalData=metaLearningData)
+        # Shared signal encoder layers.
+        for layerInd in range(self.numSharedEncoderLayers):
+            metaLearningData = self.sharedSignalEncoderModel.learningInterface(layerInd=layerInd, signalData=metaLearningData)
             if compileLayerStates: compiledLayerStates[compiledLayerIndex] = metaLearningData.clone().detach().cpu().numpy() if compileLayerStates else 0; compiledLayerIndex += 1
         # metaLearningData: batchSize, numSignals, finalDimension
 
@@ -248,7 +241,7 @@ class emotionModelHead(nn.Module):
 
         with torch.no_grad():
             # Initialize the output tensors.
-            compiledSignalEncoderLayerStates = np.zeros(shape=(2*self.numSpecificEncoderLayers + self.numSharedEncoderLayers + 1, numExperiments, 1, self.encodedDimension))
+            compiledSignalEncoderLayerStates = np.zeros(shape=(self.numSpecificEncoderLayers + self.numSharedEncoderLayers + 1, numExperiments, 1, self.encodedDimension))
             basicEmotionProfile = torch.zeros((numExperiments, self.numBasicEmotions, self.encodedDimension), device=device)
             validDataMask = torch.zeros((numExperiments, numSignals, maxSequenceLength), device=device, dtype=torch.bool)
             emotionProfile = torch.zeros((numExperiments, self.numEmotions, self.encodedDimension), device=device)

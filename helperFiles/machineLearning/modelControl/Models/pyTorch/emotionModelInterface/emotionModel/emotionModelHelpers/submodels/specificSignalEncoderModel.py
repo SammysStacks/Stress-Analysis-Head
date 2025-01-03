@@ -24,7 +24,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         self.profileModel = profileModel(numExperiments=numExperiments, numSignals=self.numSignals, encodedDimension=encodedDimension)
         self.healthProfileJacobians = self.initializeJacobianParams(self.numSignals)
         self.processingLayers, self.neuralLayers = nn.ModuleList(), nn.ModuleList()
-        for _ in range(2*self.numSpecificEncoderLayers): self.addLayer()
+        for _ in range(self.numSpecificEncoderLayers): self.addLayer()
 
         # Assert the validity of the input parameters.
         assert self.encodedDimension % 2 == 0, "The encoded dimension must be divisible by 2."

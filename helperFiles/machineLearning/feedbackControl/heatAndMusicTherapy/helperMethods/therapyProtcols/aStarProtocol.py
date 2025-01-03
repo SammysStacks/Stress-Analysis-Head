@@ -109,7 +109,7 @@ class aStarTherapyProtocol(generalTherapyProtocol):
         newUserParam = (newUserParam - self.initialParameterBounds[0][0]) / (self.initialParameterBounds[0][1] - self.initialParameterBounds[0][0])
         return newUserParam
 
-    #TODO: to be deleted, double check not needed
+    # TODO: to be deleted, double check not needed
     def findNewTemperature(self, currentUserState, gradientDirection):
         # Unpack the current user state.
         currentUserTemp, currentUserLoss = currentUserState

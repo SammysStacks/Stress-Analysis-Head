@@ -474,7 +474,7 @@ class simulationProtocols:
 
                 # Sample a new loss from the distribution
                 newLossBinIndex = torch.multinomial(newLossProbabilities, 1).item()
-                newUserLoss = resampledPredictionBins[0][newLossBinIndex] # doesn't matter which prediction bins, after resampling they are the same. TODO: do we need to add half of the bin width? to make it in the middle?
+                newUserLoss = resampledPredictionBins[0][newLossBinIndex]  # doesn't matter which prediction bins, after resampling they are the same.
                 # Sample distribution of loss at a certain temperature for PA, NA, SA
                 simulatedSpecificMaps = {'PA': simulatedMapPA, 'NA': simulatedMapNA, 'SA': simulatedMapSA}
                 specificLossProbabilities = {}

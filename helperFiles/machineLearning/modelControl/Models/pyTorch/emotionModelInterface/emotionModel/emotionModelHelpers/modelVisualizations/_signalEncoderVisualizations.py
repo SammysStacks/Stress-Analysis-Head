@@ -59,7 +59,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotPhysiologicalError(self, relativeTimes, healthProfile, reconstructedPhysiologicalProfile, epoch=0, saveFigureLocation="", plotTitle="Signal Encoding"):
+    def plotProfileReconstructionError(self, relativeTimes, healthProfile, reconstructedPhysiologicalProfile, epoch=0, saveFigureLocation="", plotTitle="Signal Encoding"):
         # Extract the signal dimensions.
         healthError = (healthProfile[:, None, :] - reconstructedPhysiologicalProfile)
         batchSize, numSignals, sequenceLength = reconstructedPhysiologicalProfile.shape
@@ -77,7 +77,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotPhysiologicalReconstruction(self, relativeTimes, healthProfile, reconstructedPhysiologicalProfile, epoch=0, saveFigureLocation="", plotTitle="Signal Encoding"):
+    def plotProfileReconstruction(self, relativeTimes, healthProfile, reconstructedPhysiologicalProfile, epoch=0, saveFigureLocation="", plotTitle="Signal Encoding"):
         # Extract the signal dimensions.
         batchSize, numSignals, sequenceLength = reconstructedPhysiologicalProfile.shape
         batchInd = 0
@@ -156,31 +156,19 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         interpolated_states = compiledSignalEncoderLayerStates.real
 
         # These should be chosen based on your data and how you want to "zoom"
-        # relativeTimesExtentInterp = (relativeTimes.min(), relativeTimes.max(), hiddenLayers + numSpecificEncoderLayers, numLayers - numSpecificEncoderLayers)
         relativeTimesExtent = (relativeTimes.min(), relativeTimes.max(), 0, numLayers)
         plt.figure(figsize=(12, 8))
 
         # Plot the rest of the layers with the same normalization.
-        im0 = plt.imshow(interpolated_states, cmap=self.custom_cmap, interpolation=None, extent=relativeTimesExtent, aspect='auto', origin='lower', vmin=-1.1, vmax=1.1)
-        # plt.imshow(interpolated_states[hiddenLayers + numSpecificEncoderLayers:numLayers - numSpecificEncoderLayers + 1], cmap=self.custom_cmap, interpolation='nearest', extent=relativeTimesExtentInterp, aspect='auto', origin='lower', vmin=-1.1, vmax=1.1)
+        im0 = plt.imshow(interpolated_states, cmap=self.custom_cmap, interpolation=None, extent=relativeTimesExtent, aspect='auto', origin='lower', vmin=-1.25, vmax=1.25)
         plt.colorbar(im0, fraction=0.046, pad=0.04)
 
-        # # Plot the last layer with its own normalization and colorbar
-        # plt.imshow(interpolated_states[2:-1], cmap=custom_cmap, interpolation=None, extent=relativeTimes, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
-        # im0 = plt.imshow(interpolated_states[-1:], cmap=custom_cmap, interpolation=None, extent=relativeTimes_finalExtent, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
-        # plt.colorbar(im0, fraction=0.046, pad=0.04)
-        #
-        # # Plot the rest of the layers with the same normalization.
-        # plt.imshow(interpolated_states[0:1], cmap=custom_cmap, interpolation=None, extent=relativeTimes_initExtent1, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
-        # plt.imshow(interpolated_states[1:2], cmap=custom_cmap, interpolation=None, extent=relativeTimes_initExtent2, aspect='auto', origin='lower', vmin=first_layer_vmin, vmax=first_layer_vmax)
-
         # Add horizontal lines to mark layer boundaries
-        plt.hlines(y=numLayers - numSpecificEncoderLayers, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
         plt.hlines(y=hiddenLayers + numSpecificEncoderLayers, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
         plt.hlines(y=hiddenLayers, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='-', linewidth=2)
 
         # Ticks, labels, and formatting
-        yticks = np.asarray([0, 1, 1] + list(range(2, numLayers - 2)) + [1])
+        yticks = np.asarray([0, 1, 1] + list(range(2, numLayers - 1)))
         plt.yticks(ticks=np.arange(start=0.5, stop=numLayers, step=1), labels=yticks, fontsize=12)
         plt.title(label=f"{plotTitle} epoch{epoch}", fontsize=16)
         plt.ylabel(ylabel="Layer Index", fontsize=14)
@@ -354,7 +342,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         maxHalfAngle = 180 if degreesFlag else np.pi
         if "3D Data Flow" in plotTitle: maxHalfAngle = 2*modelConstants.minMaxScale
         surf = ax.scatter(x_data.flatten(), y_data.flatten(), np.imag(jacobianPath.flatten()),  # Use z-values for coloring
-                          c=np.angle(jacobianPath.flatten(), deg=degreesFlag), cmap='viridis', alpha=1, s=10, vmin=-maxHalfAngle, vmax=maxHalfAngle)
+                          c=np.angle(jacobianPath.flatten(), deg=degreesFlag), cmap='viridis', alpha=1, s=7, vmin=-maxHalfAngle, vmax=maxHalfAngle)
 
         # Customize the view angle
         ax.view_init(elev=30, azim=135)
@@ -391,7 +379,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         ax = fig.add_subplot(111, projection='3d')
 
         # Create the scatter plot
-        surf = ax.scatter(x_data.flatten(), y_data.flatten(), dataStates.flatten(), c=dataStates.flatten(), linewidths=2,  cmap=self.custom_cmap, alpha=1, s=10, vmin=-1.5*modelConstants.minMaxScale, vmax=1.5*modelConstants.minMaxScale)
+        surf = ax.scatter(x_data.flatten(), y_data.flatten(), dataStates.flatten(), c=dataStates.flatten(), linewidths=2, cmap=self.custom_cmap, alpha=1, s=7, vmin=-1.5*modelConstants.minMaxScale, vmax=1.5*modelConstants.minMaxScale)
 
         # Customize the view angle
         ax.view_init(elev=30, azim=135)

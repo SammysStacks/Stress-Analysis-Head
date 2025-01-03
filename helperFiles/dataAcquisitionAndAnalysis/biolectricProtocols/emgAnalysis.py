@@ -40,7 +40,6 @@ class emgProtocol(globalProtocol):
         super().__init__("emg", numPointsPerBatch, moveDataFinger, channelIndices, plottingClass, readData)
         self.resetAnalysisVariables()
 
-    # TODO: [0 for _ in range(self.numChannels)] FOR CERTAIN VARIABLES
     def resetAnalysisVariables(self):
         # Reset Mutable Variables
         self.xDataRMS = []              # Holder for Most Recent RMS Data

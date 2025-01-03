@@ -121,12 +121,13 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
 
     def printParams(self):
         # Count the trainable parameters.
-        numProfileParams = sum(p.numel() for name, p in self.named_parameters() if p.requires_grad and 'healthGenerationModel' in name)
-        numParams = sum(p.numel() for name, p in self.named_parameters() if p.requires_grad and 'healthGenerationModel' in name)
+        numInitParams = sum(p.numel() for name, p in self.named_parameters() if p.requires_grad and 'healthGenerationModel' in name)
+        numJacobians = sum(p.numel() for name, p in self.named_parameters() if p.requires_grad and 'healthProfileJacobian' in name)
+        numParams = sum(p.numel() for name, p in self.named_parameters()) - numJacobians - numInitParams
 
         # Print the number of trainable parameters.
-        totalParams = numParams + numProfileParams
-        print(f'The model has {totalParams} trainable parameters: {numParams} in the metamodel and {numProfileParams} for health generation.')
+        totalParams = sum(p.numel() for name, p in self.named_parameters())
+        print(f'The model has {totalParams} trainable parameters: {numJacobians} jacobians, {numParams} meta-weights, and {numInitParams} initial weights.')
 
     def getEigenvalues(self, inputData, layerInd):
         neuralWeights = self.getTransformationMatrix(inputData, layerInd)
@@ -137,7 +138,7 @@ if __name__ == "__main__":
     # General parameters.
     _neuralOperatorParameters = modelParameters.getNeuralParameters({'waveletType': 'bior3.1'})['neuralOperatorParameters']
     _batchSize, _numSignals, _sequenceLength = 2, 128, 256
-    modelConstants.numEncodedWeights = 32
+    modelConstants.numEncodedWeights = 64
     _numSharedEncoderLayers = 8
 
     # Set up the parameters.
