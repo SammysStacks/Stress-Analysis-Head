@@ -11,13 +11,13 @@ wds_profile=('1e-6')  # 1e-6 ==> x <== 1e-3; Removed from filename
 wds_profileGen=('1e-5')  # 1e-5 == x <= 1e-4; Removed from filename
 wds_reversible=('1e-4')  # 1e-4 == x <= 1e-3; Removed from filename
 
-# Known interesting parameters: 256
-numSharedEncoderLayers_arr=(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16)  # 16
-numSpecificEncoderLayers_arr=(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16)  # 16
+# Known interesting parameters: 144
+numSharedEncoderLayers_arr=(1 2 3 4 5 6 7 8 9 10 11 12)  # 12
+numSpecificEncoderLayers_arr=(1 2 3 4 5 6 7 8 9 10 11 12)  # 12
 
 # Known interesting parameters: 144
 allNumEncodedWeights=(16 32 64 128 256 512)  # 6
-numProfileShots_arr=(4 8 16 24 32 48)  # 6
+numProfileShots_arr=(4 8 12 16 24 32)  # 6
 encodedDimensions_arr=(64 128 256 512)  # 4
 initialProfileAmp_arr=('0.01')  # 0.005 <= x <= 0.05
 
