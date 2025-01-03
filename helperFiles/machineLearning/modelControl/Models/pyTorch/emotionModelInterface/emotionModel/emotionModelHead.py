@@ -213,22 +213,33 @@ class emotionModelHead(nn.Module):
         if compileLayerStates:
             # Initialize the model's learning interface.
             compiledLayerStates = np.zeros(shape=(self.numSpecificEncoderLayers + self.numSharedEncoderLayers + 1, metaLearningData.size(0), metaLearningData.size(1), metaLearningData.size(2)))
-            compiledLayerStates[compiledLayerIndex] = metaLearningData.clone().detach().cpu().numpy() if compileLayerStates else 0; compiledLayerIndex += 1
+            compiledLayerStates[compiledLayerIndex] = metaLearningData.clone().detach().cpu().numpy(); compiledLayerIndex += 1
         # metaLearningData: batchSize, numSignals, finalDimension
 
-        # Specific signal encoder layers.
-        for layerInd in range(self.numSpecificEncoderLayers):
-            metaLearningData = self.specificSignalEncoderModel.learningInterface(layerInd=layerInd, signalData=metaLearningData)
-            if compileLayerStates: compiledLayerStates[compiledLayerIndex] = metaLearningData.clone().detach().cpu().numpy() if compileLayerStates else 0; compiledLayerIndex += 1
-        # metaLearningData: batchSize, numSignals, finalDimension
-
-        # Shared signal encoder layers.
-        for layerInd in range(self.numSharedEncoderLayers):
-            metaLearningData = self.sharedSignalEncoderModel.learningInterface(layerInd=layerInd, signalData=metaLearningData)
-            if compileLayerStates: compiledLayerStates[compiledLayerIndex] = metaLearningData.clone().detach().cpu().numpy() if compileLayerStates else 0; compiledLayerIndex += 1
-        # metaLearningData: batchSize, numSignals, finalDimension
+        if forwardPass:
+            # Signal encoder layers.
+            metaLearningData, compiledLayerStates, compiledLayerIndex = self.modelBlockPass(metaLearningData, compiledLayerStates, self.sharedSignalEncoderModel, self.numSharedEncoderLayers, compiledLayerIndex)
+            metaLearningData, compiledLayerStates, compiledLayerIndex = self.modelBlockPass(metaLearningData, compiledLayerStates, self.specificSignalEncoderModel, self.numSpecificEncoderLayers, compiledLayerIndex)
+            # metaLearningData: batchSize, numSignals, finalDimension
+        else:
+            # Signal encoder layers.
+            metaLearningData, compiledLayerStates, compiledLayerIndex = self.modelBlockPass(metaLearningData, compiledLayerStates, self.specificSignalEncoderModel, self.numSpecificEncoderLayers, compiledLayerIndex)
+            metaLearningData, compiledLayerStates, compiledLayerIndex = self.modelBlockPass(metaLearningData, compiledLayerStates, self.sharedSignalEncoderModel, self.numSharedEncoderLayers, compiledLayerIndex)
+            # metaLearningData: batchSize, numSignals, finalDimension
 
         return metaLearningData, compiledLayerStates
+
+    @staticmethod
+    def modelBlockPass(metaLearningData, compiledLayerStates, modelLayer, numLayers, compiledLayerIndex):
+        compileLayerStates = compiledLayerStates is not None
+
+        # Shared signal encoder layers.
+        for layerInd in range(numLayers):
+            metaLearningData = modelLayer.learningInterface(layerInd=layerInd, signalData=metaLearningData)
+            if compileLayerStates: compiledLayerStates[compiledLayerIndex] = metaLearningData.clone().detach().cpu().numpy(); compiledLayerIndex += 1
+        # metaLearningData: batchSize, numSignals, finalDimension
+
+        return metaLearningData, compiledLayerStates, compiledLayerIndex
 
     def reconstructPhysiologicalProfile(self, resampledSignalData):
         return self.signalEncoderPass(metaLearningData=resampledSignalData, forwardPass=True, compileLayerStates=True)
