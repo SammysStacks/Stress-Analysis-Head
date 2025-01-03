@@ -152,8 +152,8 @@ class generalVisualizations(globalPlottingProtocols):
             plt.plot(trainingValues[modelInd], color=self.darkColors[modelInd], linewidth=0.2, alpha=0.8)
             if testingValues is not None: plt.plot(testingValues[modelInd], color=self.darkColors[modelInd], linewidth=0.2, alpha=0.5)
 
-            plt.plot(trainingValues[modelInd].mean(axis=-1), color=self.darkColors[modelInd], linewidth=1, alpha=0.8)
-            if testingValues is not None: plt.plot(testingValues[modelInd].mean(axis=-1), color=self.darkColors[modelInd], linewidth=1, alpha=0.5)
+            plt.plot(np.mean(trainingValues[modelInd], axis=-1), color=self.darkColors[modelInd], linewidth=1, alpha=0.8)
+            if testingValues is not None: plt.plot(np.mean(testingValues[modelInd], axis=-1), color=self.darkColors[modelInd], linewidth=1, alpha=0.5)
         plt.xlim((0, len(trainingValues[0]) + 1))
         plt.grid(True)
 
