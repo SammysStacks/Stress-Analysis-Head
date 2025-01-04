@@ -113,13 +113,13 @@ class generalVisualizations(globalPlottingProtocols):
             N = np.sum(~np.isnan(trainingLosses[modelInd]), axis=-1)
             trainingSTD = np.nanstd(trainingLosses[modelInd], ddof=1, axis=-1) / np.sqrt(N)
             trainingLoss = np.nanmean(trainingLosses[modelInd], axis=-1)
-            plt.errorbar(x=np.arange(len(trainingLoss)), y=trainingLoss, yerr=trainingSTD, color=self.darkColors[modelInd], linewidth=2)
+            plt.errorbar(x=np.arange(len(trainingLoss)), y=trainingLoss, yerr=trainingSTD, color=self.darkColors[modelInd], linewidth=1)
             if testingLosses is not None:
                 N = np.sum(~np.isnan(testingLosses[modelInd]), axis=-1)
                 testingStd = np.nanstd(testingLosses[modelInd], ddof=1, axis=-1) / np.sqrt(N)
                 testingLoss = np.nanmean(testingLosses[modelInd], axis=-1)
-                plt.plot(testingLoss, color=self.darkColors[modelInd], linewidth=2, alpha=0.75)
-                plt.errorbar(x=np.arange(len(testingLoss)), y=testingLoss, yerr=testingStd, color=self.darkColors[modelInd], linewidth=2)
+                # plt.plot(testingLoss, color=self.darkColors[modelInd], linewidth=1, alpha=0.75)
+                plt.errorbar(x=np.arange(len(testingLoss)), y=testingLoss, yerr=testingStd, color=self.darkColors[modelInd], linewidth=1)
 
         # Plot the losses
         for modelInd in range(len(trainingLosses)):
@@ -128,12 +128,10 @@ class generalVisualizations(globalPlottingProtocols):
                 testingLoss = np.asarray(testingLosses[modelInd])
                 testingLoss[np.isnan(testingLoss)] = None
                 plt.plot(testingLoss, '-', color=self.darkColors[modelInd], linewidth=1, alpha=0.025)
-        plt.hlines(y=0.1, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2)
-        plt.hlines(y=0.05, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.5)
-        plt.hlines(y=0.04, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.25)
-        plt.hlines(y=0.03, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.25)
-        plt.hlines(y=0.02, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2, alpha=0.25)
-        plt.hlines(y=0.01, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=2)
+        plt.hlines(y=0.1, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=1)
+        plt.hlines(y=0.03, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=1, alpha=0.25)
+        plt.hlines(y=0.02, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=1, alpha=0.25)
+        plt.hlines(y=0.01, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=1)
         plt.xlim((0, max(32, len(trainingLosses[0]) + 1)))
         plt.ylim((0.0025, 1))
         plt.grid(True)
