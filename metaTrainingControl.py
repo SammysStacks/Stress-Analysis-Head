@@ -96,11 +96,12 @@ if __name__ == "__main__":
     userInputParams = modelParameters.getNeuralParameters(userInputParams)
     modelConstants.updateModelParams(userInputParams)
     submodel = userInputParams['submodel']
-
+    
+    # TODO
+    modelConstants.userInputParams['infinite'] = modelConstants.userInputParams['beta1']
+    modelConstants.userInputParams['linearity'] = modelConstants.userInputParams['beta2']
     modelConstants.userInputParams['beta1'] = 0.7
     modelConstants.userInputParams['beta2'] = 0.9
-    modelConstants.userInputParams['infinite'] = modelConstants.userInputParams['beta1']
-    modelConstants.userInputParams['linear'] = modelConstants.userInputParams['beta2']
 
     # Initialize the model information classes.
     modelCompiler = compileModelData(submodel, userInputParams, useTherapyData=False, accelerator=accelerator)  # Initialize the model compiler.
