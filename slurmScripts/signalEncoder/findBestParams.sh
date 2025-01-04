@@ -39,7 +39,7 @@ numSpecificEncoderLayers_arr=(1)
 numSharedEncoderLayers_arr=(6)
 
 # Collective Switchables: 256
-encodedDimensions_arr=(256)
+encodedDimensions_arr=(128)
 allNumEncodedWeights=(128)
 numProfileShots_arr=(24)
 
