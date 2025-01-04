@@ -40,12 +40,12 @@ numSharedEncoderLayers_arr=(6)
 
 # Collective Switchables: 256
 encodedDimensions_arr=(128)
-allNumEncodedWeights=(32 64 128)
+allNumEncodedWeights=(32)
 numProfileShots_arr=(24)
 
 # Single Switchables.
 waveletTypes_arr=('bior3.1')
-#optimizers_arr=('Adam')
+optimizers_arr=('Adam' 'NAdam')
 lrs_profile=('0.01' '0.025' '0.05')
 
 beta1s_arr=('0.5' '0.6' '0.667' '0.7' '0.75' '0.8' '0.9' '1')  # Removed from filename
