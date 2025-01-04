@@ -57,9 +57,9 @@ if __name__ == "__main__":
 
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--initialProfileAmp', type=float, default=0.01, help='The limits for profile initialization, [0.005, 0.05]')
-    parser.add_argument('--numSpecificEncoderLayers', type=int, default=4, help='The number of layers in the model.')
-    parser.add_argument('--numSharedEncoderLayers', type=int, default=4, help='The number of layers in the model.')
-    parser.add_argument('--numEncodedWeights', type=int, default=16, help='The number of profile weights.')
+    parser.add_argument('--numSpecificEncoderLayers', type=int, default=6, help='The number of layers in the model.')
+    parser.add_argument('--numSharedEncoderLayers', type=int, default=6, help='The number of layers in the model.')
+    parser.add_argument('--numEncodedWeights', type=int, default=32, help='The number of profile weights.')
     parser.add_argument('--numProfileShots', type=int, default=24, help='The epochs for profile training.')
 
     # Add arguments for the emotion and activity architecture.
