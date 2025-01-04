@@ -88,7 +88,7 @@ class simulationProtocols:
 
     """Define the initialStates"""
     def getInitialState(self):
-        # / TODO: prediction is for loss, parameter is the whatever we can control/change
+        # TODO: prediction is for loss, parameter is the whatever we can control/change
         return self.startingTimes, self.startingParams, self.startingPredictions  # (initialPoints), (initialPoints, numParams), (initialPoints, predictions = emotion states)
 
     """Randomly sample states"""
@@ -416,7 +416,7 @@ class simulationProtocols:
 
         return smoothed_map
 
-    # / TODO: deleted after real-time streaming is implemented
+    # TODO: deleted after real-time streaming is implemented
     def getSimulatedCompiledLoss_empatch(self, currentParam, currentUserState, newUserTemp=None, therapyMethod=None):
         # Unpack the current user state.
         currentUserTemp = currentParam
