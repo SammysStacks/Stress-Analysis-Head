@@ -367,8 +367,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         ax = fig.add_subplot(111, projection='3d')
 
         # Plot the surface.
-        surf = ax.plot_surface(x_data, y_data, dataStates, cmap='viridis', alpha=0.5, linewidth=0, rcount=64, ccount=64, antialiased=True, vmin=-1.5*modelConstants.minMaxScale, vmax=1.5*modelConstants.minMaxScale)
-        ax.scatter(x, y, z, c=self.blackColor, linewidths=2, alpha=1, s=10)
+        surf = ax.plot_surface(x_data, y_data, dataStates, cmap=self.custom_cmap, alpha=0.5, linewidth=1, antialiased=True, vmin=-1.5*modelConstants.minMaxScale, vmax=1.5*modelConstants.minMaxScale)
+        surf = ax.scatter(x_data.flatten(), y_data.flatten(), dataStates.flatten(), c=dataStates.flatten(), linewidths=2, cmap=self.custom_cmap, alpha=1, s=7, vmin=-1.5*modelConstants.minMaxScale, vmax=1.5*modelConstants.minMaxScale)
 
         # Customize the view angle
         ax.view_init(elev=30, azim=135)

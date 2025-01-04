@@ -33,7 +33,7 @@ class hmmTherapyProtocol(generalTherapyProtocol):
             print("Initial emission matrix shape:", normalized_initial_matrix.shape)
             return normalized_initial_matrix.numpy()
         else:
-            # TODO: get the emission matrix from actual data
+            # / TODO: get the emission matrix from actual data
             normalized_initial_matrix = self.simulationProtocols.realSimMapCompiledLoss / self.simulationProtocols.realSimMapCompiledLoss.sum(axis=1, keepdims=True)
             print("Initial emission matrix shape:", normalized_initial_matrix.shape)
             return normalized_initial_matrix.numpy()
@@ -57,7 +57,7 @@ class hmmTherapyProtocol(generalTherapyProtocol):
             observation_sequences = np.asarray(observation_sequences).reshape(-1, 1)
             return observation_sequences
         else:
-            # TODO: think about how we are gonna use the actual data to train the HMM
+            # / TODO: think about how we are gonna use the actual data to train the HMM
             # right now this is just the same as generating random sequence from real data
             observation_sequences = []
             current_state = np.random.choice(self.numStates, p=self.startProb)

@@ -97,5 +97,5 @@ class basicTherapyProtocol(generalTherapyProtocol):
         if self.simulateTherapy:
             return self.simulationProtocols.simulatedMapCompiledLoss
         else:
-            # TODO: eventually, this should return the fully compiled map with real data (once we finished data collection)
+            # / TODO: eventually, this should return the fully compiled map with real data (once we finished data collection)
             return self.simulationProtocols.realSimMapCompiledLoss

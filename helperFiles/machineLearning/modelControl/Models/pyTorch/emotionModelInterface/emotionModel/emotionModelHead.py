@@ -202,7 +202,8 @@ class emotionModelHead(nn.Module):
         jacobianSpatialPath = np.asarray([*[specificSignalJacobianPath[specificEigenvalueInd] for specificEigenvalueInd in range(0, specificSignalJacobianPath.shape[0] // 2, 1)],
                                           *[np.broadcast_to(sharedSignalJacobianPath[sharedEigenvalueInd], specificSignalJacobianPath[0].shape) for sharedEigenvalueInd in range(sharedSignalJacobianPath.shape[0])],
                                           *[specificSignalJacobianPath[specificEigenvalueInd] for specificEigenvalueInd in range(specificSignalJacobianPath.shape[0] // 2, specificSignalJacobianPath.shape[0], 1)]])
-        # jacobianSpatialPath: numSpecificEncoderLayers + numSharedEncoderLayers, numSignals, encodedDimension  TODO: collect for every profile epoch? Memory?
+        # jacobianSpatialPath: numSpecificEncoderLayers + numSharedEncoderLayers, numSignals, encodedDimension
+        # TODO: collect for every profile epoch? Memory?
 
         return jacobianSpatialPath
 

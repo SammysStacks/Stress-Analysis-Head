@@ -293,7 +293,7 @@ class generalTherapyProtocol(abc.ABC):
                 self.timepoints.append(newTimePoint)
 
         else:
-            # TODO: eventually, this will be the real-time user state update during experiment
+            # / TODO: eventually, this will be the real-time user state update during experiment
             # Simulate a new time.
             lastTimePoint = self.timepoints[-1] if len(self.timepoints) != 0 else 0
 

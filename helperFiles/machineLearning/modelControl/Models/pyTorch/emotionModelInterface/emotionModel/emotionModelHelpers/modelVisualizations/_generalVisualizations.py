@@ -110,14 +110,16 @@ class generalVisualizations(globalPlottingProtocols):
 
         # Plot the losses
         for modelInd in range(len(trainingLosses)):
-            trainingSTD = np.nanstd(trainingLosses[modelInd], axis=-1)
+            N = np.sum(~np.isnan(trainingLosses[modelInd]), axis=-1)
+            trainingSTD = np.nanstd(trainingLosses[modelInd], ddof=1, axis=-1) / np.sqrt(N)
             trainingLoss = np.nanmean(trainingLosses[modelInd], axis=-1)
-            plt.errorbar(x=np.arange(len(trainingLoss)), y=trainingLoss, yerr=trainingSTD, color=self.darkColors[modelInd], capsize=3, linewidth=2)
+            plt.errorbar(x=np.arange(len(trainingLoss)), y=trainingLoss, yerr=trainingSTD, color=self.darkColors[modelInd], linewidth=2)
             if testingLosses is not None:
-                testingStd = np.nanstd(testingLosses[modelInd], axis=-1)
+                N = np.sum(~np.isnan(testingLosses[modelInd]), axis=-1)
+                testingStd = np.nanstd(testingLosses[modelInd], ddof=1, axis=-1) / np.sqrt(N)
                 testingLoss = np.nanmean(testingLosses[modelInd], axis=-1)
                 plt.plot(testingLoss, color=self.darkColors[modelInd], linewidth=2, alpha=0.75)
-                plt.errorbar(x=np.arange(len(testingLoss)), y=testingLoss, yerr=testingStd, color=self.darkColors[modelInd], capsize=3, linewidth=2)
+                plt.errorbar(x=np.arange(len(testingLoss)), y=testingLoss, yerr=testingStd, color=self.darkColors[modelInd], linewidth=2)
 
         # Plot the losses
         for modelInd in range(len(trainingLosses)):
