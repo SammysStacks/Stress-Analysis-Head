@@ -35,7 +35,7 @@ lrs_profileGen=('1e-4') # # 5e-5 <= x == 1e-4; Removed from filename
 lrs_reversible=('1e-3')  # 1e-4 <= x == 1e-3; Removed from filename
 
 # Collective Switchables: 128
-numSpecificEncoderLayers_arr=(6 3 1)
+numSpecificEncoderLayers_arr=(4 1)
 numSharedEncoderLayers_arr=(6)
 
 # Collective Switchables: 256
@@ -45,8 +45,8 @@ numProfileShots_arr=(24)
 
 # Single Switchables.
 waveletTypes_arr=('bior3.1')
-optimizers_arr=('Adam' 'NAdam')
-lrs_profile=('0.01' '0.025' '0.05')
+optimizers_arr=('Adam')
+lrs_profile=('0.01' '0.05')
 
 beta1s_arr=('0.5' '0.6' '0.667' '0.7' '0.75' '0.8' '0.9' '1')  # Removed from filename
 beta2s_arr=('1' '1.25' '1.334' '1.5' '1.667' '2' '2.5' '3' '4' '5')  # Removed from filename
