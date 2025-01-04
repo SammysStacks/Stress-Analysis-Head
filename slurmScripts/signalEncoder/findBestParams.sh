@@ -50,7 +50,7 @@ lrs_profile=('0.01')
 
 
 beta1s_arr=('0.5' '0.6' '0.667' '0.7' '0.75' '0.8' '0.9')  # Removed from filename
-beta2s_arr=('1' '2' '3' '4' '0.5' '0.667' '0.75' '1' '1.334' '1.25' '1.5')  # Removed from filename
+beta2s_arr=('0.5' '0.667' '0.75' '1' '1.334' '1.25' '1.5' '2' '3' '4')  # Removed from filename
 
 for beta1s in "${beta1s_arr[@]}"
 do
