@@ -49,9 +49,8 @@ optimizers_arr=('Adam')
 lrs_profile=('0.01')
 
 
-# lrs_profile=('0.01' '0.025' '0.05' '0.1')  # 0.005 <= x <= 0.05
-#numSharedEncoderLayers_arr=(4 6 8 12)  # 4
-#numSpecificEncoderLayers_arr=(1 2 3 4 5 6)  # 4
+beta1s_arr=('0.5' '0.6' '0.667' '0.7' '0.75' '0.8' '0.9')  # Removed from filename
+beta2s_arr=('1' '2' '3' '4' '0.5' '0.667' '0.75' '1' '1.334' '1.25' '1.5')  # Removed from filename
 
 for beta1s in "${beta1s_arr[@]}"
 do
