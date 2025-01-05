@@ -73,7 +73,7 @@ if __name__ == "__main__":
     # ----------------------- Training Parameters ----------------------- #
 
     # Signal encoder learning rates.
-    parser.add_argument('--profileLR', type=float, default=0.01, help='The learning rate of the health model.')
+    parser.add_argument('--profileLR', type=float, default=0.1, help='The learning rate of the health model.')
     parser.add_argument('--reversibleLR', type=float, default=1e-3, help='The learning rate of the general model.')
     parser.add_argument('--physGenLR', type=float, default=1e-4, help='The learning rate of the general model.')
 
@@ -84,8 +84,8 @@ if __name__ == "__main__":
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--momentum_decay', type=float, default=0.004, help='Momentum decay for the optimizer.')
-    parser.add_argument('--beta1', type=float, default=0.701, help='Beta1 for the optimizer: 0.7 -> 0.9')
-    parser.add_argument('--beta2', type=float, default=0.901, help='Beta2 for the optimizer: 0.9 -> 0.999')
+    parser.add_argument('--beta1', type=float, default=0.7, help='Beta1 for the optimizer: 0.7 -> 0.9')
+    parser.add_argument('--beta2', type=float, default=0.9, help='Beta2 for the optimizer: 0.9 -> 0.999')
 
     # ----------------------- Compile Parameters ----------------------- #
 
@@ -97,8 +97,8 @@ if __name__ == "__main__":
     userInputParams['linearity'] = userInputParams['beta2']
     userInputParams['beta1'] = 0.7
     userInputParams['beta2'] = 0.9
-    userInputParams['infinite'] = 0.75
-    userInputParams['linearity'] = 2
+    # userInputParams['infinite'] = 0.75
+    # userInputParams['linearity'] = 2
 
     # Compile additional input parameters.
     userInputParams = modelParameters.getNeuralParameters(userInputParams)
