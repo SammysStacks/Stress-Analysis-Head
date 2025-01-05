@@ -31,7 +31,7 @@ waveletTypes_arr=(
 
 # Learning parameters.
 lrs_profile=('0.001' '0.0025' '0.005' '0.0075' '0.01' '0.02' '0.03' '0.04' '0.05' '0.075' '0.1')  # 0.005 <= x <= 0.05
-lrs_profile=('0.01' '0.02' '0.03' '0.04' '0.05' '0.075' '0.1' '0.2' '0.25')  # 0.005 <= x <= 0.05
+lrs_profile=('0.25' '0.2' '0.1' '0.05' '0.025' '0.01' '0.5')  # 0.005 <= x <= 0.05
 lrs_profileGen=('1e-4') # # 5e-5 <= x == 1e-4; Removed from filename
 lrs_reversible=('1e-3')  # 1e-4 <= x == 1e-3; Removed from filename
 
@@ -47,7 +47,7 @@ numProfileShots_arr=(24)
 # Single Switchables.
 waveletTypes_arr=('bior3.1')
 optimizers_arr=('Adam')
-#lrs_profile=('0.01' '0.05')
+lrs_profile=('0.05')
 
 beta1s_arr=('0.5' '0.6' '0.667' '0.7' '0.75' '0.8' '0.9' '1')  # Removed from filename
 beta2s_arr=('1' '1.25' '1.334' '1.5' '1.667' '2' '2.5' '3' '4' '5')  # Removed from filename
