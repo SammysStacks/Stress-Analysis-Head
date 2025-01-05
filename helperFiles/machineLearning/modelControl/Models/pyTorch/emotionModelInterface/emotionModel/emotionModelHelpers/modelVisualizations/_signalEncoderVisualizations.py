@@ -135,7 +135,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
             # Plot the signal reconstruction.
-            plt.plot(timepoints[batchInd, signalInd, :], reconstructedSignals[batchInd, signalInd, :] - datapoints[batchInd, signalInd, :], 'o', color=self.blackColor, markersize=15, alpha=0.75, label="Signal Reconstruction Error")
+            plt.plot(timepoints[batchInd, signalInd, :], reconstructedSignals[batchInd, signalInd, :] - datapoints[batchInd, signalInd, :], 'o', color=self.blackColor, markersize=4, alpha=0.75, label="Signal Reconstruction Error")
 
             # Plotting aesthetics.
             plt.title(f"{plotTitle} Error epoch{epoch} signal{signalInd + 1}")
