@@ -49,8 +49,8 @@ waveletTypes_arr=('bior3.1')
 optimizers_arr=('Adam')
 lrs_profile=('0.05')
 
-beta1s_arr=('0.5' '0.6' '0.667' '0.7' '0.75' '0.8' '0.9' '1')  # Removed from filename
-beta2s_arr=('1' '1.25' '1.334' '1.5' '1.667' '2' '2.5' '3' '4' '5')  # Removed from filename
+#beta1s_arr=('0.5' '0.6' '0.667' '0.7' '0.75' '0.8' '0.9' '1')  # Removed from filename
+#beta2s_arr=('1' '1.25' '1.334' '1.5' '1.667' '2' '2.5' '3' '4' '5')  # Removed from filename
 
 for beta1s in "${beta1s_arr[@]}"
 do
