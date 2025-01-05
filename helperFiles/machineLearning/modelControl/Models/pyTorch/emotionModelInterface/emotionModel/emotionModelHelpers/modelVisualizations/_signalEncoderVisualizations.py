@@ -156,6 +156,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Interpolate the states.
         compiledSignalEncoderLayerStates = compiledSignalEncoderLayerStates[:, batchInd, signalInd, :]
         numSpecificEncoderLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
+        numSharedEncoderLayers = modelConstants.userInputParams['numSharedEncoderLayers']
         interpolated_states = compiledSignalEncoderLayerStates.real
 
         # These should be chosen based on your data and how you want to "zoom"
@@ -171,8 +172,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.hlines(y=hiddenLayers, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='-', linewidth=2)
 
         # Ticks, labels, and formatting
-        yticks = np.asarray([0, 1, 1] + list(range(2, numLayers - 1)))
-        plt.yticks(ticks=np.arange(start=0.5, stop=numLayers, step=1), labels=yticks, fontsize=12)
+        yticks = np.asarray([0] + list(range(1, 1 + numSpecificEncoderLayers)) + list(range(1, 1 + numSharedEncoderLayers)))
+        plt.yticks(ticks=np.arange(start=0.5, stop=1 + numSpecificEncoderLayers + numSharedEncoderLayers, step=1), labels=yticks, fontsize=12)
         plt.title(label=f"{plotTitle} epoch{epoch}", fontsize=16)
         plt.ylabel(ylabel="Layer Index", fontsize=14)
         plt.xlabel(xlabel="Time", fontsize=14)
