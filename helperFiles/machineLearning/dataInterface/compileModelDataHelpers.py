@@ -54,8 +54,6 @@ class compileModelDataHelpers:
         signalEncoderModelInfo = f"signalEncoder {userInputParams['optimizerType']} {userInputParams['numSharedEncoderLayers']}-shared specific-{userInputParams['numSpecificEncoderLayers']} numShots{userInputParams['numProfileShots']} encodedDim{userInputParams['encodedDimension']} profileLR{userInputParams['profileLR']} profileParams{userInputParams['numEncodedWeights']} weightLim{userInputParams['initialProfileAmp']} {userInputParams['neuralOperatorParameters']['wavelet']['waveletType']}"
         emotionPredictionModelInfo = f"emotionPrediction on {userInputParams['deviceListed']} with {userInputParams['optimizerType']}"
 
-        signalEncoderModelInfo = f'{signalEncoderModelInfo} I{modelConstants.userInputParams['infinite']} L{modelConstants.userInputParams['linearity']}'
-
         # Return the model information.
         if submodel == modelConstants.signalEncoderModel: return f"{trainingDate} {signalEncoderModelInfo.replace('.', '-')}"
         elif submodel == modelConstants.emotionModel: return f"{trainingDate} {emotionPredictionModelInfo.replace('.', '-')}"
