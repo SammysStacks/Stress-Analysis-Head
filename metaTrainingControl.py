@@ -97,8 +97,8 @@ if __name__ == "__main__":
     userInputParams['linearity'] = userInputParams['beta2']
     userInputParams['beta1'] = 0.7
     userInputParams['beta2'] = 0.9
-    # userInputParams['infinite'] = 0.75
-    # userInputParams['linearity'] = 2
+    # userInputParams['infinite'] = 0.5
+    # userInputParams['linearity'] = 1
 
     # Compile additional input parameters.
     userInputParams = modelParameters.getNeuralParameters(userInputParams)
