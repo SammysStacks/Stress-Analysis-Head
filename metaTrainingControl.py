@@ -92,14 +92,6 @@ if __name__ == "__main__":
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
 
-    # TODO
-    userInputParams['infinite'] = userInputParams['beta1']
-    userInputParams['linearity'] = userInputParams['beta2']
-    userInputParams['beta1'] = 0.7
-    userInputParams['beta2'] = 0.9
-    userInputParams['infinite'] = 0.5
-    userInputParams['linearity'] = 1
-
     # Compile additional input parameters.
     userInputParams = modelParameters.getNeuralParameters(userInputParams)
     modelConstants.updateModelParams(userInputParams)
