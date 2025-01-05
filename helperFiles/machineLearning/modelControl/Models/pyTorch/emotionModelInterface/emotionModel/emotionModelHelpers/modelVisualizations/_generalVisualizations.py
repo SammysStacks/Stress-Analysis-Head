@@ -162,7 +162,7 @@ class generalVisualizations(globalPlottingProtocols):
         plt.xlabel("Training Epoch")
         plt.ylabel("Values")
         plt.title(f"{plotTitle}")
-        # plt.ylim((0.4, 2.1))
+        plt.ylim((0.25, 3.1))
 
         # Save the figure if desired.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(trainingValues[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")

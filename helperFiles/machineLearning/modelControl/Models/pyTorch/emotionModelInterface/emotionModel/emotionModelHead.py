@@ -192,20 +192,27 @@ class emotionModelHead(nn.Module):
 
     # ------------------------- Model Components ------------------------- #
 
-    def getJacobianFullPassPath(self, device, domain):
+    def getEigenvalueFullPassPath(self, device, domain):
         specificLinearModels, sharedLinearModels = getattr(self.specificSignalEncoderModel, domain), getattr(self.sharedSignalEncoderModel, domain)
         if domain == 'neuralLayers': specificLinearModels = [_linearModel.highFrequenciesWeights[0] for _linearModel in specificLinearModels]
         if domain == 'neuralLayers': sharedLinearModels = [_linearModel.highFrequenciesWeights[0] for _linearModel in sharedLinearModels]
 
-        specificSignalJacobianPath = np.asarray([specificLinearModels[layerInd].getLayerEigenvalues(layerInd=-1, device=device) for layerInd in range(modelConstants.userInputParams['numSpecificEncoderLayers'])])  # numSpecificEncoderLayers, numSpecificEncoderLayers, numSignals, encodedDimension
-        sharedSignalJacobianPath = np.asarray([sharedLinearModels[layerInd].getLayerEigenvalues(layerInd=-1, device=device) for layerInd in range(modelConstants.userInputParams['numSharedEncoderLayers'])])  # numSharedEncoderLayers, numSharedEncoderLayers, numSignals=1, encodedDimension
-        jacobianSpatialPath = np.asarray([*[specificSignalJacobianPath[specificEigenvalueInd] for specificEigenvalueInd in range(0, specificSignalJacobianPath.shape[0] // 2, 1)],
-                                          *[np.broadcast_to(sharedSignalJacobianPath[sharedEigenvalueInd], specificSignalJacobianPath[0].shape) for sharedEigenvalueInd in range(sharedSignalJacobianPath.shape[0])],
-                                          *[specificSignalJacobianPath[specificEigenvalueInd] for specificEigenvalueInd in range(specificSignalJacobianPath.shape[0] // 2, specificSignalJacobianPath.shape[0], 1)]])
-        # jacobianSpatialPath: numSpecificEncoderLayers + numSharedEncoderLayers, numSignals, encodedDimension
-        # TODO: collect for every profile epoch? Memory?
+        specificEigenvaluePath = np.asarray([specificLinearModels[layerInd].getLayerEigenvalues(layerInd=-1, device=device) for layerInd in range(self.numSpecificEncoderLayers)])
+        sharedEigenvaluePath = np.asarray([sharedLinearModels[layerInd].getLayerEigenvalues(layerInd=-1, device=device) for layerInd in range(self.numSharedEncoderLayers)])
+        # eigenvaluePath: numSpecificEncoderLayers or numSharedEncoderLayers, numSignals or 1, encodedDimension
 
-        return jacobianSpatialPath
+        return specificEigenvaluePath, sharedEigenvaluePath
+
+    def getActivationParamsFullPassPath(self, domain):
+        specificLinearModels, sharedLinearModels = getattr(self.specificSignalEncoderModel, domain), getattr(self.sharedSignalEncoderModel, domain)
+        if domain == 'neuralLayers': specificLinearModels = [_linearModel.highFrequenciesWeights[0] for _linearModel in specificLinearModels]
+        if domain == 'neuralLayers': sharedLinearModels = [_linearModel.highFrequenciesWeights[0] for _linearModel in sharedLinearModels]
+
+        specificActivationPath = np.asarray([specificLinearModels[layerInd].getReversibleActivationParams() for layerInd in range(self.numSpecificEncoderLayers)])
+        sharedActivationPath = np.asarray([sharedLinearModels[layerInd].getReversibleActivationParams() for layerInd in range(self.numSharedEncoderLayers)])
+        # activationPath: numSpecificEncoderLayers or numSharedEncoderLayers, 2, numPoints
+
+        return specificActivationPath, sharedActivationPath
 
     def signalEncoderPass(self, metaLearningData, forwardPass, compileLayerStates=False):
         reversibleInterface.changeDirections(forwardDirection=forwardPass)
@@ -312,6 +319,6 @@ class emotionModelHead(nn.Module):
         plt.plot(validTimepoints, validReconstructedPoints, 'o', color='tab:red', markersize=3, label='Reconstructed Signal', alpha=0.75)
         plt.plot(resampledBiomarkerTimes, resampledSignalData[firstBatchInd, firstSignalInd, :].clone().detach().cpu().numpy(), 'tab:blue', linewidth=1, label='Resampled Signal', alpha=0.75)
         plt.title(f"batchInd{firstBatchInd} signalInd{firstSignalInd} numPoints{len(validTimepoints)}")
-        plt.ylim((-1.5, 1.5))
+        plt.ylim((-1.75, 1.75))
         plt.legend()
         plt.show()

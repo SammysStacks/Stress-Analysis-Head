@@ -52,8 +52,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.xlabel("Time (Seconds)")
         plt.title(f"{plotTitle} epoch{epoch}")
         plt.ylabel("Signal (AU)")
-        if not noTimes: plt.ylim((-1.5, 1.5))
-        else: plt.ylim((-1.5, 1.5))
+        if not noTimes: plt.ylim((-1.75, 1.75))
+        else: plt.ylim((-1.75, 1.75))
 
         # Save the figure.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
@@ -95,7 +95,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.xlabel("Time (Seconds)")
         plt.title(f"{plotTitle} epoch{epoch}")
         plt.ylabel("Signal (AU)")
-        plt.ylim((-1.5, 1.5))
+        plt.ylim((-1.75, 1.75))
 
         # Save the figure.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
@@ -128,7 +128,21 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             plt.ylabel("Signal (AU)")
             plt.legend(loc="best")
             plt.xlabel("Points")
-            plt.ylim((-1.5, 1.5))
+            plt.ylim((-1.75, 1.75))
+
+            # Save the figure.
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+            else: self.clearFigure(fig=None, legend=None, showPlot=True)
+
+            # Plot the signal reconstruction.
+            plt.plot(timepoints[batchInd, signalInd, :], reconstructedSignals[batchInd, signalInd, :] - datapoints[batchInd, signalInd, :], 'o', color=self.blackColor, markersize=15, alpha=0.75, label="Signal Reconstruction Error")
+
+            # Plotting aesthetics.
+            plt.title(f"{plotTitle} Error epoch{epoch} signal{signalInd + 1}")
+            plt.ylabel("Signal (AU)")
+            plt.legend(loc="best")
+            plt.xlabel("Points")
+            plt.ylim((-1.75, 1.75))
 
             # Save the figure.
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
@@ -192,7 +206,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             plt.ylabel("Arbitrary Axis (AU)")
             plt.xlabel("Points")
             plt.title(f"{plotTitle} epoch{epoch} signal{signalInd + 1}")
-            plt.ylim((-1.5, 1.5))
+            plt.ylim((-1.75, 1.75))
 
             # Save the plot
             if self.saveDataFolder: self.displayFigure(saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
@@ -389,4 +403,41 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} batchInd{batchInd} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        else: self.clearFigure(fig=None, legend=None, showPlot=True)
+
+    def plotActivationParams(self, activationCurves, epoch, saveFigureLocation, plotTitle):
+        numActivations, numPointsX, numPointsY = activationCurves.shape
+        nCols = 3; nRows = math.ceil(numActivations / nCols)
+
+        # Create a figure and axes array
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(8 * nCols, 8 * nRows), squeeze=False)
+        axes = axes.flatten()  # Flatten to 1D array for easy indexing
+
+        for activationInd in range(numActivations):
+            ax = axes[activationInd]
+            x, y = activationCurves[activationInd]
+
+            # Plot the activation curves
+            ax.plot(x, y, color=self.lightColors[1], linestyle='-', linewidth=2, label="Inverse Pass")  # Plot Inverse Pass
+            ax.plot(y, x, color=self.lightColors[0], linestyle='-', linewidth=2, label="Forward Pass")  # Plot Forward Pass
+            ax.plot(x, x, color=self.blackColor, linestyle='--', linewidth=0.5, label="Identity")  # Plot Identity Line
+
+            ax.set_title(f"Activation {activationInd + 1}")
+            ax.set_xlabel("X")
+            ax.set_ylabel("Y")
+            ax.grid(True)
+            ax.legend()
+
+        # Remove any unused subplots
+        total_plots = nRows * nCols
+        if numActivations < total_plots:
+            for idx in range(numActivations, total_plots):
+                fig.delaxes(axes[idx])
+
+        # Set the main title
+        fig.suptitle(f"{plotTitle} - Epoch {epoch}\nForward and Inverse from x ∈ [{-2}, {2}]", fontsize=16)
+        plt.tight_layout()
+
+        # Save the plot
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)

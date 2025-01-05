@@ -89,15 +89,15 @@ class reversibleConvolutionLayer(reversibleInterface):
     
     def getAllEigenvalues(self, device):
         allEigenvalues = np.zeros(shape=(self.numLayers, self.numSignals, self.sequenceLength), dtype=np.complex128)
-        for layerInd in range(self.numLayers): allEigenvalues[layerInd] = self.getEigenvalues(layerInd, device)
+        for layerInd in range(self.numLayers): allEigenvalues[layerInd] = self.getLayerEigenvalues(layerInd, device)
         return allEigenvalues
 
     def getLayerEigenvalues(self, layerInd, device):
-        return self.getEigenvalues(layerInd=layerInd, device=device)
-
-    def getEigenvalues(self, layerInd, device):
         neuralWeights = self.getTransformationMatrix(layerInd, device).detach()  # Dim: numSignals, sequenceLength, sequenceLength
         return torch.linalg.eigvals(neuralWeights).detach().cpu().numpy()  # Dim: numSignals, sequenceLength
+
+    def getReversibleActivationParams(self):
+        return self.activationFunction.getActivationCurve(x_min=-2, x_max=2, num_points=250)
 
     def printParams(self):
         # Count the trainable parameters.
@@ -122,9 +122,7 @@ if __name__ == "__main__":
             # Set up the parameters.
             neuralLayerClass = reversibleConvolutionLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod)
             healthProfile = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float64)
-            healthProfile = healthProfile - healthProfile.mean(dim=-1, keepdim=True)
-            healthProfile = healthProfile / healthProfile.std(dim=-1, keepdim=True)
-            healthProfile = healthProfile / 3
+            healthProfile = healthProfile / 6
 
             # Perform the convolution in the fourier and spatial domains.
             if reconstructionFlag: _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(healthProfile, atol=1e-6, numLayers=1, plotResults=False)

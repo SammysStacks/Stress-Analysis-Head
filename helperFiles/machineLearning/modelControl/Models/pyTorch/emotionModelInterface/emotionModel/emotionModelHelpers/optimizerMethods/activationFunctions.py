@@ -34,18 +34,28 @@ def getActivationMethod(activationMethod):
 
 
 class reversibleLinearSoftSign(reversibleInterface):
-    def __init__(self, infiniteBound=0.5, linearity=1):  # 3/4, 4 # TODO
+    def __init__(self, infiniteBound=0.5, linearity=1):
         super(reversibleLinearSoftSign, self).__init__()
-        self.infiniteBound = infiniteBound  # This controls how the activation converges at +/- infinity; Ex: 0.5, 13/21, 33/49
-        self.linearity = linearity  # Corresponds to `r` in the equation
+        # self.infiniteBound = infiniteBound  # This controls how the activation converges at +/- infinity; Ex: 0.5, 13/21, 33/49
+        # self.linearity = linearity  # Corresponds to `r` in the equation
         self.tolerance = 1e-25  # Tolerance for numerical stability
 
         # TODO
-        self.infiniteBound = modelConstants.userInputParams['infinite']
-        self.linearity = modelConstants.userInputParams['linearity']
-        print(f"Using infiniteBound: {self.infiniteBound}, linearity: {self.linearity}")
+        self.linearity = torch.ones(1)
+        self.infiniteBound = torch.ones(1)*1/2
+        self.infiniteBoundParam = nn.Parameter(torch.zeros(1))
+
+    def getActivationParams(self):
+        infiniteBound = torch.sigmoid(self.infiniteBoundParam).clamp(min=0, max=1 - self.tolerance)  # Convert the infinite bound to a sigmoid value.
+        linearity = 1 / (1 + modelConstants.minMaxScale) / (1 - infiniteBound + self.tolerance)
+        assert 0 < self.infiniteBound < 1, "The infinite bound must be in the range (0, 1)."
+
+        return infiniteBound, linearity
 
     def forward(self, x, linearModel, forwardFirst=True):
+        # Set the parameters for the forward and inverse passes.
+        self.infiniteBound, self.linearity = self.getActivationParams()
+
         # forwardPass: Increase the signal below inversion point; decrease above.
         x = self.forwardPass(x) if forwardFirst else self.inversePass(x)
         x = linearModel(x)  # Rotate the signal through the linear model.
@@ -73,6 +83,15 @@ class reversibleLinearSoftSign(reversibleInterface):
 
         return x
 
+    def getActivationCurve(self, x_min=-2, x_max=2, num_points=200):
+        # Turn off gradient tracking for plotting
+        with torch.no_grad():
+            x_vals = torch.linspace(x_min, x_max, num_points, device=self.infiniteBound.device)
+            y_vals = self.forwardPass(x_vals)
+
+        # Convert to NumPy for plotting
+        x_vals, y_vals = x_vals.detach().cpu().numpy(), y_vals.detach().cpu().numpy()
+        return x_vals, y_vals
 
 class boundedExp(nn.Module):
     def __init__(self, decayConstant=0, nonLinearityRegion=2, infiniteBound=math.exp(-0.5)):

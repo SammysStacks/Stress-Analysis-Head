@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 import torch
+from matplotlib import pyplot as plt
 
 from helperFiles.globalPlottingProtocols import globalPlottingProtocols
 from ._generalVisualizations import generalVisualizations
@@ -19,6 +20,7 @@ class modelVisualizations(globalPlottingProtocols):
         # Initialize helper classes.
         self.signalEncoderViz = signalEncoderVisualizations(baseSavingFolder="", stringID="", datasetName=datasetName)
         self.generalViz = generalVisualizations(baseSavingFolder="", stringID="", datasetName=datasetName)
+        plt.ioff()  # Turn off interactive mode
 
     def setModelSavingFolder(self, baseSavingFolder, stringID):
         # Compile and shorten the name of the model visualization folder.
@@ -88,50 +90,76 @@ class modelVisualizations(globalPlottingProtocols):
         with torch.no_grad():
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
             validDataMask, reconstructedSignalData, resampledSignalData, _, healthProfile, activityProfile, basicEmotionProfile, emotionProfile = model.forward(submodel, signalData, signalIdentifiers, metadata, device=self.accelerator.device, onlyProfileTraining=False)
-            reconstructedHealthProfile, compiledSignalEncoderLayerStates = model.reconstructPhysiologicalProfile(resampledSignalData)
+            reconstructedHealthProfile, compiledSignalEncoderLayerStates = model.reconstructPhysiologicalProfile(resampledSignalData)  # reconstructedHealthProfile: batchSize, encodedDimension
+
+            # Extract the model's internal variables.
+            signalEncoderLayerTransforms = np.asarray(model.specificSignalEncoderModel.profileModel.signalEncoderLayerTransforms)  # numProfileShots, numProcessingLayers, numExperiments, numSignals=1***, encodedDimension
+            retrainingHealthProfilePath = np.asarray(model.specificSignalEncoderModel.profileModel.retrainingHealthProfilePath)  # numProfileShots, numExperiments, numEncodedWeights
+            resampledBiomarkerTimes = model.sharedSignalEncoderModel.hyperSampledTimes.detach().cpu().numpy()  # numTimePoints
             compiledSignalEncoderLayerStates = np.flip(compiledSignalEncoderLayerStates, axis=0)
             # compiledSignalEncoderLayerStates: numProcessingLayers, numLayers=1, numSignals, encodedDimension
 
             # Detach the data from the GPU and tensor format.
             reconstructedHealthProfile, activityProfile, basicEmotionProfile, emotionProfile = reconstructedHealthProfile.detach().cpu().numpy(), activityProfile.detach().cpu().numpy(), basicEmotionProfile.detach().cpu().numpy(), emotionProfile.detach().cpu().numpy()
             validDataMask, reconstructedSignalData, resampledSignalData, healthProfile = validDataMask.detach().cpu().numpy(), reconstructedSignalData.detach().cpu().numpy(), resampledSignalData.detach().cpu().numpy(), healthProfile.detach().cpu().numpy()
-            specificEigenvalues = np.asarray([modelLayer.getAllEigenvalues(device=self.accelerator.device) for modelLayer in model.specificSignalEncoderModel.processingLayers])  # numProcessingLayers, numLayers=1, numSignals, encodedDimension
-            sharedEigenvalues = np.asarray([modelLayer.getAllEigenvalues(device=self.accelerator.device) for modelLayer in model.sharedSignalEncoderModel.processingLayers])  # numProcessingLayers, numLayers=1, numSignals=1, encodedDimension
-            signalEncoderLayerTransforms = np.asarray(model.specificSignalEncoderModel.profileModel.signalEncoderLayerTransforms)  # numProfileShots, 2*numSpecific + numShared + 1, numExperiments, numSignals=1***, encodedDimension
-            retrainingHealthProfilePath = np.asarray(model.specificSignalEncoderModel.profileModel.retrainingHealthProfilePath)  # numProfileShots, numExperiments, numEncodedWeights
-            spatialEigenvalues = model.getJacobianFullPassPath(device=self.accelerator.device, domain='processingLayers')  # 2*numSpecific + numShared, numSignals, encodedDimension
-            neuralEigenvalues = model.getJacobianFullPassPath(device=self.accelerator.device, domain='neuralLayers')  # 2*numSpecific + numShared, numSignals, encodedDimension
-            resampledBiomarkerTimes = model.sharedSignalEncoderModel.hyperSampledTimes.detach().cpu().numpy()  # numTimePoints
+            signalData = signalData.detach().cpu().numpy()
+            
+            # Compile additional information for the model.getActivationParamsFullPassPath
+            specificSpatialEigenvaluePath, sharedSpatialEigenvaluePath = model.getEigenvalueFullPassPath(device=self.accelerator.device, domain='processingLayers')  # numProcessingLayers, numSignals, encodedDimension
+            specificNeuralEigenvaluePath, sharedNeuralEigenvaluePath = model.getEigenvalueFullPassPath(device=self.accelerator.device, domain='neuralLayers')  # numProcessingLayers, numSignals, encodedDimension
+            specificSpatialActivationPath, sharedSpatialActivationPath = model.getActivationParamsFullPassPath(domain='processingLayers')  # numProcessingLayers, 2, numPoints
+            specificNeuralActivationPath, sharedNeuralActivationPath = model.getActivationParamsFullPassPath(domain='neuralLayers')  # numProcessingLayers, 2, numPoints
             globalPlottingProtocols.clearFigure(fig=None, legend=None, showPlot=False)
             batchInd, signalInd = -1, -1
 
-            # Plot the loss on the primary GPU.
+            # Plot the loss on the primary process.
             if self.accelerator.is_local_main_process:
 
                 # ------------------- Signal Encoding Plots -------------------- #
 
                 if submodel == modelConstants.signalEncoderModel:
-                    # Plot the health profile training information.
-                    self.signalEncoderViz.plotProfileReconstruction(resampledBiomarkerTimes, healthProfile, reconstructedHealthProfile, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Reconstruction")
-                    self.signalEncoderViz.plotProfileReconstructionError(resampledBiomarkerTimes, healthProfile, reconstructedHealthProfile, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Physiological Reconstruction Error")
-                    self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, healthProfile=healthProfile, retrainingProfilePath=retrainingHealthProfilePath, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Health Profile Generation")
+                    # Plot the signal reconstruction training information.
+                    if signalEncoderLayerTransforms.shape[0] != 0: self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, healthProfile=healthProfile, retrainingProfilePath=signalEncoderLayerTransforms[:, -1, :, signalInd, :], epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Generating Initial Signal")
 
-                    # Plotting 3D flow of the health profile.
-                    self.signalEncoderViz.modelFlow(dataTimes=resampledBiomarkerTimes, dataStates=compiledSignalEncoderLayerStates[:, 0], epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="3D Data Flow within Model", batchInd=0, signalInd=0)
-                    self.signalEncoderViz.modelPropagation3D(neuralEigenvalues=spatialEigenvalues, epoch=currentEpoch, degreesFlag=True, saveFigureLocation="signalEncoding/", plotTitle="3D Spatial Eigenvalues by Layer", batchInd=0, signalInd=0)
-                    self.signalEncoderViz.modelPropagation3D(neuralEigenvalues=neuralEigenvalues, epoch=currentEpoch, degreesFlag=True, saveFigureLocation="signalEncoding/", plotTitle="3D Neural Eigenvalues by Layer", batchInd=0, signalInd=0)
-
-                    # Plot the signal encoding training information.
-                    self.signalEncoderViz.plotEigenValueLocations(specificEigenvalues[:, 0, allTrainingSignalMask[batchInd], :], testingEigenValues=specificEigenvalues[:, 0, allTestingSignalMask[batchInd], :], epoch=currentEpoch, signalInd=0, saveFigureLocation="signalEncoding/", plotTitle="Specific Eigenvalues on Circle")
-                    self.signalEncoderViz.plotEigenValueLocations(sharedEigenvalues[:, 0, :, :], testingEigenValues=sharedEigenvalues[:, 0, :, :], epoch=currentEpoch, signalInd=0, saveFigureLocation="signalEncoding/", plotTitle="Shared Eigenvalues on Circle")
-                    self.signalEncoderViz.plotEigenvalueAngles(specificEigenvalues[:, 0, allTrainingSignalMask[batchInd], :], testingEigenValues=specificEigenvalues[:, 0, allTestingSignalMask[batchInd], :], epoch=currentEpoch, degreesFlag=True, signalInd=0, saveFigureLocation="signalEncoding/", plotTitle="Specific Eigenvalue Angles")
-                    self.signalEncoderViz.plotEigenvalueAngles(sharedEigenvalues[:, 0, :, :], testingEigenValues=sharedEigenvalues[:, 0, :, :], epoch=currentEpoch, degreesFlag=True, signalInd=0, saveFigureLocation="signalEncoding/", plotTitle="Shared Eigenvalue Angles")
-
-                    self.signalEncoderViz.plotSignalEncodingStatePath(relativeTimes=None, compiledSignalEncoderLayerStates=np.expand_dims(spatialEigenvalues, axis=1), epoch=currentEpoch, hiddenLayers=0, saveFigureLocation="signalEncoding/", plotTitle="2D Spatial Eigenvalue by Layer")
-                    self.signalEncoderViz.plotSignalEncodingStatePath(relativeTimes=None, compiledSignalEncoderLayerStates=np.expand_dims(neuralEigenvalues, axis=1), epoch=currentEpoch, hiddenLayers=0, saveFigureLocation="signalEncoding/", plotTitle="2D Neural Eigenvalue by Layer")
-                    self.signalEncoderViz.plotSignalEncodingStatePath(relativeTimes=resampledBiomarkerTimes, compiledSignalEncoderLayerStates=compiledSignalEncoderLayerStates, epoch=currentEpoch, hiddenLayers=1, saveFigureLocation="signalEncoding/", plotTitle="2D Final Model Flow")
-                    if signalEncoderLayerTransforms.shape[0] != 0: self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, healthProfile=healthProfile, retrainingProfilePath=signalEncoderLayerTransforms[:, -1, :, signalInd, :], epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Generating Reconstructed Signal")
+                    # Plotting model flows.
                     if signalEncoderLayerTransforms.shape[0] != 0: self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, healthProfile=healthProfile, retrainingProfilePath=signalEncoderLayerTransforms[-1, :, :, signalInd, :], epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Data Flow Curves within Model")
+                    self.signalEncoderViz.plotSignalEncodingStatePath(relativeTimes=resampledBiomarkerTimes, compiledSignalEncoderLayerStates=compiledSignalEncoderLayerStates, epoch=currentEpoch, hiddenLayers=1, saveFigureLocation="signalEncoding/", plotTitle="2D Model Flow by Layer")
+                    self.signalEncoderViz.modelFlow(dataTimes=resampledBiomarkerTimes, dataStates=compiledSignalEncoderLayerStates[:, 0], epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="3D Data Flow by Layer", batchInd=0, signalInd=0)
+
+                    # Plot the health profile training information.
+                    self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, healthProfile=healthProfile, retrainingProfilePath=retrainingHealthProfilePath, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Health Profile Generation")
+                    self.signalEncoderViz.plotProfileReconstructionError(resampledBiomarkerTimes, healthProfile, reconstructedHealthProfile, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Health Profile Reconstruction Error")
+                    self.signalEncoderViz.plotProfileReconstruction(resampledBiomarkerTimes, healthProfile, reconstructedHealthProfile, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Health Profile Reconstruction")
+
+                    # Plot the eigenvalue information.
+                    self.signalEncoderViz.plotEigenvalueAngles(specificSpatialEigenvaluePath[:, allTrainingSignalMask[batchInd], :], testingEigenValues=specificSpatialEigenvaluePath[:, allTestingSignalMask[batchInd], :], epoch=currentEpoch, degreesFlag=True, signalInd=0, saveFigureLocation="signalEncoding/", plotTitle="Specific Spatial Eigenvalues Angles")
+                    self.signalEncoderViz.plotEigenvalueAngles(specificNeuralEigenvaluePath[:, allTrainingSignalMask[batchInd], :], testingEigenValues=specificNeuralEigenvaluePath[:, allTestingSignalMask[batchInd], :], epoch=currentEpoch, degreesFlag=True, signalInd=0, saveFigureLocation="signalEncoding/", plotTitle="Specific Neural Eigenvalues Angles")
+                    self.signalEncoderViz.plotEigenvalueAngles(sharedSpatialEigenvaluePath, testingEigenValues=sharedSpatialEigenvaluePath, epoch=currentEpoch, degreesFlag=True, signalInd=0, saveFigureLocation="signalEncoding/", plotTitle="Shared Spatial Eigenvalues Angles")
+                    self.signalEncoderViz.plotEigenvalueAngles(sharedNeuralEigenvaluePath, testingEigenValues=sharedNeuralEigenvaluePath, epoch=currentEpoch, degreesFlag=True, signalInd=0, saveFigureLocation="signalEncoding/", plotTitle="Shared Neural Eigenvalues Angles")
+
+                    # Plot the eigenvalue information.
+                    self.signalEncoderViz.plotEigenValueLocations(specificSpatialEigenvaluePath[:, allTrainingSignalMask[batchInd], :], testingEigenValues=specificSpatialEigenvaluePath[:, allTestingSignalMask[batchInd], :], epoch=currentEpoch, signalInd=0, saveFigureLocation="signalEncoding/", plotTitle="Specific Spatial Eigenvalues on Circle")
+                    self.signalEncoderViz.plotEigenValueLocations(specificNeuralEigenvaluePath[:, allTrainingSignalMask[batchInd], :], testingEigenValues=specificNeuralEigenvaluePath[:, allTestingSignalMask[batchInd], :], epoch=currentEpoch, signalInd=0, saveFigureLocation="signalEncoding/", plotTitle="Specific Neural Eigenvalues on Circle")
+                    self.signalEncoderViz.plotEigenValueLocations(sharedSpatialEigenvaluePath, testingEigenValues=sharedSpatialEigenvaluePath, epoch=currentEpoch, signalInd=0, saveFigureLocation="signalEncoding/", plotTitle="Shared Spatial Eigenvalues on Circle")
+                    self.signalEncoderViz.plotEigenValueLocations(sharedNeuralEigenvaluePath, testingEigenValues=sharedNeuralEigenvaluePath, epoch=currentEpoch, signalInd=0, saveFigureLocation="signalEncoding/", plotTitle="Shared Neural Eigenvalues on Circle")
+
+                    # Plot the eigenvalue information.
+                    self.signalEncoderViz.plotSignalEncodingStatePath(relativeTimes=None, compiledSignalEncoderLayerStates=np.expand_dims(specificSpatialEigenvaluePath, axis=1), epoch=currentEpoch, hiddenLayers=0, saveFigureLocation="signalEncoding/", plotTitle="2D Specific Spatial Eigenvalues by Layer")
+                    self.signalEncoderViz.plotSignalEncodingStatePath(relativeTimes=None, compiledSignalEncoderLayerStates=np.expand_dims(specificNeuralEigenvaluePath, axis=1), epoch=currentEpoch, hiddenLayers=0, saveFigureLocation="signalEncoding/", plotTitle="2D Specific Neural Eigenvalues by Layer")
+                    self.signalEncoderViz.plotSignalEncodingStatePath(relativeTimes=None, compiledSignalEncoderLayerStates=np.expand_dims(sharedSpatialEigenvaluePath, axis=1), epoch=currentEpoch, hiddenLayers=0, saveFigureLocation="signalEncoding/", plotTitle="2D Shared Spatial Eigenvalues by Layer")
+                    self.signalEncoderViz.plotSignalEncodingStatePath(relativeTimes=None, compiledSignalEncoderLayerStates=np.expand_dims(sharedNeuralEigenvaluePath, axis=1), epoch=currentEpoch, hiddenLayers=0, saveFigureLocation="signalEncoding/", plotTitle="2D Shared Neural Eigenvalues by Layer")
+
+                    # Plot the eigenvalue information.
+                    self.signalEncoderViz.modelPropagation3D(neuralEigenvalues=specificSpatialEigenvaluePath, epoch=currentEpoch, degreesFlag=True, saveFigureLocation="signalEncoding/", plotTitle="3D Spatial Specific Eigenvalues by Layer", batchInd=0, signalInd=0)
+                    self.signalEncoderViz.modelPropagation3D(neuralEigenvalues=sharedSpatialEigenvaluePath, epoch=currentEpoch, degreesFlag=True, saveFigureLocation="signalEncoding/", plotTitle="3D Spatial Shared Eigenvalues by Layer", batchInd=0, signalInd=0)
+                    self.signalEncoderViz.modelPropagation3D(neuralEigenvalues=specificNeuralEigenvaluePath, epoch=currentEpoch, degreesFlag=True, saveFigureLocation="signalEncoding/", plotTitle="3D Specific Neural Eigenvalues by Layer", batchInd=0, signalInd=0)
+                    self.signalEncoderViz.modelPropagation3D(neuralEigenvalues=sharedNeuralEigenvaluePath, epoch=currentEpoch, degreesFlag=True, saveFigureLocation="signalEncoding/", plotTitle="3D Shared Neural Eigenvalues by Layer", batchInd=0, signalInd=0)
+
+                    # Plot the activation information.
+                    self.signalEncoderViz.plotActivationParams(specificSpatialActivationPath, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Specific Spatial Activation Parameters")
+                    self.signalEncoderViz.plotActivationParams(specificNeuralActivationPath, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Specific Neural Activation Parameters")
+                    self.signalEncoderViz.plotActivationParams(sharedSpatialActivationPath, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Shared Spatial Activation Parameters")
+                    self.signalEncoderViz.plotActivationParams(sharedNeuralActivationPath, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Shared Neural Activation Parameters")
 
                 # Plot the autoencoder results.
                 self.signalEncoderViz.plotEncoder(signalData, reconstructedSignalData, resampledBiomarkerTimes, resampledSignalData, epoch=currentEpoch, saveFigureLocation="signalReconstruction/", plotTitle="Signal Reconstruction", numSignalPlots=1)

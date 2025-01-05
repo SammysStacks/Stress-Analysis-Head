@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
     # Add arguments for the general model
     parser.add_argument('--submodel', type=str, default=modelConstants.signalEncoderModel, help='The component of the model we are training. Options: signalEncoderModel, emotionModel')
-    parser.add_argument('--optimizerType', type=str, default='NAdam', help='The optimizerType used during training convergence: Options: RMSprop, Adam, AdamW, SGD, etc.')
+    parser.add_argument('--optimizerType', type=str, default='Adam', help='The optimizerType used during training convergence: Options: RMSprop, Adam, AdamW, SGD, etc.')
     parser.add_argument('--irreversibleLearningProtocol', type=str, default='FC', help='The learning protocol for the model: CNN, FC')
     parser.add_argument('--reversibleLearningProtocol', type=str, default='rCNN', help='The learning protocol for the model: rCNN')
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are using: cpu, cuda')
@@ -58,22 +58,22 @@ if __name__ == "__main__":
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--initialProfileAmp', type=float, default=0.01, help='The limits for profile initialization, [0.005, 0.05]')
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=4, help='The number of layers in the model.')
-    parser.add_argument('--numSharedEncoderLayers', type=int, default=8, help='The number of layers in the model.')
+    parser.add_argument('--numSharedEncoderLayers', type=int, default=6, help='The number of layers in the model.')
     parser.add_argument('--numEncodedWeights', type=int, default=32, help='The number of profile weights.')
-    parser.add_argument('--numProfileShots', type=int, default=24, help='The epochs for profile training.')
+    parser.add_argument('--numProfileShots', type=int, default=16, help='The epochs for profile training.')
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions).')
-    parser.add_argument('--activityLearningRate', type=float, default=0.1, help='The learning rate of the activity model.')
     parser.add_argument('--numActivityModelLayers', type=int, default=4, help='The number of layers in the activity model.')
-    parser.add_argument('--emotionLearningRate', type=float, default=0.01, help='The learning rate of the emotion model.')
+    parser.add_argument('--activityLearningRate', type=float, default=0.1, help='The learning rate of the activity model.')
     parser.add_argument('--numEmotionModelLayers', type=int, default=4, help='The number of layers in the emotion model.')
+    parser.add_argument('--emotionLearningRate', type=float, default=0.01, help='The learning rate of the emotion model.')
     parser.add_argument('--numActivityChannels', type=int, default=4, help='The number of activity channels.')
 
     # ----------------------- Training Parameters ----------------------- #
 
     # Signal encoder learning rates.
-    parser.add_argument('--profileLR', type=float, default=0.05, help='The learning rate of the health model.')
+    parser.add_argument('--profileLR', type=float, default=0.01, help='The learning rate of the health model.')
     parser.add_argument('--reversibleLR', type=float, default=1e-3, help='The learning rate of the general model.')
     parser.add_argument('--physGenLR', type=float, default=1e-4, help='The learning rate of the general model.')
 
