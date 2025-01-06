@@ -52,8 +52,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.xlabel("Time (Seconds)")
         plt.title(f"{plotTitle} epoch{epoch}")
         plt.ylabel("Signal (AU)")
-        if not noTimes: plt.ylim((-1.75, 1.75))
-        else: plt.ylim((-1.75, 1.75))
+        if not noTimes: plt.ylim((-2, 2))
+        else: plt.ylim((-2, 2))
 
         # Save the figure.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
@@ -95,7 +95,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.xlabel("Time (Seconds)")
         plt.title(f"{plotTitle} epoch{epoch}")
         plt.ylabel("Signal (AU)")
-        plt.ylim((-1.75, 1.75))
+        plt.ylim((-2, 2))
 
         # Save the figure.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
@@ -128,7 +128,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             plt.ylabel("Signal (AU)")
             plt.legend(loc="best")
             plt.xlabel("Points")
-            plt.ylim((-1.75, 1.75))
+            plt.ylim((-2, 2))
 
             # Save the figure.
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
@@ -142,7 +142,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             plt.ylabel("Signal (AU)")
             plt.legend(loc="best")
             plt.xlabel("Points")
-            plt.ylim((-1.75, 1.75))
+            plt.ylim((-2, 2))
 
             # Save the figure.
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
@@ -164,7 +164,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.figure(figsize=(12, 8))
 
         # Plot the rest of the layers with the same normalization.
-        im0 = plt.imshow(interpolated_states, cmap=self.custom_cmap, interpolation=None, extent=relativeTimesExtent, aspect='auto', origin='lower', vmin=-1.25, vmax=1.25)
+        im0 = plt.imshow(interpolated_states, cmap=self.custom_cmap, interpolation=None, extent=relativeTimesExtent, aspect='auto', origin='lower', vmin=-1.5, vmax=1.5)
         plt.colorbar(im0, fraction=0.046, pad=0.04)
 
         # Add horizontal lines to mark layer boundaries
@@ -207,7 +207,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             plt.ylabel("Arbitrary Axis (AU)")
             plt.xlabel("Points")
             plt.title(f"{plotTitle} epoch{epoch} signal{signalInd + 1}")
-            plt.ylim((-1.75, 1.75))
+            plt.ylim((-2, 2))
 
             # Save the plot
             if self.saveDataFolder: self.displayFigure(saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")

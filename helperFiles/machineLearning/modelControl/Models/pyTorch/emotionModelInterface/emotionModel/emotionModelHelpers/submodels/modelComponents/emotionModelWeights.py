@@ -72,8 +72,9 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def initializeJacobianParams(numSignals):
-        if numSignals == 1: return nn.Parameter(torch.zeros((1, numSignals)))
-        else: return nn.Parameter(-torch.log(3*torch.ones((1, numSignals, 1))))
+        initialValue = -torch.log(3*torch.ones(1))
+        if numSignals == 1: return nn.Parameter(initialValue * torch.ones((1, numSignals)))
+        else: return nn.Parameter(initialValue * torch.ones((1, numSignals, 1)))
 
     def healthGeneration(self, numOutputFeatures):
         if numOutputFeatures < modelConstants.numEncodedWeights: raise ValueError(f"Number of outputs ({numOutputFeatures}) must be greater than inputs ({modelConstants.numEncodedWeights})")
@@ -103,9 +104,9 @@ class emotionModelWeights(convolutionalHelpers):
     def gradientHook(grad): return grad
 
     def applyManifoldScale(self, healthProfile, healthProfileJacobians):
-        if not reversibleInterface.forwardDirection:
-            return healthProfile / self.getJacobianScalar(healthProfileJacobians).expand_as(healthProfile)
-        else: return healthProfile * self.getJacobianScalar(healthProfileJacobians).expand_as(healthProfile)
+        scalarValues = self.getJacobianScalar(healthProfileJacobians).expand_as(healthProfile)
+        if not reversibleInterface.forwardDirection: return healthProfile / scalarValues
+        else: return healthProfile * scalarValues
 
     # ------------------- Emotion/Activity Encoding Architectures ------------------- #
 

@@ -47,7 +47,7 @@ class modelVisualizations(globalPlottingProtocols):
         with torch.no_grad():
             if self.accelerator.is_local_main_process:
                 specificModels = [modelPipeline.model.specificSignalEncoderModel for modelPipeline in allModelPipelines]
-                # sharedModels = [modelPipeline.model.sharedSignalEncoderModel for modelPipeline in allModelPipelines]
+                sharedModels = [modelPipeline.model.sharedSignalEncoderModel for modelPipeline in allModelPipelines]
                 datasetNames = [modelPipeline.model.datasetName for modelPipeline in allModelPipelines]
                 if allModelPipelines[0].getTrainingEpoch(submodel) == 0: return None
 
