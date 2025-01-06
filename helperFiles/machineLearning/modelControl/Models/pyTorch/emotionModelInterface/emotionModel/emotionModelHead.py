@@ -123,7 +123,7 @@ class emotionModelHead(nn.Module):
 
     def forward(self, submodel, signalData, signalIdentifiers, metadata, device, onlyProfileTraining=False):
         signalData, signalIdentifiers, metadata = (tensor.to(device) for tensor in (signalData, signalIdentifiers, metadata))
-        signalIdentifiers, signalData, metadata = signalIdentifiers.int(), signalData.double(), metadata.int()
+        signalIdentifiers, signalData, metadata = signalIdentifiers.int(), signalData, metadata.int()
         batchSize, numSignals, maxSequenceLength, numChannels = signalData.size()
         assert numChannels == len(modelConstants.signalChannelNames)
         # timepoints: [further away from survey (300) -> closest to survey (0)]
@@ -197,8 +197,8 @@ class emotionModelHead(nn.Module):
         if domain == 'neuralLayers': specificLinearModels = [_linearModel.highFrequenciesWeights[0] for _linearModel in specificLinearModels]
         if domain == 'neuralLayers': sharedLinearModels = [_linearModel.highFrequenciesWeights[0] for _linearModel in sharedLinearModels]
 
-        specificRotationsPath = np.asarray([specificLinearModels[layerInd].getSubdomainRotations(layerInd=-1, device=device) for layerInd in range(self.numSpecificEncoderLayers)])
-        sharedRotationsPath = np.asarray([sharedLinearModels[layerInd].getSubdomainRotations(layerInd=-1, device=device) for layerInd in range(self.numSharedEncoderLayers)])
+        specificRotationsPath = np.asarray([specificLinearModels[layerInd].getSubdomainRotations(layerInd=-1, device=device).detach().cpu().numpy() for layerInd in range(self.numSpecificEncoderLayers)])
+        sharedRotationsPath = np.asarray([sharedLinearModels[layerInd].getSubdomainRotations(layerInd=-1, device=device).detach().cpu().numpy() for layerInd in range(self.numSharedEncoderLayers)])
         # eigenvaluePath: numSpecificEncoderLayers or numSharedEncoderLayers, numSignals or 1, encodedDimension
 
         return specificRotationsPath, sharedRotationsPath

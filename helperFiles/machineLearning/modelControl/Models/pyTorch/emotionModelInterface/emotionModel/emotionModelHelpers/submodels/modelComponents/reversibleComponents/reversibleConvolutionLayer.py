@@ -16,7 +16,7 @@ class reversibleConvolutionLayer(reversibleInterface):
     def __init__(self, numSignals, sequenceLength, numLayers, activationMethod):
         super(reversibleConvolutionLayer, self).__init__()
         # General parameters.
-        self.numEigenvalues = sequenceLength//2 + sequenceLength%2  # The number of parameters in the model.
+        self.numEigenvalues = sequenceLength // 2 + sequenceLength % 2  # The number of parameters in the model.
         self.activationMethod = activationMethod  # The activation method to use.
         self.sequenceLength = sequenceLength  # The length of the input signal.
         self.numSignals = numSignals  # The number of signals in the input data.
@@ -29,18 +29,14 @@ class reversibleConvolutionLayer(reversibleInterface):
         # Initialize the neural layers.
         self.activationFunction = activationFunctions.getActivationMethod(activationMethod)
         self.jacobianParameter = self.initializeJacobianParams(numSignals)
-        self.linearOperators = nn.ParameterList()
+        self.omegaAngleParams = nn.ParameterList()
 
         # Create the neural layers.
         for layerInd in range(self.numLayers):
             # Create the neural weights.
-            parameters = nn.Parameter(torch.randn(self.numSignals, self.numEigenvalues, dtype=torch.float64))
-            parameters = nn.init.kaiming_uniform_(parameters)
-            self.linearOperators.append(parameters)
-
-    @staticmethod
-    def initializeJacobianParams(numSignals):
-        return nn.Parameter(0 * torch.ones((1, numSignals, 1)))
+            parameters = nn.Parameter(torch.randn(self.numSignals, self.numEigenvalues))
+            parameters = nn.init.xavier_uniform_(parameters)  # kaiming_uniform_
+            self.omegaAngleParams.append(parameters)
 
     def forward(self, inputData):
         for layerInd in range(self.numLayers):
@@ -51,16 +47,6 @@ class reversibleConvolutionLayer(reversibleInterface):
             else: inputData = self.activationFunction(inputData, lambda X: self.applyLayer(X, layerInd), forwardFirst=False)
 
         return inputData
-
-    def applyManifoldScale(self, inputData, jacobianParameter):
-        scalarValues = self.getJacobianScalar(jacobianParameter).expand_as(inputData)
-        if not reversibleInterface.forwardDirection: return inputData / scalarValues
-        else: return inputData * scalarValues
-
-    @staticmethod
-    def getJacobianScalar(jacobianParameter):
-        jacobianMatrix = 3/4 + 1/2 * torch.sigmoid(jacobianParameter)
-        return jacobianMatrix
 
     def applyLayer(self, inputData, layerInd):
         # Assert the validity of the input parameters.
@@ -76,35 +62,52 @@ class reversibleConvolutionLayer(reversibleInterface):
 
         return outputData
 
-    def getA(self, layerInd, device):
-        # Unpack the dimensions.
-        A = torch.zeros(self.numSignals, self.sequenceLength, self.sequenceLength, dtype=torch.float64, device=device)
-        # neuralWeight: numSignals, sequenceLength, sequenceLength
+    # ------------------- Linearity ------------------- #
 
-        # Scale the values to an angle.
-        linearOperators = 2*torch.sigmoid(self.linearOperators[layerInd]) - 1
-        linearOperators = torch.pi*linearOperators
+    def getExpA(self, layerInd, device):
+        A = self.getA(layerInd, device)  # Get the linear operator in the exponent.
+        if self.forwardDirection: A = -A  # Ensure the neural weights are symmetric.
+
+        # Get the exponential of the linear operator.
+        neuralWeights = A.matrix_exp()  # For orthogonal matrices: A.exp().inverse() = (-A).exp(); If A is Skewed Symmetric: A.exp().inverse() = A.exp().transpose()
+        return neuralWeights  # exp(A)
+
+    def getA(self, layerInd, device):
+        # Get the rotations.
+        A = torch.zeros(self.numSignals, self.sequenceLength, self.sequenceLength, device=device)
+        omegaAngles = self.getSubdomainRotations(layerInd, device)
+        # omegaAngles: numSignals, numEigenvalues
 
         # Gather the corresponding kernel values for each position for a skewed symmetric matrix.
-        A[:, self.rowInds, self.colInds] = -linearOperators[layerInd]
-        A[:, self.colInds, self.rowInds] = linearOperators[layerInd]
-        # neuralWeight: numSignals, sequenceLength, sequenceLength
+        A[:, self.rowInds, self.colInds] = -omegaAngles[layerInd]
+        A[:, self.colInds, self.rowInds] = omegaAngles[layerInd]
+        # In Jordan 2x2 Blocks, A: numSignals, sequenceLength, sequenceLength
 
         return A
 
-    def getExpA(self, layerInd, device):
-        # Orthogonal matrix.
-        neuralWeights = self.getA(layerInd, device).matrix_exp()
-        if self.forwardDirection: neuralWeights = neuralWeights.transpose(-2, -1)  # Ensure the neural weights are symmetric.
-        # For orthogonal matrices: A.exp().inverse() = A.exp().transpose() = (-A).exp()
+    # ------------------- Activation Functions ------------------- #
 
-        return neuralWeights  # exp(A)
+    def applyManifoldScale(self, inputData, jacobianParameter):
+        scalarValues = self.getJacobianScalar(jacobianParameter).expand_as(inputData)
+        if not reversibleInterface.forwardDirection: return inputData / scalarValues
+        else: return inputData * scalarValues
+
+    @staticmethod
+    def initializeJacobianParams(numSignals):
+        return nn.Parameter(torch.zeros((1, numSignals, 1)))
+
+    @staticmethod
+    def getJacobianScalar(jacobianParameter):
+        jacobianMatrix = 9/10 + 2/10 * torch.sigmoid(jacobianParameter)
+        return jacobianMatrix
+
+    # ------------------- Activation Functions ------------------- #
 
     def getSubdomainRotations(self, layerInd, device):
-        A = self.getA(layerInd, device)  # Dim: numSignals, sequenceLength, sequenceLength
-        layerEigenvalues = A[:, self.rowInds, self.colInds].detach().cpu().numpy()  # Dim: numSignals, numEigenvalues
-
-        return layerEigenvalues
+        # Scale the values to an angle.
+        omegaAngles = torch.tanh(self.omegaAngleParams[layerInd])  # Scale between [-1, 1]
+        omegaAngles = torch.pi*omegaAngles  # Scale between [-pi, pi]
+        return omegaAngles.to(device)
 
     def getReversibleActivationCurves(self):
         return self.activationFunction.getActivationCurve(x_min=-2, x_max=2, num_points=200)
@@ -136,11 +139,11 @@ if __name__ == "__main__":
 
             # Set up the parameters.
             neuralLayerClass = reversibleConvolutionLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, numLayers=_numLayers, activationMethod=_activationMethod)
-            healthProfile = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float64)
+            healthProfile = torch.randn(_batchSize, _numSignals, _sequenceLength)
             healthProfile = healthProfile / 6
 
             # Perform the convolution in the fourier and spatial domains.
-            if reconstructionFlag: _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(healthProfile, atol=1e-6, numLayers=1, plotResults=False)
+            if reconstructionFlag: _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(healthProfile, atol=1e-6, numLayers=1, plotResults=True)
             else: _forwardData = neuralLayerClass.forward(healthProfile)
             neuralLayerClass.printParams()
 

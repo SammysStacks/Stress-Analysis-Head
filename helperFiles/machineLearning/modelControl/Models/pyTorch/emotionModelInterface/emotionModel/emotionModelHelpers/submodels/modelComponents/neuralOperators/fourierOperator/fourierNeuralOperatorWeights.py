@@ -95,7 +95,7 @@ class fourierNeuralOperatorWeights(emotionModelWeights):
     # SPECIFIC CASE. USE WITH CAUTION.
     def getAngularFrequencies(self):
         # Initialize the frequency indices for the fourier data.
-        imagAngularFrequencies = 2j * torch.pi * torch.fft.rfftfreq(self.sequenceLength, d=self.sequenceTimeWindow / (self.sequenceLength - 1), dtype=torch.float64)
+        imagAngularFrequencies = 2j * torch.pi * torch.fft.rfftfreq(self.sequenceLength, d=self.sequenceTimeWindow / (self.sequenceLength - 1))
         print("Calculated frequencies are based on the sequence being evenly spaced from 0 -> sequenceTimeWindow")
         # angularFrequencies: fourierDimension
 

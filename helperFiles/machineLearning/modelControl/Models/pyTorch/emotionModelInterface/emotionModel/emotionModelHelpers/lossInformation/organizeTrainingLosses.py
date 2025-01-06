@@ -5,7 +5,6 @@ import torch
 
 # Helper classes
 from .lossCalculations import lossCalculations
-from ..submodels.modelComponents.emotionModelWeights import emotionModelWeights
 
 
 class organizeTrainingLosses(lossCalculations):

@@ -33,7 +33,7 @@ class emotionModelWeights(convolutionalHelpers):
     @staticmethod
     def getInitialPhysiologicalProfile(numExperiments):
         # Initialize the health profile.
-        healthProfile = torch.randn(numExperiments, modelConstants.numEncodedWeights, dtype=torch.float64)
+        healthProfile = torch.randn(numExperiments, modelConstants.numEncodedWeights)
         emotionModelWeights.healthInitialization(healthProfile)
         healthProfile = nn.Parameter(healthProfile)
 
@@ -72,7 +72,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def initializeJacobianParams(numSignals):
-        initialValue = -torch.log(3*torch.ones(1))
+        initialValue = 0
         if numSignals == 1: return nn.Parameter(initialValue * torch.ones((1, numSignals)))
         else: return nn.Parameter(initialValue * torch.ones((1, numSignals, 1)))
 
@@ -95,7 +95,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def getJacobianScalar(jacobianParameter):
-        jacobianMatrix = 1/3 + (4/3) * torch.sigmoid(jacobianParameter)
+        jacobianMatrix = 1 + 1 * torch.sigmoid(jacobianParameter)
         return jacobianMatrix
 
     @staticmethod
@@ -124,7 +124,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def getSubjectSpecificBasicEmotionWeights(numBasicEmotions, numSubjects):
-        basicEmotionWeights = torch.randn(numSubjects, numBasicEmotions, dtype=torch.float64)
+        basicEmotionWeights = torch.randn(numSubjects, numBasicEmotions)
         basicEmotionWeights = basicEmotionWeights / basicEmotionWeights.sum(dim=-1, keepdim=True)
 
         return nn.Parameter(basicEmotionWeights)

@@ -18,7 +18,7 @@ class reversibleInterface(nn.Module):
     def checkDualReconstruction(self, x1, x2, atol=1e-8, numLayers=10):
         # Initialize the forward data.
         reversibleInterface.changeDirections(False)
-        f1, f2 = x1.clone().double(), x2.clone().double()
+        f1, f2 = x1.clone(), x2.clone().double()
         t1 = time.time()
 
         # Perform the forward passes.
@@ -43,7 +43,7 @@ class reversibleInterface(nn.Module):
     def checkReconstruction(self, inputData, atol=1e-8, numLayers=10, plotResults=True):
         # Initialize the forward data.
         reversibleInterface.changeDirections(False)
-        forwardData = inputData.clone().double()
+        forwardData = inputData.clone()
         t1 = time.time()
 
         # Perform the forward passes.
