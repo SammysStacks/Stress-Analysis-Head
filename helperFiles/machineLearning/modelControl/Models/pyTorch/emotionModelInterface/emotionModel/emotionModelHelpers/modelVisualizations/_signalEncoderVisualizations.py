@@ -150,7 +150,9 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     def plotSignalEncodingStatePath(self, relativeTimes, compiledSignalEncoderLayerStates, vMin, epoch, hiddenLayers, saveFigureLocation, plotTitle):
         numLayers, numExperiments, numSignals, encodedDimension = compiledSignalEncoderLayerStates.shape
-        if relativeTimes is None: relativeTimes = np.arange(start=1, stop=1 + encodedDimension, step=1)
+        timesPresent = relativeTimes is not None
+
+        if not timesPresent: relativeTimes = np.arange(start=1, stop=1 + encodedDimension, step=1)
         batchInd, signalInd = 0, 0
 
         # Interpolate the states.
@@ -164,7 +166,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.figure(figsize=(12, 8))
 
         # Plot the rest of the layers with the same normalization.
-        im0 = plt.imshow(interpolated_states, cmap='viridis', interpolation=None, extent=relativeTimesExtent, aspect='auto', origin='lower', vmin=-vMin, vmax=vMin)
+        im0 = plt.imshow(interpolated_states, cmap='viridis', interpolation=None, extent=relativeTimesExtent, aspect='auto', origin='lower', vmin=-vMin if timesPresent else 0, vmax=vMin)
         plt.colorbar(im0, fraction=0.046, pad=0.04)
 
         # Add horizontal lines to mark layer boundaries
@@ -349,6 +351,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Customize the view angle
         ax.view_init(elev=30, azim=135)
 
+        # Add labels and title
         # Add labels and title
         ax.set_title(plotTitle, fontsize=16, weight='bold', pad=20)
         ax.set_xlabel("Eigenvalue Index", fontsize=12, labelpad=10)

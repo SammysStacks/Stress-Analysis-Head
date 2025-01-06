@@ -38,6 +38,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
         # Initialize the neural layers.
         self.activationFunction = activationFunctions.getActivationMethod(activationMethod)
+        self.jacobianParameter = self.initializeJacobianParams(1)
         self.linearOperators = nn.ParameterList()
 
         # Create the neural layers.
@@ -46,6 +47,10 @@ class reversibleConvolutionLayer(reversibleInterface):
             parameters = nn.Parameter(torch.randn(numSignals, self.kernelSize//2 or 1, dtype=torch.float64))
             parameters = nn.init.kaiming_uniform_(parameters)
             self.linearOperators.append(parameters)
+
+    @staticmethod
+    def initializeJacobianParams(numSignals):
+        return nn.Parameter(0 * torch.ones((1, numSignals, 1)))
 
     def forward(self, inputData):
         for layerInd in range(self.numLayers):
@@ -57,6 +62,16 @@ class reversibleConvolutionLayer(reversibleInterface):
 
         return inputData
 
+    def applyManifoldScale(self, inputData, jacobianParameter):
+        scalarValues = self.getJacobianScalar(jacobianParameter).expand_as(inputData)
+        if not reversibleInterface.forwardDirection: return inputData / scalarValues
+        else: return inputData * scalarValues
+
+    @staticmethod
+    def getJacobianScalar(jacobianParameter):
+        jacobianMatrix = 1 + 1/10 * torch.sigmoid(jacobianParameter)
+        return jacobianMatrix
+
     def applyLayer(self, inputData, layerInd):
         # Assert the validity of the input parameters.
         batchSize, numSignals, sequenceLength = inputData.size()
@@ -65,7 +80,13 @@ class reversibleConvolutionLayer(reversibleInterface):
 
         # Apply the neural weights to the input data.
         neuralWeights = self.getTransformationMatrix(layerInd, inputData.device)  # = exp(A)
-        outputData = torch.einsum('bns,nsi->bni', inputData, neuralWeights)  # -> exp(A) @ f(x)
+
+        if not self.forwardDirection:
+            outputData = torch.einsum('bns,nsi->bni', inputData, neuralWeights)  # -> exp(A) @ f(x)
+            outputData = self.applyManifoldScale(outputData, self.jacobianParameter)  # TODO
+        else:
+            outputData = self.applyManifoldScale(inputData, self.jacobianParameter)  # TODO
+            outputData = torch.einsum('bns,nsi->bni', outputData, neuralWeights)  # -> exp(A) @ f(x)
         # The inverse would be f-1(exp(-A) @ [exp(A) @ f(x)]) = X
 
         return outputData
