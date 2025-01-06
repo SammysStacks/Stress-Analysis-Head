@@ -37,13 +37,13 @@ lrs_reversible=('1e-3')  # 1e-4 <= x == 1e-3; Removed from filename
 # Collective Switchables: 128
 numSpecificEncoderLayers_arr=(1 2)
 numSharedEncoderLayers_arr=(6 8 12 16 24 32)
-numSpecificEncoderLayers_arr=(2)
-numSharedEncoderLayers_arr=(12)
+#numSpecificEncoderLayers_arr=(2)
+#numSharedEncoderLayers_arr=(12)
 
 # Collective Switchables: 256
 encodedDimensions_arr=(256)
 allNumEncodedWeights=(32)
-#numProfileShots_arr=(24, 16, 8 32)
+#numProfileShots_arr=(24 16 8 32)
 numProfileShots_arr=(24)
 lrs_profile=('0.05')
 
