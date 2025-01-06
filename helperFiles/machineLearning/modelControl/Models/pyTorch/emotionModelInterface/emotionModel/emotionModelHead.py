@@ -197,11 +197,11 @@ class emotionModelHead(nn.Module):
         if domain == 'neuralLayers': specificLinearModels = [_linearModel.highFrequenciesWeights[0] for _linearModel in specificLinearModels]
         if domain == 'neuralLayers': sharedLinearModels = [_linearModel.highFrequenciesWeights[0] for _linearModel in sharedLinearModels]
 
-        specificEigenvaluePath = np.asarray([specificLinearModels[layerInd].getLayerEigenvalues(layerInd=-1, device=device) for layerInd in range(self.numSpecificEncoderLayers)])
-        sharedEigenvaluePath = np.asarray([sharedLinearModels[layerInd].getLayerEigenvalues(layerInd=-1, device=device) for layerInd in range(self.numSharedEncoderLayers)])
+        specificRotationsPath = np.asarray([specificLinearModels[layerInd].getSubdomainRotations(layerInd=-1, device=device) for layerInd in range(self.numSpecificEncoderLayers)])
+        sharedRotationsPath = np.asarray([sharedLinearModels[layerInd].getSubdomainRotations(layerInd=-1, device=device) for layerInd in range(self.numSharedEncoderLayers)])
         # eigenvaluePath: numSpecificEncoderLayers or numSharedEncoderLayers, numSignals or 1, encodedDimension
 
-        return specificEigenvaluePath, sharedEigenvaluePath
+        return specificRotationsPath, sharedRotationsPath
 
     def getActivationCurvesFullPassPath(self, domain):
         specificLinearModels, sharedLinearModels = getattr(self.specificSignalEncoderModel, domain), getattr(self.sharedSignalEncoderModel, domain)

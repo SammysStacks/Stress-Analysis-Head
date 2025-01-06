@@ -129,10 +129,6 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         totalParams = sum(p.numel() for name, p in self.named_parameters())
         print(f'The model has {totalParams} trainable parameters: {numJacobians} jacobians, {numParams} meta-weights, and {numInitParams} initial weights.')
 
-    def getEigenvalues(self, inputData, layerInd):
-        neuralWeights = self.getTransformationMatrix(inputData, layerInd)
-        return torch.linalg.eigvals(neuralWeights)
-
 
 if __name__ == "__main__":
     # General parameters.

@@ -13,38 +13,28 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class reversibleConvolutionLayer(reversibleInterface):
 
-    def __init__(self, numSignals, sequenceLength, kernelSize, numLayers, activationMethod):
+    def __init__(self, numSignals, sequenceLength, numLayers, activationMethod):
         super(reversibleConvolutionLayer, self).__init__()
         # General parameters.
+        self.numEigenvalues = sequenceLength//2 + sequenceLength%2  # The number of parameters in the model.
         self.activationMethod = activationMethod  # The activation method to use.
         self.sequenceLength = sequenceLength  # The length of the input signal.
         self.numSignals = numSignals  # The number of signals in the input data.
-        self.kernelSize = kernelSize  # The restricted window for the neural weights.
         self.numLayers = numLayers  # The number of layers in the reversible linear layer.
 
-        # The restricted window for the neural weights.
-        upperWindowMask = torch.ones(self.sequenceLength, self.sequenceLength, dtype=torch.float64)
-        if self.sequenceLength != self.kernelSize: upperWindowMask = torch.tril(upperWindowMask, diagonal=self.kernelSize//2)
-        upperWindowMask = torch.triu(upperWindowMask, diagonal=1)
-
-        # Calculate the offsets to map positions to kernel indices
-        self.rowInds, self.colInds = upperWindowMask.nonzero(as_tuple=False).T
-        self.kernelInds = self.rowInds - self.colInds + self.kernelSize // 2  # Adjust for the kernel center
-
-        # Assert the validity of the input parameters.
-        assert 1 <= self.kernelSize // 2 <= sequenceLength - 1, f"The kernel size must be less than the sequence length: {self.kernelSize}, {self.sequenceLength}"
-        assert self.kernelInds.max() == self.kernelSize // 2 - 1, f"The kernel indices are not valid: {self.kernelInds.max()}"
-        assert self.kernelInds.min() == 0, f"The kernel indices are not valid: {self.kernelInds.min()}"
+        # The indices for the neural weights.
+        indices = np.arange(0, self.numEigenvalues, 1)
+        self.rowInds, self.colInds = 2*indices, 2*indices + 1
 
         # Initialize the neural layers.
         self.activationFunction = activationFunctions.getActivationMethod(activationMethod)
-        self.jacobianParameter = self.initializeJacobianParams(1)
+        self.jacobianParameter = self.initializeJacobianParams(numSignals)
         self.linearOperators = nn.ParameterList()
 
         # Create the neural layers.
         for layerInd in range(self.numLayers):
             # Create the neural weights.
-            parameters = nn.Parameter(torch.randn(numSignals, self.kernelSize//2 or 1, dtype=torch.float64))
+            parameters = nn.Parameter(torch.randn(self.numSignals, self.numEigenvalues, dtype=torch.float64))
             parameters = nn.init.kaiming_uniform_(parameters)
             self.linearOperators.append(parameters)
 
@@ -69,7 +59,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
     @staticmethod
     def getJacobianScalar(jacobianParameter):
-        jacobianMatrix = 1 + 1/10 * torch.sigmoid(jacobianParameter)
+        jacobianMatrix = 3/4 + 1/2 * torch.sigmoid(jacobianParameter)
         return jacobianMatrix
 
     def applyLayer(self, inputData, layerInd):
@@ -79,43 +69,38 @@ class reversibleConvolutionLayer(reversibleInterface):
         assert numSignals == self.numSignals, f"The number of signals is not correct: {numSignals}, {self.numSignals}"
 
         # Apply the neural weights to the input data.
-        neuralWeights = self.getTransformationMatrix(layerInd, inputData.device)  # = exp(A)
-
-        if not self.forwardDirection:
-            outputData = torch.einsum('bns,nsi->bni', inputData, neuralWeights)  # -> exp(A) @ f(x)
-            outputData = self.applyManifoldScale(outputData, self.jacobianParameter)  # TODO
-        else:
-            outputData = self.applyManifoldScale(inputData, self.jacobianParameter)  # TODO
-            outputData = torch.einsum('bns,nsi->bni', outputData, neuralWeights)  # -> exp(A) @ f(x)
+        neuralWeights = self.getExpA(layerInd, inputData.device)  # = exp(A)
+        outputData = torch.einsum('bns,nsi->bni', inputData, neuralWeights)  # -> exp(A) @ f(x)
+        outputData = self.applyManifoldScale(outputData, self.jacobianParameter)  # TODO
         # The inverse would be f-1(exp(-A) @ [exp(A) @ f(x)]) = X
 
         return outputData
 
-    def getTransformationMatrix(self, layerInd, device):
+    def getA(self, layerInd, device):
         # Unpack the dimensions.
-        neuralWeights = torch.zeros(self.numSignals, self.sequenceLength, self.sequenceLength, dtype=torch.float64, device=device)
+        A = torch.zeros(self.numSignals, self.sequenceLength, self.sequenceLength, dtype=torch.float64, device=device)
         # neuralWeight: numSignals, sequenceLength, sequenceLength
 
         # Gather the corresponding kernel values for each position for a skewed symmetric matrix.
-        neuralWeights[:, self.rowInds, self.colInds] = -self.linearOperators[layerInd][:, self.kernelInds]
-        neuralWeights[:, self.colInds, self.rowInds] = self.linearOperators[layerInd][:, self.kernelInds]
+        A[:, self.rowInds, self.colInds] = -self.linearOperators[layerInd]
+        A[:, self.colInds, self.rowInds] = self.linearOperators[layerInd]
         # neuralWeight: numSignals, sequenceLength, sequenceLength
 
-        # Create an orthogonal matrix.
-        neuralWeights = neuralWeights.matrix_exp()
+        return A
+
+    def getExpA(self, layerInd, device):
+        # Orthogonal matrix.
+        neuralWeights = self.getA(layerInd, device).matrix_exp()
         if self.forwardDirection: neuralWeights = neuralWeights.transpose(-2, -1)  # Ensure the neural weights are symmetric.
         # For orthogonal matrices: A.exp().inverse() = A.exp().transpose() = (-A).exp()
 
         return neuralWeights  # exp(A)
-    
-    def getAllEigenvalues(self, device):
-        allEigenvalues = np.zeros(shape=(self.numLayers, self.numSignals, self.sequenceLength), dtype=np.complex128)
-        for layerInd in range(self.numLayers): allEigenvalues[layerInd] = self.getLayerEigenvalues(layerInd, device)
-        return allEigenvalues
 
-    def getLayerEigenvalues(self, layerInd, device):
-        neuralWeights = self.getTransformationMatrix(layerInd, device).detach()  # Dim: numSignals, sequenceLength, sequenceLength
-        return torch.linalg.eigvals(neuralWeights).detach().cpu().numpy()  # Dim: numSignals, sequenceLength
+    def getSubdomainRotations(self, layerInd, device):
+        A = self.getA(layerInd, device)  # Dim: numSignals, sequenceLength, sequenceLength
+        layerEigenvalues = A[:, self.rowInds, self.colInds].detach().cpu().numpy()  # Dim: numSignals, numEigenvalues
+
+        return layerEigenvalues
 
     def getReversibleActivationCurves(self):
         return self.activationFunction.getActivationCurve(x_min=-2, x_max=2, num_points=200)
@@ -146,7 +131,7 @@ if __name__ == "__main__":
             _numLayers = _layerInd
 
             # Set up the parameters.
-            neuralLayerClass = reversibleConvolutionLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, kernelSize=_kernelSize, numLayers=_numLayers, activationMethod=_activationMethod)
+            neuralLayerClass = reversibleConvolutionLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, numLayers=_numLayers, activationMethod=_activationMethod)
             healthProfile = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float64)
             healthProfile = healthProfile / 6
 

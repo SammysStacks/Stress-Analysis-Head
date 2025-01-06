@@ -57,11 +57,11 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def reversibleNeuralWeightRCNN(numSignals, sequenceLength):
-        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=1, activationMethod=f"{emotionModelWeights.getReversibleActivation()}")
+        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, numLayers=1, activationMethod=f"{emotionModelWeights.getReversibleActivation()}")
 
     @staticmethod
     def postProcessingLayerRCNN(numSignals, sequenceLength):
-        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, kernelSize=sequenceLength*2 - 1, numLayers=1, activationMethod=f"{emotionModelWeights.getReversibleActivation()}")
+        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, numLayers=1, activationMethod=f"{emotionModelWeights.getReversibleActivation()}")
 
     def postProcessingLayerCNN(self, numSignals):
         return self.convolutionalFilters_resNetBlocks(numResNets=1, numBlocks=4, numChannels=[numSignals, numSignals], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False)
@@ -95,7 +95,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def getJacobianScalar(jacobianParameter):
-        jacobianMatrix = 1/3 + (2/3 + 2) * torch.sigmoid(jacobianParameter)
+        jacobianMatrix = 1/3 + (4/3) * torch.sigmoid(jacobianParameter)
         return jacobianMatrix
 
     @staticmethod
