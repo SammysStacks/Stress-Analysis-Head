@@ -408,7 +408,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     def plotActivationParams(self, activationCurves, epoch, saveFigureLocation, plotTitle):
         numActivations, numPointsX, numPointsY = activationCurves.shape
-        nCols = 3; nRows = math.ceil(numActivations / nCols)
+        nCols = 4; nRows = math.ceil(numActivations / nCols)
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(8 * nCols, 8 * nRows), squeeze=False)
