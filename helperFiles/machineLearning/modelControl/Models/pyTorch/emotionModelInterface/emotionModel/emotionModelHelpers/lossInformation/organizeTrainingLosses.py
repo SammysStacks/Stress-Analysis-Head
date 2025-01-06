@@ -43,14 +43,14 @@ class organizeTrainingLosses(lossCalculations):
             signalReconstructedTestingLosses = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, validDataMask, allTestingSignalMask, averageBatches=True)
 
             # Get the encoder information.
-            specificJacobians, sharedJacobians = model.specificSignalEncoderModel.healthProfileJacobians[0, :, 0], model.sharedSignalEncoderModel.healthProfileJacobian[0, :]
-            specificJacobians, sharedJacobians = emotionModelWeights.getJacobianScalar(specificJacobians), emotionModelWeights.getJacobianScalar(sharedJacobians)
+            # specificJacobians, sharedJacobians = model.specificSignalEncoderModel.healthProfileJacobians[0, :, 0], model.sharedSignalEncoderModel.healthProfileJacobian[0, :]
+            # specificJacobians, sharedJacobians = emotionModelWeights.getJacobianScalar(specificJacobians), emotionModelWeights.getJacobianScalar(sharedJacobians)
             specificActivationParamsPath, sharedActivationParamsPath = model.getActivationParamsFullPassPath(domain="processingLayers")
 
             # Store the signal encoder loss information.
             self.storeLossInformation(signalReconstructedTrainingLosses, signalReconstructedTestingLosses, model.specificSignalEncoderModel.trainingLosses_signalReconstruction, model.specificSignalEncoderModel.testingLosses_signalReconstruction)
             self.storeLossInformation(specificActivationParamsPath, sharedActivationParamsPath, model.specificSignalEncoderModel.specificActivationParamsPath, model.specificSignalEncoderModel.sharedActivationParamsPath)
-            self.storeLossInformation(specificJacobians, sharedJacobians, model.specificSignalEncoderModel.specificJacobianFlow, model.specificSignalEncoderModel.sharedJacobianFlow)
+            # self.storeLossInformation(specificJacobians, sharedJacobians, model.specificSignalEncoderModel.specificJacobianFlow, model.specificSignalEncoderModel.sharedJacobianFlow)
             self.accelerator.print("Reconstruction loss values:", signalReconstructedTrainingLosses.nanmean().item(), signalReconstructedTestingLosses.nanmean().item())
 
             # Calculate the activity classification accuracy/loss and assert the integrity of the loss.

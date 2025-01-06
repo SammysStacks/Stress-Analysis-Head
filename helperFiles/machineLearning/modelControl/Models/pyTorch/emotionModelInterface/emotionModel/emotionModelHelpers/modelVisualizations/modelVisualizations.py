@@ -62,11 +62,11 @@ class modelVisualizations(globalPlottingProtocols):
                                                    lossLabels=[f"{datasetName}" for datasetName in datasetNames],
                                                    saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Profile Losses")
 
-                # Plot the shared and specific jacobian convergences.
-                self.generalViz.plotSinglaParameterFlow(trainingValues=[specificModel.specificJacobianFlow for specificModel in specificModels],
-                                                        testingValues=[specificModel.sharedJacobianFlow for specificModel in specificModels],
-                                                        labels=[f"{datasetName}" for datasetName in datasetNames],
-                                                        saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Health Jacobian Convergences")
+                # # Plot the shared and specific jacobian convergences.
+                # self.generalViz.plotSinglaParameterFlow(trainingValues=[specificModel.specificJacobianFlow for specificModel in specificModels],
+                #                                         testingValues=[specificModel.sharedJacobianFlow for specificModel in specificModels],
+                #                                         labels=[f"{datasetName}" for datasetName in datasetNames],
+                #                                         saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Health Jacobian Convergences")
 
                 # # Plot the shared and specific jacobian convergences.
                 # self.generalViz.plotSinglaParameterFlow(trainingValues=[specificModel.specificActivationParamsPath for specificModel in specificModels],
