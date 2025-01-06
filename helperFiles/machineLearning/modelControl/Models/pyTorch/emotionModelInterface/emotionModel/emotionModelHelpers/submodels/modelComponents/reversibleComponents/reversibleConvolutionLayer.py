@@ -81,9 +81,13 @@ class reversibleConvolutionLayer(reversibleInterface):
         A = torch.zeros(self.numSignals, self.sequenceLength, self.sequenceLength, dtype=torch.float64, device=device)
         # neuralWeight: numSignals, sequenceLength, sequenceLength
 
+        # Scale the values to an angle.
+        linearOperators = 2*torch.sigmoid(self.linearOperators[layerInd]) - 1
+        linearOperators = torch.pi*linearOperators
+
         # Gather the corresponding kernel values for each position for a skewed symmetric matrix.
-        A[:, self.rowInds, self.colInds] = -self.linearOperators[layerInd]
-        A[:, self.colInds, self.rowInds] = self.linearOperators[layerInd]
+        A[:, self.rowInds, self.colInds] = -linearOperators[layerInd]
+        A[:, self.colInds, self.rowInds] = linearOperators[layerInd]
         # neuralWeight: numSignals, sequenceLength, sequenceLength
 
         return A
