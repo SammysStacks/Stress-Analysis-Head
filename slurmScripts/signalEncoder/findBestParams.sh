@@ -45,11 +45,11 @@ numSharedEncoderLayers_arr=(12)
 encodedDimensions_arr=(256)
 allNumEncodedWeights=(32)
 numProfileShots_arr=(24)
-
+lrs_profile=('0.01')
 # Single Switchables.
 waveletTypes_arr=('bior3.1')
 optimizers_arr=('Adam')
-lrs_profile=('0.01')
+
 
 for beta1s in "${beta1s_arr[@]}"
 do
