@@ -148,7 +148,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
             else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotSignalEncodingStatePath(self, relativeTimes, compiledSignalEncoderLayerStates, epoch, hiddenLayers, saveFigureLocation, plotTitle):
+    def plotSignalEncodingStatePath(self, relativeTimes, compiledSignalEncoderLayerStates, vMin, epoch, hiddenLayers, saveFigureLocation, plotTitle):
         numLayers, numExperiments, numSignals, encodedDimension = compiledSignalEncoderLayerStates.shape
         if relativeTimes is None: relativeTimes = np.arange(start=1, stop=1 + encodedDimension, step=1)
         batchInd, signalInd = 0, 0
@@ -157,14 +157,14 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         compiledSignalEncoderLayerStates = compiledSignalEncoderLayerStates[:, batchInd, signalInd, :]
         numSpecificEncoderLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
         numSharedEncoderLayers = modelConstants.userInputParams['numSharedEncoderLayers']
-        interpolated_states = compiledSignalEncoderLayerStates.real
+        interpolated_states = compiledSignalEncoderLayerStates
 
         # These should be chosen based on your data and how you want to "zoom"
         relativeTimesExtent = (relativeTimes.min(), relativeTimes.max(), 0, numLayers)
         plt.figure(figsize=(12, 8))
 
         # Plot the rest of the layers with the same normalization.
-        im0 = plt.imshow(interpolated_states, cmap=self.custom_cmap, interpolation=None, extent=relativeTimesExtent, aspect='auto', origin='lower', vmin=-1.5, vmax=1.5)
+        im0 = plt.imshow(interpolated_states, cmap='viridis', interpolation=None, extent=relativeTimesExtent, aspect='auto', origin='lower', vmin=-vMin, vmax=vMin)
         plt.colorbar(im0, fraction=0.046, pad=0.04)
 
         # Add horizontal lines to mark layer boundaries
@@ -301,12 +301,12 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax = axes[layerInd]  # which subplot to use
             # Plot training eigenvalue angles
             angles_training = np.angle(trainingEigenValues[layerInd, signalInd, :], deg=degreesFlag)
-            ax.hist(angles_training, bins=64, alpha=0.75, density=True, color=self.lightColors[1], label="Training")
+            ax.hist(angles_training, bins=36, alpha=0.75, density=True, color=self.lightColors[1], label="Training")
 
             # Plot testing angles if provided
             if testingEigenValues is not None and testingEigenValues.shape[1] > 0:
                 angles_testing = np.angle(testingEigenValues[layerInd, signalInd, :], deg=degreesFlag)
-                ax.hist(angles_testing, bins=64, alpha=0.5, density=True, color=self.lightColors[0], label="Testing")
+                ax.hist(angles_testing, bins=36, alpha=0.5, density=True, color=self.lightColors[0], label="Testing")
 
             units = "degrees" if degreesFlag else "radians"
             degrees = 200 if degreesFlag else 3.25
@@ -343,7 +343,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Create the scatter plot
         maxHalfAngle = 180 if degreesFlag else np.pi
         if "3D Data Flow" in plotTitle: maxHalfAngle = 2*modelConstants.minMaxScale
-        surf = ax.scatter(x_data.flatten(), y_data.flatten(), np.imag(neuralEigenvalues.flatten()),  # Use z-values for coloring
+        surf = ax.scatter(x_data.flatten(), y_data.flatten(), np.angle(neuralEigenvalues.flatten(), deg=degreesFlag),  # Use z-values for coloring
                           c=np.angle(neuralEigenvalues.flatten(), deg=degreesFlag), cmap='viridis', alpha=1, s=7, vmin=-maxHalfAngle, vmax=maxHalfAngle)
 
         # Customize the view angle

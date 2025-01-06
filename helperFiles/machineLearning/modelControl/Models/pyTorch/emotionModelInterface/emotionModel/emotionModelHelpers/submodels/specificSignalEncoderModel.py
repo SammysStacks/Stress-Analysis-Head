@@ -32,6 +32,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
         # Initialize loss holders.
         self.trainingLosses_signalReconstruction, self.testingLosses_signalReconstruction = None, None
+        self.specificActivationParamsPath, self.sharedActivationParamsPath = None, None
         self.specificJacobianFlow, self.sharedJacobianFlow = None, None
         self.resetModel()
 
@@ -45,6 +46,10 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         # Jacobian parameter flow holders.
         self.specificJacobianFlow = []  # List of jacobian parameters. Dim: numEpochs
         self.sharedJacobianFlow = []  # List of jacobian parameters. Dim: numEpochs
+
+        # Activation parameter flow holders.
+        self.sharedActivationParamsPath = []  # List of activation linearity. Dim: numEpochs
+        self.specificActivationParamsPath = []  # List of activation bounds. Dim: numEpochs
 
     def addLayer(self):
         self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True))
@@ -61,12 +66,12 @@ class specificSignalEncoderModel(neuralOperatorInterface):
             signalData = self.processingLayers[layerInd](signalData)
 
             # Allow the signals to be scaled once.
-            if layerInd == 0: signalData = self.applyManifoldScale(signalData, self.healthProfileJacobians)  # TODO
+            # if layerInd == 0: signalData = self.applyManifoldScale(signalData, self.healthProfileJacobians)  # TODO
         else:
             # Get the reverse layer index.
             pseudoLayerInd = len(self.neuralLayers) - layerInd - 1
             assert 0 <= pseudoLayerInd < len(self.neuralLayers), f"The pseudo layer index is out of bounds: {pseudoLayerInd}, {len(self.neuralLayers)}, {layerInd}"
-            if pseudoLayerInd == 0: signalData = self.applyManifoldScale(signalData, self.healthProfileJacobians)
+            # if pseudoLayerInd == 0: signalData = self.applyManifoldScale(signalData, self.healthProfileJacobians)
 
             # Apply the neural operator layer with activation.
             signalData = self.processingLayers[pseudoLayerInd](signalData)

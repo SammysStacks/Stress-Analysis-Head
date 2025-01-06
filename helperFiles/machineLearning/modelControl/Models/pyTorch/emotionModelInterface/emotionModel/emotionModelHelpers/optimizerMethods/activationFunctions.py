@@ -36,8 +36,8 @@ def getActivationMethod(activationMethod):
 class reversibleLinearSoftSign(reversibleInterface):
     def __init__(self, infiniteBound=0.5, linearity=1):
         super(reversibleLinearSoftSign, self).__init__()
-        self.infiniteBoundParam = nn.Parameter(torch.zeros(1))  # The infinite bound controller.
-        self.infiniteBound = torch.ones(1)*1/2  # The infinite bound parameter.
+        self.infiniteBoundParam = nn.Parameter(torch.log(3*torch.ones(1)))  # The infinite bound controller.
+        self.infiniteBound = torch.ones(1)*3/4  # The infinite bound parameter.
         self.linearity = torch.ones(1)  # The linearity parameter.
         self.tolerance = 1e-25  # Tolerance for numerical stability
 

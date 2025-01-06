@@ -203,16 +203,27 @@ class emotionModelHead(nn.Module):
 
         return specificEigenvaluePath, sharedEigenvaluePath
 
+    def getActivationCurvesFullPassPath(self, domain):
+        specificLinearModels, sharedLinearModels = getattr(self.specificSignalEncoderModel, domain), getattr(self.sharedSignalEncoderModel, domain)
+        if domain == 'neuralLayers': specificLinearModels = [_linearModel.highFrequenciesWeights[0] for _linearModel in specificLinearModels]
+        if domain == 'neuralLayers': sharedLinearModels = [_linearModel.highFrequenciesWeights[0] for _linearModel in sharedLinearModels]
+
+        specificActivationPath = np.asarray([specificLinearModels[layerInd].getReversibleActivationCurves() for layerInd in range(self.numSpecificEncoderLayers)])
+        sharedActivationPath = np.asarray([sharedLinearModels[layerInd].getReversibleActivationCurves() for layerInd in range(self.numSharedEncoderLayers)])
+        # activationPath: numSpecificEncoderLayers or numSharedEncoderLayers, 2, numPoints
+
+        return specificActivationPath, sharedActivationPath
+
     def getActivationParamsFullPassPath(self, domain):
         specificLinearModels, sharedLinearModels = getattr(self.specificSignalEncoderModel, domain), getattr(self.sharedSignalEncoderModel, domain)
         if domain == 'neuralLayers': specificLinearModels = [_linearModel.highFrequenciesWeights[0] for _linearModel in specificLinearModels]
         if domain == 'neuralLayers': sharedLinearModels = [_linearModel.highFrequenciesWeights[0] for _linearModel in sharedLinearModels]
 
-        specificActivationPath = np.asarray([specificLinearModels[layerInd].getReversibleActivationParams() for layerInd in range(self.numSpecificEncoderLayers)])
-        sharedActivationPath = np.asarray([sharedLinearModels[layerInd].getReversibleActivationParams() for layerInd in range(self.numSharedEncoderLayers)])
-        # activationPath: numSpecificEncoderLayers or numSharedEncoderLayers, 2, numPoints
+        specificActivationParamsPath = np.asarray([specificLinearModels[layerInd].getReversibleActivationParams() for layerInd in range(self.numSpecificEncoderLayers)])
+        sharedActivationParamsPath = np.asarray([sharedLinearModels[layerInd].getReversibleActivationParams() for layerInd in range(self.numSharedEncoderLayers)])
+        # activationPath: numSpecificEncoderLayers or numSharedEncoderLayers, 2
 
-        return specificActivationPath, sharedActivationPath
+        return specificActivationParamsPath, sharedActivationParamsPath
 
     def signalEncoderPass(self, metaLearningData, forwardPass, compileLayerStates=False):
         reversibleInterface.changeDirections(forwardDirection=forwardPass)

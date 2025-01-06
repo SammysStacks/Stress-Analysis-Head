@@ -96,8 +96,13 @@ class reversibleConvolutionLayer(reversibleInterface):
         neuralWeights = self.getTransformationMatrix(layerInd, device).detach()  # Dim: numSignals, sequenceLength, sequenceLength
         return torch.linalg.eigvals(neuralWeights).detach().cpu().numpy()  # Dim: numSignals, sequenceLength
 
+    def getReversibleActivationCurves(self):
+        return self.activationFunction.getActivationCurve(x_min=-2, x_max=2, num_points=200)
+
     def getReversibleActivationParams(self):
-        return self.activationFunction.getActivationCurve(x_min=-2, x_max=2, num_points=250)
+        params = self.activationFunction.getActivationParams()
+        params = [param.detach().cpu().numpy() for param in params]
+        return params
 
     def printParams(self):
         # Count the trainable parameters.
