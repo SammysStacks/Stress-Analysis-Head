@@ -29,7 +29,7 @@ helperFiles/machineLearning/modelControl/_finalModels/emotionModel/
 
 # Feedback control files and folders
 helperFiles/machineLearning/feedbackControl/virtualRealityControl/Virtual Images/horror.osgb
-helperFiles/machineLearning/feedbackControl/oldMusicTherapy/musicHelpers/organizedSounds/_compiledSounds/
+helperFiles/machineLearning/feedbackControl/musicTherapy/musicHelpers/organizedSounds/_compiledSounds/
 
 # Supplementary information
 _projectFiles/_supplementaryWork/Signal Data and Features/Figures/Feature Time Windows/
