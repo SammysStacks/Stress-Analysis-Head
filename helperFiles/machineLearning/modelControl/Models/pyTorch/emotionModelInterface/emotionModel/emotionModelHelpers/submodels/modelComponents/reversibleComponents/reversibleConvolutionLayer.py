@@ -35,7 +35,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         for layerInd in range(self.numLayers):
             # Create the neural weights.
             parameters = nn.Parameter(torch.randn(self.numSignals, self.numEigenvalues))
-            parameters = nn.init.kaiming_uniform_(parameters)
+            parameters = nn.init.xavier_normal_(parameters)  # kaiming_uniform_
             self.omegaAngleParams.append(parameters)
 
     def forward(self, inputData):
@@ -106,7 +106,7 @@ class reversibleConvolutionLayer(reversibleInterface):
     def getSubdomainRotations(self, layerInd, device):
         # Scale the values to an angle.
         omegaAngles = torch.tanh(self.omegaAngleParams[layerInd])  # Scale between [-1, 1]
-        omegaAngles = torch.pi*omegaAngles / 2  # Scale between [-pi, pi]
+        omegaAngles = torch.pi*omegaAngles  # Scale between [-pi, pi]
         return omegaAngles.to(device)
 
     def getReversibleActivationCurves(self):
