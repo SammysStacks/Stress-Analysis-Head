@@ -56,7 +56,7 @@ if __name__ == "__main__":
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
 
     # Add arguments for the signal encoder architecture.
-    parser.add_argument('--initialProfileAmp', type=float, default=0.01, help='The limits for profile initialization, [0.005, 0.05]')
+    parser.add_argument('--initialProfileAmp', type=float, default=0.02, help='The limits for profile initialization, [0.005, 0.05]')
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=2, help='The number of layers in the model.')
     parser.add_argument('--numSharedEncoderLayers', type=int, default=8, help='The number of layers in the model.')
     parser.add_argument('--numEncodedWeights', type=int, default=32, help='The number of profile weights.')
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     # ----------------------- Training Parameters ----------------------- #
 
     # Signal encoder learning rates.
-    parser.add_argument('--profileLR', type=float, default=0.01, help='The learning rate of the health model.')
+    parser.add_argument('--profileLR', type=float, default=0.05, help='The learning rate of the health model.')
     parser.add_argument('--reversibleLR', type=float, default=1e-3, help='The learning rate of the general model.')
     parser.add_argument('--physGenLR', type=float, default=1e-4, help='The learning rate of the general model.')
 

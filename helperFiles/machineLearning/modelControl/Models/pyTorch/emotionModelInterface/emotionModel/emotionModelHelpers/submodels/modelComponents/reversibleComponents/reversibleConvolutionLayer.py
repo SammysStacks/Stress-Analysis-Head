@@ -35,7 +35,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         for layerInd in range(self.numLayers):
             # Create the neural weights.
             parameters = nn.Parameter(torch.randn(self.numSignals, self.numEigenvalues))
-            parameters = nn.init.xavier_uniform_(parameters)  # kaiming_uniform_
+            parameters = nn.init.kaiming_uniform_(parameters)
             self.omegaAngleParams.append(parameters)
 
     def forward(self, inputData):
@@ -89,8 +89,8 @@ class reversibleConvolutionLayer(reversibleInterface):
 
     def applyManifoldScale(self, inputData, jacobianParameter):
         scalarValues = self.getJacobianScalar(jacobianParameter).expand_as(inputData)
-        if not reversibleInterface.forwardDirection: return inputData / scalarValues
-        else: return inputData * scalarValues
+        if not reversibleInterface.forwardDirection: return inputData * scalarValues
+        else: return inputData / scalarValues
 
     @staticmethod
     def initializeJacobianParams(numSignals):
@@ -98,7 +98,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
     @staticmethod
     def getJacobianScalar(jacobianParameter):
-        jacobianMatrix = 9/10 + 2/10 * torch.sigmoid(jacobianParameter)
+        jacobianMatrix = 0.95 + 0.1 * torch.sigmoid(jacobianParameter)
         return jacobianMatrix
 
     # ------------------- Activation Functions ------------------- #
@@ -106,7 +106,7 @@ class reversibleConvolutionLayer(reversibleInterface):
     def getSubdomainRotations(self, layerInd, device):
         # Scale the values to an angle.
         omegaAngles = torch.tanh(self.omegaAngleParams[layerInd])  # Scale between [-1, 1]
-        omegaAngles = torch.pi*omegaAngles  # Scale between [-pi, pi]
+        omegaAngles = torch.pi*omegaAngles / 2  # Scale between [-pi, pi]
         return omegaAngles.to(device)
 
     def getReversibleActivationCurves(self):

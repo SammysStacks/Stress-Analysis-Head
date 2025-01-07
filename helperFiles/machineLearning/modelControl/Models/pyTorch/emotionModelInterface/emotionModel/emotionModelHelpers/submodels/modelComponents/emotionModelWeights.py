@@ -72,9 +72,8 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def initializeJacobianParams(numSignals):
-        initialValue = 0
-        if numSignals == 1: return nn.Parameter(initialValue * torch.ones((1, numSignals)))
-        else: return nn.Parameter(initialValue * torch.ones((1, numSignals, 1)))
+        if numSignals == 1: return nn.Parameter(0 * torch.ones((1, numSignals)))
+        else: return nn.Parameter(0 * torch.ones((1, numSignals, 1)))
 
     def healthGeneration(self, numOutputFeatures):
         if numOutputFeatures < modelConstants.numEncodedWeights: raise ValueError(f"Number of outputs ({numOutputFeatures}) must be greater than inputs ({modelConstants.numEncodedWeights})")
@@ -85,12 +84,15 @@ class emotionModelWeights(convolutionalHelpers):
             self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
             self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
             self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
+
+            self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
+            self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
             self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
         ]
 
         # Construct the profile generation model.
-        for i in range(numUpSamples): layers.append(self.convolutionalFilters_resNetBlocks(numResNets=1, numBlocks=1, numChannels=[1, 2, 2], kernel_sizes=[[3, 3]], dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
-        layers.append(self.convolutionalFilters_resNetBlocks(numResNets=4, numBlocks=1, numChannels=[1, 2, 2, 2, 1], kernel_sizes=[[3, 3, 3, 3]], dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
+        for i in range(numUpSamples): layers.append(self.convolutionalFilters_resNetBlocks(numResNets=1, numBlocks=1, numChannels=[1, 2], kernel_sizes=[[3]], dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
+        layers.append(self.convolutionalFilters_resNetBlocks(numResNets=4, numBlocks=1, numChannels=[1, 2, 1], kernel_sizes=[[3, 3]], dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
         return nn.Sequential(*layers)
 
     @staticmethod
@@ -103,8 +105,8 @@ class emotionModelWeights(convolutionalHelpers):
 
     def applyManifoldScale(self, healthProfile, healthProfileJacobians):
         scalarValues = self.getJacobianScalar(healthProfileJacobians).expand_as(healthProfile)
-        if not reversibleInterface.forwardDirection: return healthProfile / scalarValues
-        else: return healthProfile * scalarValues
+        if not reversibleInterface.forwardDirection: return healthProfile * scalarValues
+        else: return healthProfile / scalarValues
 
     # ------------------- Emotion/Activity Encoding Architectures ------------------- #
 
