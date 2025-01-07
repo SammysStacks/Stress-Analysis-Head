@@ -60,7 +60,6 @@ class aStarTherapyProtocol(generalTherapyProtocol):
         newUserParam = newUserParam + self.uncertaintyBias * np.random.normal(loc=0, scale=0.5)  # Add noise to the gradient.
 
         # Calculate the new temperature.
-        #newUserParam = self.boundNewTemperature(newUserParam, bufferZone=1)
         newUserParam = torch.tensor(newUserParam).view(1, 1, 1, 1)
 
         # Bound the parameter
@@ -96,7 +95,6 @@ class aStarTherapyProtocol(generalTherapyProtocol):
         newUserParam = newUserParam + self.uncertaintyBias * np.random.normal(loc=0, scale=0.5)  # Add noise to the gradient.
 
         # Calculate the new temperature.
-        #newUserParam = self.boundNewTemperature(newUserParam, bufferZone=1) # newUserParam = torch.Size([1, 1, 1, 1])
         newUserParam = torch.tensor(newUserParam).view(1, 2, 1, 1)
 
         # Bound the parameter
@@ -109,6 +107,7 @@ class aStarTherapyProtocol(generalTherapyProtocol):
         newUserParam = (newUserParam - self.initialParameterBounds[0][0]) / (self.initialParameterBounds[0][1] - self.initialParameterBounds[0][0])
         return newUserParam
 
+<<<<<<< HEAD
     # / TODO: to be deleted, double check not needed
     def findNewTemperature(self, currentUserState, gradientDirection):
         # Unpack the current user state.
@@ -120,6 +119,8 @@ class aStarTherapyProtocol(generalTherapyProtocol):
 
         return tempGradient
 
+=======
+>>>>>>> 11bff24868 (TherapyCleaned)
     # ================================================Update Parameters=================================================
 
     def findOptimalDirection(self, probabilityMap, currentParam, currentCompiledLoss):
@@ -171,8 +172,6 @@ class aStarTherapyProtocol(generalTherapyProtocol):
             # Return the new parameters and the expected rewards
             return userParams, expectedRewards
 
-        # # Compute the gradient.
-        # potentialTemperatureRewards = np.gradient(potentialTemperatureRewards)  # Dimension: 2, allNumParameterBins, numPredictionBins
 
     """Update the map weights alpha """
     def updateAlpha(self):
@@ -261,8 +260,6 @@ class aStarTherapyProtocol(generalTherapyProtocol):
         for idx in range(len(self.paramStatePath)):
             currentParam = self.paramStatePath[idx]
             param_values = currentParam.squeeze().numpy()  # Shape should be (2,)
-            print('currentParam', currentParam)
-            print('param_values', param_values)
 
             paramBinIndex_1 = self.dataInterface.getBinIndex(self.allParameterBins_resampled[0], param_values[0])
             paramBinIndex_2 = self.dataInterface.getBinIndex(self.allParameterBins_resampled[1], param_values[1])

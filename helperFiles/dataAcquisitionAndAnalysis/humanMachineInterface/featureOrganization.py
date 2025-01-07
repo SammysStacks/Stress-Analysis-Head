@@ -91,7 +91,6 @@ class featureOrganization(humanMachineInterface):
     # --------------------- Organize Incoming Features --------------------- #
 
     def compileIntervalFeaturesWithPadding(self):
-        print('self.featureAnalysisList', self.featureAnalysisList)
         # Find the number of new points.
         lastRecordedTime = self.featureAnalysisList[0].timepoints[-1]  # The last time we streamed data.
         numNewPoints = int(1 + (lastRecordedTime - self.startModelTime - self.modelTimeBuffer) // self.modelTimeGap)
@@ -129,7 +128,7 @@ class featureOrganization(humanMachineInterface):
             refereneStartTime[-1].append(self.startModelTime)
         refereneStartTime = torch.as_tensor(refereneStartTime, dtype=torch.float64)
 
-        allSignalData, allNumSignalPoints = self.compileModelHelpers._padSignalData(allRawFeatureTimeInterval, allRawFeatureInterval, refereneStartTime)
+        allSignalData = self.compileModelHelpers._padSignalData(allRawFeatureTimeInterval, allRawFeatureInterval, refereneStartTime)
         # allSignalData example size: torch.Size([75, 81, 72, 2])
 
         # allSignalData, allNumSignalPoints = self.compileModelHelpers.preprocessingSignalsTherapy(allSignalData, allNumSignalPoints)
@@ -138,7 +137,7 @@ class featureOrganization(humanMachineInterface):
         self.startModelTime += self.modelTimeGap
         modelTimes.append(self.startModelTime)
         # Update the pointers.
-        return modelTimes, allSignalData, allNumSignalPoints
+        return modelTimes, allSignalData
 
 
     def organizeRawFeatures(self):

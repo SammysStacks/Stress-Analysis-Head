@@ -58,7 +58,7 @@ class TextFeedback:
         textResponseObject = self.client.chat.completions.create(
             messages=conversationHistory,      # A list of messages comprising the conversation so far.
             # response_format = "text",     # Must be one of text or json_object.
-            model="gpt-4-vision-preview",            # ID of the model to use.
+            model="gpt-4-0613",            # ID of the model to use.
             frequency_penalty = 0,      # Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
             presence_penalty = 0,       # Number between -2.0 and 2.0. Positive values penalize new tokens based on whether they appear in the text so far, increasing the model's likelihood to talk about new topics.
             user = self.userName,       # A unique identifier representing your end-user, which can help OpenAI to monitor and detect abuse.

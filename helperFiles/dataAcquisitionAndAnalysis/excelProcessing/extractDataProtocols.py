@@ -74,8 +74,8 @@ class extractData(handlingExcelFormat):
                     else: break
 
         # Assert the data columns are correct.
-
-        assert endDataCol - startDataCol == dataColumns[-1], f"Data columns: {dataColumns}; timeColumns: {timeColumns}; startDataCol: {startDataCol}; endDataCol: {endDataCol}"
+        # this is only for empatica
+        #assert endDataCol - startDataCol == dataColumns[-1], f"Data columns: {dataColumns}; timeColumns: {timeColumns}; startDataCol: {startDataCol}; endDataCol: {endDataCol}"
         numFreqs = len(timeColumns)
 
         # Create the data

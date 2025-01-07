@@ -53,6 +53,7 @@ class empatchProtocols(extractData):
             # Remove any files that are not part of the therapy data.
             if not excelFile.endswith(".xlsx") or excelFile.startswith(("~", ".")): continue  # Only analyze Excel files with the training signals.
             if self.therapyExpMethod not in excelFile: continue  # Only analyze the therapy data.
+            print(f"Processing file: {excelFile}")
 
             # Get the full file information.
             savedFeaturesFile = self.trainingFolder + '/' + self.saveFeatureFolder + excelFile.split(".")[0] + self.saveFeatureFile_Appended
@@ -60,6 +61,7 @@ class empatchProtocols(extractData):
             rawFeatureTimesHolder, rawFeatureHolder, _, experimentTimes, experimentNames, currentSurveyAnswerTimes, \
                 currentSurveyAnswersList, surveyQuestions, currentSubjectInformationAnswers, subjectInformationQuestions \
                 = self.getFeatures(self.biomarkerFeatureOrder, savedFeaturesFile, self.biomarkerFeatureNames, surveyQuestions=[], finalSubjectInformationQuestions=[])
+
             # currentSurveyAnswersList: The user answers to the survey questions during the experiment. Dimensions: numExperiments, numSurveyQuestions
             # surveyQuestions: The questions asked in the survey. Dimensions: numSurveyQuestions = numEmotionsRecorded
             # currentSurveyAnswerTimes: The times the survey questions were answered. Dimensions: numExperiments
@@ -101,7 +103,6 @@ class empatchProtocols(extractData):
 
                     # Extract the temperature used in the experiment.
                     if self.therapyExpMethod in experimentName:
-                        # print('experimentName', experimentName)
                         experimentalTemp = int(experimentName.split("-")[-1])
                         experimentTempHolder.append(experimentalTemp)
                     else:
@@ -114,24 +115,52 @@ class empatchProtocols(extractData):
                         experimentTempHolder.append(experimentalTemp.item())
                 return experimentTempHolder
 
-            experimentTempHolder = temperatureInterface()
-            # For each experiment.
-            for experimentalInd in range(len(experimentNames)):
-                # Get the mental state values and normalize them.
-                emotion_states = [currentPredictionStates[0][experimentalInd], currentPredictionStates[1][experimentalInd], currentPredictionStates[2][experimentalInd]]
-                experimentalTemp = experimentTempHolder[experimentalInd]
-                stateHolder.append([experimentalTemp] + emotion_states)
-                #print('stateHolder', stateHolder)
+            def binauralBeatsInterface():
+                experimentParamHolder = [[], []]
+                therapyMethodCleaned = self.therapyExpMethod.replace("Beats", "")
+                for experimentalInd in range(len(experimentNames)):
+                    experimentName = experimentNames[experimentalInd]
+                    if therapyMethodCleaned in experimentName:
+                        experimentalParameters = experimentName.split("-")[-2:]  # Get the last two elements
+                        param1, param2 = map(int, experimentalParameters)
+                        experimentParamHolder[0].append(param1)
+                        experimentParamHolder[1].append(param2)
+                return experimentParamHolder
+
+            if self.therapyExpMethod == "HeatingPad":
+                experimentTempHolder = temperatureInterface()
+                # For each experiment.
+                for experimentalInd in range(len(experimentNames)):
+                    # Get the mental state values and normalize them.
+                    emotion_states = [currentPredictionStates[0][experimentalInd], currentPredictionStates[1][experimentalInd], currentPredictionStates[2][experimentalInd]]
+                    experimentalTemp = experimentTempHolder[experimentalInd]
+                    stateHolder.append([experimentalTemp] + emotion_states)
+            elif self.therapyExpMethod == "BinauralBeats":
+                experimentParamHolder = binauralBeatsInterface()
+                correspondEmoIndex = [i for i, name in enumerate(experimentNames) if 'Binaural' in name]
+                for index in range(len(correspondEmoIndex)):
+                    emotion_states = [currentPredictionStates[0][correspondEmoIndex[index]], currentPredictionStates[1][correspondEmoIndex[index]], currentPredictionStates[2][correspondEmoIndex[index]]]
+                    experimentalParam_1 = experimentParamHolder[0][index]
+                    experimentalParam_2 = experimentParamHolder[1][index]
+                    stateHolder.append([experimentalParam_1, experimentalParam_2] + emotion_states)
+
 
         stateHolder = torch.as_tensor(stateHolder)
-        #print('stateHolder', stateHolder)
-        parameter = stateHolder[:, 0].view(1, -1)
-        pa = stateHolder[:, 1].view(1, -1)
-        na = stateHolder[:, 2].view(1, -1)
-        sa = stateHolder[:, 3].view(1, -1)
-        # print('parameter', parameter)
-        # print('pa', pa)
-        # print('na', na)
-        # print('sa', sa)
-        return parameter, pa, na, sa
+
+        if self.therapyExpMethod == "HeatingPad":
+            parameter = stateHolder[:, 0].view(1, -1)
+            pa = stateHolder[:, 1].view(1, -1)
+            na = stateHolder[:, 2].view(1, -1)
+            sa = stateHolder[:, 3].view(1, -1)
+            return parameter, pa, na, sa
+        elif self.therapyExpMethod == "BinauralBeats":
+            parameter_1 = stateHolder[:, 0].view(1, -1)
+            parameter_2 = stateHolder[:, 1].view(1, -1)
+            totalParameter = [parameter_1, parameter_2]
+            pa = stateHolder[:, 2].view(1, -1)
+            na = stateHolder[:, 3].view(1, -1)
+            sa = stateHolder[:, 4].view(1, -1)
+            return totalParameter, pa, na, sa
+
+
 

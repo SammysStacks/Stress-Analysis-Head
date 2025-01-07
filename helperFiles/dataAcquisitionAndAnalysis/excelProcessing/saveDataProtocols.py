@@ -169,14 +169,24 @@ class saveExcelData(handlingExcelFormat):
                     # Append the collected row data to the worksheet
                     worksheet.append(row_data)
             elif deviceType == 'serial':
-                # Loop through all data to be saved within this sheet in the Excel file.
-                for dataInd in range(firstIndexInFile, min(firstIndexInFile + self.maxAddToExcelSheet, len(timepoints))):
-                    # Organize all the data
-                    row = [timepoints[dataInd]]
-                    row.extend([dataCol[dataInd] for dataCol in signalData])
+                max_rows = max(len(tp) for tp in timepoints)  # Determine the maximum number of rows to iterate over
 
-                    # Add the row to the worksheet
-                    worksheet.append(row)
+                # Iterate through each row (time point)
+                for row in range(max_rows):
+                    row_data = []  # To hold the row data to append
+
+                    # For each channel (time and data)
+                    for channelInd in range(len(timepoints)):
+                        if row < len(timepoints[channelInd]):  # Check if the current row exists in the channel data
+                            row_data.append(timepoints[channelInd][row])  # Append the time point
+                            row_data.append(signalData[channelInd][row])  # Append the corresponding signal data
+                        else:
+                            # If no data for this row (shorter array), append empty cells
+                            row_data.append(None)
+                            row_data.append(None)
+
+                    # Append the collected row data to the worksheet
+                    worksheet.append(row_data)
 
             # Finalize document aesthetics
             self.addExcelAesthetics(worksheet)  # Add Excel Aesthetics

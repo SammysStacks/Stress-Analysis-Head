@@ -80,11 +80,12 @@ class streamingProtocols(streamingProtocolHelpers):
 
                 # Analyze the new data in batches.
                 streamingDataFingers = self.analyzeBatchData(streamingDataFingers)
-            self.analyzeBatchData(streamingDataFingers)
+
+            #self.analyzeBatchData(streamingDataFingers)
 
         except Exception as error:
             self.closeDeviceStream()
-            print(error)
+            print("Streaming error:", error)
 
         finally:
             # Set the final experimental time to the end of the experiment

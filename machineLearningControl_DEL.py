@@ -46,7 +46,7 @@ from _dataPreparation import standardizeData
 
 # Import Files for Stress Therapy
 sys.path.append(os.path.dirname(__file__) + "/Helper Files/Machine Learning/Feedback Control/Music Therapy/")
-# import musicTherapy
+# import oldMusicTherapy
 
 if __name__ == "__main__":
     # ---------------------------------------------------------------------- #
@@ -103,7 +103,7 @@ if __name__ == "__main__":
         soundInfoFile = 'raw_30s_cleantags_50artists.tsv'
         dataFolder = './Helper Files/Machine Learning/_Feedback Control/Music Therapy/Organized Sounds/MTG-Jamendo/'
         # Initialize the classes
-        # soundManager = musicTherapy.soundController(dataFolder, soundInfoFile)  # Controls the music playing
+        # soundManager = oldMusicTherapy.soundController(dataFolder, soundInfoFile)  # Controls the music playing
         # soundManager.loadSound(soundManager.soundInfo[0][3])
         playGenres = [None, 'pop', 'jazz', 'heavymetal', 'classical', None]
 

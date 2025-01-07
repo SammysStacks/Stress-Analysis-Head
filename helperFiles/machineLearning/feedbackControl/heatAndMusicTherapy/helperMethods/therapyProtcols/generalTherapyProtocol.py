@@ -139,54 +139,95 @@ class generalTherapyProtocol(abc.ABC):
             elif therapySelection == "BinauralBeats":
                 self.simulationProtocols.initializeSimulatedMaps(self.predictionWeights, self.gausParameterSTDs, self.gausLossSTDs, self.applyGaussianFilter)
         else:
-            # Real data points
-            temperature, pa, na, sa = self.empatchProtocols.getTherapyData()
+            if therapySelection == "Heat":
+                # Real data points
+                temperature, pa, na, sa = self.empatchProtocols.getTherapyData()
+                # Sort the Param, PA, NA, SA into correct format to generate initialSimulatedData
+                initialSimulatedStates = torch.stack([temperature, pa, na, sa], dim=1)
+                extracted_param = initialSimulatedStates[0, 0, :]
+                # Normalize the Params
+                extracted_param = dataInterface.normalizeParameters(currentParamBounds=self.initialParameterBounds, normalizedParamBounds=self.modelParameterBounds, currentParamValues=extracted_param)
+                extracted_pa = initialSimulatedStates[0, 1, :]
+                extracted_na = initialSimulatedStates[0, 2, :]
+                extracted_sa = initialSimulatedStates[0, 3, :]
 
-            # Sort the Param, PA, NA, SA into correct format to generate initialSimulatedData
-            initialSimulatedStates = torch.stack([temperature, pa, na, sa], dim=1)
-            extracted_param = initialSimulatedStates[0, 0, :]
+                # Stack the PA, NA, and SA into the desired shape
+                realDataInitialEmotionStates = torch.stack([extracted_pa, extracted_na, extracted_sa], dim=1).unsqueeze(2).unsqueeze(3)  # [48, 3, 1, 1]
 
-            # Normalize the Params
-            extracted_param = dataInterface.normalizeParameters(currentParamBounds=self.initialParameterBounds, normalizedParamBounds=self.modelParameterBounds, currentParamValues=extracted_param)
-            extracted_pa = initialSimulatedStates[0, 1, :]
-            extracted_na = initialSimulatedStates[0, 2, :]
-            extracted_sa = initialSimulatedStates[0, 3, :]
+                initialRealData_compiledLoss = self.dataInterface.calculateCompiledLoss(realDataInitialEmotionStates)  # initialSimulatedData dimension: numSimulationTrueSamples, (T, L).
+                realDataInitialCompiledStates = torch.stack([extracted_param, extracted_pa, extracted_na, extracted_sa, initialRealData_compiledLoss.flatten()], dim=1).unsqueeze(2).unsqueeze(3)  # [48, 5, 1, 1]
 
-            # Stack the PA, NA, and SA into the desired shape
-            realDataInitialEmotionStates = torch.stack([extracted_pa, extracted_na, extracted_sa], dim=1).unsqueeze(2).unsqueeze(3)  # [48, 3, 1, 1]
+                # data preprocessing for generating intial Maps
+                initialRealData_PA = realDataInitialCompiledStates[:, [0, 1], :, :]  # Shape: [30, 2, 1, 1]
 
-            initialRealData_compiledLoss = self.dataInterface.calculateCompiledLoss(realDataInitialEmotionStates)  # initialSimulatedData dimension: numSimulationTrueSamples, (T, L).
-            realDataInitialCompiledStates = torch.stack([extracted_param, extracted_pa, extracted_na, extracted_sa, initialRealData_compiledLoss.flatten()], dim=1).unsqueeze(2).unsqueeze(3)  # [48, 5, 1, 1]
+                # Extract for NA: Parameter and second emotion prediction
+                initialRealData_NA = realDataInitialCompiledStates[:, [0, 2], :, :]  # Shape: [30, 2, 1, 1]
 
-            # data preprocessing for generating intial Maps
-            initialRealData_PA = realDataInitialCompiledStates[:, [0, 1], :, :]  # Shape: [30, 2, 1, 1]
+                # Extract for SA: Parameter and third emotion prediction
+                initialRealData_SA = realDataInitialCompiledStates[:, [0, 3], :, :]  # Shape: [30, 2, 1, 1]
 
-            # Extract for NA: Parameter and second emotion prediction
-            initialRealData_NA = realDataInitialCompiledStates[:, [0, 2], :, :]  # Shape: [30, 2, 1, 1]
+                # Resample the data bins to address unevenness
+                resampledParameterBins, resampledPredictionBins = self.generalMethods.resampleBins(self.allParameterBins, self.allPredictionBins, eventlySpacedBins=False)
 
-            # Extract for SA: Parameter and third emotion prediction
-            initialRealData_SA = realDataInitialCompiledStates[:, [0, 3], :, :]  # Shape: [30, 2, 1, 1]
+                # Generate Prob Matrix
+                self.simulationProtocols.realSimMapPA = self.generalMethods.getProbabilityMatrix(initialRealData_PA, resampledParameterBins, resampledPredictionBins[0], self.gausParameterSTDs, self.gausLossSTDs[0], noise=0.1, applyGaussianFilter=self.applyGaussianFilter)
+                self.simulationProtocols.realSimMapNA = self.generalMethods.getProbabilityMatrix(initialRealData_NA, resampledParameterBins, resampledPredictionBins[1], self.gausParameterSTDs, self.gausLossSTDs[1], noise=0.1, applyGaussianFilter=self.applyGaussianFilter)
+                self.simulationProtocols.realSimMapSA = self.generalMethods.getProbabilityMatrix(initialRealData_SA, resampledParameterBins, resampledPredictionBins[2], self.gausParameterSTDs, self.gausLossSTDs[2], noise=0.1, applyGaussianFilter=self.applyGaussianFilter)
 
-            # Resample the data bins to address unevenness
-            resampledParameterBins, resampledPredictionBins = self.generalMethods.resampleBins(self.allParameterBins, self.allPredictionBins, eventlySpacedBins=False)
+                # Weigh the Maps
+                self.simulationProtocols.realSimMapCompiledLoss = 0.3 * self.simulationProtocols.realSimMapPA + 0.3 * self.simulationProtocols.realSimMapNA + 0.4 * self.simulationProtocols.realSimMapSA
+            elif therapySelection == "BinauralBeats":
+                totalParam, pa, na, sa = self.empatchProtocols.getTherapyData()
+                param1 = totalParam[0]
+                param2 = totalParam[1]
+                # Sort the Params, PA, NA, SA into correct format to generate initialSimulatedData
+                initialSimulatedStates = torch.stack([param1, param2, pa, na, sa], dim=1)
+                extracted_param_1 = initialSimulatedStates[0, 0, :]
+                extracted_param_2 = initialSimulatedStates[0, 1, :]
+                # Normalize the Params
+                extracted_param_1 = dataInterface.normalizeParameters(currentParamBounds=self.initialParameterBounds[0].unsqueeze(0) - self.initialParameterBounds[0].unsqueeze(0)[:, 0:1], normalizedParamBounds=self.modelParameterBounds,
+                                                                              currentParamValues=extracted_param_1)
+                extracted_param_2 = dataInterface.normalizeParameters(currentParamBounds=self.initialParameterBounds[1].unsqueeze(0) - self.initialParameterBounds[1].unsqueeze(0)[:, 0:1], normalizedParamBounds=self.modelParameterBounds,
+                                                                      currentParamValues=extracted_param_2)
+                extracted_pa = initialSimulatedStates[0, 2, :]
+                extracted_na = initialSimulatedStates[0, 3, :]
+                extracted_sa = initialSimulatedStates[0, 4, :]
+                # Stack the PA, NA, and SA into the desired shape
+                realDataInitialEmotionStates = torch.stack([extracted_pa, extracted_na, extracted_sa], dim=1).unsqueeze(2).unsqueeze(3)
+                initialRealData_compiledLoss = self.dataInterface.calculateCompiledLoss(realDataInitialEmotionStates)  # initialSimulatedData dimension: numSimulationTrueSamples, (T, L).
+                realDataInitialCompiledStates = torch.stack([extracted_param_1, extracted_param_2, extracted_pa, extracted_na, extracted_sa, initialRealData_compiledLoss.flatten()], dim=1).unsqueeze(2).unsqueeze(3)  # [numPoints, 6, 1, 1]
+                # data preprocessing for generating intial Maps
+                initialRealData_PA = realDataInitialCompiledStates[:, [0, 1, 2], :, :] # torch.Size([numBinauralBeats, 3, 1, 1])
 
-            # Generate Prob Matrix
-            self.simulationProtocols.realSimMapPA = self.generalMethods.getProbabilityMatrix(initialRealData_PA, resampledParameterBins, resampledPredictionBins[0], self.gausParameterSTDs, self.gausLossSTDs[0], noise=0.1, applyGaussianFilter=self.applyGaussianFilter)
-            self.simulationProtocols.realSimMapNA = self.generalMethods.getProbabilityMatrix(initialRealData_NA, resampledParameterBins, resampledPredictionBins[1], self.gausParameterSTDs, self.gausLossSTDs[1], noise=0.1, applyGaussianFilter=self.applyGaussianFilter)
-            self.simulationProtocols.realSimMapSA = self.generalMethods.getProbabilityMatrix(initialRealData_SA, resampledParameterBins, resampledPredictionBins[2], self.gausParameterSTDs, self.gausLossSTDs[2], noise=0.1, applyGaussianFilter=self.applyGaussianFilter)
+                # Extract for NA: Parameter and second emotion prediction
+                initialRealData_NA = realDataInitialCompiledStates[:, [0, 1, 3], :, :] # torch.Size([numBinauralBeats, 3, 1, 1])
 
-            # Weigh the Maps
-            self.simulationProtocols.realSimMapCompiledLoss = 0.3 * self.simulationProtocols.realSimMapPA + 0.3 * self.simulationProtocols.realSimMapNA + 0.4 * self.simulationProtocols.realSimMapSA
+                # Extract for SA: Parameter and third emotion prediction
+                initialRealData_SA = realDataInitialCompiledStates[:, [0, 1, 4], :, :] # # torch.Size([numBinauralBeats, 3, 1, 1])
+
+                resampledParameterBins_single, resampledPredictionBins = self.generalMethods.resampleBins(self.allParameterBins[0], self.allPredictionBins, eventlySpacedBins=False)
+                resampledParameterBins = [resampledParameterBins_single, resampledParameterBins_single]
+
+                self.simulationProtocols.realSimMapPA = self.generalMethods.get3DProbabilityMatrix(initialRealData_PA, resampledParameterBins, resampledPredictionBins[0], self.gausParameterSTDs, self.gausLossSTDs[0], noise=0.1,
+                                                                                 applyGaussianFilter=self.applyGaussianFilter)
+                self.simulationProtocols.realSimMapNA = self.generalMethods.get3DProbabilityMatrix(initialRealData_NA, resampledParameterBins, resampledPredictionBins[1], self.gausParameterSTDs, self.gausLossSTDs[1], noise=0.1,
+                                                                                 applyGaussianFilter=self.applyGaussianFilter)
+                self.simulationProtocols.realSimMapSA = self.generalMethods.get3DProbabilityMatrix(initialRealData_SA, resampledParameterBins, resampledPredictionBins[2], self.gausParameterSTDs, self.gausLossSTDs[2], noise=0.1,
+                                                                                 applyGaussianFilter=self.applyGaussianFilter)
+                # Weigh the Maps
+                self.simulationProtocols.realSimMapCompiledLoss = 0.3 * self.simulationProtocols.realSimMapPA + 0.3 * self.simulationProtocols.realSimMapNA + 0.4 * self.simulationProtocols.realSimMapSA
+
+
 
     """Initialize the User information"""
-    def initializeUserState(self, userName, initialTime, initialParam, initialPredicitons):
+    def initializeUserState(self, userName):
         # --------------------------------------Dimensions--------------------------------------
         # timePints: a tensor
         # parameter: tensor of size 1, 1, 1, 1 for heat and tensor of size 1, 2, 1, 1 for Binaural Beats
         # emotionStates: tensor of size 1, 3, 1, 1
         # --------------------------------------------------------------------------------------
 
-        timepoints, parameters, emotionStates = self.getInitialSate(initialTime, initialParam, initialPredicitons)
+        timepoints, parameters, emotionStates = self.getInitialSate()
 
         # Check if any of the initial state components are None
         if timepoints is None or parameters is None or emotionStates is None:
@@ -225,18 +266,13 @@ class generalTherapyProtocol(abc.ABC):
             self.unNormalizedParam_2.append(initialUserParam_2)
 
     """Initialize the state information"""
-    def getInitialSate(self, initialTime, initialParam, initialPredicitons):
+    def getInitialSate(self):
         if self.simulateTherapy:
             # Simulate a new time point by adding a constant delay factor.
             currentTime, currentParam, currentPredictions = self.simulationProtocols.getInitialState() # currentTime: tensor(0); currentParam: torch.Size([1, 1, 1, 1]); currentPredictions: torch.Size([1, 3, 1, 1]) predefined.
-            print('currentTime, currentParam, currentPredictions', currentTime, currentParam, currentPredictions)
             return currentTime, currentParam, currentPredictions
         else:
-            # Real-time interfacing
-            # Assumption: random start state
             currentTime, currentParam, currentPredictions = self.simulationProtocols.getInitialState()
-            #currentTime, currentParam, currentPredictions = initialTime, initialParam, initialPredicitons  # currentTime: tensor(0); currentParam: torch.Size([1, 1, 1, 1]); currentPredictions: torch.Size([1, 3, 1, 1]) predefined.
-            # print('currentTime, currentParam, currentPredictions', currentTime, currentParam, currentPredictions)
             return currentTime, currentParam, currentPredictions
 
     """Therapy state updates"""
@@ -254,7 +290,7 @@ class generalTherapyProtocol(abc.ABC):
             currentEmotionStates = self.userMentalStatePath[-1]
 
             # Sample the new loss form a pre-simulated map.
-            newUserLoss, PA, NA, SA = self.simulationProtocols.getSimulatedCompiledLoss(currentParam, currentEmotionStates, newParamValues, therapyMethod)
+            newUserLoss, PA, NA, SA = self.simulationProtocols.getSimulatedCompiledLoss(currentParam, currentEmotionStates, self.simulateTherapy, newParamValues, therapyMethod)
 
             # Combined to mentalState
             combinedMentalState = torch.cat((PA, NA, SA), dim=1)
@@ -293,35 +329,56 @@ class generalTherapyProtocol(abc.ABC):
                 self.timepoints.append(newTimePoint)
 
         else:
-            # / TODO: eventually, this will be the real-time user state update during experiment
-            # Simulate a new time.
-            lastTimePoint = self.timepoints[-1] if len(self.timepoints) != 0 else 0
 
-            # Convert tensor to int
-            lastTimePoint = int(lastTimePoint)
-            newTimePoint = self.simulationProtocols.getSimulatedTimes(self.simulationProtocols.initialPoints, lastTimePoint)
+                # Simulate a new time.
+                lastTimePoint = self.timepoints[-1] if len(self.timepoints) != 0 else 0
+                # Convert tensor to int
+                lastTimePoint = int(lastTimePoint)
+                newTimePoint = self.simulationProtocols.getSimulatedTimes(self.simulationProtocols.initialPoints, lastTimePoint)
 
-            # Get the current user state
-            currentParam = self.paramStatePath[-1]
-            currentEmotionStates = self.userMentalStatePath[-1]
+                # Get the current user state
+                currentParam = self.paramStatePath[-1]
+                currentEmotionStates = self.userMentalStatePath[-1]
 
-            # Sample the new loss form a pre-simulated map.
-            newUserLoss, PA, NA, SA = self.simulationProtocols.getSimulatedCompiledLoss_empatch(currentParam, currentEmotionStates, newParamValues, therapyMethod)
+                # Sample the new loss form a pre-simulated map.
+                newUserLoss, PA, NA, SA = self.simulationProtocols.getSimulatedCompiledLoss(currentParam, currentEmotionStates, self.simulateTherapy, newParamValues, therapyMethod)
 
-            # Combined to mentalState
-            combinedMentalState = torch.cat((PA, NA, SA), dim=1)
+                # Combined to mentalState
+                combinedMentalState = torch.cat((PA, NA, SA), dim=1)
+                # Therapy-specific calculations
+                if self.therapySelection == 'Heat':
+                    # Unbound temperature:
+                    param_state_index = self.dataInterface.getBinIndex(self.allParameterBins[0], newParamValues)
+                    param_state_unbound = self.unNormalizedAllParameterBins[0][param_state_index]
+                    param_state_unbound = self.boundNewTemperature(param_state_unbound, bufferZone=0.01)
 
-            # Unbound temperature:
-            param_state_index = self.dataInterface.getBinIndex(self.allParameterBins[0], newParamValues)
-            param_state_unbound = self.unNormalizedAllParameterBins[0][param_state_index]
-            param_state_unbound = self.boundNewTemperature(param_state_unbound, bufferZone=0.01)
+                    # User state update
+                    self.unNormalizedParameter.append(param_state_unbound)
+                    self.userMentalStatePath.append(combinedMentalState)
+                    self.userMentalStateCompiledLoss.append(newUserLoss)
+                    self.paramStatePath.append(newParamValues)
+                    self.timepoints.append(newTimePoint)
 
-            # User state update
-            self.unNormalizedParameter.append(param_state_unbound)
-            self.userMentalStatePath.append(combinedMentalState)
-            self.userMentalStateCompiledLoss.append(newUserLoss)
-            self.paramStatePath.append(newParamValues)
-            self.timepoints.append(newTimePoint)
+                elif self.therapySelection == 'BinauralBeats':
+                    param_state_index_1 = self.dataInterface.getBinIndex(self.allParameterBins[0], newParamValues[:, 0])
+                    param_state_index_2 = self.dataInterface.getBinIndex(self.allParameterBins[0], newParamValues[:, 1])
+
+                    param_state_unbound_1 = self.unNormalizedAllParameterBins[0][0][param_state_index_1]
+                    param_state_unbound_2 = self.unNormalizedAllParameterBins[1][0][param_state_index_2]
+
+                    param_state_unbound_1 = self.boundNewTemperature(param_state_unbound_1, bufferZone=0.01)
+                    param_state_unbound_2 = self.boundNewTemperature(param_state_unbound_2, bufferZone=0.01)
+                    param_state_unbound = [param_state_unbound_1, param_state_unbound_2]
+
+                    # User state update
+                    self.unNormalizedParameter.append(param_state_unbound)
+                    self.unNormalizedParam_1.append(param_state_unbound_1)
+                    self.unNormalizedParam_2.append(param_state_unbound_2)
+                    self.userMentalStatePath.append(combinedMentalState)
+                    self.userMentalStateCompiledLoss.append(newUserLoss)
+                    self.paramStatePath.append(newParamValues)
+                    self.timepoints.append(newTimePoint)
+
 
     """Bound the temperatures"""
     def boundNewTemperature(self, newUserParam, bufferZone=0.01):
@@ -362,37 +419,6 @@ class generalTherapyProtocol(abc.ABC):
                 if currentProbability > param_quantile and currentProbability > loss_quantile:
                     self.finishedTherapy = True
                     print(f'Therapy converged at currentProbability {currentProbability}')
-
-    """Convergence Check"""
-    def checkConvergence_hmm(self, maxIterations):
-        # Check if the therapy has converged.
-        if maxIterations is not None:
-            if len(self.userMentalStatePath) >= maxIterations:
-                self.finishedTherapy = True
-        else:
-            currentParam = self.paramStatePath[-1].item()
-            currentCompiledLoss = self.userMentalStateCompiledLoss[-1].item()
-
-            # Get the corresponding bin index for currentCompiledLoss and currentParam
-            currentParamIndex = self.dataInterface.getBinIndex(self.allParameterBins[0], currentParam)
-            currentLossIndex = self.dataInterface.getBinIndex(self.allPredictionBins[0], currentCompiledLoss)
-            if self.simulateTherapy:
-                probabilityMap = self.simulationProtocols.simulatedMapCompiledLoss
-            else:
-                probabilityMap = self.simulationProtocols.realSimMapCompiledLoss
-            currentProbability = probabilityMap[currentParamIndex][currentLossIndex]
-
-            # Check if currentProbability is greater than 80% of other probabilities under currentParam
-            param_probs = probabilityMap[currentParamIndex]
-            param_quantile = torch.quantile(param_probs, 0.8)
-
-            # Check if currentProbability is greater than 80% of probabilities for all parameters under the same loss bin
-            loss_probs = probabilityMap[:, currentLossIndex]
-            loss_quantile = torch.quantile(loss_probs, 0.8)
-
-            if currentCompiledLoss < 0.2:
-                if currentProbability > param_quantile and currentProbability > loss_quantile:
-                    self.finishedTherapy = True
 
 
     # ===============================================Child Class Contract================================================

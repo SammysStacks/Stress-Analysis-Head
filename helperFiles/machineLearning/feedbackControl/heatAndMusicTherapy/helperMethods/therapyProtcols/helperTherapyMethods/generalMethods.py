@@ -85,6 +85,8 @@ class generalMethods:
         # Generate the 3D meshgrid for Gaussian calculations
         x, y, z = torch.meshgrid(paramBins_1, paramBins_2, predictionBins, indexing='ij')
 
+        # Ensure valid gausSTD
+        gausSTD = [max(1e-6, std) for std in gausSTD]
         # Calculate the 3D Gaussian matrix
         gaussMatrix = torch.exp(
             -0.5 * (
@@ -93,8 +95,10 @@ class generalMethods:
                     ((z - gausMean[2]) ** 2 / gausSTD[2] ** 2)
             )
         )
+        # Normalize the Gaussian matrix
+        if gaussMatrix.sum() == 0:
+            gaussMatrix.fill_(1.0) # ensure no nan values
         gaussMatrix = gaussMatrix / gaussMatrix.sum()  # Normalize the Gaussian matrix
-
         return gaussMatrix
 
     @staticmethod
@@ -160,6 +164,7 @@ class generalMethods:
 
                 # Increment the corresponding bin in the probability matrix
                 probabilityMatrix[param1BinIndex][param2BinIndex][predictionBinIndex] += 1
+
             else:
                 # Generate a 3D Gaussian distribution centered at the current data point
                 gaussianMatrix = self.create3DGaussianMap(
@@ -169,7 +174,6 @@ class generalMethods:
                     gausSTD=(gausParamSTD[0], gausParamSTD[1], gausLossSTD)
                 )
                 probabilityMatrix += gaussianMatrix
-
         # Add noise and normalize the probability matrix
         probabilityMatrix += noise * torch.randn_like(probabilityMatrix)
         probabilityMatrix = torch.clamp(probabilityMatrix, min=0.0, max=None)  # Ensure non-negative values

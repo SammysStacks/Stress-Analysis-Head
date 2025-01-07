@@ -71,24 +71,9 @@ class simulationProtocols:
         # Generate the tensor with the specified number of points, starting from startTime, incremented by timeDelay
         simulatedTimes = torch.arange(start=startTime + self.timeDelay, end=startTime + numPoints * self.timeDelay + self.timeDelay, step=self.timeDelay)
         return simulatedTimes
-        # potential alternative:
-        # # If no time is given, start over.
-        # lastTimePoint = lastTimePoint or -self.timeDelay
-        # # Simulate the time points.
-        # currentTimePoint = lastTimePoint + self.timeDelay
-        # start = currentTimePoint + self.timeDelay
-        # end = currentTimePoint + numPoints * self.timeDelay
-        # if start >= end:
-        #     print("Start value is greater than or equal to end value, returning empty tensor.")
-        #     return torch.tensor([], dtype=torch.int64)
-        # simulatedTimes = torch.arange(start, end, self.timeDelay)
-        # # simulatedTimes dimension: numPoints
-        # print('simulatedTimes:', simulatedTimes)
-        # return simulatedTimes
 
     """Define the initialStates"""
     def getInitialState(self):
-        # / TODO: prediction is for loss, parameter is the whatever we can control/change
         return self.startingTimes, self.startingParams, self.startingPredictions  # (initialPoints), (initialPoints, numParams), (initialPoints, predictions = emotion states)
 
     """Randomly sample states"""
@@ -163,7 +148,7 @@ class simulationProtocols:
         # Smoothen the map
 
     """Get the simulated compiled loss"""
-    def getSimulatedCompiledLoss(self, currentParam, currentUserState, newParamValues=None, therapyMethod=None):
+    def getSimulatedCompiledLoss(self, currentParam, currentUserState, simulateTherapy, newParamValues=None, therapyMethod=None):
         if self.therapySelection == 'Heat':
             # Unpack the current user state.
             currentUserTemp = currentParam
@@ -171,13 +156,13 @@ class simulationProtocols:
             newUserTemp = currentUserTemp if newParamValues is None else newParamValues
 
             # Resample for specific protocols
-            if therapyMethod == 'aStarTherapyProtocol' or 'basicTherapyProtocol' or 'hmmTherapyProtocol':
+            if therapyMethod == 'aStarTherapyProtocol' or 'basicTherapyProtocol':
                 resampledParameterBins, resampledPredictionBins = self.generalMethods.resampleBins(self.allParameterBins, self.allPredictionBins, eventlySpacedBins=False)
 
                 currentTempBinIndex = self.dataInterface.getBinIndex(resampledParameterBins[0], currentUserTemp)
                 currentLossIndex = self.dataInterface.getBinIndex(resampledPredictionBins[0], currentUserLoss)
                 newTempBinIndex = self.dataInterface.getBinIndex(resampledParameterBins[0], newUserTemp)
-                newUserLoss, PA, NA, SA = self.sampleNewLoss(currentUserLoss, currentLossIndex, currentTempBinIndex, newTempBinIndex, currentUserState, therapyMethod, bufferZone=0.01)
+                newUserLoss, PA, NA, SA = self.sampleNewLoss(currentUserLoss, currentLossIndex, currentTempBinIndex, newTempBinIndex, currentUserState, simulateTherapy, therapyMethod, bufferZone=0.01)
                 newUserLoss = torch.tensor(newUserLoss).view(1, 1, 1, 1)
                 PA = torch.tensor(PA).view(1, 1, 1, 1)
                 NA = torch.tensor(NA).view(1, 1, 1, 1)
@@ -192,7 +177,7 @@ class simulationProtocols:
             newParamValues = currentParam if newParamValues is None else newParamValues
 
             # Resample for specific protocols
-            if therapyMethod == 'aStarTherapyProtocol' or 'basicTherapyProtocol' or 'hmmTherapyProtocol':
+            if therapyMethod == 'aStarTherapyProtocol':
                 resampledParameterBins_single, resampledPredictionBins = self.generalMethods.resampleBins(self.allParameterBins[0], self.allPredictionBins, eventlySpacedBins=False)
                 resampledParameterBins = [resampledParameterBins_single, resampledParameterBins_single]
                 currentLossIndex = self.dataInterface.getBinIndex(resampledPredictionBins[0], currentUserLoss)
@@ -204,34 +189,29 @@ class simulationProtocols:
                 currentParamBinIndex = [currentParamBinIndex_1, currentParamBinIndex_2]
                 newParamBinIndex = [newParamBinIndex_1, newParamBinIndex_2]
 
-                newUserLoss, PA, NA, SA = self.sampleNewLoss3D(currentUserLoss, currentLossIndex, currentParamBinIndex, newParamBinIndex, currentUserState, therapyMethod, bufferZone=0.01)
-                newUserLoss = torch.tensor(newUserLoss).view(1, 1, 1, 1)
-                PA = torch.tensor(PA).view(1, 1, 1, 1)
-                NA = torch.tensor(NA).view(1, 1, 1, 1)
-                SA = torch.tensor(SA).view(1, 1, 1, 1)
+                newUserLoss, PA, NA, SA = self.sampleNewLoss3D(currentUserLoss, currentLossIndex, currentParamBinIndex, newParamBinIndex, currentUserState, simulateTherapy, therapyMethod, bufferZone=0.01)
+                newUserLoss = torch.tensor(newUserLoss).view(1, 1, 1, 1) if not isinstance(newUserLoss, torch.Tensor) else newUserLoss.clone().detach().view(1, 1, 1, 1)
+                PA = torch.tensor(PA).view(1, 1, 1, 1) if not isinstance(PA, torch.Tensor) else PA.clone().detach().view(1, 1, 1, 1)
+                NA = torch.tensor(NA).view(1, 1, 1, 1) if not isinstance(NA, torch.Tensor) else NA.clone().detach().view(1, 1, 1, 1)
+                SA = torch.tensor(SA).view(1, 1, 1, 1) if not isinstance(SA, torch.Tensor) else SA.clone().detach().view(1, 1, 1, 1)
+
                 return newUserLoss, PA, NA, SA
-        else:
-            # for other conditions or protocols
-            # Calculate the bin indices for the current and new user states.
-            currentLossIndex = self.dataInterface.getBinIndex(self.allPredictionBins, currentUserLoss)
-            newTempBinIndex = self.dataInterface.getBinIndex(self.allParameterBins, newUserTemp)
-            #newUserLoss, PA, NA, SA = self.sampleNewLoss(currentUserLoss, currentLossIndex, currentTempBinIndex, newTempBinIndex, currentUserState, therapyMethod, bufferZone=0.01)
-        # Simulate a new user loss.
-            newUserLoss = None
-            PA = None
-            NA = None
-            SA = None
-            return newUserLoss, PA, NA, SA
 
     """Sample new loss"""
-    def sampleNewLoss(self, currentUserLoss, currentLossIndex, currentParamBinIndex, newParamIndex, currentUserState, therapyMethod=None, bufferZone=0.01, gausSTD=0.05):
-        simulatedMapPA = torch.tensor(self.simulatedMapPA, dtype=torch.float32)
-        simulatedMapNA = torch.tensor(self.simulatedMapNA, dtype=torch.float32)
-        simulatedMapSA = torch.tensor(self.simulatedMapSA, dtype=torch.float32)
-        simulatedMapCompiledLoss = torch.tensor(self.simulatedMapCompiledLoss, dtype=torch.float32)
+    def sampleNewLoss(self, currentUserLoss, currentLossIndex, currentParamBinIndex, newParamIndex, currentUserState, simulateTherapy, therapyMethod=None, bufferZone=0.01, gausSTD=0.05):
+        if simulateTherapy:
+            simulatedMapPA = torch.tensor(self.simulatedMapPA, dtype=torch.float32)
+            simulatedMapNA = torch.tensor(self.simulatedMapNA, dtype=torch.float32)
+            simulatedMapSA = torch.tensor(self.simulatedMapSA, dtype=torch.float32)
+            simulatedMapCompiledLoss = torch.tensor(self.simulatedMapCompiledLoss, dtype=torch.float32)
+        else:
+            simulatedMapPA = torch.tensor(self.realSimMapPA, dtype=torch.float32)
+            simulatedMapNA = torch.tensor(self.realSimMapNA, dtype=torch.float32)
+            simulatedMapSA = torch.tensor(self.realSimMapSA, dtype=torch.float32)
+            simulatedMapCompiledLoss = torch.tensor(self.realSimMapCompiledLoss, dtype=torch.float32)
 
         # Resample for specific protocols
-        if therapyMethod == 'aStarTherapyProtocol' or 'basicTherapyProtocol' or 'hmmTherapyProtocol':
+        if therapyMethod == 'aStarTherapyProtocol' or 'basicTherapyProtocol':
             resampledParameterBins, resampledPredictionBins = self.generalMethods.resampleBins(self.allParameterBins, self.allPredictionBins, eventlySpacedBins=False)
             if newParamIndex != currentParamBinIndex or torch.rand(1).item() < 0.1:
 
@@ -260,7 +240,6 @@ class simulationProtocols:
 
                     newSpecificLossBinIndex = torch.multinomial(specificLossProbabilities[key], 1).item()
                     specificUserLosses[key] = resampledPredictionBins[0][newSpecificLossBinIndex]
-                    print(f"{key} specific user loss: {specificUserLosses[key]}")
 
                 # SpecificLossProbabilities contains the normalized loss probabilities for PA, NA, and SA
                 return newUserLoss, specificUserLosses['PA'], specificUserLosses['NA'], specificUserLosses['SA']
@@ -272,14 +251,19 @@ class simulationProtocols:
                 return newUserLoss, newUserLossPA, newUserLossNA, newUserLossSA
 
     """For BinauralBeats therapy specifically"""
-    def sampleNewLoss3D(self, currentUserLoss, currentLossIndex, currentParamBinIndex, newParamIndex, currentUserState, therapyMethod=None, bufferZone=0.01, gausSTD=0.05):
+    def sampleNewLoss3D(self, currentUserLoss, currentLossIndex, currentParamBinIndex, newParamIndex, currentUserState, simulateTherapy, therapyMethod=None, bufferZone=0.01, gausSTD=0.05):
+        if simulateTherapy:
+            simulatedMapPA = torch.tensor(self.simulatedMapPA, dtype=torch.float32)
+            simulatedMapNA = torch.tensor(self.simulatedMapNA, dtype=torch.float32)
+            simulatedMapSA = torch.tensor(self.simulatedMapSA, dtype=torch.float32)
+            simulatedMapCompiledLoss = torch.tensor(self.simulatedMapCompiledLoss, dtype=torch.float32)
+        else:
+            simulatedMapPA = torch.tensor(self.realSimMapPA, dtype=torch.float32)
+            simulatedMapNA = torch.tensor(self.realSimMapNA, dtype=torch.float32)
+            simulatedMapSA = torch.tensor(self.realSimMapSA, dtype=torch.float32)
+            simulatedMapCompiledLoss = torch.tensor(self.realSimMapCompiledLoss, dtype=torch.float32)
 
-        simulatedMapPA = torch.tensor(self.simulatedMapPA, dtype=torch.float32)
-        simulatedMapNA = torch.tensor(self.simulatedMapNA, dtype=torch.float32)
-        simulatedMapSA = torch.tensor(self.simulatedMapSA, dtype=torch.float32)
-        simulatedMapCompiledLoss = torch.tensor(self.simulatedMapCompiledLoss, dtype=torch.float32)
-
-        if therapyMethod in ['aStarTherapyProtocol', 'basicTherapyProtocol', 'hmmTherapyProtocol']:
+        if therapyMethod in ['aStarTherapyProtocol', 'basicTherapyProtocol']:
             resampledParameterBins_single, resampledPredictionBins = self.generalMethods.resampleBins(self.allParameterBins[0], self.allPredictionBins, eventlySpacedBins=False)
             resampledParameterBins = [resampledParameterBins_single, resampledParameterBins_single]
             if newParamIndex != currentParamBinIndex or torch.rand(1).item() < 0.1:
@@ -416,86 +400,3 @@ class simulationProtocols:
 
         return smoothed_map
 
-    # / TODO: deleted after real-time streaming is implemented
-    def getSimulatedCompiledLoss_empatch(self, currentParam, currentUserState, newUserTemp=None, therapyMethod=None):
-        # Unpack the current user state.
-        currentUserTemp = currentParam
-        print('entering loss calculation in the getNextStates')
-        currentUserLoss = self.dataInterface.calculateCompiledLoss(currentUserState) # torch.Size([1, 1, 1, 1])
-
-        newUserTemp = currentUserTemp if newUserTemp is None else newUserTemp
-
-        # if it is aStarProtocol, resample
-        if therapyMethod == 'aStarTherapyProtocol' or 'basicTherapyProtocol' or 'hmmTherapyProtocol':
-            resampledParameterBins, resampledPredictionBins = self.generalMethods.resampleBins(self.allParameterBins, self.allPredictionBins, eventlySpacedBins=False)
-            # Calculate the bin indices for the current and new user states.
-
-            # doesn't matter to index resampledPrediciton bins or not, it's the same anyway if we are resampling
-            currentLossIndex = self.dataInterface.getBinIndex(resampledPredictionBins[0], currentUserLoss)
-            currentTempBinIndex = self.dataInterface.getBinIndex(resampledParameterBins[0], currentUserTemp)
-            newTempBinIndex = self.dataInterface.getBinIndex(resampledParameterBins[0], newUserTemp)
-            newUserLoss, PA, NA, SA = self.sampleNewLoss_empatch(currentUserLoss, currentLossIndex, currentTempBinIndex, newTempBinIndex, currentUserState, therapyMethod, bufferZone=0.01)
-            newUserLoss = torch.tensor(newUserLoss).view(1, 1, 1, 1)
-            PA = torch.tensor(PA).view(1, 1, 1, 1)
-            NA = torch.tensor(NA).view(1, 1, 1, 1)
-            SA = torch.tensor(SA).view(1, 1, 1, 1)
-            return newUserLoss, PA, NA, SA
-        else:
-            # for other conditions or protocols
-            # Calculate the bin indices for the current and new user states.
-            currentLossIndex = self.dataInterface.getBinIndex(self.allPredictionBins, currentUserLoss)
-            newTempBinIndex = self.dataInterface.getBinIndex(self.allParameterBins, newUserTemp)
-            #newUserLoss, PA, NA, SA = self.sampleNewLoss(currentUserLoss, currentLossIndex, currentTempBinIndex, newTempBinIndex, currentUserState, therapyMethod, bufferZone=0.01)
-            # Simulate a new user loss.
-            newUserLoss = None
-            PA = None
-            NA = None
-            SA = None
-            return newUserLoss, PA, NA, SA
-
-    "Sample a new loss for real data interface"
-    def sampleNewLoss_empatch(self, currentUserLoss, currentLossIndex, currentParamBinIndex, newParamIndex, currentUserState, therapyMethod=None, bufferZone=0.01, gausSTD=0.05):
-        simulatedMapPA = torch.tensor(self.realSimMapPA, dtype=torch.float32)
-        simulatedMapNA = torch.tensor(self.realSimMapNA, dtype=torch.float32)
-        simulatedMapSA = torch.tensor(self.realSimMapSA, dtype=torch.float32)
-        simulatedMapCompiledLoss = torch.tensor(self.realSimMapCompiledLoss, dtype=torch.float32)
-        if therapyMethod == 'aStarTherapyProtocol' or 'basicTherapyProtocol' or 'hmmTherapyProtocol':
-            # resampling
-            resampledParameterBins, resampledPredictionBins = self.generalMethods.resampleBins(self.allParameterBins, self.allPredictionBins, eventlySpacedBins=False)
-            if newParamIndex != currentParamBinIndex or torch.rand(1).item() < 0.1:
-
-                # Calculate new loss probabilities and Gaussian boost
-                newLossProbabilities = simulatedMapCompiledLoss[newParamIndex] / torch.sum(simulatedMapCompiledLoss[newParamIndex])
-
-                gaussian_boost = self.generalMethods.createGaussianArray(inputData=newLossProbabilities.numpy(), gausMean=currentLossIndex, gausSTD=gausSTD, torchFlag=True)
-                # Combine the two distributions and normalize
-                newLossProbabilities = newLossProbabilities + gaussian_boost
-                newLossProbabilities = newLossProbabilities / torch.sum(newLossProbabilities)
-
-                # Sample a new loss from the distribution
-                newLossBinIndex = torch.multinomial(newLossProbabilities, 1).item()
-                newUserLoss = resampledPredictionBins[0][newLossBinIndex]  # doesn't matter which prediction bins, after resampling they are the same.
-                # Sample distribution of loss at a certain temperature for PA, NA, SA
-                simulatedSpecificMaps = {'PA': simulatedMapPA, 'NA': simulatedMapNA, 'SA': simulatedMapSA}
-                specificLossProbabilities = {}
-                specificUserLosses = {}
-
-                for key in simulatedSpecificMaps.keys():
-                    specificLossProbabilities[key] = simulatedSpecificMaps[key][newParamIndex] / torch.sum(simulatedSpecificMaps[key][newParamIndex])
-                    gaussian_boost = self.generalMethods.createGaussianArray(inputData=specificLossProbabilities[key].numpy(), gausMean=currentLossIndex, gausSTD=gausSTD, torchFlag=True)
-                    specificLossProbabilities[key] = specificLossProbabilities[key] + gaussian_boost
-                    specificLossProbabilities[key] = specificLossProbabilities[key] / torch.sum(specificLossProbabilities[key])
-
-                    # can also sample a new loss for each specific map if needed
-                    newSpecificLossBinIndex = torch.multinomial(specificLossProbabilities[key], 1).item()
-                    specificUserLosses[key] = resampledPredictionBins[0][newSpecificLossBinIndex]
-                    print(f"{key} specific user loss: {specificUserLosses[key]}")
-
-                # specificLossProbabilities contains the normalized loss probabilities for PA, NA, and SA
-                return newUserLoss, specificUserLosses['PA'], specificUserLosses['NA'], specificUserLosses['SA']
-            else:
-                newUserLoss = currentUserLoss + torch.normal(mean=0.0, std=0.01, size=currentUserLoss.size())
-                newUserLossPA = currentUserState[0][0][0][0] + torch.normal(mean=0.0, std=0.01, size=currentUserState[0][0][0][0].size())
-                newUserLossNA = currentUserState[0][1][0][0] + torch.normal(mean=0.0, std=0.01, size=currentUserState[0][1][0][0].size())
-                newUserLossSA = currentUserState[0][2][0][0] + torch.normal(mean=0.0, std=0.01, size=currentUserState[0][2][0][0].size())
-                return newUserLoss, newUserLossPA, newUserLossNA, newUserLossSA

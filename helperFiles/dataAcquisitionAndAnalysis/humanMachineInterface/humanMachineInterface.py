@@ -6,10 +6,8 @@ import torch
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.trainingProtocolHelpers import trainingProtocolHelpers
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionPipeline import emotionPipeline
 from helperFiles.machineLearning.featureAnalysis.compiledFeatureNames.compileFeatureNames import compileFeatureNames
 from helperFiles.machineLearning.modelControl.modelSpecifications.compileModelInfo import compileModelInfo
-from helperFiles.machineLearning.feedbackControl.heatAndMusicTherapy.heatTherapyMain import heatTherapyControl
 from helperFiles.machineLearning.dataInterface.compileModelDataHelpers import compileModelDataHelpers
 
 
@@ -69,7 +67,7 @@ class humanMachineInterface:
         self.therapyInitializedUser = False
         self.timePointEvolution = []
         self.therapyControl = None
-        self.therapyInitialization()
+       #self.therapyInitialization()
 
         # Initialize mutable variables.
         self.resetVariables_HMI()
@@ -87,7 +85,7 @@ class humanMachineInterface:
 
             parameterBounds = self.compileModelInfo.parameterBounds
             parameterBinWdith = self.compileModelInfo.parameterBinWidth
-            self.therapyControl = heatTherapyControl(self.userName, parameterBounds, parameterBinWdith, protocolParameters, therapyMethod=self.compileModelInfo.userTherapyMethod, plotResults=self.plottingTherapyIndicator, therapySelection='Heat')
+            #self.therapyControl = heatTherapyControl(self.userName, parameterBounds, parameterBinWdith, protocolParameters, therapyMethod=self.compileModelInfo.userTherapyMethod, plotResults=self.plottingTherapyIndicator, therapySelection='Heat')
             initialParam = self.therapyControl.therapyProtocol.boundNewTemperature(self.therapyParam, bufferZone=0.01)
             initialPredictions = self.initialPredictions
             initialTime = self.therapyStartTime
@@ -123,13 +121,13 @@ class humanMachineInterface:
         emotionScores[10:] = 0.5 + emotionScores[10:] / (4.5 - 0.5)
         return emotionScores
 
-    def predictLabels(self, modelTimes, inputModelData, allNumSignalPoints, therapyParam):
+    def predictLabels(self, modelTimes, inputModelData, therapyParam):
         # Add in contextual information to the data.
         allSubjectInds = torch.zeros(inputModelData.shape[0])  # torch.Size([75, 81, 72, 2]) batchSize, numSignals, maxLength, [time, features]
         datasetInd = 1
         validDataMask = emotionDataInterface.getValidDataMask(inputModelData)
         inputModelData = self.compileModelHelpers.normalizeSignals(allSignalData=inputModelData, missingDataMask=~validDataMask)
-        compiledInputData = self.compileModelHelpers.addContextualInfo(inputModelData, allNumSignalPoints, allSubjectInds, datasetInd)
+        compiledInputData = self.compileModelHelpers.addContextualInfo(inputModelData, allSubjectInds, datasetInd)
 
         emotionProfile = self.trainingProtocols.inferenceTraining([compiledInputData], self.emoPipeline, self.submodel, compiledInputData, 256, numEpochs=5)
         # emotionProfile dim: numNewPoints, numEmotions=30, encodedDimension=256

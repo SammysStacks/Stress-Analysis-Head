@@ -118,7 +118,7 @@ class adjustInputParameters:
         soundInfoFile = 'raw_30s_cleantags_50artists.tsv'
         dataFolder = './therapyHelperFiles/machineLearning/_Feedback Control/Music Therapy/Organized Sounds/MTG-Jamendo/'
         # Initialize the classes
-        # soundManager = musicTherapy.soundController(dataFolder, soundInfoFile) # Controls the music playing
+        # soundManager = oldMusicTherapy.soundController(dataFolder, soundInfoFile) # Controls the music playing
         # soundManager.loadSound(soundManager.soundInfo[0][3])
         playGenres = [None, 'pop', 'jazz', 'heavymetal', 'classical', None]
         # playGenres = [None, 'hiphop', 'blues', 'disco', 'ethno', None]

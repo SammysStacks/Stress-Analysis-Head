@@ -123,28 +123,17 @@ class streamingProtocolHelpers(featureOrganization):
             streamingDataFinger = streamingDataFingers[analysisInd]
             analysis = self.analysisList[analysisInd]
 
-            print('numPointsPerBatch', self.numPointsPerBatch)
-            print('length of analysis timepoints', len(analysis.timepoints))
-            print('streamingDatafingers', streamingDataFingers[analysisInd])
             # Analyze the data until the minimum number of points is reached.
             while self.numPointsPerBatch <= len(analysis.timepoints) - streamingDataFingers[analysisInd]:
                 streamingDataFingers[analysisInd] += self.moveDataFinger
                 analysis.analyzeData(streamingDataFinger)
+
         # All features and data are currently in their respective analysis protocols.
-
         # Organize the new features
-        self.organizeRawFeatures()  # Features are now stored in rawFeatureHolder in feature organization.
-        modelTimes, inputModelData, allNumSignalPoints = self.compileIntervalFeaturesWithPadding()
+            self.organizeRawFeatures()  # Features are now stored in rawFeatureHolder in feature organization.
 
-        while not self.therapyControl.therapyProtocol.finishedTherapy:
-            therapyState, allMaps = self.predictLabels(modelTimes, inputModelData, allNumSignalPoints, therapyParam=self.therapyParam)
-            combinedStates = [[param_state, user_compiled_mental] for param_state, user_compiled_mental in zip(self.therapyControl.therapyProtocol.unNormalizedParameter, self.therapyControl.therapyProtocol.userMentalStateCompiledLoss)]
-            if self.plottingTherapyIndicator:
-                self.therapyControl.therapyProtocol.plottingProtocolsMain.plotTherapyResults(combinedStates, allMaps)
-            self.therapyControl.therapyProtocol.checkConvergence(10)
-        # interface with hardware
         # Plot the Data
-        if self.plotStreamedData: self.plottingClass.displayData()
+            if self.plotStreamedData: self.plottingClass.displayData()
 
         # Move the streamingDataFinger pointer to analyze the next batch of data
         return streamingDataFingers
@@ -182,6 +171,5 @@ class streamingProtocolHelpers(featureOrganization):
                 # Compile the datapoints for each of the sensor's channels.
                 streamingDataIndex = analysis.streamingChannelInds[channelIndex]
                 newData = datapoints[streamingDataIndex]
-
                 # Add the Data to the Correct Channel
                 analysis.channelData[channelIndex].extend(newData)

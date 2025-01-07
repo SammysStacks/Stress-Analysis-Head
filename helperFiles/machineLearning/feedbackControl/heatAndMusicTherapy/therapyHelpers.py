@@ -1,8 +1,6 @@
 # Import the necessary libraries.
 from helperFiles.machineLearning.feedbackControl.heatAndMusicTherapy.helperMethods.therapyProtcols.aStarProtocol import aStarTherapyProtocol
 from helperFiles.machineLearning.feedbackControl.heatAndMusicTherapy.helperMethods.therapyProtcols.basicProtocol import basicTherapyProtocol
-from helperFiles.machineLearning.feedbackControl.heatAndMusicTherapy.helperMethods.therapyProtcols.hmmProtocol import hmmTherapyProtocol
-from helperFiles.machineLearning.feedbackControl.heatAndMusicTherapy.helperMethods.therapyProtcols.nnProtocol import nnTherapyProtocol
 
 
 class therapyHelpers:
@@ -19,7 +17,6 @@ class therapyHelpers:
         self.therapyMethod = None
         self.therapyType = None
         self.therapySelection = therapySelection
-
         # Set up the therapy protocols.
         self.setupTherapyProtocols(therapySelection, therapyMethod)
 
@@ -29,13 +26,15 @@ class therapyHelpers:
     def setupTherapyProtocols(self, therapySelection, therapyMethod):
         # Change the therapy method.
         self.therapyMethod = therapyMethod
-        if self.therapyMethod == "aStarTherapyProtocol":
-            self.therapyProtocol = aStarTherapyProtocol(self.initialParameterBounds, self.unNormalizedParameterBinWidths, self.simulationParameters, therapySelection, therapyMethod, learningRate=2)
-        elif self.therapyMethod == "basicTherapyProtocol":
-            self.therapyProtocol = basicTherapyProtocol(self.initialParameterBounds, self.unNormalizedParameterBinWidths, self.simulationParameters, therapySelection, therapyMethod)
-        elif self.therapyMethod == "nnTherapyProtocol":
-            self.therapyProtocol = nnTherapyProtocol(self.initialParameterBounds, self.simulationParameters, modelName="2024-04-12 heatTherapyModel", onlineTraining=False)
-        elif self.therapyMethod == "hmmTherapyProtocol":
-            self.therapyProtocol = hmmTherapyProtocol(self.initialParameterBounds, self.unNormalizedParameterBinWidths, self.simulationParameters, therapySelection, therapyMethod="HeatingPad")
-        else:
-            raise ValueError("Invalid therapy method provided.")
+        if therapySelection == 'Heat':
+            if self.therapyMethod == "aStarTherapyProtocol":
+                self.therapyProtocol = aStarTherapyProtocol(self.initialParameterBounds, self.unNormalizedParameterBinWidths, self.simulationParameters, therapySelection, therapyMethod, learningRate=2)
+            elif self.therapyMethod == "basicTherapyProtocol":
+                self.therapyProtocol = basicTherapyProtocol(self.initialParameterBounds, self.unNormalizedParameterBinWidths, self.simulationParameters, therapySelection, therapyMethod)
+            else:
+                raise ValueError("Invalid therapy method provided.")
+        elif therapySelection == 'BinauralBeats':
+            if self.therapyMethod == "aStarTherapyProtocol":
+                self.therapyProtocol = aStarTherapyProtocol(self.initialParameterBounds, self.unNormalizedParameterBinWidths, self.simulationParameters, therapySelection, therapyMethod, learningRate=2)
+            else:
+                raise ValueError("Invalid therapy method provided.")
