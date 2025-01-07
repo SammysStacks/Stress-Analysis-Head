@@ -107,20 +107,6 @@ class aStarTherapyProtocol(generalTherapyProtocol):
         newUserParam = (newUserParam - self.initialParameterBounds[0][0]) / (self.initialParameterBounds[0][1] - self.initialParameterBounds[0][0])
         return newUserParam
 
-<<<<<<< HEAD
-    # / TODO: to be deleted, double check not needed
-    def findNewTemperature(self, currentUserState, gradientDirection):
-        # Unpack the current user state.
-        currentUserTemp, currentUserLoss = currentUserState
-
-        # Determine a direction based on temperature gradient at current loss
-        tempBinIndex = self.getBinIndex(self.temp_bins, currentUserTemp)
-        tempGradient = gradientDirection[tempBinIndex]
-
-        return tempGradient
-
-=======
->>>>>>> 11bff24868 (TherapyCleaned)
     # ================================================Update Parameters=================================================
 
     def findOptimalDirection(self, probabilityMap, currentParam, currentCompiledLoss):

@@ -65,7 +65,7 @@ if __name__ == "__main__":
     parameterBinWidth = 1
 
     # Therapy method initialziation
-    therapyChoices = "Heat"  # 'Heat or 'BinauralBeats'
+    therapyChoices = "BinauralBeats"  # 'Heat or 'BinauralBeats'
 
     # User parameters.
     userTherapyMethod = "aStarTherapyProtocol"
