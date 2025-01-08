@@ -9,6 +9,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.lossInformation.lossCalculations import lossCalculations
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods.activationFunctions import reversibleLinearSoftSign
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.sharedActivityModel import sharedActivityModel
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.sharedEmotionModel import sharedEmotionModel
@@ -197,8 +198,8 @@ class emotionModelHead(nn.Module):
         if domain == 'neuralLayers': specificLinearModels = [_linearModel.highFrequenciesWeights[0] for _linearModel in specificLinearModels]
         if domain == 'neuralLayers': sharedLinearModels = [_linearModel.highFrequenciesWeights[0] for _linearModel in sharedLinearModels]
 
-        specificRotationsPath = np.asarray([specificLinearModels[layerInd].getSubdomainRotations(layerInd=-1, device=device).detach().cpu().numpy() for layerInd in range(self.numSpecificEncoderLayers)])
-        sharedRotationsPath = np.asarray([sharedLinearModels[layerInd].getSubdomainRotations(layerInd=-1, device=device).detach().cpu().numpy() for layerInd in range(self.numSharedEncoderLayers)])
+        # specificRotationsPath = np.asarray([specificLinearModels[layerInd].getSubdomainRotations(layerInd=-1, device=device).detach().cpu().numpy() for layerInd in range(self.numSpecificEncoderLayers)])
+        # sharedRotationsPath = np.asarray([sharedLinearModels[layerInd].getSubdomainRotations(layerInd=-1, device=device).detach().cpu().numpy() for layerInd in range(self.numSharedEncoderLayers)])
         # eigenvaluePath: numSpecificEncoderLayers or numSharedEncoderLayers, numSignals or 1, encodedDimension
 
         return specificRotationsPath, sharedRotationsPath
@@ -214,16 +215,13 @@ class emotionModelHead(nn.Module):
 
         return specificActivationPath, sharedActivationPath
 
-    def getActivationParamsFullPassPath(self, domain):
-        specificLinearModels, sharedLinearModels = getattr(self.specificSignalEncoderModel, domain), getattr(self.sharedSignalEncoderModel, domain)
-        if domain == 'neuralLayers': specificLinearModels = [_linearModel.highFrequenciesWeights[0] for _linearModel in specificLinearModels]
-        if domain == 'neuralLayers': sharedLinearModels = [_linearModel.highFrequenciesWeights[0] for _linearModel in sharedLinearModels]
-
-        specificActivationParamsPath = np.asarray([specificLinearModels[layerInd].getReversibleActivationParams() for layerInd in range(self.numSpecificEncoderLayers)])
-        sharedActivationParamsPath = np.asarray([sharedLinearModels[layerInd].getReversibleActivationParams() for layerInd in range(self.numSharedEncoderLayers)])
-        # activationPath: numSpecificEncoderLayers or numSharedEncoderLayers, 2
-
-        return specificActivationParamsPath, sharedActivationParamsPath
+    def getActivationParamsFullPassPath(self):
+        activationParamsPath = []
+        for name, module in self.named_modules():
+            if isinstance(module, reversibleLinearSoftSign):  # Add other activation layers if needed
+                activationParamsPath.append([param.detach().cpu().numpy() for param in module.getActivationParams()])
+        assert len(activationParamsPath) != 0
+        return activationParamsPath
 
     def signalEncoderPass(self, metaLearningData, forwardPass, compileLayerStates=False):
         reversibleInterface.changeDirections(forwardDirection=forwardPass)

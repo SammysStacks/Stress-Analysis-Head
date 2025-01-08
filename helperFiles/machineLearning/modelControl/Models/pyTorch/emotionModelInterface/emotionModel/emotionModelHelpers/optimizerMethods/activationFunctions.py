@@ -89,6 +89,7 @@ class reversibleLinearSoftSign(reversibleInterface):
         x_vals, y_vals = x_vals.detach().cpu().numpy(), y_vals.detach().cpu().numpy()
         return x_vals, y_vals
 
+
 class boundedExp(nn.Module):
     def __init__(self, decayConstant=0, nonLinearityRegion=2, infiniteBound=math.exp(-0.5)):
         super(boundedExp, self).__init__()
@@ -113,6 +114,7 @@ class boundedExp(nn.Module):
         linearTerm = self.infiniteBound * x
 
         return linearTerm * exponentialTerm
+
 
 class reversibleActivationInterface(reversibleInterface):
     def __init__(self, activationFunctions):

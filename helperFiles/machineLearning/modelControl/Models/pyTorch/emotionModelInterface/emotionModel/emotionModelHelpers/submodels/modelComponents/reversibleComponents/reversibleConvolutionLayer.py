@@ -16,28 +16,32 @@ class reversibleConvolutionLayer(reversibleInterface):
     def __init__(self, numSignals, sequenceLength, numLayers, activationMethod):
         super(reversibleConvolutionLayer, self).__init__()
         # General parameters.
-        self.numFreeParameters = sequenceLength * (sequenceLength - 1) / 2  # The number of free parameters in the model.
-        self.numEigenvalues = sequenceLength // 2 + sequenceLength % 2  # The number of parameters in the model.
+        self.numFreeParameters = int(sequenceLength * (sequenceLength - 1) / 2)  # The number of free parameters in the model.
         self.activationMethod = activationMethod  # The activation method to use.
         self.sequenceLength = sequenceLength  # The length of the input signal.
         self.numSignals = numSignals  # The number of signals in the input data.
         self.numLayers = numLayers  # The number of layers in the reversible linear layer.
 
-        # The indices for the neural weights.
-        indices = np.arange(0, self.numEigenvalues, 1)
-        self.rowInds, self.colInds = 2*indices, 2*indices + 1
+        # The restricted window for the neural weights.
+        upperWindowMask = torch.ones(self.sequenceLength, self.sequenceLength)
+        upperWindowMask = torch.tril(upperWindowMask, diagonal=self.numFreeParameters)
+        upperWindowMask = torch.triu(upperWindowMask, diagonal=1)
+
+        # Calculate the offsets to map positions to kernel indices
+        self.rowInds, self.colInds = upperWindowMask.nonzero(as_tuple=False).T
+        self.operatorInds = self.rowInds - self.colInds + self.numFreeParameters  # Adjust for the kernel center
 
         # Initialize the neural layers.
         self.activationFunction = activationFunctions.getActivationMethod(activationMethod)
         self.jacobianParameter = self.initializeJacobianParams(numSignals)
-        self.omegaAngleParams = nn.ParameterList()
+        self.linearOperators = nn.ParameterList()
 
         # Create the neural layers.
         for layerInd in range(self.numLayers):
             # Create the neural weights.
-            parameters = nn.Parameter(torch.randn(self.numSignals, self.numEigenvalues))
-            parameters = nn.init.kaiming_uniform_(parameters)  # kaiming_uniform_
-            self.omegaAngleParams.append(parameters)
+            parameters = nn.Parameter(torch.randn(self.numSignals, self.numFreeParameters or 1))
+            parameters = nn.init.kaiming_uniform_(parameters)
+            self.linearOperators.append(parameters)
 
     def forward(self, inputData):
         for layerInd in range(self.numLayers):
@@ -76,12 +80,13 @@ class reversibleConvolutionLayer(reversibleInterface):
     def getA(self, layerInd, device):
         # Get the rotations.
         A = torch.zeros(self.numSignals, self.sequenceLength, self.sequenceLength, device=device)
-        omegaAngles = self.getSubdomainRotations(layerInd, device)
         # omegaAngles: numSignals, numEigenvalues
 
         # Gather the corresponding kernel values for each position for a skewed symmetric matrix.
-        A[:, self.rowInds, self.colInds] = -omegaAngles[layerInd]
-        A[:, self.colInds, self.rowInds] = omegaAngles[layerInd]
+        A[:, self.rowInds, self.colInds] = -self.linearOperators[layerInd][:, self.operatorInds]
+        A[:, self.colInds, self.rowInds] = self.linearOperators[layerInd][:, self.operatorInds]
+        # neuralWeight: numSignals, sequenceLength, sequenceLength
+
         # In Jordan 2x2 Blocks, A: numSignals, sequenceLength, sequenceLength
 
         return A
@@ -99,7 +104,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
     @staticmethod
     def getJacobianScalar(jacobianParameter):
-        jacobianMatrix = 0.95 + 0.1 * torch.sigmoid(jacobianParameter)
+        jacobianMatrix = 0.9 + 0.2 * torch.sigmoid(jacobianParameter)
         return jacobianMatrix
 
     # ------------------- Activation Functions ------------------- #

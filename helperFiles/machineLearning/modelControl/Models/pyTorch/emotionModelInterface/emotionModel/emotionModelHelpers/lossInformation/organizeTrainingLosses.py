@@ -44,11 +44,11 @@ class organizeTrainingLosses(lossCalculations):
             # Get the encoder information.
             # specificJacobians, sharedJacobians = model.specificSignalEncoderModel.healthProfileJacobians[0, :, 0], model.sharedSignalEncoderModel.healthProfileJacobian[0, :]
             # specificJacobians, sharedJacobians = emotionModelWeights.getJacobianScalar(specificJacobians), emotionModelWeights.getJacobianScalar(sharedJacobians)
-            specificActivationParamsPath, sharedActivationParamsPath = model.getActivationParamsFullPassPath(domain="processingLayers")
+            activationParamsPath = model.getActivationParamsFullPassPath()
 
             # Store the signal encoder loss information.
-            self.storeLossInformation(signalReconstructedTrainingLosses, signalReconstructedTestingLosses, model.specificSignalEncoderModel.trainingLosses_signalReconstruction, model.specificSignalEncoderModel.testingLosses_signalReconstruction)
-            self.storeLossInformation(specificActivationParamsPath, sharedActivationParamsPath, model.specificSignalEncoderModel.specificActivationParamsPath, model.specificSignalEncoderModel.sharedActivationParamsPath)
+            self.storeLossInformation(trainingLoss=signalReconstructedTrainingLosses, testingLoss=signalReconstructedTestingLosses, trainingHolder=model.specificSignalEncoderModel.trainingLosses_signalReconstruction, testingHolder=model.specificSignalEncoderModel.testingLosses_signalReconstruction)
+            self.storeLossInformation(trainingLoss=activationParamsPath, testingLoss=None, trainingHolder=model.specificSignalEncoderModel.activationParamsPath, testingHolder=None)
             # self.storeLossInformation(specificJacobians, sharedJacobians, model.specificSignalEncoderModel.specificJacobianFlow, model.specificSignalEncoderModel.sharedJacobianFlow)
             self.accelerator.print("Reconstruction loss values:", signalReconstructedTrainingLosses.nanmean().item(), signalReconstructedTestingLosses.nanmean().item())
 
@@ -121,10 +121,10 @@ class organizeTrainingLosses(lossCalculations):
         # Store the loss information.
         if isinstance(gatheredTrainingLoss, torch.Tensor):
             trainingHolder.append(gatheredTrainingLoss.detach().cpu().numpy())
-            testingHolder.append(gatheredTestingLoss.detach().cpu().numpy())
+            if testingLoss is not None: testingHolder.append(gatheredTestingLoss.detach().cpu().numpy())
         else:
             trainingHolder.append(gatheredTrainingLoss)
-            testingHolder.append(gatheredTestingLoss)
+            if testingLoss is not None: testingHolder.append(gatheredTestingLoss)
 
     # ----------------------- Class Weighting Methods ---------------------- #
 

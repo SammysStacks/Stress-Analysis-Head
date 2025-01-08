@@ -32,7 +32,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
         # Initialize loss holders.
         self.trainingLosses_signalReconstruction, self.testingLosses_signalReconstruction = None, None
-        self.specificActivationParamsPath, self.sharedActivationParamsPath = None, None
+        self.activationParamsPath = None
         self.specificJacobianFlow, self.sharedJacobianFlow = None, None
         self.resetModel()
 
@@ -49,7 +49,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
         # Activation parameter flow holders.
         self.sharedActivationParamsPath = []  # List of activation linearity. Dim: numEpochs
-        self.specificActivationParamsPath = []  # List of activation bounds. Dim: numEpochs
+        self.activationParamsPath = []  # List of activation bounds. Dim: numEpochs
 
     def addLayer(self):
         self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True))
