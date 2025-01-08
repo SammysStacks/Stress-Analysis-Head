@@ -70,7 +70,8 @@ class modelVisualizations(globalPlottingProtocols):
 
                 # Plot the shared and specific jacobian convergences.
                 activationParamsPaths = np.asarray([specificModel.activationParamsPath for specificModel in specificModels])
-                self.generalViz.plotSinglaParameterFlow(trainingValues=activationParamsPaths[:, 0], testingValues=activationParamsPaths[:, 1], labels=[f"{datasetName}" for datasetName in datasetNames],
+                print(activationParamsPaths.shape)
+                self.generalViz.plotSinglaParameterFlow(trainingValues=activationParamsPaths[:, :, 0], testingValues=activationParamsPaths[:, :, 1], labels=[f"{datasetName}" for datasetName in datasetNames],
                                                         saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Health Jacobian Convergences")
 
     def plotAllTrainingEvents(self, submodel, modelPipeline, lossDataLoader, trainingDate, currentEpoch):
