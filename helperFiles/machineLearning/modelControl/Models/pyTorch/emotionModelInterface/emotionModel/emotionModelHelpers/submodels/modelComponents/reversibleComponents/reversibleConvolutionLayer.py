@@ -25,12 +25,10 @@ class reversibleConvolutionLayer(reversibleInterface):
 
         # The restricted window for the neural weights.
         upperWindowMask = torch.ones(self.sequenceLength, self.sequenceLength)
-        upperWindowMask = torch.tril(upperWindowMask, diagonal=self.numFreeParameters)
         upperWindowMask = torch.triu(upperWindowMask, diagonal=1)
 
         # Calculate the offsets to map positions to kernel indices
         self.rowInds, self.colInds = upperWindowMask.nonzero(as_tuple=False).T
-        self.operatorInds = self.rowInds - self.colInds + self.numFreeParameters  # Adjust for the kernel center
 
         # Initialize the neural layers.
         self.activationFunction = activationFunctions.getActivationMethod(activationMethod)
@@ -72,18 +70,20 @@ class reversibleConvolutionLayer(reversibleInterface):
 
     def getExpA(self, layerInd, device):
         A = self.getA(layerInd, device)  # Get the linear operator in the exponent.
-        if self.forwardDirection: A = -A  # Ensure the neural weights are symmetric.
+        # if self.forwardDirection: A = -A  # Ensure the neural weights are symmetric.
 
         # Get the exponential of the linear operator.
         expA = A.matrix_exp()  # For orthogonal matrices: A.exp().inverse() = (-A).exp(); If A is Skewed Symmetric: A.exp().inverse() = A.exp().transpose()
+        if self.forwardDirection: A = A.transpose(-2, -1)  # Ensure the neural weights are symmetric.
+
         return expA  # exp(A)
 
     def getA(self, layerInd, device):
         # Gather the corresponding kernel values for each position for a skewed symmetric matrix.
         A = torch.zeros(self.numSignals, self.sequenceLength, self.sequenceLength, device=device)
-        A[:, self.rowInds, self.colInds] = -self.linearOperators[layerInd][:, self.operatorInds]
-        A[:, self.colInds, self.rowInds] = self.linearOperators[layerInd][:, self.operatorInds]
-        
+        A[:, self.rowInds, self.colInds] = -self.linearOperators[layerInd]
+        A[:, self.colInds, self.rowInds] = self.linearOperators[layerInd]
+
         return A
 
     # ------------------- Activation Functions ------------------- #

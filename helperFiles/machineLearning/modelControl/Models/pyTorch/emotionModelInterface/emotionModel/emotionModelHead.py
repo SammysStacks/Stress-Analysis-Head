@@ -10,6 +10,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods.activationFunctions import reversibleLinearSoftSign
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleConvolutionLayer import reversibleConvolutionLayer
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.sharedActivityModel import sharedActivityModel
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.sharedEmotionModel import sharedEmotionModel
@@ -218,8 +219,9 @@ class emotionModelHead(nn.Module):
     def getActivationParamsFullPassPath(self):
         activationParamsPath = []
         for name, module in self.named_modules():
-            if isinstance(module, reversibleLinearSoftSign):  # Add other activation layers if needed
-                activationParamsPath.append([param.detach().cpu().numpy() for param in module.getActivationParams()])
+            if isinstance(module, reversibleConvolutionLayer):  # Add other activation layers if needed
+                params = module.activationFunction.getActivationParams()
+                activationParamsPath.append([param.detach().cpu().numpy() for param in params])
         assert len(activationParamsPath) != 0
         return activationParamsPath
 
