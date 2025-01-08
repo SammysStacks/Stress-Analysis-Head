@@ -41,8 +41,8 @@ class reversibleLinearSoftSign(reversibleInterface):
         self.linearity = torch.zeros(1)  # The linearity parameter.
         self.tolerance = 1e-25  # Tolerance for numerical stability
 
-    def getActivationParams(self):
-        infiniteBound = 0.5 + 0.5 * torch.sigmoid(self.infiniteBoundParam)  # Convert the infinite bound to a sigmoid value.
+    def getActivationParams(self): # TODO
+        infiniteBound = 0 + 1 * torch.sigmoid(self.infiniteBoundParam)  # Convert the infinite bound to a sigmoid value.
         linearity = 1 / (1 + modelConstants.minMaxScale) / (1 - infiniteBound)
         assert 0 < infiniteBound < 1, "The infinite bound must be in the range (0, 1)."
 
