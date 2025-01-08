@@ -118,11 +118,6 @@ class optimizerMethods:
             return optim.SGD(params, lr=lr, momentum=momentum, dampening=0, weight_decay=weight_decay, nesterov=True)
         else: assert False, f"No optimizer initialized: {optimizerType}"
 
-    @property
-    def __class__(self):
-        return super().__class__
-
-
 class CosineAnnealingLR_customized(LRScheduler):
     def __init__(self, optimizer: Optimizer, T_max: int, absolute_min_lr: float, multiplicativeFactor: float, numWarmupEpochs: int, warmupFactor: float,  last_epoch: int = -1):
         self.multiplicativeFactor = multiplicativeFactor  # The multiplicative factor for the learning rate decay.
