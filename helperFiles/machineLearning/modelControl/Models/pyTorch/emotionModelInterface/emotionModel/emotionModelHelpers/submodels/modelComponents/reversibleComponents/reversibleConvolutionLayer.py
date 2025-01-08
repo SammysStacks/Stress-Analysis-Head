@@ -63,7 +63,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         # Apply the neural weights to the input data.
         expA = self.getExpA(layerInd, inputData.device)  # = exp(A)
         outputData = torch.einsum('bns,nsi->bni', inputData, expA)  # -> exp(A) @ f(x)
-        # outputData = self.applyManifoldScale(outputData, self.jacobianParameter)  # TODO
+        outputData = self.applyManifoldScale(outputData, self.jacobianParameter)  # TODO
         # The inverse would be f-1(exp(-A) @ [exp(A) @ f(x)]) = X
 
         return outputData
@@ -99,7 +99,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
     @staticmethod
     def getJacobianScalar(jacobianParameter):
-        jacobianMatrix = 0.95 + 0.1 * torch.sigmoid(jacobianParameter)
+        jacobianMatrix = 0.95 + 0.1 * torch.sin(jacobianParameter)
         return jacobianMatrix
 
     # ------------------- Activation Functions ------------------- #
