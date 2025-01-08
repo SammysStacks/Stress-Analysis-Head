@@ -97,7 +97,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def getJacobianScalar(jacobianParameter):
-        jacobianMatrix = 1 + torch.sigmoid(jacobianParameter) / 2
+        jacobianMatrix = 0.75 + 0.5 * torch.sigmoid(jacobianParameter)
         return jacobianMatrix
 
     @staticmethod

@@ -24,7 +24,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         self.eigenvalues, self.eigenvectors = nn.ParameterList(), nn.ParameterList()  # The eigenvalues and eigenvectors of the linear operator.
 
         # The restricted window for the neural weights.
-        upperWindowMask = torch.ones(self.sequenceLength, self.sequenceLength)
+        upperWindowMask = torch.ones(self.sequenceLength, self.sequenceLength, dtype=torch.float64)
         upperWindowMask = torch.triu(upperWindowMask, diagonal=1)
 
         # Calculate the offsets to map positions to kernel indices
@@ -38,7 +38,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         # Create the neural layers.
         for layerInd in range(self.numLayers):
             # Create the neural weights.
-            parameters = nn.Parameter(torch.randn(self.numSignals, self.numFreeParameters or 1))
+            parameters = nn.Parameter(torch.randn(self.numSignals, self.numFreeParameters or 1, dtype=torch.float64))
             parameters = nn.init.kaiming_uniform_(parameters)
             self.linearOperators.append(parameters)
 
@@ -79,7 +79,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
     def getA(self, layerInd, device):
         # Gather the corresponding kernel values for each position for a skewed symmetric matrix.
-        A = torch.zeros(self.numSignals, self.sequenceLength, self.sequenceLength, device=device)
+        A = torch.zeros(self.numSignals, self.sequenceLength, self.sequenceLength, device=device, dtype=torch.float64)
         A[:, self.rowInds, self.colInds] = -self.linearOperators[layerInd]
         A[:, self.colInds, self.rowInds] = self.linearOperators[layerInd]
 
@@ -98,7 +98,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
     @staticmethod
     def getJacobianScalar(jacobianParameter):
-        jacobianMatrix = 1 + torch.sigmoid(jacobianParameter) / 10
+        jacobianMatrix = 0.9 + 0.2 * torch.sigmoid(jacobianParameter)
         return jacobianMatrix
 
     # ------------------- Activation Functions ------------------- #
