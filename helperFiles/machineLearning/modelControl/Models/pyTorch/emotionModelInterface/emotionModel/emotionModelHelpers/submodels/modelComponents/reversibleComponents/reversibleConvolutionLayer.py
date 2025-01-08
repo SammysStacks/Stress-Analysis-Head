@@ -70,11 +70,10 @@ class reversibleConvolutionLayer(reversibleInterface):
 
     def getExpA(self, layerInd, device):
         A = self.getA(layerInd, device)  # Get the linear operator in the exponent.
-        # if self.forwardDirection: A = -A  # Ensure the neural weights are symmetric.
+        if self.forwardDirection: A = -A  # Ensure the neural weights are symmetric.
 
         # Get the exponential of the linear operator.
         expA = A.matrix_exp()  # For orthogonal matrices: A.exp().inverse() = (-A).exp(); If A is Skewed Symmetric: A.exp().inverse() = A.exp().transpose()
-        if self.forwardDirection: A = A.transpose(-2, -1)  # Ensure the neural weights are symmetric.
 
         return expA  # exp(A)
 
