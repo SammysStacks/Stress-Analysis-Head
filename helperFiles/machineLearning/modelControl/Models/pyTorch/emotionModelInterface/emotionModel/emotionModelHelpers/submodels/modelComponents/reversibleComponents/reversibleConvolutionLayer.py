@@ -60,8 +60,8 @@ class reversibleConvolutionLayer(reversibleInterface):
         assert numSignals == self.numSignals, f"The number of signals is not correct: {numSignals}, {self.numSignals}"
 
         # Apply the neural weights to the input data.
-        neuralWeights = self.getExpA(layerInd, inputData.device)  # = exp(A)
-        outputData = torch.einsum('bns,nsi->bni', inputData, neuralWeights)  # -> exp(A) @ f(x)
+        expA = self.getExpA(layerInd, inputData.device)  # = exp(A)
+        outputData = torch.einsum('bns,nsi->bni', inputData, expA)  # -> exp(A) @ f(x)
         outputData = self.applyManifoldScale(outputData, self.jacobianParameter)  # TODO
         # The inverse would be f-1(exp(-A) @ [exp(A) @ f(x)]) = X
 
@@ -74,21 +74,15 @@ class reversibleConvolutionLayer(reversibleInterface):
         if self.forwardDirection: A = -A  # Ensure the neural weights are symmetric.
 
         # Get the exponential of the linear operator.
-        neuralWeights = A.matrix_exp()  # For orthogonal matrices: A.exp().inverse() = (-A).exp(); If A is Skewed Symmetric: A.exp().inverse() = A.exp().transpose()
-        return neuralWeights  # exp(A)
+        expA = A.matrix_exp()  # For orthogonal matrices: A.exp().inverse() = (-A).exp(); If A is Skewed Symmetric: A.exp().inverse() = A.exp().transpose()
+        return expA  # exp(A)
 
     def getA(self, layerInd, device):
-        # Get the rotations.
-        A = torch.zeros(self.numSignals, self.sequenceLength, self.sequenceLength, device=device)
-        # omegaAngles: numSignals, numEigenvalues
-
         # Gather the corresponding kernel values for each position for a skewed symmetric matrix.
+        A = torch.zeros(self.numSignals, self.sequenceLength, self.sequenceLength, device=device)
         A[:, self.rowInds, self.colInds] = -self.linearOperators[layerInd][:, self.operatorInds]
         A[:, self.colInds, self.rowInds] = self.linearOperators[layerInd][:, self.operatorInds]
-        # neuralWeight: numSignals, sequenceLength, sequenceLength
-
-        # In Jordan 2x2 Blocks, A: numSignals, sequenceLength, sequenceLength
-
+        
         return A
 
     # ------------------- Activation Functions ------------------- #
