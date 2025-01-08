@@ -1,7 +1,6 @@
-import torch
 import torch.optim as optim
 from torch.optim import Optimizer
-from torch.optim.lr_scheduler import LRScheduler
+from torch.optim.lr_scheduler import LRScheduler, _warn_get_lr_called_within_step
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
@@ -138,7 +137,7 @@ class CosineAnnealingLR_customized(LRScheduler):
 
     def get_lr(self):
         """Retrieve the learning rate of each parameter group."""
-        torch.optim.lr_scheduler_warn_get_lr_called_within_step(self)
+        _warn_get_lr_called_within_step(self)
 
         # Base case: learning rate is constant.
         if self.last_epoch <= self.numWarmupEpochs: return self.updateStep(multiplicativeFactor=self.warmupFactor, base_lrs=[max(self.absolute_min_lr, base_lr / 10) for base_lr in self.base_lrs])
