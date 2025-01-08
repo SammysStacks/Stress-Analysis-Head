@@ -98,24 +98,13 @@ class reversibleConvolutionLayer(reversibleInterface):
 
     @staticmethod
     def getJacobianScalar(jacobianParameter):
-        jacobianMatrix = 0.95 + 0.1 * torch.sin(jacobianParameter)
+        jacobianMatrix = 0.95 + 0.1 * torch.sigmoid(jacobianParameter)
         return jacobianMatrix
 
     # ------------------- Activation Functions ------------------- #
 
-    def getSubdomainRotations(self, layerInd, device):
-        # Scale the values to an angle.
-        omegaAngles = torch.tanh(self.omegaAngleParams[layerInd])  # Scale between [-1, 1]
-        omegaAngles = torch.pi*omegaAngles  # Scale between [-pi, pi]
-        return omegaAngles.to(device)
-
     def getReversibleActivationCurves(self):
         return self.activationFunction.getActivationCurve(x_min=-2, x_max=2, num_points=200)
-
-    def getReversibleActivationParams(self):
-        params = self.activationFunction.getActivationParams()
-        params = [param.detach().cpu().numpy() for param in params]
-        return params
 
     def printParams(self):
         # Count the trainable parameters.
@@ -143,7 +132,7 @@ if __name__ == "__main__":
             healthProfile = healthProfile / 6
 
             # Perform the convolution in the fourier and spatial domains.
-            if reconstructionFlag: _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(healthProfile, atol=1e-6, numLayers=1, plotResults=True)
+            if reconstructionFlag: _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(healthProfile, atol=1e-6, numLayers=1, plotResults=False)
             else: _forwardData = neuralLayerClass.forward(healthProfile)
             neuralLayerClass.printParams()
 
@@ -160,7 +149,7 @@ if __name__ == "__main__":
 
             # Figure settings.
             plt.title(f'Fin', fontsize=14)  # Increase title font size for readability
-            plt.xlim(0.98, 1.02)
+            # plt.xlim(0.98, 1.02)
             plt.legend()
 
             # Save the plot.
