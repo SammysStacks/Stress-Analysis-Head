@@ -128,7 +128,7 @@ if __name__ == "__main__":
 
             # Set up the parameters.
             neuralLayerClass = reversibleConvolutionLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, numLayers=_numLayers, activationMethod=_activationMethod)
-            healthProfile = torch.randn(_batchSize, _numSignals, _sequenceLength)
+            healthProfile = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float64)
             healthProfile = healthProfile / 6
 
             # Perform the convolution in the fourier and spatial domains.

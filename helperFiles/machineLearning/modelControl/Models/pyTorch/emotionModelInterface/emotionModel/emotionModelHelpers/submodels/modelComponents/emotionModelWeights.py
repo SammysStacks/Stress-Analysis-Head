@@ -33,7 +33,7 @@ class emotionModelWeights(convolutionalHelpers):
     @staticmethod
     def getInitialPhysiologicalProfile(numExperiments):
         # Initialize the health profile.
-        healthProfile = torch.randn(numExperiments, modelConstants.numEncodedWeights)
+        healthProfile = torch.randn(numExperiments, modelConstants.numEncodedWeights, dtype=torch.float64)
         emotionModelWeights.healthInitialization(healthProfile)
         healthProfile = nn.Parameter(healthProfile)
 
