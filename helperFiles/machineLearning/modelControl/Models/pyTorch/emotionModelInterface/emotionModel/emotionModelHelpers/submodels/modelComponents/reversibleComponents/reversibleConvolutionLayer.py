@@ -16,6 +16,7 @@ class reversibleConvolutionLayer(reversibleInterface):
     def __init__(self, numSignals, sequenceLength, numLayers, activationMethod):
         super(reversibleConvolutionLayer, self).__init__()
         # General parameters.
+        self.numFreeParameters = sequenceLength * (sequenceLength - 1) / 2  # The number of free parameters in the model.
         self.numEigenvalues = sequenceLength // 2 + sequenceLength % 2  # The number of parameters in the model.
         self.activationMethod = activationMethod  # The activation method to use.
         self.sequenceLength = sequenceLength  # The length of the input signal.
