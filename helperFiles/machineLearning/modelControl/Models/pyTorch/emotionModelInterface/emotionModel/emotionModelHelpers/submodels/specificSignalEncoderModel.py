@@ -66,12 +66,12 @@ class specificSignalEncoderModel(neuralOperatorInterface):
             signalData = self.processingLayers[layerInd](signalData)
 
             # Allow the signals to be scaled once.
-            # if layerInd == 0: signalData = self.applyManifoldScale(signalData, self.healthProfileJacobians)  # TODO
+            if layerInd == 0: signalData = self.applyManifoldScale(signalData, self.healthProfileJacobians)  # TODO
         else:
             # Get the reverse layer index.
             pseudoLayerInd = len(self.neuralLayers) - layerInd - 1
             assert 0 <= pseudoLayerInd < len(self.neuralLayers), f"The pseudo layer index is out of bounds: {pseudoLayerInd}, {len(self.neuralLayers)}, {layerInd}"
-            # if pseudoLayerInd == 0: signalData = self.applyManifoldScale(signalData, self.healthProfileJacobians)
+            if pseudoLayerInd == 0: signalData = self.applyManifoldScale(signalData, self.healthProfileJacobians)
 
             # Apply the neural operator layer with activation.
             signalData = self.processingLayers[pseudoLayerInd](signalData)
