@@ -35,10 +35,10 @@ lrs_profileGen=('1e-4') # # 5e-5 <= x == 1e-4; Removed from filename
 lrs_reversible=('1e-3')  # 1e-4 <= x == 1e-3; Removed from filename
 
 # Collective Switchables: 128
-#numSpecificEncoderLayers_arr=(1 2 4 8)
-#numSharedEncoderLayers_arr=(4 6 8 12 16 24 32)
-numSpecificEncoderLayers_arr=(1)
-numSharedEncoderLayers_arr=(8)
+numSpecificEncoderLayers_arr=(1 2 4 8)
+numSharedEncoderLayers_arr=(4 6 12 16 24 32)
+#numSpecificEncoderLayers_arr=(1)
+#numSharedEncoderLayers_arr=(8)
 
 # Collective Switchables: 256
 encodedDimensions_arr=(256)
@@ -46,9 +46,9 @@ allNumEncodedWeights=(32)
 #numProfileShots_arr=(24 16 8 32)
 numProfileShots_arr=(32)
 #lrs_profile=('0.005' '0.01' '0.02' '0.03' '0.04' '0.05' '0.06' '0.07' '0.08' '0.09' '0.1' '0.25' '0.5' '0.75' '1')  # 0.005 <= x <= 0.05
-lrs_profile=('0.01')
-lrs_profileGen=('1e-4') # # 5e-5 <= x == 1e-4; Removed from filename
-lrs_reversible=('1e-3')  # 1e-4 <= x == 1e-3; Removed from filename
+lrs_profile=('0.02')
+#lrs_profileGen=('2e-4' '1e-2' '1e-3') # # 5e-5 <= x == 1e-4; Removed from filename
+#lrs_reversible=('2e-3' '1e-2' '1e-4')  # 1e-4 <= x == 1e-3; Removed from filename
 
 # Single Switchables.
 waveletTypes_arr=('bior3.1')
@@ -56,9 +56,9 @@ waveletTypes_arr=('bior3.1')
 optimizers_arr=('NAdam')
 
 # Weight decay parameters.
-wds_profile=('1e-6')  # 1e-6 ==> x <== 1e-3; Removed from filename
-wds_profileGen=('1e-5')  # 1e-5 == x <= 1e-4; Removed from filename
-wds_reversible=('1e-4')  # 1e-4 == x <= 1e-3; Removed from filename
+#wds_profile=('1e-6' '1e-4' '1e-2' '1e-1' '1e-5' '1e-3')  # 1e-6 ==> x <== 1e-3; Removed from filename
+#wds_profileGen=('1e-5' '1e-4' '1e-3' '1e-2')  # 1e-5 == x <= 1e-4; Removed from filename
+#wds_reversible=('1e-4' '1e-3' '1e-2')  # 1e-4 == x <= 1e-3; Removed from filename
 
 
 for beta1s in "${beta1s_arr[@]}"
