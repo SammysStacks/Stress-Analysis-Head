@@ -60,7 +60,7 @@ if __name__ == "__main__":
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=2, help='The number of layers in the model.')
     parser.add_argument('--numSharedEncoderLayers', type=int, default=8, help='The number of layers in the model.')
     parser.add_argument('--numEncodedWeights', type=int, default=32, help='The number of profile weights.')
-    parser.add_argument('--numProfileShots', type=int, default=16, help='The epochs for profile training.')
+    parser.add_argument('--numProfileShots', type=int, default=32, help='The epochs for profile training.')
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions).')
@@ -72,7 +72,7 @@ if __name__ == "__main__":
 
     # ----------------------- Training Parameters ----------------------- #
     # Signal encoder learning rates.
-    parser.add_argument('--profileLR', type=float, default=0.01, help='The learning rate of the health model.')
+    parser.add_argument('--profileLR', type=float, default=0.02, help='The learning rate of the health model.')
     parser.add_argument('--reversibleLR', type=float, default=1e-3, help='The learning rate of the general model.')
     parser.add_argument('--physGenLR', type=float, default=1e-4, help='The learning rate of the general model.')
 
