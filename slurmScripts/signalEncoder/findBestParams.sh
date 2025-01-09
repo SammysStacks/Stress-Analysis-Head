@@ -42,7 +42,7 @@ numSharedEncoderLayers_arr=(8)
 
 # Collective Switchables: 256
 encodedDimensions_arr=(256)
-allNumEncodedWeights=(32 64 128)
+allNumEncodedWeights=(32)
 #numProfileShots_arr=(24 16 8 32)
 numProfileShots_arr=(32)
 #lrs_profile=('0.005' '0.01' '0.02' '0.03' '0.04' '0.05' '0.06' '0.07' '0.08' '0.09' '0.1' '0.25' '0.5' '0.75' '1')  # 0.005 <= x <= 0.05
