@@ -98,7 +98,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
     @staticmethod
     def getJacobianScalar(jacobianParameter):
-        jacobianMatrix = 0.9 + 0.2 * torch.sigmoid(jacobianParameter)
+        jacobianMatrix = 0.75 + 0.5 * torch.sigmoid(jacobianParameter)
         return jacobianMatrix
 
     # ------------------- Activation Functions ------------------- #
