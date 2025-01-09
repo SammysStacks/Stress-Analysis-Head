@@ -125,7 +125,7 @@ class emotionModelHead(nn.Module):
 
     def forward(self, submodel, signalData, signalIdentifiers, metadata, device, onlyProfileTraining=False):
         signalData, signalIdentifiers, metadata = (tensor.to(device) for tensor in (signalData, signalIdentifiers, metadata))
-        signalIdentifiers, signalData, metadata = signalIdentifiers.int(), signalData, metadata.int()
+        signalIdentifiers, signalData, metadata = signalIdentifiers.int(), signalData.double(), metadata.int()
         batchSize, numSignals, maxSequenceLength, numChannels = signalData.size()
         assert numChannels == len(modelConstants.signalChannelNames)
         # timepoints: [further away from survey (300) -> closest to survey (0)]
