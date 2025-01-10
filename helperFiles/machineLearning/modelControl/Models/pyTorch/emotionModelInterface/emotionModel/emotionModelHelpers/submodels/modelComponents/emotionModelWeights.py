@@ -5,7 +5,6 @@ from torch import nn
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.modelHelpers.abnormalConvolutions import subPixelUpsampling1D
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.modelHelpers.convolutionalHelpers import convolutionalHelpers, ResNet
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleConvolutionLayer import reversibleConvolutionLayer
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
@@ -22,10 +21,7 @@ class emotionModelWeights(convolutionalHelpers):
         if activationMethod == 'none': return linearLayer
 
         linearLayer = nn.Sequential(linearLayer, activationFunctions.getActivationMethod(activationMethod))
-        if addResidualConnection:
-            if numInputFeatures == numOutputFeatures: return ResNet(module=linearLayer)
-            linearLayer.append(subPixelUpsampling1D(upscale_factor=numOutputFeatures // numInputFeatures))
-            assert False
+        if addResidualConnection: return ResNet(module=linearLayer)
         return linearLayer
 
     # ------------------- Health Profile ------------------- #
@@ -77,17 +73,18 @@ class emotionModelWeights(convolutionalHelpers):
 
     def healthGeneration(self, numOutputFeatures):
         if numOutputFeatures < modelConstants.numEncodedWeights: raise ValueError(f"Number of outputs ({numOutputFeatures}) must be greater than inputs ({modelConstants.numEncodedWeights})")
+        numUpSamples = int(math.log2(numOutputFeatures // modelConstants.numEncodedWeights))
 
-        layers = [
-            # self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
-            # self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
-            self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=numOutputFeatures, activationMethod='SoftSign', addBias=False, addResidualConnection=False),
+        layers = []
+        for i in range(numUpSamples): layers.append(self.linearModel(numInputFeatures=modelConstants.numEncodedWeights*2**i, numOutputFeatures=modelConstants.numEncodedWeights*2**(i+1), activationMethod='SoftSign', addBias=False, addResidualConnection=False))
+
+        layers.extend([
             self.linearModel(numInputFeatures=numOutputFeatures, numOutputFeatures=numOutputFeatures, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
             self.linearModel(numInputFeatures=numOutputFeatures, numOutputFeatures=numOutputFeatures, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
             self.linearModel(numInputFeatures=numOutputFeatures, numOutputFeatures=numOutputFeatures, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
             self.linearModel(numInputFeatures=numOutputFeatures, numOutputFeatures=numOutputFeatures, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
             self.convolutionalFilters_resNetBlocks(numResNets=4, numBlocks=1, numChannels=[1, 2, 1], kernel_sizes=[[3, 3]], dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False),
-        ]
+        ])
 
         # Construct the profile generation model.
         return nn.Sequential(*layers)

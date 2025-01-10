@@ -204,7 +204,6 @@ class emotionModelHead(nn.Module):
                 rotationAnglesPath.append(rotationAngles.detach().cpu().numpy())
                 eigenvaluesModuleNames.append(name)
         assert len(eigenvaluesPath) != 0
-        eigenvaluesPath = np.asarray(eigenvaluesPath)
         return rotationAnglesPath, eigenvaluesPath, eigenvaluesModuleNames
 
     def getActivationCurvesFullPassPath(self):

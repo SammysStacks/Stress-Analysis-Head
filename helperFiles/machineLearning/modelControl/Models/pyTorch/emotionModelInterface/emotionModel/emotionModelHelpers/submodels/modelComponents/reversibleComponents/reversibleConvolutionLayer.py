@@ -112,7 +112,6 @@ class reversibleConvolutionLayer(reversibleInterface):
 
         # Eigenvalues are all imaginary.
         omega_angles = torch.unique(eigenvalues.imag.abs())
-        # omega_angles = omega_angles[omega_angles > 1e-20]
 
         return omega_angles
 

@@ -237,7 +237,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def plotEigenValueLocations(self, eigenvaluesPath, epoch, signalInd, saveFigureLocation, plotTitle):
-        numLayers, nCols = eigenvaluesPath.shape[0], min(6, eigenvaluesPath.shape[0])
+        numLayers, nCols = len(eigenvaluesPath), min(6, len(eigenvaluesPath))
         nRows, layerInd = math.ceil(numLayers / nCols), 0
 
         # Create the figure and axes
@@ -246,7 +246,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         for layerInd, ax in enumerate(axes[:numLayers]):
             # Scatter training eigenvalues
-            x, y = eigenvaluesPath[layerInd, signalInd, :].real, eigenvaluesPath[layerInd, signalInd, :].imag
+            x, y = eigenvaluesPath[layerInd].real, eigenvaluesPath[layerInd].imag
             ax.scatter(x, y, color=self.lightColors[1], label="Training", s=10, linewidth=0.2, alpha=0.5)
 
             # Connect points to the origin
@@ -282,7 +282,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def plotEigenvalueAngles(self, rotationAngles, rotationModuleNames, epoch, degreesFlag, saveFigureLocation, plotTitle):
-        numLayers, nCols = rotationAngles.shape[0], min(6, rotationAngles.shape[0])
+        numLayers, nCols = len(rotationAngles), min(6, len(rotationAngles))
         nRows = math.ceil(numLayers / nCols)
 
         # Create a figure and axes array
@@ -295,13 +295,13 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax = axes[layerInd]  # which subplot to use
 
             # Plot training eigenvalue angles
-            ax.hist(rotationAngles[layerInd, :], bins=36, alpha=0.75, density=True, color=self.lightColors[1], label="Training")
+            ax.hist(rotationAngles[layerInd], bins=36, alpha=0.75, density=True, color=self.lightColors[1], label="Training")
             units = "degrees" if degreesFlag else "radians"
             degrees = 200 if degreesFlag else 3.25
             # Customize subplot title and axes
             ax.set_title(f"{rotationModuleNames[layerInd].split(".")[-2]}")
             ax.set_xlabel(f"Angle ({units})")
-            ax.set_xlim((-degrees, degrees))
+            ax.set_xlim((0, degrees))
             ax.set_ylabel("Density")
 
         # Hide any extra subplots if numLayers < nRows * nCols
