@@ -44,7 +44,7 @@ class organizeTrainingLosses(lossCalculations):
             # Get the encoder information.
             # specificJacobians, sharedJacobians = model.specificSignalEncoderModel.healthProfileJacobians[0, :, 0], model.sharedSignalEncoderModel.healthProfileJacobian[0, :]
             # specificJacobians, sharedJacobians = emotionModelWeights.getJacobianScalar(specificJacobians), emotionModelWeights.getJacobianScalar(sharedJacobians)
-            activationParamsPath = model.getActivationParamsFullPassPath()
+            activationParamsPath, activationModuleNames = model.getActivationParamsFullPassPath()
 
             # Store the signal encoder loss information.
             self.storeLossInformation(trainingLoss=signalReconstructedTrainingLosses, testingLoss=signalReconstructedTestingLosses, trainingHolder=model.specificSignalEncoderModel.trainingLosses_signalReconstruction, testingHolder=model.specificSignalEncoderModel.testingLosses_signalReconstruction)

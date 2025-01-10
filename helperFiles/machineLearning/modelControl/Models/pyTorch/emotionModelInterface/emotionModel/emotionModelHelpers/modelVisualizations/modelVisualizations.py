@@ -110,10 +110,8 @@ class modelVisualizations(globalPlottingProtocols):
             signalData = signalData.detach().cpu().numpy()
             
             # Compile additional information for the model.getActivationParamsFullPassPath
-            # specificSpatialRotationsPath, sharedSpatialRotationsPath = model.getEigenvalueFullPassPath(device=self.accelerator.device, domain='processingLayers')  # numProcessingLayers, numSignals, encodedDimension
-            # specificNeuralRotationsPath, sharedNeuralRotationsPath = model.getEigenvalueFullPassPath(device=self.accelerator.device, domain='neuralLayers')  # numProcessingLayers, numSignals, encodedDimension
-            specificSpatialActivationPath, sharedSpatialActivationPath = model.getActivationCurvesFullPassPath(domain='processingLayers')  # numProcessingLayers, 2, numPoints
-            specificNeuralActivationPath, sharedNeuralActivationPath = model.getActivationCurvesFullPassPath(domain='neuralLayers')  # numProcessingLayers, 2, numPoints
+            activationCurvePath, activationModuleNames = model.getActivationCurvesFullPassPath()  # numProcessingLayers, 2, numPoints
+            eigenvaluesPath, eigenvaluesModuleNames = model.getEigenvalueFullPassPath()  # numProcessingLayers, numSignals, encodedDimension
             globalPlottingProtocols.clearFigure(fig=None, legend=None, showPlot=False)
             batchInd, signalInd = 1, 1
 
@@ -161,10 +159,7 @@ class modelVisualizations(globalPlottingProtocols):
                     # self.signalEncoderViz.modelPropagation3D(neuralEigenvalues=sharedNeuralRotationsPath, epoch=currentEpoch, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="3D Shared Neural Eigenvalues by Layer", batchInd=0, signalInd=0)
 
                     # Plot the activation information.
-                    self.signalEncoderViz.plotActivationParams(specificSpatialActivationPath, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Specific Spatial Activation Parameters")
-                    self.signalEncoderViz.plotActivationParams(specificNeuralActivationPath, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Specific Neural Activation Parameters")
-                    self.signalEncoderViz.plotActivationParams(sharedSpatialActivationPath, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Shared Spatial Activation Parameters")
-                    self.signalEncoderViz.plotActivationParams(sharedNeuralActivationPath, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Shared Neural Activation Parameters")
+                    self.signalEncoderViz.plotActivationParams(activationCurvePath, activationModuleNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Specific Spatial Activation Parameters")
 
                 # Plot the autoencoder results.
                 self.signalEncoderViz.plotEncoder(signalData, reconstructedSignalData, resampledBiomarkerTimes, resampledSignalData, epoch=currentEpoch, saveFigureLocation="signalReconstruction/", plotTitle="Signal Reconstruction", numSignalPlots=1)

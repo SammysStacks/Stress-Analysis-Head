@@ -9,7 +9,6 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.lossInformation.lossCalculations import lossCalculations
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods.activationFunctions import reversibleLinearSoftSign
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleConvolutionLayer import reversibleConvolutionLayer
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.sharedActivityModel import sharedActivityModel
@@ -194,36 +193,34 @@ class emotionModelHead(nn.Module):
 
     # ------------------------- Model Components ------------------------- #
 
-    def getEigenvalueFullPassPath(self, device, domain):
-        specificLinearModels, sharedLinearModels = getattr(self.specificSignalEncoderModel, domain), getattr(self.sharedSignalEncoderModel, domain)
-        if domain == 'neuralLayers': specificLinearModels = [_linearModel.highFrequenciesWeights[0] for _linearModel in specificLinearModels]
-        if domain == 'neuralLayers': sharedLinearModels = [_linearModel.highFrequenciesWeights[0] for _linearModel in sharedLinearModels]
+    def getEigenvalueFullPassPath(self):
+        eigenvaluesPath, eigenvaluesModuleNames = [], []
+        for name, module in self.named_modules():
+            if isinstance(module, reversibleConvolutionLayer): 
+                eigenvaluesPath.append(module.getEigenvalues())
+                eigenvaluesModuleNames.append(name)
+        assert len(eigenvaluesPath) != 0
+        return eigenvaluesPath, eigenvaluesModuleNames
 
-        # specificRotationsPath = np.asarray([specificLinearModels[layerInd].getSubdomainRotations(layerInd=-1, device=device).detach().cpu().numpy() for layerInd in range(self.numSpecificEncoderLayers)])
-        # sharedRotationsPath = np.asarray([sharedLinearModels[layerInd].getSubdomainRotations(layerInd=-1, device=device).detach().cpu().numpy() for layerInd in range(self.numSharedEncoderLayers)])
-        # eigenvaluePath: numSpecificEncoderLayers or numSharedEncoderLayers, numSignals or 1, encodedDimension
-
-        return specificRotationsPath, sharedRotationsPath
-
-    def getActivationCurvesFullPassPath(self, domain):
-        specificLinearModels, sharedLinearModels = getattr(self.specificSignalEncoderModel, domain), getattr(self.sharedSignalEncoderModel, domain)
-        if domain == 'neuralLayers': specificLinearModels = [_linearModel.highFrequenciesWeights[0] for _linearModel in specificLinearModels]
-        if domain == 'neuralLayers': sharedLinearModels = [_linearModel.highFrequenciesWeights[0] for _linearModel in sharedLinearModels]
-
-        specificActivationPath = np.asarray([specificLinearModels[layerInd].getReversibleActivationCurves() for layerInd in range(self.numSpecificEncoderLayers)])
-        sharedActivationPath = np.asarray([sharedLinearModels[layerInd].getReversibleActivationCurves() for layerInd in range(self.numSharedEncoderLayers)])
-        # activationPath: numSpecificEncoderLayers or numSharedEncoderLayers, 2, numPoints
-
-        return specificActivationPath, sharedActivationPath
+    def getActivationCurvesFullPassPath(self):
+        activationCurvePath, activationModuleNames = [], []
+        for name, module in self.named_modules():
+            if isinstance(module, reversibleConvolutionLayer): 
+                x, y = module.activationFunction.getActivationCurve(x_min=-2, x_max=2, num_points=200)
+                activationCurvePath.append([x.detach().cpu().numpy(), y.detach().cpu().numpy()])
+                activationModuleNames.append(name)
+        assert len(activationCurvePath) != 0
+        return activationCurvePath, activationModuleNames
 
     def getActivationParamsFullPassPath(self):
-        activationParamsPath = []
+        activationParamsPath, activationModuleNames = [], []
         for name, module in self.named_modules():
-            if isinstance(module, reversibleConvolutionLayer):  # Add other activation layers if needed
+            if isinstance(module, reversibleConvolutionLayer): 
                 params = module.activationFunction.getActivationParams()
                 activationParamsPath.append([param.detach().cpu().numpy() for param in params])
+                activationModuleNames.append(name)
         assert len(activationParamsPath) != 0
-        return activationParamsPath
+        return activationParamsPath, activationModuleNames
 
     def signalEncoderPass(self, metaLearningData, forwardPass, compileLayerStates=False):
         reversibleInterface.changeDirections(forwardDirection=forwardPass)
@@ -315,7 +312,7 @@ class emotionModelHead(nn.Module):
         plt.plot(resampledBiomarkerTimes, healthProfile[firstBatchInd].clone().detach().cpu().numpy(), 'tab:red', linewidth=1, label='Health Profile', alpha=2/3)
         plt.plot(torch.linspace(start=resampledBiomarkerTimes[0], end=resampledBiomarkerTimes[-1], steps=embeddedProfile.size(-1)).clone().detach().cpu().numpy(), embeddedProfile[firstBatchInd].clone().detach().cpu().numpy(), 'ok', linewidth=1, markersize=3,  label='Embedded Profile', alpha=0.75)
         plt.title(f"batchInd{firstBatchInd}")
-        plt.ylim((-0.5, 0.5))
+        plt.ylim((-1, 1))
         plt.show()
 
         # Get the first valid signal points.

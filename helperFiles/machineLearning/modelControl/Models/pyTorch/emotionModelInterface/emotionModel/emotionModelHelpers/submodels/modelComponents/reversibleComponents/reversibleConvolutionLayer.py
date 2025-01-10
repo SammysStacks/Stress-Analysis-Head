@@ -74,6 +74,9 @@ class reversibleConvolutionLayer(reversibleInterface):
 
         # Get the exponential of the linear operator.
         expA = A.matrix_exp()  # For orthogonal matrices: A.exp().inverse() = (-A).exp(); If A is Skewed Symmetric: A.exp().inverse() = A.exp().transpose()
+        # print(A[0, 0:6, 0:6])
+        # print(expA[0, 0:6, 0:6])
+        # print(torch.linalg.eigh(A)[0])
 
         return expA  # exp(A)
 
@@ -103,8 +106,8 @@ class reversibleConvolutionLayer(reversibleInterface):
 
     # ------------------- Activation Functions ------------------- #
 
-    def getReversibleActivationCurves(self):
-        return self.activationFunction.getActivationCurve(x_min=-2, x_max=2, num_points=200)
+    def getEigenvalues(self):
+        return 1
 
     def printParams(self):
         # Count the trainable parameters.

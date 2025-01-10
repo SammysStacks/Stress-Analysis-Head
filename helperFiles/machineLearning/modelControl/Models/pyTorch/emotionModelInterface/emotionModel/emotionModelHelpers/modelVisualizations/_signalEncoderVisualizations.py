@@ -410,7 +410,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} batchInd{batchInd} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotActivationParams(self, activationCurves, epoch, saveFigureLocation, plotTitle):
+    def plotActivationParams(self, activationCurves, activationModuleNames, epoch, saveFigureLocation, plotTitle):
         numActivations, numPointsX, numPointsY = activationCurves.shape
         nCols = 4; nRows = math.ceil(numActivations / nCols)
 
@@ -427,7 +427,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.plot(y, x, color=self.lightColors[0], linestyle='-', linewidth=2, label="Forward Pass")  # Plot Forward Pass
             ax.plot(x, x, color=self.blackColor, linestyle='--', linewidth=0.5, label="Identity")  # Plot Identity Line
 
-            ax.set_title(f"Activation {activationInd + 1}")
+            ax.set_title(f"{activationModuleNames[activationInd].split(".")[-1]}")
             ax.set_xlabel("X")
             ax.set_ylabel("Y")
             ax.grid(True)
