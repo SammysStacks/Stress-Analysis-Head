@@ -49,8 +49,8 @@ numProfileShots_arr=(32)
 profileParams=(32)
 
 #lrs_profile=('0.01' '0.02' '0.03' '0.04' '0.051' '0.06' '0.07' '0.08' '0.09' '0.1')  # 0.005 <= x <= 0.05
-#lrs_profileGen=('2e-4' '1e-3') # # 5e-5 <= x == 1e-4; 
-#lrs_reversible=('2e-3' '1e-4')  # 1e-4 <= x == 1e-3;
+#lrs_profileGen=('2e-4' '1e-3' '3e-4') # # 1e-4 <= x == 1e-3; 
+#lrs_reversible=('2e-3' '1e-4' '3e-4')  # 1e-4 <= x == 1e-3;
 lrs_profileGen=('1e-4')
 lrs_reversible=('1e-3')
 lrs_profile=('0.05')
