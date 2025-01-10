@@ -16,7 +16,7 @@ numSharedEncoderLayers_arr=(1 2 3 4 5 6 7 8 9 10 11 12)  # 12
 numSpecificEncoderLayers_arr=(1 2 3 4 5 6 7 8 9 10 11 12)  # 12
 
 # Known interesting parameters: 144
-allNumEncodedWeights=(16 32 64 128 256 512)  # 6
+profileParams=(16 32 64 128 256 512)  # 6
 numProfileShots_arr=(4 8 12 16 24 32)  # 6
 encodedDimensions_arr=(64 128 256 512)  # 4
 initialProfileAmp_arr=('0.01')  # 0.005 <= x <= 0.05
@@ -42,24 +42,31 @@ numSharedEncoderLayers_arr=(4 6 12 16 24 32)
 
 # Collective Switchables: 256
 encodedDimensions_arr=(256)
-allNumEncodedWeights=(32)
-#numProfileShots_arr=(24 16 8 32)
+#numProfileShots_arr=(24 16 8)
 numProfileShots_arr=(32)
-#lrs_profile=('0.005' '0.01' '0.02' '0.03' '0.04' '0.05' '0.06' '0.07' '0.08' '0.09' '0.1' '0.25' '0.5' '0.75' '1')  # 0.005 <= x <= 0.05
-lrs_profile=('0.02')
-#lrs_profileGen=('2e-4' '1e-2' '1e-3') # # 5e-5 <= x == 1e-4; Removed from filename
-#lrs_reversible=('2e-3' '1e-2' '1e-4')  # 1e-4 <= x == 1e-3; Removed from filename
+
+#profileParams=(16 64 128 256)
+profileParams=(32)
+
+#lrs_profile=('0.01' '0.02' '0.03' '0.04' '0.051' '0.06' '0.07' '0.08' '0.09' '0.1')  # 0.005 <= x <= 0.05
+#lrs_profileGen=('2e-4' '1e-2' '1e-3') # # 5e-5 <= x == 1e-4; 
+#lrs_reversible=('2e-3' '1e-2' '1e-4')  # 1e-4 <= x == 1e-3;
+lrs_profileGen=('1e-4')
+lrs_reversible=('1e-3')
+lrs_profile=('0.05')
 
 # Single Switchables.
 waveletTypes_arr=('bior3.1')
-#optimizers_arr=('NAdam' 'AdamW' 'RAdam' 'Adam')  # AdamW == NAdam > RAdam > Adam > Adamax
-optimizers_arr=('NAdam')
+#optimizers_arr=('AdamW' 'RAdam' 'Adam')  # AdamW == NAdam > RAdam > Adam > Adamax
+optimizers_arr=('NAdam' 'Adam')
 
 # Weight decay parameters.
-#wds_profile=('1e-6' '1e-4' '1e-2' '1e-1' '1e-5' '1e-3')  # 1e-6 ==> x <== 1e-3; Removed from filename
-#wds_profileGen=('1e-5' '1e-4' '1e-3' '1e-2')  # 1e-5 == x <= 1e-4; Removed from filename
-#wds_reversible=('1e-4' '1e-3' '1e-2')  # 1e-4 == x <= 1e-3; Removed from filename
-
+#wds_profile=('2e-6' '1e-5' '1e-4' '1e-3' '1e-2' '1e-1')  # 1e-6 ==> x <== 1e-3; Removed from filename
+#wds_profileGen=('1e-6' '2e-5' '1e-4' '1e-3' '1e-2')  # 1e-5 == x <= 1e-4; Removed from filename
+#wds_reversible=('1e-6' '1e-5' '2e-4' '1e-3' '1e-2')  # 1e-4 == x <= 1e-3; Removed from filename
+wds_profile=('1e-6')  
+wds_profileGen=('1e-5') 
+wds_reversible=('1e-4') 
 
 for beta1s in "${beta1s_arr[@]}"
 do
@@ -67,7 +74,7 @@ do
   do
     for momentums in "${momentums_arr[@]}"
     do
-      for numEncodedWeights in "${allNumEncodedWeights[@]}"
+      for numEncodedWeights in "${profileParams[@]}"
       do
         for initialProfileAmp in "${initialProfileAmp_arr[@]}"
         do
