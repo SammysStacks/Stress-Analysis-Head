@@ -193,15 +193,19 @@ class emotionModelHead(nn.Module):
 
     # ------------------------- Model Components ------------------------- #
 
-    def getEigenvalueFullPassPath(self):
-        eigenvaluesPath, eigenvaluesModuleNames = [], []
+    def getEigenvalueFullPassPath(self, device):
+        rotationAnglesPath, eigenvaluesPath, eigenvaluesModuleNames = [], [], []
         for name, module in self.named_modules():
-            if isinstance(module, reversibleConvolutionLayer): 
-                eigenvaluesPath.append(module.getEigenvalues())
+            if isinstance(module, reversibleConvolutionLayer):
+                rotationAngles = module.getEigenvalues(layerInd=0, device=device)
+                eigenValues = (rotationAngles*1j).exp()
+
+                eigenvaluesPath.append(eigenValues.detach().cpu().numpy())
+                rotationAnglesPath.append(rotationAngles.detach().cpu().numpy())
                 eigenvaluesModuleNames.append(name)
         assert len(eigenvaluesPath) != 0
         eigenvaluesPath = np.asarray(eigenvaluesPath)
-        return eigenvaluesPath, eigenvaluesModuleNames
+        return rotationAnglesPath, eigenvaluesPath, eigenvaluesModuleNames
 
     def getActivationCurvesFullPassPath(self):
         activationCurvePath, activationModuleNames = [], []

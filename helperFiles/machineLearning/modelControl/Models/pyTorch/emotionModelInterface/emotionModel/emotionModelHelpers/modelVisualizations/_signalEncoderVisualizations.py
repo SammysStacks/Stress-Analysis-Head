@@ -236,20 +236,17 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotEigenValueLocations(self, trainingEigenValues, testingEigenValues, epoch, signalInd, saveFigureLocation, plotTitle):
-        numLayers, nCols = trainingEigenValues.shape[0], min(6, trainingEigenValues.shape[0])
+    def plotEigenValueLocations(self, eigenvaluesPath, epoch, signalInd, saveFigureLocation, plotTitle):
+        numLayers, nCols = eigenvaluesPath.shape[0], min(6, eigenvaluesPath.shape[0])
         nRows, layerInd = math.ceil(numLayers / nCols), 0
 
         # Create the figure and axes
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False)
         axes = axes.flatten()
 
-        trainX, trainY = np.cos(trainingEigenValues), np.sin(trainingEigenValues)
-        testX, testY = np.cos(testingEigenValues), np.sin(testingEigenValues)
-
         for layerInd, ax in enumerate(axes[:numLayers]):
             # Scatter training eigenvalues
-            x, y = trainX[layerInd, signalInd, :], trainY[layerInd, signalInd, :]
+            x, y = eigenvaluesPath[layerInd, signalInd, :].real, eigenvaluesPath[layerInd, signalInd, :].imag
             ax.scatter(x, y, color=self.lightColors[1], label="Training", s=10, linewidth=0.2, alpha=0.5)
 
             # Connect points to the origin
@@ -258,14 +255,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
             # Highlight the origin
             ax.scatter(0, 0, color=self.blackColor, label='Origin', linewidth=1)
-
-            # Scatter testing eigenvalues if provided
-            if testingEigenValues is not None and testingEigenValues.shape[1] > 0:
-                x, y = testX[layerInd, signalInd, :], testY[layerInd, signalInd, :]
-                ax.scatter(x, y, color=self.lightColors[0], label="Testing", s=10, linewidth=0.2, alpha=0.5)
-
-                for xi, yi in zip(x.flatten(), y.flatten()):
-                    ax.plot([0, xi], [0, yi], color=self.lightColors[0], linestyle='-', linewidth=0.1)
 
             # Draw coordinate lines
             ax.axhline(0, color=self.blackColor, linewidth=0.5, alpha=0.25)
@@ -292,8 +281,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} layerInd{layerInd} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotEigenvalueAngles(self, trainingEigenValues, testingEigenValues, epoch, degreesFlag, signalInd, saveFigureLocation, plotTitle):
-        numLayers, nCols = trainingEigenValues.shape[0], min(6, trainingEigenValues.shape[0])
+    def plotEigenvalueAngles(self, rotationAngles, rotationModuleNames, epoch, degreesFlag, saveFigureLocation, plotTitle):
+        numLayers, nCols = rotationAngles.shape[0], min(6, rotationAngles.shape[0])
         nRows = math.ceil(numLayers / nCols)
 
         # Create a figure and axes array
@@ -304,17 +293,13 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         for layerInd in range(numLayers):
             ax = axes[layerInd]  # which subplot to use
+
             # Plot training eigenvalue angles
-            ax.hist(trainingEigenValues[layerInd, signalInd, :], bins=36, alpha=0.75, density=True, color=self.lightColors[1], label="Training")
-
-            # Plot testing angles if provided
-            if testingEigenValues is not None and testingEigenValues.shape[1] > 0:
-                ax.hist(testingEigenValues[layerInd, signalInd, :], bins=36, alpha=0.5, density=True, color=self.lightColors[0], label="Testing")
-
+            ax.hist(rotationAngles[layerInd, :], bins=36, alpha=0.75, density=True, color=self.lightColors[1], label="Training")
             units = "degrees" if degreesFlag else "radians"
             degrees = 200 if degreesFlag else 3.25
             # Customize subplot title and axes
-            ax.set_title(f"Layer {layerInd + 1}")
+            ax.set_title(f"{rotationModuleNames[layerInd].split(".")[-2]}")
             ax.set_xlabel(f"Angle ({units})")
             ax.set_xlim((-degrees, degrees))
             ax.set_ylabel("Density")
@@ -324,20 +309,19 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             fig.delaxes(axes[idx])  # remove unused axes
 
         # Adjust layout to prevent overlapping titles/labels
-        plt.suptitle(f"{plotTitle}\nEpoch {epoch}, Signal {signalInd+1}", fontsize=16)
+        plt.suptitle(f"{plotTitle}\nEpoch {epoch}", fontsize=16)
         plt.tight_layout()
 
         # Save the plot
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def modelPropagation3D(self, neuralEigenvalues, epoch, degreesFlag, batchInd, signalInd, saveFigureLocation, plotTitle):
-        neuralEigenvalues = np.asarray(neuralEigenvalues)
-        neuralEigenvalues = neuralEigenvalues[:, signalInd]
-        numModelLayers, encodedDimension = neuralEigenvalues.shape
+    def modelPropagation3D(self, rotationAngles, epoch, degreesFlag, saveFigureLocation, plotTitle):
+        rotationAngles = np.asarray(rotationAngles)
+        numModelLayers, numAngles = rotationAngles.shape
 
         # Create a meshgrid for encodedDimension and numModelLayers
-        x_data, y_data = np.meshgrid(np.arange(encodedDimension), np.arange(1, 1 + numModelLayers))
+        x_data, y_data = np.meshgrid(np.arange(numAngles), np.arange(1, 1 + numModelLayers))
 
         # Create a figure
         fig = plt.figure(figsize=(14, 10))
@@ -346,8 +330,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Create the scatter plot
         maxHalfAngle = 180 if degreesFlag else np.pi
         if "3D Data Flow" in plotTitle: maxHalfAngle = 2*modelConstants.minMaxScale
-        surf = ax.scatter(x_data.flatten(), y_data.flatten(), neuralEigenvalues.flatten(),  # Use z-values for coloring
-                          c=neuralEigenvalues.flatten(), cmap='viridis', alpha=1, s=7, vmin=0, vmax=maxHalfAngle)
+        surf = ax.scatter(x_data.flatten(), y_data.flatten(), rotationAngles.flatten(), c=rotationAngles.flatten(), cmap='viridis', alpha=1, s=7, vmin=0, vmax=maxHalfAngle)
 
         # Customize the view angle
         ax.view_init(elev=30, azim=135)
@@ -368,7 +351,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.tight_layout()
 
         # Save the plot
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} batchInd{batchInd} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def modelFlow(self, dataTimes, dataStates, epoch, batchInd, signalInd, saveFigureLocation, plotTitle):
@@ -427,7 +410,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.plot(y, x, color=self.lightColors[0], linestyle='-', linewidth=2, label="Forward Pass")  # Plot Forward Pass
             ax.plot(x, x, color=self.blackColor, linestyle='--', linewidth=0.5, label="Identity")  # Plot Identity Line
 
-            ax.set_title(f"{activationModuleNames[activationInd].split(".")[-1]}")
+            ax.set_title(f"{activationModuleNames[activationInd].split(".")[-2]}")
             ax.set_xlabel("X")
             ax.set_ylabel("Y")
             ax.grid(True)

@@ -44,7 +44,7 @@ class reversibleLinearSoftSign(reversibleInterface):
 
     def getActivationParams(self):  # TODO
         infiniteBound = torch.sigmoid(self.infiniteBoundParam)  # Convert the infinite bound to a sigmoid value.
-        convergentPoint = 0.5 + torch.sigmoid(self.convergencePointParam)  # Convert the infinite bound to a sigmoid value.
+        convergentPoint = 2*torch.sigmoid(self.convergencePointParam)  # Convert the infinite bound to a sigmoid value.
         linearity = 1 / (1 + convergentPoint) / (1 - infiniteBound)
         assert 0 < infiniteBound < 1, "The infinite bound must be in the range (0, 1)."
 

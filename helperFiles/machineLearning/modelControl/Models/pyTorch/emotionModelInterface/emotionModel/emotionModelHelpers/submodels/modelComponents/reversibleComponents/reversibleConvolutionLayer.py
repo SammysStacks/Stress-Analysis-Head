@@ -61,7 +61,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         # Apply the neural weights to the input data.
         expA = self.getExpA(layerInd, inputData.device)  # = exp(A)
         outputData = torch.einsum('bns,nsi->bni', inputData, expA)  # -> exp(A) @ f(x)
-        outputData = self.applyManifoldScale(outputData, self.jacobianParameter)  # TODO
+        outputData = self.applyManifoldScale(outputData)  # TODO
         # The inverse would be f-1(exp(-A) @ [exp(A) @ f(x)]) = X
 
         return outputData
@@ -90,8 +90,8 @@ class reversibleConvolutionLayer(reversibleInterface):
 
     # ------------------- Activation Functions ------------------- #
 
-    def applyManifoldScale(self, inputData, jacobianParameter):
-        scalarValues = self.getJacobianScalar(jacobianParameter).expand_as(inputData)
+    def applyManifoldScale(self, inputData):
+        scalarValues = self.getJacobianScalar().expand_as(inputData)
         if not reversibleInterface.forwardDirection: return inputData * scalarValues
         else: return inputData / scalarValues
 
@@ -99,15 +99,22 @@ class reversibleConvolutionLayer(reversibleInterface):
     def initializeJacobianParams(numSignals):
         return nn.Parameter(torch.zeros((1, numSignals, 1)))
 
-    @staticmethod
-    def getJacobianScalar(jacobianParameter):
-        jacobianMatrix = 0.75 + 0.5 * torch.sigmoid(jacobianParameter)
+    def getJacobianScalar(self):
+        jacobianMatrix = 0.9 + 0.2 * torch.sigmoid(self.jacobianParameter)
         return jacobianMatrix
 
     # ------------------- Activation Functions ------------------- #
 
-    def getEigenvalues(self):
-        return 1
+    def getEigenvalues(self, layerInd, device):
+        # Compute eigenvalues of A
+        A = self.getA(layerInd, device)
+        eigenvalues = torch.linalg.eigvals(A)
+
+        # Eigenvalues are all imaginary.
+        omega_angles = torch.unique(eigenvalues.imag.abs())
+        # omega_angles = omega_angles[omega_angles > 1e-20]
+
+        return omega_angles
 
     def printParams(self):
         # Count the trainable parameters.

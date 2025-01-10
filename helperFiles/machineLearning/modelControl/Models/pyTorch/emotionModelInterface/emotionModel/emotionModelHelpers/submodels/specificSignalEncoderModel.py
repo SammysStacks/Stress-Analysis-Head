@@ -33,22 +33,14 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         # Initialize loss holders.
         self.trainingLosses_signalReconstruction, self.testingLosses_signalReconstruction = None, None
         self.activationParamsPath = None
-        self.specificJacobianFlow, self.sharedJacobianFlow = None, None
         self.resetModel()
 
     def forward(self): raise "You cannot call the dataset-specific signal encoder module."
 
     def resetModel(self):
-        # Signal encoder reconstructed loss holders.
+        # Signal encoder reconstruction holders.
         self.trainingLosses_signalReconstruction = []  # List of list of data reconstruction training losses. Dim: numEpochs
         self.testingLosses_signalReconstruction = []  # List of list of data reconstruction testing losses. Dim: numEpochs
-
-        # Jacobian parameter flow holders.
-        self.specificJacobianFlow = []  # List of jacobian parameters. Dim: numEpochs
-        self.sharedJacobianFlow = []  # List of jacobian parameters. Dim: numEpochs
-
-        # Activation parameter flow holders.
-        self.sharedActivationParamsPath = []  # List of activation linearity. Dim: numEpochs
         self.activationParamsPath = []  # List of activation bounds. Dim: numEpochs
 
     def addLayer(self):
