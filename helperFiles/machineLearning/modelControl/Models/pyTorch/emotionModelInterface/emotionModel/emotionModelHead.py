@@ -200,6 +200,7 @@ class emotionModelHead(nn.Module):
                 eigenvaluesPath.append(module.getEigenvalues())
                 eigenvaluesModuleNames.append(name)
         assert len(eigenvaluesPath) != 0
+        eigenvaluesPath = np.asarray(eigenvaluesPath)
         return eigenvaluesPath, eigenvaluesModuleNames
 
     def getActivationCurvesFullPassPath(self):
@@ -210,6 +211,7 @@ class emotionModelHead(nn.Module):
                 activationCurvePath.append([x, y])
                 activationModuleNames.append(name)
         assert len(activationCurvePath) != 0
+        activationCurvePath = np.asarray(activationCurvePath)
         return activationCurvePath, activationModuleNames
 
     def getActivationParamsFullPassPath(self):
@@ -220,6 +222,7 @@ class emotionModelHead(nn.Module):
                 activationParamsPath.append([param.detach().cpu().numpy() for param in params])
                 activationModuleNames.append(name)
         assert len(activationParamsPath) != 0
+        activationParamsPath = np.asarray(activationParamsPath)
         return activationParamsPath, activationModuleNames
 
     def signalEncoderPass(self, metaLearningData, forwardPass, compileLayerStates=False):

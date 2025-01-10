@@ -237,11 +237,11 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def plotEigenValueLocations(self, trainingEigenValues, testingEigenValues, epoch, signalInd, saveFigureLocation, plotTitle):
-        numLayers, nCols = trainingEigenValues.shape[0], min(4, trainingEigenValues.shape[0])
+        numLayers, nCols = trainingEigenValues.shape[0], min(6, trainingEigenValues.shape[0])
         nRows, layerInd = math.ceil(numLayers / nCols), 0
 
         # Create the figure and axes
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(4 * nCols, 4 * nRows), squeeze=False)
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False)
         axes = axes.flatten()
 
         trainX, trainY = np.cos(trainingEigenValues), np.sin(trainingEigenValues)
@@ -293,11 +293,11 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def plotEigenvalueAngles(self, trainingEigenValues, testingEigenValues, epoch, degreesFlag, signalInd, saveFigureLocation, plotTitle):
-        numLayers, nCols = trainingEigenValues.shape[0], min(4, trainingEigenValues.shape[0])
+        numLayers, nCols = trainingEigenValues.shape[0], min(6, trainingEigenValues.shape[0])
         nRows = math.ceil(numLayers / nCols)
 
         # Create a figure and axes array
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(4 * nCols, 4 * nRows), squeeze=False)  # squeeze=False ensures axes is 2D
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False)  # squeeze=False ensures axes is 2D
 
         # Flatten axes for easy indexing if you prefer
         axes = axes.flatten()
@@ -412,10 +412,10 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     def plotActivationParams(self, activationCurves, activationModuleNames, epoch, saveFigureLocation, plotTitle):
         numActivations, numPointsX, numPointsY = activationCurves.shape
-        nCols = 4; nRows = math.ceil(numActivations / nCols)
+        nCols = 6; nRows = math.ceil(numActivations / nCols)
 
         # Create a figure and axes array
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(4 * nCols, 4 * nRows), squeeze=False)
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False)
         axes = axes.flatten()  # Flatten to 1D array for easy indexing
 
         for activationInd in range(numActivations):
