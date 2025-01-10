@@ -113,7 +113,7 @@ class modelVisualizations(globalPlottingProtocols):
             activationCurvePath, activationModuleNames = model.getActivationCurvesFullPassPath()  # numProcessingLayers, 2, numPoints
             eigenvaluesPath, eigenvaluesModuleNames = model.getEigenvalueFullPassPath()  # numProcessingLayers, numSignals, encodedDimension
             globalPlottingProtocols.clearFigure(fig=None, legend=None, showPlot=False)
-            batchInd, signalInd = 1, 1
+            batchInd, signalInd = 1, 0
 
             # Plot the loss on the primary process.
             if self.accelerator.is_local_main_process:
