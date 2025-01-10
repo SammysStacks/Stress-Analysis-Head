@@ -207,7 +207,7 @@ class emotionModelHead(nn.Module):
         for name, module in self.named_modules():
             if isinstance(module, reversibleConvolutionLayer): 
                 x, y = module.activationFunction.getActivationCurve(x_min=-2, x_max=2, num_points=200)
-                activationCurvePath.append([x.detach().cpu().numpy(), y.detach().cpu().numpy()])
+                activationCurvePath.append([x, y])
                 activationModuleNames.append(name)
         assert len(activationCurvePath) != 0
         return activationCurvePath, activationModuleNames
