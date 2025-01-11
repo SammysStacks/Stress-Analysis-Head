@@ -193,6 +193,18 @@ class emotionModelHead(nn.Module):
 
     # ------------------------- Model Components ------------------------- #
 
+    @staticmethod
+    def compileModuleName(name):
+        compiledName = ""
+        if 'specific' in name: compiledName = 'specific' + compiledName; assert 'shared' not in name
+        elif 'shared' in name: compiledName = 'shared' + compiledName; assert 'specific' not in name
+        if 'neuralLayers' in name: compiledName = compiledName + ' WNO'; assert 'processingLayers' not in name
+        if 'highFrequenciesWeights' in name: compiledName = compiledName + ' highFrequency'; assert 'lowFrequencyWeights' not in name
+        elif 'lowFrequencyWeights' in name: compiledName = compiledName + ' lowFrequency'; assert 'highFrequenciesWeights' not in name
+        compiledName = compiledName + ' Layer' + name.split('.')[-1]
+
+        return compiledName
+
     def getEigenvalueFullPassPath(self, device):
         rotationAnglesPath, eigenvaluesPath, eigenvaluesModuleNames = [], [], []
         for name, module in self.named_modules():
@@ -202,7 +214,7 @@ class emotionModelHead(nn.Module):
 
                 eigenvaluesPath.append(eigenValues.detach().cpu().numpy())
                 rotationAnglesPath.append(rotationAngles.detach().cpu().numpy())
-                eigenvaluesModuleNames.append(name)
+                eigenvaluesModuleNames.append(self.compileModuleName(name))
         assert len(eigenvaluesPath) != 0
         return rotationAnglesPath, eigenvaluesPath, eigenvaluesModuleNames
 
@@ -212,7 +224,7 @@ class emotionModelHead(nn.Module):
             if isinstance(module, reversibleConvolutionLayer): 
                 x, y = module.activationFunction.getActivationCurve(x_min=-2, x_max=2, num_points=200)
                 activationCurvePath.append([x, y])
-                activationModuleNames.append(name)
+                activationModuleNames.append(self.compileModuleName(name))
         assert len(activationCurvePath) != 0
         activationCurvePath = np.asarray(activationCurvePath)
         return activationCurvePath, activationModuleNames
@@ -223,7 +235,7 @@ class emotionModelHead(nn.Module):
             if isinstance(module, reversibleConvolutionLayer): 
                 params = module.activationFunction.getActivationParams()
                 activationParamsPath.append([param.detach().cpu().numpy() for param in params])
-                activationModuleNames.append(name)
+                activationModuleNames.append(self.compileModuleName(name))
         assert len(activationParamsPath) != 0
         activationParamsPath = np.asarray(activationParamsPath)
         return activationParamsPath, activationModuleNames

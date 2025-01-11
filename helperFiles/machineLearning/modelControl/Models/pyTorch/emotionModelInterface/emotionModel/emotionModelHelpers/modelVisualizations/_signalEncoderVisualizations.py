@@ -265,7 +265,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.add_patch(circle)
 
             # Customize appearance
-            ax.set_title(f"{moduleNames[layerInd].split(".")[-2]}")
+            ax.set_title(f"{moduleNames[layerInd]}")
             ax.set_xlabel("Real part")
             ax.set_ylabel("Imag part")
             ax.axis('equal')
@@ -299,7 +299,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             units = "degrees" if degreesFlag else "radians"
             degrees = 200 if degreesFlag else 3.25
             # Customize subplot title and axes
-            ax.set_title(f"{moduleNames[layerInd].split(".")[-3]}")
+            ax.set_title(f"{moduleNames[layerInd]}")
             ax.set_xlabel(f"Angle ({units})")
             ax.set_xlim((0, degrees))
             ax.set_ylabel("Density")
@@ -398,19 +398,19 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         nCols = 6; nRows = math.ceil(numActivations / nCols)
 
         # Create a figure and axes array
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False)
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(3 * nCols, 2 * nRows), squeeze=False)
         axes = axes.flatten()  # Flatten to 1D array for easy indexing
 
-        for activationInd in range(numActivations):
-            ax = axes[activationInd]
-            x, y = activationCurves[activationInd]
+        for layerInd in range(numActivations):
+            ax = axes[layerInd]
+            x, y = activationCurves[layerInd]
 
             # Plot the activation curves
             ax.plot(x, y, color=self.lightColors[1], linestyle='-', linewidth=2, label="Inverse Pass")  # Plot Inverse Pass
             ax.plot(y, x, color=self.lightColors[0], linestyle='-', linewidth=2, label="Forward Pass")  # Plot Forward Pass
             ax.plot(x, x, color=self.blackColor, linestyle='--', linewidth=0.5, label="Identity")  # Plot Identity Line
 
-            ax.set_title(f"{activationModuleNames[activationInd].split(".")[-2]}")
+            ax.set_title(f"{activationModuleNames[layerInd]}")
             ax.set_xlabel("X")
             ax.set_ylabel("Y")
             ax.grid(True)
