@@ -49,21 +49,21 @@ numProfileShots_arr=(32)
 profileParams=(32)
 
 #lrs_profile=('0.01' '0.02' '0.03' '0.04' '0.051' '0.06' '0.07' '0.08' '0.09' '0.1')  # 0.005 <= x <= 0.05
-#lrs_reversible=('2e-3' '1e-4' '3e-4')  # 1e-4 <= x == 1e-3;
-#lrs_profileGen=('2e-4' '1e-3' '3e-4') # # 1e-4 <= x == 1e-3; lrs_profileGen <= lrs_reversible
+#lrs_reversible=('1e-4' '3e-4' '1e-3')  # 1e-4 <= x == 1e-3;
+#lrs_profileGen=('1e-4' '3e-4' 5e-4' '1e-3') # # 1e-4 <= x == 1e-3; lrs_profileGen <= lrs_reversible
 lrs_profile=('0.05')
-lrs_reversible=('1e-3')
-lrs_profileGen=('1e-4')
+lrs_reversible=('5e-4')
+lrs_profileGen=('2e-4')
 
 # Single Switchables.
 waveletTypes_arr=('bior3.1')
-#optimizers_arr=('AdamW' 'RAdam')  # AdamW == NAdam > RAdam > Adam > Adamax
-optimizers_arr=('NAdam' 'Adam')
+#optimizers_arr=('RAdam')  # AdamW == NAdam > RAdam > Adam > Adamax
+optimizers_arr=('NAdam' 'AdamW' 'Adam')  # AdamW == NAdam > RAdam > Adam > Adamax
 
 # Weight decay parameters.
-#wds_profile=('2e-6' '1e-7' '1e-8' '0')  # 1e-6 ==> x <== 1e-3; Removed from filename
-#wds_reversible=('1e-6' '1e-5' '2e-4' '1e-3' '1e-2')  # 1e-4 == x <= 1e-3; Removed from filename
-#wds_profileGen=('1e-6' '2e-5' '1e-4' '1e-3' '1e-2')  # 1e-5 == x <= 1e-4; Removed from filename
+#wds_profile=('1e-2' '1e-4' '1e-8' '0')  # 1e-6 ==> x <== 1e-3; Removed from filename
+#wds_reversible=('1e-6' '1e-3' '1e-2' '0')  # 1e-4 == x <= 1e-3; Removed from filename
+#wds_profileGen=('1e-6' '1e-4' '1e-2' '0')  # 1e-5 == x <= 1e-4; Removed from filename
 wds_profile=('1e-6')  
 wds_reversible=('1e-4') 
 wds_profileGen=('1e-5') 
