@@ -29,7 +29,7 @@ class emotionModelWeights(convolutionalHelpers):
     @staticmethod
     def getInitialPhysiologicalProfile(numExperiments):
         # Initialize the health profile.
-        healthProfile = torch.randn(numExperiments, modelConstants.numEncodedWeights, dtype=torch.float64)
+        healthProfile = torch.randn(numExperiments, modelConstants.profileDimension, dtype=torch.float64)
         emotionModelWeights.healthInitialization(healthProfile)
         healthProfile = nn.Parameter(healthProfile)
 
@@ -72,42 +72,22 @@ class emotionModelWeights(convolutionalHelpers):
         else: return nn.Parameter(0 * torch.ones((1, numSignals, 1)))
 
     def healthGeneration(self, numOutputFeatures):
-        if numOutputFeatures < modelConstants.numEncodedWeights: raise ValueError(f"Number of outputs ({numOutputFeatures}) must be greater than inputs ({modelConstants.numEncodedWeights})")
-        numUpSamples = int(math.log2(numOutputFeatures // modelConstants.numEncodedWeights))
+        if numOutputFeatures < modelConstants.profileDimension: raise ValueError(f"Number of outputs ({numOutputFeatures}) must be greater than inputs ({modelConstants.profileDimension})")
+        numUpSamples = int(math.log2(numOutputFeatures // modelConstants.profileDimension))
 
         layers = []
-        for i in range(numUpSamples): layers.append(self.linearModel(numInputFeatures=modelConstants.numEncodedWeights*2**i, numOutputFeatures=modelConstants.numEncodedWeights*2**(i+1), activationMethod='SoftSign', addBias=False, addResidualConnection=False))
+        for i in range(numUpSamples): layers.append(self.linearModel(numInputFeatures=modelConstants.profileDimension*2**i, numOutputFeatures=modelConstants.profileDimension*2**(i+1), activationMethod='SoftSign', addBias=False, addResidualConnection=False))
 
         layers.extend([
             self.linearModel(numInputFeatures=numOutputFeatures, numOutputFeatures=numOutputFeatures, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
             self.linearModel(numInputFeatures=numOutputFeatures, numOutputFeatures=numOutputFeatures, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
             self.linearModel(numInputFeatures=numOutputFeatures, numOutputFeatures=numOutputFeatures, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
             self.linearModel(numInputFeatures=numOutputFeatures, numOutputFeatures=numOutputFeatures, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
-            self.convolutionalFilters_resNetBlocks(numResNets=4, numBlocks=1, numChannels=[1, 2, 1], kernel_sizes=[[3, 3]], dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False),
+            self.convolutionalFilters_resNetBlocks(numResNets=4, numBlocks=1, numChannels=[1, 2, 2, 2, 1], kernel_sizes=[[3, 3, 3, 3]], dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False),
         ])
 
         # Construct the profile generation model.
         return nn.Sequential(*layers)
-
-    # def healthGeneration(self, numOutputFeatures):
-    #     if numOutputFeatures < modelConstants.numEncodedWeights: raise ValueError(f"Number of outputs ({numOutputFeatures}) must be greater than inputs ({modelConstants.numEncodedWeights})")
-    #     numUpSamples = int(math.log2(numOutputFeatures // modelConstants.numEncodedWeights))
-    #
-    #     layers = [
-    #         # Linear model with residual connection.
-    #         self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
-    #         self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
-    #         self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
-    #
-    #         self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
-    #         self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
-    #         self.linearModel(numInputFeatures=modelConstants.numEncodedWeights, numOutputFeatures=modelConstants.numEncodedWeights, activationMethod='SoftSign', addBias=False, addResidualConnection=True),
-    #     ]
-    #
-    #     # Construct the profile generation model.
-    #     for i in range(numUpSamples): layers.append(self.convolutionalFilters_resNetBlocks(numResNets=1, numBlocks=1, numChannels=[1, 2], kernel_sizes=[[3]], dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
-    #     layers.append(self.convolutionalFilters_resNetBlocks(numResNets=4, numBlocks=1, numChannels=[1, 2, 1], kernel_sizes=[[3, 3]], dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
-    #     return nn.Sequential(*layers)
 
     @staticmethod
     def getJacobianScalar(jacobianParameter):

@@ -4,7 +4,7 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
-from matplotlib.patches import Circle
+from matplotlib.patches import Circle, Arc
 from shap.plots.colors._colors import lch2rgb
 
 # Visualization protocols
@@ -261,8 +261,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.axvline(0, color=self.blackColor, linewidth=0.5, alpha=0.25)
 
             # Draw unit circle for reference
-            circle = Circle((0, 0), 1.0, color=self.blackColor, fill=False, linestyle='-')
-            ax.add_patch(circle)
+            arc = Arc((0, 0), width=1, height=1, theta1=0, theta2=180, color=self.blackColor, linewidth=1)
+            ax.add_patch(arc)
 
             # Customize appearance
             ax.set_title(f"{moduleNames[layerInd]}")

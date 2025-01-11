@@ -81,7 +81,7 @@ if __name__ == "__main__":
     _neuralOperatorParameters = modelParameters.getNeuralParameters({'waveletType': 'bior3.1'})['neuralOperatorParameters']
     _batchSize, _numSignals, _sequenceLength = 1, 1, 256
     _featureNames = [f"signal_{i}" for i in range(_numSignals)]
-    modelConstants.numEncodedWeights = 32
+    modelConstants.profileDimension = 32
     _numSpecificEncoderLayers = 1
 
     # Set up the parameters.

@@ -14,7 +14,7 @@ srun accelerate launch ./../../metaTrainingControl.py \
     --profileLR "$8" \
     --reversibleLR "$9" \
     --physGenLR "${10}" \
-    --numEncodedWeights "${11}" \
+    --profileDimension "${11}" \
     --profileWD "${12}" \
     --reversibleWD "${13}" \
     --physGenWD "${14}" \

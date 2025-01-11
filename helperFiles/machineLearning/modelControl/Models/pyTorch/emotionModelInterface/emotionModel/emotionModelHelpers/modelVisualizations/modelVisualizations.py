@@ -95,7 +95,7 @@ class modelVisualizations(globalPlottingProtocols):
 
             # Extract the model's internal variables.
             signalEncoderLayerTransforms = np.asarray(model.specificSignalEncoderModel.profileModel.signalEncoderLayerTransforms)  # numProfileShots, numProcessingLayers, numExperiments, numSignals=1***, encodedDimension
-            retrainingHealthProfilePath = np.asarray(model.specificSignalEncoderModel.profileModel.retrainingHealthProfilePath)  # numProfileShots, numExperiments, numEncodedWeights
+            retrainingHealthProfilePath = np.asarray(model.specificSignalEncoderModel.profileModel.retrainingHealthProfilePath)  # numProfileShots, numExperiments, profileDimension
             resampledBiomarkerTimes = model.sharedSignalEncoderModel.hyperSampledTimes.detach().cpu().numpy()  # numTimePoints
             compiledSignalEncoderLayerStates = np.flip(compiledSignalEncoderLayerStates, axis=0)
             # compiledSignalEncoderLayerStates: numProcessingLayers, numLayers=1, numSignals, encodedDimension

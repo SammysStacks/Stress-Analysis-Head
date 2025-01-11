@@ -149,7 +149,7 @@ class emotionModelHead(nn.Module):
         # Get the estimated profile weights.
         embeddedProfile = self.specificSignalEncoderModel.profileModel.getHealthEmbedding(batchInds)
         healthProfile = self.sharedSignalEncoderModel.generateHealthProfile(embeddedProfile)
-        # embeddedProfile: batchSize, modelConstants.numEncodedWeights
+        # embeddedProfile: batchSize, modelConstants.profileDimension
         # healthProfile: batchSize, encodedDimension
 
         # ------------------- Learned Signal Mapping ------------------- #

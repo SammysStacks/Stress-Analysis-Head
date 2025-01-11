@@ -48,10 +48,10 @@ class compileModelDataHelpers:
     @staticmethod
     def embedInformation(submodel, userInputParams, trainingDate):
         # Embedded information for each model.
-        if userInputParams['encodedDimension'] < userInputParams['numEncodedWeights']: raise Exception("The number of encoded weights must be less than the encoded dimension.")
+        if userInputParams['encodedDimension'] < userInputParams['profileDimension']: raise Exception("The number of encoded weights must be less than the encoded dimension.")
 
         # Get the model information.
-        signalEncoderModelInfo = f"signalEncoder {userInputParams['optimizerType']}-{userInputParams['momentum_decay']}-{userInputParams['beta1']}-{userInputParams['beta2']} {userInputParams['numSharedEncoderLayers']}-shared specific-{userInputParams['numSpecificEncoderLayers']} numShots{userInputParams['numProfileShots']} encodedDim{userInputParams['encodedDimension']} WD{userInputParams['profileWD']}-{userInputParams['reversibleWD']}-{userInputParams['physGenWD']} LR{userInputParams['profileLR']}-{userInputParams['reversibleLR']}-{userInputParams['physGenLR']} profileParams{userInputParams['numEncodedWeights']} {userInputParams['neuralOperatorParameters']['wavelet']['waveletType']}"
+        signalEncoderModelInfo = f"signalEncoder {userInputParams['optimizerType']}-{userInputParams['momentum_decay']}-{userInputParams['beta1']}-{userInputParams['beta2']} {userInputParams['numSharedEncoderLayers']}-shared specific-{userInputParams['numSpecificEncoderLayers']} numShots{userInputParams['numProfileShots']} encodedDim{userInputParams['encodedDimension']} WD{userInputParams['profileWD']}-{userInputParams['reversibleWD']}-{userInputParams['physGenWD']} LR{userInputParams['profileLR']}-{userInputParams['reversibleLR']}-{userInputParams['physGenLR']} profileParams{userInputParams['profileDimension']} {userInputParams['neuralOperatorParameters']['wavelet']['waveletType']}"
         emotionPredictionModelInfo = f"emotionPrediction on {userInputParams['deviceListed']} with {userInputParams['optimizerType']}"
 
         # Return the model information.

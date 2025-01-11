@@ -45,7 +45,7 @@ class modelConstants:
 
     # Specify the model parameters.
     initialProfileAmp = None  # The limits for the uniform initialization.
-    numEncodedWeights = None  # The number of encoded weights.
+    profileDimension = None  # The number of encoded weights.
     useInitialLoss = True  # Use the initial loss.
     modelTimeWindow = 120  # The time window for the model.
     numEpochs_minLR = 0  # The number of warmup epochs. 4
@@ -66,7 +66,7 @@ class modelConstants:
 
         # Update the model constants.
         modelConstants.initialProfileAmp = userInputParams['initialProfileAmp']
-        modelConstants.numEncodedWeights = userInputParams['numEncodedWeights']
+        modelConstants.profileDimension = userInputParams['profileDimension']
 
     # ---------------- Hard-coded therapy parameters --------------------- #
 

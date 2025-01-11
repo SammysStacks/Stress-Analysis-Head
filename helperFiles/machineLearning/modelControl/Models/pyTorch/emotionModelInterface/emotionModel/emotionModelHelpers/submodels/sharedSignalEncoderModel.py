@@ -49,7 +49,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
     def generateHealthProfile(self, healthProfile):
         healthProfile = self.applyManifoldScale(healthProfile, self.healthProfileJacobians[:, 0])
         healthProfile = self.healthGenerationModel(healthProfile.unsqueeze(1)).squeeze(1)
-        healthProfile = self.applyManifoldScale(healthProfile, self.healthProfileJacobians[:, 1])
+        # healthProfile = self.applyManifoldScale(healthProfile, self.healthProfileJacobians[:, 1])  # TODO: Do I need this??
 
         return healthProfile
 
@@ -135,7 +135,7 @@ if __name__ == "__main__":
     # General parameters.
     _neuralOperatorParameters = modelParameters.getNeuralParameters({'waveletType': 'bior3.1'})['neuralOperatorParameters']
     _batchSize, _numSignals, _sequenceLength = 1, 1, 256
-    modelConstants.numEncodedWeights = 64
+    modelConstants.profileDimension = 64
     _numSharedEncoderLayers = 1
 
     # Set up the parameters.
