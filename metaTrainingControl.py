@@ -83,8 +83,8 @@ if __name__ == "__main__":
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--momentum_decay', type=float, default=0.001, help='Momentum decay for the optimizer.')
-    parser.add_argument('--beta1', type=float, default=0.7, help='Beta1 for the optimizer: 0.7 -> 0.9')
-    parser.add_argument('--beta2', type=float, default=0.999, help='Beta2 for the optimizer: 0.9 -> 0.999')
+    parser.add_argument('--beta1', type=float, default=0.7, help='Beta1 for the optimizer: 0.5 -> 0.99')
+    parser.add_argument('--beta2', type=float, default=0.9, help='Beta2 for the optimizer: 0.9 -> 0.999')
 
     # ----------------------- Compile Parameters ----------------------- #
 
