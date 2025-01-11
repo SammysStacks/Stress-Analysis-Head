@@ -147,13 +147,10 @@ class generalVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(trainingLosses[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotSinglaParameterFlow(self, trainingValues, testingValues, labels, saveFigureLocation="", plotTitle="Model Convergence Loss", logY=False):
+    def plotSinglaParameterFlow(self, trainingValues, saveFigureLocation="", plotTitle="Model Convergence Loss", logY=False):
         for modelInd in range(len(trainingValues)):
-            plt.plot(trainingValues[modelInd], color=self.darkColors[modelInd], linewidth=0.2, alpha=0.8)
-            if testingValues is not None: plt.plot(testingValues[modelInd], color=self.darkColors[modelInd], linewidth=0.2, alpha=0.5)
-
+            plt.plot(trainingValues[modelInd], color=self.darkColors[modelInd], linewidth=0.5, alpha=0.5)
             plt.plot(np.mean(trainingValues[modelInd], axis=-1), color=self.darkColors[modelInd], linewidth=1, alpha=0.8)
-            if testingValues is not None: plt.plot(np.mean(testingValues[modelInd], axis=-1), color=self.darkColors[modelInd], linewidth=1, alpha=0.5)
         plt.xlim((0, len(trainingValues[0]) + 1))
         plt.grid(True)
 
@@ -162,7 +159,7 @@ class generalVisualizations(globalPlottingProtocols):
         plt.xlabel("Training Epoch")
         plt.ylabel("Values")
         plt.title(f"{plotTitle}")
-        plt.ylim((0.25, 3.1))
+        plt.ylim((0, 1) if 'Infinite' in plotTitle else (0, 2))
 
         # Save the figure if desired.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(trainingValues[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
