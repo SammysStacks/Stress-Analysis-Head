@@ -69,7 +69,7 @@ wds_reversible=('1e-4')
 wds_profileGen=('1e-2') 
 
 momentums_arr=('0.004' '0.01' '0.025' '0.001' '0.0025' '0.0075')  # Removed from filename
-beta1s_arr=('0.7' '0.8' '0.9' '0.6' '0.5')  # Removed from filename
+beta1s_arr=('0.7' '0.8' '0.6' '0.5')  # Removed from filename
 beta2s_arr=('0.8' '0.9' '0.99' '0.95' '0.999')  # Removed from filename
 
 for beta1s in "${beta1s_arr[@]}"
