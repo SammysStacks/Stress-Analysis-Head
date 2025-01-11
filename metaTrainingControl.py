@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
     # Add arguments for the general model
     parser.add_argument('--submodel', type=str, default=modelConstants.signalEncoderModel, help='The component of the model we are training. Options: signalEncoderModel, emotionModel')
-    parser.add_argument('--optimizerType', type=str, default='Adam', help='The optimizerType used during training convergence: Options: RMSprop, Adam, AdamW, SGD, etc.')
+    parser.add_argument('--optimizerType', type=str, default='NAdam', help='The optimizerType used during training convergence: Options: RMSprop, Adam, AdamW, SGD, etc.')
     parser.add_argument('--irreversibleLearningProtocol', type=str, default='FC', help='The learning protocol for the model: CNN, FC')
     parser.add_argument('--reversibleLearningProtocol', type=str, default='rCNN', help='The learning protocol for the model: rCNN')
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are using: cpu, cuda')
@@ -82,9 +82,9 @@ if __name__ == "__main__":
     parser.add_argument('--physGenWD', type=float, default=1e-2, help='The learning rate of the general model.')
 
     # Add arguments for the emotion and activity architecture.
-    parser.add_argument('--momentum_decay', type=float, default=0.004, help='Momentum decay for the optimizer.')
+    parser.add_argument('--momentum_decay', type=float, default=0.001, help='Momentum decay for the optimizer.')
     parser.add_argument('--beta1', type=float, default=0.9, help='Beta1 for the optimizer: 0.7 -> 0.9')
-    parser.add_argument('--beta2', type=float, default=0.999, help='Beta2 for the optimizer: 0.9 -> 0.999')
+    parser.add_argument('--beta2', type=float, default=0.9, help='Beta2 for the optimizer: 0.9 -> 0.999')
 
     # ----------------------- Compile Parameters ----------------------- #
 
