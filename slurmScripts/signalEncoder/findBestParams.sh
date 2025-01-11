@@ -57,8 +57,8 @@ lrs_profileGen=('2e-4')
 
 # Single Switchables.
 waveletTypes_arr=('bior3.1')
-#optimizers_arr=('RAdam')  # AdamW == NAdam > RAdam > Adam > Adamax
-optimizers_arr=('NAdam' 'AdamW' 'Adam')  # AdamW == NAdam > RAdam > Adam > Adamax
+optimizers_arr=('NAdam')  # AdamW == NAdam > RAdam > Adam > Adamax
+#optimizers_arr=('AdamW' 'Adam')  # AdamW == NAdam > RAdam > Adam > Adamax
 
 # Weight decay parameters.
 #wds_profile=('1e-2' '1e-4' '1e-8' '0')  # 1e-6 ==> x <== 1e-3; Removed from filename
