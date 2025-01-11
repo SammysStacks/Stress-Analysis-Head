@@ -12,7 +12,7 @@ class basicTherapyProtocol(generalTherapyProtocol):
         # Specific basic protocol parameters
         self.discretePersonalizedMap = [] # store the probability matrix
         self.gausParam_STD = self.gausParameterSTDs  # self.gausParameterSTDs  # The standard deviation for the Gaussian distribution.
-        self.gausLoss_STD = torch.tensor([0.0580])  # resampled bin width TODO: need to change it to be more general
+        self.gausLoss_STD = torch.tensor([0.0580])  # resampled bin width /TODO: need to change it to be more general
         self.uncertaintyBias = 1  # The bias for uncertainty.
         self.finishedTherapy = False    # Whether the therapy has finished.
         self.numParamsConsider = 2  # Number of temperatures to consider for the next step

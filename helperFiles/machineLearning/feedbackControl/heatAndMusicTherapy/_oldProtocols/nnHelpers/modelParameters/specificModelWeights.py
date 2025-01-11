@@ -55,7 +55,6 @@ class specificModelWeights(nn.Module):
                 nn.Linear(self.numSharedLossFeatures, self.numLossBins, bias=True),
             ))
 
-        # / TODO: double check
         # For each coefficient module.
         for stateModuleInd in range(self.numParameters):
             self.stateModules.append(nn.Sequential(

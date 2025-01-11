@@ -60,12 +60,14 @@ class modelVisualizations(globalPlottingProtocols):
                 # Plot the losses during few-shot retraining the profile.
                 self.generalViz.plotTrainingLosses(trainingLosses=[specificModel.profileModel.retrainingProfileLosses for specificModel in specificModels], testingLosses=None,
                                                    lossLabels=[f"{datasetName}" for datasetName in datasetNames],
-                                                   saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Profile Losses")
+                                                   saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Profile Convergence Losses")
 
                 # Plot the shared and specific jacobian convergences.
                 activationParamsPaths = np.asarray([specificModel.activationParamsPath for specificModel in specificModels])
-                self.generalViz.plotSinglaParameterFlow(trainingValues=activationParamsPaths[:, :, :, 0, 0], testingValues=activationParamsPaths[:, :, :, 0, 0], labels=[f"{datasetName}" for datasetName in datasetNames],
-                                                        saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Health Jacobian Convergences")
+                self.generalViz.plotSinglaParameterFlow(trainingValues=activationParamsPaths[:, :, 0, 0, 0], testingValues=None, labels=[f"{datasetName}" for datasetName in datasetNames],
+                                                        saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Infinite Bound Activations")
+                self.generalViz.plotSinglaParameterFlow(trainingValues=activationParamsPaths[:, :, 1, 0, 0], testingValues=None, labels=[f"{datasetName}" for datasetName in datasetNames],
+                                                        saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Linearity Activations")
 
     def plotAllTrainingEvents(self, submodel, modelPipeline, lossDataLoader, trainingDate, currentEpoch):
         self.accelerator.print(f"\nPlotting results for the {modelPipeline.model.datasetName} model")

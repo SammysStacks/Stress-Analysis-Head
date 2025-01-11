@@ -145,7 +145,6 @@ class nnTherapyProtocol(generalTherapyProtocol):
     def updateWeights(self, lossPredictionLoss, minimizeLossBias):
         # Calculate the total error.
 
-        #TODO: check
         total_error = lossPredictionLoss
         print('total_error: ', total_error)
         # Backpropagation.

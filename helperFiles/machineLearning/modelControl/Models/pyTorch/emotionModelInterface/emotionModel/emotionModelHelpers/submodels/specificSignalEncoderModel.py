@@ -22,7 +22,6 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
         # The neural layers for the signal encoder.
         self.profileModel = profileModel(numExperiments=numExperiments, numSignals=self.numSignals, encodedDimension=encodedDimension)
-        # self.healthProfileJacobians = self.initializeJacobianParams(self.numSignals)  # TODO
         self.processingLayers, self.neuralLayers = nn.ModuleList(), nn.ModuleList()
         for _ in range(self.numSpecificEncoderLayers): self.addLayer()
 
