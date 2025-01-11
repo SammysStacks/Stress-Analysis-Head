@@ -52,21 +52,22 @@ numProfileShots_arr=(16)
 profileParams=(128)
 
 # Collective Switchables: 90
-lrs_profile=('0.03' '0.04' '0.051' '0.06' '0.07' '0.08')  # 0.005 <= x <= 0.05
-lrs_reversible=('1e-3' '3e-4' '1e-4')  # 1e-4 <= x == 1e-3;
-lrs_profileGen=('1e-4' '5e-4' '1e-3') # # 1e-4 <= x == 1e-3; lrs_profileGen <= lrs_reversible
-#lrs_profile=('0.05' '0.075' '0.025' '0.1')
-#lrs_reversible=('5e-4')
-#lrs_profileGen=('2e-4')
+#lrs_profile=('0.03' '0.04' '0.051' '0.06' '0.07' '0.08')  # 0.005 <= x <= 0.05
+#lrs_reversible=('1e-3' '3e-4' '1e-4')  # 1e-4 <= x == 1e-3;
+#lrs_profileGen=('1e-4' '5e-4' '1e-3') # # 1e-4 <= x == 1e-3; lrs_profileGen <= lrs_reversible
+lrs_profile=('0.05')
+lrs_reversible=('5e-4')
+lrs_profileGen=('2e-4')
 
 # Single Switchables: 2
 #optimizers_arr=('Adam' 'RAdam')  # AdamW == NAdam > RAdam > Adam > Adamax
-optimizers_arr=('AdamW' 'NAdam')  # AdamW == NAdam > RAdam > Adam > Adamax
+#optimizers_arr=('AdamW' 'NAdam')  # AdamW == NAdam > RAdam > Adam > Adamax
+optimizers_arr=('AdamW')  # AdamW == NAdam > RAdam > Adam > Adamax
 
 # Weight decay parameters.
-#wds_profile=('1e-2' '1e-4' '1e-6' '1e-8')  # 1e-6 ==> x <== 1e-3; Removed from filename
-#wds_reversible=('1e-6' '1e-3' '1e-2' '0')  # 1e-4 == x <= 1e-3; Removed from filename
-#wds_profileGen=('1e-6' '1e-4' '1e-3' '0')  # 1e-5 == x <= 1e-4; Removed from filename
+wds_profile=('1e-2' '1e-4' '1e-6' '1e-8')  # 1e-6 ==> x <== 1e-3; Removed from filename
+wds_reversible=('1e-6' '1e-3' '1e-2' '0')  # 1e-4 == x <= 1e-3; Removed from filename
+wds_profileGen=('1e-6' '1e-4' '1e-3' '0')  # 1e-5 == x <= 1e-4; Removed from filename
 wds_profile=('0')  
 wds_reversible=('1e-4') 
 wds_profileGen=('1e-2') 
