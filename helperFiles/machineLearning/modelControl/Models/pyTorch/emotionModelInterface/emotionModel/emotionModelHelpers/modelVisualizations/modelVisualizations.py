@@ -105,7 +105,7 @@ class modelVisualizations(globalPlottingProtocols):
             
             # Compile additional information for the model.getActivationParamsFullPassPath
             activationCurvePath, activationModuleNames = model.getActivationCurvesFullPassPath()  # numModules, 2, numPoints
-            rotationAngles, eigenvaluesPath, rotationModuleNames = model.getEigenvalueFullPassPath(device=self.accelerator.device)  # numModules, numAngles
+            rotationAngles, eigenvaluesPath, moduleNames = model.getEigenvalueFullPassPath(device=self.accelerator.device)  # numModules, numAngles
             globalPlottingProtocols.clearFigure(fig=None, legend=None, showPlot=False)
             batchInd, signalInd = 0, -1
 
@@ -129,8 +129,8 @@ class modelVisualizations(globalPlottingProtocols):
                     self.signalEncoderViz.plotProfileReconstruction(resampledBiomarkerTimes, healthProfile, reconstructedHealthProfile, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Health Profile Reconstruction")
 
                     # # Plot the eigenvalue information.
-                    self.signalEncoderViz.plotEigenvalueAngles(rotationAngles, rotationModuleNames, epoch=currentEpoch, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="Rotation Angles")
-                    self.signalEncoderViz.plotEigenValueLocations(eigenvaluesPath, epoch=currentEpoch, signalInd=0, saveFigureLocation="signalEncoding/", plotTitle="Specific Spatial Eigenvalues on Circle")
+                    self.signalEncoderViz.plotEigenvalueAngles(rotationAngles, moduleNames, epoch=currentEpoch, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="Rotation Angles")
+                    self.signalEncoderViz.plotEigenValueLocations(eigenvaluesPath, moduleNames, epoch=currentEpoch, signalInd=0, saveFigureLocation="signalEncoding/", plotTitle="Specific Spatial Eigenvalues on Circle")
                     # self.signalEncoderViz.modelPropagation3D(rotationAngles=rotationAngles, epoch=currentEpoch, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="3D Spatial Specific Eigenvalues by Layer")
 
                     # Plot the activation information.

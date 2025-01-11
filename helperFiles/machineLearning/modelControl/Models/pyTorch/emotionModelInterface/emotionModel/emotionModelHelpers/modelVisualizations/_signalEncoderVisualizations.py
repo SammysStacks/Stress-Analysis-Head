@@ -236,12 +236,12 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotEigenValueLocations(self, eigenvaluesPath, epoch, signalInd, saveFigureLocation, plotTitle):
+    def plotEigenValueLocations(self, eigenvaluesPath, moduleNames, epoch, signalInd, saveFigureLocation, plotTitle):
         numLayers, nCols = len(eigenvaluesPath), min(6, len(eigenvaluesPath))
         nRows, layerInd = math.ceil(numLayers / nCols), 0
 
         # Create the figure and axes
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False)
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(3 * nCols, 2 * nRows), squeeze=False)
         axes = axes.flatten()
 
         for layerInd, ax in enumerate(axes[:numLayers]):
@@ -265,7 +265,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.add_patch(circle)
 
             # Customize appearance
-            ax.set_title(f"{plotTitle}\nEpoch {epoch}, Signal {signalInd + 1}, Layer {layerInd + 1}")
+            ax.set_title(f"{moduleNames[layerInd].split(".")[-2]}")
             ax.set_xlabel("Real part")
             ax.set_ylabel("Imag part")
             ax.axis('equal')
@@ -281,12 +281,12 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} layerInd{layerInd} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotEigenvalueAngles(self, rotationAngles, rotationModuleNames, epoch, degreesFlag, saveFigureLocation, plotTitle):
+    def plotEigenvalueAngles(self, rotationAngles, moduleNames, epoch, degreesFlag, saveFigureLocation, plotTitle):
         numLayers, nCols = len(rotationAngles), min(6, len(rotationAngles))
         nRows = math.ceil(numLayers / nCols)
 
         # Create a figure and axes array
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False)  # squeeze=False ensures axes is 2D
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(3 * nCols, 2 * nRows), squeeze=False)  # squeeze=False ensures axes is 2D
 
         # Flatten axes for easy indexing if you prefer
         axes = axes.flatten()
@@ -299,7 +299,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             units = "degrees" if degreesFlag else "radians"
             degrees = 200 if degreesFlag else 3.25
             # Customize subplot title and axes
-            ax.set_title(f"{rotationModuleNames[layerInd].split(".")[-2]}")
+            ax.set_title(f"{moduleNames[layerInd].split(".")[-3]}")
             ax.set_xlabel(f"Angle ({units})")
             ax.set_xlim((0, degrees))
             ax.set_ylabel("Density")
