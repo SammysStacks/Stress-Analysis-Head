@@ -34,7 +34,7 @@ lrs_profileGen=('1e-4') # # 5e-5 <= x == 1e-4; Removed from filename
 lrs_reversible=('1e-3')  # 1e-4 <= x == 1e-3; Removed from filename
 
 # Finished
-encodedDimensions_arr=(256)
+encodedDimensions_arr=(128)
 waveletTypes_arr=('bior3.1')
 
 # Collective Switchables: 20
