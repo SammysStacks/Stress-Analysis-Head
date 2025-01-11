@@ -32,7 +32,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
         # Initialize the neural layers.
         self.activationFunction = activationFunctions.getActivationMethod(activationMethod)
-        self.jacobianParameter = self.initializeJacobianParams(1)  # TODO: or 1
+        self.jacobianParameter = self.initializeJacobianParams(numSignals)  # TODO: or 1
         self.linearOperators = nn.ParameterList()
 
         # Create the neural layers.
