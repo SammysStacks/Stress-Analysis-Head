@@ -47,11 +47,11 @@ class reversibleLinearSoftSign(reversibleInterface):
         convergentPoint = 2*torch.sigmoid(self.convergencePointParam)  # Convert the infinite bound to a sigmoid value.
         linearity = 1 / (1 + convergentPoint) / (1 - infiniteBound + 1e-10)
 
-        return infiniteBound, linearity
+        return infiniteBound, linearity, convergentPoint
 
     def forward(self, x, linearModel, forwardFirst=True):
         # Set the parameters for the forward and inverse passes.
-        self.infiniteBound, self.linearity = self.getActivationParams()
+        self.infiniteBound, self.linearity = self.getActivationParams()[0:2]
 
         # forwardPass: Increase the signal below inversion point; decrease above.
         x = self.forwardPass(x) if forwardFirst else self.inversePass(x)

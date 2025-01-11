@@ -66,6 +66,7 @@ class modelVisualizations(globalPlottingProtocols):
                 activationParamsPaths = np.asarray([specificModel.activationParamsPath for specificModel in specificModels])  # numModels, numModules, numPoints, numParams=1, numLayers?=1
                 self.generalViz.plotSinglaParameterFlow(activationParamsPaths=activationParamsPaths[:, :, :, 0, 0], saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Infinite Bound Activations")
                 self.generalViz.plotSinglaParameterFlow(activationParamsPaths=activationParamsPaths[:, :, :, 1, 0], saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Linearity Activations")
+                self.generalViz.plotSinglaParameterFlow(activationParamsPaths=activationParamsPaths[:, :, :, 2, 0], saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Convergent Activations")
 
     def plotAllTrainingEvents(self, submodel, modelPipeline, lossDataLoader, trainingDate, currentEpoch):
         self.accelerator.print(f"\nPlotting results for the {modelPipeline.model.datasetName} model")
