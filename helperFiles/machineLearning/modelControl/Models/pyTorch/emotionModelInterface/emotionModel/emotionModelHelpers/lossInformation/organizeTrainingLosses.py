@@ -47,7 +47,6 @@ class organizeTrainingLosses(lossCalculations):
             # Store the signal encoder loss information.
             self.storeLossInformation(trainingLoss=signalReconstructedTrainingLosses, testingLoss=signalReconstructedTestingLosses, trainingHolder=model.specificSignalEncoderModel.trainingLosses_signalReconstruction, testingHolder=model.specificSignalEncoderModel.testingLosses_signalReconstruction)
             self.storeLossInformation(trainingLoss=activationParamsPath, testingLoss=None, trainingHolder=model.specificSignalEncoderModel.activationParamsPath, testingHolder=None)
-            # self.storeLossInformation(specificJacobians, sharedJacobians, model.specificSignalEncoderModel.specificJacobianFlow, model.specificSignalEncoderModel.sharedJacobianFlow)
             self.accelerator.print("Reconstruction loss values:", signalReconstructedTrainingLosses.nanmean().item(), signalReconstructedTestingLosses.nanmean().item())
 
             # Calculate the activity classification accuracy/loss and assert the integrity of the loss.
