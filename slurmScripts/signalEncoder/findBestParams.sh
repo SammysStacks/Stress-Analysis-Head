@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Optimizer parameters.
-optimizers_arr=('NAdam' 'AdamW')  # AdamW == NAdam > RAdam > Adam > Adamax
-momentums_arr=('0.004')  # Removed from filename
+optimizers_arr=('NAdam' 'AdamW')  # AdamW == NAdam > Adam ~= RAdam > Adamax
+momentums_arr=('0.001')  # Removed from filename
 beta1s_arr=('0.7')  # Removed from filename
-beta2s_arr=('0.9')  # Removed from filename
+beta2s_arr=('0.8')  # Removed from filename
 
 # Weight decay parameters.
 wds_profile=('1e-6')  # 1e-6 ==> x <== 1e-3; Removed from filename
@@ -45,19 +45,19 @@ numSharedEncoderLayers_arr=(6)
 
 # Collective Switchables: 5
 #numProfileShots_arr=(32 20 16 12 8)
-numProfileShots_arr=(24)
+numProfileShots_arr=(16)
 
 # Collective Switchables: 4
 #profileParams=(16 64 128 256)
 profileParams=(128)
 
 # Collective Switchables: 90
-#lrs_profile=('0.01' '0.02' '0.03' '0.04' '0.051' '0.06' '0.07' '0.08' '0.09' '0.1')  # 0.005 <= x <= 0.05
-#lrs_reversible=('1e-3' '3e-4' '1e-4')  # 1e-4 <= x == 1e-3;
-#lrs_profileGen=('1e-4' '5e-4' '1e-3') # # 1e-4 <= x == 1e-3; lrs_profileGen <= lrs_reversible
-lrs_profile=('0.05')
-lrs_reversible=('5e-4')
-lrs_profileGen=('2e-4')
+lrs_profile=('0.01' '0.02' '0.03' '0.04' '0.051' '0.06' '0.07' '0.08' '0.09' '0.1')  # 0.005 <= x <= 0.05
+lrs_reversible=('1e-3' '3e-4' '1e-4')  # 1e-4 <= x == 1e-3;
+lrs_profileGen=('1e-4' '5e-4' '1e-3') # # 1e-4 <= x == 1e-3; lrs_profileGen <= lrs_reversible
+#lrs_profile=('0.05' '0.075' '0.025' '0.1')
+#lrs_reversible=('5e-4')
+#lrs_profileGen=('2e-4')
 
 # Single Switchables: 2
 #optimizers_arr=('Adam' 'RAdam')  # AdamW == NAdam > RAdam > Adam > Adamax
@@ -71,9 +71,9 @@ wds_profile=('0')
 wds_reversible=('1e-4') 
 wds_profileGen=('1e-2') 
 
-momentums_arr=('0.004' '0.01' '0.025' '0.001' '0.0025' '0.0075')  # Removed from filename
-beta1s_arr=('0.7' '0.8' '0.6' '0.5')  # Removed from filename
-beta2s_arr=('0.8' '0.9' '0.99' '0.95' '0.999')  # Removed from filename
+#momentums_arr=('0.004' '0.01' '0.025' '0.001' '0.0025' '0.0075')  # Removed from filename
+#beta1s_arr=('0.7' '0.8' '0.6' '0.5')  # Removed from filename
+#beta2s_arr=('0.8' '0.9' '0.99' '0.95' '0.999')  # Removed from filename
 
 for beta1s in "${beta1s_arr[@]}"
 do
