@@ -199,8 +199,8 @@ class emotionModelHead(nn.Module):
         if 'specific' in name: compiledName = 'specific' + compiledName; assert 'shared' not in name
         elif 'shared' in name: compiledName = 'shared' + compiledName; assert 'specific' not in name
         if 'neuralLayers' in name: compiledName = compiledName + ' WNO'; assert 'processingLayers' not in name
-        if 'highFrequenciesWeights' in name: compiledName = compiledName + ' highFrequency'; assert 'lowFrequencyWeights' not in name
-        elif 'lowFrequencyWeights' in name: compiledName = compiledName + ' lowFrequency'; assert 'highFrequenciesWeights' not in name
+        if 'highFrequenciesWeights' in name: compiledName = compiledName + ' highFreq'; assert 'lowFrequencyWeights' not in name
+        elif 'lowFrequencyWeights' in name: compiledName = compiledName + ' lowFreq'; assert 'highFrequenciesWeights' not in name
         compiledName = compiledName + ' Layer' + name.split('.')[-1]
 
         return compiledName
