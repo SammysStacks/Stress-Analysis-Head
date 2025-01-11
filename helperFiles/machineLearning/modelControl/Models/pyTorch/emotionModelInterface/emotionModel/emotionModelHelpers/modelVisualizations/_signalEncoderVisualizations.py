@@ -261,7 +261,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.axvline(0, color=self.blackColor, linewidth=0.5, alpha=0.25)
 
             # Draw unit circle for reference
-            arc = Arc((0, 0), width=1, height=1, theta1=0, theta2=180, color=self.blackColor, linewidth=1)
+            arc = Arc((0, 0), width=2, height=2, theta1=0, theta2=180, color=self.blackColor, linewidth=1)
             ax.add_patch(arc)
 
             # Customize appearance
