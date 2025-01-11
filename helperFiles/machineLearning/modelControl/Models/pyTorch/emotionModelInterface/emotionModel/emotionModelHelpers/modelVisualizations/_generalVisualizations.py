@@ -147,11 +147,17 @@ class generalVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(trainingLosses[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotSinglaParameterFlow(self, trainingValues, saveFigureLocation="", plotTitle="Model Convergence Loss", logY=False):
-        for modelInd in range(len(trainingValues)):
-            plt.plot(trainingValues[modelInd], color=self.darkColors[modelInd], linewidth=0.5, alpha=0.5)
-            plt.plot(np.mean(trainingValues[modelInd], axis=-1), color=self.darkColors[modelInd], linewidth=1, alpha=0.8)
-        plt.xlim((0, len(trainingValues[0]) + 1))
+    def plotSinglaParameterFlow(self, activationParamsPaths, saveFigureLocation="", plotTitle="Model Convergence Loss", logY=False):
+        activationParams = [[]]
+
+        for modelInd in range(len(activationParamsPaths)):
+            activationParamsPath = activationParamsPaths[modelInd]
+            for moduleInd in range(len(activationParamsPath)):
+                activationParams = activationParamsPath[moduleInd]
+
+                plt.plot(activationParams, color=self.darkColors[modelInd], linewidth=0.5, alpha=0.5)
+                plt.plot(np.mean(activationParams, axis=-1), color=self.darkColors[modelInd], linewidth=1, alpha=0.8)
+        plt.xlim((0, len(activationParams) + 1))
         plt.grid(True)
 
         # Label the plot.
@@ -162,7 +168,7 @@ class generalVisualizations(globalPlottingProtocols):
         plt.ylim((0, 1) if 'Infinite' in plotTitle else (0, 2))
 
         # Save the figure if desired.
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(trainingValues[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(activationParams)}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def generalDataPlotting(self, plottingData, plottingLabels, saveFigureLocation, plotTitle="Model Convergence Loss"):
