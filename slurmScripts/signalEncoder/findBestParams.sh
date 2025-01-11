@@ -2,7 +2,7 @@
 
 # Optimizer parameters.
 optimizers_arr=('NAdam' 'AdamW')  # AdamW == NAdam > RAdam >= Adam > Adamax
-momentums_arr=('0.001')  # Removed from filename
+momentums_arr=('0.01')  # Removed from filename
 beta1s_arr=('0.7')  # Removed from filename
 beta2s_arr=('0.8')  # Removed from filename
 
