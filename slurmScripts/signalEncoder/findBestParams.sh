@@ -49,7 +49,7 @@ numProfileShots_arr=(24)
 
 # Collective Switchables: 4
 #profileParams=(16 64 128 256)
-profileParams=(32)
+profileParams=(128)
 
 # Collective Switchables: 90
 #lrs_profile=('0.01' '0.02' '0.03' '0.04' '0.051' '0.06' '0.07' '0.08' '0.09' '0.1')  # 0.005 <= x <= 0.05

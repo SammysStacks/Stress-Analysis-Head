@@ -68,8 +68,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def initializeJacobianParams(numSignals):
-        if numSignals == 1: return nn.Parameter(0 * torch.ones((1, numSignals)))
-        else: return nn.Parameter(0 * torch.ones((1, numSignals, 1)))
+        return nn.Parameter(torch.zeros((1, numSignals)))
 
     def healthGeneration(self, numOutputFeatures):
         if numOutputFeatures < modelConstants.profileDimension: raise ValueError(f"Number of outputs ({numOutputFeatures}) must be greater than inputs ({modelConstants.profileDimension})")

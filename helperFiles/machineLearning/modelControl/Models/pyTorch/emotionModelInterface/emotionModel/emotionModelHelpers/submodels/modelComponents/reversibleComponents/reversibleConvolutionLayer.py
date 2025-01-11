@@ -22,6 +22,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         self.numSignals = numSignals  # The number of signals in the input data.
         self.numLayers = numLayers  # The number of layers in the reversible linear layer.
         self.eigenvalues, self.eigenvectors = nn.ParameterList(), nn.ParameterList()  # The eigenvalues and eigenvectors of the linear operator.
+        # TODO: Add eigenvectors to the model.
 
         # The restricted window for the neural weights.
         upperWindowMask = torch.ones(self.sequenceLength, self.sequenceLength, dtype=torch.float64)
@@ -32,7 +33,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
         # Initialize the neural layers.
         self.activationFunction = activationFunctions.getActivationMethod(activationMethod)
-        self.jacobianParameter = self.initializeJacobianParams(numSignals)  # TODO: or 1
+        self.jacobianParameter = self.initializeJacobianParams(numSignals)
         self.linearOperators = nn.ParameterList()
 
         # Create the neural layers.
