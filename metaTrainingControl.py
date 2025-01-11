@@ -59,7 +59,7 @@ if __name__ == "__main__":
     parser.add_argument('--initialProfileAmp', type=float, default=0.01, help='The limits for profile initialization, [0.005, 0.05]')
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=2, help='The number of layers in the model.')
     parser.add_argument('--numSharedEncoderLayers', type=int, default=6, help='The number of layers in the model.')
-    parser.add_argument('--profileDimension', type=int, default=32, help='The number of profile weights.')
+    parser.add_argument('--profileDimension', type=int, default=128, help='The number of profile weights.')
     parser.add_argument('--numProfileShots', type=int, default=24, help='The epochs for profile training.')
 
     # Add arguments for the emotion and activity architecture.
@@ -83,8 +83,8 @@ if __name__ == "__main__":
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--momentum_decay', type=float, default=0.001, help='Momentum decay for the optimizer.')
-    parser.add_argument('--beta1', type=float, default=0.7, help='Beta1 for the optimizer: 0.5 -> 0.99')
-    parser.add_argument('--beta2', type=float, default=0.9, help='Beta2 for the optimizer: 0.9 -> 0.999')
+    parser.add_argument('--beta1', type=float, default=0.7, help='Beta1 for the optimizer: 0.5 -> 0.99')  # 0.6, 0.7, 0.8
+    parser.add_argument('--beta2', type=float, default=0.8, help='Beta2 for the optimizer: 0.9 -> 0.999')  # 0.8, 0.9
 
     # ----------------------- Compile Parameters ----------------------- #
 
