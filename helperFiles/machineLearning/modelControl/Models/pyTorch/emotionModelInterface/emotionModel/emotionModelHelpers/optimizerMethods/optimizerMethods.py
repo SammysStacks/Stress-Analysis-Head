@@ -86,7 +86,6 @@ class optimizerMethods:
         elif optimizerType == 'NAdam':
             # NAdam combines Adam with Nesterov momentum, aiming to combine the benefits of Nesterov and Adam.
             # Use in deep architectures where fine control over convergence is needed.
-            # return optim.NAdam(params, lr=lr, betas=(0.95, 0.999), weight_decay=weight_decay, momentum_decay=0.004, decoupled_weight_decay=True)
             return optim.NAdam(params, lr=lr, betas=(beta1, beta2), weight_decay=weight_decay, momentum_decay=momentum_decay, decoupled_weight_decay=True)
         elif optimizerType == 'RAdam':
             # RAdam (Rectified Adam) is an Adam variant that introduces a term to rectify the variance of the adaptive learning rate.

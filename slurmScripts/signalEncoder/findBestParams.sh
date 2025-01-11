@@ -37,8 +37,8 @@ lrs_reversible=('1e-3')  # 1e-4 <= x == 1e-3; Removed from filename
 # Collective Switchables: 128
 #numSpecificEncoderLayers_arr=(1 2 3)
 #numSharedEncoderLayers_arr=(4 6 12 16 24)
-numSpecificEncoderLayers_arr=(1)
-numSharedEncoderLayers_arr=(8)
+numSpecificEncoderLayers_arr=(2)
+numSharedEncoderLayers_arr=(6)
 
 # Collective Switchables: 256
 encodedDimensions_arr=(256)
@@ -64,9 +64,13 @@ optimizers_arr=('NAdam' 'AdamW' 'Adam')  # AdamW == NAdam > RAdam > Adam > Adama
 #wds_profile=('1e-2' '1e-4' '1e-8' '0')  # 1e-6 ==> x <== 1e-3; Removed from filename
 #wds_reversible=('1e-6' '1e-3' '1e-2' '0')  # 1e-4 == x <= 1e-3; Removed from filename
 #wds_profileGen=('1e-6' '1e-4' '1e-2' '0')  # 1e-5 == x <= 1e-4; Removed from filename
-wds_profile=('1e-6')  
+wds_profile=('0')  
 wds_reversible=('1e-4') 
-wds_profileGen=('1e-5') 
+wds_profileGen=('1e-2') 
+
+momentums_arr=('0.004' '0.01' '0.025' '0.001' '0.0025' '0.0075')  # Removed from filename
+beta1s_arr=('0.7' '0.8' '0.9' '0.6' '0.5')  # Removed from filename
+beta2s_arr=('0.8' '0.9' '0.99' '0.95' '0.999')  # Removed from filename
 
 for beta1s in "${beta1s_arr[@]}"
 do
