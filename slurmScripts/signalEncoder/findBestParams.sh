@@ -68,9 +68,9 @@ optimizers_arr=('AdamW')  # AdamW == NAdam > RAdam > Adam > Adamax
 wds_profile=('1e-2' '1e-4' '1e-6' '1e-8')  # 1e-6 ==> x <== 1e-3; Removed from filename
 wds_reversible=('1e-6' '1e-3' '1e-2' '0')  # 1e-4 == x <= 1e-3; Removed from filename
 wds_profileGen=('1e-6' '1e-4' '1e-3' '0')  # 1e-5 == x <= 1e-4; Removed from filename
-wds_profile=('0')  
-wds_reversible=('1e-4') 
-wds_profileGen=('1e-2') 
+#wds_profile=('0')  
+#wds_reversible=('1e-4') 
+#wds_profileGen=('1e-2') 
 
 #momentums_arr=('0.004' '0.01' '0.025' '0.001' '0.0025' '0.0075')  # Removed from filename
 #beta1s_arr=('0.7' '0.8' '0.6' '0.5')  # Removed from filename
