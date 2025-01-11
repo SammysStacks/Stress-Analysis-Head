@@ -84,8 +84,8 @@ class modelParameters:
     # -------------------------- Compilation Parameters ------------------------- #
 
     @staticmethod
-    def getExclusionSequenceCriteria(): return 32, 32, 2, 0.25, 0.15  # minSequencePoints, minSignalPresentCount, minBoundaryPoints, maxSinglePointDiff, maxAverageDiff
-    # TODO: 0.2, 0.2
+    def getExclusionSequenceCriteria(): return 32, 32, 2, 0.2, 0.2  # minSequencePoints, minSignalPresentCount, minBoundaryPoints, maxSinglePointDiff, maxAverageDiff
+    # TODO: 0.2, 0.2 (Old) | 0.25, 0.15 (1-11)
 
     # -------------------------- Saving/Loading Parameters ------------------------- #
 
