@@ -119,6 +119,7 @@ class generalVisualizations(globalPlottingProtocols):
 
             # Plot the training losses.
             plt.errorbar(x=np.arange(len(trainingLoss)), y=trainingLoss, yerr=trainingStandardError, color=self.darkColors[modelInd], linewidth=1)
+            plt.plot(modelTrainingLosses, '--', color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
 
             if testingLosses is not None:
                 modelTestingLosses = np.asarray(testingLosses[modelInd])
@@ -126,19 +127,11 @@ class generalVisualizations(globalPlottingProtocols):
                 N = np.sum(~np.isnan(modelTestingLosses), axis=-1)
                 testingStd = np.nanstd(modelTestingLosses, ddof=1, axis=-1) / np.sqrt(N)
                 testingLoss = np.nanmean(modelTestingLosses, axis=-1)
+                modelTestingLosses[np.isnan(modelTestingLosses)] = None
 
                 # Plot the testing losses.
                 plt.errorbar(x=np.arange(len(testingLoss)), y=testingLoss, yerr=testingStd, color=self.darkColors[modelInd], linewidth=1)
-
-        # Plot the individual losses.
-        for modelInd in range(len(trainingLosses)):
-            modelTrainingLosses = np.asarray(trainingLosses[modelInd])
-            plt.plot(np.asarray(modelTrainingLosses), '--', color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
-
-            if testingLosses is not None:
-                modelTestingLosses = np.asarray(testingLosses[modelInd])
-                testingLoss = np.asarray(modelTestingLosses); testingLoss[np.isnan(testingLoss)] = None
-                plt.plot(testingLoss, '-', color=self.darkColors[modelInd], linewidth=1, alpha=0.025)
+                plt.plot(modelTestingLosses, '-', color=self.darkColors[modelInd], linewidth=1, alpha=0.025)
 
         # Plot gridlines.
         plt.hlines(y=0.1, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=1)

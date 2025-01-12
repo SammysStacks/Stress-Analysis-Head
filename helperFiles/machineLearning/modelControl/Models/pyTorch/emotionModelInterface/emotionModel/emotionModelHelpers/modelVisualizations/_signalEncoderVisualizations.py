@@ -243,15 +243,13 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False)  # squeeze=False ensures axes is 2D
-
-        # Flatten axes for easy indexing if you prefer
-        axes = axes.flatten()
+        axes = axes.flatten()  # Flatten axes for easy indexing if you prefer
 
         for layerInd in range(numModuleLayers):
+            signalAngleLocations = np.exp(np.asarray(givensAnglesPath[layerInd][signalInd]) * 1j)
             ax = axes[layerInd]  # which subplot to use
 
             # Scatter training eigenvalues
-            signalAngleLocations = np.exp(np.asarray(givensAnglesPath[layerInd][signalInd]) * 1j)
             x, y = signalAngleLocations.real, signalAngleLocations.imag
             ax.scatter(x, y, color=self.lightColors[1], label="Training", s=10, linewidth=0.2, alpha=0.5)
 
