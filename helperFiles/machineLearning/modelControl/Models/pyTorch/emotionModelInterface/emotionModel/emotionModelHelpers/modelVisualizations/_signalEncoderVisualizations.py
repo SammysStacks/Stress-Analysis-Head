@@ -239,7 +239,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
     def plotEigenValueLocations(self, givensAnglesPath, scalingFactorsPath, reversibleModuleNames, epoch, signalInd, saveFigureLocation, plotTitle):
         # givensAnglesPath: numModuleLayers, numSignals, numFreeParameters
         numModuleLayers, nCols = len(givensAnglesPath), min(6, len(givensAnglesPath))
-        givensAngleLocationsPath = np.exp(givensAnglesPath * 1j)
+        givensAngleLocationsPath = np.exp(givensAnglesPath)
         nRows = math.ceil(numModuleLayers / nCols)
 
         # Create a figure and axes array
