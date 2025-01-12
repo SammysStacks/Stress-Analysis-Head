@@ -107,25 +107,39 @@ class generalVisualizations(globalPlottingProtocols):
         # Assert the validity of the input data.
         assert len(trainingLosses) == len(lossLabels), "Number of loss labels must match the number of loss indices."
         if len(trainingLosses[0]) == 0: return None
+        trainingLosses = np.asarray(trainingLosses)
+        numModels, numEpochs, numSignals = trainingLosses.shape
 
         # Plot the average losses.
-        for modelInd in range(len(trainingLosses)):
-            N = np.sum(~np.isnan(trainingLosses[modelInd]), axis=0)
-            trainingSTD = np.nanstd(trainingLosses[modelInd], ddof=1, axis=0) / np.sqrt(N)
-            trainingLoss = np.nanmean(trainingLosses[modelInd], axis=0)
-            plt.errorbar(x=np.arange(len(trainingLoss)), y=trainingLoss, yerr=trainingSTD, color=self.darkColors[modelInd], linewidth=1)
+        for modelInd in range(numModels):
+            modelTrainingLosses = trainingLosses[modelInd]
+
+            # Calculate the average and standard deviation of the training losses.
+            N = np.sum(~np.isnan(modelTrainingLosses), axis=-1)
+            trainingStandardError = np.nanstd(modelTrainingLosses, ddof=1, axis=-1) / np.sqrt(N)
+            trainingLoss = np.nanmean(modelTrainingLosses, axis=-1)
+
+            # Plot the training losses.
+            plt.errorbar(x=np.arange(len(trainingLoss)), y=trainingLoss, yerr=trainingStandardError, color=self.darkColors[modelInd], linewidth=1)
 
             if testingLosses is not None:
-                N = np.sum(~np.isnan(testingLosses[modelInd]), axis=0)
-                testingStd = np.nanstd(testingLosses[modelInd], ddof=1, axis=0) / np.sqrt(N)
-                testingLoss = np.nanmean(testingLosses[modelInd], axis=0)
+                modelTestingLosses = testingLosses[modelInd]
+                # Calculate the average and standard deviation of the testing losses.
+                N = np.sum(~np.isnan(modelTestingLosses), axis=-1)
+                testingStd = np.nanstd(modelTestingLosses, ddof=1, axis=-1) / np.sqrt(N)
+                testingLoss = np.nanmean(modelTestingLosses, axis=-1)
+
+                # Plot the testing losses.
                 plt.errorbar(x=np.arange(len(testingLoss)), y=testingLoss, yerr=testingStd, color=self.darkColors[modelInd], linewidth=1)
 
         # Plot the individual losses.
         for modelInd in range(len(trainingLosses)):
-            plt.plot(np.asarray(trainingLosses[modelInd]), '--', color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
+            modelTrainingLosses = trainingLosses[modelInd]
+            plt.plot(np.asarray(modelTrainingLosses), '--', color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
+
             if testingLosses is not None:
-                testingLoss = np.asarray(testingLosses[modelInd]); testingLoss[np.isnan(testingLoss)] = None
+                modelTestingLosses = testingLosses[modelInd]
+                testingLoss = np.asarray(modelTestingLosses); testingLoss[np.isnan(testingLoss)] = None
                 plt.plot(testingLoss, '-', color=self.darkColors[modelInd], linewidth=1, alpha=0.025)
 
         # Plot gridlines.
