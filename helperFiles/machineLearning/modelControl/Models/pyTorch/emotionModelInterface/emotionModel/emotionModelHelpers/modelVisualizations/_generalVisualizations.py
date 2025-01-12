@@ -24,16 +24,14 @@ class generalVisualizations(globalPlottingProtocols):
     @staticmethod
     def plotPredictions(allTrainingLabels, allTestingLabels, allPredictedTrainingLabels, allPredictedTestingLabels, numClasses, plotTitle="Emotion Prediction"):
         # Plot the data correlation.
-        plt.plot(allPredictedTrainingLabels, allTrainingLabels, 'ko',
-                 markersize=6, alpha=0.3, label="Training Points")
-        plt.plot(allPredictedTestingLabels, allTestingLabels, '*',
-                 color='tab:blue', markersize=6, alpha=0.6, label="Testing Points")
+        plt.plot(allPredictedTrainingLabels, allTrainingLabels, 'ko', markersize=6, alpha=0.3, label="Training Points")
+        plt.plot(allPredictedTestingLabels, allTestingLabels, '*', color='tab:blue', markersize=6, alpha=0.6, label="Testing Points")
         plt.xlabel("Predicted Emotion Rating")
+        plt.xlim((-0.1, numClasses-0.9))
+        plt.ylim((-0.1, numClasses-0.9))
         plt.ylabel("Emotion Rating")
         plt.title(f"{plotTitle}")
         plt.legend(loc="best")
-        plt.xlim((-0.1, numClasses-0.9))
-        plt.ylim((-0.1, numClasses-0.9))
         plt.show()
 
     @staticmethod
@@ -113,6 +111,7 @@ class generalVisualizations(globalPlottingProtocols):
         # Plot the average losses.
         for modelInd in range(numModels):
             modelTrainingLosses = trainingLosses[modelInd]
+            # modelTrainingLosses: numEpochs, numSignals
 
             # Calculate the average and standard deviation of the training losses.
             N = np.sum(~np.isnan(modelTrainingLosses), axis=-1)

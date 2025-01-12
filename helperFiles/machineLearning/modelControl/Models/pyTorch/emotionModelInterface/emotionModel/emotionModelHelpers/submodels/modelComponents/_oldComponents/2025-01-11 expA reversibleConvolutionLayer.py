@@ -34,14 +34,14 @@ class reversibleConvolutionLayer(reversibleInterface):
         # Initialize the neural layers.
         self.activationFunction = activationFunctions.getActivationMethod(activationMethod)
         self.jacobianParameter = self.initializeJacobianParams(numSignals)
-        self.givensRotationParams = nn.ParameterList()
+        self.linearOperators = nn.ParameterList()
 
         # Create the neural layers.
         for layerInd in range(self.numLayers):
             # Create the neural weights.
             parameters = nn.Parameter(torch.randn(self.numSignals, self.numFreeParameters or 1, dtype=torch.float64))
             parameters = nn.init.kaiming_uniform_(parameters)
-            self.givensRotationParams.append(parameters)
+            self.linearOperators.append(parameters)
 
     def forward(self, inputData):
         for layerInd in range(self.numLayers):
@@ -67,7 +67,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
         return outputData
 
-    # ------------------- Rotation Methods ------------------- #
+    # ------------------- Linearity ------------------- #
 
     def getExpA(self, layerInd, device):
         A = self.getA(layerInd, device)  # Get the linear operator in the exponent.
@@ -75,23 +75,26 @@ class reversibleConvolutionLayer(reversibleInterface):
 
         # Get the exponential of the linear operator.
         expA = A.matrix_exp()  # For orthogonal matrices: A.exp().inverse() = (-A).exp(); If A is Skewed Symmetric: A.exp().inverse() = A.exp().transpose()
+        # print(A[0, 0:6, 0:6])
+        # print(expA[0, 0:6, 0:6])
+        # print(torch.linalg.eigh(A)[0])
+
         return expA  # exp(A)
 
     def getA(self, layerInd, device):
         # Gather the corresponding kernel values for each position for a skewed symmetric matrix.
         A = torch.zeros(self.numSignals, self.sequenceLength, self.sequenceLength, device=device, dtype=torch.float64)
-
-        # Populate the Givens rotation angles.
-        givensAngles = self.getGivensAngles(layerInd)
-        A[:, self.rowInds, self.colInds] = -givensAngles
-        A[:, self.colInds, self.rowInds] = givensAngles
+        A[:, self.rowInds, self.colInds] = -self.linearOperators[layerInd]
+        A[:, self.colInds, self.rowInds] = self.linearOperators[layerInd]
 
         return A
 
-    def getGivensAngles(self, layerInd):
-        return -torch.pi + torch.pi * torch.sigmoid(self.givensRotationParams[layerInd])
+    # ------------------- Activation Functions ------------------- #
 
-    # ------------------- Scaling Methods ------------------- #
+    def applyManifoldScale(self, inputData):
+        scalarValues = self.getJacobianScalar().expand_as(inputData)
+        if not reversibleInterface.forwardDirection: return inputData * scalarValues
+        else: return inputData / scalarValues
 
     @staticmethod
     def initializeJacobianParams(numSignals):
@@ -101,18 +104,17 @@ class reversibleConvolutionLayer(reversibleInterface):
         jacobianMatrix = 0.9 + 0.2 * torch.sigmoid(self.jacobianParameter)
         return jacobianMatrix
 
-    def applyManifoldScale(self, inputData):
-        scalarValues = self.getJacobianScalar().expand_as(inputData)
-        if not reversibleInterface.forwardDirection: return inputData * scalarValues
-        else: return inputData / scalarValues
+    # ------------------- Activation Functions ------------------- #
 
-    # ------------------------------------------------------------ #
+    def getEigenvalues(self, layerInd, device):
+        # Compute eigenvalues of A
+        A = self.getA(layerInd, device)
+        eigenvalues = torch.linalg.eigvals(A)
 
-    def getLinearParams(self, layerInd):
-        givensAngles = self.getGivensAngles(layerInd)  # Dim: numSignals, numFreeParameters
-        scalingFactors = self.getJacobianScalar()[0, :, 0]  # Dim: numSignals
+        # Eigenvalues are all imaginary.
+        omega_angles = torch.unique(eigenvalues.imag.abs())
 
-        return givensAngles, scalingFactors
+        return omega_angles
 
     def printParams(self):
         # Count the trainable parameters.
@@ -127,7 +129,7 @@ if __name__ == "__main__":
 
     try:
         # for layers, sequenceLength2 in [(2, 256), (2, 128), (2, 64), (2, 32), (2, 16), (2, 8), (2, 4), (2, 2)]:
-        for _layerInd, sequenceLength2 in [(1, 8)]:
+        for _layerInd, sequenceLength2 in [(1, 128)]:
             # General parameters.
             _batchSize, _numSignals, _sequenceLength = 256, 256, sequenceLength2
             _kernelSize = 2*_sequenceLength - 1

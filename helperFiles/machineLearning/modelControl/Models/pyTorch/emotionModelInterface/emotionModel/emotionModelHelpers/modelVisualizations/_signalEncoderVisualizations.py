@@ -236,17 +236,24 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotEigenValueLocations(self, eigenvaluesPath, moduleNames, epoch, signalInd, saveFigureLocation, plotTitle):
-        numLayers, nCols = len(eigenvaluesPath), min(6, len(eigenvaluesPath))
-        nRows, layerInd = math.ceil(numLayers / nCols), 0
+    def plotEigenValueLocations(self, givensAnglesPath, scalingFactorsPath, reversibleModuleNames, epoch, signalInd, saveFigureLocation, plotTitle):
+        # givensAnglesPath: numModuleLayers, numSignals, numFreeParameters
+        numModuleLayers, nCols = len(givensAnglesPath), min(6, len(givensAnglesPath))
+        givensAngleLocationsPath = np.exp(givensAnglesPath * 1j)
+        nRows = math.ceil(numModuleLayers / nCols)
 
-        # Create the figure and axes
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False)
+        # Create a figure and axes array
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False)  # squeeze=False ensures axes is 2D
+
+        # Flatten axes for easy indexing if you prefer
         axes = axes.flatten()
 
-        for layerInd, ax in enumerate(axes[:numLayers]):
+        for layerInd in range(numModuleLayers):
+            ax = axes[layerInd]  # which subplot to use
+
             # Scatter training eigenvalues
-            x, y = eigenvaluesPath[layerInd].real, eigenvaluesPath[layerInd].imag
+            signalAngleLocations = givensAngleLocationsPath[layerInd][signalInd]
+            x, y = signalAngleLocations.real, signalAngleLocations.imag
             ax.scatter(x, y, color=self.lightColors[1], label="Training", s=10, linewidth=0.2, alpha=0.5)
 
             # Connect points to the origin
@@ -265,47 +272,54 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.add_patch(arc)
 
             # Customize appearance
-            ax.set_title(f"{moduleNames[layerInd]}")
+            ax.set_title(f"{reversibleModuleNames[layerInd]}")
             ax.set_xlabel("Real part")
             ax.set_ylabel("Imag part")
             ax.axis('equal')
 
         # Remove unused subplots
-        for idx in range(numLayers, nRows * nCols):
+        for idx in range(numModuleLayers, nRows * nCols):
             fig.delaxes(axes[idx])
 
         # Adjust layout with padding
         plt.tight_layout(pad=2.0)
 
         # Save the plot
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} layerInd{layerInd} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotEigenvalueAngles(self, rotationAngles, moduleNames, epoch, degreesFlag, saveFigureLocation, plotTitle):
-        numLayers, nCols = len(rotationAngles), min(6, len(rotationAngles))
-        nRows = math.ceil(numLayers / nCols)
+    def plotEigenvalueAngles(self, givensAnglesPath, scalingFactorsPath, reversibleModuleNames, epoch, degreesFlag, saveFigureLocation, plotTitle):
+        # givensAnglesPath: numModuleLayers, numSignals, numFreeParameters
+        # scalingFactorsPath: numModuleLayers, numSignals
+        numModuleLayers, nCols = len(givensAnglesPath), min(6, len(givensAnglesPath))
+        nRows = math.ceil(numModuleLayers / nCols)
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False)  # squeeze=False ensures axes is 2D
+        units = "degrees" if degreesFlag else "radians"
+        degrees = 200 if degreesFlag else 3.25
 
         # Flatten axes for easy indexing if you prefer
         axes = axes.flatten()
 
-        for layerInd in range(numLayers):
+        for layerInd in range(numModuleLayers):
             ax = axes[layerInd]  # which subplot to use
 
-            # Plot training eigenvalue angles
-            ax.hist(rotationAngles[layerInd], bins=36, alpha=0.75, density=True, color=self.lightColors[1], label="Training")
-            units = "degrees" if degreesFlag else "radians"
-            degrees = 200 if degreesFlag else 3.25
+            for signalInd in range(len(givensAnglesPath[layerInd])):
+                scaleFactor = scalingFactorsPath[layerInd][signalInd]
+                angles = givensAnglesPath[layerInd][signalInd]
+
+                # Plot training eigenvalue angles
+                ax.hist(angles, bins=36, alpha=scaleFactor, density=True, color=self.lightColors[signalInd % len(self.lightColors)], label="Training")
+
             # Customize subplot title and axes
-            ax.set_title(f"{moduleNames[layerInd]}")
+            ax.set_title(f"{reversibleModuleNames[layerInd]}")
             ax.set_xlabel(f"Angle ({units})")
             ax.set_xlim((0, degrees))
             ax.set_ylabel("Density")
 
-        # Hide any extra subplots if numLayers < nRows * nCols
-        for idx in range(numLayers, nRows * nCols):
+        # Hide any extra subplots if numModuleLayers < nRows * nCols
+        for idx in range(numModuleLayers, nRows * nCols):
             fig.delaxes(axes[idx])  # remove unused axes
 
         # Adjust layout to prevent overlapping titles/labels

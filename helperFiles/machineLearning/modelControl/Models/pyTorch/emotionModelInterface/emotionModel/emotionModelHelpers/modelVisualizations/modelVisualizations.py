@@ -62,12 +62,12 @@ class modelVisualizations(globalPlottingProtocols):
                 # Plot the shared and specific jacobian convergences.
                 activationParamsPaths = np.asarray([specificModel.activationParamsPath for specificModel in specificModels])  # numModels, numEpochs, numActivations, numActivationParams=3
                 activationModuleNames = np.asarray([modelPipeline.getActivationParamsFullPassPath()[1] for modelPipeline in allModelPipelines])  # numModels, numActivations
-                print("activationParamsPaths:", activationParamsPaths.shape)
-                print("activationModuleNames:", activationModuleNames.shape)
-
                 self.generalViz.plotSinglaParameterFlow(activationParamsPaths=activationParamsPaths[:, :, :, 0], activationModuleNames=activationModuleNames, modelLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Infinite Bound Activations")
                 self.generalViz.plotSinglaParameterFlow(activationParamsPaths=activationParamsPaths[:, :, :, 1], activationModuleNames=activationModuleNames, modelLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Linearity Activations")
                 self.generalViz.plotSinglaParameterFlow(activationParamsPaths=activationParamsPaths[:, :, :, 2], activationModuleNames=activationModuleNames, modelLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Convergent Activations")
+                # TODO: combine these into 3 plots total
+
+                # TODO: plot angles over epochs for each model (store the angle weights)
 
     def plotAllTrainingEvents(self, submodel, modelPipeline, lossDataLoader, trainingDate, currentEpoch):
         self.accelerator.print(f"\nPlotting results for the {modelPipeline.model.datasetName} model")
@@ -106,15 +106,17 @@ class modelVisualizations(globalPlottingProtocols):
             signalData = signalData.detach().cpu().numpy()
             
             # Compile additional information for the model.getActivationParamsFullPassPath
+            givensAnglesPath, scalingFactorsPath, reversibleModuleNames = model.getEigenvalueFullPassPath()
             activationCurvePath, activationModuleNames = model.getActivationCurvesFullPassPath()  # numModules, 2, numPoints
-            rotationAngles, eigenvaluesPath, moduleNames = model.getEigenvalueFullPassPath(device=self.accelerator.device)  # numModules, numAngles
-            globalPlottingProtocols.clearFigure(fig=None, legend=None, showPlot=False)
+            # givensAnglesPath: numModuleLayers, numSignals, numFreeParameters
+            # scalingFactorsPath: numModuleLayers, numSignals
             batchInd, signalInd = 0, -1
 
             # Plot the loss on the primary process.
             if self.accelerator.is_local_main_process:
 
                 # ------------------- Signal Encoding Plots -------------------- #
+                globalPlottingProtocols.clearFigure(fig=None, legend=None, showPlot=False)
 
                 if submodel == modelConstants.signalEncoderModel:
                     # Plot the signal reconstruction training information.
@@ -131,8 +133,9 @@ class modelVisualizations(globalPlottingProtocols):
                     self.signalEncoderViz.plotProfileReconstruction(resampledBiomarkerTimes, healthProfile, reconstructedHealthProfile, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Health Profile Reconstruction")
 
                     # # Plot the eigenvalue information.
-                    self.signalEncoderViz.plotEigenvalueAngles(rotationAngles, moduleNames, epoch=currentEpoch, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="Rotation Angles")
-                    self.signalEncoderViz.plotEigenValueLocations(eigenvaluesPath, moduleNames, epoch=currentEpoch, signalInd=0, saveFigureLocation="signalEncoding/", plotTitle="Specific Spatial Eigenvalues on Circle")
+                    scalingFactorsPathNorms = (scalingFactorsPath - 0.9) / 0.2
+                    self.signalEncoderViz.plotEigenvalueAngles(givensAnglesPath, scalingFactorsPathNorms, reversibleModuleNames, epoch=currentEpoch, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="Rotation Angles")
+                    self.signalEncoderViz.plotEigenValueLocations(givensAnglesPath, scalingFactorsPathNorms, reversibleModuleNames, epoch=currentEpoch, signalInd=0, saveFigureLocation="signalEncoding/", plotTitle="Specific Spatial Eigenvalues on Circle")
                     # self.signalEncoderViz.modelPropagation3D(rotationAngles=rotationAngles, epoch=currentEpoch, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="3D Spatial Specific Eigenvalues by Layer")
 
                     # Plot the activation information.

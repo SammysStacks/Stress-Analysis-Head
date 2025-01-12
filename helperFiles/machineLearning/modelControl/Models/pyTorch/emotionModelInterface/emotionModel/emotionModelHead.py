@@ -205,18 +205,18 @@ class emotionModelHead(nn.Module):
 
         return compiledName
 
-    def getEigenvalueFullPassPath(self, device):
-        rotationAnglesPath, eigenvaluesPath, eigenvaluesModuleNames = [], [], []
+    def getEigenvalueFullPassPath(self):
+        givensAnglesPath, scalingFactorsPath, reversibleModuleNames = [], [], []
         for name, module in self.named_modules():
             if isinstance(module, reversibleConvolutionLayer):
-                rotationAngles = module.getEigenvalues(layerInd=0, device=device)
-                eigenValues = (rotationAngles*1j).exp()
+                givensAngles, scalingFactors = module.getLinearParams(layerInd=0)
+                givensAngles = np.asarray([givensAngle.detach().cpu().numpy() for givensAngle in givensAngles])
+                scalingFactors = np.asarray([scalingFactor.detach().cpu().numpy() for scalingFactor in scalingFactors])
 
-                eigenvaluesPath.append(eigenValues.detach().cpu().numpy())
-                rotationAnglesPath.append(rotationAngles.detach().cpu().numpy())
-                eigenvaluesModuleNames.append(self.compileModuleName(name))
-        assert len(eigenvaluesPath) != 0
-        return rotationAnglesPath, eigenvaluesPath, eigenvaluesModuleNames
+                givensAnglesPath.append(givensAngles)  # givensAnglesPath: numModuleLayers, numSignals, numFreeParameters
+                scalingFactorsPath.append(scalingFactors)  # scalingFactorsPath: numModuleLayers, numSignals
+                reversibleModuleNames.append(self.compileModuleName(name))
+        return givensAnglesPath, scalingFactorsPath, reversibleModuleNames
 
     def getActivationCurvesFullPassPath(self):
         activationCurvePath, activationModuleNames = [], []
