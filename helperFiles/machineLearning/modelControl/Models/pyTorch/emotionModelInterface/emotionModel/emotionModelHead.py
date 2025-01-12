@@ -234,7 +234,7 @@ class emotionModelHead(nn.Module):
         for name, module in self.named_modules():
             if isinstance(module, reversibleConvolutionLayer): 
                 params = module.activationFunction.getActivationParams()
-                activationParamsPath.append([param.detach().cpu().numpy() for param in params])
+                activationParamsPath.append([param.detach().cpu().item() for param in params])
                 activationModuleNames.append(self.compileModuleName(name))
         assert len(activationParamsPath) != 0
         activationParamsPath = np.asarray(activationParamsPath)

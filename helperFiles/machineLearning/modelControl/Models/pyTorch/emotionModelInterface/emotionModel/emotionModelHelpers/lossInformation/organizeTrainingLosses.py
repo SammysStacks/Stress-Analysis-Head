@@ -40,9 +40,12 @@ class organizeTrainingLosses(lossCalculations):
             # Calculate the signal encoding loss.
             signalReconstructedTrainingLosses = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, validDataMask, allTrainingSignalMask, averageBatches=True)
             signalReconstructedTestingLosses = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, validDataMask, allTestingSignalMask, averageBatches=True)
+            # signalReconstructedTrainingLosses: numEpochs, numTrainingSignals
+            # signalReconstructedTestingLosses: numEpochs, numTestingSignals
 
             # Get the encoder information.
             activationParamsPath, activationModuleNames = model.getActivationParamsFullPassPath()
+            # activationParamsPath: numActivations, numEpochs, numParams=3
 
             # Store the signal encoder loss information.
             self.storeLossInformation(trainingLoss=signalReconstructedTrainingLosses, testingLoss=signalReconstructedTestingLosses, trainingHolder=model.specificSignalEncoderModel.trainingLosses_signalReconstruction, testingHolder=model.specificSignalEncoderModel.testingLosses_signalReconstruction)

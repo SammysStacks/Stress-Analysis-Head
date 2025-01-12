@@ -108,26 +108,27 @@ class generalVisualizations(globalPlottingProtocols):
         assert len(trainingLosses) == len(lossLabels), "Number of loss labels must match the number of loss indices."
         if len(trainingLosses[0]) == 0: return None
 
-        # Plot the losses
+        # Plot the average losses.
         for modelInd in range(len(trainingLosses)):
-            N = np.sum(~np.isnan(trainingLosses[modelInd]), axis=-1)
-            trainingSTD = np.nanstd(trainingLosses[modelInd], ddof=1, axis=-1) / np.sqrt(N)
-            trainingLoss = np.nanmean(trainingLosses[modelInd], axis=-1)
+            N = np.sum(~np.isnan(trainingLosses[modelInd]), axis=0)
+            trainingSTD = np.nanstd(trainingLosses[modelInd], ddof=1, axis=0) / np.sqrt(N)
+            trainingLoss = np.nanmean(trainingLosses[modelInd], axis=0)
             plt.errorbar(x=np.arange(len(trainingLoss)), y=trainingLoss, yerr=trainingSTD, color=self.darkColors[modelInd], linewidth=1)
+
             if testingLosses is not None:
-                N = np.sum(~np.isnan(testingLosses[modelInd]), axis=-1)
-                testingStd = np.nanstd(testingLosses[modelInd], ddof=1, axis=-1) / np.sqrt(N)
-                testingLoss = np.nanmean(testingLosses[modelInd], axis=-1)
-                # plt.plot(testingLoss, color=self.darkColors[modelInd], linewidth=1, alpha=0.75)
+                N = np.sum(~np.isnan(testingLosses[modelInd]), axis=0)
+                testingStd = np.nanstd(testingLosses[modelInd], ddof=1, axis=0) / np.sqrt(N)
+                testingLoss = np.nanmean(testingLosses[modelInd], axis=0)
                 plt.errorbar(x=np.arange(len(testingLoss)), y=testingLoss, yerr=testingStd, color=self.darkColors[modelInd], linewidth=1)
 
-        # Plot the losses
+        # Plot the individual losses.
         for modelInd in range(len(trainingLosses)):
             plt.plot(np.asarray(trainingLosses[modelInd]), '--', color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
             if testingLosses is not None:
-                testingLoss = np.asarray(testingLosses[modelInd])
-                testingLoss[np.isnan(testingLoss)] = None
+                testingLoss = np.asarray(testingLosses[modelInd]); testingLoss[np.isnan(testingLoss)] = None
                 plt.plot(testingLoss, '-', color=self.darkColors[modelInd], linewidth=1, alpha=0.025)
+
+        # Plot gridlines.
         plt.hlines(y=0.1, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=1)
         plt.hlines(y=0.03, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=1, alpha=0.25)
         plt.hlines(y=0.02, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=1, alpha=0.25)
@@ -147,29 +148,31 @@ class generalVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(trainingLosses[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotSinglaParameterFlow(self, activationParamsPaths, saveFigureLocation="", plotTitle="Model Convergence Loss", logY=False):
+    def plotSinglaParameterFlow(self, activationParamsPaths, modelLabels, saveFigureLocation="", plotTitle="Model Convergence Loss", logY=False):
+        numModels, numActivations, numEpochs, numParams = activationParamsPaths.size()
         activationParams = [[]]
 
-        for modelInd in range(len(activationParamsPaths)):
-            activationParamsPath = activationParamsPaths[modelInd]
-            for moduleInd in range(len(activationParamsPath)):
-                activationParams = activationParamsPath[moduleInd]
+        for modelInd in range(numModels):
+            for activationInd in range(numActivations):
+                activationParams = activationParamsPaths[modelInd][activationInd]
 
-                plt.plot(activationParams, color=self.darkColors[modelInd], linewidth=0.5, alpha=0.5)
-                plt.plot(np.mean(activationParams, axis=-1), color=self.darkColors[modelInd], linewidth=1, alpha=0.8)
-        plt.xlim((0, len(activationParams) + 1))
-        plt.grid(True)
+                plt.plot(activationParams, color=self.lightColors[activationInd % len(self.lightColors)], linewidth=0.5, alpha=0.5)
+                plt.plot(np.mean(activationParams, axis=0), color=self.darkColors[activationInd % len(self.lightColors)], linewidth=1, alpha=0.8)
+            plt.xlim((0, len(activationParams) + 1))
+            plt.grid(True)
 
-        # Label the plot.
-        if logY: plt.yscale('log')
-        plt.xlabel("Training Epoch")
-        plt.ylabel("Values")
-        plt.title(f"{plotTitle}")
-        plt.ylim((0, 1) if 'Infinite' in plotTitle else (0, 2))
+            # Label the plot.
+            if logY: plt.yscale('log')
+            plt.xlabel("Training Epoch")
+            plt.ylabel("Values")
+            plt.title(f"{plotTitle}")
+            if 'Infinite' in plotTitle: plt.ylim((0, 1))
+            elif 'Linearity' in plotTitle: plt.ylim((0, 4))
+            elif 'Convergent' in plotTitle: plt.ylim((0, 2))
 
-        # Save the figure if desired.
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(activationParams)}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
-        else: self.clearFigure(fig=None, legend=None, showPlot=True)
+            # Save the figure if desired.
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{modelLabels[modelInd]} {plotTitle} epochs{len(activationParams)}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+            else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def generalDataPlotting(self, plottingData, plottingLabels, saveFigureLocation, plotTitle="Model Convergence Loss"):
         # Plot the training path.

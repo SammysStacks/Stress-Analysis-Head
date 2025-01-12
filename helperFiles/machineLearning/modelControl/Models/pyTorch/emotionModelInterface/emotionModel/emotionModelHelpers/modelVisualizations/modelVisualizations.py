@@ -46,27 +46,24 @@ class modelVisualizations(globalPlottingProtocols):
 
         with torch.no_grad():
             if self.accelerator.is_local_main_process:
-                specificModels = [modelPipeline.model.specificSignalEncoderModel for modelPipeline in allModelPipelines]
-                sharedModels = [modelPipeline.model.sharedSignalEncoderModel for modelPipeline in allModelPipelines]
-                datasetNames = [modelPipeline.model.datasetName for modelPipeline in allModelPipelines]
+                specificModels = [modelPipeline.model.specificSignalEncoderModel for modelPipeline in allModelPipelines]  # Dim: numModels
+                datasetNames = [modelPipeline.model.datasetName for modelPipeline in allModelPipelines]  # Dim: numModels
                 if allModelPipelines[0].getTrainingEpoch(submodel) == 0: return None
 
                 # Plot reconstruction loss for the signal encoder.
                 self.generalViz.plotTrainingLosses(trainingLosses=[specificModel.trainingLosses_signalReconstruction for specificModel in specificModels],
                                                    testingLosses=[specificModel.testingLosses_signalReconstruction for specificModel in specificModels],
-                                                   lossLabels=[f"{datasetName}" for datasetName in datasetNames],
-                                                   saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Convergence Losses")
+                                                   lossLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Convergence Losses")
 
                 # Plot the losses during few-shot retraining the profile.
-                self.generalViz.plotTrainingLosses(trainingLosses=[specificModel.profileModel.retrainingProfileLosses for specificModel in specificModels], testingLosses=None,
-                                                   lossLabels=[f"{datasetName}" for datasetName in datasetNames],
-                                                   saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Profile Convergence Losses")
+                self.generalViz.plotTrainingLosses(trainingLosses=[specificModel.profileModel.retrainingProfileLosses.mean(axis=1) for specificModel in specificModels], testingLosses=None,
+                                                   lossLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Profile Convergence Losses")
 
                 # Plot the shared and specific jacobian convergences.
-                activationParamsPaths = np.asarray([specificModel.activationParamsPath for specificModel in specificModels])  # numModels, numModules, numPoints, numParams=1, numLayers?=1
-                self.generalViz.plotSinglaParameterFlow(activationParamsPaths=activationParamsPaths[:, :, :, 0, 0], saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Infinite Bound Activations")
-                self.generalViz.plotSinglaParameterFlow(activationParamsPaths=activationParamsPaths[:, :, :, 1, 0], saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Linearity Activations")
-                self.generalViz.plotSinglaParameterFlow(activationParamsPaths=activationParamsPaths[:, :, :, 2, 0], saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Convergent Activations")
+                activationParamsPaths = np.asarray([specificModel.activationParamsPath for specificModel in specificModels])  # numModels, numActivations, numEpochs, numParams=3
+                self.generalViz.plotSinglaParameterFlow(activationParamsPaths=activationParamsPaths[:, :, :, 0, 0], modelLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Infinite Bound Activations")
+                self.generalViz.plotSinglaParameterFlow(activationParamsPaths=activationParamsPaths[:, :, :, 1, 0], modelLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Linearity Activations")
+                self.generalViz.plotSinglaParameterFlow(activationParamsPaths=activationParamsPaths[:, :, :, 2, 0], modelLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Convergent Activations")
 
     def plotAllTrainingEvents(self, submodel, modelPipeline, lossDataLoader, trainingDate, currentEpoch):
         self.accelerator.print(f"\nPlotting results for the {modelPipeline.model.datasetName} model")
