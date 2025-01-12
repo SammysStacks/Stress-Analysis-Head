@@ -28,7 +28,7 @@ class modelHelpers:
     @staticmethod
     def roundModelWeights(model, decimals=4):
         for param in model.parameters():
-            param.data = param.data.round(decimals=decimals)
+            param.data.round_(decimals=decimals)
 
     @staticmethod
     def printModelParams(model):
