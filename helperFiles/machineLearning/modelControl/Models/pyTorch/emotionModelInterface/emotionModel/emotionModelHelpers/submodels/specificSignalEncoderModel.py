@@ -38,9 +38,9 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
     def resetModel(self):
         # Signal encoder reconstruction holders.
-        self.trainingLosses_signalReconstruction = []  # List of list of data reconstruction training losses. Dim: numEpochs
-        self.testingLosses_signalReconstruction = []  # List of list of data reconstruction testing losses. Dim: numEpochs
-        self.activationParamsPath = []  # List of activation bounds. Dim: numEpochs
+        self.trainingLosses_signalReconstruction = []  # List of list of data reconstruction training losses. Dim: numEpochs, numTrainingSignals
+        self.testingLosses_signalReconstruction = []  # List of list of data reconstruction testing losses. Dim: numEpochs, numTestingSignals
+        self.activationParamsPath = []  # List of activation bounds. Dim: numEpochs, numActivations, numActivationParams
 
     def addLayer(self):
         self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True))

@@ -60,10 +60,14 @@ class modelVisualizations(globalPlottingProtocols):
                                                    lossLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Profile Convergence Losses")
 
                 # Plot the shared and specific jacobian convergences.
-                activationParamsPaths = np.asarray([specificModel.activationParamsPath for specificModel in specificModels])  # numModels, numActivations, numEpochs, numParams=3
-                self.generalViz.plotSinglaParameterFlow(activationParamsPaths=activationParamsPaths[:, :, :, 0, 0], modelLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Infinite Bound Activations")
-                self.generalViz.plotSinglaParameterFlow(activationParamsPaths=activationParamsPaths[:, :, :, 1, 0], modelLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Linearity Activations")
-                self.generalViz.plotSinglaParameterFlow(activationParamsPaths=activationParamsPaths[:, :, :, 2, 0], modelLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Convergent Activations")
+                activationParamsPaths = np.asarray([specificModel.activationParamsPath for specificModel in specificModels])  # numModels, numEpochs, numActivations, numActivationParams=3
+                activationModuleNames = np.asarray([modelPipeline.getActivationParamsFullPassPath()[1] for modelPipeline in allModelPipelines])  # numModels, numActivations
+                print("activationParamsPaths:", activationParamsPaths.shape)
+                print("activationModuleNames:", activationModuleNames.shape)
+
+                self.generalViz.plotSinglaParameterFlow(activationParamsPaths=activationParamsPaths[:, :, :, 0], activationModuleNames=activationModuleNames, modelLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Infinite Bound Activations")
+                self.generalViz.plotSinglaParameterFlow(activationParamsPaths=activationParamsPaths[:, :, :, 1], activationModuleNames=activationModuleNames, modelLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Linearity Activations")
+                self.generalViz.plotSinglaParameterFlow(activationParamsPaths=activationParamsPaths[:, :, :, 2], activationModuleNames=activationModuleNames, modelLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Convergent Activations")
 
     def plotAllTrainingEvents(self, submodel, modelPipeline, lossDataLoader, trainingDate, currentEpoch):
         self.accelerator.print(f"\nPlotting results for the {modelPipeline.model.datasetName} model")

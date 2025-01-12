@@ -148,16 +148,16 @@ class generalVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(trainingLosses[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotSinglaParameterFlow(self, activationParamsPaths, modelLabels, saveFigureLocation="", plotTitle="Model Convergence Loss", logY=False):
-        numModels, numActivations, numEpochs, numParams = activationParamsPaths.size()
+    def plotSinglaParameterFlow(self, activationParamsPaths, activationModuleNames, modelLabels, saveFigureLocation="", plotTitle="Model Convergence Loss", logY=False):
+        numModels, numEpochs, numActivations = activationParamsPaths.shape
         activationParams = [[]]
 
         for modelInd in range(numModels):
             for activationInd in range(numActivations):
-                activationParams = activationParamsPaths[modelInd][activationInd]
+                activationParams = activationParamsPaths[modelInd, :, activationInd]
+                activationModuleName = activationModuleNames[activationInd]
 
-                plt.plot(activationParams, color=self.lightColors[activationInd % len(self.lightColors)], linewidth=0.5, alpha=0.5)
-                plt.plot(np.mean(activationParams, axis=0), color=self.darkColors[activationInd % len(self.lightColors)], linewidth=1, alpha=0.8)
+                plt.plot(activationParams, color=self.lightColors[activationInd % len(self.lightColors)], linewidth=0.5, alpha=0.5, label=f"{activationModuleName}")
             plt.xlim((0, len(activationParams) + 1))
             plt.grid(True)
 
@@ -166,6 +166,7 @@ class generalVisualizations(globalPlottingProtocols):
             plt.xlabel("Training Epoch")
             plt.ylabel("Values")
             plt.title(f"{plotTitle}")
+            plt.legend(loc="upper right", bbox_to_anchor=(1.35, 1), borderaxespad=0)
             if 'Infinite' in plotTitle: plt.ylim((0, 1))
             elif 'Linearity' in plotTitle: plt.ylim((0, 4))
             elif 'Convergent' in plotTitle: plt.ylim((0, 2))
