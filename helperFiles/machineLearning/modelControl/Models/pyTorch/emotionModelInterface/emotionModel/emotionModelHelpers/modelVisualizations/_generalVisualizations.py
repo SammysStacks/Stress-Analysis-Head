@@ -171,9 +171,9 @@ class generalVisualizations(globalPlottingProtocols):
             plt.xlabel("Training Epoch")
             plt.ylabel("Values")
             plt.title(f"{plotTitle}")
-            if 'Infinite' in plotTitle: plt.ylim((0, 1))
-            elif 'Linearity' in plotTitle: plt.ylim((0, 4))
-            elif 'Convergent' in plotTitle: plt.ylim((0, 2))
+            if 'Infinite' in plotTitle: plt.ylim((0, 1.1))
+            elif 'Linearity' in plotTitle: plt.ylim((0, 10))
+            elif 'Convergent' in plotTitle: plt.ylim((0, 2.1))
 
             # Save the figure if desired.
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{modelLabels[modelInd]} {plotTitle} epochs{len(activationParams)}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")

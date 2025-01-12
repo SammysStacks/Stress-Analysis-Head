@@ -56,8 +56,7 @@ class modelVisualizations(globalPlottingProtocols):
                                                    lossLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Convergence Losses")
 
                 # Plot the losses during few-shot retraining the profile.
-                print("retrainingProfileLosses", len(specificModels[0].profileModel.retrainingProfileLosses), np.asarray(specificModels[0].profileModel.retrainingProfileLosses).shape)
-                self.generalViz.plotTrainingLosses(trainingLosses=[specificModel.profileModel.retrainingProfileLosses.mean(axis=1) for specificModel in specificModels], testingLosses=None,
+                self.generalViz.plotTrainingLosses(trainingLosses=[np.nanmean(specificModel.model.specificSignalEncoderModel.profileModel.retrainingProfileLosses, axis=1) for specificModel in specificModels], testingLosses=None,
                                                    lossLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Profile Convergence Losses")
 
                 # Plot the shared and specific jacobian convergences.
