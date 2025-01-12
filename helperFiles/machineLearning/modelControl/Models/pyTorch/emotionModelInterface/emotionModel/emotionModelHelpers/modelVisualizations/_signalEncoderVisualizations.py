@@ -239,7 +239,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
     def plotEigenValueLocations(self, givensAnglesPath, scalingFactorsPath, reversibleModuleNames, epoch, signalInd, saveFigureLocation, plotTitle):
         # givensAnglesPath: numModuleLayers, numSignals, numFreeParameters
         numModuleLayers, nCols = len(givensAnglesPath), min(6, len(givensAnglesPath))
-        givensAngleLocationsPath = np.exp(givensAnglesPath)
         nRows = math.ceil(numModuleLayers / nCols)
 
         # Create a figure and axes array
@@ -252,7 +251,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax = axes[layerInd]  # which subplot to use
 
             # Scatter training eigenvalues
-            signalAngleLocations = givensAngleLocationsPath[layerInd][signalInd]
+            signalAngleLocations = np.exp(np.asarray(givensAnglesPath[layerInd][signalInd]) * 1j)
             x, y = signalAngleLocations.real, signalAngleLocations.imag
             ax.scatter(x, y, color=self.lightColors[1], label="Training", s=10, linewidth=0.2, alpha=0.5)
 
