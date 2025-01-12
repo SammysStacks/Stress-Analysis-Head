@@ -105,12 +105,11 @@ class generalVisualizations(globalPlottingProtocols):
         # Assert the validity of the input data.
         assert len(trainingLosses) == len(lossLabels), "Number of loss labels must match the number of loss indices."
         if len(trainingLosses[0]) == 0: return None
-        trainingLosses = np.asarray(trainingLosses)
-        numModels, numEpochs, numSignals = trainingLosses.shape
+        numModels, numEpochs = len(trainingLosses), len(trainingLosses[0])
 
         # Plot the average losses.
         for modelInd in range(numModels):
-            modelTrainingLosses = trainingLosses[modelInd]
+            modelTrainingLosses = np.asarray(trainingLosses[modelInd])
             # modelTrainingLosses: numEpochs, numSignals
 
             # Calculate the average and standard deviation of the training losses.
@@ -122,7 +121,7 @@ class generalVisualizations(globalPlottingProtocols):
             plt.errorbar(x=np.arange(len(trainingLoss)), y=trainingLoss, yerr=trainingStandardError, color=self.darkColors[modelInd], linewidth=1)
 
             if testingLosses is not None:
-                modelTestingLosses = testingLosses[modelInd]
+                modelTestingLosses = np.asarray(testingLosses[modelInd])
                 # Calculate the average and standard deviation of the testing losses.
                 N = np.sum(~np.isnan(modelTestingLosses), axis=-1)
                 testingStd = np.nanstd(modelTestingLosses, ddof=1, axis=-1) / np.sqrt(N)
@@ -133,11 +132,11 @@ class generalVisualizations(globalPlottingProtocols):
 
         # Plot the individual losses.
         for modelInd in range(len(trainingLosses)):
-            modelTrainingLosses = trainingLosses[modelInd]
+            modelTrainingLosses = np.asarray(trainingLosses[modelInd])
             plt.plot(np.asarray(modelTrainingLosses), '--', color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
 
             if testingLosses is not None:
-                modelTestingLosses = testingLosses[modelInd]
+                modelTestingLosses = np.asarray(testingLosses[modelInd])
                 testingLoss = np.asarray(modelTestingLosses); testingLoss[np.isnan(testingLoss)] = None
                 plt.plot(testingLoss, '-', color=self.darkColors[modelInd], linewidth=1, alpha=0.025)
 
@@ -168,9 +167,9 @@ class generalVisualizations(globalPlottingProtocols):
         for modelInd in range(numModels):
             for activationInd in range(numActivations):
                 activationParams = activationParamsPaths[modelInd, :, activationInd]
-                activationModuleName = activationModuleNames[activationInd]
+                activationModuleName = activationModuleNames[modelInd, activationInd]
 
-                plt.plot(activationParams, color=self.lightColors[activationInd % len(self.lightColors)], linewidth=0.5, alpha=0.5, label=f"{activationModuleName}")
+                plt.plot(activationParams, color=self.lightColors[activationInd % len(self.lightColors)], linewidth=0.8, alpha=0.5, label=f"{activationModuleName}")
             plt.xlim((0, len(activationParams) + 1))
             plt.grid(True)
 
@@ -179,7 +178,6 @@ class generalVisualizations(globalPlottingProtocols):
             plt.xlabel("Training Epoch")
             plt.ylabel("Values")
             plt.title(f"{plotTitle}")
-            plt.legend(loc="upper right", bbox_to_anchor=(1.35, 1), borderaxespad=0)
             if 'Infinite' in plotTitle: plt.ylim((0, 1))
             elif 'Linearity' in plotTitle: plt.ylim((0, 4))
             elif 'Convergent' in plotTitle: plt.ylim((0, 2))
