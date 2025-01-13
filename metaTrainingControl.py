@@ -131,6 +131,7 @@ if __name__ == "__main__":
         saveFullModel, plotSteps = modelParameters.getEpochParameters(epoch, numEpoch_toSaveFull, numEpoch_toPlot)
 
         # Train the model for a single epoch.
+        if epoch == 1: trainingProtocols.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders)
         trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders)
 
         # Store the initial loss information and plot.
