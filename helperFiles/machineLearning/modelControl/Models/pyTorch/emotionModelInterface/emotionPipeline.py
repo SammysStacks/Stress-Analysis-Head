@@ -92,7 +92,7 @@ class emotionPipeline(emotionPipelineHelpers):
                         finalTrainingLoss = trainingSignalReconstructedLosses.nanmean()
 
                         # Initialize basic core loss value.
-                        if self.model.debugging: self.accelerator.print("Final encoder loss:", finalTrainingLoss.item() / reducedLossFactor)
+                        if self.model.debugging: self.accelerator.print("Final encoder loss:", finalTrainingLoss.item())
 
                         # ------------------- Update the Model  -------------------- #
 
