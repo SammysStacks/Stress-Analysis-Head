@@ -2,7 +2,7 @@
 
 # Optimizer parameters.
 optimizers_arr=('NAdam')  # NAdam > AdamW > RAdam >= Adam > Adamax
-momentums_arr=('0.01' '0.001')  # Removed from filename
+momentums_arr=('0.01')  # Removed from filename
 beta1s_arr=('0.7')  # Removed from filename
 beta2s_arr=('0.8')  # Removed from filename
 
@@ -45,7 +45,7 @@ numSharedEncoderLayers_arr=(6)
 
 # Collective Switchables: 5
 #numProfileShots_arr=(32 20 16 12 8)
-numProfileShots_arr=(24 12)
+numProfileShots_arr=(16)
 
 # Collective Switchables: 4
 #profileParams=(16 64 128 256)
@@ -55,20 +55,20 @@ profileParams=(128)
 lrs_profile=('0.025' '0.051' '0.067' '0.075')  # 0.005 <= x <= 0.05
 lrs_reversible=('1e-4' '5e-4' '1e-3')  # 1e-4 <= x == 1e-3;
 lrs_profileGen=('1e-4' '5e-4' '1e-3') # # 1e-4 <= x == 1e-3; lrs_profileGen <= lrs_reversible
-#lrs_profile=('0.05')
-#lrs_reversible=('6e-4')
-#lrs_profileGen=('2e-4')
+lrs_profile=('0.05')
+lrs_reversible=('6e-4')
+lrs_profileGen=('2e-4')
 
 # Single Switchables: 2
 optimizers_arr=('NAdam')  # AdamW == NAdam > RAdam > Adam > Adamax
 
 # Weight decay parameters.
 wds_profile=('0' '1e-2' '1e-3' '1e-4' '1e-5' '1e-6')  # 1e-6 ==> x <== 1e-3; Removed from filename
-wds_reversible=('0' '1e-2' '1e-3' '1e-4' '1e-5' '1e-6')  # 1e-4 == x <= 1e-3; Removed from filename
-wds_profileGen=('0' '1e-2' '1e-3' '1e-4' '1e-5' '1e-6')  # 1e-5 == x <= 1e-4; Removed from filename
-wds_profile=('1e-6')  
-wds_reversible=('1e-4') 
-wds_profileGen=('1e-2')
+wds_reversible=('1e-2' '1e-3' '1e-4' '1e-5' '1e-6')  # 1e-4 == x <= 1e-3; Removed from filename
+wds_profileGen=('1e-2' '1e-3' '1e-4' '1e-5' '1e-6')  # 1e-5 == x <= 1e-4; Removed from filename
+#wds_profile=('1e-6')  
+#wds_reversible=('1e-4') 
+#wds_profileGen=('1e-2')
 
 for beta1s in "${beta1s_arr[@]}"
 do
