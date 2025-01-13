@@ -56,7 +56,7 @@ if __name__ == "__main__":
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
 
     # Add arguments for the signal encoder architecture.
-    parser.add_argument('--initialProfileAmp', type=float, default=0.01, help='The limits for profile initialization, [0.005, 0.05]')
+    parser.add_argument('--initialProfileAmp', type=float, default=0.025, help='The limits for profile initialization, [0.005, 0.05]')
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=2, help='The number of layers in the model.')
     parser.add_argument('--numSharedEncoderLayers', type=int, default=6, help='The number of layers in the model.')
     parser.add_argument('--profileDimension', type=int, default=128, help='The number of profile weights.')
