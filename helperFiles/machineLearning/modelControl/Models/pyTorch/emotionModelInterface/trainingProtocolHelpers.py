@@ -48,9 +48,9 @@ class trainingProtocolHelpers:
 
         # Unify all the model weights.
         self.unifyAllModelWeights(allMetaModels, allModels)
-        self.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders)
+        self.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, profileOnly=False)
 
-    def datasetSpecificTraining(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders):
+    def datasetSpecificTraining(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, profileOnlyTraining=False):
         # Unify all the model weights.
         self.unifyAllModelWeights(allMetaModels, allModels)
 
@@ -63,7 +63,7 @@ class trainingProtocolHelpers:
             else: numEpochs = 1
 
             # Train the updated model.
-            modelPipeline.trainModel(dataLoader, submodel, profileTraining=False, specificTraining=True, trainSharedLayers=False, stepScheduler=False, numEpochs=numEpochs)  # Signal-specific training.
+            if not profileOnlyTraining: modelPipeline.trainModel(dataLoader, submodel, profileTraining=False, specificTraining=True, trainSharedLayers=False, stepScheduler=False, numEpochs=numEpochs)  # Signal-specific training.
 
             # Health profile training.
             numProfileShots = modelPipeline.resetPhysiologicalProfile(submodel)

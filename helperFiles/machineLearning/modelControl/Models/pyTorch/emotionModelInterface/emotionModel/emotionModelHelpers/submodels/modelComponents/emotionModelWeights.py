@@ -66,10 +66,6 @@ class emotionModelWeights(convolutionalHelpers):
     def postProcessingLayerFC(sequenceLength):
         return emotionModelWeights.linearModel(numInputFeatures=sequenceLength, numOutputFeatures=sequenceLength, activationMethod="SoftSign", addBias=False)
 
-    @staticmethod
-    def initializeJacobianParams(numSignals):
-        return nn.Parameter(torch.zeros((1, numSignals)))
-
     def healthGeneration(self, numOutputFeatures):
         if numOutputFeatures < modelConstants.profileDimension: raise ValueError(f"Number of outputs ({numOutputFeatures}) must be greater than inputs ({modelConstants.profileDimension})")
         numUpSamples = int(math.log2(numOutputFeatures // modelConstants.profileDimension))
@@ -89,12 +85,13 @@ class emotionModelWeights(convolutionalHelpers):
         return nn.Sequential(*layers)
 
     @staticmethod
-    def getJacobianScalar(jacobianParameter):
-        jacobianMatrix = 0.5 + 1.5*torch.sigmoid(jacobianParameter)
-        return jacobianMatrix
+    def initializeJacobianParams(numSignals):
+        return nn.Parameter(torch.zeros((1, numSignals)))
 
     @staticmethod
-    def gradientHook(grad): return grad
+    def getJacobianScalar(jacobianParameter):
+        jacobianMatrix = 0.75 + 1.25*torch.sigmoid(jacobianParameter)
+        return jacobianMatrix
 
     def applyManifoldScale(self, healthProfile, healthProfileJacobians):
         scalarValues = self.getJacobianScalar(healthProfileJacobians).expand_as(healthProfile)

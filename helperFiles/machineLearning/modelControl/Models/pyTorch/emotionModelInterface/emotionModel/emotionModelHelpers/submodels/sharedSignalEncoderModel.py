@@ -32,9 +32,6 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         self.healthProfileJacobians = self.initializeJacobianParams(1)
         for _ in range(self.numSharedEncoderLayers): self.addLayer()
 
-        # Register gradient hook for the weights.
-        for param in self.healthGenerationModel.parameters(): param.register_hook(self.gradientHook)
-
     def forward(self):
         raise "You cannot call the dataset-specific signal encoder module."
 
