@@ -142,7 +142,7 @@ class emotionModelHead(nn.Module):
         # Check which points were missing in the data.
         batchInds = emotionDataInterface.getSignalIdentifierData(signalIdentifiers, channelName=modelConstants.batchIndexSI)[:, 0]  # Dim: batchSize
         validDataMask = emotionDataInterface.getValidDataMask(signalData)
-        # missingDataMask: batchSize, numSignals, maxSequenceLength
+        # validDataMask: batchSize, numSignals, maxSequenceLength
 
         # ------------------- Estimated Health Profile ------------------- #
 
@@ -195,13 +195,20 @@ class emotionModelHead(nn.Module):
 
     @staticmethod
     def compileModuleName(name):
-        compiledName = ""
+        # Initialize the model name.
+        compiledName = ""; name = name.lower()
+
+        # Add the model type information.
         if 'specific' in name: compiledName = 'specific' + compiledName; assert 'shared' not in name
         elif 'shared' in name: compiledName = 'shared' + compiledName; assert 'specific' not in name
-        if 'neuralLayers' in name: compiledName = compiledName + ' WNO'; assert 'processingLayers' not in name
-        if 'highFrequenciesWeights' in name: compiledName = compiledName + ' highFreq'; assert 'lowFrequencyWeights' not in name
-        elif 'lowFrequencyWeights' in name: compiledName = compiledName + ' lowFreq'; assert 'highFrequenciesWeights' not in name
-        compiledName = compiledName + ' Layer' + name.split('.')[-1]
+        else: raise Exception("Invalid name:", name)
+
+        # Add the neural layer information.
+        if 'neural' in name: compiledName = compiledName + ' neural'; assert 'processing' not in name
+        if 'high' in name: compiledName = compiledName + ' highFreq'; assert 'low' not in name
+        elif 'low' in name: compiledName = compiledName + ' lowFreq'; assert 'high' not in name
+        elif 'processing' not in name: raise Exception("Invalid name:", name)
+        else: compiledName = compiledName + ' processing'
 
         return compiledName
 
@@ -222,7 +229,7 @@ class emotionModelHead(nn.Module):
         activationCurvePath, activationModuleNames = [], []
         for name, module in self.named_modules():
             if isinstance(module, reversibleConvolutionLayer): 
-                x, y = module.activationFunction.getActivationCurve(x_min=-2, x_max=2, num_points=200)
+                x, y = module.activationFunction.getActivationCurve(x_min=-1.5, x_max=1.5, num_points=100)
                 activationCurvePath.append([x, y])
                 activationModuleNames.append(self.compileModuleName(name))
         assert len(activationCurvePath) != 0

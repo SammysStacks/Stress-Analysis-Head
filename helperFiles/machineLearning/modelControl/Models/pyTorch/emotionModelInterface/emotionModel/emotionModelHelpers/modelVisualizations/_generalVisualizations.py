@@ -153,31 +153,46 @@ class generalVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(trainingLosses[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotSinglaParameterFlow(self, activationParamsPaths, activationModuleNames, modelLabels, saveFigureLocation="", plotTitle="Model Convergence Loss", logY=False):
-        numModels, numEpochs, numActivations = activationParamsPaths.shape
-        activationParams = [[]]
+    def plotSinglaParameterFlow(self, activationParamsPaths, activationModuleNames, modelLabels, activationParamNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
+        numModels, numEpochs, numActivations, numParams = activationParamsPaths.shape
 
-        for modelInd in range(numModels):
-            for activationInd in range(numActivations):
-                activationParams = activationParamsPaths[modelInd, :, activationInd]
-                activationModuleName = activationModuleNames[modelInd, activationInd]
+        # Create a figure and axes array
+        fig, axes = plt.subplots(nrows=1, ncols=numParams, figsize=(6 * numParams, 4), squeeze=False, sharex=True, sharey=False)  # squeeze=False ensures axes is 2D
+        axes = axes.flatten()  # Flatten axes for easy indexing if you prefer
 
-                plt.plot(activationParams, color=self.lightColors[activationInd % len(self.lightColors)], linewidth=0.8, alpha=0.5, label=f"{activationModuleName}")
-            plt.xlim((0, len(activationParams) + 1))
-            plt.grid(True)
+        for paramInd in range(numParams):
+            ax = axes[paramInd]  # which subplot to use
+            paramName = activationParamNames[paramInd]
 
-            # Label the plot.
-            if logY: plt.yscale('log')
-            plt.xlabel("Training Epoch")
-            plt.ylabel("Values")
-            plt.title(f"{plotTitle}")
-            if 'Infinite' in plotTitle: plt.ylim((0, 1.1))
-            elif 'Linearity' in plotTitle: plt.ylim((0, 10))
-            elif 'Convergent' in plotTitle: plt.ylim((0, 2.1))
+            for modelInd in range(numModels):
+                for activationInd in range(numActivations):
+                    activationParams = activationParamsPaths[modelInd, :, activationInd, paramInd]
+                    activationModuleName = activationModuleNames[modelInd, activationInd].lower()
+                    if "shared" in activationModuleName and modelInd != 0: continue
 
-            # Save the figure if desired.
-            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{modelLabels[modelInd]} {plotTitle} epochs{len(activationParams)}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
-            else: self.clearFigure(fig=None, legend=None, showPlot=True)
+                    if "specific" in activationModuleName: lineColor = self.darkColors[modelInd]; alpha = 0.8
+                    elif "shared" in activationModuleName: lineColor = self.blackColor; alpha = 0.5
+                    else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+
+                    if modelInd == 0: modelLabel = modelLabels[modelInd]
+                    else: modelLabel = None
+
+                    # Plot the activation parameters.
+                    ax.plot(activationParams, color=lineColor, linewidth=0.8, alpha=alpha, label=modelLabel)
+                    ax.set_xlabel("Training Epoch")
+                    ax.set_ylabel("Values")
+                    if 'Infinite' in paramName: ax.set_ylim((0, 1.1))
+                    elif 'Linearity' in paramName: ax.set_ylim((0, 10.1))
+                    elif 'Convergent' in paramName: ax.set_ylim((0, 2.1))
+        plt.xlim((0, numEpochs + 1))
+        plt.grid(True)
+
+        # Label the plot.
+        plt.title(f"{plotTitle}")
+
+        # Save the figure if desired.
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(activationParams)}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def generalDataPlotting(self, plottingData, plottingLabels, saveFigureLocation, plotTitle="Model Convergence Loss"):
         # Plot the training path.

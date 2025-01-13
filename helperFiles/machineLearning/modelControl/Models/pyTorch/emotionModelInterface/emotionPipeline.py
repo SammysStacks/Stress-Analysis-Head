@@ -16,13 +16,14 @@ class emotionPipeline(emotionPipelineHelpers):
         # Finish setting up the model.
         self.compileOptimizer(submodel)  # Initialize the optimizer (for back propagation)
 
-    def trainModel(self, dataLoader, submodel, profileTraining, specificTraining, trainSharedLayers, stepScheduler, numEpochs):
+    def trainModel(self, dataLoader, submodel, profileTraining, specificTraining, trainSharedLayers, stepScheduler, numEpochs, warmupFlag=False):
         # Load in all the data and labels for final predictions and calculate the activity and emotion class weights.
         # allData, allLabels, allTrainingMasks, allTestingMasks, allSignalData, allSignalIdentifiers, allMetadata, reconstructionIndex = self.prepareInformation(dataLoader)
         # allEmotionClassWeights, activityClassWeights = self.organizeLossInfo.getClassWeights(allLabels, allTrainingMasks, allTestingMasks, self.numActivities)
         self.setupTraining(submodel, profileTraining=profileTraining, specificTraining=specificTraining, trainSharedLayers=trainSharedLayers)
         onlyProfileTraining = profileTraining and not specificTraining and not trainSharedLayers
         if self.model.debugging: self.accelerator.print(f"\nTraining {self.datasetName} model")
+        reducedLossFactor = 100 if warmupFlag else 1
         if onlyProfileTraining:
             dataLoader = dataLoader.dataset.getAll()
             testSize = modelParameters.getInferenceBatchSize(submodel, self.accelerator.device)
@@ -97,7 +98,7 @@ class emotionPipeline(emotionPipelineHelpers):
 
                         t1 = time.time()
                         # Update the model parameters.
-                        self.accelerator.backward(finalTrainingLoss)  # Calculate the gradients.
+                        self.accelerator.backward(finalTrainingLoss / reducedLossFactor)  # Calculate the gradients.
                         self.backpropogateModel()  # Backpropagation.
                         if self.model.debugging: t2 = time.time(); self.accelerator.print(f"{'Shared' if trainSharedLayers else '\tSpecific'} layer training {self.datasetName} {numPointsAnalyzed}: {t22 - t11} {t2 - t1}\n")
 

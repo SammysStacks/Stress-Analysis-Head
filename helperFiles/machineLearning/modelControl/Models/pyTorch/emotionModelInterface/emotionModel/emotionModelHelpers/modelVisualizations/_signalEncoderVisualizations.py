@@ -59,14 +59,13 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotProfileReconstructionError(self, relativeTimes, healthProfile, reconstructedHealthProfile, epoch=0, saveFigureLocation="", plotTitle="Signal Encoding"):
+    def plotProfileReconstructionError(self, relativeTimes, healthProfile, reconstructedHealthProfile, epoch=0, batchInd=0, saveFigureLocation="", plotTitle="Signal Encoding"):
         # Extract the signal dimensions.
-        healthError = (healthProfile[:, None, :] - reconstructedHealthProfile)
-        batchSize, numSignals, sequenceLength = reconstructedHealthProfile.shape
-        batchInd = 0
+        healthError = (healthProfile[:, None, :] - reconstructedHealthProfile)[batchInd]
 
-        plt.plot(relativeTimes, healthError[batchInd].mean(axis=0), c=self.blackColor, label=f"Health profile error", linewidth=2, alpha=0.8)
-        for signalInd in range(numSignals): plt.plot(relativeTimes, healthError[batchInd, signalInd], c=self.lightColors[0], linewidth=1, alpha=0.1)
+        # Plot the signal reconstruction error.
+        plt.plot(relativeTimes, healthError.mean(axis=0), c=self.blackColor, label=f"Health profile error", linewidth=2, alpha=0.8)
+        plt.plot(relativeTimes, healthError.T, c=self.lightColors[0], linewidth=1, alpha=0.1)
 
         # Plotting aesthetics.
         plt.xlabel("Time (Seconds)")
@@ -77,19 +76,17 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotProfileReconstruction(self, relativeTimes, healthProfile, reconstructedHealthProfile, epoch=0, saveFigureLocation="", plotTitle="Signal Encoding"):
-        batchInd = 0
-
+    def plotProfileReconstruction(self, relativeTimes, healthProfile, reconstructedHealthProfile, epoch=0, batchInd=0, saveFigureLocation="", plotTitle="Signal Encoding"):
         # Extract the signal dimensions.
         reconstructionError = np.square(healthProfile[:, None, :] - reconstructedHealthProfile)[batchInd]
-        batchSize, numSignals, sequenceLength = reconstructedHealthProfile.shape
 
         # Plot the signal reconstruction.
         plt.plot(relativeTimes, healthProfile[batchInd], c=self.blackColor, label=f"Health profile", linewidth=2, alpha=0.8)
         plt.errorbar(x=np.arange(0, len(reconstructionError)), y=reconstructionError.mean(axis=-1), yerr=reconstructionError.std(axis=-1), color=self.darkColors[1], capsize=3, linewidth=2)
 
         # Plot the signal reconstruction.
-        for signalInd in range(numSignals): plt.plot(relativeTimes, reconstructedHealthProfile[batchInd, signalInd], c=self.lightColors[1], linewidth=1, alpha=0.1)
+        plt.plot(relativeTimes, reconstructedHealthProfile[batchInd].T, c=self.lightColors[1], linewidth=1, alpha=0.1)
+        plt.axhline(y=0, color=self.blackColor, linewidth=0.5, alpha=0.25)
 
         # Plotting aesthetics.
         plt.xlabel("Time (Seconds)")
@@ -101,54 +98,54 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotEncoder(self, initialSignalData, reconstructedSignals, comparisonTimes, comparisonSignal, epoch, saveFigureLocation="", plotTitle="Encoder Prediction", numSignalPlots=1):
+    def plotEncoder(self, initialSignalData, reconstructedSignals, comparisonTimes, comparisonSignal, signalNames, epoch, batchInd, saveFigureLocation="", plotTitle="Encoder Prediction"):
         # Assert the integrity of the incoming data
         assert initialSignalData.shape[0:2] == comparisonSignal.shape[0:2], f"{initialSignalData.shape} {comparisonSignal.shape}"
         batchSize, numSignals, numEncodedPoints = comparisonSignal.shape
         if batchSize == 0: return None
 
-        # Get the signals to plot.
-        plottingSignals = np.arange(0, numSignalPlots)
-        plottingSignals = np.concatenate((plottingSignals, np.sort(numSignals - plottingSignals - 1)))
-        assert plottingSignals[-1] == numSignals - 1, f"{plottingSignals} {numSignals}"
-
         # Unpack the data
         datapoints = emotionDataInterface.getChannelData(initialSignalData, channelName=modelConstants.signalChannel)
         timepoints = emotionDataInterface.getChannelData(initialSignalData, channelName=modelConstants.timeChannel)
 
-        batchInd = 0
-        for signalInd in plottingSignals:
+        for signalInd in range(min(2, numSignals)):
+            times, data = timepoints[batchInd, signalInd, :], datapoints[batchInd, signalInd, :]
+            reconstructedData = reconstructedSignals[batchInd, signalInd, :]
+
             # Plot the signal reconstruction.
-            plt.plot(timepoints[batchInd, signalInd, :], datapoints[batchInd, signalInd, :], 'o', color=self.blackColor, markersize=2, alpha=0.75, label="Initial Signal")
-            plt.plot(timepoints[batchInd, signalInd, :], reconstructedSignals[batchInd, signalInd, :], 'o', color=self.lightColors[0], markersize=2, alpha=1, label="Reconstructed Signal")
+            plt.plot(times, data, 'o', color=self.blackColor, markersize=2, alpha=0.75, label="Initial Signal")
+            plt.plot(times, reconstructedData, 'o', color=self.lightColors[0], markersize=2, alpha=1, label="Reconstructed Signal")
             plt.plot(comparisonTimes, comparisonSignal[batchInd, signalInd, :], self.lightColors[1], linewidth=2, alpha=1, label="Resampled Signal")
+            plt.axhline(y=0, color=self.blackColor, linewidth=0.5, alpha=0.25)
 
             # Plotting aesthetics.
-            plt.title(f"{plotTitle} epoch{epoch} signal{signalInd + 1}")
+            plt.title(f"{plotTitle} epoch{epoch} {signalNames[signalInd]}")
             plt.ylabel("Signal (AU)")
             plt.legend(loc="best")
             plt.xlabel("Points")
             plt.ylim((-2, 2))
 
             # Save the figure.
-            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} {signalNames[signalInd]}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
             else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
             # Plot the signal reconstruction.
-            plt.plot(timepoints[batchInd, signalInd, :], reconstructedSignals[batchInd, signalInd, :] - datapoints[batchInd, signalInd, :], 'o', color=self.blackColor, markersize=4, alpha=0.75, label="Signal Reconstruction Error")
+            plt.plot(times, reconstructedData - data, 'o', color=self.blackColor, markersize=2, alpha=0.75, label="Signal Reconstruction Error")
+            plt.axhline(y=0, color=self.blackColor, linewidth=0.5, alpha=0.25)
 
             # Plotting aesthetics.
-            plt.title(f"{plotTitle} Error epoch{epoch} signal{signalInd + 1}")
+            plt.title(f"{plotTitle} Error epoch{epoch} {signalNames[signalInd]}")
             plt.ylabel("Signal (AU)")
             plt.legend(loc="best")
             plt.xlabel("Points")
             plt.ylim((-2, 2))
 
             # Save the figure.
-            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} {signalNames[signalInd]}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
             else: self.clearFigure(fig=None, legend=None, showPlot=True)
+            break
 
-    def plotSignalEncodingStatePath(self, relativeTimes, compiledSignalEncoderLayerStates, vMin, epoch, hiddenLayers, saveFigureLocation, plotTitle):
+    def plotSignalEncodingStatePath(self, relativeTimes, compiledSignalEncoderLayerStates, vMin, signalNames, epoch, hiddenLayers, saveFigureLocation, plotTitle):
         numLayers, numExperiments, numSignals, encodedDimension = compiledSignalEncoderLayerStates.shape
         timesPresent = relativeTimes is not None
 
@@ -183,12 +180,12 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.grid(False)
 
         # Save or clear figure
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", showPlot=True)
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} {signalNames[signalInd]}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", showPlot=True)
         else: self.clearFigure(fig=None, legend=None, showPlot=False)
 
     # --------------------- Visualize Model Training --------------------- #
 
-    def plotSignalComparison(self, originalSignal, comparisonSignal, epoch, saveFigureLocation, plotTitle, numSignalPlots=1):
+    def plotSignalComparison(self, originalSignal, comparisonSignal, signalNames, epoch, saveFigureLocation, plotTitle, numSignalPlots=1):
         """ originalSignal dimension: batchSize, numSignals, numTotalPoints """
         # Assert the integrity of the incoming data
         assert originalSignal.shape[0:2] == comparisonSignal.shape[0:2], f"{originalSignal.shape} {comparisonSignal.shape}"
@@ -208,15 +205,15 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             # Format the plotting
             plt.ylabel("Arbitrary Axis (AU)")
             plt.xlabel("Points")
-            plt.title(f"{plotTitle} epoch{epoch} signal{signalInd + 1}")
+            plt.title(f"{plotTitle} epoch{epoch} {signalNames[signalInd]}")
             plt.ylim((-2, 2))
 
             # Save the plot
-            if self.saveDataFolder: self.displayFigure(saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} {signalNames[signalInd]}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
             else: self.clearFigure(fig=None, legend=None, showPlot=True)
             if signalInd + 1 == numSignalPlots: break
 
-    def plotAllSignalComparisons(self, distortedSignals, reconstructedDistortedSignals, trueSignal, epoch, signalInd, saveFigureLocation, plotTitle):
+    def plotAllSignalComparisons(self, distortedSignals, reconstructedDistortedSignals, trueSignal, signalNames, epoch, signalInd, saveFigureLocation, plotTitle):
         numSignals, numTotalPoints = reconstructedDistortedSignals.shape
         alphas = np.linspace(0.1, 1, numSignals)
 
@@ -227,16 +224,16 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             plt.plot(reconstructedDistortedSignals[i], '-', color='tab:red', linewidth=1, markersize=2, alpha=alphas[i], zorder=5)
         
         # Format the plotting
-        plt.title(f"{plotTitle} epoch{epoch} signal{signalInd + 1}")
+        plt.title(f"{plotTitle} epoch{epoch} {signalNames[signalInd]}")
         plt.xlabel('Time (Seconds)')
         plt.ylabel("Arbitrary Axis (AU)")
         plt.legend(['Noisy Signal', 'True Signal', 'Reconstructed Signal'], loc='best')
 
         # Save the plot
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} {signalNames[signalInd]}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotEigenValueLocations(self, givensAnglesPath, scalingFactorsPath, reversibleModuleNames, epoch, signalInd, saveFigureLocation, plotTitle):
+    def plotEigenValueLocations(self, givensAnglesPath, scalingFactorsPath, reversibleModuleNames, signalNames, epoch, signalInd, saveFigureLocation, plotTitle):
         # givensAnglesPath: numModuleLayers, numSignals, numFreeParameters
         numModuleLayers, nCols = len(givensAnglesPath), min(6, len(givensAnglesPath))
         nRows = math.ceil(numModuleLayers / nCols)
@@ -282,7 +279,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.tight_layout(pad=2.0)
 
         # Save the plot
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} {signalNames[signalInd]}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def plotEigenvalueAngles(self, givensAnglesPath, scalingFactorsPath, reversibleModuleNames, epoch, degreesFlag, saveFigureLocation, plotTitle):
@@ -365,7 +362,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def modelFlow(self, dataTimes, dataStates, epoch, batchInd, signalInd, saveFigureLocation, plotTitle):
+    def modelFlow(self, dataTimes, dataStates, signalNames, epoch, batchInd, signalInd, saveFigureLocation, plotTitle):
         dataStates = np.asarray(dataStates)
         dataStates = dataStates[:, signalInd]
         numModelLayers, encodedDimension = dataStates.shape
@@ -375,13 +372,14 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         x_data, y_data = np.meshgrid(dataTimes, np.arange(1, 1 + numModelLayers))
         x, y, z = x_data.flatten(), y_data.flatten(), dataStates.flatten()
 
-        # Create a figure
-        fig = plt.figure(figsize=(14, 10))
-        ax = fig.add_subplot(111, projection='3d')
+        # Create a figure with a white background
+        plt.style.use('default')  # Reset style for a clean white background
+        fig = plt.figure(figsize=(14, 10), facecolor="white")
+        ax = fig.add_subplot(111, projection='3d', facecolor="white")
 
         # Plot the surface.
-        surf = ax.plot_surface(x_data, y_data, dataStates, cmap=self.custom_cmap, alpha=0.5, linewidth=1, antialiased=True, vmin=-1.5*modelConstants.minMaxScale, vmax=1.5*modelConstants.minMaxScale)
-        surf = ax.scatter(x_data.flatten(), y_data.flatten(), dataStates.flatten(), c=dataStates.flatten(), linewidths=2, cmap=self.custom_cmap, alpha=1, s=7, vmin=-1.5*modelConstants.minMaxScale, vmax=1.5*modelConstants.minMaxScale)
+        ax.plot_surface(x_data, y_data, dataStates, cmap=self.custom_cmap, alpha=0.85, linewidth=0.5, antialiased=True, vmin=-1.5*modelConstants.minMaxScale, vmax=1.5*modelConstants.minMaxScale)
+        surf = ax.scatter(x, y, z, c=z, linewidths=2, cmap=self.custom_cmap, alpha=1, s=7, vmin=-1.5*modelConstants.minMaxScale, vmax=1.5*modelConstants.minMaxScale)
 
         # Customize the view angle
         ax.view_init(elev=30, azim=135)
@@ -401,40 +399,45 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.tight_layout()
 
         # Save the plot
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} batchInd{batchInd} signalInd{signalInd}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} batchInd{batchInd} {signalNames[signalInd]}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotActivationParams(self, activationCurves, activationModuleNames, epoch, saveFigureLocation, plotTitle):
+    def plotActivationCurves(self, activationCurves, activationModuleNames, epoch, saveFigureLocation, plotTitle):
+        axNames = ["Specific Processing", "Specific Neural Low Freq", "Specific Neural High Freq",
+                   "Shared Processing", "Shared Neural Low Freq", "Shared Neural High Freq"]
         numActivations, numPointsX, numPointsY = activationCurves.shape
-        nCols = 6; nRows = math.ceil(numActivations / nCols)
+        nCols, nRows = 3, 2
 
         # Create a figure and axes array
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False)
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=True)
         axes = axes.flatten()  # Flatten to 1D array for easy indexing
 
-        for layerInd in range(numActivations):
-            ax = axes[layerInd]
-            x, y = activationCurves[layerInd]
+        for activationInd in range(numActivations):
+            x, y = activationCurves[activationInd]
+            activationName = activationModuleNames[activationInd].lower()
+            axInd = 0
 
+            if "specific" in activationName: axInd = 0
+            elif "shared" in activationName: axInd = 3
+            if "neural" in activationName and 'low' in activationName: axInd += 1
+            elif "neural" in activationName and 'high' in activationName: axInd += 2
+            elif "processing" not in activationName: raise ValueError(f"Unknown activation module: {activationName}")
+
+            ax = axes[axInd]
             # Plot the activation curves
-            ax.plot(x, y, color=self.lightColors[1], linestyle='-', linewidth=2, label="Inverse Pass")  # Plot Inverse Pass
-            ax.plot(y, x, color=self.lightColors[0], linestyle='-', linewidth=2, label="Forward Pass")  # Plot Forward Pass
-            ax.plot(x, x, color=self.blackColor, linestyle='--', linewidth=0.5, label="Identity")  # Plot Identity Line
+            ax.plot(x, y, color=self.lightColors[1], linestyle='-', linewidth=1, label="Inverse Pass", alpha=0.8*activationInd/numActivations + 0.2)  # Plot Inverse Pass
+            ax.plot(y, x, color=self.lightColors[0], linestyle='-', linewidth=1, label="Forward Pass", alpha=0.8*activationInd/numActivations + 0.2)  # Plot Forward Pass
 
-            ax.set_title(f"{activationModuleNames[layerInd]}")
+        for axInd in range(nCols*nRows):
+            ax = axes[axInd]
+            ax.plot(x, x, color=self.blackColor, linestyle='--', linewidth=0.5)  # Plot Identity Line
+            ax.set_title(f"{axNames[axInd]}")
             ax.set_xlabel("X")
             ax.set_ylabel("Y")
             ax.grid(True)
-            ax.legend()
-
-        # Remove any unused subplots
-        total_plots = nRows * nCols
-        if numActivations < total_plots:
-            for idx in range(numActivations, total_plots):
-                fig.delaxes(axes[idx])
 
         # Set the main title
-        fig.suptitle(f"{plotTitle} - Epoch {epoch}\nForward and Inverse from x ∈ [{-2}, {2}]", fontsize=16)
+        fig.suptitle(f"{plotTitle} - Epoch {epoch}\nForward and Inverse from x ∈ [{-1.5}, {1.5}]", fontsize=16)
         plt.tight_layout()
 
         # Save the plot

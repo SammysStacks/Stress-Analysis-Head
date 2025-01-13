@@ -38,7 +38,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-01-07 2-2"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2025-01-12"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Architecture Parameters ----------------------- #
@@ -59,7 +59,7 @@ if __name__ == "__main__":
     parser.add_argument('--initialProfileAmp', type=float, default=0.01, help='The limits for profile initialization, [0.005, 0.05]')
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=2, help='The number of layers in the model.')
     parser.add_argument('--numSharedEncoderLayers', type=int, default=6, help='The number of layers in the model.')
-    parser.add_argument('--profileDimension', type=int, default=32, help='The number of profile weights.')
+    parser.add_argument('--profileDimension', type=int, default=128, help='The number of profile weights.')
     parser.add_argument('--numProfileShots', type=int, default=16, help='The epochs for profile training.')
 
     # Add arguments for the emotion and activity architecture.
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     # ----------------------- Training Parameters ----------------------- #
     # Signal encoder learning rates.
     parser.add_argument('--profileLR', type=float, default=0.05, help='The learning rate of the health model.')
-    parser.add_argument('--reversibleLR', type=float, default=1e-3, help='The learning rate of the general model.')
+    parser.add_argument('--reversibleLR', type=float, default=5e-4, help='The learning rate of the general model.')
     parser.add_argument('--physGenLR', type=float, default=1e-4, help='The learning rate of the general model.')
 
     # Signal encoder weight decays.
