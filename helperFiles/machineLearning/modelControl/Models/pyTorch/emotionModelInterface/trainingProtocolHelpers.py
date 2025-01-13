@@ -48,7 +48,7 @@ class trainingProtocolHelpers:
 
         # Unify all the model weights.
         self.unifyAllModelWeights(allMetaModels, allModels)
-        self.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, profileOnly=False)
+        self.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, profileOnlyTraining=False)
 
     def datasetSpecificTraining(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, profileOnlyTraining=False):
         # Unify all the model weights.
