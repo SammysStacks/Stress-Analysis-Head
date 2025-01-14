@@ -40,8 +40,8 @@ waveletTypes_arr=('bior3.1')
 # Collective Switchables: 20
 numSpecificEncoderLayers_arr=(1 2)
 numSharedEncoderLayers_arr=(2 4 6 8 12)
-#numSpecificEncoderLayers_arr=(1)
-#numSharedEncoderLayers_arr=(7)
+numSpecificEncoderLayers_arr=(1)
+numSharedEncoderLayers_arr=(5)
 
 # Collective Switchables: 5
 #numProfileShots_arr=(32 20 16 12 8)
@@ -55,9 +55,9 @@ profileParams=(128)
 lrs_profile=('0.051' '0.06' '0.07' '0.8')  # 0.005 <= x <= 0.05
 lrs_reversible=('1e-4' '5e-4' '2.5e-4')  # 1e-4 <= x == 1e-3;
 lrs_profileGen=('1e-4' '2.5e-4') # # 1e-4 <= x == 1e-3; lrs_profileGen <= lrs_reversible
-#lrs_profile=('0.05')
-#lrs_reversible=('6e-4')
-#lrs_profileGen=('2e-4')
+lrs_profile=('0.067')
+lrs_reversible=('3e-4')
+lrs_profileGen=('1e-4')
 
 # Single Switchables: 2
 optimizers_arr=('NAdam')  # AdamW == NAdam > RAdam > Adam > Adamax
@@ -66,9 +66,9 @@ optimizers_arr=('NAdam')  # AdamW == NAdam > RAdam > Adam > Adamax
 wds_profile=('0' '1e-2' '1e-3' '1e-4' '1e-5')  # 1e-6 ==> x <== 1e-3; Removed from filename
 wds_reversible=('1e-2' '1e-3' '1e-4')  # 1e-4 == x <= 1e-3; Removed from filename
 wds_profileGen=('1e-2' '1e-3' '1e-4')  # 1e-5 == x <= 1e-4; Removed from filename
-wds_profile=('0')
-wds_reversible=('1e-4')
-wds_profileGen=('1e-4')
+#wds_profile=('0')
+#wds_reversible=('1e-4')
+#wds_profileGen=('1e-4')
 
 for beta1s in "${beta1s_arr[@]}"
 do
