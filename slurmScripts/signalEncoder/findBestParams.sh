@@ -2,7 +2,7 @@
 
 # Optimizer parameters.
 optimizers_arr=('NAdam')  # NAdam > AdamW > RAdam >= Adam > Adamax
-momentums_arr=('0.01' '0.001')  # Removed from filename
+momentums_arr=('0.001')  # Removed from filename
 beta1s_arr=('0.7')  # Removed from filename
 beta2s_arr=('0.8')  # Removed from filename
 
@@ -38,37 +38,37 @@ encodedDimensions_arr=(128)
 waveletTypes_arr=('bior3.1')
 
 # Collective Switchables: 20
-numSpecificEncoderLayers_arr=(1 2 3 4)
-numSharedEncoderLayers_arr=(2 4 5 8 12 16)
-#numSpecificEncoderLayers_arr=(2)
-#numSharedEncoderLayers_arr=(6)
+numSpecificEncoderLayers_arr=(1 2)
+numSharedEncoderLayers_arr=(2 4 6 8 12)
+#numSpecificEncoderLayers_arr=(1)
+#numSharedEncoderLayers_arr=(7)
 
 # Collective Switchables: 5
 #numProfileShots_arr=(32 20 16 12 8)
-numProfileShots_arr=(16 12)
+numProfileShots_arr=(24)
 
 # Collective Switchables: 4
 #profileParams=(16 64 128 256)
 profileParams=(128)
 
 # Collective Switchables: 90
-lrs_profile=('0.025' '0.051' '0.067' '0.075')  # 0.005 <= x <= 0.05
-lrs_reversible=('1e-4' '5e-4' '1e-3')  # 1e-4 <= x == 1e-3;
-lrs_profileGen=('1e-4' '5e-4' '1e-3') # # 1e-4 <= x == 1e-3; lrs_profileGen <= lrs_reversible
-lrs_profile=('0.05')
-lrs_reversible=('6e-4')
-lrs_profileGen=('2e-4')
+lrs_profile=('0.051' '0.06' '0.07' '0.8')  # 0.005 <= x <= 0.05
+lrs_reversible=('1e-4' '5e-4' '2.5e-4')  # 1e-4 <= x == 1e-3;
+lrs_profileGen=('1e-4' '2.5e-4') # # 1e-4 <= x == 1e-3; lrs_profileGen <= lrs_reversible
+#lrs_profile=('0.05')
+#lrs_reversible=('6e-4')
+#lrs_profileGen=('2e-4')
 
 # Single Switchables: 2
 optimizers_arr=('NAdam')  # AdamW == NAdam > RAdam > Adam > Adamax
 
 # Weight decay parameters.
-wds_profile=('0' '1e-2' '1e-3' '1e-4' '1e-5' '1e-6')  # 1e-6 ==> x <== 1e-3; Removed from filename
-wds_reversible=('1e-2' '1e-3' '1e-4' '1e-5' '1e-6')  # 1e-4 == x <= 1e-3; Removed from filename
-wds_profileGen=('1e-2' '1e-3' '1e-4' '1e-5' '1e-6')  # 1e-5 == x <= 1e-4; Removed from filename
-wds_profile=('1e-6')
+wds_profile=('0' '1e-2' '1e-3' '1e-4' '1e-5')  # 1e-6 ==> x <== 1e-3; Removed from filename
+wds_reversible=('1e-2' '1e-3' '1e-4')  # 1e-4 == x <= 1e-3; Removed from filename
+wds_profileGen=('1e-2' '1e-3' '1e-4')  # 1e-5 == x <= 1e-4; Removed from filename
+wds_profile=('0')
 wds_reversible=('1e-4')
-wds_profileGen=('1e-2')
+wds_profileGen=('1e-4')
 
 for beta1s in "${beta1s_arr[@]}"
 do
