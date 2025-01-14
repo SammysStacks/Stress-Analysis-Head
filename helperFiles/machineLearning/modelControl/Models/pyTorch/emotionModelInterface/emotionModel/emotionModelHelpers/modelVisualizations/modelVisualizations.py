@@ -80,7 +80,7 @@ class modelVisualizations(globalPlottingProtocols):
         # Load in all the data and labels for final predictions and calculate the activity and emotion class weights.
         allLabels, allSignalData, allSignalIdentifiers, allMetadata, allTrainingLabelMask, allTrainingSignalMask, allTestingLabelMask, allTestingSignalMask = modelPipeline.prepareInformation(lossDataLoader)
         validDataMask = emotionDataInterface.getValidDataMask(allSignalData)  # validDataMask: batchSize, numSignals, maxSequenceLength
-        validBatchMask = torch.any(torch.any(validDataMask, dim=-1), dim=-1)  # validBatchMask: batchSize
+        validBatchMask = 10 < torch.any(validDataMask, dim=-1).sum(dim=-1)  # validBatchMask: batchSize
         # allSignalData: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
         # allTrainingLabelMask, allTestingLabelMask: batchSize, numEmotions + 1 (activity)
         # allTrainingSignalMask, allTestingSignalMask: batchSize, numSignals

@@ -425,8 +425,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
             ax = axes[axInd]
             # Plot the activation curves
-            ax.plot(x, y, color=self.lightColors[1], linestyle='-', linewidth=1, label="Inverse Pass", alpha=0.8*activationInd/numActivations + 0.2)  # Plot Inverse Pass
-            ax.plot(y, x, color=self.lightColors[0], linestyle='-', linewidth=1, label="Forward Pass", alpha=0.8*activationInd/numActivations + 0.2)  # Plot Forward Pass
+            ax.plot(x, y, color=self.lightColors[1], linestyle='-', linewidth=1, label="Inverse Pass", alpha=0.75*activationInd/numActivations + 0.25)  # Plot Inverse Pass
+            ax.plot(y, x, color=self.lightColors[0], linestyle='-', linewidth=1, label="Forward Pass", alpha=0.75*activationInd/numActivations + 0.25)  # Plot Forward Pass
 
         for axInd in range(nCols*nRows):
             ax = axes[axInd]
