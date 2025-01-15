@@ -41,17 +41,18 @@ profileParams=(128)
 
 # Finished
 waveletTypes_arr=('bior3.1')
+lrs_profile=('0.067')
 
 # Collective Switchables: 20
-numSpecificEncoderLayers_arr=(1 2)
-numSharedEncoderLayers_arr=(2 4 6 8)
-#numSpecificEncoderLayers_arr=(1)
-#numSharedEncoderLayers_arr=(6)
+#numSpecificEncoderLayers_arr=(1 2)
+#numSharedEncoderLayers_arr=(2 4 6 8)
+numSpecificEncoderLayers_arr=(1)
+numSharedEncoderLayers_arr=(3)
 
 # Collective Switchables: 90
-lrs_profile=('0.06' '0.067' '0.07' '0.75' '0.8')  # 0.005 <= x <= 0.05
-lrs_reversible=('1e-4' '5e-4' '2.5e-4')  # 1e-4 <= x == 1e-3;
-lrs_profileGen=('1e-4' '2.5e-4') # # 1e-4 <= x == 1e-3; lrs_profileGen <= lrs_reversible
+#lrs_profile=('0.06' '0.067' '0.07' '0.75' '0.8')  # 0.005 <= x <= 0.05
+#lrs_reversible=('1e-4' '5e-4' '2.5e-4')  # 1e-4 <= x == 1e-3;
+#lrs_profileGen=('1e-4' '2.5e-4') # # 1e-4 <= x == 1e-3; lrs_profileGen <= lrs_reversible
 #lrs_profile=('0.067')
 #lrs_reversible=('3e-4')
 #lrs_profileGen=('1e-4')
