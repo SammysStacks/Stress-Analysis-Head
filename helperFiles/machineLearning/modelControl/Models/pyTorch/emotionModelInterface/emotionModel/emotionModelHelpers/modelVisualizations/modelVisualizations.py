@@ -67,8 +67,8 @@ class modelVisualizations(globalPlottingProtocols):
                 self.generalViz.plotSinglaParameterFlow(activationParamsPaths=activationParamsPaths, moduleNames=moduleNames, modelLabels=datasetNames, paramNames=paramNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Activation Path")
 
                 # Plot the givens angles for the signal encoder.
-                givensAnglesPaths = [specificModel.givensAnglesPath for specificModel in specificModels]  # numModels, numEpochs, numModuleLayers, numSignals, numParams
-                self.generalViz.plotGivensAnglesFlow(givensAnglesPaths=givensAnglesPaths, moduleNames=moduleNames, modelLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Givens Angles Path")
+                # givensAnglesPaths = [specificModel.givensAnglesPath for specificModel in specificModels]  # numModels, numEpochs, numModuleLayers, numSignals, numParams
+                # self.generalViz.plotGivensAnglesFlow(givensAnglesPaths=givensAnglesPaths, moduleNames=moduleNames, modelLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Givens Angles Path")
 
                 # TODO: plot angles over epochs for each model (store the angle weights)
 
