@@ -195,7 +195,7 @@ class generalVisualizations(globalPlottingProtocols):
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
         
     def plotGivensAnglesFlow(self, givensAnglesPaths, moduleNames, modelLabels, saveFigureLocation="", plotTitle="Model Convergence Loss"):
-        numModels, numEpochs, numModuleLayers, numSignals, numParams = givensAnglesPaths.shape
+        numModels, numEpochs, numModuleLayers, numParams = len(givensAnglesPaths), len(givensAnglesPaths[0]), len(givensAnglesPaths[0][0]), len(givensAnglesPaths[0][0][0][0])
         nCols = 4; nRows = numParams // 4
         signalInd = 0
 
