@@ -44,7 +44,7 @@ class organizeTrainingLosses(lossCalculations):
             # signalReconstructedTestingLosses: numTestingSignals
 
             # Get the encoder information.
-            givensAnglesPath, scalingFactorsPath, reversibleModuleNames = model.getEigenvalueFullPassPath()
+            givensAnglesPath, scalingFactorsPath, reversibleModuleNames = model.getLearnableParams()
             activationParamsPath, moduleNames = model.getActivationParamsFullPassPath()
             # activationParamsPath: numActivations, numParams=3
 

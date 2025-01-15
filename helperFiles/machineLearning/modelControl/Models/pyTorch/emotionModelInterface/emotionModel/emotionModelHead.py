@@ -212,7 +212,7 @@ class emotionModelHead(nn.Module):
 
         return compiledName
 
-    def getEigenvalueFullPassPath(self):
+    def getLearnableParams(self):
         givensAnglesPath, scalingFactorsPath, reversibleModuleNames = [], [], []
         for name, module in self.named_modules():
             if isinstance(module, reversibleConvolutionLayer):
