@@ -194,16 +194,16 @@ class generalVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
         
-    def plotGivensAnglesFlow(self, givensAnglesPaths, moduleNames, modelLabels, paramNames, signalInd, saveFigureLocation="", plotTitle="Model Convergence Loss"):
+    def plotGivensAnglesFlow(self, givensAnglesPaths, moduleNames, modelLabels, saveFigureLocation="", plotTitle="Model Convergence Loss"):
         numModels, numEpochs, numModuleLayers, numSignals, numParams = givensAnglesPaths.shape
         nCols = 4; nRows = numParams // 4
+        signalInd = 0
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=True)
         axes = axes.flatten()  # Flatten to 1D array for easy indexing
 
         for paramInd in range(numParams):
-            paramName = paramNames[paramInd]
             ax = axes[paramInd]  # which subplot to use
 
             for modelInd in range(numModels):

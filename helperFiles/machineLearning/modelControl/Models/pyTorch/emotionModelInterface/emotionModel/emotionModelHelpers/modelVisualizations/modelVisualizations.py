@@ -64,11 +64,11 @@ class modelVisualizations(globalPlottingProtocols):
                 paramNames = ["Infinite Bound", "Linearity Factor", "Convergent Point"]
                 moduleNames = np.asarray([modelPipeline.model.getActivationParamsFullPassPath()[1] for modelPipeline in allModelPipelines])  # numModels, numActivations
                 activationParamsPaths = np.asarray([specificModel.activationParamsPath for specificModel in specificModels])  # numModels, numEpochs, numActivations, numActivationParams=3
-                self.generalViz.plotSinglaParameterFlow(activationParamsPaths=activationParamsPaths, moduleNames=moduleNames, modelLabels=datasetNames, paramNames=paramNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Activations")
+                self.generalViz.plotSinglaParameterFlow(activationParamsPaths=activationParamsPaths, moduleNames=moduleNames, modelLabels=datasetNames, paramNames=paramNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Activation Path")
 
                 # Plot the givens angles for the signal encoder.
                 givensAnglesPaths = np.asarray([specificModel.givensAnglesPath for specificModel in specificModels])  # numModels, numEpochs, numModuleLayers, numSignals, numParams
-                self.generalViz.plotGivensAnglesFlow(givensAnglesPaths=givensAnglesPaths, moduleNames=moduleNames, modelLabels=datasetNames, paramNames=paramNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Activations")
+                self.generalViz.plotGivensAnglesFlow(givensAnglesPaths=givensAnglesPaths, moduleNames=moduleNames, modelLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Givens Angles Path")
 
                 # TODO: plot angles over epochs for each model (store the angle weights)
 
