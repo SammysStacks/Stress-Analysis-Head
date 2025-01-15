@@ -13,8 +13,8 @@ wds_reversible=('0' '1e-4')  # 1e-4 == x <= 1e-3
 
 # Learning parameters.
 lrs_profile=('0.05' '0.06' '0.07' '0.08' '0.09' '0.1')  # 0.005 <= x <= 0.05
-lrs_profileGen=('2.5e-4') # # 5e-5 <= x == 1e-4; Removed from filename
-lrs_reversible=('1e-4')  # 1e-4 <= x == 1e-3; Removed from filename
+lrs_reversible=('4e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
+lrs_profileGen=('1e-4') # # 5e-5 <= x == 1e-4; 
 
 # Known interesting parameters: 96
 numSharedEncoderLayers_arr=(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16)  # 16
@@ -55,11 +55,9 @@ wds_reversible=('1e-6')  # 1e-4 == x <= 1e-3
 
 # Collective Switchables: 90
 #lrs_profile=('0.06' '0.067' '0.07' '0.75' '0.8')  # 0.005 <= x <= 0.05
-#lrs_reversible=('1e-4' '5e-4' '2.5e-4')  # 1e-4 <= x == 1e-3;
-#lrs_profileGen=('1e-4' '2.5e-4') # # 1e-4 <= x == 1e-3; lrs_profileGen <= lrs_reversible
+#lrs_reversible=('5e-4')  # 1e-4 <= x == 1e-3;
+#lrs_profileGen=('1e-4') # # 1e-4 <= x == 1e-3; lrs_profileGen <= lrs_reversible
 #lrs_profile=('0.067')
-#lrs_reversible=('3e-4')
-#lrs_profileGen=('1e-4')
 
 for beta1s in "${beta1s_arr[@]}"
 do
