@@ -111,9 +111,15 @@ class modelVisualizations(globalPlottingProtocols):
             signalData = signalData.detach().cpu().numpy()
             
             # Compile additional information for the model.getActivationParamsFullPassPath
+<<<<<<< HEAD
             givensAnglesPath, scalingFactorsPath, reversibleModuleNames = model.getEigenvalueFullPassPath()
             activationCurvePath, moduleNames = model.getActivationCurvesFullPassPath()  # numModuleLayers, 2=(x, y), numPoints=100
             # givensAnglesPath: numModuleLayers, numSignals, numParams
+=======
+            # givensAnglesPath, scalingFactorsPath, reversibleModuleNames = model.getEigenvalueFullPassPath()
+            activationCurvePath, activationModuleNames = model.getActivationCurvesFullPassPath()  # numModuleLayers, 2=(x, y), numPoints=100
+            # givensAnglesPath: numModuleLayers, numSignals, numFreeParameters
+>>>>>>> 3ae243117 (Lab)
             # scalingFactorsPath: numModuleLayers, numSignals
             signalNames = model.featureNames
             batchInd, signalInd = 0, 0
