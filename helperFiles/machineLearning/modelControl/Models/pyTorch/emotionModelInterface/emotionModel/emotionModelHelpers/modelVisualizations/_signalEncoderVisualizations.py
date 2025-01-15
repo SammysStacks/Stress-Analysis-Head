@@ -233,7 +233,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} {signalNames[signalInd]}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotEigenValueLocations(self, givensAnglesPath, scalingFactorsPath, reversibleModuleNames, signalNames, epoch, signalInd, saveFigureLocation, plotTitle):
+    def plotEigenValueLocations(self, givensAnglesPath, moduleNames, signalNames, epoch, signalInd, saveFigureLocation, plotTitle):
         # givensAnglesPath: numModuleLayers, numSignals, numParams
         numModuleLayers, nCols = len(givensAnglesPath), min(6, len(givensAnglesPath))
         nRows = math.ceil(numModuleLayers / nCols)
@@ -244,15 +244,20 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         for layerInd in range(numModuleLayers):
             signalAngleLocations = np.exp(np.asarray(givensAnglesPath[layerInd][signalInd]) * 1j)
-            ax = axes[layerInd]  # which subplot to use
+            moduleName = moduleNames[layerInd]
+            ax = axes[layerInd]
+
+            if "specific" in moduleName: lineColor = self.lightColors[0]; alpha = 0.8
+            elif "shared" in moduleName: lineColor = self.blackColor; alpha = 0.5
+            else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
 
             # Scatter training eigenvalues
             x, y = signalAngleLocations.real, signalAngleLocations.imag
-            ax.scatter(x, y, color=self.lightColors[1], label="Training", s=10, linewidth=0.2, alpha=0.5)
+            ax.scatter(x, y, color=lineColor, label="Training", s=10, linewidth=0.2, alpha=alpha)
 
             # Connect points to the origin
             for xi, yi in zip(x.flatten(), y.flatten()):
-                ax.plot([0, xi], [0, yi], color=self.lightColors[1], linestyle='-', linewidth=0.2)
+                ax.plot([0, xi], [0, yi], color=lineColor, linestyle='-', linewidth=0.2)
 
             # Highlight the origin
             ax.scatter(0, 0, color=self.blackColor, label='Origin', linewidth=1)
@@ -262,11 +267,11 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.axvline(0, color=self.blackColor, linewidth=0.5, alpha=0.25)
 
             # Draw unit circle for reference
-            arc = Arc((0, 0), width=2, height=2, theta1=0, theta2=180, color=self.blackColor, linewidth=1)
+            arc = Arc(xy=(0, 0), width=2, height=2, theta1=0, theta2=180, color=self.blackColor, linewidth=1)
             ax.add_patch(arc)
 
             # Customize appearance
-            ax.set_title(f"{reversibleModuleNames[layerInd]}")
+            ax.set_title(f"{moduleName}")
             ax.set_xlabel("Real part")
             ax.set_ylabel("Imag part")
             ax.axis('equal')
