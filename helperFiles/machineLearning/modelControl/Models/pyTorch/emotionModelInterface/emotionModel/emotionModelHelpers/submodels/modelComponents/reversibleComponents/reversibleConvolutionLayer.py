@@ -1,3 +1,4 @@
+import math
 import os
 
 import numpy as np
@@ -80,14 +81,17 @@ class reversibleConvolutionLayer(reversibleInterface):
         A = torch.zeros(self.numSignals, self.sequenceLength, self.sequenceLength, device=device, dtype=torch.float64)
 
         # Populate the Givens rotation angles.
-        givensAngles = self.getGivensAngles(layerInd)
-        A[:, self.rowInds, self.colInds] = -givensAngles
-        A[:, self.colInds, self.rowInds] = givensAngles
+        entriesA = self.getParamsA(layerInd)
+        A[:, self.rowInds, self.colInds] = -entriesA
+        A[:, self.colInds, self.rowInds] = entriesA
 
         return A
 
+    def getParamsA(self, layerInd):
+        return torch.pi * torch.tanh(self.givensRotationParams[layerInd]) / 2  # [-pi/2, pi/2]
+
     def getGivensAngles(self, layerInd):
-        return -torch.pi + torch.pi * torch.sigmoid(self.givensRotationParams[layerInd])
+        return self.getParamsA(layerInd)
 
     # ------------------- Scaling Methods ------------------- #
 
