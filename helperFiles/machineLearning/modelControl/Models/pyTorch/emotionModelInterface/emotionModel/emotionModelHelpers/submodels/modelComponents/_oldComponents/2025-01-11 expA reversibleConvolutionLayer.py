@@ -16,7 +16,7 @@ class reversibleConvolutionLayer(reversibleInterface):
     def __init__(self, numSignals, sequenceLength, numLayers, activationMethod):
         super(reversibleConvolutionLayer, self).__init__()
         # General parameters.
-        self.numFreeParameters = int(sequenceLength * (sequenceLength - 1) / 2)  # The number of free parameters in the model.
+        self.numParams = int(sequenceLength * (sequenceLength - 1) / 2)  # The number of free parameters in the model.
         self.activationMethod = activationMethod  # The activation method to use.
         self.sequenceLength = sequenceLength  # The length of the input signal.
         self.numSignals = numSignals  # The number of signals in the input data.
@@ -39,7 +39,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         # Create the neural layers.
         for layerInd in range(self.numLayers):
             # Create the neural weights.
-            parameters = nn.Parameter(torch.randn(self.numSignals, self.numFreeParameters or 1, dtype=torch.float64))
+            parameters = nn.Parameter(torch.randn(self.numSignals, self.numParams or 1, dtype=torch.float64))
             parameters = nn.init.kaiming_uniform_(parameters)
             self.linearOperators.append(parameters)
 

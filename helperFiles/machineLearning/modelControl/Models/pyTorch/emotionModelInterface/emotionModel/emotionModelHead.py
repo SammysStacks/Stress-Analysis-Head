@@ -220,32 +220,32 @@ class emotionModelHead(nn.Module):
                 givensAngles = np.asarray([givensAngle.detach().cpu().numpy() for givensAngle in givensAngles])
                 scalingFactors = np.asarray([scalingFactor.detach().cpu().numpy() for scalingFactor in scalingFactors])
 
-                givensAnglesPath.append(givensAngles)  # givensAnglesPath: numModuleLayers, numSignals, numFreeParameters
+                givensAnglesPath.append(givensAngles)  # givensAnglesPath: numModuleLayers, numSignals, numParams
                 scalingFactorsPath.append(scalingFactors)  # scalingFactorsPath: numModuleLayers, numSignals
                 reversibleModuleNames.append(self.compileModuleName(name))
         return givensAnglesPath, scalingFactorsPath, reversibleModuleNames
 
     def getActivationCurvesFullPassPath(self):
-        activationCurvePath, activationModuleNames = [], []
+        activationCurvePath, moduleNames = [], []
         for name, module in self.named_modules():
             if isinstance(module, reversibleConvolutionLayer): 
                 x, y = module.activationFunction.getActivationCurve(x_min=-1.5, x_max=1.5, num_points=100)
                 activationCurvePath.append([x, y])
-                activationModuleNames.append(self.compileModuleName(name))
+                moduleNames.append(self.compileModuleName(name))
         assert len(activationCurvePath) != 0
         activationCurvePath = np.asarray(activationCurvePath)
-        return activationCurvePath, activationModuleNames
+        return activationCurvePath, moduleNames
 
     def getActivationParamsFullPassPath(self):
-        activationParamsPath, activationModuleNames = [], []
+        activationParamsPath, moduleNames = [], []
         for name, module in self.named_modules():
             if isinstance(module, reversibleConvolutionLayer): 
                 params = module.activationFunction.getActivationParams()
                 activationParamsPath.append([param.detach().cpu().item() for param in params])
-                activationModuleNames.append(self.compileModuleName(name))
+                moduleNames.append(self.compileModuleName(name))
         assert len(activationParamsPath) != 0
         activationParamsPath = np.asarray(activationParamsPath)
-        return activationParamsPath, activationModuleNames
+        return activationParamsPath, moduleNames
 
     def signalEncoderPass(self, metaLearningData, forwardPass, compileLayerStates=False):
         reversibleInterface.changeDirections(forwardDirection=forwardPass)

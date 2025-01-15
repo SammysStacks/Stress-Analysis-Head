@@ -234,7 +234,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def plotEigenValueLocations(self, givensAnglesPath, scalingFactorsPath, reversibleModuleNames, signalNames, epoch, signalInd, saveFigureLocation, plotTitle):
-        # givensAnglesPath: numModuleLayers, numSignals, numFreeParameters
+        # givensAnglesPath: numModuleLayers, numSignals, numParams
         numModuleLayers, nCols = len(givensAnglesPath), min(6, len(givensAnglesPath))
         nRows = math.ceil(numModuleLayers / nCols)
 
@@ -283,7 +283,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def plotEigenvalueAngles(self, givensAnglesPath, scalingFactorsPath, reversibleModuleNames, epoch, degreesFlag, saveFigureLocation, plotTitle):
-        # givensAnglesPath: numModuleLayers, numSignals, numFreeParameters
+        # givensAnglesPath: numModuleLayers, numSignals, numParams
         # scalingFactorsPath: numModuleLayers, numSignals
         numModuleLayers, nCols = len(givensAnglesPath), min(6, len(givensAnglesPath))
         nRows = math.ceil(numModuleLayers / nCols)
@@ -402,7 +402,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} batchInd{batchInd} {signalNames[signalInd]}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotActivationCurves(self, activationCurves, activationModuleNames, epoch, saveFigureLocation, plotTitle):
+    def plotActivationCurves(self, activationCurves, moduleNames, epoch, saveFigureLocation, plotTitle):
         axNames = ["Specific Processing", "Specific Neural Low Freq", "Specific Neural High Freq",
                    "Shared Processing", "Shared Neural Low Freq", "Shared Neural High Freq"]
         numActivations, numPointsX, numPointsY = activationCurves.shape
@@ -414,7 +414,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         for activationInd in range(numActivations):
             x, y = activationCurves[activationInd]
-            activationName = activationModuleNames[activationInd].lower()
+            activationName = moduleNames[activationInd].lower()
             axInd = 0
 
             if "specific" in activationName: axInd = 0

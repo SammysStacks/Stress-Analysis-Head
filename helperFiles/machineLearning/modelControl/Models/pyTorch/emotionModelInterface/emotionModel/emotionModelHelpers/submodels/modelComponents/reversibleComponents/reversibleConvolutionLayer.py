@@ -16,12 +16,11 @@ class reversibleConvolutionLayer(reversibleInterface):
     def __init__(self, numSignals, sequenceLength, numLayers, activationMethod):
         super(reversibleConvolutionLayer, self).__init__()
         # General parameters.
-        self.numFreeParameters = int(sequenceLength * (sequenceLength - 1) / 2)  # The number of free parameters in the model.
+        self.numParams = int(sequenceLength * (sequenceLength - 1) / 2)  # The number of free parameters in the model.
         self.activationMethod = activationMethod  # The activation method to use.
         self.sequenceLength = sequenceLength  # The length of the input signal.
         self.numSignals = numSignals  # The number of signals in the input data.
         self.numLayers = numLayers  # The number of layers in the reversible linear layer.
-        self.eigenvalues, self.eigenvectors = nn.ParameterList(), nn.ParameterList()  # The eigenvalues and eigenvectors of the linear operator.
 
         # The restricted window for the neural weights.
         upperWindowMask = torch.ones(self.sequenceLength, self.sequenceLength, dtype=torch.float64)
@@ -38,7 +37,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         # Create the neural layers.
         for layerInd in range(self.numLayers):
             # Create the neural weights.
-            parameters = nn.Parameter(torch.randn(self.numSignals, self.numFreeParameters or 1, dtype=torch.float64))
+            parameters = nn.Parameter(torch.randn(self.numSignals, self.numParams or 1, dtype=torch.float64))
             parameters = nn.init.kaiming_uniform_(parameters)
             self.givensRotationParams.append(parameters)
 
@@ -108,7 +107,7 @@ class reversibleConvolutionLayer(reversibleInterface):
     # ------------------------------------------------------------ #
 
     def getLinearParams(self, layerInd):
-        givensAngles = self.getGivensAngles(layerInd)  # Dim: numSignals, numFreeParameters
+        givensAngles = self.getGivensAngles(layerInd)  # Dim: numSignals, numParams
         scalingFactors = self.getJacobianScalar()[0, :, 0]  # Dim: numSignals
 
         return givensAngles, scalingFactors

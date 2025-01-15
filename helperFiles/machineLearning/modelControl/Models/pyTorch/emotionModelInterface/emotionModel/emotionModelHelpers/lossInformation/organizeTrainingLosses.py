@@ -44,12 +44,14 @@ class organizeTrainingLosses(lossCalculations):
             # signalReconstructedTestingLosses: numTestingSignals
 
             # Get the encoder information.
-            activationParamsPath, activationModuleNames = model.getActivationParamsFullPassPath()
+            givensAnglesPath, scalingFactorsPath, reversibleModuleNames = model.getEigenvalueFullPassPath()
+            activationParamsPath, moduleNames = model.getActivationParamsFullPassPath()
             # activationParamsPath: numActivations, numParams=3
 
             # Store the signal encoder loss information.
             self.storeLossInformation(trainingLoss=signalReconstructedTrainingLosses, testingLoss=signalReconstructedTestingLosses, trainingHolder=model.specificSignalEncoderModel.trainingLosses_signalReconstruction, testingHolder=model.specificSignalEncoderModel.testingLosses_signalReconstruction)
             self.storeLossInformation(trainingLoss=activationParamsPath, testingLoss=None, trainingHolder=model.specificSignalEncoderModel.activationParamsPath, testingHolder=None)
+            self.storeLossInformation(trainingLoss=givensAnglesPath, testingLoss=None, trainingHolder=model.specificSignalEncoderModel.givensAnglesPath, testingHolder=None)
             self.accelerator.print("Reconstruction loss values:", signalReconstructedTrainingLosses.nanmean().item(), signalReconstructedTestingLosses.nanmean().item())
 
             # Calculate the activity classification accuracy/loss and assert the integrity of the loss.

@@ -153,7 +153,7 @@ class generalVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(trainingLosses[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotSinglaParameterFlow(self, activationParamsPaths, activationModuleNames, modelLabels, activationParamNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
+    def plotSinglaParameterFlow(self, activationParamsPaths, moduleNames, modelLabels, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
         numModels, numEpochs, numActivations, numParams = activationParamsPaths.shape
 
         # Create a figure and axes array
@@ -162,16 +162,16 @@ class generalVisualizations(globalPlottingProtocols):
 
         for paramInd in range(numParams):
             ax = axes[paramInd]  # which subplot to use
-            paramName = activationParamNames[paramInd]
+            paramName = paramNames[paramInd]
 
             for modelInd in range(numModels):
                 for activationInd in range(numActivations):
                     activationParams = activationParamsPaths[modelInd, :, activationInd, paramInd]
-                    activationModuleName = activationModuleNames[modelInd, activationInd].lower()
-                    if "shared" in activationModuleName and modelInd != 0: continue
+                    moduleName = moduleNames[modelInd, activationInd].lower()
+                    if "shared" in moduleName and modelInd != 0: continue
 
-                    if "specific" in activationModuleName: lineColor = self.darkColors[modelInd]; alpha = 0.8
-                    elif "shared" in activationModuleName: lineColor = self.blackColor; alpha = 0.5
+                    if "specific" in moduleName: lineColor = self.darkColors[modelInd]; alpha = 0.8
+                    elif "shared" in moduleName: lineColor = self.blackColor; alpha = 0.5
                     else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
 
                     if modelInd == 0: modelLabel = modelLabels[modelInd]
@@ -191,7 +191,47 @@ class generalVisualizations(globalPlottingProtocols):
         plt.title(f"{plotTitle}")
 
         # Save the figure if desired.
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(activationParams)}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        else: self.clearFigure(fig=None, legend=None, showPlot=True)
+        
+    def plotGivensAnglesFlow(self, givensAnglesPaths, moduleNames, modelLabels, paramNames, signalInd, saveFigureLocation="", plotTitle="Model Convergence Loss"):
+        numModels, numEpochs, numModuleLayers, numSignals, numParams = givensAnglesPaths.shape
+        nCols = 4; nRows = numParams // 4
+
+        # Create a figure and axes array
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=True)
+        axes = axes.flatten()  # Flatten to 1D array for easy indexing
+
+        for paramInd in range(numParams):
+            paramName = paramNames[paramInd]
+            ax = axes[paramInd]  # which subplot to use
+
+            for modelInd in range(numModels):
+                for moduleInd in range(numModuleLayers):
+                    givensAngles = givensAnglesPaths[modelInd, :, moduleInd, signalInd, paramInd]
+                    moduleName = moduleNames[modelInd, moduleInd].lower()
+                    if "shared" in moduleName and modelInd != 0: continue
+
+                    if "specific" in moduleName: lineColor = self.darkColors[modelInd]; alpha = 0.8
+                    elif "shared" in moduleName: lineColor = self.blackColor; alpha = 0.5
+                    else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+
+                    if modelInd == 0: modelLabel = modelLabels[modelInd]
+                    else: modelLabel = None
+
+                    # Plot the activation parameters.
+                    ax.plot(givensAngles, color=lineColor, linewidth=0.8, alpha=alpha, label=modelLabel)
+                    ax.set_xlabel("Training Epoch")
+                    ax.set_ylabel("Values")
+        plt.ylim((-np.pi, np.pi))
+        plt.xlim((0, numEpochs + 1))
+        plt.grid(True)
+
+        # Label the plot.
+        plt.title(f"{plotTitle}")
+
+        # Save the figure if desired.
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def generalDataPlotting(self, plottingData, plottingLabels, saveFigureLocation, plotTitle="Model Convergence Loss"):

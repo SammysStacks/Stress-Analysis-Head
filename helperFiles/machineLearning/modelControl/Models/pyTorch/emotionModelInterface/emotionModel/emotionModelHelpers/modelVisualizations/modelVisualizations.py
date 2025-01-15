@@ -61,10 +61,14 @@ class modelVisualizations(globalPlottingProtocols):
                                                    lossLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Profile Convergence Losses")
 
                 # Plot the shared and specific jacobian convergences.
-                activationParamNames = ["Infinite Bound", "Linearity Factor", "Convergent Point"]
-                activationModuleNames = np.asarray([modelPipeline.model.getActivationParamsFullPassPath()[1] for modelPipeline in allModelPipelines])  # numModels, numActivations
+                paramNames = ["Infinite Bound", "Linearity Factor", "Convergent Point"]
+                moduleNames = np.asarray([modelPipeline.model.getActivationParamsFullPassPath()[1] for modelPipeline in allModelPipelines])  # numModels, numActivations
                 activationParamsPaths = np.asarray([specificModel.activationParamsPath for specificModel in specificModels])  # numModels, numEpochs, numActivations, numActivationParams=3
-                self.generalViz.plotSinglaParameterFlow(activationParamsPaths=activationParamsPaths, activationModuleNames=activationModuleNames, modelLabels=datasetNames, activationParamNames=activationParamNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Activations")
+                self.generalViz.plotSinglaParameterFlow(activationParamsPaths=activationParamsPaths, moduleNames=moduleNames, modelLabels=datasetNames, paramNames=paramNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Activations")
+
+                # Plot the givens angles for the signal encoder.
+                givensAnglesPaths = np.asarray([specificModel.givensAnglesPath for specificModel in specificModels])  # numModels, numEpochs, numModuleLayers, numSignals, numParams
+                self.generalViz.plotGivensAnglesFlow(givensAnglesPaths=givensAnglesPaths, moduleNames=moduleNames, modelLabels=datasetNames, paramNames=paramNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Activations")
 
                 # TODO: plot angles over epochs for each model (store the angle weights)
 
@@ -108,8 +112,8 @@ class modelVisualizations(globalPlottingProtocols):
             
             # Compile additional information for the model.getActivationParamsFullPassPath
             givensAnglesPath, scalingFactorsPath, reversibleModuleNames = model.getEigenvalueFullPassPath()
-            activationCurvePath, activationModuleNames = model.getActivationCurvesFullPassPath()  # numModuleLayers, 2=(x, y), numPoints=100
-            # givensAnglesPath: numModuleLayers, numSignals, numFreeParameters
+            activationCurvePath, moduleNames = model.getActivationCurvesFullPassPath()  # numModuleLayers, 2=(x, y), numPoints=100
+            # givensAnglesPath: numModuleLayers, numSignals, numParams
             # scalingFactorsPath: numModuleLayers, numSignals
             signalNames = model.featureNames
             batchInd, signalInd = 0, 0
@@ -141,7 +145,7 @@ class modelVisualizations(globalPlottingProtocols):
                     # self.signalEncoderViz.modelPropagation3D(rotationAngles=rotationAngles, epoch=currentEpoch, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="3D Spatial Specific Eigenvalues by Layer")
 
                     # Plot the activation information.
-                    self.signalEncoderViz.plotActivationCurves(activationCurvePath, activationModuleNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Specific Spatial Activation Parameters")
+                    self.signalEncoderViz.plotActivationCurves(activationCurvePath, moduleNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Specific Spatial Activation Parameters")
 
                 # Plot the autoencoder results.
                 self.signalEncoderViz.plotEncoder(signalData, reconstructedSignalData, resampledBiomarkerTimes, resampledSignalData, signalNames=signalNames, epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="signalReconstruction/", plotTitle="Signal Reconstruction")
