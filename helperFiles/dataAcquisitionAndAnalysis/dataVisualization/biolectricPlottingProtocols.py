@@ -13,7 +13,7 @@ class plottingProtocols:
 
         # Specify Figure aesthetics
         figWidth, figHeight = 25, 15
-        self.fig, axes = plt.subplots(numChannels, nCols=3, sharey=False, sharex=False, gridspec_kw={'hspace': 0},
+        self.fig, axes = plt.subplots(numChannels, ncols=3, sharey=False, sharex=False, gridspec_kw={'hspace': 0},
                                       figsize=(figWidth, figHeight))
         if numChannels == 1:
             axes = np.asarray([axes])
