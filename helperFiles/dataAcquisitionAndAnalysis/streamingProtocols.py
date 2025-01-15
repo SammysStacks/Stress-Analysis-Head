@@ -81,8 +81,6 @@ class streamingProtocols(streamingProtocolHelpers):
                 # Analyze the new data in batches.
                 streamingDataFingers = self.analyzeBatchData(streamingDataFingers)
 
-            #self.analyzeBatchData(streamingDataFingers)
-
         except Exception as error:
             self.closeDeviceStream()
             print("Streaming error:", error)
