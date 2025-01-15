@@ -296,7 +296,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False)  # squeeze=False ensures axes is 2D
         units = "degrees" if degreesFlag else "radians"
-        degrees = 200 if degreesFlag else 3.25
+        degrees = 200 if degreesFlag else math.pi / 2
 
         # Flatten axes for easy indexing if you prefer
         axes = axes.flatten()
@@ -310,7 +310,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             # Customize subplot title and axes
             ax.set_title(f"{reversibleModuleNames[layerInd]}")
             ax.set_xlabel(f"Angle ({units})")
-            ax.set_xlim((0, degrees))
+            ax.set_xlim((-degrees, degrees))
             ax.set_ylabel("Density")
 
         # Hide any extra subplots if numModuleLayers < nRows * nCols
