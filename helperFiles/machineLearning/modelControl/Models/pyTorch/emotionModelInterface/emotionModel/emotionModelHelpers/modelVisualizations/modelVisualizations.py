@@ -111,7 +111,7 @@ class modelVisualizations(globalPlottingProtocols):
             signalData = signalData.detach().cpu().numpy()
             
             # Compile additional information for the model.getActivationParamsFullPassPath
-            # givensAnglesPath, scalingFactorsPath, reversibleModuleNames = model.getEigenvalueFullPassPath()
+            givensAnglesPath, scalingFactorsPath, reversibleModuleNames = model.getEigenvalueFullPassPath()
             activationCurvePath, moduleNames = model.getActivationCurvesFullPassPath()  # numModuleLayers, 2=(x, y), numPoints=100
             # givensAnglesPath: numModuleLayers, numSignals, numParams
             # scalingFactorsPath: numModuleLayers, numSignals
@@ -139,10 +139,10 @@ class modelVisualizations(globalPlottingProtocols):
                     self.signalEncoderViz.plotProfileReconstruction(resampledBiomarkerTimes, healthProfile, reconstructedHealthProfile, epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="signalEncoding/", plotTitle="Health Profile Reconstruction")
 
                     # # Plot the eigenvalue information.
-                    # scalingFactorsPathNorms = [(np.asarray(scalingFactorsPath[i]) - 0.8) / 0.3 for i in range(len(scalingFactorsPath))]
-                    # self.signalEncoderViz.plotEigenvalueAngles(givensAnglesPath, scalingFactorsPathNorms, reversibleModuleNames, epoch=currentEpoch, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="Rotation Angles")
-                    # self.signalEncoderViz.plotEigenValueLocations(givensAnglesPath, scalingFactorsPathNorms, reversibleModuleNames, epoch=currentEpoch, signalInd=signalInd, saveFigureLocation="signalEncoding/", plotTitle="Specific Spatial Eigenvalues on Circle")
-                    # self.signalEncoderViz.modelPropagation3D(rotationAngles=rotationAngles, epoch=currentEpoch, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="3D Spatial Specific Eigenvalues by Layer")
+                    scalingFactorsPathNorms = [(np.asarray(scalingFactorsPath[i]) - 0.8) / 0.3 for i in range(len(scalingFactorsPath))]
+                    self.signalEncoderViz.plotEigenvalueAngles(givensAnglesPath, scalingFactorsPathNorms, reversibleModuleNames, epoch=currentEpoch, signalInd=signalInd, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="Rotation Angles")
+                    self.signalEncoderViz.plotEigenValueLocations(givensAnglesPath, scalingFactorsPathNorms, reversibleModuleNames, epoch=currentEpoch, signalInd=signalInd, saveFigureLocation="signalEncoding/", plotTitle="Specific Spatial Eigenvalues on Circle")
+                    self.signalEncoderViz.modelPropagation3D(rotationAngles=rotationAngles, epoch=currentEpoch, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="3D Spatial Specific Eigenvalues by Layer")
 
                     # Plot the activation information.
                     self.signalEncoderViz.plotActivationCurves(activationCurvePath, moduleNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Specific Spatial Activation Parameters")

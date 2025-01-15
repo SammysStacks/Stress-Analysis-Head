@@ -282,7 +282,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} {signalNames[signalInd]}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotEigenvalueAngles(self, givensAnglesPath, scalingFactorsPath, reversibleModuleNames, epoch, degreesFlag, saveFigureLocation, plotTitle):
+    def plotEigenvalueAngles(self, givensAnglesPath, scalingFactorsPath, reversibleModuleNames, epoch, signalInd, degreesFlag, saveFigureLocation, plotTitle):
         # givensAnglesPath: numModuleLayers, numSignals, numParams
         # scalingFactorsPath: numModuleLayers, numSignals
         numModuleLayers, nCols = len(givensAnglesPath), min(6, len(givensAnglesPath))
@@ -299,12 +299,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         for layerInd in range(numModuleLayers):
             ax = axes[layerInd]  # which subplot to use
 
-            # for signalInd in range(len(givensAnglesPath[layerInd])):
-            #     scaleFactor = scalingFactorsPath[layerInd][signalInd]
-            #     angles = givensAnglesPath[layerInd][signalInd]
-
             # Plot training eigenvalue angles
-            ax.hist(givensAnglesPath[layerInd], bins=36, alpha=1, density=True, label="Training")
+            ax.hist(givensAnglesPath[layerInd][signalInd], bins=36, alpha=1, density=True, label="Training")
 
             # Customize subplot title and axes
             ax.set_title(f"{reversibleModuleNames[layerInd]}")
