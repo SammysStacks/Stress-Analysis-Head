@@ -35,7 +35,7 @@ waveletTypes_arr=(
 
 
 # Finished
-encodedDimensions_arr=(256)
+encodedDimensions_arr=(128 256 512)
 numProfileShots_arr=(24)
 profileParams=(128)
 
@@ -48,6 +48,10 @@ lrs_profile=('0.067')
 #numSharedEncoderLayers_arr=(2 4 6 8)
 numSpecificEncoderLayers_arr=(1)
 numSharedEncoderLayers_arr=(3)
+
+wds_profileGen=('1e-6')  # 1e-5 == x <= 1e-4
+wds_reversible=('1e-6')  # 1e-4 == x <= 1e-3
+
 
 # Collective Switchables: 90
 #lrs_profile=('0.06' '0.067' '0.07' '0.75' '0.8')  # 0.005 <= x <= 0.05
