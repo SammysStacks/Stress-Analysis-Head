@@ -8,23 +8,23 @@ beta2s_arr=('0.8')
 
 # Weight decay parameters.
 wds_profile=('0')  # 1e-6 ==> x <== 1e-3
-wds_profileGen=('0' '1e-4')  # 1e-5 == x <= 1e-4
-wds_reversible=('0' '1e-4')  # 1e-4 == x <= 1e-3
+wds_profileGen=('0')  # 1e-5 == x <= 1e-4
+wds_reversible=('0')  # 1e-4 == x <= 1e-3
 
 # Learning parameters.
-lrs_profile=('0.05' '0.06' '0.07' '0.08' '0.09' '0.1')  # 0.005 <= x <= 0.05
+lrs_profile=('0.067')  # 0.005 <= x <= 0.05
 lrs_reversible=('4e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
 lrs_profileGen=('1e-4') # # 5e-5 <= x == 1e-4; 
 
-# Known interesting parameters: 96
-numSharedEncoderLayers_arr=(1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16)  # 16
+# Known interesting parameters: 72
+numSharedEncoderLayers_arr=(1 2 3 4 5 6 7 8 9 10 11 12)  # 12
 numSpecificEncoderLayers_arr=(1 2 3 4 5 6)  # 6
 
-# Known interesting parameters: 144
-profileParams=(1 2 4 8 16 32 64 128 256 512)  # 
+# Known interesting parameters: 288
+encodedDimensions_arr=(32 64 128 256 512)  # 5
 numProfileShots_arr=(4 8 12 16 24 32)  # 6
-encodedDimensions_arr=(16 32 64 128 256 512)  # 4
-initialProfileAmp_arr=('0.001')  # 0.005 <= x <= 0.05
+profileParams=(16 32 64 128 256 512)  # 6
+initialProfileAmp_arr=('0.001')  # 0.001 <= x <= 0.05
 
 # Neural operator parameters.
 waveletTypes_arr=(
@@ -34,30 +34,17 @@ waveletTypes_arr=(
 )  # 'bior3.1' > 'bior3.3' > 'bior2.2' > 'bior3.5'
 
 
-# Finished
-encodedDimensions_arr=(128 256 512)
-numProfileShots_arr=(24)
+# Switchable
+encodedDimensions_arr=(256)
+numProfileShots_arr=(16)
 profileParams=(128)
 
-# Finished
+# Switchable
 waveletTypes_arr=('bior3.1')
-lrs_profile=('0.067')
 
-# Collective Switchables: 20
-#numSpecificEncoderLayers_arr=(1 2)
-#numSharedEncoderLayers_arr=(2 4 6 8)
+# Switchable
 numSpecificEncoderLayers_arr=(1)
-numSharedEncoderLayers_arr=(3)
-
-wds_profileGen=('1e-6')  # 1e-5 == x <= 1e-4
-wds_reversible=('1e-6')  # 1e-4 == x <= 1e-3
-
-
-# Collective Switchables: 90
-#lrs_profile=('0.06' '0.067' '0.07' '0.75' '0.8')  # 0.005 <= x <= 0.05
-#lrs_reversible=('5e-4')  # 1e-4 <= x == 1e-3;
-#lrs_profileGen=('1e-4') # # 1e-4 <= x == 1e-3; lrs_profileGen <= lrs_reversible
-#lrs_profile=('0.067')
+numSharedEncoderLayers_arr=(6)
 
 for beta1s in "${beta1s_arr[@]}"
 do
