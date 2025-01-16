@@ -287,7 +287,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} {signalNames[signalInd]}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotsGivensAnglesHist(self, givensAnglesPath, scalingFactorsPath, reversibleModuleNames, epoch, signalInd, degreesFlag, saveFigureLocation, plotTitle):
+    def plotsGivensAnglesHist(self, givensAnglesPath, scalingFactorsPath, reversibleModuleNames, numBins, epoch, signalInd, degreesFlag, saveFigureLocation, plotTitle):
         # givensAnglesPath: numModuleLayers, numSignals, numParams
         # scalingFactorsPath: numModuleLayers, numSignals
         numModuleLayers, nCols = len(givensAnglesPath), min(6, len(givensAnglesPath))
@@ -295,7 +295,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False)  # squeeze=False ensures axes is 2D
-        bins = np.arange(-np.pi/4, np.pi/4, np.pi/4/16)
+        bins = np.arange(-np.pi/4, np.pi/4, np.pi/4/numBins)
         units = "degrees" if degreesFlag else "radians"
         degrees = 200 if degreesFlag else math.pi / 4
 
