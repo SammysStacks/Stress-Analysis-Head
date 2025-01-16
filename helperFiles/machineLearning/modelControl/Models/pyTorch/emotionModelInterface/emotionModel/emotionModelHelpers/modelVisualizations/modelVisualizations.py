@@ -139,9 +139,7 @@ class modelVisualizations(globalPlottingProtocols):
 
                     # # Plot the eigenvalue information.
                     scalingFactorsPathNorms = [(np.asarray(scalingFactorsPath[i]) - 0.8) / 0.3 for i in range(len(scalingFactorsPath))]
-                    self.signalEncoderViz.plotsGivensAnglesHist(givensAnglesPath, scalingFactorsPathNorms, reversibleModuleNames, numBins=32, epoch=currentEpoch, signalInd=signalInd, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="Rotation Angles Hist32")
                     self.signalEncoderViz.plotsGivensAnglesHist(givensAnglesPath, scalingFactorsPathNorms, reversibleModuleNames, numBins=16, epoch=currentEpoch, signalInd=signalInd, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="Rotation Angles Hist16")
-                    self.signalEncoderViz.plotsGivensAnglesHist(givensAnglesPath, scalingFactorsPathNorms, reversibleModuleNames, numBins=8, epoch=currentEpoch, signalInd=signalInd, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="Rotation Angles Hist8")
                     self.signalEncoderViz.plotsGivensAnglesLine(givensAnglesPath, scalingFactorsPathNorms, reversibleModuleNames, epoch=currentEpoch, signalInd=signalInd, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="Rotation Angles Line")
                     # self.signalEncoderViz.plotEigenValueLocations(givensAnglesPath, reversibleModuleNames, signalNames=signalNames, epoch=currentEpoch, signalInd=signalInd, saveFigureLocation="signalEncoding/", plotTitle="Specific Spatial Eigenvalues on Circle")
                     # self.signalEncoderViz.modelPropagation3D(rotationAngles=rotationAngles, epoch=currentEpoch, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="3D Spatial Specific Eigenvalues by Layer")
