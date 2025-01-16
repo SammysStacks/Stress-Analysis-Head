@@ -20,7 +20,7 @@ lrs_profileGen=('1e-4') # # 5e-5 <= x == 1e-4;
 numSharedEncoderLayers_arr=(1 2 3 4 5 6 7 8 9 10 11 12)  # 12
 numSpecificEncoderLayers_arr=(1 2 3 4 5 6)  # 6
 
-# Known interesting parameters: 288
+# Known interesting parameters: 180
 encodedDimensions_arr=(32 64 128 256 512)  # 5
 numProfileShots_arr=(4 8 12 16 24 32)  # 6; 12 <= x <= 24
 profileParams=(16 32 64 128 256 512)  # 6
