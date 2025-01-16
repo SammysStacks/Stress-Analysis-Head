@@ -139,7 +139,7 @@ class generalVisualizations(globalPlottingProtocols):
         plt.hlines(y=0.02, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=1, alpha=0.25)
         plt.hlines(y=0.01, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=1)
         plt.xlim((0, max(32, len(trainingLosses[0]) + 1)))
-        plt.ylim((0.001, 10))
+        plt.ylim((0.001, 2))
         plt.grid(True)
 
         # Label the plot.
@@ -207,14 +207,13 @@ class generalVisualizations(globalPlottingProtocols):
         for modelInd in range(numModels):
             for moduleInd in range(numModuleLayers):
                 for paramInd in range(numParams):
+                    moduleName = moduleNames[modelInd, moduleInd].lower()
+                    if "shared" in moduleName and modelInd != 0: continue
                     ax = axes[paramInd]  # which subplot to use
 
                     givensAngles = []
                     for epoch in range(numEpochs):
                         givensAngles.append(givensAnglesPaths[modelInd, epoch, moduleInd, signalInd, paramInd])
-
-                    moduleName = moduleNames[modelInd, moduleInd].lower()
-                    if "shared" in moduleName and modelInd != 0: continue
 
                     if "specific" in moduleName: lineColor = self.darkColors[modelInd]; alpha = 0.8
                     elif "shared" in moduleName: lineColor = self.blackColor; alpha = 0.5

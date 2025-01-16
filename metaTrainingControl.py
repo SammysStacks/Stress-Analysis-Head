@@ -56,11 +56,11 @@ if __name__ == "__main__":
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
 
     # Add arguments for the signal encoder architecture.
-    parser.add_argument('--initialProfileAmp', type=float, default=1e-3, help='The limits for profile initialization, [0.005, 0.05]')
-    parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model.')
-    parser.add_argument('--numSharedEncoderLayers', type=int, default=6, help='The number of layers in the model.')
-    parser.add_argument('--profileDimension', type=int, default=128, help='The number of profile weights.')
-    parser.add_argument('--numProfileShots', type=int, default=16, help='The epochs for profile training.')
+    parser.add_argument('--initialProfileAmp', type=float, default=1e-3, help='The limits for profile initialization. Should be near zero.')
+    parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model: [1, 2]')
+    parser.add_argument('--numSharedEncoderLayers', type=int, default=6, help='The number of layers in the model: [2, 8]')
+    parser.add_argument('--profileDimension', type=int, default=128, help='The number of profile weights: [32, 256]')
+    parser.add_argument('--numProfileShots', type=int, default=16, help='The epochs for profile training: [16, 32]')
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions).')
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     parser.add_argument('--physGenLR', type=float, default=1e-4, help='The learning rate of the general model.')
 
     # Signal encoder weight decays.
-    parser.add_argument('--profileWD', type=float, default=0, help='The learning rate of the general model, [1e-6, 1e-3]')
+    parser.add_argument('--profileWD', type=float, default=0, help='The learning rate of the general model.')
     parser.add_argument('--reversibleWD', type=float, default=0, help='The learning rate of the general model.')
     parser.add_argument('--physGenWD', type=float, default=0, help='The learning rate of the general model.')
 
