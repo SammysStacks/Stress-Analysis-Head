@@ -21,7 +21,6 @@ srun accelerate launch ./../../metaTrainingControl.py \
     --beta1 "${15}" \
     --beta2 "${16}" \
     --momentum_decay "${17}" \
-    --initialProfileAmp "${18}" \
 
 end=$(date +%s)
 runtime=$((end-start))
