@@ -34,8 +34,13 @@ waveletTypes_arr=(
 
 
 # Switchable
+<<<<<<< HEAD
 #numSpecificEncoderLayers_arr=(1)
 #numSharedEncoderLayers_arr=(4)
+=======
+numSpecificEncoderLayers_arr=(1)
+numSharedEncoderLayers_arr=(6)
+>>>>>>> 82d4c7fd (HPC)
 
 # Switchable
 #encodedDimensions_arr=(128)
@@ -43,7 +48,7 @@ profileParams=(128)
 
 # Single Switchables
 waveletTypes_arr=('bior3.1')
-numProfileShots_arr=(24)  # 6
+#numProfileShots_arr=(24)  # 6
 
 for beta1s in "${beta1s_arr[@]}"
 do
