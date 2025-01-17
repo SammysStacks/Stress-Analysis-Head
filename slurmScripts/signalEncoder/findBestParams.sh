@@ -43,10 +43,9 @@ numSharedEncoderLayers_arr=(6)
 >>>>>>> 82d4c7fd (HPC)
 
 # Switchable
-#encodedDimensions_arr=(128)
 profileParams=(128)
 
-# Single Switchables
+# Single switchable
 waveletTypes_arr=('bior3.1')
 #numProfileShots_arr=(24)  # 6
 
