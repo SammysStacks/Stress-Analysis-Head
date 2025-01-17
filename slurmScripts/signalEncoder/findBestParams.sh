@@ -13,7 +13,7 @@ wds_reversible=('0')  # 1e-4 == x <= 1e-3
 
 # Learning parameters.
 lrs_profile=('0.067')  # 0.005 <= x <= 0.05
-lrs_reversible=('4e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
+lrs_reversible=('3e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
 lrs_profileGen=('1e-4') # # 5e-5 <= x == 1e-4; 
 
 # Known interesting parameters: 72
@@ -22,7 +22,7 @@ numSpecificEncoderLayers_arr=(1 2 3 4 5 6)  # 6
 
 # Known interesting parameters: 20 + 6
 encodedDimensions_arr=(32 64 128 256 512)  # 5
-numProfileShots_arr=(4 8 12 16 24 32)  # 6; 12 <= x <= 24
+numProfileShots_arr=(4 8 12 16 24 32 48)  # 6; 12 <= x <= 24
 profileParams=(16 32 64 128 256 512)  # 6
 
 # Neural operator parameters.
@@ -43,7 +43,7 @@ profileParams=(128)
 
 # Single Switchables
 waveletTypes_arr=('bior3.1')
-numProfileShots_arr=(16)  # 6
+numProfileShots_arr=(24)  # 6
 
 for beta1s in "${beta1s_arr[@]}"
 do

@@ -335,7 +335,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False)  # squeeze=False ensures axes is 2D
         units = "degrees" if degreesFlag else "radians"
-        degrees = 200 if degreesFlag else math.pi / 2
+        degrees = 200 if degreesFlag else math.pi / 4
 
         # Flatten axes for easy indexing if you prefer
         axes = axes.flatten()

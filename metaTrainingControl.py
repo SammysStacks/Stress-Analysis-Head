@@ -38,7 +38,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-01-14"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2025-01-16"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Architecture Parameters ----------------------- #
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     parser.add_argument('--irreversibleLearningProtocol', type=str, default='FC', help='The learning protocol for the model: CNN, FC')
     parser.add_argument('--reversibleLearningProtocol', type=str, default='rCNN', help='The learning protocol for the model: rCNN')
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are using: cpu, cuda')
-    parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
+    parser.add_argument('--encodedDimension', type=int, default=512, help='The dimension of the encoded signal.')
 
     # Add arguments for the neural operator.
     parser.add_argument('--waveletType', type=str, default='bior3.1', help='The wavelet type for the wavelet transform: bior3.1, bior3.3, bior2.2, bior3.5')
@@ -58,9 +58,9 @@ if __name__ == "__main__":
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--initialProfileAmp', type=float, default=1e-3, help='The limits for profile initialization. Should be near zero.')
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model: [1, 2]')
-    parser.add_argument('--numSharedEncoderLayers', type=int, default=6, help='The number of layers in the model: [2, 8]')
+    parser.add_argument('--numSharedEncoderLayers', type=int, default=4, help='The number of layers in the model: [2, 8]')
     parser.add_argument('--profileDimension', type=int, default=128, help='The number of profile weights: [32, 256]')
-    parser.add_argument('--numProfileShots', type=int, default=16, help='The epochs for profile training: [16, 32]')
+    parser.add_argument('--numProfileShots', type=int, default=24, help='The epochs for profile training: [16, 32]')
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions).')
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     # ----------------------- Training Parameters ----------------------- #
     # Signal encoder learning rates.
     parser.add_argument('--profileLR', type=float, default=0.067, help='The learning rate of the health model.')
-    parser.add_argument('--reversibleLR', type=float, default=1e-2, help='The learning rate of the general model.')
+    parser.add_argument('--reversibleLR', type=float, default=3e-4, help='The learning rate of the general model.')
     parser.add_argument('--physGenLR', type=float, default=1e-4, help='The learning rate of the general model.')
 
     # Signal encoder weight decays.

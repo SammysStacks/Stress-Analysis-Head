@@ -32,6 +32,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         # Initialize loss holders.
         self.trainingLosses_signalReconstruction, self.testingLosses_signalReconstruction = None, None
         self.activationParamsPath, self.givensAnglesPath = None, None
+        self.scalingFactorsPath = None
         self.resetModel()
 
     def forward(self): raise "You cannot call the dataset-specific signal encoder module."
@@ -42,6 +43,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         self.testingLosses_signalReconstruction = []  # List of list of data reconstruction testing losses. Dim: numEpochs, numTestingSignals
         self.activationParamsPath = []  # List of activation bounds. Dim: numEpochs, numActivations, numActivationParams
         self.givensAnglesPath = []  # List of Givens angles. Dim: numEpochs, numModuleLayers, numSignals, numParams
+        self.scalingFactorsPath = []  # List of Givens angles. Dim: numEpochs, numModuleLayers, numSignals
 
     def addLayer(self):
         self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True))
