@@ -34,11 +34,11 @@ waveletTypes_arr=(
 
 
 # Switchable
-numSpecificEncoderLayers_arr=(1)
-numSharedEncoderLayers_arr=(6)
+#numSpecificEncoderLayers_arr=(1)
+#numSharedEncoderLayers_arr=(6)
 
 # Switchable
-encodedDimensions_arr=(256)
+#encodedDimensions_arr=(256)
 profileParams=(128)
 
 # Single Switchables
