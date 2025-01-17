@@ -138,7 +138,7 @@ class modelVisualizations(globalPlottingProtocols):
                     self.signalEncoderViz.plotProfileReconstruction(resampledBiomarkerTimes, healthProfile, reconstructedHealthProfile, epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="signalEncoding/", plotTitle="Health Profile Reconstruction")
 
                     # # Plot the eigenvalue information.
-                    scalingFactorsPathNorms = [(np.asarray(scalingFactorsPath[i]) - 0.8) / 0.3 for i in range(len(scalingFactorsPath))]
+                    scalingFactorsPathNorms = [(np.asarray(scalingFactorsPath[i]) - 0.1) for i in range(len(scalingFactorsPath))]
                     self.signalEncoderViz.plotsGivensAnglesHist(givensAnglesPath, scalingFactorsPathNorms, reversibleModuleNames, numBins=16, epoch=currentEpoch, signalInd=signalInd, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="Rotation Angles Hist16")
                     self.signalEncoderViz.plotsGivensAnglesLine(givensAnglesPath, scalingFactorsPathNorms, reversibleModuleNames, epoch=currentEpoch, signalInd=signalInd, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="Rotation Angles Line")
                     # self.signalEncoderViz.plotEigenValueLocations(givensAnglesPath, reversibleModuleNames, signalNames=signalNames, epoch=currentEpoch, signalInd=signalInd, saveFigureLocation="signalEncoding/", plotTitle="Specific Spatial Eigenvalues on Circle")

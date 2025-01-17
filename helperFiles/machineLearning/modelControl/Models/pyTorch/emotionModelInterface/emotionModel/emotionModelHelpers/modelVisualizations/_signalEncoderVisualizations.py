@@ -306,7 +306,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax = axes[layerInd]  # which subplot to use
 
             # Plot training eigenvalue angles
-            ax.hist(givensAnglesPath[layerInd][signalInd], bins=bins, alpha=1, density=True, color=self.lightColors[1], edgecolor=self.blackColor, linewidth=0.1)
+            scaleFactors = scalingFactorsPath[layerInd][signalInd]
+            ax.hist(givensAnglesPath[layerInd][signalInd], bins=bins, alpha=scaleFactors, density=True, color=self.lightColors[1], edgecolor=self.blackColor, linewidth=0.1)
 
             # Customize subplot title and axes
             ax.set_title(f"{reversibleModuleNames[layerInd]}")
@@ -344,7 +345,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax = axes[layerInd]  # which subplot to use
 
             # Plot training eigenvalue angles
-            ax.plot(givensAnglesPath[layerInd][signalInd], color=self.lightColors[1], linestyle='-', linewidth=1)
+            scaleFactors = scalingFactorsPath[layerInd][signalInd]
+            ax.plot(givensAnglesPath[layerInd][signalInd], color=self.lightColors[1], linestyle='-', linewidth=1, alpha=scaleFactors)
 
             # Customize subplot title and axes
             ax.set_title(f"{reversibleModuleNames[layerInd]}")
