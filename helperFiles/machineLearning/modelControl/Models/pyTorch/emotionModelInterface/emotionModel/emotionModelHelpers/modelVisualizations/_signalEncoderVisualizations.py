@@ -476,7 +476,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.set_title(f"{axNames[axInd]}")
             ax.set_xlabel("X")
             ax.set_ylabel("Y")
-            ax.grid(True)
+            ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
         # Set the main title
         fig.suptitle(f"{plotTitle} - Epoch {epoch}\nForward and Inverse from x ∈ [{-1.5}, {1.5}]", fontsize=16)
