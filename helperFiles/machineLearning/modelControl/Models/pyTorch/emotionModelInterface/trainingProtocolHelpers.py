@@ -77,6 +77,18 @@ class trainingProtocolHelpers:
                 modelPipeline.model.fullPass(submodel, signalBatchData, batchSignalIdentifiers, metaBatchInfo, device=modelPipeline.accelerator.device, profileEpoch=numProfileShots)
             self.accelerator.wait_for_everyone()
 
+    def cullNullWeights(self, allMetaModels, allModels):
+        # Unify all the model weights.
+        self.unifyAllModelWeights(allMetaModels, allModels)
+
+        # For each meta-training model.
+        for modelPipeline in allMetaModels + allModels:
+            modelPipeline.model.removeZeroWeights()
+
+            # Unify all the model weights and retrain the specific models.
+            self.unifiedLayerData = self.modelMigration.copyModelWeights(modelPipeline, self.sharedModelWeights)
+            self.unifyAllModelWeights(allMetaModels, allModels)
+
     def calculateLossInformation(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel):
         self.unifyAllModelWeights(allMetaModels, allModels)  # Unify all the model weights.
 

@@ -239,6 +239,11 @@ class emotionModelHead(nn.Module):
         activationCurvePath = np.asarray(activationCurvePath)
         return activationCurvePath, moduleNames
 
+    def removeZeroAngles(self):
+        for name, module in self.named_modules():
+            if isinstance(module, reversibleConvolutionLayer):
+                module.removeZeroWeights()
+
     def getActivationParamsFullPassPath(self):
         activationParamsPath, moduleNames = [], []
         for name, module in self.named_modules():
