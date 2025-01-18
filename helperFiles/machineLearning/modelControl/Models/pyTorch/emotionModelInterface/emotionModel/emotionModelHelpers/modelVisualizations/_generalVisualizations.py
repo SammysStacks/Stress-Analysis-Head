@@ -154,7 +154,7 @@ class generalVisualizations(globalPlottingProtocols):
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def plotSinglaParameterFlow(self, activationParamsPaths, moduleNames, modelLabels, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
-        numModels, numEpochs, numActivations, numParams = activationParamsPaths.shape
+        numModels, numEpochs, numLayers, numParams = np.asarray(activationParamsPaths).shape
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=1, ncols=numParams, figsize=(6 * numParams, 4), squeeze=False, sharex=True, sharey=False)  # squeeze=False ensures axes is 2D
@@ -165,9 +165,9 @@ class generalVisualizations(globalPlottingProtocols):
             paramName = paramNames[paramInd]
 
             for modelInd in range(numModels):
-                for activationInd in range(numActivations):
-                    activationParams = activationParamsPaths[modelInd, :, activationInd, paramInd]
-                    moduleName = moduleNames[modelInd, activationInd].lower()
+                for layerInd in range(numLayers):
+                    activationParams = activationParamsPaths[modelInd, :, layerInd, paramInd]
+                    moduleName = moduleNames[modelInd, layerInd].lower()
                     if "shared" in moduleName and modelInd != 0: continue
 
                     if "specific" in moduleName: lineColor = self.darkColors[modelInd]; alpha = 0.8
@@ -184,6 +184,9 @@ class generalVisualizations(globalPlottingProtocols):
             if 'Infinite' in paramName: ax.set_ylim((0, 1.1))
             elif 'Linearity' in paramName: ax.set_ylim((0, 10.1))
             elif 'Convergent' in paramName: ax.set_ylim((0, 2.1))
+            elif 'Range' in paramName: ax.set_ylim((0, 1))
+            elif 'Variance' in paramName: ax.set_ylim((0, 0.6))
+            elif 'Mean' in paramName: ax.set_ylim((-0.1, 0.1))
             ax.set_xlim((0, numEpochs + 1))
             ax.set_title(paramName)
             ax.grid(True, which='both', linestyle='--', linewidth=0.5)
@@ -196,15 +199,24 @@ class generalVisualizations(globalPlottingProtocols):
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
     
     def plotGivensAnglesFlow(self, givensAnglesPaths, moduleNames, modelLabels, saveFigureLocation="", plotTitle="Model Convergence Loss"):
-        numModels, numEpochs, numModuleLayers, numParams = len(givensAnglesPaths), len(givensAnglesPaths[0]), len(givensAnglesPaths[0][0]), len(givensAnglesPaths[0][0][0][0])
-        # givensAnglesPaths: numModels, numEpochs, numModuleLayers, (numSignals, numParams)
+        numModels, numEpochs, numModuleLayers, numParams = len(givensAnglesPaths), len(givensAnglesPaths[0]), len(givensAnglesPaths[0][0]), len(givensAnglesPaths[0][0][0])
+        # givensAnglesPaths: numModels, numEpochs, numModuleLayers, numParams, numSignals
         nCols = 4; nRows = numParams // 4
-        signalInd = 0
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=True)
         axes = axes.flatten()  # Flatten to 1D array for easy indexing
-        
+
+        givensAnglesPaths2 = []
+        for moduleInd in range(numModuleLayers):
+            temp = []
+            for modelInd in range(numModels):
+                temp.append([])
+                for epochInd in range(numEpochs):
+                    temp[-1].append(givensAnglesPaths[modelInd][epochInd][moduleInd])
+            givensAnglesPaths2.append(temp)
+        # givensAnglesPaths2: numModuleLayers, modelInd, epochInd, numParams, numSignals
+
         for paramInd in range(numParams):
             ax = axes[paramInd]  # which subplot to use
 
@@ -212,10 +224,6 @@ class generalVisualizations(globalPlottingProtocols):
                 for moduleInd in range(numModuleLayers):
                     moduleName = moduleNames[modelInd, moduleInd].lower()
                     if "shared" in moduleName and modelInd != 0: continue
-
-                    givensAngles = []
-                    for epoch in range(numEpochs):
-                        givensAngles.append(givensAnglesPaths[modelInd, epoch, moduleInd, signalInd, paramInd])
 
                     if "specific" in moduleName: lineColor = self.darkColors[modelInd]; alpha = 0.8
                     elif "shared" in moduleName: lineColor = self.blackColor; alpha = 0.5
@@ -225,7 +233,8 @@ class generalVisualizations(globalPlottingProtocols):
                     else: modelLabel = None
 
                     # Plot the activation parameters.
-                    ax.plot(givensAngles, color=lineColor, linewidth=0.8, alpha=alpha, label=modelLabel)
+                    data = np.asarray(givensAnglesPaths2[moduleInd][modelInd])[:, paramInd, :].T
+                    ax.plot(data, color=lineColor, linewidth=0.8, alpha=alpha, label=modelLabel)
         plt.xlabel("Training Epoch")
         plt.ylabel("Values")
         plt.ylim((-np.pi, np.pi))

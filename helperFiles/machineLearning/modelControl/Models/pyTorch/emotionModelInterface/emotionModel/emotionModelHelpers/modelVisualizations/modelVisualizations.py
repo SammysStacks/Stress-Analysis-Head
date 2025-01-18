@@ -62,15 +62,15 @@ class modelVisualizations(globalPlottingProtocols):
 
                 # Plot the shared and specific jacobian convergences.
                 paramNames = ["Infinite Bound", "Linearity Factor", "Convergent Point"]; givensAnglesFeatures = ["Mean", "Variance", "Range"]
-                givensAnglesFeaturesPaths = [specificModel.givensAnglesFeaturesPath for specificModel in specificModels]  # numModels, numEpochs, numModuleLayers, numSignals, numParams
                 moduleNames = np.asarray([modelPipeline.model.getActivationParamsFullPassPath()[1] for modelPipeline in allModelPipelines])  # numModels, numActivations
                 activationParamsPaths = np.asarray([specificModel.activationParamsPath for specificModel in specificModels])  # numModels, numEpochs, numActivations, numActivationParams=3
                 self.generalViz.plotSinglaParameterFlow(activationParamsPaths=activationParamsPaths, moduleNames=moduleNames, modelLabels=datasetNames, paramNames=paramNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Activation Path")
-                self.generalViz.plotSinglaParameterFlow(activationParamsPaths=givensAnglesFeaturesPaths, moduleNames=moduleNames, modelLabels=datasetNames, paramNames=givensAnglesFeatures, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Givens Angle Features Path")
 
                 # Plot the givens angles for the signal encoder.
-                givensAnglesPaths = [specificModel.givensAnglesPath for specificModel in specificModels]  # numModels, numEpochs, numModuleLayers, numSignals, numParams
+                givensAnglesPaths = [specificModel.givensAnglesPath for specificModel in specificModels]  # numModels, numEpochs, numModuleLayers, numParams, numSignals
+                givensAnglesFeaturesPaths = [specificModel.givensAnglesFeaturesPath for specificModel in specificModels]  # numModels, numEpochs, numModuleLayers, numParams, numSignals
                 self.generalViz.plotGivensAnglesFlow(givensAnglesPaths=givensAnglesPaths, moduleNames=moduleNames, modelLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Givens Angles Path")
+                self.generalViz.plotGivensAnglesFlow(givensAnglesPaths=givensAnglesFeaturesPaths, moduleNames=moduleNames, modelLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Givens Angle Features Path")
 
     def plotAllTrainingEvents(self, submodel, modelPipeline, lossDataLoader, trainingDate, currentEpoch):
         self.accelerator.print(f"\nPlotting results for the {modelPipeline.model.datasetName} model")

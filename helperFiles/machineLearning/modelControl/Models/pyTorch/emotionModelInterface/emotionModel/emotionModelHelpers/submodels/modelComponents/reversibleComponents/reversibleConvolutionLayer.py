@@ -38,7 +38,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         for layerInd in range(self.numLayers):
             # Create the neural weights.
             parameters = nn.Parameter(torch.randn(self.numSignals, self.numParams or 1, dtype=torch.float64))
-            # parameters = nn.init.uniform_(parameters, a=-0.2, b=0.2)
+            # parameters = nn.init.uniform_(parameters, a=-0.2, b=0.2) # TODO ADD BACK?
             parameters = nn.init.zeros_(parameters)  # TODO REMOVE
             self.givensRotationParams.append(parameters)
 
@@ -120,11 +120,11 @@ class reversibleConvolutionLayer(reversibleInterface):
         givensAngles = self.getGivensAngles(layerInd)  # Dim: numSignals, numParams
 
         # Calculate the mean, variance, and range of the Givens angles.
-        givensAnglesRange = givensAngles.max(dim=-1).values - givensAngles.min(dim=-1).values  # Dim: numSignals
-        givensAnglesMean = givensAngles.mean(dim=-1)  # Dim: numSignals
-        givensAnglesVar = givensAngles.var(dim=-1)  # Dim: numSignals
+        givensAnglesRange = givensAngles.max(dim=-1, keepdim=True).values - givensAngles.min(dim=-1, keepdim=True).values  # Dim: numSignals, 1
+        givensAnglesMean = givensAngles.mean(dim=-1, keepdim=True)  # Dim: numSignals, 1
+        givensAnglesVar = givensAngles.var(dim=-1, keepdim=True)  # Dim: numSignals, 1
 
-        return [givensAnglesMean, givensAnglesVar, givensAnglesRange]
+        return torch.hstack(tensors=[givensAnglesMean, givensAnglesVar, givensAnglesRange])
 
     def printParams(self):
         # Count the trainable parameters.
