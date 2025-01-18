@@ -15,12 +15,6 @@ class organizeTrainingLosses(lossCalculations):
     # ---------------------------------------------------------------------- #
     # -------------------------- Loss Calculations ------------------------- #
 
-    def getActivationParamsFullPassPath(self, givensAnglesPath):
-        activationParamsPath = []
-        for activationInd in range(len(givensAnglesPath)):
-            activationParamsPath.append(givensAnglesPath[activationInd].reshape(-1, 3))
-        return activationParams
-
     def storeTrainingLosses(self, submodel, modelPipeline, lossDataLoader):
         self.accelerator.print(f"\nCalculating loss for {modelPipeline.model.datasetName} model")
         modelPipeline.setupTrainingFlags(modelPipeline.model, trainingFlag=False)  # Set all models into evaluation mode.
@@ -50,9 +44,8 @@ class organizeTrainingLosses(lossCalculations):
             # signalReconstructedTestingLosses: numTestingSignals
 
             # Get the encoder information.
-            givensAnglesPath, scalingFactorsPath, reversibleModuleNames = model.getLearnableParams()
-            activationParamsPath, moduleNames = self.getActivationParamsFullPassPath(givensAnglesPath)
-            givensAnglesFeaturesPath = model.getGivensAnglesFeatures()
+            givensAnglesPath, scalingFactorsPath, givensAnglesFeaturesPath, reversibleModuleNames = model.getLearnableParams()
+            activationParamsPath, moduleNames = model.getActivationParamsFullPassPath()
             # activationParamsPath: numActivations, numParams=3
 
             # Store the signal encoder loss information.

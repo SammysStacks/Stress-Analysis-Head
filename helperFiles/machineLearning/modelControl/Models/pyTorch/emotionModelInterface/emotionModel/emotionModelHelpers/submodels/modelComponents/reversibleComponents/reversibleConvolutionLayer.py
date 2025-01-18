@@ -115,6 +115,16 @@ class reversibleConvolutionLayer(reversibleInterface):
 
         return givensAngles, scalingFactors
 
+    def getFeatureParams(self, layerInd):
+        givensAngles = self.getGivensAngles(layerInd)  # Dim: numSignals, numParams
+
+        # Calculate the mean, variance, and range of the Givens angles.
+        givensAnglesRange = givensAngles.max(dim=-1).values - givensAngles.min(dim=-1).values  # Dim: numSignals
+        givensAnglesMean = givensAngles.mean(dim=-1)  # Dim: numSignals
+        givensAnglesVar = givensAngles.var(dim=-1)  # Dim: numSignals
+
+        return [givensAnglesMean, givensAnglesVar, givensAnglesRange]
+
     def printParams(self):
         # Count the trainable parameters.
         numParams = sum(_p.numel() for _p in self.parameters() if _p.requires_grad) / self.numSignals

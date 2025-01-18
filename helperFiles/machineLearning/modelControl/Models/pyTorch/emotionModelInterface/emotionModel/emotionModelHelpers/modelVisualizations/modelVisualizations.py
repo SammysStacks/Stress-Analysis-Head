@@ -61,7 +61,7 @@ class modelVisualizations(globalPlottingProtocols):
                                                    lossLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Profile Convergence Losses")
 
                 # Plot the shared and specific jacobian convergences.
-                paramNames = ["Infinite Bound", "Linearity Factor", "Convergent Point"]; givensAnglesFeatures = ["Mean", "Variance"]
+                paramNames = ["Infinite Bound", "Linearity Factor", "Convergent Point"]; givensAnglesFeatures = ["Mean", "Variance", "Range"]
                 givensAnglesFeaturesPaths = [specificModel.givensAnglesFeaturesPath for specificModel in specificModels]  # numModels, numEpochs, numModuleLayers, numSignals, numParams
                 moduleNames = np.asarray([modelPipeline.model.getActivationParamsFullPassPath()[1] for modelPipeline in allModelPipelines])  # numModels, numActivations
                 activationParamsPaths = np.asarray([specificModel.activationParamsPath for specificModel in specificModels])  # numModels, numEpochs, numActivations, numActivationParams=3
@@ -111,7 +111,7 @@ class modelVisualizations(globalPlottingProtocols):
             signalData = signalData.detach().cpu().numpy()
             
             # Compile additional information for the model.getActivationParamsFullPassPath
-            givensAnglesPath, scalingFactorsPath, reversibleModuleNames = model.getLearnableParams()
+            givensAnglesPath, scalingFactorsPath, givensAnglesFeaturesPath, reversibleModuleNames = model.getLearnableParams()
             activationCurvePath, moduleNames = model.getActivationCurvesFullPassPath()  # numModuleLayers, 2=(x, y), numPoints=100
             # givensAnglesPath: numModuleLayers, numSignals, numParams
             # scalingFactorsPath: numModuleLayers, numSignals

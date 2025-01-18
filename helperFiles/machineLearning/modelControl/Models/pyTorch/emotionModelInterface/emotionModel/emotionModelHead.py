@@ -213,17 +213,20 @@ class emotionModelHead(nn.Module):
         return compiledName
 
     def getLearnableParams(self):
-        givensAnglesPath, scalingFactorsPath, reversibleModuleNames = [], [], []
+        givensAnglesPath, scalingFactorsPath, givensAnglesFeaturesPath, reversibleModuleNames = [], [], [], []
         for name, module in self.named_modules():
             if isinstance(module, reversibleConvolutionLayer):
+                givensAnglesFeatures = module.getFeatureParams(layerInd=0)
                 givensAngles, scalingFactors = module.getLinearParams(layerInd=0)
                 givensAngles = np.asarray([givensAngle.detach().cpu().numpy() for givensAngle in givensAngles])  # givensAngles: numSignals, numParams
                 scalingFactors = np.asarray([scalingFactor.detach().cpu().numpy() for scalingFactor in scalingFactors])  # scalingFactors: numSignals
+                givensAnglesFeatures = np.asarray([givensAnglesFeature.detach().cpu().numpy() for givensAnglesFeature in givensAnglesFeatures])  # givensAnglesFeatures: numSignals, numFeatures
 
                 givensAnglesPath.append(givensAngles)  # givensAnglesPath: numModuleLayers, numSignals, numParams
                 scalingFactorsPath.append(scalingFactors)  # scalingFactorsPath: numModuleLayers, numSignals
+                givensAnglesFeaturesPath.append(givensAnglesFeatures)  # givensAnglesFeaturesPath: numModuleLayers, numSignals, numFeatures
                 reversibleModuleNames.append(self.compileModuleName(name))
-        return givensAnglesPath, scalingFactorsPath, reversibleModuleNames
+        return givensAnglesPath, scalingFactorsPath, givensAnglesFeaturesPath, reversibleModuleNames
 
     def getActivationCurvesFullPassPath(self):
         activationCurvePath, moduleNames = [], []
