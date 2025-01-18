@@ -128,7 +128,12 @@ class reversibleConvolutionLayer(reversibleInterface):
 
     def removeZeroWeights(self, threshold=0.001):
         for layerInd in range(self.numLayers):
-            self.givensRotationParams[layerInd].data[abs(self.givensRotationParams[layerInd].data) < threshold] = 0
+            # Get the parameter tensor
+            param = self.givensRotationParams[layerInd]
+
+            # Zero out small values using a mask
+            mask = param.abs() < threshold
+            param.masked_fill_(mask, 0)
 
     def printParams(self):
         # Count the trainable parameters.

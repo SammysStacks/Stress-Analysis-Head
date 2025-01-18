@@ -83,7 +83,7 @@ class trainingProtocolHelpers:
 
         # For each meta-training model.
         for modelPipeline in allMetaModels + allModels:
-            modelPipeline.model.removeZeroWeights()
+            modelPipeline.model.removeZeroAngles()
 
             # Unify all the model weights and retrain the specific models.
             self.unifiedLayerData = self.modelMigration.copyModelWeights(modelPipeline, self.sharedModelWeights)

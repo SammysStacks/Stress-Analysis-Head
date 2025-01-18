@@ -133,6 +133,7 @@ if __name__ == "__main__":
         cullNullWeights = (epoch % 50 == 0)
 
         # Train the model for a single epoch.
+        # trainingProtocols.cullNullWeights(allMetaModels, allModels)  # TODO
         if cullNullWeights: trainingProtocols.cullNullWeights(allMetaModels, allModels)
         trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders)
 
