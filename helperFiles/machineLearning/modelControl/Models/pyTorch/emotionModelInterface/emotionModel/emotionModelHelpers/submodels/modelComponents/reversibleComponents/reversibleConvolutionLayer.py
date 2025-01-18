@@ -38,8 +38,8 @@ class reversibleConvolutionLayer(reversibleInterface):
         for layerInd in range(self.numLayers):
             # Create the neural weights.
             parameters = nn.Parameter(torch.randn(self.numSignals, self.numParams or 1, dtype=torch.float64))
-            # parameters = nn.init.uniform_(parameters, a=-0.2, b=0.2) # TODO ADD BACK?
-            parameters = nn.init.zeros_(parameters)  # TODO REMOVE
+            parameters = nn.init.uniform_(parameters, a=-0.2, b=0.2) # TODO ADD BACK?
+            # parameters = nn.init.zeros_(parameters)  # TODO REMOVE
             self.givensRotationParams.append(parameters)
 
     def forward(self, inputData):
