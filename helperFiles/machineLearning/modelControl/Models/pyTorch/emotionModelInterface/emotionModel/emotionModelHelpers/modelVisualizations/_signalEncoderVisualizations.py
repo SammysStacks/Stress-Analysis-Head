@@ -300,7 +300,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         degrees = 200 if degreesFlag else math.pi / 4
 
         # Flatten axes for easy indexing if you prefer
-        print("givensAnglesPath", givensAnglesPath.shape, givensAnglesPath.max(), givensAnglesPath.min())
         axes = axes.flatten()
 
         for layerInd in range(numModuleLayers):
