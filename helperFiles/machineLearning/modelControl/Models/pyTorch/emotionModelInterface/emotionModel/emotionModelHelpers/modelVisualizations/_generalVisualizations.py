@@ -184,9 +184,9 @@ class generalVisualizations(globalPlottingProtocols):
             if 'Infinite' in paramName: ax.set_ylim((0, 1.1))
             elif 'Linearity' in paramName: ax.set_ylim((0, 10.1))
             elif 'Convergent' in paramName: ax.set_ylim((0, 2.1))
-            elif 'Range' in paramName: ax.set_ylim((0, 1))
-            elif 'Variance' in paramName: ax.set_ylim((0, 0.6))
-            elif 'Mean' in paramName: ax.set_ylim((-0.1, 0.1))
+            elif 'Range' in paramName: ax.set_ylim((0, 0.1))
+            elif 'Variance' in paramName: ax.set_ylim((0, 0.01))
+            elif 'Mean' in paramName: ax.set_ylim((-0.1, 0.01))
             ax.set_xlim((0, numEpochs + 1))
             ax.set_title(paramName)
             ax.grid(True, which='both', linestyle='--', linewidth=0.5)
@@ -204,7 +204,7 @@ class generalVisualizations(globalPlottingProtocols):
         nCols = 4; nRows = max(1, numParams // 4)
 
         # Create a figure and axes array
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=True)
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=False)
         axes = axes.flatten()  # Flatten to 1D array for easy indexing
 
         givensAnglesPaths2 = []
@@ -233,11 +233,11 @@ class generalVisualizations(globalPlottingProtocols):
                     else: modelLabel = None
 
                     # Plot the activation parameters.
-                    data = np.asarray(givensAnglesPaths2[moduleInd][modelInd])[:, paramInd, :].T
+                    data = np.asarray(givensAnglesPaths2[moduleInd][modelInd])[:, paramInd, :]
                     ax.plot(data, color=lineColor, linewidth=0.8, alpha=alpha, label=modelLabel)
         plt.xlabel("Training Epoch")
         plt.ylabel("Values")
-        plt.ylim((-np.pi, np.pi))
+        #  plt.ylim((-np.pi, np.pi))
         plt.xlim((0, numEpochs + 1))
         plt.grid(True)
 

@@ -38,7 +38,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         for layerInd in range(self.numLayers):
             # Create the neural weights.
             parameters = nn.Parameter(torch.randn(self.numSignals, self.numParams or 1, dtype=torch.float64))
-            parameters = nn.init.uniform_(parameters, a=-0.2, b=0.2) # TODO ADD BACK?
+            parameters = nn.init.uniform_(parameters, a=-0.2, b=0.2)  # TODO ADD BACK?
             # parameters = nn.init.zeros_(parameters)  # TODO REMOVE
             self.givensRotationParams.append(parameters)
 
@@ -126,14 +126,10 @@ class reversibleConvolutionLayer(reversibleInterface):
 
         return torch.hstack(tensors=[givensAnglesMean, givensAnglesVar, givensAnglesRange])
 
-    def removeZeroWeights(self, threshold=0.001):
-        for layerInd in range(self.numLayers):
-            # Get the parameter tensor
-            param = self.givensRotationParams[layerInd]
-
-            # Zero out small values using a mask
-            mask = param.abs() < threshold
-            param.masked_fill_(mask, 0)
+    def removeZeroWeights(self, threshold=0.1):
+        # Zero out small values using a mask
+        mask = self.givensRotationParams.abs() < threshold
+        self.givensRotationParams.masked_fill_(mask, 0)
 
     def printParams(self):
         # Count the trainable parameters.

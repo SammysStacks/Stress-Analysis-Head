@@ -300,6 +300,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         degrees = 200 if degreesFlag else math.pi / 4
 
         # Flatten axes for easy indexing if you prefer
+        print("givensAnglesPath", givensAnglesPath.shape, givensAnglesPath.max(), givensAnglesPath.min())
         axes = axes.flatten()
 
         for layerInd in range(numModuleLayers):
@@ -307,7 +308,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
             # Plot training eigenvalue angles
             scaleFactors = scalingFactorsPath[layerInd][signalInd]
-            ax.hist(givensAnglesPath[layerInd][signalInd], bins=bins, alpha=scaleFactors, density=True, color=self.lightColors[1], edgecolor=self.blackColor, linewidth=0.1)
+            ax.hist(givensAnglesPath[layerInd][signalInd], bins=bins, alpha=min(0.5, scaleFactors), density=True, color=self.lightColors[1], edgecolor=self.blackColor, linewidth=0.1)
 
             # Customize subplot title and axes
             ax.set_title(f"{reversibleModuleNames[layerInd]}")
