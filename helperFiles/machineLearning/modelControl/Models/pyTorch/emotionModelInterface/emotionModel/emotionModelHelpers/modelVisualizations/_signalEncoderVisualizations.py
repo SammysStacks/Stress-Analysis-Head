@@ -374,13 +374,14 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             if "shared" in reversibleModuleNames[layerInd]: sharedValues.extend(scalingFactorsPath[layerInd].flatten())
             elif "specific" in reversibleModuleNames[layerInd]: specificValues.extend(scalingFactorsPath[layerInd].flatten())
             else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+        allValues = [sharedValues, specificValues]
 
         plt.hist(
-            [sharedValues, specificValues],  # Data for both histograms
-            color=[self.lightColors[1], self.lightColors[0]],  # Colors for shared and specific values
+            x=allValues,  # Data for both histograms
+            color=[self.lightColors[i] for i in range(len(allValues))],  # Colors for shared and specific values
             label=["Shared", "Specific"],  # Labels for the legend
             stacked=True,  # Stacked histogram
-            bins=128,  # Number of bins
+            bins=96,  # Number of bins
             alpha=0.7,  # Transparency for better visibility
             align='left',
         )
