@@ -130,9 +130,15 @@ class reversibleConvolutionLayer(reversibleInterface):
         return torch.hstack(tensors=[givensAnglesMean, givensAnglesVar, givensAnglesRange])
 
     def removeZeroWeights(self, layerInd, threshold=0.1):
-        # Zero out small values using a mask
-        mask = self.getGivensAngles(layerInd).abs() < threshold
-        self.givensRotationParams.masked_fill_(mask, 0)
+        # Get the tensor associated with the specified layer
+        param = self.getGivensAngles(layerInd)
+
+        with torch.no_grad():  # Ensure gradient tracking is disabled
+            # Create the mask for small values
+            mask = param.abs() < threshold
+
+            # Apply the mask to zero out small values
+            param[mask] = 0
 
     def printParams(self):
         # Count the trainable parameters.
