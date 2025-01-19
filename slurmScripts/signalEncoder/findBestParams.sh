@@ -20,9 +20,9 @@ lrs_profileGen=('1e-4') # # 5e-5 <= x == 1e-4;
 numSharedEncoderLayers_arr=(1 2 3 4 5 6 7 8 9 10 11 12)
 numSpecificEncoderLayers_arr=(1 2 3 4 5 6 7 8)
 
-# Known interesting parameters: 21*7 = 147
-encodedDimensions_arr=(32 64 128 256 512 1024)  # 5
-profileParams=(16 32 64 128 256 512 1024)  # 6
+# Known interesting parameters: 15*7 = 140
+encodedDimensions_arr=(32 64 128 256 512)  # 5
+profileParams=(16 32 64 128 256 512)  # 6
 numProfileShots_arr=(4 8 12 16 24 32 48)  # 6; 12 <= x <= 24
 
 # Neural operator parameters.
@@ -57,8 +57,8 @@ waveletTypes_arr=('bior3.1')
 numProfileShots_arr=(24)
 
 # Binary switchable
-profileParams=(128 256 512 1024)  # 6
-encodedDimensions_arr=(128 256 512 1024)
+profileParams=(128 256 512)  # 6
+encodedDimensions_arr=(128 256 512)
 profileParams=(128)
 
 for beta1s in "${beta1s_arr[@]}"
