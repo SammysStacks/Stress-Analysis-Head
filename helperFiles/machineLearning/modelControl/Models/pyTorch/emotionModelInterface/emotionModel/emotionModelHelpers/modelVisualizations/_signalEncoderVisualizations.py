@@ -381,7 +381,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             label=["Shared", "Specific"],  # Labels for the legend
             stacked=True,  # Stacked histogram
             bins=30,  # Number of bins
-            alpha=0.7  # Transparency for better visibility
+            alpha=0.7,  # Transparency for better visibility
+            align='left',
         )
 
         # Customize plot title and axes
