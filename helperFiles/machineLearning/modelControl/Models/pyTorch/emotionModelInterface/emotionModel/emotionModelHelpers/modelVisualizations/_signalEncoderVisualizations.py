@@ -366,6 +366,39 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
+    def plotScaleFactorLines(self, scalingFactorsPath, reversibleModuleNames, epoch, saveFigureLocation, plotTitle):
+        # scalingFactorsPath: numModuleLayers, numSignals
+        numModuleLayers, nCols = len(scalingFactorsPath), min(6, len(scalingFactorsPath))
+        nRows = math.ceil(numModuleLayers / nCols)
+
+        # Create a figure and axes array
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False)  # squeeze=False ensures axes is 2D
+        axes = axes.flatten()
+
+        for layerInd in range(numModuleLayers):
+            ax = axes[layerInd]  # which subplot to use
+
+            # Plot training eigenvalue angles
+            ax.plot(scalingFactorsPath[layerInd], color=self.lightColors[1], linestyle='-', linewidth=1, alpha=1)
+
+            # Customize subplot title and axes
+            ax.set_title(f"{reversibleModuleNames[layerInd]}")
+            ax.set_ylabel(f"Scale Factor)")
+            # ax.set_ylim((0.9, 1.1))
+            ax.set_xlabel("Axis Number")
+
+        # Hide any extra subplots if numModuleLayers < nRows * nCols
+        for idx in range(numModuleLayers, nRows * nCols):
+            fig.delaxes(axes[idx])  # remove unused axes
+
+        # Adjust layout to prevent overlapping titles/labels
+        plt.suptitle(f"{plotTitle}\nEpoch {epoch}", fontsize=16)
+        plt.tight_layout()
+
+        # Save the plot
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        else: self.clearFigure(fig=None, legend=None, showPlot=True)
+
     def modelPropagation3D(self, rotationAngles, epoch, degreesFlag, saveFigureLocation, plotTitle):
         rotationAngles = np.asarray(rotationAngles)
         numModelLayers, numAngles = rotationAngles.shape

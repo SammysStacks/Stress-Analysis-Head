@@ -21,6 +21,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         self.sequenceLength = sequenceLength  # The length of the input signal.
         self.numSignals = numSignals  # The number of signals in the input data.
         self.numLayers = numLayers  # The number of layers in the reversible linear layer.
+        assert self.numLayers == 1, "Hard-coded as I assume layerInd=0; I am too tried to change this."
 
         # The restricted window for the neural weights.
         upperWindowMask = torch.ones(self.sequenceLength, self.sequenceLength, dtype=torch.float64)
@@ -39,9 +40,9 @@ class reversibleConvolutionLayer(reversibleInterface):
             # Create the neural weights.
             parameters = nn.Parameter(torch.randn(self.numSignals, self.numParams or 1, dtype=torch.float64))
             # parameters = nn.init.uniform_(parameters, a=-0.2, b=0.2)  # TODO ADD BACK?
-            # parameters = nn.init.normal_(parameters, mean=0, std=0.1)  # TODO ADD BACK?
+            parameters = nn.init.normal_(parameters, mean=0, std=0.06)  # TODO ADD BACK?
             # parameters = nn.init.zeros_(parameters)  # TODO REMOVE
-            parameters = nn.init.kaiming_uniform_(parameters)  # TODO: OLD
+            # parameters = nn.init.kaiming_uniform_(parameters)  # TODO: OLD
             self.givensRotationParams.append(parameters)
 
     def forward(self, inputData):
@@ -128,9 +129,9 @@ class reversibleConvolutionLayer(reversibleInterface):
 
         return torch.hstack(tensors=[givensAnglesMean, givensAnglesVar, givensAnglesRange])
 
-    def removeZeroWeights(self, threshold=0.1):
+    def removeZeroWeights(self, layerInd, threshold=0.1):
         # Zero out small values using a mask
-        mask = self.givensRotationParams.abs() < threshold
+        mask = self.getGivensAngles(layerInd).abs() < threshold
         self.givensRotationParams.masked_fill_(mask, 0)
 
     def printParams(self):

@@ -242,7 +242,7 @@ class emotionModelHead(nn.Module):
     def removeZeroAngles(self):
         for name, module in self.named_modules():
             if isinstance(module, reversibleConvolutionLayer):
-                module.removeZeroWeights()
+                module.removeZeroWeights(layerInd=0)
 
     def getActivationParamsFullPassPath(self):
         activationParamsPath, moduleNames = [], []
