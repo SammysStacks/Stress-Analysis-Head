@@ -368,32 +368,30 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     def plotScaleFactorLines(self, scalingFactorsPath, reversibleModuleNames, epoch, saveFigureLocation, plotTitle):
         # scalingFactorsPath: numModuleLayers, numSignals
-        numModuleLayers, nCols = len(scalingFactorsPath), min(6, len(scalingFactorsPath))
-        nRows = math.ceil(numModuleLayers / nCols)
 
-        # Create a figure and axes array
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False)  # squeeze=False ensures axes is 2D
-        axes = axes.flatten()
+        sharedValues, specificValues = [], []
+        for layerInd in range(len(scalingFactorsPath)):
+            if "shared" in reversibleModuleNames[layerInd]: sharedValues.extend(scalingFactorsPath[layerInd].flatten())
+            elif "specific" in reversibleModuleNames[layerInd]: specificValues.extend(scalingFactorsPath[layerInd].flatten())
+            else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
 
-        for layerInd in range(numModuleLayers):
-            ax = axes[layerInd]  # which subplot to use
+        # Create a stacked histogram
+        plt.hist(
+            [sharedValues, specificValues],  # Data for both histograms
+            color=[self.lightColors[1], self.lightColors[0]],  # Colors for shared and specific values
+            label=["Shared", "Specific"],  # Labels for the legend
+            stacked=True,  # Stacked histogram
+            bins=30,  # Number of bins
+            alpha=0.7  # Transparency for better visibility
+        )
 
-            # Plot training eigenvalue angles
-            ax.plot(scalingFactorsPath[layerInd], color=self.lightColors[1], linestyle='-', linewidth=1, alpha=1)
-
-            # Customize subplot title and axes
-            ax.set_title(f"{reversibleModuleNames[layerInd]}")
-            ax.set_ylabel(f"Scale Factor)")
-            # ax.set_ylim((0.9, 1.1))
-            ax.set_xlabel("Axis Number")
-
-        # Hide any extra subplots if numModuleLayers < nRows * nCols
-        for idx in range(numModuleLayers, nRows * nCols):
-            fig.delaxes(axes[idx])  # remove unused axes
-
-        # Adjust layout to prevent overlapping titles/labels
-        plt.suptitle(f"{plotTitle}\nEpoch {epoch}", fontsize=16)
-        plt.tight_layout()
+        # Customize plot title and axes
+        plt.ylabel("Frequency")
+        plt.xlabel("Scale Factor")
+        plt.title(f"{plotTitle}\nEpoch {epoch}", fontsize=16)
+        plt.xlim((0.9, 1.1))
+        plt.ylim((0, None))
+        plt.legend()
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
