@@ -380,7 +380,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             color=[self.lightColors[1], self.lightColors[0]],  # Colors for shared and specific values
             label=["Shared", "Specific"],  # Labels for the legend
             stacked=True,  # Stacked histogram
-            bins=64,  # Number of bins
+            bins=128,  # Number of bins
             alpha=0.7,  # Transparency for better visibility
             align='left',
         )
