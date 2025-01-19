@@ -133,7 +133,7 @@ if __name__ == "__main__":
         cullNullWeights = (epoch % 25 == 0)
 
         # Train the model for a single epoch.
-        # if cullNullWeights: trainingProtocols.cullNullWeights(allMetaModels, allModels)  # TODO
+        if cullNullWeights: trainingProtocols.cullNullWeights(allMetaModels, allModels)  # TODO
         trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders)
 
         # Store the initial loss information and plot.

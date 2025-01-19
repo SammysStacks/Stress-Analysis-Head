@@ -306,7 +306,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax = axes[layerInd]  # which subplot to use
 
             # Plot training eigenvalue angles
-            scaleFactors = scalingFactorsPath[layerInd][signalInd]
+            scaleFactors = 1  # scalingFactorsPath[layerInd][signalInd]
             ax.hist(givensAnglesPath[layerInd][signalInd], bins=bins, alpha=max(0.5, scaleFactors), density=True, color=self.lightColors[1], edgecolor=self.blackColor, linewidth=0.1)
 
             # Customize subplot title and axes
@@ -345,7 +345,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax = axes[layerInd]  # which subplot to use
 
             # Plot training eigenvalue angles
-            scaleFactors = scalingFactorsPath[layerInd][signalInd]
+            scaleFactors = 1  # scalingFactorsPath[layerInd][signalInd]
             ax.plot(givensAnglesPath[layerInd][signalInd], color=self.lightColors[1], linestyle='-', linewidth=1, alpha=max(0.5, scaleFactors))
 
             # Customize subplot title and axes
