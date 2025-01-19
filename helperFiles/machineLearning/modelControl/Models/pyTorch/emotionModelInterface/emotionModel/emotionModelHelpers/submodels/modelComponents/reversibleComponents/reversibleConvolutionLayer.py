@@ -84,17 +84,17 @@ class reversibleConvolutionLayer(reversibleInterface):
         A = torch.zeros(self.numSignals, self.sequenceLength, self.sequenceLength, device=device, dtype=torch.float64)
 
         # Populate the Givens rotation angles.
-        entriesA = self.getParamsA(layerInd)
+        entriesA = self.getInfinitesimalAnglesA(layerInd)
         A[:, self.rowInds, self.colInds] = -entriesA
         A[:, self.colInds, self.rowInds] = entriesA
 
         return A
 
-    def getParamsA(self, layerInd):
+    def getInfinitesimalAnglesA(self, layerInd):
         return torch.pi * torch.tanh(self.givensRotationParams[layerInd]) / 2  # [-pi/2, pi/2]
 
     def getGivensAngles(self, layerInd):
-        return self.getParamsA(layerInd)
+        return self.getInfinitesimalAnglesA(layerInd)
 
     # ------------------- Scaling Methods ------------------- #
 
