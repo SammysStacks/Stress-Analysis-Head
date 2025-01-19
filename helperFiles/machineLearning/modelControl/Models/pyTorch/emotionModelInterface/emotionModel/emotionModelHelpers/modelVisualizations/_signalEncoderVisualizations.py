@@ -375,7 +375,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             elif "specific" in reversibleModuleNames[layerInd]: specificValues.extend(scalingFactorsPath[layerInd].flatten())
             else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
 
-        # Create a stacked histogram
         plt.hist(
             [sharedValues, specificValues],  # Data for both histograms
             color=[self.lightColors[1], self.lightColors[0]],  # Colors for shared and specific values
@@ -386,9 +385,9 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         )
 
         # Customize plot title and axes
-        plt.ylabel("Frequency")
-        plt.xlabel("Scale Factor")
         plt.title(f"{plotTitle}\nEpoch {epoch}", fontsize=16)
+        plt.xlabel("Scale Factor Values")  # X-axis: values
+        plt.ylabel("Frequency")  # Y-axis: bin counts
         plt.xlim((0.9, 1.1))
         plt.ylim((0, None))
         plt.legend()
