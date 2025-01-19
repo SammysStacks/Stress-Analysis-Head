@@ -115,7 +115,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
     def getLinearParams(self, layerInd):
         givensAngles = self.getGivensAngles(layerInd)  # Dim: numSignals, numParams
-        scalingFactors = self.getJacobianScalar()[0, :, 0]  # Dim: numSignals
+        scalingFactors = self.getJacobianScalar().flatten()  # Dim: numSignals
 
         return givensAngles, scalingFactors
 
