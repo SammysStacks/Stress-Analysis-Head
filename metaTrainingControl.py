@@ -38,7 +38,11 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
+<<<<<<< HEAD
     trainingDate = "2025-01-16 2 Norm-01 Cull25"  # The current date we are training the model. Unique identifier of this training set.
+=======
+    trainingDate = "2025-01-16 2 Norm-06"  # The current date we are training the model. Unique identifier of this training set.
+>>>>>>> d48a57e1 (HPC)
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Architecture Parameters ----------------------- #
@@ -133,7 +137,7 @@ if __name__ == "__main__":
         cullNullWeights = (epoch % 25 == 0)
 
         # Train the model for a single epoch.
-        if cullNullWeights: trainingProtocols.cullNullWeights(allMetaModels, allModels)  # TODO
+        # if cullNullWeights: trainingProtocols.cullNullWeights(allMetaModels, allModels)  # TODO
         trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders)
 
         # Store the initial loss information and plot.
