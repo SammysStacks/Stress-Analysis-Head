@@ -113,7 +113,7 @@ class modelVisualizations(globalPlottingProtocols):
             # Compile additional information for the model.getActivationParamsFullPassPath
             givensAnglesPath, scalingFactorsPath, givensAnglesFeaturesPath, reversibleModuleNames = model.getLearnableParams()
             activationCurvePath, moduleNames = model.getActivationCurvesFullPassPath()  # numModuleLayers, 2=(x, y), numPoints=100
-            # givensAnglesPath: numModuleLayers, numSignals, numParams
+            # givensAnglesPath: numModuleLayers, numParams, numSignals
             # scalingFactorsPath: numModuleLayers, numSignals
             signalNames = model.featureNames
             batchInd, signalInd = 0, 0
