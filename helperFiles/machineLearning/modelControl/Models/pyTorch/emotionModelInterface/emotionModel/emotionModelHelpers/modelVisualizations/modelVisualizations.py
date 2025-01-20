@@ -49,7 +49,8 @@ class modelVisualizations(globalPlottingProtocols):
             if self.accelerator.is_local_main_process:
                 specificModels = [modelPipeline.model.specificSignalEncoderModel for modelPipeline in allModelPipelines]  # Dim: numModels
                 datasetNames = [modelPipeline.model.datasetName for modelPipeline in allModelPipelines]  # Dim: numModels
-                if allModelPipelines[0].getTrainingEpoch(submodel) == 0: return None
+                epoch = allModelPipelines[0].getTrainingEpoch(submodel)
+                if epoch == 0: return None
 
                 # Plot reconstruction loss for the signal encoder.
                 self.generalViz.plotTrainingLosses(trainingLosses=[specificModel.trainingLosses_signalReconstruction for specificModel in specificModels],
@@ -71,6 +72,10 @@ class modelVisualizations(globalPlottingProtocols):
                 givensAnglesFeaturesPaths = [specificModel.givensAnglesFeaturesPath for specificModel in specificModels]  # numModels, numEpochs, numModuleLayers, numParams, numSignals
                 # self.generalViz.plotGivensAnglesFlow(givensAnglesPaths=givensAnglesPaths, moduleNames=moduleNames, modelLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Givens Angles Path")
                 self.generalViz.plotGivensAnglesFlow(givensAnglesPaths=givensAnglesFeaturesPaths, moduleNames=moduleNames, modelLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Givens Angle Features Path")
+
+                # Scale factors' path.
+                scalingFactorsPaths = [allModelPipeline.getLearnableParams()[1] for allModelPipeline in allModelPipelines]
+                self.generalViz.plotScaleFactorLines(scalingFactorsPaths, moduleNames, datasetNames=datasetNames, epoch=epoch, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Scale Factor Path")
 
     def plotAllTrainingEvents(self, submodel, modelPipeline, lossDataLoader, trainingDate, currentEpoch):
         self.accelerator.print(f"\nPlotting results for the {modelPipeline.model.datasetName} model")
@@ -141,7 +146,7 @@ class modelVisualizations(globalPlottingProtocols):
                     # # Plot the eigenvalue information.
                     self.signalEncoderViz.plotsGivensAnglesHist(givensAnglesPath, scalingFactorsPath, reversibleModuleNames, numBins=16, epoch=currentEpoch, signalInd=signalInd, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="Rotation Angles Hist16")
                     self.signalEncoderViz.plotsGivensAnglesLine(givensAnglesPath, scalingFactorsPath, reversibleModuleNames, epoch=currentEpoch, signalInd=signalInd, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="Rotation Angles Line")
-                    self.signalEncoderViz.plotScaleFactorLines(scalingFactorsPath, reversibleModuleNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Rotation Angles Line")
+                    self.signalEncoderViz.plotScaleFactorLines(scalingFactorsPath, reversibleModuleNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Scale Factors Line")
                     # self.signalEncoderViz.plotEigenValueLocations(givensAnglesPath, reversibleModuleNames, signalNames=signalNames, epoch=currentEpoch, signalInd=signalInd, saveFigureLocation="signalEncoding/", plotTitle="Specific Spatial Eigenvalues on Circle")
                     # self.signalEncoderViz.modelPropagation3D(rotationAngles=rotationAngles, epoch=currentEpoch, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="3D Spatial Specific Eigenvalues by Layer")
 

@@ -262,3 +262,37 @@ class generalVisualizations(globalPlottingProtocols):
         # Save the figure if desired.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(plottingData[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
+
+    def plotScaleFactorLines(self, scalingFactorsPaths, reversibleModuleNames, datasetNames, epoch, saveFigureLocation, plotTitle):
+        # scalingFactorsPaths: numModels, numModuleLayers, numSignals
+        for modelInd in range(len(scalingFactorsPaths)):
+            scalingFactorsPath = scalingFactorsPaths[modelInd]  # numModuleLayers, numSignals
+            sharedValues, specificValues = [], []
+
+            for layerInd in range(len(scalingFactorsPath)):
+                if "shared" in reversibleModuleNames[layerInd]: sharedValues.extend(scalingFactorsPath[layerInd].flatten())
+                elif "specific" in reversibleModuleNames[layerInd]: specificValues.extend(scalingFactorsPath[layerInd].flatten())
+                else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+
+            if modelInd == 0: x = [sharedValues, specificValues]; color = [self.blackColor, self.darkColors[modelInd]]
+            else: x = [specificValues]; color = [self.darkColors[modelInd]]
+
+            plt.hist(
+                x=x,  # Data for both histograms
+                color=color,  # Colors for shared and specific values
+                stacked=True,  # Stacked histogram
+                bins=64,  # Number of bins
+                alpha=0.7,  # Transparency for better visibility
+                align='left',
+            )
+
+        # Customize plot title and axes
+        plt.title(f"{plotTitle}\nEpoch {epoch}", fontsize=16)
+        plt.xlabel("Scale Factor Values")  # X-axis: values
+        plt.ylabel("Frequency")  # Y-axis: bin counts
+        plt.xlim((0.9, 1.1))
+        plt.ylim((0, None))
+
+        # Save the plot
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        else: self.clearFigure(fig=None, legend=None, showPlot=True)
