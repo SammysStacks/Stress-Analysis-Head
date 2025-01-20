@@ -237,7 +237,7 @@ class generalVisualizations(globalPlottingProtocols):
                     else: modelLabel = None
 
                     # Plot the activation parameters.
-                    data = np.asarray(givensAnglesPaths2[moduleInd][modelInd])[:, paramInd, :]
+                    data = np.asarray(givensAnglesPaths2[moduleInd][modelInd])[:, :, paramInd]
                     ax.plot(data, color=lineColor, linewidth=0.8, alpha=alpha, label=modelLabel)
         plt.xlabel("Training Epoch")
         plt.ylabel("Values")
