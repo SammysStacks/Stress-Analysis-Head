@@ -134,11 +134,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         param = self.getGivensAngles(layerInd)
 
         with torch.no_grad():  # Ensure gradient tracking is disabled
-            # Create the mask for small values
-            mask = param.abs() < threshold
-
-            # Apply the mask to zero out small values
-            param[mask] = 0
+            param[param.abs() < threshold] = 0
 
     def printParams(self):
         # Count the trainable parameters.

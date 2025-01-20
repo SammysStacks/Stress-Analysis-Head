@@ -85,9 +85,9 @@ class trainingProtocolHelpers:
         for modelPipeline in allMetaModels + allModels:
             modelPipeline.model.removeZeroAngles()
 
-        # Unify all the model weights and retrain the specific models.
-        self.unifiedLayerData = self.modelMigration.copyModelWeights(allMetaModels[0], self.sharedModelWeights)
-        self.unifyAllModelWeights(allMetaModels, allModels)
+            # Unify all the model weights and retrain the specific models.
+            self.unifiedLayerData = self.modelMigration.copyModelWeights(allMetaModels[0], self.sharedModelWeights)
+            self.unifyAllModelWeights(allMetaModels, allModels)
 
     def calculateLossInformation(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel):
         self.unifyAllModelWeights(allMetaModels, allModels)  # Unify all the model weights.
