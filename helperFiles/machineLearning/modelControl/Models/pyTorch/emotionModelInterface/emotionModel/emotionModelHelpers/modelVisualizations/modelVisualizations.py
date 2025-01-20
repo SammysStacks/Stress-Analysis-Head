@@ -50,7 +50,7 @@ class modelVisualizations(globalPlottingProtocols):
                 specificModels = [modelPipeline.model.specificSignalEncoderModel for modelPipeline in allModelPipelines]  # Dim: numModels
                 datasetNames = [modelPipeline.model.datasetName for modelPipeline in allModelPipelines]  # Dim: numModels
                 epoch = allModelPipelines[0].getTrainingEpoch(submodel)
-                if epoch == 0: return None
+                # if epoch == 0: return None
 
                 # Plot reconstruction loss for the signal encoder.
                 self.generalViz.plotTrainingLosses(trainingLosses=[specificModel.trainingLosses_signalReconstruction for specificModel in specificModels],
@@ -62,7 +62,7 @@ class modelVisualizations(globalPlottingProtocols):
                                                    lossLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Profile Convergence Losses")
 
                 # Plot the shared and specific jacobian convergences.
-                paramNames = ["Infinite Bound", "Linearity Factor", "Convergent Point"]; givensAnglesFeatures = ["Mean", "Variance", "Range"]
+                paramNames = ["Infinite Bound", "Linearity Factor", "Convergent Point"]; givensAnglesFeatures = ["Angular Mean", "Angular Variance", "Angular Range", "Scalar Mean", "Scalar Variance", "Scalar Range"]
                 moduleNames = np.asarray([modelPipeline.model.getActivationParamsFullPassPath()[1] for modelPipeline in allModelPipelines])  # numModels, numActivations
                 activationParamsPaths = np.asarray([specificModel.activationParamsPath for specificModel in specificModels])  # numModels, numEpochs, numActivations, numActivationParams=3
                 self.generalViz.plotSinglaParameterFlow(activationParamsPaths=activationParamsPaths, moduleNames=moduleNames, modelLabels=datasetNames, paramNames=paramNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Activation Path")
@@ -71,7 +71,7 @@ class modelVisualizations(globalPlottingProtocols):
                 givensAnglesPaths = [specificModel.givensAnglesPath for specificModel in specificModels]  # numModels, numEpochs, numModuleLayers, numParams, numSignals
                 givensAnglesFeaturesPaths = [specificModel.givensAnglesFeaturesPath for specificModel in specificModels]  # numModels, numEpochs, numModuleLayers, numParams, numSignals
                 # self.generalViz.plotGivensAnglesFlow(givensAnglesPaths=givensAnglesPaths, moduleNames=moduleNames, modelLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Givens Angles Path")
-                self.generalViz.plotGivensAnglesFlow(givensAnglesPaths=givensAnglesFeaturesPaths, moduleNames=moduleNames, modelLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Givens Angle Features Path")
+                self.generalViz.plotGivensAnglesFlow(givensAnglesPaths=givensAnglesFeaturesPaths, moduleNames=moduleNames*2, modelLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Givens Angle Features Path")
 
                 # Scale factors' path.
                 _, _, _, reversibleModuleNames = allModelPipelines[0].model.getLearnableParams()
