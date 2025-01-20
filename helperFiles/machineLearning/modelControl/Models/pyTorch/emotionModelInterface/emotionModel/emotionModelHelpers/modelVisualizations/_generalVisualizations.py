@@ -154,7 +154,9 @@ class generalVisualizations(globalPlottingProtocols):
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def plotSinglaParameterFlow(self, activationParamsPaths, moduleNames, modelLabels, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
-        numModels, numEpochs, numLayers, numParams = np.asarray(activationParamsPaths).shape
+        activationParamsPaths = np.asarray(activationParamsPaths)
+        if len(activationParamsPaths.shape) == 2: return "No data to plot."
+        numModels, numEpochs, numLayers, numParams = activationParamsPaths.shape
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=1, ncols=numParams, figsize=(6 * numParams, 4), squeeze=False, sharex=True, sharey=False)  # squeeze=False ensures axes is 2D
@@ -199,8 +201,10 @@ class generalVisualizations(globalPlottingProtocols):
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
     
     def plotGivensAnglesFlow(self, givensAnglesPaths, moduleNames, modelLabels, saveFigureLocation="", plotTitle="Model Convergence Loss"):
-        numModels, numEpochs, numModuleLayers, numParams = len(givensAnglesPaths), len(givensAnglesPaths[0]), len(givensAnglesPaths[0][0]), len(givensAnglesPaths[0][0][0])
-        # givensAnglesPaths: numModels, numEpochs, numModuleLayers, numParams, numSignals
+        numModels, numEpochs = len(givensAnglesPaths), len(givensAnglesPaths[0])
+        if numEpochs == 0: return "No data to plot."
+        numModuleLayers, numParams = len(givensAnglesPaths[0][0]), len(givensAnglesPaths[0][0][0][0])
+        # givensAnglesPaths: numModels, numEpochs, numModuleLayers, numSignals, numParams
         nRows, nCols = 1, 3
 
         # Create a figure and axes array
@@ -215,7 +219,7 @@ class generalVisualizations(globalPlottingProtocols):
                 for epochInd in range(numEpochs):
                     temp[-1].append(givensAnglesPaths[modelInd][epochInd][moduleInd])
             givensAnglesPaths2.append(temp)
-        # givensAnglesPaths2: numModuleLayers, modelInd, epochInd, numParams, numSignals
+        # givensAnglesPaths2: numModuleLayers, modelInd, epochInd, numSignals, numParams
 
         for paramInd in range(numParams):
             ax = axes[paramInd]  # which subplot to use
