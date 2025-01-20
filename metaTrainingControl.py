@@ -38,7 +38,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-01-16 2 Normal--1 Cull25"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2025-01-16 2 Normal--1 Cull10"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Architecture Parameters ----------------------- #
@@ -130,7 +130,7 @@ if __name__ == "__main__":
 
         # Get the saving information.
         saveFullModel, plotSteps = modelParameters.getEpochParameters(epoch, numEpoch_toSaveFull, numEpoch_toPlot)
-        cullNullWeights = (epoch % 25 == 0)
+        cullNullWeights = (epoch % 10 == 0)
 
         # Train the model for a single epoch.
         if cullNullWeights: trainingProtocols.cullNullWeights(allMetaModels, allModels)  # TODO
