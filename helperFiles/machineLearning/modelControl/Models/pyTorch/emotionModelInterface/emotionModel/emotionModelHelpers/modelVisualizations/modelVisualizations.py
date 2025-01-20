@@ -74,8 +74,9 @@ class modelVisualizations(globalPlottingProtocols):
                 self.generalViz.plotGivensAnglesFlow(givensAnglesPaths=givensAnglesFeaturesPaths, moduleNames=moduleNames, modelLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Givens Angle Features Path")
 
                 # Scale factors' path.
-                scalingFactorsPaths = [allModelPipeline.model.getLearnableParams()[1] for allModelPipeline in allModelPipelines]
-                self.generalViz.plotScaleFactorLines(scalingFactorsPaths, moduleNames, datasetNames=datasetNames, epoch=epoch, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Scale Factor Path")
+                _, _, _, reversibleModuleNames = allModelPipelines[0].model.getLearnableParams()
+                scalingFactorsPaths = [modelPipeline.model.getLearnableParams()[1] for modelPipeline in allModelPipelines]
+                self.generalViz.plotScaleFactorLines(scalingFactorsPaths, reversibleModuleNames, datasetNames=datasetNames, epoch=epoch, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Scale Factor Path")
 
     def plotAllTrainingEvents(self, submodel, modelPipeline, lossDataLoader, trainingDate, currentEpoch):
         self.accelerator.print(f"\nPlotting results for the {modelPipeline.model.datasetName} model")
