@@ -128,9 +128,9 @@ class reversibleConvolutionLayer(reversibleInterface):
         givensAnglesVar = givensAngles.var(dim=0, keepdim=True)  # Dim: numSignals, 1
 
         # Calculate the mean, variance, and range of the scaling factors.
-        scalingFactorsRange = scalingFactors.max(dim=0, keepdim=True).values - scalingFactors.min(dim=0, keepdim=True).values  # Dim: 1
-        scalingFactorsMean = scalingFactors.mean(dim=0, keepdim=True)  # Dim: 1
-        scalingFactorsVar = scalingFactors.var(dim=0, keepdim=True)  # Dim: 1
+        scalingFactorsRange = (scalingFactors.max() - scalingFactors.min()).view(1, 1)  # Dim: numSignals=1, 1
+        scalingFactorsMean = scalingFactors.mean().view(1, 1)  # Dim: numSignals=1, 1
+        scalingFactorsVar = scalingFactors.var().view(1, 1)  # Dim: numSignals=1, 1
 
         return torch.hstack(tensors=[givensAnglesMean, givensAnglesVar, givensAnglesRange, scalingFactorsMean, scalingFactorsVar, scalingFactorsRange])
 
