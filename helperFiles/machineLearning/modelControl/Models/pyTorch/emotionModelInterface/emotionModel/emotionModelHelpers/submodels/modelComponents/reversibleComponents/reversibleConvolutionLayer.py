@@ -120,14 +120,19 @@ class reversibleConvolutionLayer(reversibleInterface):
         return givensAngles, scalingFactors
 
     def getFeatureParams(self, layerInd):
-        givensAngles = self.getGivensAngles(layerInd)  # Dim: numSignals, numParams
+        givensAngles, scalingFactors = self.getLinearParams(layerInd)  # Dim: numSignals, numParams
 
         # Calculate the mean, variance, and range of the Givens angles.
-        givensAnglesRange = givensAngles.max(dim=-1, keepdim=True).values - givensAngles.min(dim=-1, keepdim=True).values  # Dim: numSignals, 1
-        givensAnglesMean = givensAngles.mean(dim=-1, keepdim=True)  # Dim: numSignals, 1
-        givensAnglesVar = givensAngles.var(dim=-1, keepdim=True)  # Dim: numSignals, 1
+        givensAnglesRange = givensAngles.max(dim=0, keepdim=True).values - givensAngles.min(dim=0, keepdim=True).values  # Dim: numSignals, 1
+        givensAnglesMean = givensAngles.mean(dim=0, keepdim=True)  # Dim: numSignals, 1
+        givensAnglesVar = givensAngles.var(dim=0, keepdim=True)  # Dim: numSignals, 1
 
-        return torch.hstack(tensors=[givensAnglesMean, givensAnglesVar, givensAnglesRange])
+        # Calculate the mean, variance, and range of the scaling factors.
+        scalingFactorsRange = scalingFactors.max(dim=0, keepdim=True).values - scalingFactors.min(dim=0, keepdim=True).values  # Dim: 1
+        scalingFactorsMean = scalingFactors.mean(dim=0, keepdim=True)  # Dim: 1
+        scalingFactorsVar = scalingFactors.var(dim=0, keepdim=True)  # Dim: 1
+
+        return torch.hstack(tensors=[givensAnglesMean, givensAnglesVar, givensAnglesRange, scalingFactorsMean, scalingFactorsVar, scalingFactorsRange])
 
     def removeZeroWeights(self, layerInd, threshold=0.1):
         # Get the tensor associated with the specified layer
