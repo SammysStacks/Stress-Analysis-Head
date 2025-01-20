@@ -281,7 +281,7 @@ class generalVisualizations(globalPlottingProtocols):
                 x=x,  # Data for both histograms
                 color=color,  # Colors for shared and specific values
                 stacked=True,  # Stacked histogram
-                bins=64,  # Number of bins
+                bins=48,  # Number of bins
                 alpha=0.7,  # Transparency for better visibility
                 align='left',
             )
