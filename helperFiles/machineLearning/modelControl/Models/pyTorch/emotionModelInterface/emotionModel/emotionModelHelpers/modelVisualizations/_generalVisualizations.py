@@ -201,7 +201,7 @@ class generalVisualizations(globalPlottingProtocols):
     def plotGivensAnglesFlow(self, givensAnglesPaths, moduleNames, modelLabels, saveFigureLocation="", plotTitle="Model Convergence Loss"):
         numModels, numEpochs, numModuleLayers, numParams = len(givensAnglesPaths), len(givensAnglesPaths[0]), len(givensAnglesPaths[0][0]), len(givensAnglesPaths[0][0][0])
         # givensAnglesPaths: numModels, numEpochs, numModuleLayers, numParams, numSignals
-        nCols = 4; nRows = max(1, numParams // 4)
+        nRows, nCols = 1, 3
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=False)
