@@ -1,5 +1,6 @@
 # General
 from datetime import date
+import itertools
 import os
 
 # Import Files for Machine Learning
@@ -7,6 +8,9 @@ from ..imageModifications import imageModifications  # Methods for working with 
 from ..browserControl import browserControl      # Methods for controlling the web browser.
 
 class ImageFeedback:
+
+    image_counter = itertools.count()
+
     def __init__(self, client, model, thread, txtFilePath, userName = "Sam"):
         # General parameters.
         self.imageGenerationEvent = thread
@@ -89,6 +93,7 @@ class ImageFeedback:
             print('path does not exist', filepath)
 
         # Save the file with today's date
+        counter = next(self.image_counter)
         image_filepath = os.path.join(filepath, f"{date.today()}_{org_prompt}.png")
         imageRGBA.save(image_filepath, 'PNG')
         print(f"Image saved to {image_filepath}")
