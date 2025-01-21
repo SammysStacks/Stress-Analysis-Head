@@ -3,6 +3,7 @@ import math
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.collections import LineCollection
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.patches import Arc
 from shap.plots.colors._colors import lch2rgb
@@ -246,16 +247,17 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax = axes[layerInd]
 
             if "specific" in moduleName: lineColor = self.lightColors[0]; alpha = 0.8
-            elif "shared" in moduleName: lineColor = self.blackColor; alpha = 0.5
+            elif "shared" in moduleName: lineColor = self.lightColors[1]; alpha = 0.33
             else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
 
             # Scatter training eigenvalues
-            x, y = signalAngleLocations.real, signalAngleLocations.imag
-            ax.scatter(x, y, color=lineColor, label="Training", s=10, linewidth=0.2, alpha=alpha)
+            x, y = signalAngleLocations.real, signalAngleLocations.imag; x[y < 0] = np.nan; y[y < 0] = np.nan
+            ax.scatter(x, y, color=lineColor, label="Training", s=10, linewidth=0.1, alpha=alpha)
 
-            # Connect points to the origin
-            for xi, yi in zip(x.flatten(), y.flatten()):
-                ax.plot([0, xi], [0, yi], color=lineColor, linestyle='-', linewidth=0.2)
+            # Create lines connecting points to the origin
+            lines = np.array([[[0, 0], [xi, yi]] for xi, yi in zip(x, y)])  # Define line segments
+            line_segments = LineCollection(lines, colors=lineColor, linewidths=0.2, alpha=alpha)
+            ax.add_collection(line_segments)  # Add all lines at once
 
             # Highlight the origin
             ax.scatter(0, 0, color=self.blackColor, label='Origin', linewidth=1)
@@ -285,9 +287,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} {signalNames[signalInd]}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotsGivensAnglesHist(self, givensAnglesPath, scalingFactorsPath, reversibleModuleNames, numBins, epoch, signalInd, degreesFlag, saveFigureLocation, plotTitle):
+    def plotsGivensAnglesHist(self, givensAnglesPath, reversibleModuleNames, numBins, epoch, signalInd, degreesFlag, saveFigureLocation, plotTitle):
         # givensAnglesPath: numModuleLayers, numSignals, numParams
-        # scalingFactorsPath: numModuleLayers, numSignals
         numModuleLayers, nCols = len(givensAnglesPath), min(5, len(givensAnglesPath))
         nRows = math.ceil(numModuleLayers / nCols)
 
@@ -296,16 +297,14 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         bins = np.arange(-np.pi/4, np.pi/4, np.pi/4/numBins)
         units = "degrees" if degreesFlag else "radians"
         degrees = 200 if degreesFlag else math.pi / 4
-
-        # Flatten axes for easy indexing if you prefer
         axes = axes.flatten()
 
         for layerInd in range(numModuleLayers):
             ax = axes[layerInd]  # which subplot to use
 
             # Plot training eigenvalue angles
-            scaleFactors = scalingFactorsPath[layerInd]
-            ax.hist(givensAnglesPath[layerInd].flatten(), bins=bins, alpha=1, density=True, color=self.lightColors[1], edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True)
+            histograms = np.asarray(givensAnglesPath[layerInd][signalInd:signalInd + len(self.darkColors)])  # Get the histograms for the signal: numSignals, numParams
+            ax.hist(histograms.T, bins=bins, color=self.darkColors[0:len(histograms)], alpha=1, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True)
 
             # Customize subplot title and axes
             ax.set_title(f"{reversibleModuleNames[layerInd]}")
@@ -314,20 +313,18 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.set_ylabel("Density")
 
         # Hide any extra subplots if numModuleLayers < nRows * nCols
-        for idx in range(numModuleLayers, nRows * nCols):
-            fig.delaxes(axes[idx])  # remove unused axes
+        for idx in range(numModuleLayers, nRows * nCols): fig.delaxes(axes[idx])  # remove unused axes
 
         # Adjust layout to prevent overlapping titles/labels
-        plt.suptitle(f"{plotTitle}\nEpoch {epoch}", fontsize=16)
+        plt.suptitle(f"{plotTitle}; Epoch\n {epoch}", fontsize=16)
         plt.tight_layout()
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotsGivensAnglesLine(self, givensAnglesPath, scalingFactorsPath, reversibleModuleNames, epoch, signalInd, degreesFlag, saveFigureLocation, plotTitle):
+    def plotsGivensAnglesLine(self, givensAnglesPath, reversibleModuleNames, epoch, signalInd, degreesFlag, saveFigureLocation, plotTitle):
         # givensAnglesPath: numModuleLayers, numSignals, numParams
-        # scalingFactorsPath: numModuleLayers, numSignals
         numModuleLayers, nCols = len(givensAnglesPath), min(5, len(givensAnglesPath))
         nRows = math.ceil(numModuleLayers / nCols)
 
@@ -335,36 +332,34 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False)  # squeeze=False ensures axes is 2D
         units = "degrees" if degreesFlag else "radians"
         degrees = 200 if degreesFlag else math.pi / 4
-
-        # Flatten axes for easy indexing if you prefer
         axes = axes.flatten()
 
         for layerInd in range(numModuleLayers):
             ax = axes[layerInd]  # which subplot to use
 
-            # Plot training eigenvalue angles
-            scaleFactors = scalingFactorsPath[layerInd][signalInd]
-            ax.plot(givensAnglesPath[layerInd].flatten(), color=self.lightColors[1], linestyle='-', linewidth=1, alpha=1)
+            # Get the angles for the current layer
+            lines = np.asarray(givensAnglesPath[layerInd][signalInd:signalInd + len(self.darkColors)])  # Dimensions: numSignals, numParams
+            for lineInd in range(len(lines)): ax.plot(lines[lineInd], color=self.darkColors[lineInd], alpha=0.75, linewidth=1)
 
             # Customize subplot title and axes
             ax.set_title(f"{reversibleModuleNames[layerInd]}")
+            ax.set_xlabel("Parameter Index")
+            ax.set_xlim((-degrees, degrees))
             ax.set_ylabel(f"Angle ({units})")
-            ax.set_ylim((-degrees, degrees))
-            ax.set_xlabel("Axis Number")
 
-        # Hide any extra subplots if numModuleLayers < nRows * nCols
-        for idx in range(numModuleLayers, nRows * nCols):
-            fig.delaxes(axes[idx])  # remove unused axes
+        # Hide unused axes
+        for idx in range(numModuleLayers, len(axes)):
+            fig.delaxes(axes[idx])
 
         # Adjust layout to prevent overlapping titles/labels
-        plt.suptitle(f"{plotTitle}\nEpoch {epoch}", fontsize=16)
+        plt.suptitle(f"{plotTitle}; Epoch\n {epoch}", fontsize=16)
         plt.tight_layout()
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotScaleFactorLines(self, scalingFactorsPath, reversibleModuleNames, epoch, saveFigureLocation, plotTitle):
+    def plotScaleFactorHist(self, scalingFactorsPath, reversibleModuleNames, epoch, saveFigureLocation, plotTitle):
         # scalingFactorsPath: numModuleLayers, numSignals
 
         sharedValues, specificValues = [], []
@@ -385,7 +380,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         )
 
         # Customize plot title and axes
-        plt.title(f"{plotTitle}\nEpoch {epoch}", fontsize=16)
+        plt.title(f"{plotTitle}; Epoch\n {epoch}", fontsize=16)
         plt.xlabel("Scale Factor Values")  # X-axis: values
         plt.ylabel("Frequency")  # Y-axis: bin counts
         plt.xlim((0.9, 1.1))
@@ -483,22 +478,25 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=True)
         axes = axes.flatten()  # Flatten to 1D array for easy indexing
+        numSpecificActivations, numSharedActivations = 0, 0
 
         for activationInd in range(numActivations):
             x, y = activationCurves[activationInd]
             activationName = moduleNames[activationInd].lower()
             axInd = 0
 
-            if "specific" in activationName: axInd = 0
-            elif "shared" in activationName: axInd = 3
+            if "specific" in activationName: axInd = 0; numSpecificActivations += 1; totalActivations = numSpecificActivations
+            elif "shared" in activationName: axInd = 3; numSharedActivations += 1; totalActivations = numSharedActivations
+            else: raise ValueError(f"Unknown activation module: {activationName}")
+
             if "neural" in activationName and 'low' in activationName: axInd += 1
             elif "neural" in activationName and 'high' in activationName: axInd += 2
             elif "processing" not in activationName: raise ValueError(f"Unknown activation module: {activationName}")
 
             ax = axes[axInd]
             # Plot the activation curves
-            ax.plot(x, y, color=self.lightColors[1], linestyle='-', linewidth=1, label="Inverse Pass", alpha=0.75*activationInd/numActivations + 0.25)  # Plot Inverse Pass
-            ax.plot(y, x, color=self.lightColors[0], linestyle='-', linewidth=1, label="Forward Pass", alpha=0.75*activationInd/numActivations + 0.25)  # Plot Forward Pass
+            ax.plot(x, y, color=self.lightColors[1], linestyle='-', linewidth=1, label="Inverse Pass", alpha=0.5*totalActivations/numActivations + 0.5)  # Plot Inverse Pass
+            ax.plot(y, x, color=self.lightColors[0], linestyle='-', linewidth=1, label="Forward Pass", alpha=0.5*totalActivations/numActivations + 0.5)  # Plot Forward Pass
 
         for axInd in range(nCols*nRows):
             ax = axes[axInd]

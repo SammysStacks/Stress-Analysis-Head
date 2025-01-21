@@ -200,8 +200,8 @@ class generalVisualizations(globalPlottingProtocols):
         numModels, numEpochs = len(givensAnglesPaths), len(givensAnglesPaths[0])
         if numEpochs == 0: return "No data to plot."
         numModuleLayers, numParams = len(givensAnglesPaths[0][0]), len(givensAnglesPaths[0][0][0][0])
-        # givensAnglesPaths: numModels, numEpochs, numModuleLayers, numSignals, numParams
-        nRows, nCols = 1, 3
+        # givensAnglesPaths: numModels, numEpochs, numModuleLayers, numSignals, numParams=3
+        nRows, nCols = 1, min(5, numModuleLayers)
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=False)
@@ -245,6 +245,9 @@ class generalVisualizations(globalPlottingProtocols):
 
         # Label the plot.
         plt.title(f"{plotTitle}")
+
+        # Hide any extra subplots if numModuleLayers < nRows * nCols
+        for idx in range(numModuleLayers, nRows * nCols): fig.delaxes(axes[idx])  # remove unused axes
 
         # Save the figure if desired.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
