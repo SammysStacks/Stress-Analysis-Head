@@ -201,11 +201,10 @@ class generalVisualizations(globalPlottingProtocols):
         if numEpochs == 0: return "No data to plot."
         numModuleLayers, numParams = len(givensAnglesPaths[0][0]), len(givensAnglesPaths[0][0][0][0])
         # givensAnglesPaths: numModels, numEpochs, numModuleLayers, numSignals, numParams=3
-        nRows, nCols = 1, min(5, numModuleLayers)
 
         # Create a figure and axes array
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=False)
-        axes = axes.flatten()  # Flatten to 1D array for easy indexing
+        fig, axes = plt.subplots(nrows=1, ncols=numParams, figsize=(6 * numParams, 4), squeeze=False, sharex=True, sharey=False)  # squeeze=False ensures axes is 2D
+        axes = axes.flatten()  # Flatten axes for easy indexing if you prefer
 
         givensAnglesPaths2 = []
         for moduleInd in range(numModuleLayers):
@@ -216,9 +215,6 @@ class generalVisualizations(globalPlottingProtocols):
                     temp[-1].append(givensAnglesPaths[modelInd][epochInd][moduleInd])
             givensAnglesPaths2.append(temp)
         # givensAnglesPaths2: numModuleLayers, numModels, numEpochs, numSignals, numParams
-        print(len(givensAnglesPaths2), len(givensAnglesPaths2[0]), len(givensAnglesPaths2[0][0]))
-        print(len(givensAnglesPaths2[0][0][0]))
-        print(len(givensAnglesPaths2[0][0][0][0]))
 
         for paramInd in range(numParams):
             ax = axes[paramInd]  # which subplot to use
@@ -247,7 +243,7 @@ class generalVisualizations(globalPlottingProtocols):
         plt.title(f"{plotTitle}")
 
         # Hide any extra subplots if numModuleLayers < nRows * nCols
-        for idx in range(numModuleLayers, nRows * nCols): fig.delaxes(axes[idx])  # remove unused axes
+        for idx in range(numModuleLayers, len(axes)): fig.delaxes(axes[idx])  # remove unused axes
 
         # Save the figure if desired.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
@@ -268,7 +264,7 @@ class generalVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(plottingData[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotScaleFactorLines(self, scalingFactorsPaths, reversibleModuleNames, datasetNames, epoch, saveFigureLocation, plotTitle):
+    def plotScaleFactorHist(self, scalingFactorsPaths, reversibleModuleNames, datasetNames, epoch, saveFigureLocation, plotTitle):
         # scalingFactorsPaths: numModels, numModuleLayers, numSignals
         for modelInd in range(len(scalingFactorsPaths)):
             scalingFactorsPath = scalingFactorsPaths[modelInd]  # numModuleLayers, numSignals

@@ -267,18 +267,18 @@ class emotionModelHead(nn.Module):
             # Initialize the model's learning interface.
             compiledLayerStates = np.zeros(shape=(self.numSpecificEncoderLayers + self.numSharedEncoderLayers + 1, metaLearningData.size(0), metaLearningData.size(1), metaLearningData.size(2)))
             compiledLayerStates[compiledLayerIndex] = metaLearningData.clone().detach().cpu().numpy(); compiledLayerIndex += 1
-        # metaLearningData: batchSize, numSignals, finalDimension
+            # compiledLayerStates: numLayers, batchSize, numSignals, encodedDimension
 
         if forwardPass:
             # Signal encoder layers.
             metaLearningData, compiledLayerStates, compiledLayerIndex = self.modelBlockPass(metaLearningData, compiledLayerStates, self.sharedSignalEncoderModel, self.numSharedEncoderLayers, compiledLayerIndex)
             metaLearningData, compiledLayerStates, compiledLayerIndex = self.modelBlockPass(metaLearningData, compiledLayerStates, self.specificSignalEncoderModel, self.numSpecificEncoderLayers, compiledLayerIndex)
-            # metaLearningData: batchSize, numSignals, finalDimension
+            # metaLearningData: batchSize, numSignals, encodedDimension
         else:
             # Signal encoder layers.
             metaLearningData, compiledLayerStates, compiledLayerIndex = self.modelBlockPass(metaLearningData, compiledLayerStates, self.specificSignalEncoderModel, self.numSpecificEncoderLayers, compiledLayerIndex)
             metaLearningData, compiledLayerStates, compiledLayerIndex = self.modelBlockPass(metaLearningData, compiledLayerStates, self.sharedSignalEncoderModel, self.numSharedEncoderLayers, compiledLayerIndex)
-            # metaLearningData: batchSize, numSignals, finalDimension
+            # metaLearningData: batchSize, numSignals, encodedDimension
 
         return metaLearningData, compiledLayerStates
 
@@ -290,7 +290,7 @@ class emotionModelHead(nn.Module):
         for layerInd in range(numLayers):
             metaLearningData = modelLayer.learningInterface(layerInd=layerInd, signalData=metaLearningData)
             if compileLayerStates: compiledLayerStates[compiledLayerIndex] = metaLearningData.clone().detach().cpu().numpy(); compiledLayerIndex += 1
-        # metaLearningData: batchSize, numSignals, finalDimension
+        # metaLearningData: batchSize, numSignals, encodedDimension
 
         return metaLearningData, compiledLayerStates, compiledLayerIndex
 

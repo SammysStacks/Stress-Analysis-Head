@@ -316,7 +316,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         for idx in range(numModuleLayers, nRows * nCols): fig.delaxes(axes[idx])  # remove unused axes
 
         # Adjust layout to prevent overlapping titles/labels
-        plt.suptitle(f"{plotTitle}; Epoch\n {epoch}", fontsize=16)
+        plt.suptitle(f"{plotTitle}; Epoch {epoch}\n", fontsize=16)
         plt.tight_layout()
 
         # Save the plot
@@ -344,7 +344,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             # Customize subplot title and axes
             ax.set_title(f"{reversibleModuleNames[layerInd]}")
             ax.set_xlabel("Parameter Index")
-            ax.set_xlim((-degrees, degrees))
+            ax.set_ylim((-degrees, degrees))
             ax.set_ylabel(f"Angle ({units})")
 
         # Hide unused axes
@@ -352,8 +352,34 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             fig.delaxes(axes[idx])
 
         # Adjust layout to prevent overlapping titles/labels
-        plt.suptitle(f"{plotTitle}; Epoch\n {epoch}", fontsize=16)
+        plt.suptitle(f"{plotTitle}; Epoch {epoch}\n", fontsize=16)
         plt.tight_layout()
+
+        # Save the plot
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        else: self.clearFigure(fig=None, legend=None, showPlot=True)
+
+    def plotScaleFactorLines(self, scalingFactorsPath, reversibleModuleNames, epoch, saveFigureLocation, plotTitle):
+        # scalingFactorsPath: numModuleLayers, numSignals
+        numModuleLayers = len(reversibleModuleNames)
+        sharedValues, specificValues = [], []
+
+        for layerInd in range(numModuleLayers):
+            if "shared" in reversibleModuleNames[layerInd]: sharedValues.extend(scalingFactorsPath[layerInd])
+            elif "specific" in reversibleModuleNames[layerInd]: specificValues.extend(scalingFactorsPath[layerInd])
+            else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+        sharedValues = np.asarray(sharedValues); specificValues = np.asarray(specificValues)
+
+        # Get the angles for the current layer
+        plt.plot(sharedValues, color=self.darkColors[1], alpha=0.75, linewidth=1)
+        plt.plot(specificValues, color=self.darkColors[0], alpha=0.75, linewidth=1)
+
+        # Customize plot title and axes
+        plt.title(f"{plotTitle}; Epoch {epoch}\n", fontsize=16)
+        plt.xlabel("Scale Factor Values")  # X-axis: values
+        plt.ylabel("Frequency")  # Y-axis: bin counts
+        plt.ylim((0.9, 1.1))
+        plt.legend()
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
@@ -361,7 +387,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     def plotScaleFactorHist(self, scalingFactorsPath, reversibleModuleNames, epoch, saveFigureLocation, plotTitle):
         # scalingFactorsPath: numModuleLayers, numSignals
-
         sharedValues, specificValues = [], []
         for layerInd in range(len(scalingFactorsPath)):
             if "shared" in reversibleModuleNames[layerInd]: sharedValues.extend(scalingFactorsPath[layerInd].flatten())
@@ -374,13 +399,13 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             color=[self.lightColors[i] for i in range(len(allValues))],  # Colors for shared and specific values
             label=["Shared", "Specific"],  # Labels for the legend
             stacked=True,  # Stacked histogram
-            bins=48,  # Number of bins
+            bins=24,  # Number of bins
             alpha=0.7,  # Transparency for better visibility
             align='left',
         )
 
         # Customize plot title and axes
-        plt.title(f"{plotTitle}; Epoch\n {epoch}", fontsize=16)
+        plt.title(f"{plotTitle}; Epoch {epoch}\n", fontsize=16)
         plt.xlabel("Scale Factor Values")  # X-axis: values
         plt.ylabel("Frequency")  # Y-axis: bin counts
         plt.xlim((0.9, 1.1))
