@@ -4,7 +4,7 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
-from matplotlib.patches import Circle, Arc
+from matplotlib.patches import Arc
 from shap.plots.colors._colors import lch2rgb
 
 # Visualization protocols
@@ -26,34 +26,36 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         red_rgb = lch2rgb(red_lch)
         white_rgb = np.asarray([1., 1., 1.])
 
-        colors = []
-        for alpha in np.linspace(1, 0, 100):
+        # Create the colormap
+        colors = []; num_steps = 200
+        for alpha in np.linspace(start=1, stop=0, num=num_steps):
             c = blue_rgb * alpha + (1 - alpha) * white_rgb
             colors.append(c)
-        for alpha in np.linspace(0, 1, 100):
+        for alpha in np.linspace(start=0, stop=1, num=num_steps):
             c = red_rgb * alpha + (1 - alpha) * white_rgb
             colors.append(c)
+
+        # Create the colormap
         self.custom_cmap = LinearSegmentedColormap.from_list("red_transparent_blue", colors)
 
     # --------------------- Visualize Model Parameters --------------------- #
 
     def plotProfilePath(self, relativeTimes, healthProfile, retrainingProfilePath, epoch, saveFigureLocation="signalEncoding/", plotTitle="Health Profile State Path"):
+        # retrainingProfilePath: (numProfileShots or numProcessingLayers, numExperiments, encodedDimension)
         # Extract the signal dimensions.
         numProfileSteps, batchInd = len(retrainingProfilePath), 0
-        noTimes = relativeTimes is None
 
-        if noTimes: relativeTimes = np.arange(start=0, stop=len(healthProfile[batchInd]), step=1)
-        for profileStep in range(numProfileSteps): plt.plot(relativeTimes, retrainingProfilePath[profileStep, batchInd], 'o--' if noTimes else '-', c=self.lightColors[1], linewidth=0.25 if noTimes else 1, markersize=4, alpha=0.3*(numProfileSteps - profileStep)/numProfileSteps)
-        for profileStep in range(numProfileSteps): plt.plot(relativeTimes, retrainingProfilePath[profileStep, batchInd], 'o--' if noTimes else '-', c=self.lightColors[0], linewidth=0.25 if noTimes else 1, markersize=4, alpha=0.6*(1 - (numProfileSteps - profileStep)/numProfileSteps))
-        plt.plot(relativeTimes, healthProfile[batchInd], 'o-' if noTimes else '-', c=self.blackColor, label=f"Health profile", linewidth=1 if noTimes else 2, markersize=7, alpha=0.6 if noTimes else 0.25)
-        plt.hlines(y=0, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors='k', linestyles='dashed', linewidth=1)
+        for profileStep in range(numProfileSteps):
+            plt.plot(relativeTimes, retrainingProfilePath[profileStep, batchInd], '-', c=self.lightColors[1], linewidth=1, markersize=4, alpha=0.3*(numProfileSteps - profileStep)/numProfileSteps)
+            plt.plot(relativeTimes, retrainingProfilePath[profileStep, batchInd], '-', c=self.lightColors[0], linewidth=1, markersize=4, alpha=0.6*(1 - (numProfileSteps - profileStep)/numProfileSteps))
+        plt.plot(relativeTimes, healthProfile[batchInd], '-', c=self.blackColor, label=f"Health profile", linewidth=1, markersize=6, alpha=0.3)
+        plt.hlines(y=0, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='-', linewidth=1)
 
         # Plotting aesthetics.
         plt.xlabel("Time (Seconds)")
         plt.title(f"{plotTitle} epoch{epoch}")
         plt.ylabel("Signal (AU)")
-        if not noTimes: plt.ylim((-2, 2))
-        else: plt.ylim((-2, 2))
+        plt.ylim((-2, 2))
 
         # Save the figure.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
@@ -145,12 +147,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             else: self.clearFigure(fig=None, legend=None, showPlot=True)
             break
 
-    def plotSignalEncodingStatePath(self, relativeTimes, compiledSignalEncoderLayerStates, vMin, signalNames, epoch, hiddenLayers, saveFigureLocation, plotTitle):
+    def plotSignalEncodingStatePath(self, relativeTimes, compiledSignalEncoderLayerStates, batchInd, signalInd, vMin, signalNames, epoch, hiddenLayers, saveFigureLocation, plotTitle):
         numLayers, numExperiments, numSignals, encodedDimension = compiledSignalEncoderLayerStates.shape
-        timesPresent = relativeTimes is not None
-
-        if not timesPresent: relativeTimes = np.arange(start=1, stop=1 + encodedDimension, step=1)
-        batchInd, signalInd = 0, 0
 
         # Interpolate the states.
         compiledSignalEncoderLayerStates = compiledSignalEncoderLayerStates[:, batchInd, signalInd, :]
@@ -163,7 +161,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.figure(figsize=(12, 8))
 
         # Plot the rest of the layers with the same normalization.
-        im0 = plt.imshow(interpolated_states, cmap='viridis', interpolation=None, extent=relativeTimesExtent, aspect='auto', origin='lower', vmin=-vMin if timesPresent else 0, vmax=vMin)
+        im0 = plt.imshow(interpolated_states, cmap=self.custom_cmap, interpolation=None, extent=relativeTimesExtent, aspect='auto', origin='lower', vmin=-vMin, vmax=vMin)
         plt.colorbar(im0, fraction=0.046, pad=0.04)
 
         # Add horizontal lines to mark layer boundaries
@@ -171,8 +169,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.hlines(y=hiddenLayers, xmin=plt.xlim()[0], xmax=plt.xlim()[1], colors=self.blackColor, linestyles='-', linewidth=2)
 
         # Ticks, labels, and formatting
-        yticks = np.asarray([0] + list(range(1, 1 + numSpecificEncoderLayers)) + list(range(1, 1 + numSharedEncoderLayers)))
-        plt.yticks(ticks=np.arange(start=0.5, stop=1 + numSpecificEncoderLayers + numSharedEncoderLayers, step=1), labels=yticks, fontsize=12)
+        yTicks = np.asarray([0] + list(range(1, 1 + numSpecificEncoderLayers)) + list(range(1, 1 + numSharedEncoderLayers)))
+        plt.yticks(ticks=np.arange(start=0.5, stop=1 + numSpecificEncoderLayers + numSharedEncoderLayers, step=1), labels=yTicks, fontsize=12)
         plt.title(label=f"{plotTitle} epoch{epoch}", fontsize=16)
         plt.ylabel(ylabel="Layer Index", fontsize=14)
         plt.xlabel(xlabel="Time", fontsize=14)
@@ -233,9 +231,9 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} {signalNames[signalInd]}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotEigenValueLocations(self, givensAnglesPath, moduleNames, signalNames, epoch, signalInd, saveFigureLocation, plotTitle):
+    def plotAngleLocations(self, givensAnglesPath, moduleNames, signalNames, epoch, signalInd, saveFigureLocation, plotTitle):
         # givensAnglesPath: numModuleLayers, numSignals, numParams
-        numModuleLayers, nCols = len(givensAnglesPath), min(6, len(givensAnglesPath))
+        numModuleLayers, nCols = len(givensAnglesPath), min(5, len(givensAnglesPath))
         nRows = math.ceil(numModuleLayers / nCols)
 
         # Create a figure and axes array
@@ -290,7 +288,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
     def plotsGivensAnglesHist(self, givensAnglesPath, scalingFactorsPath, reversibleModuleNames, numBins, epoch, signalInd, degreesFlag, saveFigureLocation, plotTitle):
         # givensAnglesPath: numModuleLayers, numSignals, numParams
         # scalingFactorsPath: numModuleLayers, numSignals
-        numModuleLayers, nCols = len(givensAnglesPath), min(6, len(givensAnglesPath))
+        numModuleLayers, nCols = len(givensAnglesPath), min(5, len(givensAnglesPath))
         nRows = math.ceil(numModuleLayers / nCols)
 
         # Create a figure and axes array
@@ -330,7 +328,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
     def plotsGivensAnglesLine(self, givensAnglesPath, scalingFactorsPath, reversibleModuleNames, epoch, signalInd, degreesFlag, saveFigureLocation, plotTitle):
         # givensAnglesPath: numModuleLayers, numSignals, numParams
         # scalingFactorsPath: numModuleLayers, numSignals
-        numModuleLayers, nCols = len(givensAnglesPath), min(6, len(givensAnglesPath))
+        numModuleLayers, nCols = len(givensAnglesPath), min(5, len(givensAnglesPath))
         nRows = math.ceil(numModuleLayers / nCols)
 
         # Create a figure and axes array
@@ -452,8 +450,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         ax = fig.add_subplot(111, projection='3d', facecolor="white")
 
         # Plot the surface.
-        ax.plot_surface(x_data, y_data, dataStates, cmap=self.custom_cmap, alpha=0.85, linewidth=0.5, antialiased=True, vmin=-1.5*modelConstants.minMaxScale, vmax=1.5*modelConstants.minMaxScale)
-        surf = ax.scatter(x, y, z, c=z, linewidths=2, cmap=self.custom_cmap, alpha=1, s=7, vmin=-1.5*modelConstants.minMaxScale, vmax=1.5*modelConstants.minMaxScale)
+        ax.plot_surface(x_data, y_data, dataStates, cmap=self.custom_cmap, alpha=0.85, linewidth=0.5, antialiased=True, vmin=-1.25*modelConstants.minMaxScale, vmax=1.25*modelConstants.minMaxScale)
+        surf = ax.scatter(x, y, z, c=z, linewidths=2, cmap=self.custom_cmap, alpha=1, s=7, vmin=-1.25*modelConstants.minMaxScale, vmax=1.25*modelConstants.minMaxScale)
 
         # Customize the view angle
         ax.view_init(elev=30, azim=135)

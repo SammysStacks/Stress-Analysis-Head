@@ -40,9 +40,10 @@ class reversibleConvolutionLayer(reversibleInterface):
             # Create the neural weights.
             parameters = nn.Parameter(torch.randn(self.numSignals, self.numParams or 1, dtype=torch.float64))
             # parameters = nn.init.uniform_(parameters, a=-0.2, b=0.2)  # TODO ADD BACK?
-            parameters = nn.init.normal_(parameters, mean=0, std=0.1)  # TODO ADD BACK?
+            # parameters = nn.init.normal_(parameters, mean=0, std=0.1)  # TODO ADD BACK?
             # parameters = nn.init.zeros_(parameters)  # TODO REMOVE
             # parameters = nn.init.kaiming_uniform_(parameters)  # TODO: OLD
+            parameters = nn.init.kaiming_normal_(parameters, a=0, mode='fan_in', nonlinearity='leaky_relu')
             self.givensRotationParams.append(parameters)
 
     def forward(self, inputData):
@@ -121,6 +122,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
     def getFeatureParams(self, layerInd):
         givensAngles, scalingFactors = self.getLinearParams(layerInd)  # Dim: numSignals, numParams
+        scalingFactors = scalingFactors.reshape(self.numSignals, 1)  # Dim: numSignals, numParams=1
 
         # Calculate the mean, variance, and range of the Givens angles.
         givensAnglesRange = givensAngles.max(dim=0, keepdim=True).values - givensAngles.min(dim=0, keepdim=True).values  # Dim: numSignals, 1
@@ -128,18 +130,18 @@ class reversibleConvolutionLayer(reversibleInterface):
         givensAnglesVar = givensAngles.var(dim=0, keepdim=True)  # Dim: numSignals, 1
 
         # Calculate the mean, variance, and range of the scaling factors.
-        scalingFactorsRange = (scalingFactors.max() - scalingFactors.min()).view(1, 1)  # Dim: numSignals=1, 1
-        scalingFactorsMean = scalingFactors.mean().view(1, 1)  # Dim: numSignals=1, 1
-        scalingFactorsVar = scalingFactors.var().view(1, 1)  # Dim: numSignals=1, 1
+        scalingFactorsRange = scalingFactors.max(dim=0, keepdim=True).values - scalingFactors.min(dim=0, keepdim=True).values  # Dim: numSignals, 1
+        scalingFactorsMean = scalingFactors.mean(dim=0, keepdim=True)  # Dim: numSignals, 1
+        scalingFactorsVar = scalingFactors.var(dim=0, keepdim=True)  # Dim: numSignals, 1
 
-        return torch.hstack(tensors=[givensAnglesMean, givensAnglesVar, givensAnglesRange, scalingFactorsMean, scalingFactorsVar, scalingFactorsRange])
+        # Combine the features.
+        givensAnglesFeatureNames = ["Angular Mean", "Angular Variance", "Angular Range", "Scalar Mean", "Scalar Variance", "Scalar Range"]
+        givensAnglesFeatures = torch.hstack(tensors=[givensAnglesMean, givensAnglesVar, givensAnglesRange, scalingFactorsMean, scalingFactorsVar, scalingFactorsRange])
+        return givensAnglesFeatureNames, givensAnglesFeatures
 
-    def removeZeroWeights(self, layerInd, threshold=0.1):
-        # Get the tensor associated with the specified layer
-        param = self.getGivensAngles(layerInd)
-
+    def removeZeroWeights(self, layerInd, threshold=0.01):
         with torch.no_grad():  # Ensure gradient tracking is disabled
-            param[param.abs() < threshold] = 0
+            self.givensRotationParams[layerInd][self.getGivensAngles(layerInd).abs() < threshold] = 0
 
     def printParams(self):
         # Count the trainable parameters.

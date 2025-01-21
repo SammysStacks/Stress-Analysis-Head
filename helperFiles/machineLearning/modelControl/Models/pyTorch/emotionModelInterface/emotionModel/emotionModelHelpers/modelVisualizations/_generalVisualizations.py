@@ -182,25 +182,21 @@ class generalVisualizations(globalPlottingProtocols):
                     # Plot the activation parameters.
                     ax.plot(activationParams, color=lineColor, linewidth=0.8, alpha=alpha, label=modelLabel)
             ax.set_xlabel("Training Epoch")
-            ax.set_ylabel(paramName)
+            ax.set_title(paramName)
             if 'Infinite' in paramName: ax.set_ylim((0, 1.1))
             elif 'Linearity' in paramName: ax.set_ylim((0, 10.1))
             elif 'Convergent' in paramName: ax.set_ylim((0, 2.1))
-            elif 'Range' in paramName: ax.set_ylim((0, 0.1))
-            elif 'Variance' in paramName: ax.set_ylim((0, 0.01))
-            elif 'Mean' in paramName: ax.set_ylim((-0.1, 0.01))
             ax.set_xlim((0, numEpochs + 1))
-            ax.set_title(paramName)
             ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
         # Label the plot.
-        plt.title(f"{plotTitle}")
+        plt.suptitle(f"{plotTitle}")
 
         # Save the figure if desired.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
     
-    def plotGivensAnglesFlow(self, givensAnglesPaths, moduleNames, modelLabels, saveFigureLocation="", plotTitle="Model Convergence Loss"):
+    def plotGivensAnglesFlow(self, givensAnglesPaths, paramNames, moduleNames, modelLabels, saveFigureLocation="", plotTitle="Model Convergence Loss"):
         numModels, numEpochs = len(givensAnglesPaths), len(givensAnglesPaths[0])
         if numEpochs == 0: return "No data to plot."
         numModuleLayers, numParams = len(givensAnglesPaths[0][0]), len(givensAnglesPaths[0][0][0][0])
@@ -219,14 +215,17 @@ class generalVisualizations(globalPlottingProtocols):
                 for epochInd in range(numEpochs):
                     temp[-1].append(givensAnglesPaths[modelInd][epochInd][moduleInd])
             givensAnglesPaths2.append(temp)
-        # givensAnglesPaths2: numModuleLayers, modelInd, epochInd, numSignals, numParams
+        # givensAnglesPaths2: numModuleLayers, numModels, numEpochs, numSignals, numParams
+        print(len(givensAnglesPaths2), len(givensAnglesPaths2[0]), len(givensAnglesPaths2[0][0]))
+        print(len(givensAnglesPaths2[0][0][0]))
+        print(len(givensAnglesPaths2[0][0][0][0]))
 
         for paramInd in range(numParams):
             ax = axes[paramInd]  # which subplot to use
 
             for modelInd in range(numModels):
                 for moduleInd in range(numModuleLayers):
-                    moduleName = moduleNames[modelInd, moduleInd].lower()
+                    moduleName = moduleNames[modelInd][moduleInd].lower()
                     if "shared" in moduleName and modelInd != 0: continue
 
                     if "specific" in moduleName: lineColor = self.darkColors[modelInd]; alpha = 0.8
@@ -239,11 +238,10 @@ class generalVisualizations(globalPlottingProtocols):
                     # Plot the activation parameters.
                     data = np.asarray(givensAnglesPaths2[moduleInd][modelInd])[:, :, paramInd]
                     ax.plot(data, color=lineColor, linewidth=0.8, alpha=alpha, label=modelLabel)
-        plt.xlabel("Training Epoch")
-        plt.ylabel("Values")
-        #  plt.ylim((-np.pi, np.pi))
-        plt.xlim((0, numEpochs + 1))
-        plt.grid(True)
+            ax.set_xlabel("Training Epoch")
+            if paramNames is not None: ax.set_ylabel(paramNames[paramInd])
+            ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+            ax.set_xlim((0, numEpochs + 1))
 
         # Label the plot.
         plt.title(f"{plotTitle}")
@@ -274,20 +272,24 @@ class generalVisualizations(globalPlottingProtocols):
             sharedValues, specificValues = [], []
 
             for layerInd in range(len(scalingFactorsPath)):
-                if "shared" in reversibleModuleNames[layerInd]: sharedValues.extend(scalingFactorsPath[layerInd].flatten())
-                elif "specific" in reversibleModuleNames[layerInd]: specificValues.extend(scalingFactorsPath[layerInd].flatten())
+                if "specific" in reversibleModuleNames[modelInd][layerInd]: specificValues.extend(scalingFactorsPath[layerInd].flatten())
+                elif "shared" in reversibleModuleNames[modelInd][layerInd]:
+                    if modelInd == 0: sharedValues.extend(scalingFactorsPath[layerInd].flatten())
                 else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
 
-            if modelInd == 0: x = [sharedValues, specificValues]; color = [self.blackColor, self.darkColors[modelInd]]
-            else: x = [specificValues]; color = [self.darkColors[modelInd]]
+            if modelInd == 0: x = [sharedValues, specificValues]; color = [self.blackColor, self.darkColors[modelInd]]; bins = 24
+            else: x = [specificValues]; color = [self.darkColors[modelInd]]; bins = 24
 
             plt.hist(
                 x=x,  # Data for both histograms
                 color=color,  # Colors for shared and specific values
                 stacked=True,  # Stacked histogram
-                bins=48,  # Number of bins
+                bins=bins,  # Number of bins
                 alpha=0.7,  # Transparency for better visibility
                 align='left',
+                density=True,
+                linewidth=0.1,
+                histtype='bar',
             )
 
         # Customize plot title and axes

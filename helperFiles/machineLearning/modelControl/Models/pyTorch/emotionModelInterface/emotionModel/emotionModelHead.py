@@ -213,10 +213,14 @@ class emotionModelHead(nn.Module):
         return compiledName
 
     def getLearnableParams(self):
-        givensAnglesPath, scalingFactorsPath, givensAnglesFeaturesPath, reversibleModuleNames = [], [], [], []
+        # Initialize the learnable parameters.
+        givensAnglesPath, scalingFactorsPath, givensAnglesFeaturesPath,  = [], [], []
+        givensAnglesFeatureNames, reversibleModuleNames = None, []
+
+        # For each module.
         for name, module in self.named_modules():
             if isinstance(module, reversibleConvolutionLayer):
-                givensAnglesFeatures = module.getFeatureParams(layerInd=0)
+                givensAnglesFeatureNames, givensAnglesFeatures = module.getFeatureParams(layerInd=0)
                 givensAngles, scalingFactors = module.getLinearParams(layerInd=0)
                 givensAnglesFeatures = givensAnglesFeatures.detach().cpu().numpy().T  # givensAnglesFeatures: numSignals, numFeatures
                 scalingFactors = scalingFactors.detach().cpu().numpy()  # scalingFactors: numSignals
@@ -226,7 +230,7 @@ class emotionModelHead(nn.Module):
                 scalingFactorsPath.append(scalingFactors)  # scalingFactorsPath: numModuleLayers, numSignals
                 givensAnglesFeaturesPath.append(givensAnglesFeatures)  # givensAnglesFeaturesPath: numModuleLayers, numSignals, numFeatures
                 reversibleModuleNames.append(self.compileModuleName(name))
-        return givensAnglesPath, scalingFactorsPath, givensAnglesFeaturesPath, reversibleModuleNames
+        return givensAnglesPath, scalingFactorsPath, givensAnglesFeaturesPath, reversibleModuleNames, givensAnglesFeatureNames
 
     def getActivationCurvesFullPassPath(self):
         activationCurvePath, moduleNames = [], []
