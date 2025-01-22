@@ -157,7 +157,7 @@ class emotionModelHead(nn.Module):
         # Perform the backward pass: health profile -> signal data.
         resampledSignalData = healthProfile.unsqueeze(1).repeat(repeats=(1, numSignals, 1))
         resampledSignalData, compiledSignalEncoderLayerState = self.signalEncoderPass(metaLearningData=resampledSignalData, forwardPass=False, compileLayerStates=onlyProfileTraining)
-        reconstructedSignalData = self.sharedSignalEncoderModel.interpolateOriginalSignals(signalData, resampledSignalData)
+        reconstructedSignalData = self.sharedSignalEncoderModel.interpolateOriginalSignals(signalData, resampledSignalData.clone())
         # reconstructedSignalData: batchSize, numSignals, maxSequenceLength
         # resampledSignalData: batchSize, numSignals, encodedDimension
 
@@ -322,9 +322,7 @@ class emotionModelHead(nn.Module):
                 healthProfile[startBatchInd:endBatchInd], activityProfile[startBatchInd:endBatchInd], basicEmotionProfile[startBatchInd:endBatchInd], emotionProfile[startBatchInd:endBatchInd] \
                 = (element.cpu() if isinstance(element, torch.Tensor) else element for element in self.forward(submodel=submodel, signalData=signalData[startBatchInd:endBatchInd], signalIdentifiers=signalIdentifiers[startBatchInd:endBatchInd],
                                                                                                                metadata=metadata[startBatchInd:endBatchInd], device=device, onlyProfileTraining=onlyProfileTraining))
-
-            # Update the batch index.
-            startBatchInd = endBatchInd
+            startBatchInd = endBatchInd  # Update the batch index.
 
         if onlyProfileTraining:
             with torch.no_grad():
