@@ -227,6 +227,7 @@ class generalVisualizations(globalPlottingProtocols):
 
                     plottingParams = []
                     for epochInd in range(numEpochs):
+                        print("plotAngularFeaturesFlow:", np.asarray(givensAnglesFeaturesPaths[modelInd][epochInd][layerInd].shape))
                         plottingParams.append(givensAnglesFeaturesPaths[modelInd][epochInd][layerInd][:, paramInd])
                     ax.plot(plottingParams, color=lineColor, linewidth=0.8, alpha=alpha, label=modelLabel)
             ax.set_xlabel("Training Epoch")
@@ -236,6 +237,9 @@ class generalVisualizations(globalPlottingProtocols):
 
         # Label the plot.
         plt.suptitle(f"{plotTitle}")
+
+        # Hide unused axes
+        for idx in range(numModuleLayers, len(axes)): fig.delaxes(axes[idx])
 
         # Save the figure if desired.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
@@ -254,41 +258,4 @@ class generalVisualizations(globalPlottingProtocols):
 
         # Save the figure if desired.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(plottingData[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
-        else: self.clearFigure(fig=None, legend=None, showPlot=True)
-
-    def plotScaleFactorLines(self, scalingFactorsPaths, reversibleModuleNames, datasetNames, epoch, saveFigureLocation, plotTitle):
-        # scalingFactorsPaths: numModels, numEpochs, numModuleLayers, numSignals
-        try: numModels, numEpochs, numModuleLayers = len(scalingFactorsPaths), len(scalingFactorsPaths[0]), len(scalingFactorsPaths[0][0])
-        except Exception as e: print("plotScaleFactorLines:", e); return None
-        nCols = min(5, numModuleLayers); nRows = math.ceil(numModuleLayers / nCols)
-        if numEpochs == 0: return "No data to plot."
-
-        # Create a figure and axes array
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False)  # squeeze=False ensures axes is 2D
-        axes = axes.flatten()
-
-        for modelInd in range(numModels):
-            for layerInd in range(numModuleLayers):
-                ax = axes[layerInd]  # which subplot to use
-
-                lines = []
-                for epochInd in range(numEpochs):
-                    lines.append(scalingFactorsPaths[modelInd][epochInd][layerInd])
-                ax.plot(np.asarray(lines).T, color=self.darkColors[modelInd], alpha=0.75, linewidth=1)
-
-                # Customize subplot title and axes
-                ax.set_title(f"{reversibleModuleNames[layerInd]}")
-                ax.set_xlabel("Epoch")
-                ax.set_ylabel("Scale Factor")
-
-        # Hide unused axes
-        for idx in range(numModuleLayers, len(axes)):
-            fig.delaxes(axes[idx])
-
-        # Adjust layout to prevent overlapping titles/labels
-        plt.suptitle(f"{plotTitle}; Epoch {epoch}\n", fontsize=16)
-        plt.tight_layout()
-
-        # Save the plot
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)

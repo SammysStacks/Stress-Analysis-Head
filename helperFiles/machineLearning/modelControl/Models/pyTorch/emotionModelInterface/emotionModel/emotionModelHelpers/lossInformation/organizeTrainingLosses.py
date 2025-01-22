@@ -1,10 +1,8 @@
 # General
 import time
-
 import torch
 
-# Helper classes
-from .lossCalculations import lossCalculations
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.lossInformation.lossCalculations import lossCalculations
 
 
 class organizeTrainingLosses(lossCalculations):

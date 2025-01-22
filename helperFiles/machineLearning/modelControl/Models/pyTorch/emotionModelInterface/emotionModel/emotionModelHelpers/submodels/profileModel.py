@@ -29,7 +29,7 @@ class profileModel(emotionModelWeights):
         numSharedEncoderLayers = modelConstants.userInputParams['numSharedEncoderLayers']
 
         # Pre-allocate each parameter.
-        self.signalEncoderLayerTransforms = np.zeros(shape=(numProfileShots + 1, numSpecificEncoderLayers + numSharedEncoderLayers + 1, self.numExperiments, 1, self.encodedDimension))
+        self.signalEncoderLayerTransforms = np.zeros(shape=(numProfileShots + 1, numSpecificEncoderLayers + numSharedEncoderLayers + 1, self.numExperiments, self.numSignals, self.encodedDimension))  # Dim: numProfileShots, numLayers, numExperiments, numSignals, encodedDimension
         self.retrainingHealthProfilePath = np.zeros(shape=(numProfileShots + 1, self.numExperiments, self.encodedDimension))
         self.retrainingProfileLosses = np.zeros(shape=(numProfileShots + 1, self.numExperiments, self.numSignals))
 

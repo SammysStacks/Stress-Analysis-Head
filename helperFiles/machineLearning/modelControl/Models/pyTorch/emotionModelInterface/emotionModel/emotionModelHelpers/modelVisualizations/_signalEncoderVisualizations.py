@@ -277,8 +277,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.axis('equal')
 
         # Remove unused subplots
-        for idx in range(numModuleLayers, nRows * nCols):
-            fig.delaxes(axes[idx])
+        for idx in range(numModuleLayers, nRows * nCols): fig.delaxes(axes[idx])
 
         # Adjust layout with padding
         plt.tight_layout(pad=2.0)
@@ -364,8 +363,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         sharedValues, specificValues = [], []
 
         for layerInd in range(numModuleLayers):
-            if "shared" in reversibleModuleNames[layerInd]: sharedValues.append(scalingFactorsPath[layerInd])
-            elif "specific" in reversibleModuleNames[layerInd]: specificValues.append(scalingFactorsPath[layerInd])
+            if "shared" in reversibleModuleNames[layerInd]: sharedValues.append(scalingFactorsPath[layerInd].flatten())
+            elif "specific" in reversibleModuleNames[layerInd]: specificValues.append(scalingFactorsPath[layerInd].flatten())
             else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
         sharedValues = np.asarray(sharedValues); specificValues = np.asarray(specificValues)
 
