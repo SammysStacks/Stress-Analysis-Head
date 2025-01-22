@@ -31,9 +31,8 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
         # Initialize loss holders.
         self.trainingLosses_signalReconstruction, self.testingLosses_signalReconstruction = None, None
-        self.scalingFactorsPath, self.givensAnglesPath = None, None
-        self.givensAnglesFeaturesPath = None
-        self.activationParamsPath = None
+        self.givensAnglesFeaturesPath, self.scalingFactorsPath = None, None
+        self.activationParamsPath, self.givensAnglesPath = None, None
         self.resetModel()
 
     def forward(self): raise "You cannot call the dataset-specific signal encoder module."

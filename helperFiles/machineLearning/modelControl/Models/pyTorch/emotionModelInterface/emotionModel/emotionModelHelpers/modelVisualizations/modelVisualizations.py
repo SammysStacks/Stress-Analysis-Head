@@ -67,17 +67,13 @@ class modelVisualizations(globalPlottingProtocols):
                 self.generalViz.plotSinglaParameterFlow(activationParamsPaths=activationParamsPaths, moduleNames=moduleNames, modelLabels=datasetNames, paramNames=paramNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Activation Parameter Paths")
 
                 # Plot the angle features for the signal encoder.
-                _, _, _, _, givensAnglesFeatureNames = allModelPipelines[0].model.getLearnableParams()
+                givensAnglesFeatureNames = allModelPipelines[0].model.specificSignalEncoderModel.processingLayers[0].getFeatureParams(layerInd=0)[0]
                 givensAnglesFeaturesPaths = [specificModel.givensAnglesFeaturesPath for specificModel in specificModels]  # numModels, numEpochs, numModuleLayers, numSignals, numParams
-                self.generalViz.plotSinglaParameterFlow(activationParamsPaths=givensAnglesFeaturesPaths, paramNames=givensAnglesFeatureNames, moduleNames=moduleNames, modelLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Angular Features Path")
-
-                # # Plot the givens angles for the signal encoder.
-                # givensAnglesPaths = [specificModel.givensAnglesPath for specificModel in specificModels]  # numModels, numEpochs, numModuleLayers, numSignals, numParams
-                # self.generalViz.plotGivensAnglesFlow(givensAnglesPaths=givensAnglesPaths, paramNames=None, moduleNames=moduleNames, modelLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Givens Angles Path")
+                self.generalViz.plotAngularFeaturesFlow(givensAnglesFeaturesPaths=givensAnglesFeaturesPaths, paramNames=givensAnglesFeatureNames, moduleNames=moduleNames, modelLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Angular Features Path")
 
                 # Plot the scaling factors for the signal encoder.
-                scalingFactorsPaths = [modelPipeline.model.getLearnableParams()[1] for modelPipeline in allModelPipelines]
-                self.generalViz.plotScaleFactorHist(scalingFactorsPaths, moduleNames, datasetNames=datasetNames, epoch=epoch, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Scale Factor Path Hist")
+                scalingFactorsPaths = [specificModel.scalingFactorsPath for specificModel in specificModels]  # numModels, numEpochs, numModuleLayers, numSignals, numParams=1
+                self.generalViz.plotAngularFeaturesFlow(scalingFactorsPaths, paramNames=["Scalar"], moduleNames=moduleNames, modelLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Scalar Path")
 
     def plotAllTrainingEvents(self, submodel, modelPipeline, lossDataLoader, trainingDate, currentEpoch):
         self.accelerator.print(f"\nPlotting results for the {modelPipeline.model.datasetName} model")

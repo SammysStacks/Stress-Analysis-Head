@@ -348,8 +348,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.set_ylabel(f"Angle ({units})")
 
         # Hide unused axes
-        for idx in range(numModuleLayers, len(axes)):
-            fig.delaxes(axes[idx])
+        for idx in range(numModuleLayers, len(axes)): fig.delaxes(axes[idx])
 
         # Adjust layout to prevent overlapping titles/labels
         plt.suptitle(f"{plotTitle}; Epoch {epoch}\n", fontsize=16)
@@ -365,14 +364,14 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         sharedValues, specificValues = [], []
 
         for layerInd in range(numModuleLayers):
-            if "shared" in reversibleModuleNames[layerInd]: sharedValues.extend(scalingFactorsPath[layerInd])
-            elif "specific" in reversibleModuleNames[layerInd]: specificValues.extend(scalingFactorsPath[layerInd])
+            if "shared" in reversibleModuleNames[layerInd]: sharedValues.append(scalingFactorsPath[layerInd])
+            elif "specific" in reversibleModuleNames[layerInd]: specificValues.append(scalingFactorsPath[layerInd])
             else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
         sharedValues = np.asarray(sharedValues); specificValues = np.asarray(specificValues)
 
         # Get the angles for the current layer
-        plt.plot(sharedValues, color=self.darkColors[1], alpha=0.75, linewidth=1)
-        plt.plot(specificValues, color=self.darkColors[0], alpha=0.75, linewidth=1)
+        plt.plot(sharedValues, 'o-', color=self.darkColors[1], alpha=0.75, linewidth=1, markersize=2)
+        plt.plot(specificValues, 'o-', color=self.darkColors[0], alpha=0.75, linewidth=1, markersize=2)
 
         # Customize plot title and axes
         plt.title(f"{plotTitle}; Epoch {epoch}\n", fontsize=16)

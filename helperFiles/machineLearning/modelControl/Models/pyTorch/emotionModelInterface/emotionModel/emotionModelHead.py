@@ -227,7 +227,7 @@ class emotionModelHead(nn.Module):
                 givensAngles = givensAngles.detach().cpu().numpy()  # givensAngles: numSignals, numParams
 
                 givensAnglesPath.append(givensAngles)  # givensAnglesPath: numModuleLayers, numSignals, numParams
-                scalingFactorsPath.append(scalingFactors)  # scalingFactorsPath: numModuleLayers, numSignals
+                scalingFactorsPath.append(scalingFactors)  # scalingFactorsPath: numModuleLayers, numSignals, numParams=1
                 givensAnglesFeaturesPath.append(givensAnglesFeatures)  # givensAnglesFeaturesPath: numModuleLayers, numSignals, numFeatures
                 reversibleModuleNames.append(self.compileModuleName(name))
         return givensAnglesPath, scalingFactorsPath, givensAnglesFeaturesPath, reversibleModuleNames, givensAnglesFeatureNames

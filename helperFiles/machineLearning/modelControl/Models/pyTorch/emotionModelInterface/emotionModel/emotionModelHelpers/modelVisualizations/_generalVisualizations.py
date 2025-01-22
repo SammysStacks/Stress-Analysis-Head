@@ -1,4 +1,6 @@
 # General
+import math
+
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import confusion_matrix
@@ -157,9 +159,10 @@ class generalVisualizations(globalPlottingProtocols):
         activationParamsPaths = np.asarray(activationParamsPaths)
         if len(activationParamsPaths.shape) == 2: return "No data to plot."
         numModels, numEpochs, numLayers, numParams = activationParamsPaths.shape
+        nRows, nCols = numParams // 3, 3
 
         # Create a figure and axes array
-        fig, axes = plt.subplots(nrows=1, ncols=numParams, figsize=(6 * numParams, 4), squeeze=False, sharex=True, sharey=False)  # squeeze=False ensures axes is 2D
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=True)
         axes = axes.flatten()  # Flatten axes for easy indexing if you prefer
 
         for paramInd in range(numParams):
@@ -186,6 +189,50 @@ class generalVisualizations(globalPlottingProtocols):
             if 'Infinite' in paramName: ax.set_ylim((0, 1.1))
             elif 'Linearity' in paramName: ax.set_ylim((0, 10.1))
             elif 'Convergent' in paramName: ax.set_ylim((0, 2.1))
+            ax.set_xlim((0, numEpochs + 1))
+            ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+
+        # Label the plot.
+        plt.suptitle(f"{plotTitle}")
+
+        # Save the figure if desired.
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        else: self.clearFigure(fig=None, legend=None, showPlot=True)
+
+    def plotAngularFeaturesFlow(self, givensAnglesFeaturesPaths, moduleNames, modelLabels, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
+        # givensAnglesFeaturesPaths: numModels, numEpochs, numModuleLayers, *numSignals*, numParams=3*2
+        try: numModels, numEpochs, numModuleLayers = len(givensAnglesFeaturesPaths), len(givensAnglesFeaturesPaths[0]), len(givensAnglesFeaturesPaths[0][0])
+        except Exception as e: print("plotAngularFeaturesFlow:", e); return None
+        numParams = len(paramNames); nRows, nCols = numParams // 3, 3
+        if numEpochs == 0: return "No data to plot."
+        print(numModels, numEpochs, numModuleLayers)
+
+        # Create a figure and axes array
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=True)
+        axes = axes.flatten()  # Flatten axes for easy indexing if you prefer
+
+        for paramInd in range(numParams):
+            ax = axes[paramInd]  # which subplot to use
+            paramName = paramNames[paramInd]
+
+            for modelInd in range(numModels):
+                for layerInd in range(numModuleLayers):
+                    moduleName = moduleNames[layerInd].lower()
+                    if "shared" in moduleName and modelInd != 0: continue
+
+                    if "specific" in moduleName: lineColor = self.darkColors[modelInd]; alpha = 0.8
+                    elif "shared" in moduleName: lineColor = self.blackColor; alpha = 0.5
+                    else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+
+                    if modelInd == 0: modelLabel = modelLabels[modelInd]
+                    else: modelLabel = None
+
+                    plottingParams = []
+                    for epochInd in range(numEpochs):
+                        plottingParams.append(givensAnglesFeaturesPaths[modelInd][epochInd][layerInd][:, paramInd])
+                    ax.plot(plottingParams, color=lineColor, linewidth=0.8, alpha=alpha, label=modelLabel)
+            ax.set_xlabel("Training Epoch")
+            ax.set_title(paramName)
             ax.set_xlim((0, numEpochs + 1))
             ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
@@ -265,39 +312,38 @@ class generalVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(plottingData[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotScaleFactorHist(self, scalingFactorsPaths, reversibleModuleNames, datasetNames, epoch, saveFigureLocation, plotTitle):
-        # scalingFactorsPaths: numModels, numModuleLayers, numSignals
-        for modelInd in range(len(scalingFactorsPaths)):
-            scalingFactorsPath = scalingFactorsPaths[modelInd]  # numModuleLayers, numSignals
-            sharedValues, specificValues = [], []
+    def plotScaleFactorLines(self, scalingFactorsPaths, reversibleModuleNames, datasetNames, epoch, saveFigureLocation, plotTitle):
+        # scalingFactorsPaths: numModels, numEpochs, numModuleLayers, numSignals
+        try: numModels, numEpochs, numModuleLayers = len(scalingFactorsPaths), len(scalingFactorsPaths[0]), len(scalingFactorsPaths[0][0])
+        except Exception as e: print("plotScaleFactorLines:", e); return None
+        nCols = min(5, numModuleLayers); nRows = math.ceil(numModuleLayers / nCols)
+        if numEpochs == 0: return "No data to plot."
 
-            for layerInd in range(len(scalingFactorsPath)):
-                if "specific" in reversibleModuleNames[modelInd][layerInd]: specificValues.extend(scalingFactorsPath[layerInd].flatten())
-                elif "shared" in reversibleModuleNames[modelInd][layerInd]:
-                    if modelInd == 0: sharedValues.extend(scalingFactorsPath[layerInd].flatten())
-                else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+        # Create a figure and axes array
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False)  # squeeze=False ensures axes is 2D
+        axes = axes.flatten()
 
-            if modelInd == 0: x = [sharedValues, specificValues]; color = [self.blackColor, self.darkColors[modelInd]]; bins = 24
-            else: x = [specificValues]; color = [self.darkColors[modelInd]]; bins = 24
+        for modelInd in range(numModels):
+            for layerInd in range(numModuleLayers):
+                ax = axes[layerInd]  # which subplot to use
 
-            plt.hist(
-                x=x,  # Data for both histograms
-                color=color,  # Colors for shared and specific values
-                stacked=True,  # Stacked histogram
-                bins=bins,  # Number of bins
-                alpha=0.7,  # Transparency for better visibility
-                align='left',
-                density=True,
-                linewidth=0.1,
-                histtype='bar',
-            )
+                lines = []
+                for epochInd in range(numEpochs):
+                    lines.append(scalingFactorsPaths[modelInd][epochInd][layerInd])
+                ax.plot(np.asarray(lines).T, color=self.darkColors[modelInd], alpha=0.75, linewidth=1)
 
-        # Customize plot title and axes
-        plt.title(f"{plotTitle}\nEpoch {epoch}", fontsize=16)
-        plt.xlabel("Scale Factor Values")  # X-axis: values
-        plt.ylabel("Frequency")  # Y-axis: bin counts
-        plt.xlim((0.9, 1.1))
-        plt.ylim((0, None))
+                # Customize subplot title and axes
+                ax.set_title(f"{reversibleModuleNames[layerInd]}")
+                ax.set_xlabel("Epoch")
+                ax.set_ylabel("Scale Factor")
+
+        # Hide unused axes
+        for idx in range(numModuleLayers, len(axes)):
+            fig.delaxes(axes[idx])
+
+        # Adjust layout to prevent overlapping titles/labels
+        plt.suptitle(f"{plotTitle}; Epoch {epoch}\n", fontsize=16)
+        plt.tight_layout()
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
