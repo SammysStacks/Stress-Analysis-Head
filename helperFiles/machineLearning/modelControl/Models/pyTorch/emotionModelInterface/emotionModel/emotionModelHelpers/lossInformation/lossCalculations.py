@@ -41,6 +41,7 @@ class lossCalculations:
     def calculateSignalEncodingLoss(self, allInitialSignalData, allReconstructedSignalData, allValidDataMask, allSignalMask, averageBatches=True):
         # Get the relevant data for the loss calculation.
         allDatapoints = emotionDataInterface.getChannelData(allInitialSignalData, channelName=modelConstants.signalChannel)
+        allDatapoints = allDatapoints.to(allReconstructedSignalData.device)
         validDataMask = allValidDataMask.clone()  # Masks out missing data points: batchSize, numSignals, sequenceLength
 
         # Compile the relevant data for the loss calculation.

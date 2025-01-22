@@ -205,6 +205,7 @@ class generalVisualizations(globalPlottingProtocols):
         try: numModels, numEpochs, numModuleLayers = len(givensAnglesFeaturesPaths), len(givensAnglesFeaturesPaths[0]), len(givensAnglesFeaturesPaths[0][0])
         except Exception as e: print("plotAngularFeaturesFlow:", e); return None
         numParams = len(paramNames); nRows, nCols = max(1, numParams // 3), min(numParams, 3)
+        x = np.arange(numEpochs)
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=False)
@@ -229,9 +230,7 @@ class generalVisualizations(globalPlottingProtocols):
                     plottingParams = []
                     for epochInd in range(numEpochs):
                         plottingParams.append(givensAnglesFeaturesPaths[modelInd][epochInd][layerInd][:, paramInd])
-                    plottingParams = np.asarray(plottingParams).T
-                    print(paramName, plottingParams.shape)
-                    ax.plot(plottingParams, color=lineColor, linewidth=0.8, alpha=alpha, label=modelLabel)
+                    ax.plot(x, plottingParams, color=lineColor, linewidth=0.8, alpha=alpha, label=modelLabel)
             ax.set_xlabel("Training Epoch")
             ax.set_title(paramName)
             # ax.set_xlim((0, numEpochs + 1))

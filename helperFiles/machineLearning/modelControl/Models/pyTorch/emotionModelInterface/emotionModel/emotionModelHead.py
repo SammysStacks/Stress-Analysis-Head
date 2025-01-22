@@ -303,27 +303,25 @@ class emotionModelHead(nn.Module):
         testingBatchSize = modelParameters.getInferenceBatchSize(submodel, device)
         onlyProfileTraining = profileEpoch is not None
 
-        with torch.no_grad():
-            # Initialize the output tensors.
-            compiledSignalEncoderLayerStates = np.zeros(shape=(self.numSpecificEncoderLayers + self.numSharedEncoderLayers + 1, numExperiments, numSignals, self.encodedDimension))
-            basicEmotionProfile = torch.zeros((numExperiments, self.numBasicEmotions, self.encodedDimension), device=device)
-            validDataMask = torch.zeros((numExperiments, numSignals, maxSequenceLength), device=device, dtype=torch.bool)
-            emotionProfile = torch.zeros((numExperiments, self.numEmotions, self.encodedDimension), device=device)
-            reconstructedSignalData = torch.zeros((numExperiments, numSignals, maxSequenceLength), device=device)
-            resampledSignalData = torch.zeros((numExperiments, numSignals, self.encodedDimension), device=device)
-            activityProfile = torch.zeros((numExperiments, self.encodedDimension), device=device)
-            healthProfile = torch.zeros((numExperiments, self.encodedDimension), device=device)
+        # Initialize the output tensors.
+        compiledSignalEncoderLayerStates = np.zeros(shape=(self.numSpecificEncoderLayers + self.numSharedEncoderLayers + 1, numExperiments, numSignals, self.encodedDimension))
+        basicEmotionProfile = torch.zeros((numExperiments, self.numBasicEmotions, self.encodedDimension), device='cpu')
+        validDataMask = torch.zeros((numExperiments, numSignals, maxSequenceLength), device='cpu', dtype=torch.bool)
+        emotionProfile = torch.zeros((numExperiments, self.numEmotions, self.encodedDimension), device='cpu')
+        reconstructedSignalData = torch.zeros((numExperiments, numSignals, maxSequenceLength), device='cpu')
+        resampledSignalData = torch.zeros((numExperiments, numSignals, self.encodedDimension), device='cpu')
+        activityProfile = torch.zeros((numExperiments, self.encodedDimension), device='cpu')
+        healthProfile = torch.zeros((numExperiments, self.encodedDimension), device='cpu')
 
         startBatchInd = 0
         while startBatchInd < numExperiments:
             endBatchInd = startBatchInd + testingBatchSize
 
             # Perform a full pass of the model.
-            validDataMask[startBatchInd:endBatchInd], reconstructedSignalData[startBatchInd:endBatchInd], resampledSignalData[startBatchInd:endBatchInd], compiledSignalEncoderLayerState, \
+            validDataMask[startBatchInd:endBatchInd], reconstructedSignalData[startBatchInd:endBatchInd], resampledSignalData[startBatchInd:endBatchInd], compiledSignalEncoderLayerStates[:, startBatchInd:endBatchInd], \
                 healthProfile[startBatchInd:endBatchInd], activityProfile[startBatchInd:endBatchInd], basicEmotionProfile[startBatchInd:endBatchInd], emotionProfile[startBatchInd:endBatchInd] \
-                = self.forward(submodel=submodel, signalData=signalData[startBatchInd:endBatchInd], signalIdentifiers=signalIdentifiers[startBatchInd:endBatchInd],
-                               metadata=metadata[startBatchInd:endBatchInd], device=device, onlyProfileTraining=onlyProfileTraining)
-            if compiledSignalEncoderLayerState is not None: assert onlyProfileTraining; compiledSignalEncoderLayerStates[:, startBatchInd:endBatchInd] = compiledSignalEncoderLayerState
+                = (element.cpu() if isinstance(element, torch.Tensor) else element for element in self.forward(submodel=submodel, signalData=signalData[startBatchInd:endBatchInd], signalIdentifiers=signalIdentifiers[startBatchInd:endBatchInd],
+                                                                                                               metadata=metadata[startBatchInd:endBatchInd], device=device, onlyProfileTraining=onlyProfileTraining))
 
             # Update the batch index.
             startBatchInd = endBatchInd
@@ -331,7 +329,7 @@ class emotionModelHead(nn.Module):
         if onlyProfileTraining:
             with torch.no_grad():
                 batchInds = emotionDataInterface.getSignalIdentifierData(signalIdentifiers, channelName=modelConstants.batchIndexSI)[:, 0].long()  # Dim: batchSize
-                batchLossValues = self.calculateModelLosses.calculateSignalEncodingLoss(signalData, reconstructedSignalData, validDataMask, allSignalMask=None, averageBatches=False)
+                batchLossValues = self.calculateModelLosses.calculateSignalEncodingLoss(signalData.cpu(), reconstructedSignalData, validDataMask, allSignalMask=None, averageBatches=False)
                 self.specificSignalEncoderModel.profileModel.populateProfileState(profileEpoch, batchInds, batchLossValues, compiledSignalEncoderLayerStates, healthProfile)
 
         return validDataMask, reconstructedSignalData, resampledSignalData, compiledSignalEncoderLayerStates, healthProfile, activityProfile, basicEmotionProfile, emotionProfile
