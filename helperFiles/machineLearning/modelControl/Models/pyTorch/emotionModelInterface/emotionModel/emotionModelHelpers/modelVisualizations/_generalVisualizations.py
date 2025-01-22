@@ -203,12 +203,10 @@ class generalVisualizations(globalPlottingProtocols):
         # givensAnglesFeaturesPaths: numModels, numEpochs, numModuleLayers, *numSignals*, numParams=3*2
         try: numModels, numEpochs, numModuleLayers = len(givensAnglesFeaturesPaths), len(givensAnglesFeaturesPaths[0]), len(givensAnglesFeaturesPaths[0][0])
         except Exception as e: print("plotAngularFeaturesFlow:", e); return None
-        numParams = len(paramNames); nRows, nCols = numParams // 3, 3
-        if numEpochs == 0: return "No data to plot."
-        print(numModels, numEpochs, numModuleLayers)
+        numParams = len(paramNames); nRows, nCols = max(1, numParams // 3), 3
 
         # Create a figure and axes array
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=True)
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=False)
         axes = axes.flatten()  # Flatten axes for easy indexing if you prefer
 
         for paramInd in range(numParams):
@@ -217,7 +215,7 @@ class generalVisualizations(globalPlottingProtocols):
 
             for modelInd in range(numModels):
                 for layerInd in range(numModuleLayers):
-                    moduleName = moduleNames[layerInd].lower()
+                    moduleName = moduleNames[modelInd][layerInd].lower()
                     if "shared" in moduleName and modelInd != 0: continue
 
                     if "specific" in moduleName: lineColor = self.darkColors[modelInd]; alpha = 0.8
@@ -238,60 +236,6 @@ class generalVisualizations(globalPlottingProtocols):
 
         # Label the plot.
         plt.suptitle(f"{plotTitle}")
-
-        # Save the figure if desired.
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
-        else: self.clearFigure(fig=None, legend=None, showPlot=True)
-    
-    def plotGivensAnglesFlow(self, givensAnglesPaths, paramNames, moduleNames, modelLabels, saveFigureLocation="", plotTitle="Model Convergence Loss"):
-        numModels, numEpochs = len(givensAnglesPaths), len(givensAnglesPaths[0])
-        if numEpochs == 0: return "No data to plot."
-        numModuleLayers, numParams = len(givensAnglesPaths[0][0]), len(givensAnglesPaths[0][0][0][0])
-        # givensAnglesPaths: numModels, numEpochs, numModuleLayers, numSignals, numParams=3
-
-        # Create a figure and axes array
-        fig, axes = plt.subplots(nrows=1, ncols=numParams, figsize=(6 * numParams, 4), squeeze=False, sharex=True, sharey=False)  # squeeze=False ensures axes is 2D
-        axes = axes.flatten()  # Flatten axes for easy indexing if you prefer
-
-        print(numModuleLayers, numModels, numEpochs, '---', numParams)
-
-        givensAnglesPaths2 = []
-        for modelInd in range(numModels):
-            for moduleInd in range(numModuleLayers):
-                temp.append([])
-                for epochInd in range(numEpochs):
-                    temp[-1].append(givensAnglesPaths[modelInd][epochInd][moduleInd])
-            givensAnglesPaths2.append(temp)
-        # givensAnglesPaths2: numModuleLayers, numModels, numEpochs, numSignals, numParams
-
-        for paramInd in range(numParams):
-            ax = axes[paramInd]  # which subplot to use
-
-            for modelInd in range(numModels):
-                for moduleInd in range(numModuleLayers):
-                    moduleName = moduleNames[modelInd][moduleInd].lower()
-                    if "shared" in moduleName and modelInd != 0: continue
-
-                    if "specific" in moduleName: lineColor = self.darkColors[modelInd]; alpha = 0.8
-                    elif "shared" in moduleName: lineColor = self.blackColor; alpha = 0.5
-                    else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
-
-                    if modelInd == 0: modelLabel = modelLabels[modelInd]
-                    else: modelLabel = None
-
-                    # Plot the activation parameters.
-                    data = np.asarray(givensAnglesPaths2[moduleInd][modelInd])[:, :, paramInd]
-                    ax.plot(data, color=lineColor, linewidth=0.8, alpha=alpha, label=modelLabel)
-            ax.set_xlabel("Training Epoch")
-            if paramNames is not None: ax.set_ylabel(paramNames[paramInd])
-            ax.grid(True, which='both', linestyle='--', linewidth=0.5)
-            ax.set_xlim((0, numEpochs + 1))
-
-        # Label the plot.
-        plt.title(f"{plotTitle}")
-
-        # Hide any extra subplots if numModuleLayers < nRows * nCols
-        for idx in range(numModuleLayers, len(axes)): fig.delaxes(axes[idx])  # remove unused axes
 
         # Save the figure if desired.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")

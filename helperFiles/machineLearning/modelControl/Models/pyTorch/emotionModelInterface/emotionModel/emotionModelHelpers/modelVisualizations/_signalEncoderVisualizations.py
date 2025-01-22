@@ -371,7 +371,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Get the angles for the current layer
         plt.plot(sharedValues, 'o-', color=self.darkColors[1], alpha=0.75, linewidth=1, markersize=2)
-        plt.plot(specificValues, 'o-', color=self.darkColors[0], alpha=0.75, linewidth=1, markersize=2)
+        plt.plot(specificValues, 'o-', color=self.darkColors[0], alpha=0.5, linewidth=1, markersize=2)
 
         # Customize plot title and axes
         plt.title(f"{plotTitle}; Epoch {epoch}\n", fontsize=16)
@@ -385,7 +385,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def plotScaleFactorHist(self, scalingFactorsPath, reversibleModuleNames, epoch, saveFigureLocation, plotTitle):
-        # scalingFactorsPath: numModuleLayers, numSignals
+        # scalingFactorsPath: numModuleLayers, numSignals, numParams=1
         sharedValues, specificValues = [], []
         for layerInd in range(len(scalingFactorsPath)):
             if "shared" in reversibleModuleNames[layerInd]: sharedValues.extend(scalingFactorsPath[layerInd].flatten())
@@ -398,7 +398,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             color=[self.lightColors[i] for i in range(len(allValues))],  # Colors for shared and specific values
             label=["Shared", "Specific"],  # Labels for the legend
             stacked=True,  # Stacked histogram
-            bins=24,  # Number of bins
+            bins=16,  # Number of bins
             alpha=0.7,  # Transparency for better visibility
             align='left',
         )
