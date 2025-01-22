@@ -222,13 +222,13 @@ class emotionModelHead(nn.Module):
             if isinstance(module, reversibleConvolutionLayer):
                 givensAnglesFeatureNames, givensAnglesFeatures = module.getFeatureParams(layerInd=0)
                 givensAngles, scalingFactors = module.getLinearParams(layerInd=0)
-                givensAnglesFeatures = givensAnglesFeatures.detach().cpu().numpy()  # givensAnglesFeatures: numSignals, numFeatures
+                givensAnglesFeatures = givensAnglesFeatures.detach().cpu().numpy()  # givensAnglesFeatures: 1, numFeatures=6
                 scalingFactors = scalingFactors.detach().cpu().numpy().reshape(len(scalingFactors), 1)  # scalingFactors: numSignals, numParam=1
                 givensAngles = givensAngles.detach().cpu().numpy()  # givensAngles: numSignals, numParams
 
                 givensAnglesPath.append(givensAngles)  # givensAnglesPath: numModuleLayers, numSignals, numParams
                 scalingFactorsPath.append(scalingFactors)  # scalingFactorsPath: numModuleLayers, numSignals, numParams=1
-                givensAnglesFeaturesPath.append(givensAnglesFeatures)  # givensAnglesFeaturesPath: numModuleLayers, numSignals, numFeatures
+                givensAnglesFeaturesPath.append(givensAnglesFeatures)  # givensAnglesFeaturesPath: numModuleLayers, 1, numFeatures=6
                 reversibleModuleNames.append(self.compileModuleName(name))
         return givensAnglesPath, scalingFactorsPath, givensAnglesFeaturesPath, reversibleModuleNames, givensAnglesFeatureNames
 

@@ -195,6 +195,8 @@ class generalVisualizations(globalPlottingProtocols):
         # Label the plot.
         plt.suptitle(f"{plotTitle}")
 
+        for idx in range(numParams, len(axes)): fig.delaxes(axes[idx])
+
         # Save the figure if desired.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
@@ -227,7 +229,6 @@ class generalVisualizations(globalPlottingProtocols):
 
                     plottingParams = []
                     for epochInd in range(numEpochs):
-                        print("plotAngularFeaturesFlow:", np.asarray(givensAnglesFeaturesPaths[modelInd][epochInd][layerInd].shape))
                         plottingParams.append(givensAnglesFeaturesPaths[modelInd][epochInd][layerInd][:, paramInd])
                     ax.plot(plottingParams, color=lineColor, linewidth=0.8, alpha=alpha, label=modelLabel)
             ax.set_xlabel("Training Epoch")

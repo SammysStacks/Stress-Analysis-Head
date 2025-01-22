@@ -72,8 +72,8 @@ class trainingProtocolHelpers:
 
             with torch.no_grad():
                 # Record final state paths.
-                batchSignalInfo, _, _, _, _, _ = modelPipeline.extractBatchInformation(dataLoader.dataset.getAll())
-                signalBatchData, batchSignalIdentifiers, metaBatchInfo = emotionDataInterface.separateData(batchSignalInfo)
+                _, allSignalData, _, _, _, _, _, _ = modelPipeline.prepareInformation(dataLoader)
+                signalBatchData, batchSignalIdentifiers, metaBatchInfo = emotionDataInterface.separateData(allSignalData)
                 modelPipeline.model.fullPass(submodel, signalBatchData, batchSignalIdentifiers, metaBatchInfo, device=modelPipeline.accelerator.device, profileEpoch=numProfileShots)
             self.accelerator.wait_for_everyone()
 

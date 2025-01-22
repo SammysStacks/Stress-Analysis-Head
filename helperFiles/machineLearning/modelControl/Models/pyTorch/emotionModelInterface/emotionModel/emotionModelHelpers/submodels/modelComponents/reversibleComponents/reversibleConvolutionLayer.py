@@ -128,18 +128,18 @@ class reversibleConvolutionLayer(reversibleInterface):
         scalingFactors = scalingFactors.reshape(self.numSignals, 1)  # Dim: numSignals, numParams=1
 
         # Calculate the mean, variance, and range of the Givens angles.
-        givensAnglesRange = givensAngles.max(dim=0, keepdim=True).values - givensAngles.min(dim=0, keepdim=True).values  # Dim: numSignals, 1
-        givensAnglesMean = givensAngles.mean(dim=0, keepdim=True)  # Dim: numSignals, 1
-        givensAnglesVar = givensAngles.var(dim=0, keepdim=True)  # Dim: numSignals, 1
+        givensAnglesRange = givensAngles.max(dim=0, keepdim=True).values - givensAngles.min(dim=0, keepdim=True).values  # Dim: 1, numParams
+        givensAnglesMean = givensAngles.mean(dim=0, keepdim=True)  # Dim: 1, numParams
+        givensAnglesVar = givensAngles.var(dim=0, keepdim=True)  # Dim: 1, numParams
 
         # Calculate the mean, variance, and range of the scaling factors.
-        scalingFactorsRange = scalingFactors.max(dim=0, keepdim=True).values - scalingFactors.min(dim=0, keepdim=True).values  # Dim: numSignals, 1
-        scalingFactorsMean = scalingFactors.mean(dim=0, keepdim=True)  # Dim: numSignals, 1
-        scalingFactorsVar = scalingFactors.var(dim=0, keepdim=True)  # Dim: numSignals, 1
+        scalingFactorsRange = scalingFactors.max(dim=0, keepdim=True).values - scalingFactors.min(dim=0, keepdim=True).values  # Dim: 1, 1
+        scalingFactorsMean = scalingFactors.mean(dim=0, keepdim=True)  # Dim: 1, 1
+        scalingFactorsVar = scalingFactors.var(dim=0, keepdim=True)  # Dim: 1, 1
 
         # Combine the features.
         givensAnglesFeatureNames = ["Angular Mean", "Angular Variance", "Angular Range", "Scalar Mean", "Scalar Variance", "Scalar Range"]
-        givensAnglesFeatures = torch.hstack(tensors=[givensAnglesMean, givensAnglesVar, givensAnglesRange, scalingFactorsMean, scalingFactorsVar, scalingFactorsRange])
+        givensAnglesFeatures = torch.hstack(tensors=[givensAnglesMean, givensAnglesVar, givensAnglesRange, scalingFactorsMean, scalingFactorsVar, scalingFactorsRange])  # Dim: 1, 3*numParams + 3
         return givensAnglesFeatureNames, givensAnglesFeatures
 
     def removeZeroWeights(self, layerInd, threshold=0.01):
