@@ -349,7 +349,7 @@ class emotionModelHead(nn.Module):
         plt.plot(resampledBiomarkerTimes, healthProfile[firstBatchInd].clone().detach().cpu().numpy(), 'tab:red', linewidth=1, label='Health Profile', alpha=2/3)
         plt.plot(torch.linspace(start=resampledBiomarkerTimes[0], end=resampledBiomarkerTimes[-1], steps=embeddedProfile.size(-1)).clone().detach().cpu().numpy(), embeddedProfile[firstBatchInd].clone().detach().cpu().numpy(), 'ok', linewidth=1, markersize=3,  label='Embedded Profile', alpha=0.75)
         plt.title(f"batchInd{firstBatchInd}")
-        plt.ylim((-1, 1))
+        plt.ylim((-1.5, 1.5))
         plt.show()
 
         # Get the first valid signal points.

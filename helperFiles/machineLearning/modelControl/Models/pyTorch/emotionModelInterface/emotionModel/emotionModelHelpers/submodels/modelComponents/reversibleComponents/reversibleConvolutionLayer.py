@@ -42,10 +42,10 @@ class reversibleConvolutionLayer(reversibleInterface):
 
             # parameters = nn.init.normal_(parameters, mean=0, std=0.1)  # TODO ADD BACK?
             # parameters = nn.init.uniform_(parameters, a=-0.1, b=0.1)  # TODO ADD BACK?
-            # parameters = nn.init.zeros_(parameters)  # TODO REMOVE
+            parameters = nn.init.zeros_(parameters)  # TODO REMOVE
 
             # parameters = nn.init.kaiming_normal_(parameters, a=0, mode='fan_in', nonlinearity='leaky_relu')
-            parameters = nn.init.kaiming_uniform_(parameters)  # TODO: OLD
+            # parameters = nn.init.kaiming_uniform_(parameters)  # TODO: OLD
 
             self.givensRotationParams.append(parameters)
 
