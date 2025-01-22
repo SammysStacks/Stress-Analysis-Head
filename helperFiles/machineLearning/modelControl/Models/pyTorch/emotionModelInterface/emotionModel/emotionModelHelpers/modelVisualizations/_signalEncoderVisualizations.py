@@ -369,11 +369,11 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         sharedValues = np.asarray(sharedValues); specificValues = np.asarray(specificValues)
 
         # Get the angles for the current layer
-        plt.plot(sharedValues, 'o-', color=self.darkColors[1], alpha=0.75, linewidth=1, markersize=2)
-        plt.plot(specificValues, 'o-', color=self.darkColors[0], alpha=0.5, linewidth=1, markersize=2)
+        plt.plot(sharedValues, 'o-', color=self.darkColors[1], alpha=0.75, linewidth=1, markersize=2, label="Shared")
+        plt.plot(specificValues, 'o-', color=self.darkColors[0], alpha=0.5, linewidth=1, markersize=2, label="Specific")
 
         # Customize plot title and axes
-        plt.title(f"{plotTitle}; Epoch {epoch}\n", fontsize=16)
+        plt.title(f"{plotTitle}; Epoch {epoch}", fontsize=16)
         plt.xlabel("Scale Factor Values")  # X-axis: values
         plt.ylabel("Frequency")  # Y-axis: bin counts
         plt.ylim((0.9, 1.1))
