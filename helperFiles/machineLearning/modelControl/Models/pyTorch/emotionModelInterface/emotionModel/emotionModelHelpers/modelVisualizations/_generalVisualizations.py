@@ -206,10 +206,11 @@ class generalVisualizations(globalPlottingProtocols):
         fig, axes = plt.subplots(nrows=1, ncols=numParams, figsize=(6 * numParams, 4), squeeze=False, sharex=True, sharey=False)  # squeeze=False ensures axes is 2D
         axes = axes.flatten()  # Flatten axes for easy indexing if you prefer
 
+        print(numModuleLayers, numModels, numEpochs, '---', numParams)
+
         givensAnglesPaths2 = []
-        for moduleInd in range(numModuleLayers):
-            temp = []
-            for modelInd in range(numModels):
+        for modelInd in range(numModels):
+            for moduleInd in range(numModuleLayers):
                 temp.append([])
                 for epochInd in range(numEpochs):
                     temp[-1].append(givensAnglesPaths[modelInd][epochInd][moduleInd])
