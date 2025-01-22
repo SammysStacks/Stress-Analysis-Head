@@ -38,8 +38,13 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
+<<<<<<< HEAD
     trainingDate = "2025-01-21 Zeros Cull10"  # The current date we are training the model. Unique identifier of this training set.
     numEpoch_toCull = 10  # The number of epochs to cull the null weights.
+=======
+    trainingDate = "2025-01-21 K-Uni Cull25"  # The current date we are training the model. Unique identifier of this training set.
+    numEpoch_toCull = 25  # The number of epochs to cull the null weights.
+>>>>>>> 36612cfe (HPC)
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Architecture Parameters ----------------------- #
