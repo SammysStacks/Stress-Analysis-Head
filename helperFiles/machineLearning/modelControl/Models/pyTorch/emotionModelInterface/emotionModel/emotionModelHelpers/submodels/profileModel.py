@@ -25,15 +25,15 @@ class profileModel(emotionModelWeights):
 
     def resetProfileHolders(self, numProfileShots):
         # Pre-allocate each parameter.
-        self.generatingBiometricSignals = np.zeros(shape=(numProfileShots + 1, 1, self.numExperiments, self.numSignals, self.encodedDimension))  # Dim: numProfileShots, numLayers, numExperiments, numSignals, encodedDimension
+        self.generatingBiometricSignals = np.zeros(shape=(numProfileShots + 1, self.numExperiments, self.numSignals, self.encodedDimension))  # Dim: numProfileShots, numLayers, numExperiments, numSignals, encodedDimension
         self.retrainingHealthProfilePath = np.zeros(shape=(numProfileShots + 1, self.numExperiments, self.encodedDimension))
         self.retrainingProfileLosses = np.zeros(shape=(numProfileShots + 1, self.numExperiments, self.numSignals))
 
-    def populateProfileState(self, profileEpoch, batchInds, profileStateLoss, generatingBiometricSignals, healthProfile):
+    def populateProfileState(self, profileEpoch, batchInds, profileStateLoss, resampledSignalData, healthProfile):
         if isinstance(batchInds, torch.Tensor): batchInds = batchInds.detach().cpu().numpy()
-        self.retrainingHealthProfilePath[profileEpoch][batchInds] = healthProfile.clone().detach().cpu().numpy()
         self.retrainingProfileLosses[profileEpoch][batchInds] = profileStateLoss.clone().detach().cpu().numpy()
-        self.generatingBiometricSignals[profileEpoch][:, batchInds] = generatingBiometricSignals[:, :, :, :].copy()
+        self.retrainingHealthProfilePath[profileEpoch][batchInds] = healthProfile.clone().detach().cpu().numpy()
+        self.generatingBiometricSignals[profileEpoch][batchInds] = resampledSignalData.clone().detach().cpu().numpy()
 
     def getHealthEmbedding(self, batchInds):
         return self.embeddedHealthProfiles.to(batchInds.device)[batchInds]
