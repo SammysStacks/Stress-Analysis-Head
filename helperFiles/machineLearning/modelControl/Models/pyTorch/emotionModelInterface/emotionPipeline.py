@@ -95,6 +95,9 @@ class emotionPipeline(emotionPipelineHelpers):
 
                         # ------------------- Update the Model  -------------------- #
 
+                        # The last epoch is for profiling only, no updates.
+                        if onlyProfileTraining and epoch == numEpochs - 1: self.optimizer.zero_grad(); continue
+
                         t1 = time.time()
                         # Update the model parameters.
                         self.accelerator.backward(finalTrainingLoss)  # Calculate the gradients.

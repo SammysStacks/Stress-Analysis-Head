@@ -142,7 +142,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         givensAnglesFeatures = torch.hstack(tensors=[givensAnglesMean, givensAnglesVar, givensAnglesRange, scalingFactorsMean, scalingFactorsVar, scalingFactorsRange])  # Dim: 1, 3*numParams + 3
         return givensAnglesFeatureNames, givensAnglesFeatures
 
-    def removeZeroWeights(self, layerInd, threshold=0.01):
+    def removeZeroWeights(self, layerInd, threshold=0.05):
         with torch.no_grad():  # Ensure gradient tracking is disabled
             self.givensRotationParams[layerInd][self.getGivensAngles(layerInd).abs() < threshold] = 0
 

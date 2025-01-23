@@ -157,7 +157,7 @@ class emotionModelHead(nn.Module):
         # Perform the backward pass: health profile -> signal data.
         resampledSignalData = healthProfile.unsqueeze(1).repeat(repeats=(1, numSignals, 1))
         resampledSignalData, compiledSignalEncoderLayerState = self.signalEncoderPass(metaLearningData=resampledSignalData, forwardPass=False, compileLayerStates=onlyProfileTraining)
-        reconstructedSignalData = self.sharedSignalEncoderModel.interpolateOriginalSignals(signalData, resampledSignalData.clone())
+        reconstructedSignalData = self.sharedSignalEncoderModel.interpolateOriginalSignals(signalData, resampledSignalData)
         # reconstructedSignalData: batchSize, numSignals, maxSequenceLength
         # resampledSignalData: batchSize, numSignals, encodedDimension
 
@@ -294,7 +294,7 @@ class emotionModelHead(nn.Module):
 
         return metaLearningData, compiledLayerStates, compiledLayerIndex
 
-    def reconstructPhysiologicalProfile(self, resampledSignalData):
+    def reconstructHealthProfile(self, resampledSignalData):
         return self.signalEncoderPass(metaLearningData=resampledSignalData, forwardPass=True, compileLayerStates=True)
 
     def fullPass(self, submodel, signalData, signalIdentifiers, metadata, device, profileEpoch=None):
