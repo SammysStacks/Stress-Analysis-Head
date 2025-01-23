@@ -4,7 +4,6 @@ import numpy as np
 import torch
 from matplotlib import pyplot as plt
 from torch import nn
-from torch.fx import symbolic_trace
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.lossInformation.lossCalculations import lossCalculations
@@ -121,15 +120,13 @@ class emotionModelHead(nn.Module):
                 operatorType=self.operatorType,
             )
 
-        self.graph = symbolic_trace(self)
-
     # ------------------------- Full Forward Calls ------------------------- #
 
     def forward(self, submodel, signalData, signalIdentifiers, metadata, device, onlyProfileTraining=False):
         signalData, signalIdentifiers, metadata = (tensor.to(device) for tensor in (signalData, signalIdentifiers, metadata))
         signalIdentifiers, signalData, metadata = signalIdentifiers.int(), signalData.double(), metadata.int()
         batchSize, numSignals, maxSequenceLength, numChannels = signalData.size()
-        # assert numChannels == len(modelConstants.signalChannelNames)
+        assert numChannels == len(modelConstants.signalChannelNames)
         # timepoints: [further away from survey (300) -> closest to survey (0)]
         # signalData: [batchSize, numSignals, maxSequenceLength, numChannels]
         # signalIdentifiers: [batchSize, numSignals, numSignalIdentifiers]
@@ -221,11 +218,8 @@ class emotionModelHead(nn.Module):
         givensAnglesFeatureNames, reversibleModuleNames = None, []
 
         # For each module.
-        for node in self.graph.graph.nodes:
-            if isinstance(node.target, str):  # Ensure the target is a valid module name
-                module = dict(self.named_modules()).get(node.target, None)
-                name = node.target
-
+        for name, module in self.named_modules():
+            if isinstance(module, reversibleConvolutionLayer):
                 givensAnglesFeatureNames, givensAnglesFeatures = module.getFeatureParams(layerInd=0)
                 givensAngles, scalingFactors = module.getLinearParams(layerInd=0)
                 givensAnglesFeatures = givensAnglesFeatures.detach().cpu().numpy()  # givensAnglesFeatures: 1, numFeatures=6
