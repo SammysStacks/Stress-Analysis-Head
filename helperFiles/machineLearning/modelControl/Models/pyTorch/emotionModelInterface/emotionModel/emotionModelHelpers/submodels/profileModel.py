@@ -38,7 +38,6 @@ class profileModel(emotionModelWeights):
         self.retrainingHealthProfilePath[profileEpoch][batchInds] = healthProfile.clone().detach().cpu().numpy()
         self.retrainingProfileLosses[profileEpoch][batchInds] = profileStateLoss.clone().detach().cpu().numpy()
         self.signalEncoderLayerTransforms[profileEpoch][:, batchInds] = signalEncoderLayerTransforms[:, :, 0:1, :].copy()
-        print("profileEpoch:", profileEpoch, self.numSignals, self.numExperiments)
 
     def getHealthEmbedding(self, batchInds):
         return self.embeddedHealthProfiles.to(batchInds.device)[batchInds]

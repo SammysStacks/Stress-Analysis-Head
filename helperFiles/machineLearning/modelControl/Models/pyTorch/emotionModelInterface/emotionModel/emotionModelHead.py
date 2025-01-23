@@ -4,6 +4,7 @@ import numpy as np
 import torch
 from matplotlib import pyplot as plt
 from torch import nn
+from torch.fx import symbolic_trace
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.lossInformation.lossCalculations import lossCalculations
@@ -120,6 +121,8 @@ class emotionModelHead(nn.Module):
                 operatorType=self.operatorType,
             )
 
+        self.graph = symbolic_trace(self)
+
     # ------------------------- Full Forward Calls ------------------------- #
 
     def forward(self, submodel, signalData, signalIdentifiers, metadata, device, onlyProfileTraining=False):
@@ -218,8 +221,11 @@ class emotionModelHead(nn.Module):
         givensAnglesFeatureNames, reversibleModuleNames = None, []
 
         # For each module.
-        for name, module in self.named_modules():
-            if isinstance(module, reversibleConvolutionLayer):
+        for node in self.graph.graph.nodes:
+            if isinstance(node.target, str):  # Ensure the target is a valid module name
+                module = dict(self.named_modules()).get(node.target, None)
+                name = node.target
+
                 givensAnglesFeatureNames, givensAnglesFeatures = module.getFeatureParams(layerInd=0)
                 givensAngles, scalingFactors = module.getLinearParams(layerInd=0)
                 givensAnglesFeatures = givensAnglesFeatures.detach().cpu().numpy()  # givensAnglesFeatures: 1, numFeatures=6
