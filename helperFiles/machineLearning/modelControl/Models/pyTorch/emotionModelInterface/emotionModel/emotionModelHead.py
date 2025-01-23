@@ -304,7 +304,7 @@ class emotionModelHead(nn.Module):
         onlyProfileTraining = profileEpoch is not None
 
         # Initialize the output tensors.
-        compiledSignalEncoderLayerStates = np.zeros(shape=(self.numSpecificEncoderLayers + self.numSharedEncoderLayers + 1, numExperiments, numSignals, self.encodedDimension))
+        compiledSignalEncoderLayerStates = torch.zeros((self.numSpecificEncoderLayers + self.numSharedEncoderLayers + 1, numExperiments, numSignals, self.encodedDimension), device='cpu')
         basicEmotionProfile = torch.zeros((numExperiments, self.numBasicEmotions, self.encodedDimension), device='cpu')
         validDataMask = torch.zeros((numExperiments, numSignals, maxSequenceLength), device='cpu', dtype=torch.bool)
         emotionProfile = torch.zeros((numExperiments, self.numEmotions, self.encodedDimension), device='cpu')
@@ -318,10 +318,11 @@ class emotionModelHead(nn.Module):
             endBatchInd = startBatchInd + testingBatchSize
 
             # Perform a full pass of the model.
-            validDataMask[startBatchInd:endBatchInd], reconstructedSignalData[startBatchInd:endBatchInd], resampledSignalData[startBatchInd:endBatchInd], compiledSignalEncoderLayerStates[:, startBatchInd:endBatchInd], \
+            validDataMask[startBatchInd:endBatchInd], reconstructedSignalData[startBatchInd:endBatchInd], resampledSignalData[startBatchInd:endBatchInd], compiledSignalEncoderLayerStates_Temp, \
                 healthProfile[startBatchInd:endBatchInd], activityProfile[startBatchInd:endBatchInd], basicEmotionProfile[startBatchInd:endBatchInd], emotionProfile[startBatchInd:endBatchInd] \
                 = (element.cpu() if isinstance(element, torch.Tensor) else element for element in self.forward(submodel=submodel, signalData=signalData[startBatchInd:endBatchInd], signalIdentifiers=signalIdentifiers[startBatchInd:endBatchInd],
                                                                                                                metadata=metadata[startBatchInd:endBatchInd], device=device, onlyProfileTraining=onlyProfileTraining))
+            compiledSignalEncoderLayerStates[:, startBatchInd:endBatchInd] = compiledSignalEncoderLayerStates_Temp[-1]
             startBatchInd = endBatchInd  # Update the batch index.
 
         if onlyProfileTraining:
@@ -330,7 +331,7 @@ class emotionModelHead(nn.Module):
                 batchLossValues = self.calculateModelLosses.calculateSignalEncodingLoss(signalData.cpu(), reconstructedSignalData, validDataMask, allSignalMask=None, averageBatches=False)
                 self.specificSignalEncoderModel.profileModel.populateProfileState(profileEpoch, batchInds, batchLossValues, compiledSignalEncoderLayerStates, healthProfile)
 
-        return validDataMask, reconstructedSignalData, resampledSignalData, compiledSignalEncoderLayerStates, healthProfile, activityProfile, basicEmotionProfile, emotionProfile
+        return validDataMask, reconstructedSignalData, resampledSignalData, None, healthProfile, activityProfile, basicEmotionProfile, emotionProfile
 
     # ------------------------- Model Visualizations ------------------------- #
 

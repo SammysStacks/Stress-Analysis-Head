@@ -10,7 +10,7 @@ class profileModel(emotionModelWeights):
     def __init__(self, numExperiments, numSignals, encodedDimension):
         super(profileModel, self).__init__()
         self.embeddedHealthProfiles = self.getInitialPhysiologicalProfile(numExperiments)
-        self.retrainingProfileLosses, self.signalEncoderLayerTransforms = None, None
+        self.retrainingProfileLosses, self.generatingBiometricSignals = None, None
         self.retrainingHealthProfilePath = None
         self.encodedDimension = encodedDimension
         self.numExperiments = numExperiments
@@ -24,20 +24,16 @@ class profileModel(emotionModelWeights):
         self.healthInitialization(self.embeddedHealthProfiles)
 
     def resetProfileHolders(self, numProfileShots):
-        # Get the model information.
-        numSpecificEncoderLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
-        numSharedEncoderLayers = modelConstants.userInputParams['numSharedEncoderLayers']
-
         # Pre-allocate each parameter.
-        self.signalEncoderLayerTransforms = np.zeros(shape=(numProfileShots + 1, numSpecificEncoderLayers + numSharedEncoderLayers + 1, self.numExperiments, 1, self.encodedDimension))  # Dim: numProfileShots, numLayers, numExperiments, numSignals, encodedDimension
+        self.generatingBiometricSignals = np.zeros(shape=(numProfileShots + 1, 1, self.numExperiments, self.numSignals, self.encodedDimension))  # Dim: numProfileShots, numLayers, numExperiments, numSignals, encodedDimension
         self.retrainingHealthProfilePath = np.zeros(shape=(numProfileShots + 1, self.numExperiments, self.encodedDimension))
         self.retrainingProfileLosses = np.zeros(shape=(numProfileShots + 1, self.numExperiments, self.numSignals))
 
-    def populateProfileState(self, profileEpoch, batchInds, profileStateLoss, signalEncoderLayerTransforms, healthProfile):
+    def populateProfileState(self, profileEpoch, batchInds, profileStateLoss, generatingBiometricSignals, healthProfile):
         if isinstance(batchInds, torch.Tensor): batchInds = batchInds.detach().cpu().numpy()
         self.retrainingHealthProfilePath[profileEpoch][batchInds] = healthProfile.clone().detach().cpu().numpy()
         self.retrainingProfileLosses[profileEpoch][batchInds] = profileStateLoss.clone().detach().cpu().numpy()
-        self.signalEncoderLayerTransforms[profileEpoch][:, batchInds] = signalEncoderLayerTransforms[:, :, 0:1, :].copy()
+        self.generatingBiometricSignals[profileEpoch][:, batchInds] = generatingBiometricSignals[:, :, :, :].copy()
 
     def getHealthEmbedding(self, batchInds):
         return self.embeddedHealthProfiles.to(batchInds.device)[batchInds]
