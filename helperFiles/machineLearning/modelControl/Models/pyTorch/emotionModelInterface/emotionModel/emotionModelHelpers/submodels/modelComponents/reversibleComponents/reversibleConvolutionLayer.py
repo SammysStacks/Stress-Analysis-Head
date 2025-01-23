@@ -129,18 +129,18 @@ class reversibleConvolutionLayer(reversibleInterface):
         givensAnglesABS = givensAngles.abs()
 
         # Calculate the mean, variance, and range of the Givens angles.
-        givensAnglesRange = givensAnglesABS.max(dim=0, keepdim=True).values - givensAnglesABS.min(dim=0, keepdim=True).values  # Dim: 1, numParams
-        givensAnglesMean = givensAnglesABS.mean(dim=0, keepdim=True)  # Dim: 1, numParams
-        givensAnglesVar = givensAnglesABS.var(dim=0, keepdim=True)  # Dim: 1, numParams
+        givensAnglesRange = givensAnglesABS.max(dim=0).values - givensAnglesABS.min(dim=0).values  # Dim: numParams
+        givensAnglesMean = givensAnglesABS.mean(dim=0).cpu().detach().numpy()  # Dim: numParams
+        givensAnglesVar = givensAnglesABS.var(dim=0).cpu().detach().numpy()  # Dim: numParams
+        givensAnglesRange = givensAnglesRange.cpu().detach().numpy()
 
         # Calculate the mean, variance, and range of the scaling factors.
-        scalingFactorsRange = scalingFactors.max(dim=0, keepdim=True).values - scalingFactors.min(dim=0, keepdim=True).values  # Dim: 1, 1
-        scalingFactorsMean = scalingFactors.mean(dim=0, keepdim=True)  # Dim: 1, 1
-        scalingFactorsVar = scalingFactors.var(dim=0, keepdim=True)  # Dim: 1, 1
+        scalingFactorsMean = scalingFactors.mean(dim=0).cpu().detach().numpy()  # Dim: 1
+        scalingFactorsVar = scalingFactors.var(dim=0).cpu().detach().numpy()  # Dim: 1
 
-        # Combine the features.
-        givensAnglesFeatureNames = ["Angular Mean", "Angular Variance", "Angular Range", "Scalar Mean", "Scalar Variance", "Scalar Range"]
-        givensAnglesFeatures = torch.hstack(tensors=[givensAnglesMean, givensAnglesVar, givensAnglesRange, scalingFactorsMean, scalingFactorsVar, scalingFactorsRange])  # Dim: 1, 3*numParams + 3
+        # Combine the features. Return dimension: numFeatures, numValues
+        givensAnglesFeatureNames = ["Angular Mean", "Angular Variance", "Angular Range", "Scalar Mean", "Scalar Variance"]
+        givensAnglesFeatures = [givensAnglesMean, givensAnglesVar, givensAnglesRange, scalingFactorsMean, scalingFactorsVar]
         return givensAnglesFeatureNames, givensAnglesFeatures
 
     def removeZeroWeights(self, layerInd, threshold=0.0174533):
@@ -163,7 +163,6 @@ if __name__ == "__main__":
         for _layerInd, sequenceLength2 in [(1, 8)]:
             # General parameters.
             _batchSize, _numSignals, _sequenceLength = 256, 256, sequenceLength2
-            _kernelSize = 2*_sequenceLength - 1
             _activationMethod = 'reversibleLinearSoftSign'  # reversibleLinearSoftSign
             _numLayers = _layerInd
 
