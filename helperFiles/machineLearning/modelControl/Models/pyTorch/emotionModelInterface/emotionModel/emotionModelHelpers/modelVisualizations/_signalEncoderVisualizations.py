@@ -85,7 +85,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Plot the signal reconstruction.
         plt.plot(relativeTimes, healthProfile[batchInd], c=self.blackColor, label=f"Health profile", linewidth=2, alpha=0.8)
-        plt.errorbar(x=relativeTimes, y=reconstructionError.mean(axis=-1), yerr=reconstructionError.std(axis=-1), color=self.darkColors[1], capsize=3, linewidth=2)
+        plt.errorbar(x=np.arange(0, len(reconstructionError)), y=reconstructionError.mean(axis=-1), yerr=reconstructionError.std(axis=-1), color=self.darkColors[1], capsize=3, linewidth=2)
 
         # Plot the signal reconstruction.
         plt.plot(relativeTimes, reconstructedHealthProfile[batchInd].T, c=self.lightColors[1], linewidth=1, alpha=0.1)
