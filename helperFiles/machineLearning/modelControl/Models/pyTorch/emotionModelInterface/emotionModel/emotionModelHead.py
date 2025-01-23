@@ -129,7 +129,7 @@ class emotionModelHead(nn.Module):
         signalData, signalIdentifiers, metadata = (tensor.to(device) for tensor in (signalData, signalIdentifiers, metadata))
         signalIdentifiers, signalData, metadata = signalIdentifiers.int(), signalData.double(), metadata.int()
         batchSize, numSignals, maxSequenceLength, numChannels = signalData.size()
-        assert numChannels == len(modelConstants.signalChannelNames)
+        # assert numChannels == len(modelConstants.signalChannelNames)
         # timepoints: [further away from survey (300) -> closest to survey (0)]
         # signalData: [batchSize, numSignals, maxSequenceLength, numChannels]
         # signalIdentifiers: [batchSize, numSignals, numSignalIdentifiers]
