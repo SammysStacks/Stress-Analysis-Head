@@ -63,7 +63,7 @@ class emotionPipelineHelpers:
 
         # Reset the optimizer state for these parameters
         for p in list(self.optimizer.state.keys()):
-            if p in profileParams: self.optimizer.state[p] = {}; print("resetPhysiologicalProfile:", p)
+            if p in profileParams: self.optimizer.state[p] = {}
         return numProfileShots
 
     def compileOptimizer(self, submodel):
