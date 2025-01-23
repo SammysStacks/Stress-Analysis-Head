@@ -126,11 +126,12 @@ class reversibleConvolutionLayer(reversibleInterface):
     def getFeatureParams(self, layerInd):
         givensAngles, scalingFactors = self.getLinearParams(layerInd)  # Dim: numSignals, numParams
         scalingFactors = scalingFactors.reshape(self.numSignals, 1)  # Dim: numSignals, numParams=1
+        givensAnglesABS = givensAngles.abs()
 
         # Calculate the mean, variance, and range of the Givens angles.
-        givensAnglesRange = givensAngles.max(dim=0, keepdim=True).values - givensAngles.min(dim=0, keepdim=True).values  # Dim: 1, numParams
-        givensAnglesMean = givensAngles.mean(dim=0, keepdim=True)  # Dim: 1, numParams
-        givensAnglesVar = givensAngles.var(dim=0, keepdim=True)  # Dim: 1, numParams
+        givensAnglesRange = givensAnglesABS.max(dim=0, keepdim=True).values - givensAnglesABS.min(dim=0, keepdim=True).values  # Dim: 1, numParams
+        givensAnglesMean = givensAnglesABS.mean(dim=0, keepdim=True)  # Dim: 1, numParams
+        givensAnglesVar = givensAnglesABS.var(dim=0, keepdim=True)  # Dim: 1, numParams
 
         # Calculate the mean, variance, and range of the scaling factors.
         scalingFactorsRange = scalingFactors.max(dim=0, keepdim=True).values - scalingFactors.min(dim=0, keepdim=True).values  # Dim: 1, 1
