@@ -367,6 +367,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             elif "specific" in reversibleModuleNames[layerInd]: specificValues.append(scalingFactorsPath[layerInd].flatten())
             else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
         sharedValues = np.asarray(sharedValues); specificValues = np.asarray(specificValues)
+        # sharedValues: numSharedLayers, numSignals=1; specificValues: numSpecificLayers, numSignals=numSignals
         print("plotScaleFactorLines", sharedValues.shape, specificValues.shape)
 
         # Get the angles for the current layer
