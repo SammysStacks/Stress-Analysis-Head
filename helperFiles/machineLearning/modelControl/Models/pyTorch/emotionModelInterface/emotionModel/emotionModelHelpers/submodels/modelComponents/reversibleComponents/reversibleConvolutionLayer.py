@@ -40,8 +40,8 @@ class reversibleConvolutionLayer(reversibleInterface):
             # Create the neural weights.
             parameters = nn.Parameter(torch.randn(self.numSignals, self.numParams or 1, dtype=torch.float64))
 
-            # parameters = nn.init.normal_(parameters, mean=0, std=0.1)  # TODO ADD BACK?
-            parameters = nn.init.uniform_(parameters, a=-0.1, b=0.1)  # TODO ADD BACK?
+            parameters = nn.init.normal_(parameters, mean=0, std=0.1)  # TODO ADD BACK?
+            # parameters = nn.init.uniform_(parameters, a=-0.1, b=0.1)  # TODO ADD BACK?
             # parameters = nn.init.zeros_(parameters)  # TODO REMOVE
 
             # parameters = nn.init.kaiming_normal_(parameters, a=0, mode='fan_in', nonlinearity='leaky_relu')
