@@ -45,7 +45,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
     # Learned up-sampling of the health profile.
     def generateHealthProfile(self, healthProfile):
         healthProfile = self.healthGenerationModel(healthProfile.unsqueeze(1)).squeeze(1)
-        # healthProfile = self.applyManifoldScale(healthProfile, self.healthProfileJacobians) # TODO: Add back
+        healthProfile = self.applyManifoldScale(healthProfile, self.healthProfileJacobians) # TODO: Add back
 
         return healthProfile
 
