@@ -161,7 +161,7 @@ class generalVisualizations(globalPlottingProtocols):
         nRows, nCols = numParams // 3, 3
 
         # Create a figure and axes array
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=True)
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=False)
         axes = axes.flatten()  # Flatten axes for easy indexing if you prefer
 
         for paramInd in range(numParams):
@@ -201,7 +201,7 @@ class generalVisualizations(globalPlottingProtocols):
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def plotScaleFactorFlow(self, scalingFactorsPaths, moduleNames, modelLabels, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
-        # scalingFactorsPaths: numModels, numEpochs, numModuleLayers, *numSignals*, numParams=3*2
+        # scalingFactorsPaths: numModels, numEpochs, numModuleLayers, *numSignals*, numParams=1
         try: numModels, numEpochs, numModuleLayers = len(scalingFactorsPaths), len(scalingFactorsPaths[0]), len(scalingFactorsPaths[0][0])
         except Exception as e: print("plotAngularFeaturesFlow:", e); return None
         numParams = len(paramNames); nRows, nCols = max(1, numParams // 3), min(numParams, 3)

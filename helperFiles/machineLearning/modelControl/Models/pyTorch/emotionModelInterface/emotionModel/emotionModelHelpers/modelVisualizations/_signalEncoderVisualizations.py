@@ -328,7 +328,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         nRows = math.ceil(numModuleLayers / nCols)
 
         # Create a figure and axes array
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False)  # squeeze=False ensures axes is 2D
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=False, sharey=False)  # squeeze=False ensures axes is 2D
         units = "degrees" if degreesFlag else "radians"
         degrees = 200 if degreesFlag else math.pi / 4
         axes = axes.flatten()
@@ -367,6 +367,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             elif "specific" in reversibleModuleNames[layerInd]: specificValues.append(scalingFactorsPath[layerInd].flatten())
             else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
         sharedValues = np.asarray(sharedValues); specificValues = np.asarray(specificValues)
+        print("plotScaleFactorLines", sharedValues.shape, specificValues.shape)
 
         # Get the angles for the current layer
         plt.plot(sharedValues, 'o-', color=self.darkColors[1], alpha=0.75, linewidth=1, markersize=2, label="Shared")
@@ -394,7 +395,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         plt.hist(
             x=allValues,  # Data for both histograms
-            color=[self.lightColors[i] for i in range(len(allValues))],  # Colors for shared and specific values
+            color=[self.lightColors[1], self.lightColors[0]],  # Colors for shared and specific values
             label=["Shared", "Specific"],  # Labels for the legend
             stacked=True,  # Stacked histogram
             bins=16,  # Number of bins
