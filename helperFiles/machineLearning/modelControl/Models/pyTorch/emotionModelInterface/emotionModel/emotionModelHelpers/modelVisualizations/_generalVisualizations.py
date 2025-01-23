@@ -251,7 +251,7 @@ class generalVisualizations(globalPlottingProtocols):
         # givensAnglesFeaturesPaths: numModels, numEpochs, numModuleLayers, numFeatures=5, numFeatureValues*
         try: numModels, numEpochs, numModuleLayers = len(givensAnglesFeaturesPaths), len(givensAnglesFeaturesPaths[0]), len(givensAnglesFeaturesPaths[0][0])
         except Exception as e: print("plotAngularFeaturesFlow:", e); return None
-        numParams = len(paramNames); nRows, nCols = max(1, numParams // 3), min(numParams, 3)
+        numParams = len(paramNames); nRows, nCols = max(2, numParams // 3), min(numParams, 3)
         x = np.arange(numEpochs)
 
         # Create a figure and axes array

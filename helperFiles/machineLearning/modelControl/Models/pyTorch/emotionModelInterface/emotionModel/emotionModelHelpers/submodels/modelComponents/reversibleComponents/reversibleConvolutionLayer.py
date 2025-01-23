@@ -129,14 +129,14 @@ class reversibleConvolutionLayer(reversibleInterface):
         givensAnglesABS = givensAngles.abs()
 
         # Calculate the mean, variance, and range of the Givens angles.
-        givensAnglesRange = givensAnglesABS.max(dim=0).values - givensAnglesABS.min(dim=0).values  # Dim: numParams
-        givensAnglesMean = givensAnglesABS.mean(dim=0).cpu().detach().numpy()  # Dim: numParams
-        givensAnglesVar = givensAnglesABS.var(dim=0).cpu().detach().numpy()  # Dim: numParams
+        givensAnglesRange = givensAnglesABS.max(dim=-1).values - givensAnglesABS.min(dim=-1).values  # Dim: numParams
+        givensAnglesMean = givensAnglesABS.mean(dim=-1).cpu().detach().numpy()  # Dim: numParams
+        givensAnglesVar = givensAnglesABS.var(dim=-1).cpu().detach().numpy()  # Dim: numParams
         givensAnglesRange = givensAnglesRange.cpu().detach().numpy()
 
         # Calculate the mean, variance, and range of the scaling factors.
-        scalingFactorsMean = scalingFactors.mean(dim=0).cpu().detach().numpy()  # Dim: 1
-        scalingFactorsVar = scalingFactors.var(dim=0).cpu().detach().numpy()  # Dim: 1
+        scalingFactorsMean = scalingFactors.mean(dim=-1).cpu().detach().numpy()  # Dim: 1
+        scalingFactorsVar = scalingFactors.var(dim=-1).cpu().detach().numpy()  # Dim: 1
 
         # Combine the features. Return dimension: numFeatures, numValues
         givensAnglesFeatureNames = ["Angular Mean", "Angular Variance", "Angular Range", "Scalar Mean", "Scalar Variance"]
