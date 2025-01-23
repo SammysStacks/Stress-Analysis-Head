@@ -1,6 +1,7 @@
 # General
 from datetime import date
 import itertools
+import time
 import os
 
 # Import Files for Machine Learning
@@ -28,11 +29,12 @@ class ImageFeedback:
     def imageThread(self, conversationHistory, resultContainer):
         textPrompt, textPromptForImage = self.prepPromptForImage(conversationHistory)
         response = self.getImageResponse(textPromptForImage)
-        self.displayImage(response)
         if textPrompt == '':
             self.saveImage(response, textPromptForImage)
         else:
             self.saveImage(response, textPrompt)
+            time.sleep(20)
+            self.displayImage(response)
         resultContainer['response'] = response
         return response
 
@@ -64,9 +66,9 @@ class ImageFeedback:
         
         # Interface with chatGPT API.
         response = self.client.images.generate(
-            model = self.imageModel,
-            response_format = "url",  # The format in which the generated images are returned. Must be one of url or b64_json.
-            user = self.userName,     # A unique identifier representing your end-user, which can help OpenAI to monitor and detect abuse. Learn more.
+            model=self.imageModel,
+            response_format="url",  # The format in which the generated images are returned. Must be one of url or b64_json.
+            user=self.userName,     # A unique identifier representing your end-user, which can help OpenAI to monitor and detect abuse. Learn more.
             prompt=textPrompt,        # A text description of the desired image(s). The maximum length is 4000 characters.
             size="1024x1024",         # The size of the generated images. Must be one of 256x256, 512x512, or 1024x1024.
             style="vivid",            # vivid: hyperreal and dramatic images; natural: natural, less hyperreal looking images
