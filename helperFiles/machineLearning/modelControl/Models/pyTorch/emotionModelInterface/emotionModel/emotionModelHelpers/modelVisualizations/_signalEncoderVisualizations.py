@@ -238,7 +238,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         nRows = math.ceil(numModuleLayers / nCols)
 
         # Create a figure and axes array
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False)  # squeeze=False ensures axes is 2D
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 8 * nRows), squeeze=False)  # squeeze=False ensures axes is 2D
         axes = axes.flatten()  # Flatten axes for easy indexing if you prefer
 
         for layerInd in range(numModuleLayers):
@@ -251,7 +251,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
 
             # Scatter training eigenvalues
-            x, y = signalAngleLocations.real, signalAngleLocations.imag; x[y < 0] = np.nan; y[y < 0] = np.nan
+            x, y = signalAngleLocations.real, signalAngleLocations.imag;  # x[y < 0] = np.nan; y[y < 0] = np.nan
             ax.scatter(x, y, color=lineColor, label="Training", s=10, linewidth=0.1, alpha=alpha)
 
             # Create lines connecting points to the origin
@@ -267,7 +267,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.axvline(0, color=self.blackColor, linewidth=0.5, alpha=0.25)
 
             # Draw unit circle for reference
-            arc = Arc(xy=(0, 0), width=2, height=2, theta1=0, theta2=180, color=self.blackColor, linewidth=1)
+            arc = Arc(xy=(0, 0), width=2, height=2, theta1=-90, theta2=90, color=self.blackColor, linewidth=1)
             ax.add_patch(arc)
 
             # Customize appearance
@@ -367,8 +367,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             elif "specific" in reversibleModuleNames[layerInd]: specificValues.append(scalingFactorsPath[layerInd].flatten())
             else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
         sharedValues = np.asarray(sharedValues); specificValues = np.asarray(specificValues)
-        # sharedValues: numSharedLayers, numSignals=1; specificValues: numSpecificLayers, numSignals=numSignals
-        print("plotScaleFactorLines", sharedValues.shape, specificValues.shape)
+        # sharedValues: numSharedLayers=5*y, numSignals=1; specificValues: numSpecificLayers=5*x, numSignals=numSignals
+        # Every line represents one of the signals.
 
         # Get the angles for the current layer
         plt.plot(sharedValues, 'o-', color=self.darkColors[1], alpha=0.75, linewidth=1, markersize=2, label="Shared")
@@ -379,7 +379,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.xlabel("Scale Factor Values")  # X-axis: values
         plt.ylabel("Frequency")  # Y-axis: bin counts
         plt.ylim((0.9, 1.1))
-        plt.legend()
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")

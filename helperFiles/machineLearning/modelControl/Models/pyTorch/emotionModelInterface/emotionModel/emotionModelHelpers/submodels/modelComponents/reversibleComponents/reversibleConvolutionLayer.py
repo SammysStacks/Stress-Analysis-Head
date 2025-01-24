@@ -137,6 +137,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         # Calculate the mean, variance, and range of the scaling factors.
         scalingFactorsMean = scalingFactors.mean(dim=-1).cpu().detach().numpy()  # Dim: 1
         scalingFactorsVar = scalingFactors.var(dim=-1).cpu().detach().numpy()  # Dim: 1
+        scalingFactorsVar[np.isnan(scalingFactorsVar)] = 0
 
         # Combine the features. Return dimension: numFeatures, numValues
         givensAnglesFeatureNames = ["Angular Mean", "Angular Variance", "Angular Range", "Scalar Mean", "Scalar Variance"]

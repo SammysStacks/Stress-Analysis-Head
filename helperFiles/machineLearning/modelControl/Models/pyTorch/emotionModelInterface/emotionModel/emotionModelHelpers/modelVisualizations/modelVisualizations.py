@@ -64,7 +64,7 @@ class modelVisualizations(globalPlottingProtocols):
                 paramNames = ["Infinite Bound", "Linearity Factor", "Convergent Point"]
                 moduleNames = np.asarray([modelPipeline.model.getActivationParamsFullPassPath()[1] for modelPipeline in allModelPipelines])  # numModels, numActivations
                 activationParamsPaths = np.asarray([specificModel.activationParamsPath for specificModel in specificModels])  # numModels, numEpochs, numActivations, numActivationParams=3
-                self.generalViz.plotSinglaParameterFlow(activationParamsPaths=activationParamsPaths, moduleNames=moduleNames, modelLabels=datasetNames, paramNames=paramNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Activation Parameter Paths")
+                self.generalViz.plotSinglaParameterFlow(activationParamsPaths=activationParamsPaths, moduleNames=moduleNames, modelLabels=datasetNames, paramNames=paramNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Activation Parameter Path")
 
                 # Plot the angle features for the signal encoder.
                 givensAnglesFeatureNames = allModelPipelines[0].model.specificSignalEncoderModel.processingLayers[0].getFeatureParams(layerInd=0)[0]
