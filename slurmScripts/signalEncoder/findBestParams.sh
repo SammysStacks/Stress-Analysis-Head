@@ -62,8 +62,8 @@ encodedDimensions_arr=(128)
 profileParams=(128)
 
 # Binary switchable
-angularThresholds=(1 2 3 4 5)
-cullingEpochs=(5 10 15 20 25 50)
+angularThresholds=(1 2 3 4 5 6 7 8 9 10)
+cullingEpochs=(5 10 15 20 25 30 35 40 45 50)
 
 for angularThreshold in "${angularThresholds[@]}"
 do
