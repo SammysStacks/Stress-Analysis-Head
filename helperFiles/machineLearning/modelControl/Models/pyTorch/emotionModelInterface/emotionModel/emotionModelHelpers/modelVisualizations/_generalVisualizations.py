@@ -229,7 +229,7 @@ class generalVisualizations(globalPlottingProtocols):
                     plottingParams = []
                     for epochInd in range(numEpochs):
                         plottingParams.append(scalingFactorsPaths[modelInd][epochInd][layerInd][:, paramInd])
-                    ax.plot(x, plottingParams, color=lineColor, linewidth=0.8, alpha=alpha, label=modelLabel)
+                    ax.plot(x, plottingParams, color=lineColor, linewidth=0.67, alpha=alpha, label=modelLabel)
             ax.set_xlabel("Training Epoch")
             ax.set_title(moduleName)
             ax.set_xlim((0, numEpochs + 1))
@@ -276,18 +276,18 @@ class generalVisualizations(globalPlottingProtocols):
                     plottingParams = []
                     for epochInd in range(numEpochs):
                         plottingParams.append(givensAnglesFeaturesPaths[modelInd][epochInd][layerInd][featureInd])
-                    ax.plot(x, plottingParams, color=lineColor, linewidth=0.8, alpha=alpha, label=modelLabel)
+                    ax.plot(x, plottingParams, color=lineColor, linewidth=0.67, alpha=alpha, label=modelLabel)
                 ax.set_xlabel("Training Epoch")
                 ax.set_title(paramName)
                 ax.set_xlim((0, numEpochs + 1))
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
-                # Label the plot.
-                plt.suptitle(f"{plotTitle}")
+            # Label the plot.
+            plt.suptitle(f"{plotTitle}")
 
-                # Hide unused axes
-                for idx in range(numModuleLayers, len(axes)): fig.delaxes(axes[idx])
+            # Hide unused axes
+            for idx in range(numModuleLayers, len(axes)): fig.delaxes(axes[idx])
 
-                # Save the figure if desired.
-                if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle} {paramName}.pdf")
-                else: self.clearFigure(fig=None, legend=None, showPlot=True)
+            # Save the figure if desired.
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle} {paramName}.pdf")
+            else: self.clearFigure(fig=None, legend=None, showPlot=True)
