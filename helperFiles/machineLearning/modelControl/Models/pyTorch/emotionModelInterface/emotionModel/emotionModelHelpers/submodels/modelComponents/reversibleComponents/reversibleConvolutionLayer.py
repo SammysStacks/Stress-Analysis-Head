@@ -90,7 +90,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         return A
 
     def getInfinitesimalAnglesA(self, layerInd):
-        return torch.pi * torch.tanh(self.givensRotationParams[layerInd]) / 2 / 4  # [-pi/2, pi/2] # TODO
+        return torch.pi * torch.tanh(self.givensRotationParams[layerInd]) / 2  # [-pi/2, pi/2] # TODO
 
     def getGivensAngles(self, layerInd):
         return self.getInfinitesimalAnglesA(layerInd)
