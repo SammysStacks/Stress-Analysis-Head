@@ -58,7 +58,7 @@ numProfileShots_arr=(24)
 
 # Binary switchable
 #profileParams=(128 256 512)  # 6
-encodedDimensions_arr=(128 256 512)
+encodedDimensions_arr=(128)
 profileParams=(128)
 
 # Binary switchable
