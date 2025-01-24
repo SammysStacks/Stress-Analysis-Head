@@ -90,7 +90,9 @@ class reversibleConvolutionLayer(reversibleInterface):
         return A
 
     def getInfinitesimalAnglesA(self, layerInd):
-        return torch.pi * torch.tanh(self.givensRotationParams[layerInd]) / 2  # [-pi/2, pi/2] # TODO
+        angularThresholdMax = modelConstants.userInputParams['angularThresholdMax'] * torch.pi / 180  # Convert to radians
+        return angularThresholdMax * torch.tanh(self.givensRotationParams[layerInd])  # [-pi/2, pi/2] # TODO
+        # return torch.pi * torch.tanh(self.givensRotationParams[layerInd]) / 2  # [-pi/2, pi/2] # TODO
 
     def getGivensAngles(self, layerInd):
         return self.getInfinitesimalAnglesA(layerInd)
@@ -139,8 +141,8 @@ class reversibleConvolutionLayer(reversibleInterface):
 
     def removeZeroWeights(self, layerInd):
         with torch.no_grad():  # Ensure gradient tracking is disabled
-            angularThreshold = modelConstants.userInputParams['angularThreshold'] * torch.pi / 180  # Convert to radians
-            self.givensRotationParams[layerInd][self.getGivensAngles(layerInd).abs() <= angularThreshold] = 0
+            angularThresholdMin = modelConstants.userInputParams['angularThresholdMin'] * torch.pi / 180  # Convert to radians
+            self.givensRotationParams[layerInd][self.getGivensAngles(layerInd).abs() <= angularThresholdMin] = 0
 
     def printParams(self):
         # Count the trainable parameters.
