@@ -23,6 +23,7 @@ srun accelerate launch ./../../metaTrainingControl.py \
     --momentum_decay "${17}" \
     --cullingEpoch "${18}" \
     --angularThresholdMin "${19}" \
+    --angularThresholdMax "${20}"
 
 end=$(date +%s)
 runtime=$((end-start))
