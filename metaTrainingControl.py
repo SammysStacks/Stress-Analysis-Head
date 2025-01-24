@@ -38,8 +38,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-01-23 Norm-0-1 Cull10"  # The current date we are training the model. Unique identifier of this training set.
-    numEpoch_toCull = 10  # The number of epochs to cull the null weights.
+    trainingDate = "2025-01-23"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Architecture Parameters ----------------------- #
@@ -60,6 +59,8 @@ if __name__ == "__main__":
     parser.add_argument('--initialProfileAmp', type=float, default=1e-3, help='The limits for profile initialization. Should be near zero.')
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model: [1, 2]')
     parser.add_argument('--numSharedEncoderLayers', type=int, default=4, help='The number of layers in the model: [2, 8]')
+    parser.add_argument('--angularThreshold', type=float, default=1, help='The minimum rotational threshold in degrees.')
+    parser.add_argument('--cullingEpoch', type=int, default=20, help='The number of epochs before culling null weights.')
     parser.add_argument('--profileDimension', type=int, default=128, help='The number of profile weights: [32, 256]')
     parser.add_argument('--numProfileShots', type=int, default=24, help='The epochs for profile training: [16, 32]')
 
@@ -91,6 +92,7 @@ if __name__ == "__main__":
 
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
+    numEpoch_toCull = userInputParams['cullingEpoch']  # The number of epochs to cull the null weights.
 
     # Compile additional input parameters.
     userInputParams = modelParameters.getNeuralParameters(userInputParams)
@@ -134,9 +136,8 @@ if __name__ == "__main__":
         cullNullWeights = (epoch % numEpoch_toCull == 0)
 
         # Train the model for a single epoch.
-        # if cullNullWeights: trainingProtocols.cullNullWeights(allMetaModels, allModels)  # TODO
-        trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders)
         if cullNullWeights: trainingProtocols.cullNullWeights(allMetaModels, allModels)  # TODO
+        trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders)
 
         # Store the initial loss information and plot.
         trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)

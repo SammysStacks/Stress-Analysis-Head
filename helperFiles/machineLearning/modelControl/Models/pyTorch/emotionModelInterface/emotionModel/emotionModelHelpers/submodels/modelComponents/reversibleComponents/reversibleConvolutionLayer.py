@@ -7,6 +7,7 @@ import torch.fft
 import torch.nn as nn
 from matplotlib import pyplot as plt
 
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
 
@@ -144,9 +145,10 @@ class reversibleConvolutionLayer(reversibleInterface):
         givensAnglesFeatures = [givensAnglesMean, givensAnglesVar, givensAnglesRange, scalingFactorsMean, scalingFactorsVar]
         return givensAnglesFeatureNames, givensAnglesFeatures
 
-    def removeZeroWeights(self, layerInd, threshold=0.0174533):
+    def removeZeroWeights(self, layerInd):
         with torch.no_grad():  # Ensure gradient tracking is disabled
-            self.givensRotationParams[layerInd][self.getGivensAngles(layerInd).abs() <= threshold] = 0
+            angularThreshold = modelConstants.userInputParams['angularThreshold'] * torch.pi / 180  # Convert to radians
+            self.givensRotationParams[layerInd][self.getGivensAngles(layerInd).abs() <= angularThreshold] = 0
 
     def printParams(self):
         # Count the trainable parameters.

@@ -61,49 +61,59 @@ numProfileShots_arr=(24)
 encodedDimensions_arr=(128 256 512)
 profileParams=(128)
 
-for beta1s in "${beta1s_arr[@]}"
-do
-  for beta2s in "${beta2s_arr[@]}"
-  do
-    for momentums in "${momentums_arr[@]}"
-    do
-      for profileDimension in "${profileParams[@]}"
-      do
-        for numProfileShots in "${numProfileShots_arr[@]}"
-        do
-          for lr_profile in "${lrs_profile[@]}"
-          do
-            for wd_reversible in "${wds_reversible[@]}"
-            do
-              for wd_profile in "${wds_profile[@]}"
-              do
-                for lr_reversible in "${lrs_reversible[@]}"
-                do
-                  for wd_profileGen in "${wds_profileGen[@]}"
-                  do
-                    for lr_profileGen in "${lrs_profileGen[@]}"
-                    do
-                      for optimizer in "${optimizers_arr[@]}"
-                      do
-                        for waveletType in "${waveletTypes_arr[@]}"
-                        do
-                          for encodedDimension in "${encodedDimensions_arr[@]}"
-                          do
-                            for numSpecificEncoderLayers in "${numSpecificEncoderLayers_arr[@]}"
-                            do
-                              for numSharedEncoderLayers in "${numSharedEncoderLayers_arr[@]}"
-                              do
-                                if (( encodedDimension < profileDimension )); then
-                                  continue
-                                fi
+# Binary switchable
+angularThresholds=(1 2 3 4 5)
+cullingEpochs=(5 10 15 20 25 50)
 
-                                if [ "$1" == "CPU" ]; then
-                                  sbatch -J "signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_CPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$numProfileShots" "$1" "$waveletType" "$optimizer" "$lr_profile" "$lr_reversible" "$lr_profileGen" "$profileDimension" "$wd_profile" "$wd_reversible" "$wd_profileGen" "$beta1s" "$beta2s" "$momentums"
-                                  elif [ "$1" == "GPU" ]; then
-                                  sbatch -J "signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_GPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$numProfileShots" "$1" "$waveletType" "$optimizer" "$lr_profile" "$lr_reversible" "$lr_profileGen" "$profileDimension" "$wd_profile" "$wd_reversible" "$wd_profileGen" "$beta1s" "$beta2s" "$momentums"
-                                else
-                                  echo "No known device listed: $1"
-                                fi
+for angularThreshold in "${angularThresholds[@]}"
+do
+  for cullingEpoch in "${cullingEpochs[@]}"
+  do
+    for beta1s in "${beta1s_arr[@]}"
+    do
+      for beta2s in "${beta2s_arr[@]}"
+      do
+        for momentums in "${momentums_arr[@]}"
+        do
+          for profileDimension in "${profileParams[@]}"
+          do
+            for numProfileShots in "${numProfileShots_arr[@]}"
+            do
+              for lr_profile in "${lrs_profile[@]}"
+              do
+                for wd_reversible in "${wds_reversible[@]}"
+                do
+                  for wd_profile in "${wds_profile[@]}"
+                  do
+                    for lr_reversible in "${lrs_reversible[@]}"
+                    do
+                      for wd_profileGen in "${wds_profileGen[@]}"
+                      do
+                        for lr_profileGen in "${lrs_profileGen[@]}"
+                        do
+                          for optimizer in "${optimizers_arr[@]}"
+                          do
+                            for waveletType in "${waveletTypes_arr[@]}"
+                            do
+                              for encodedDimension in "${encodedDimensions_arr[@]}"
+                              do
+                                for numSpecificEncoderLayers in "${numSpecificEncoderLayers_arr[@]}"
+                                do
+                                  for numSharedEncoderLayers in "${numSharedEncoderLayers_arr[@]}"
+                                  do
+                                    if (( encodedDimension < profileDimension )); then
+                                      continue
+                                    fi
+
+                                    if [ "$1" == "CPU" ]; then
+                                      sbatch -J "signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_CPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$numProfileShots" "$1" "$waveletType" "$optimizer" "$lr_profile" "$lr_reversible" "$lr_profileGen" "$profileDimension" "$wd_profile" "$wd_reversible" "$wd_profileGen" "$beta1s" "$beta2s" "$momentums" "$cullingEpoch" "$angularThreshold"
+                                      elif [ "$1" == "GPU" ]; then
+                                      sbatch -J "signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_GPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$numProfileShots" "$1" "$waveletType" "$optimizer" "$lr_profile" "$lr_reversible" "$lr_profileGen" "$profileDimension" "$wd_profile" "$wd_reversible" "$wd_profileGen" "$beta1s" "$beta2s" "$momentums" "$cullingEpoch" "$angularThreshold"
+                                    else
+                                      echo "No known device listed: $1"
+                                    fi
+                                  done
+                                done
                               done
                             done
                           done
