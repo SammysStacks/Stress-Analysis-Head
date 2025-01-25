@@ -159,7 +159,6 @@ class generalVisualizations(globalPlottingProtocols):
         plt.ylabel("Loss Values")
         plt.title(f"{plotTitle}")
         plt.legend(loc="upper right", bbox_to_anchor=(1.35, 1), borderaxespad=0)
-        plt.tight_layout()
 
         # Save the figure if desired.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(trainingLosses[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
@@ -256,7 +255,7 @@ class generalVisualizations(globalPlottingProtocols):
                 ax.set_xlim((0, numEpochs + 1))
 
             # Label the plot.
-            plt.suptitle(f"{plotTitle}: {paramName}")
+            plt.suptitle(f"{plotTitle}: {paramName}\n")
             plt.tight_layout()
 
             # Save the figure if desired.
@@ -306,7 +305,7 @@ class generalVisualizations(globalPlottingProtocols):
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
             # Label the plot.
-            plt.suptitle(f"{plotTitle} {paramName}")
+            plt.suptitle(f"{plotTitle} {paramName}\n")
             plt.tight_layout()
 
             # Save the figure if desired.
@@ -347,7 +346,7 @@ class generalVisualizations(globalPlottingProtocols):
 
                     plottingParams = []
                     for epochInd in range(numEpochs):
-                        plottingParams.append(givensAnglesFeaturesPaths[modelInd][epochInd][layerInd][featureInd])
+                        plottingParams.append(givensAnglesFeaturesPaths[modelInd][epochInd][layerInd][paramInd])
                     ax.plot(x, plottingParams, color=lineColor, linewidth=0.67, alpha=alpha, label=modelLabel)
                 ax.set_xlabel("Training Epoch")
                 ax.set_title(moduleName)
@@ -355,7 +354,7 @@ class generalVisualizations(globalPlottingProtocols):
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
             # Label the plot.
-            plt.suptitle(f"{plotTitle}: {paramName}")
+            plt.suptitle(f"{plotTitle}: {paramName}\n")
             plt.tight_layout()
 
             # Save the figure if desired.
