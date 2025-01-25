@@ -144,7 +144,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             plt.ylim((-2, 2))
 
             # Save the figure.
-            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} {signalNames[signalInd]}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} Error epochs{epoch} {signalNames[signalInd]}.pdf", baseSaveFigureName=f"{plotTitle} Error.pdf")
             else: self.clearFigure(fig=None, legend=None, showPlot=True)
             break
 
