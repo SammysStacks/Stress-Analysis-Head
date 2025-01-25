@@ -17,9 +17,9 @@ lrs_reversible=('3e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
 lrs_profileGen=('1e-4') # # 5e-5 <= x == 1e-4; 
 
 # Known interesting parameters: 216
-angularThresholdMins=(1 2 3 4 5 6)  # 6
+angularThresholdMins=(1 2 3 4 5 6 7 8)  # 8
 angularThresholdMaxs=(10 20 30 45 60 90)  # 6
-cullingEpochs=(10 20 30 40 50 75)  # 6
+cullingEpochs=(10 20 30 40 50 75 100)  # 7
 
 # Known interesting parameters: 128
 numSharedEncoderLayers_arr=(1 2 3 4 5 6 7 8 9 10 11 12 14 15 16)
