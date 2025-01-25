@@ -179,7 +179,7 @@ class emognitionInterface(globalMetaAnalysis):
                                 # Extract and convert the time
                                 timepoints = np.asarray(allSignalInfos[0])
                                 timepoints = np.vectorize(self.getSeconds)(timepoints)
-                                # TODO: There are negative time differences and duplicate times.
+                                # TODO. Important, there are negative time differences and duplicate times due to data packet delays -> resampling the dataset with average sampling rate.
 
                             # For each type of signal.
                             for signalTypeInd in range(len(signalTypes)):
