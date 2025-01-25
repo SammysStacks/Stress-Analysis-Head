@@ -59,7 +59,7 @@ class modelVisualizations(globalPlottingProtocols):
                 self.generalViz.plotTrainingLosses(trainingLosses=[np.nanmean(specificModel.profileModel.retrainingProfileLosses, axis=1) for specificModel in specificModels], testingLosses=None,
                                                    lossLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Profile Convergence Losses")
 
-                moduleNames = np.asarray([modelPipeline.model.getActivationParamsFullPassPath()[1] for modelPipeline in allModelPipelines])  # numModels, numActivations
+                moduleNames = np.asarray([modelPipeline.model.getFreeParamsFullPassPath()[1] for modelPipeline in allModelPipelines])  # numModels, numActivations
                 numFreeModelParams = [specificModel.numFreeParams for specificModel in specificModels]  # numModels, numEpochs, numModuleLayers, numSignals, numParams=1
                 self.generalViz.plotScaleFactorFlow(numFreeModelParams, paramNames=["Free Params"], moduleNames=moduleNames, modelLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Free Parameters Path")
 

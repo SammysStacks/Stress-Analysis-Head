@@ -106,8 +106,8 @@ class generalVisualizations(globalPlottingProtocols):
                              ha='center', va='center', color='black')
 
         axes[1].invert_yaxis()  # Reverse the order of y-axis ticks
-        plt.tight_layout()
         plt.suptitle(f"{emotionName}")
+        plt.tight_layout()
 
         # Save the figure is desired.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{emotionName} epochs{epoch}.pdf", baseSaveFigureName=f"{emotionName}.pdf")
@@ -159,6 +159,7 @@ class generalVisualizations(globalPlottingProtocols):
         plt.ylabel("Loss Values")
         plt.title(f"{plotTitle}")
         plt.legend(loc="upper right", bbox_to_anchor=(1.35, 1), borderaxespad=0)
+        plt.tight_layout()
 
         # Save the figure if desired.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(trainingLosses[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
@@ -203,6 +204,7 @@ class generalVisualizations(globalPlottingProtocols):
 
         # Label the plot.
         plt.suptitle(f"{plotTitle}")
+        plt.tight_layout()
 
         # Save the figure if desired.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
@@ -220,12 +222,12 @@ class generalVisualizations(globalPlottingProtocols):
 
         for paramInd in range(numParams):
             # Create a figure and axes array
-            fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=True)
+            fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=False)
             numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
             paramName = paramNames[paramInd]
 
             for layerInd in range(numModuleLayers):
-                moduleName = moduleNames[layerInd].lower()
+                moduleName = moduleNames[0][layerInd].lower()
 
                 if "processing" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
                 elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, 1
@@ -255,6 +257,7 @@ class generalVisualizations(globalPlottingProtocols):
 
             # Label the plot.
             plt.suptitle(f"{plotTitle}: {paramName}")
+            plt.tight_layout()
 
             # Save the figure if desired.
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle} {paramName}.pdf")
@@ -270,11 +273,11 @@ class generalVisualizations(globalPlottingProtocols):
 
         for paramInd in range(numParams):
             # Create a figure and axes array
-            fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=True)
+            fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=False)
             numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
             paramName = paramNames[paramInd]
 
-            for layerInd in range(len(scalingFactorsPaths)):
+            for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
 
                 if "processing" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
@@ -284,28 +287,27 @@ class generalVisualizations(globalPlottingProtocols):
                 ax = axes[rowInd, colInd]
 
                 for modelInd in range(numModels):
-                        if "shared" in moduleName and modelInd != 0: continue
+                    if "shared" in moduleName and modelInd != 0: continue
+                    if modelInd == 0: modelLabel = modelLabels[modelInd]
+                    else: modelLabel = None
 
-                        if "specific" in moduleName: lineColor = self.darkColors[modelInd]; alpha = 0.8
-                        elif "shared" in moduleName: lineColor = self.blackColor; alpha = 0.5
-                        else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+                    if "specific" in moduleName: lineColor = self.darkColors[modelInd]; alpha = 0.8
+                    elif "shared" in moduleName: lineColor = self.blackColor; alpha = 0.5
+                    else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
 
-                        if modelInd == 0: modelLabel = modelLabels[modelInd]
-                        else: modelLabel = None
-
-                        plottingParams = []
-                        for epochInd in range(numEpochs):
-                            plottingParams.append(scalingFactorsPaths[modelInd][epochInd][layerInd][:, paramInd])
-                        ax.plot(x, plottingParams, color=lineColor, linewidth=0.67, alpha=alpha, label=modelLabel)
+                    plottingParams = []
+                    for epochInd in range(numEpochs):
+                        plottingParams.append(scalingFactorsPaths[modelInd][epochInd][layerInd][:, paramInd])
+                    ax.plot(x, plottingParams, color=lineColor, linewidth=1, alpha=alpha, label=modelLabel)
                 ax.set_xlabel("Training Epoch")
                 ax.set_title(moduleName)
                 ax.set_xlim((0, numEpochs + 1))
                 if "scalar" in paramName: ax.set_ylim((0.9, 1.1))
-                if "free" in paramName: ax.set_ylim((0, 1.1))
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
             # Label the plot.
             plt.suptitle(f"{plotTitle} {paramName}")
+            plt.tight_layout()
 
             # Save the figure if desired.
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle} {paramName}.pdf")
@@ -319,13 +321,13 @@ class generalVisualizations(globalPlottingProtocols):
         numParams = len(paramNames)
         x = np.arange(numEpochs)
 
-        for featureInd in range(numParams):
+        for paramInd in range(numParams):
             # Create a figure and axes array
             fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=False)
             numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
-            paramName = paramNames[featureInd]
+            paramName = paramNames[paramInd]
 
-            for layerInd in range(len(givensAnglesFeaturesPaths)):
+            for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
 
                 if "processing" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
@@ -336,13 +338,12 @@ class generalVisualizations(globalPlottingProtocols):
 
                 for modelInd in range(numModels):
                     if "shared" in moduleName and modelInd != 0: continue
+                    if modelInd == 0: modelLabel = modelLabels[modelInd]
+                    else: modelLabel = None
 
                     if "specific" in moduleName: lineColor = self.darkColors[modelInd]; alpha = 0.8
                     elif "shared" in moduleName: lineColor = self.blackColor; alpha = 0.5
                     else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
-
-                    if modelInd == 0: modelLabel = modelLabels[modelInd]
-                    else: modelLabel = None
 
                     plottingParams = []
                     for epochInd in range(numEpochs):
@@ -355,6 +356,7 @@ class generalVisualizations(globalPlottingProtocols):
 
             # Label the plot.
             plt.suptitle(f"{plotTitle}: {paramName}")
+            plt.tight_layout()
 
             # Save the figure if desired.
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle} {paramName}.pdf")
