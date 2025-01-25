@@ -32,7 +32,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         # Initialize loss holders.
         self.trainingLosses_signalReconstruction, self.testingLosses_signalReconstruction = None, None
         self.givensAnglesFeaturesPath, self.scalingFactorsPath = None, None
-        self.activationParamsPath, self.givensAnglesPath = None, None
+        self.activationParamsPath, self.numFreeParams = None, None
         self.resetModel()
 
     def forward(self): raise "You cannot call the dataset-specific signal encoder module."
@@ -41,10 +41,10 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         # Signal encoder reconstruction holders.
         self.trainingLosses_signalReconstruction = []  # List of list of data reconstruction training losses. Dim: numEpochs, numTrainingSignals
         self.testingLosses_signalReconstruction = []  # List of list of data reconstruction testing losses. Dim: numEpochs, numTestingSignals
-        self.givensAnglesFeaturesPath = []  # List of Givens angles. Dim: numEpochs, numModuleLayers, numSignals, numParams
+        self.givensAnglesFeaturesPath = []  # List of Givens angles. Dim: numEpochs, numModuleLayers, *numSignals*, numParams
         self.activationParamsPath = []  # List of activation bounds. Dim: numEpochs, numActivations, numActivationParams
-        self.scalingFactorsPath = []  # List of Givens angles. Dim: numEpochs, numModuleLayers, numSignals
-        self.givensAnglesPath = []  # List of Givens angles. Dim: numEpochs, numModuleLayers, numSignals, numParams
+        self.scalingFactorsPath = []  # List of Givens angles. Dim: numEpochs, numModuleLayers, *numSignals*
+        self.numFreeParams = []  # List of the number of free parameters. Dim: numEpochs, numModuleLayers, *numSignals*
 
     def addLayer(self):
         self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True))

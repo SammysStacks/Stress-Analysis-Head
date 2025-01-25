@@ -49,7 +49,6 @@ class modelVisualizations(globalPlottingProtocols):
             if self.accelerator.is_local_main_process:
                 specificModels = [modelPipeline.model.specificSignalEncoderModel for modelPipeline in allModelPipelines]  # Dim: numModels
                 datasetNames = [modelPipeline.model.datasetName for modelPipeline in allModelPipelines]  # Dim: numModels
-                epoch = allModelPipelines[0].getTrainingEpoch(submodel)
 
                 # Plot reconstruction loss for the signal encoder.
                 self.generalViz.plotTrainingLosses(trainingLosses=[specificModel.trainingLosses_signalReconstruction for specificModel in specificModels],
@@ -60,11 +59,15 @@ class modelVisualizations(globalPlottingProtocols):
                 self.generalViz.plotTrainingLosses(trainingLosses=[np.nanmean(specificModel.profileModel.retrainingProfileLosses, axis=1) for specificModel in specificModels], testingLosses=None,
                                                    lossLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Profile Convergence Losses")
 
+                moduleNames = np.asarray([modelPipeline.model.getActivationParamsFullPassPath()[1] for modelPipeline in allModelPipelines])  # numModels, numActivations
+                numFreeModelParams = [specificModel.numFreeParams for specificModel in specificModels]  # numModels, numEpochs, numModuleLayers, numSignals, numParams=1
+                self.generalViz.plotScaleFactorFlow(numFreeModelParams, paramNames=["Free Params"], moduleNames=moduleNames, modelLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Free Parameters Path")
+
                 # Plot the activation parameters for the signal encoder.
                 paramNames = ["Infinite Bound", "Linearity Factor", "Convergent Point"]
-                moduleNames = np.asarray([modelPipeline.model.getActivationParamsFullPassPath()[1] for modelPipeline in allModelPipelines])  # numModels, numActivations
                 activationParamsPaths = np.asarray([specificModel.activationParamsPath for specificModel in specificModels])  # numModels, numEpochs, numActivations, numActivationParams=3
-                self.generalViz.plotSinglaParameterFlow(activationParamsPaths=activationParamsPaths, moduleNames=moduleNames, modelLabels=datasetNames, paramNames=paramNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Activation Parameter Path")
+                self.generalViz.plotActivationFlowCompressed(activationParamsPaths=activationParamsPaths, moduleNames=moduleNames, modelLabels=datasetNames, paramNames=paramNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Activation Parameter Path")
+                self.generalViz.plotActivationFlow(activationParamsPaths=activationParamsPaths, moduleNames=moduleNames, modelLabels=datasetNames, paramNames=paramNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Activation Parameter Path")
 
                 # Plot the angle features for the signal encoder.
                 givensAnglesFeatureNames = allModelPipelines[0].model.specificSignalEncoderModel.processingLayers[0].getFeatureParams(layerInd=0)[0]
@@ -115,7 +118,7 @@ class modelVisualizations(globalPlottingProtocols):
             
             # Compile additional information for the model.getActivationParamsFullPassPath
             givensAnglesPath, scalingFactorsPath, _, reversibleModuleNames, givensAnglesFeatureNames = model.getLearnableParams()
-            activationCurvePath, moduleNames = model.getActivationCurvesFullPassPath()  # numModuleLayers, 2=(x, y), numPoints=100
+            activationCurvePath, activationModuleNames = model.getActivationCurvesFullPassPath()  # numModuleLayers, 2=(x, y), numPoints=100
             # givensAnglesPath: numModuleLayers, numSignals, numParams
             # scalingFactorsPath: numModuleLayers, numSignals, numParam=1
             signalNames = model.featureNames
@@ -134,7 +137,7 @@ class modelVisualizations(globalPlottingProtocols):
                     # Plotting the data flow within the model.
                     self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, healthProfile=healthProfile, retrainingProfilePath=backwardModelPassSignals[:, :, signalInd, :], epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Backwards Transformations (HP to Feature)")
                     self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, healthProfile=healthProfile, retrainingProfilePath=forwardModelPassSignals[:, :, signalInd, :], epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Forwards Transformations (Feature to HP)")
-                    self.signalEncoderViz.plotSignalEncodingStatePath(relativeTimes=resampledBiomarkerTimes, compiledSignalEncoderLayerStates=backwardModelPassSignals, vMin=1.25, batchInd=batchInd, signalInd=signalInd, signalNames=signalNames, epoch=currentEpoch, hiddenLayers=1, saveFigureLocation="signalEncoding/", plotTitle="Signal Transformations by Layer Heatmap")
+                    self.signalEncoderViz.plotSignalEncodingStatePath(relativeTimes=resampledBiomarkerTimes, compiledSignalEncoderLayerStates=backwardModelPassSignals, vMin=1.1, batchInd=batchInd, signalInd=signalInd, signalNames=signalNames, epoch=currentEpoch, hiddenLayers=1, saveFigureLocation="signalEncoding/", plotTitle="Signal Transformations by Layer Heatmap")
                     self.signalEncoderViz.modelFlow(dataTimes=resampledBiomarkerTimes, dataStates=backwardModelPassSignals[:, :, signalInd, :], signalNames=signalNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Signal Transformations by Layer 3D", batchInd=batchInd, signalInd=signalInd)
 
                     # Plot the health profile training information.
@@ -143,7 +146,7 @@ class modelVisualizations(globalPlottingProtocols):
                     self.signalEncoderViz.plotProfileReconstruction(resampledBiomarkerTimes, healthProfile, reconstructedHealthProfile, epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="signalEncoding/", plotTitle="Health Profile Reconstruction")
 
                     # Plot the angular information.
-                    self.signalEncoderViz.plotsGivensAnglesHist(givensAnglesPath, reversibleModuleNames, numBins=24, epoch=currentEpoch, signalInd=signalInd, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="Rotation Angles Hist")
+                    self.signalEncoderViz.plotsGivensAnglesHist(givensAnglesPath, reversibleModuleNames, numBins=32, epoch=currentEpoch, signalInd=signalInd, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="Rotation Angles Hist")
                     self.signalEncoderViz.plotsGivensAnglesLine(givensAnglesPath, reversibleModuleNames, epoch=currentEpoch, signalInd=signalInd, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="Rotation Angles Line")
                     self.signalEncoderViz.plotAngleLocations(givensAnglesPath, reversibleModuleNames, signalNames=signalNames, epoch=currentEpoch, signalInd=signalInd, saveFigureLocation="signalEncoding/", plotTitle="Rotation Angles on Circle")
 
@@ -152,7 +155,8 @@ class modelVisualizations(globalPlottingProtocols):
                     self.signalEncoderViz.plotScaleFactorLines(scalingFactorsPath, reversibleModuleNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Scale Factors Line")
 
                     # Plot the activation information.
-                    self.signalEncoderViz.plotActivationCurves(activationCurvePath, moduleNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Activation Parameters")
+                    self.signalEncoderViz.plotActivationCurvesCompressed(activationCurvePath, activationModuleNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Activation Parameters")
+                    self.signalEncoderViz.plotActivationCurves(activationCurvePath, activationModuleNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Activation Parameters")
 
                 # Plot the autoencoder results.
                 self.signalEncoderViz.plotEncoder(signalData, reconstructedSignalData, resampledBiomarkerTimes, resampledSignalData, signalNames=signalNames, epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="signalReconstruction/", plotTitle="Signal Reconstruction")

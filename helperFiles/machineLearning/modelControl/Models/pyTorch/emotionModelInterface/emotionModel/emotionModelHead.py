@@ -258,6 +258,19 @@ class emotionModelHead(nn.Module):
         activationParamsPath = np.asarray(activationParamsPath)
         return activationParamsPath, moduleNames
 
+    def getFreeParamsFullPassPath(self):
+        numFreeParamsPath, moduleNames = [], []
+        for name, module in self.named_modules():
+            if isinstance(module, reversibleConvolutionLayer):
+                params = module.getNumFreeParams(layerInd=0) 
+                params = params.detach().cpu().numpy().reshape(len(params), 1)
+                
+                numFreeParamsPath.append(params)
+                moduleNames.append(self.compileModuleName(name))
+        assert len(numFreeParamsPath) != 0
+        numFreeParamsPath = np.asarray(numFreeParamsPath)
+        return numFreeParamsPath, moduleNames
+
     def signalEncoderPass(self, metaLearningData, forwardPass, compileLayerStates=False):
         reversibleInterface.changeDirections(forwardDirection=forwardPass)
         compiledLayerIndex = 0; compiledLayerStates = None

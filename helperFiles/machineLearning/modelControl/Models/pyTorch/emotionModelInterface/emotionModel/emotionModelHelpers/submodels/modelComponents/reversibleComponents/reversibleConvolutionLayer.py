@@ -118,34 +118,43 @@ class reversibleConvolutionLayer(reversibleInterface):
 
         return givensAngles, scalingFactors
 
+    def getNumFreeParams(self, layerInd):
+        angularMask = self.cullingParamMask(layerInd)
+        return angularMask.sum(dim=-1)  # Dim: numSignals
+
     def getFeatureParams(self, layerInd):
         givensAngles, scalingFactors = self.getLinearParams(layerInd)  # Dim: numSignals, numParams
         scalingFactors = scalingFactors.reshape(self.numSignals, 1)  # Dim: numSignals, numParams=1
-        givensAngles = givensAngles[givensAngles.abs() < 1e-6] = 0  # Remove small values
 
         # Calculate the mean, variance, and range of the Givens angles.
         givensAnglesRange = givensAngles.max(dim=-1).values - givensAngles.min(dim=-1).values  # Dim: numSignals
-        givensAnglesMean = givensAngles.nanmean(dim=-1).cpu().detach().numpy()  # Dim: numSignals
+        givensAnglesMean = givensAngles.mean(dim=-1).cpu().detach().numpy()  # Dim: numSignals
         givensAnglesVar = givensAngles.var(dim=-1).cpu().detach().numpy()  # Dim: numSignals
         givensAnglesRange = givensAnglesRange.cpu().detach().numpy()
 
         # Calculate the mean, variance, and range of the scaling factors.
-        scalingFactorsMean = scalingFactors.nanmean(dim=-1).cpu().detach().numpy()  # Dim: numSignals=1
+        scalingFactorsMean = scalingFactors.mean(dim=-1).cpu().detach().numpy()  # Dim: numSignals=1
 
         # Combine the features. Return dimension: numFeatures, numValues
         givensAnglesFeatureNames = ["Angular Mean", "Angular Variance", "Angular Range", "Scalar Mean"]
         givensAnglesFeatures = [givensAnglesMean, givensAnglesVar, givensAnglesRange, scalingFactorsMean]
         return givensAnglesFeatureNames, givensAnglesFeatures
 
+    def cullingParamMask(self, layerInd):
+        # Get the angular thresholds.
+        angularThresholdMin = modelConstants.userInputParams['angularThresholdMin'] * torch.pi / 180  # Convert to radians
+        angularThresholdMax = modelConstants.userInputParams['angularThresholdMax'] * torch.pi / 180  # Convert to radians
+
+        # Apply the thresholding.
+        return (self.getGivensAngles(layerInd).abs() >= angularThresholdMin) | \
+               (self.getGivensAngles(layerInd).abs() <= angularThresholdMax)
+        # Dim: numSignals, numFreeParams
+
     def removeZeroWeights(self, layerInd):
         with torch.no_grad():
-            # Get the angular thresholds.
-            angularThresholdMin = modelConstants.userInputParams['angularThresholdMin'] * torch.pi / 180  # Convert to radians
-            angularThresholdMax = modelConstants.userInputParams['angularThresholdMax'] * torch.pi / 180  # Convert to radians
-
-            # Apply the thresholding.
-            self.givensRotationParams[layerInd][self.getGivensAngles(layerInd).abs() < angularThresholdMin] = 0
-            self.givensRotationParams[layerInd][self.getGivensAngles(layerInd).abs() > angularThresholdMax] = 0
+            # Apply the angular thresholds.
+            angularMask = self.cullingParamMask(layerInd)
+            self.givensRotationParams[layerInd][angularMask] = 0
 
     def printParams(self):
         # Count the trainable parameters.

@@ -7,6 +7,7 @@ from torchviz import make_dot
 
 # Visualization protocols
 from helperFiles.globalPlottingProtocols import globalPlottingProtocols
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
 
 class generalVisualizations(globalPlottingProtocols):
@@ -14,6 +15,16 @@ class generalVisualizations(globalPlottingProtocols):
     def __init__(self, baseSavingFolder, stringID, datasetName):
         super(generalVisualizations, self).__init__()
         self.setSavingFolder(baseSavingFolder, stringID, datasetName)
+
+    @staticmethod
+    def getRowsCols(numModuleLayers):
+        numSpecificEncoderLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
+        numSharedEncoderLayers = modelConstants.userInputParams['numSharedEncoderLayers']
+        nCols = numModuleLayers // (numSpecificEncoderLayers + numSharedEncoderLayers)
+        nRows = numSpecificEncoderLayers + numSharedEncoderLayers
+        assert nCols * nRows == numModuleLayers, f"{nCols} * {nRows} != {numModuleLayers}"
+
+        return nRows, nCols
         
     # ---------------------------------------------------------------------- #
     # --------------------- Visualize Model Parameters --------------------- #
@@ -136,11 +147,10 @@ class generalVisualizations(globalPlottingProtocols):
 
         # Plot gridlines.
         plt.hlines(y=0.1, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=1)
-        plt.hlines(y=0.03, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=1, alpha=0.25)
-        plt.hlines(y=0.02, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=1, alpha=0.25)
+        for i in range(2, 10): plt.hlines(y=0.01*i, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=1, alpha=0.25)
         plt.hlines(y=0.01, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=1)
         plt.xlim((0, max(32, len(trainingLosses[0]) + 1)))
-        plt.ylim((0.001, 2))
+        plt.ylim((0.001, 1))
         plt.grid(True)
 
         # Label the plot.
@@ -154,11 +164,11 @@ class generalVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(trainingLosses[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotSinglaParameterFlow(self, activationParamsPaths, moduleNames, modelLabels, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
+    def plotActivationFlowCompressed(self, activationParamsPaths, moduleNames, modelLabels, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
         activationParamsPaths = np.asarray(activationParamsPaths)
         if len(activationParamsPaths.shape) == 2: return "No data to plot."
         numModels, numEpochs, numLayers, numParams = activationParamsPaths.shape
-        nRows, nCols = numParams // 3, 3
+        nRows, nCols = min(1, numParams // 3), numParams
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=False)
@@ -194,29 +204,36 @@ class generalVisualizations(globalPlottingProtocols):
         # Label the plot.
         plt.suptitle(f"{plotTitle}")
 
-        for idx in range(numParams, len(axes)): fig.delaxes(axes[idx])
-
         # Save the figure if desired.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotScaleFactorFlow(self, scalingFactorsPaths, moduleNames, modelLabels, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
-        # scalingFactorsPaths: numModels, numEpochs, numModuleLayers, *numSignals*, numParams=1
-        try: numModels, numEpochs, numModuleLayers = len(scalingFactorsPaths), len(scalingFactorsPaths[0]), len(scalingFactorsPaths[0][0])
-        except Exception as e: print("plotAngularFeaturesFlow:", e); return None
-        numParams = len(paramNames); nRows, nCols = max(1, numModuleLayers // 5), min(numModuleLayers, 5)
+    def plotActivationFlow(self, activationParamsPaths, moduleNames, modelLabels, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
+        activationParamsPaths = np.asarray(activationParamsPaths)
+        if len(activationParamsPaths.shape) == 2: return "No data to plot."
+
+        # activationParamsPaths: numModels, numEpochs, numModuleLayers, numParams
+        numModels, numEpochs, numModuleLayers, numActivationParams = activationParamsPaths.shape
+        nRows, nCols = self.getRowsCols(numModuleLayers)
+        numParams = len(paramNames)
         x = np.arange(numEpochs)
 
-        # Create a figure and axes array
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=False)
-        axes = axes.flatten()  # Flatten axes for easy indexing if you prefer
+        for paramInd in range(numParams):
+            # Create a figure and axes array
+            fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=True)
+            numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
+            paramName = paramNames[paramInd]
 
-        for layerInd in range(numModuleLayers):
-            ax = axes[layerInd]  # which subplot to use
-            moduleName = moduleNames[0][layerInd].lower()
+            for layerInd in range(len(activationParamsPaths)):
+                moduleName = moduleNames[0][layerInd].lower()
 
-            for modelInd in range(numModels):
-                for paramInd in range(numParams):
+                if "processing" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
+                elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, 1
+                elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = nCols - 1 - highFreqCol % (nCols - 2)
+                else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+                ax = axes[rowInd, colInd]
+
+                for modelInd in range(numModels):
                     if "shared" in moduleName and modelInd != 0: continue
 
                     if "specific" in moduleName: lineColor = self.darkColors[modelInd]; alpha = 0.8
@@ -226,42 +243,97 @@ class generalVisualizations(globalPlottingProtocols):
                     if modelInd == 0: modelLabel = modelLabels[modelInd]
                     else: modelLabel = None
 
-                    plottingParams = []
-                    for epochInd in range(numEpochs):
-                        plottingParams.append(scalingFactorsPaths[modelInd][epochInd][layerInd][:, paramInd])
+                    plottingParams = activationParamsPaths[modelInd, :, layerInd, paramInd]
                     ax.plot(x, plottingParams, color=lineColor, linewidth=0.67, alpha=alpha, label=modelLabel)
-            ax.set_xlabel("Training Epoch")
-            ax.set_title(moduleName)
-            ax.set_xlim((0, numEpochs + 1))
-            ax.set_ylim((0.9, 1.1))
-            ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
-        # Label the plot.
-        plt.suptitle(f"{plotTitle}")
+                ax.set_xlabel("Training Epoch")
+                ax.set_title(moduleName)
+                if 'Infinite' in paramName: ax.set_ylim((0, 1.1))
+                elif 'Linearity' in paramName: ax.set_ylim((0, 10.1))
+                elif 'Convergent' in paramName: ax.set_ylim((0, 2.1))
+                ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+                ax.set_xlim((0, numEpochs + 1))
 
-        # Hide unused axes
-        for idx in range(numModuleLayers, len(axes)): fig.delaxes(axes[idx])
+            # Label the plot.
+            plt.suptitle(f"{plotTitle}: {paramName}")
 
-        # Save the figure if desired.
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
-        else: self.clearFigure(fig=None, legend=None, showPlot=True)
+            # Save the figure if desired.
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle} {paramName}.pdf")
+            else: self.clearFigure(fig=None, legend=None, showPlot=True)
+
+    def plotScaleFactorFlow(self, scalingFactorsPaths, moduleNames, modelLabels, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
+        # scalingFactorsPaths: numModels, numEpochs, numModuleLayers, *numSignals*, numParams=1
+        try: numModels, numEpochs, numModuleLayers = len(scalingFactorsPaths), len(scalingFactorsPaths[0]), len(scalingFactorsPaths[0][0])
+        except Exception as e: print("plotAngularFeaturesFlow:", e); return None
+        nRows, nCols = self.getRowsCols(numModuleLayers)
+        numParams = len(paramNames)
+        x = np.arange(numEpochs)
+
+        for paramInd in range(numParams):
+            # Create a figure and axes array
+            fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=True)
+            numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
+            paramName = paramNames[paramInd]
+
+            for layerInd in range(len(scalingFactorsPaths)):
+                moduleName = moduleNames[0][layerInd].lower()
+
+                if "processing" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
+                elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, 1
+                elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = nCols - 1 - highFreqCol % (nCols - 2)
+                else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+                ax = axes[rowInd, colInd]
+
+                for modelInd in range(numModels):
+                        if "shared" in moduleName and modelInd != 0: continue
+
+                        if "specific" in moduleName: lineColor = self.darkColors[modelInd]; alpha = 0.8
+                        elif "shared" in moduleName: lineColor = self.blackColor; alpha = 0.5
+                        else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+
+                        if modelInd == 0: modelLabel = modelLabels[modelInd]
+                        else: modelLabel = None
+
+                        plottingParams = []
+                        for epochInd in range(numEpochs):
+                            plottingParams.append(scalingFactorsPaths[modelInd][epochInd][layerInd][:, paramInd])
+                        ax.plot(x, plottingParams, color=lineColor, linewidth=0.67, alpha=alpha, label=modelLabel)
+                ax.set_xlabel("Training Epoch")
+                ax.set_title(moduleName)
+                ax.set_xlim((0, numEpochs + 1))
+                if "scalar" in paramName: ax.set_ylim((0.9, 1.1))
+                if "free" in paramName: ax.set_ylim((0, 1.1))
+                ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+
+            # Label the plot.
+            plt.suptitle(f"{plotTitle} {paramName}")
+
+            # Save the figure if desired.
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle} {paramName}.pdf")
+            else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def plotGivensAnglesFlow(self, givensAnglesFeaturesPaths, moduleNames, modelLabels, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
         # givensAnglesFeaturesPaths: numModels, numEpochs, numModuleLayers, numFeatures=5, numFeatureValues*
         try: numModels, numEpochs, numModuleLayers = len(givensAnglesFeaturesPaths), len(givensAnglesFeaturesPaths[0]), len(givensAnglesFeaturesPaths[0][0])
         except Exception as e: print("plotAngularFeaturesFlow:", e); return None
-        numParams = len(paramNames); nRows, nCols = max(1, numModuleLayers // 5), min(numModuleLayers, 5)
+        nRows, nCols = self.getRowsCols(numModuleLayers)
+        numParams = len(paramNames)
         x = np.arange(numEpochs)
 
         for featureInd in range(numParams):
             # Create a figure and axes array
             fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=False)
-            axes = axes.flatten()  # Flatten axes for easy indexing if you prefer
+            numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
             paramName = paramNames[featureInd]
 
-            for layerInd in range(numModuleLayers):
-                ax = axes[layerInd]  # which subplot to use
+            for layerInd in range(len(givensAnglesFeaturesPaths)):
                 moduleName = moduleNames[0][layerInd].lower()
+
+                if "processing" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
+                elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, 1
+                elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = nCols - 1 - highFreqCol % (nCols - 2)
+                else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+                ax = axes[rowInd, colInd]
 
                 for modelInd in range(numModels):
                     if "shared" in moduleName and modelInd != 0: continue
@@ -278,15 +350,12 @@ class generalVisualizations(globalPlottingProtocols):
                         plottingParams.append(givensAnglesFeaturesPaths[modelInd][epochInd][layerInd][featureInd])
                     ax.plot(x, plottingParams, color=lineColor, linewidth=0.67, alpha=alpha, label=modelLabel)
                 ax.set_xlabel("Training Epoch")
-                ax.set_title(paramName)
+                ax.set_title(moduleName)
                 ax.set_xlim((0, numEpochs + 1))
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
             # Label the plot.
-            plt.suptitle(f"{plotTitle}")
-
-            # Hide unused axes
-            for idx in range(numModuleLayers, len(axes)): fig.delaxes(axes[idx])
+            plt.suptitle(f"{plotTitle}: {paramName}")
 
             # Save the figure if desired.
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle} {paramName}.pdf")
