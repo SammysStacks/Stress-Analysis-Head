@@ -62,9 +62,9 @@ encodedDimensions_arr=(128)
 profileParams=(128)
 
 # Binary switchable
-angularThresholdMins=(1 2 3 4 5 6)
-angularThresholdMaxs=(90 60 45 30)
-cullingEpochs=(25 50)
+angularThresholdMins=(1 2 3 4 5)
+angularThresholdMaxs=(90 60 45 30 20 10)
+cullingEpochs=(10 25 50)
 
 for angularThresholdMin in "${angularThresholdMins[@]}"
 do
