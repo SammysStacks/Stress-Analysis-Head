@@ -16,13 +16,20 @@ lrs_profile=('0.067')  # 0.005 <= x <= 0.05
 lrs_reversible=('3e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
 lrs_profileGen=('1e-4') # # 5e-5 <= x == 1e-4; 
 
-# Known interesting parameters: 96
-numSharedEncoderLayers_arr=(1 2 3 4 5 6 7 8 9 10 11 12)
+# Known interesting parameters: 216
+angularThresholdMins=(1 2 3 4 5 6)  # 6
+angularThresholdMaxs=(10 20 30 45 60 90)  # 6
+cullingEpochs=(10 20 30 40 50 75)  # 6
+
+# Known interesting parameters: 128
+numSharedEncoderLayers_arr=(1 2 3 4 5 6 7 8 9 10 11 12 14 15 16)
 numSpecificEncoderLayers_arr=(1 2 3 4 5 6 7 8)
 
-# Known interesting parameters: 15*7 = 140
-encodedDimensions_arr=(32 64 128 256 512)  # 5
-profileParams=(16 32 64 128 256 512)  # 6
+# Known interesting parameters: 7*7 = 49
+encodedDimensions_arr=(16 32 64 128 256 512 1024)  # 7
+profileParams=(16 32 64 128 256 512 1024)  # 7
+
+# Single switchable: 7
 numProfileShots_arr=(4 8 12 16 24 32 48)  # 6; 12 <= x <= 24
 
 # Neural operator parameters.
@@ -48,23 +55,22 @@ waveletTypes_arr=(
     'coif11' 'coif12' 'coif13' 'coif14' 'coif15' 'coif16' 'coif17' \
 )
 
-# Switchable
+# Trinary reference states.
+angularThresholdMins=(2.5)
+angularThresholdMaxs=(60)
+cullingEpochs=(50)
+
+# Binary reference states.
 numSpecificEncoderLayers_arr=(1)
 numSharedEncoderLayers_arr=(4)
 
-# Single switchable
-waveletTypes_arr=('bior3.1')
-numProfileShots_arr=(24)
-
-# Binary switchable
-#profileParams=(128 256 512)  # 6
+# Binary reference states.
 encodedDimensions_arr=(128)
 profileParams=(128)
 
-# Binary switchable
-angularThresholdMins=(1 2 3 4 5)
-angularThresholdMaxs=(90 60 45 30 20 10)
-cullingEpochs=(10 25 50)
+# Reference states.
+waveletTypes_arr=('bior3.1')
+numProfileShots_arr=(24)
 
 for angularThresholdMin in "${angularThresholdMins[@]}"
 do
