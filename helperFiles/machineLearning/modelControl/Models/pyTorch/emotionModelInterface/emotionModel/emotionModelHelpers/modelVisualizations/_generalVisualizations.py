@@ -224,8 +224,8 @@ class generalVisualizations(globalPlottingProtocols):
             numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
             paramName = paramNames[paramInd]
 
-            for layerInd in range(len(activationParamsPaths)):
-                moduleName = moduleNames[0][layerInd].lower()
+            for layerInd in range(numModuleLayers):
+                moduleName = moduleNames[layerInd].lower()
 
                 if "processing" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
                 elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, 1
@@ -235,13 +235,12 @@ class generalVisualizations(globalPlottingProtocols):
 
                 for modelInd in range(numModels):
                     if "shared" in moduleName and modelInd != 0: continue
+                    if modelInd == 0: modelLabel = modelLabels[modelInd]
+                    else: modelLabel = None
 
                     if "specific" in moduleName: lineColor = self.darkColors[modelInd]; alpha = 0.8
                     elif "shared" in moduleName: lineColor = self.blackColor; alpha = 0.5
                     else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
-
-                    if modelInd == 0: modelLabel = modelLabels[modelInd]
-                    else: modelLabel = None
 
                     plottingParams = activationParamsPaths[modelInd, :, layerInd, paramInd]
                     ax.plot(x, plottingParams, color=lineColor, linewidth=0.67, alpha=alpha, label=modelLabel)

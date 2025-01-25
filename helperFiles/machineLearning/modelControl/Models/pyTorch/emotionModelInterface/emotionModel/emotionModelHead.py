@@ -268,7 +268,6 @@ class emotionModelHead(nn.Module):
                 numFreeParamsPath.append(params)
                 moduleNames.append(self.compileModuleName(name))
         assert len(numFreeParamsPath) != 0
-        numFreeParamsPath = np.asarray(numFreeParamsPath)
         return numFreeParamsPath, moduleNames
 
     def signalEncoderPass(self, metaLearningData, forwardPass, compileLayerStates=False):
