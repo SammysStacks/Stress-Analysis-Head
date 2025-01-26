@@ -262,7 +262,7 @@ class generalVisualizations(globalPlottingProtocols):
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle} {paramName}.pdf")
             else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotScaleFactorFlow(self, scalingFactorsPaths, moduleNames, modelLabels, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
+    def plotScaleFactorFlow(self, scalingFactorsPaths, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
         # scalingFactorsPaths: numModels, numEpochs, numModuleLayers, *numSignals*, numParams=1
         try: numModels, numEpochs, numModuleLayers = len(scalingFactorsPaths), len(scalingFactorsPaths[0]), len(scalingFactorsPaths[0][0])
         except Exception as e: print("plotAngularFeaturesFlow:", e); return None
@@ -287,12 +287,6 @@ class generalVisualizations(globalPlottingProtocols):
 
                 for modelInd in range(numModels):
                     if "shared" in moduleName and modelInd != 0: continue
-                    if modelInd == 0: modelLabel = modelLabels[modelInd]
-                    else: modelLabel = None
-
-                    if "specific" in moduleName: lineColor = self.darkColors[modelInd]; alpha = 0.8
-                    elif "shared" in moduleName: lineColor = self.blackColor; alpha = 0.75
-                    else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
 
                     plottingParams = []
                     for epochInd in range(numEpochs):
@@ -328,6 +322,10 @@ class generalVisualizations(globalPlottingProtocols):
         nRows, nCols = self.getRowsCols(numModuleLayers)
         numParams = len(paramNames)
         x = np.arange(numEpochs)
+
+        # Get the angular thresholds.
+        angularThresholdMin = modelConstants.userInputParams['angularThresholdMin'] * np.pi / 180  # Convert to radians
+        angularThresholdMax = modelConstants.userInputParams['angularThresholdMax'] * np.pi / 180  # Convert to radians
 
         for paramInd in range(numParams):
             # Create a figure and axes array
@@ -367,6 +365,12 @@ class generalVisualizations(globalPlottingProtocols):
                 ax.set_title(moduleName)
                 ax.set_xlim((0, numEpochs + 1))
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+
+                # Shade the angular thresholds
+                ax.fill_betweenx(ax.get_ylim(), -angularThresholdMin, angularThresholdMin, color='lightgray', alpha=0.25, zorder=0)
+                ax.axvspan(ax.get_xlim()[0], -angularThresholdMax, color='lightgray', alpha=0.25, zorder=0)
+                ax.axvspan(angularThresholdMax, ax.get_xlim()[1], color='lightgray', alpha=0.25, zorder=0)
+                ax.relim(); ax.autoscale_view()
 
             # Label the plot.
             plt.suptitle(f"{plotTitle}: {paramName}\n")

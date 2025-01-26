@@ -12,8 +12,8 @@ class globalPlottingProtocols:
         plt.ion()
 
         # Specify the color order.
-        self.lightColors = ["#F17FB1", "#5DCBF2", "#B497C9", "#90D6AD", "#FFC162", "#231F20"]  # Red, Blue, Purple, Green, Orange, grey
-        self.darkColors = ["#F3757A", "#489AD4", "#7E71B4", "#50BC84", "#F9A770", "#4A4546"]  # Red, Blue, Purple, Green, Orange, grey
+        self.lightColors = ["#F17FB1", "#5DCBF2", "#B497C9", "#90D6AD", "#FFC162", "#231F20"]  # Red, Blue, Purple, Green, Orange, Grey
+        self.darkColors = ["#F3757A", "#489AD4", "#7E71B4", "#50BC84", "#F9A770", "#4A4546"]  # Red, Blue, Purple, Green, Orange, Grey
         self.blackColor = "#231F20"
 
         # Set the saving folder

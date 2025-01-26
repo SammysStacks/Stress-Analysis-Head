@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.collections import LineCollection
 from matplotlib.colors import LinearSegmentedColormap
-from matplotlib.patches import Arc
+from matplotlib.patches import Arc, Wedge
 from shap.plots.colors._colors import lch2rgb
 
 # Visualization protocols
@@ -250,6 +250,11 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 8 * nRows), squeeze=False)  # squeeze=False ensures axes is 2D
         numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
 
+        # Get the angular thresholds.
+        angularThresholdMin = modelConstants.userInputParams['angularThresholdMin']
+        angularThresholdMax = modelConstants.userInputParams['angularThresholdMax']
+        center = (0, 0); radius = 1
+
         for layerInd in range(len(givensAnglesPath)):
             moduleName = reversibleModuleNames[layerInd].lower()
 
@@ -281,8 +286,14 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.axvline(0, color=self.blackColor, linewidth=0.5, alpha=0.25)
 
             # Draw unit circle for reference
-            arc = Arc(xy=(0, 0), width=2, height=2, theta1=-90, theta2=90, color=self.blackColor, linewidth=1)
+            arc = Arc(xy=center, width=2*radius, height=2*radius, theta1=-90, theta2=90, color=self.blackColor, linewidth=1)
             ax.add_patch(arc)
+
+            # 1. Define the shaded region in the bounded range [-minAngle, minAngle]
+            bounded_wedge = Wedge(center=center, r=radius, theta1=-angularThresholdMin, theta2=angularThresholdMin, color='lightgray', alpha=0.25, zorder=0)
+            lower_wedge = Wedge(center=center, r=radius, theta1=-90, theta2=-angularThresholdMax, color='lightgray', alpha=0.3, zorder=0)
+            upper_wedge = Wedge(center=center, r=radius, theta1=angularThresholdMax, theta2=90, color='lightgray', alpha=0.25, zorder=0)
+            ax.add_patch(upper_wedge); ax.add_patch(bounded_wedge); ax.add_patch(lower_wedge)
 
             # Customize appearance
             ax.set_title(f"{moduleName}")
@@ -304,9 +315,13 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False)  # squeeze=False ensures axes is 2D
         numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
-        bins = np.arange(-np.pi/4, np.pi/4, np.pi/4/numBins)
         units = "degrees" if degreesFlag else "radians"
-        degrees = 200 if degreesFlag else math.pi / 4
+        degrees = 180 if degreesFlag else math.pi / 2
+        bins = np.arange(-degrees, degrees, degrees/numBins)
+
+        # Get the angular thresholds.
+        angularThresholdMin = modelConstants.userInputParams['angularThresholdMin'] * np.pi / 180  # Convert to radians
+        angularThresholdMax = modelConstants.userInputParams['angularThresholdMax'] * np.pi / 180  # Convert to radians
 
         for layerInd in range(len(givensAnglesPath)):
             moduleName = reversibleModuleNames[layerInd].lower()
@@ -327,6 +342,12 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.set_xlim((-degrees, degrees))
             ax.set_ylabel("Density")
 
+            # Shade the angular thresholds
+            ax.fill_betweenx(ax.get_ylim(), -angularThresholdMin, angularThresholdMin, color='lightgray', alpha=0.25, zorder=0)
+            ax.axvspan(ax.get_xlim()[0], -angularThresholdMax, color='lightgray', alpha=0.25, zorder=0)
+            ax.axvspan(angularThresholdMax, ax.get_xlim()[1], color='lightgray', alpha=0.25, zorder=0)
+            ax.relim(); ax.autoscale_view()
+
         # Adjust layout to prevent overlapping titles/labels
         plt.suptitle(f"{plotTitle}; Epoch {epoch}\n", fontsize=16)
         plt.tight_layout()
@@ -343,7 +364,11 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=False, sharey=False)  # squeeze=False ensures axes is 2D
         numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
         units = "degrees" if degreesFlag else "radians"
-        degrees = 200 if degreesFlag else math.pi / 4
+        degrees = 180 if degreesFlag else math.pi / 2
+
+        # Get the angular thresholds.
+        angularThresholdMin = modelConstants.userInputParams['angularThresholdMin'] * np.pi / 180  # Convert to radians
+        angularThresholdMax = modelConstants.userInputParams['angularThresholdMax'] * np.pi / 180  # Convert to radians
 
         for layerInd in range(len(givensAnglesPath)):
             moduleName = reversibleModuleNames[layerInd].lower()
@@ -363,6 +388,12 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.set_xlabel("Parameter Index")
             ax.set_ylim((-degrees, degrees))
             ax.set_ylabel(f"Angle ({units})")
+
+            # Shade the angular thresholds
+            ax.fill_between(x=ax.get_xlim(), y1=-angularThresholdMin, y2=angularThresholdMin, color='lightgray', alpha=0.25, zorder=0)
+            ax.axhspan(ax.get_ylim()[0], -angularThresholdMax, color='lightgray', alpha=0.25, zorder=0)
+            ax.axhspan(angularThresholdMax, ax.get_ylim()[1], color='lightgray', alpha=0.25, zorder=0)
+            ax.relim(); ax.autoscale_view()
 
         # Adjust layout to prevent overlapping titles/labels
         plt.suptitle(f"{plotTitle}; Epoch {epoch}\n", fontsize=16)

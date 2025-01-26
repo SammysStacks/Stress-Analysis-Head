@@ -61,7 +61,7 @@ class modelVisualizations(globalPlottingProtocols):
 
                 moduleNames = np.asarray([modelPipeline.model.getFreeParamsFullPassPath()[1] for modelPipeline in allModelPipelines])  # numModels, numActivations
                 numFreeModelParams = [specificModel.numFreeParams for specificModel in specificModels]  # numModels, numEpochs, numModuleLayers, numSignals, numParams=1
-                self.generalViz.plotScaleFactorFlow(numFreeModelParams, paramNames=["Free Params"], moduleNames=moduleNames, modelLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Free Parameters Path")
+                self.generalViz.plotScaleFactorFlow(numFreeModelParams, paramNames=["Free Params"], moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Free Parameters Path")
 
                 # Plot the activation parameters for the signal encoder.
                 paramNames = ["Infinite Bound", "Linearity Factor", "Convergent Point"]
@@ -76,7 +76,7 @@ class modelVisualizations(globalPlottingProtocols):
 
                 # Plot the scaling factors for the signal encoder.
                 scalingFactorsPaths = [specificModel.scalingFactorsPath for specificModel in specificModels]  # numModels, numEpochs, numModuleLayers, numSignals, numParams=1
-                self.generalViz.plotScaleFactorFlow(scalingFactorsPaths, paramNames=["Scalar"], moduleNames=moduleNames, modelLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Scalar Path")
+                self.generalViz.plotScaleFactorFlow(scalingFactorsPaths, paramNames=["Scalar"], moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Scalar Path")
 
     def plotAllTrainingEvents(self, submodel, modelPipeline, lossDataLoader, trainingDate, currentEpoch):
         self.accelerator.print(f"\nPlotting results for the {modelPipeline.model.datasetName} model")
@@ -146,7 +146,7 @@ class modelVisualizations(globalPlottingProtocols):
                     self.signalEncoderViz.plotProfileReconstruction(resampledBiomarkerTimes, healthProfile, reconstructedHealthProfile, epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="signalEncoding/", plotTitle="Health Profile Reconstruction")
 
                     # Plot the angular information.
-                    self.signalEncoderViz.plotsGivensAnglesHist(givensAnglesPath, reversibleModuleNames, numBins=32, epoch=currentEpoch, signalInd=signalInd, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="Rotation Angles Hist")
+                    self.signalEncoderViz.plotsGivensAnglesHist(givensAnglesPath, reversibleModuleNames, numBins=64, epoch=currentEpoch, signalInd=signalInd, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="Rotation Angles Hist")
                     self.signalEncoderViz.plotsGivensAnglesLine(givensAnglesPath, reversibleModuleNames, epoch=currentEpoch, signalInd=signalInd, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="Rotation Angles Line")
                     self.signalEncoderViz.plotAngleLocations(givensAnglesPath, reversibleModuleNames, signalNames=signalNames, epoch=currentEpoch, signalInd=signalInd, saveFigureLocation="signalEncoding/", plotTitle="Rotation Angles on Circle")
 
@@ -177,7 +177,7 @@ class modelVisualizations(globalPlottingProtocols):
                 # self.plotPredictedMatrix(activityTrainingLabels, activityTestingLabels, predictedActivityLabels[activityTrainingMask], predictedActivityLabels[activityTestingMask], self.numActivities, epoch=currentEpoch, "Activities")
                 # self.plotTrainingLosses(self.trainingLosses_activities, self.testingLosses_activities, plotTitle = "Activity Loss (Cross Entropy)")
 
-                # Get the valid emotion indices (ones with training points).
+                # get the valid emotion indices (ones with training points).
                 # emotionTrainingMask = self.dataInterface.getEmotionMasks(allTrainingMasks)
                 # validEmotionInds = self.dataInterface.getLabelInds_withPoints(emotionTrainingMask)
                 # For each emotion we are predicting that has training data.
