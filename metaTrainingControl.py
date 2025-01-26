@@ -61,7 +61,7 @@ if __name__ == "__main__":
     parser.add_argument('--numSharedEncoderLayers', type=int, default=4, help='The number of layers in the model: [2, 8]')
     parser.add_argument('--angularThresholdMin', type=float, default=5, help='The minimum rotational threshold in degrees.')
     parser.add_argument('--angularThresholdMax', type=float, default=60, help='The minimum rotational threshold in degrees.')
-    parser.add_argument('--cullingEpoch', type=int, default=50, help='The number of epochs before culling null weights.')
+    parser.add_argument('--cullingEpoch', type=int, default=25, help='The number of epochs before culling null weights.')
     parser.add_argument('--profileDimension', type=int, default=128, help='The number of profile weights: [32, 256]')
     parser.add_argument('--numProfileShots', type=int, default=24, help='The epochs for profile training: [16, 32]')
 
@@ -137,8 +137,8 @@ if __name__ == "__main__":
         cullNullWeights = (epoch % numEpoch_toCull == 0)
 
         # Train the model for a single epoch.
-        if cullNullWeights: trainingProtocols.cullNullWeights(allMetaModels, allModels)
         trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders)
+        if cullNullWeights: trainingProtocols.cullNullWeights(allMetaModels, allModels)
 
         # Store the initial loss information and plot.
         trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)
