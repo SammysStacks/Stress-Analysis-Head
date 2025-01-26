@@ -124,10 +124,12 @@ class reversibleConvolutionLayer(reversibleInterface):
         angularThresholdMax = modelConstants.userInputParams['angularThresholdMax'] * torch.pi / 180  # Convert to radians
 
         # Apply the thresholding.
-        angularMask = self.getGivensAngles(layerInd).abs() >= angularThresholdMin
-        # Dim: numSignals, numFreeParams
+        angularMask = angularThresholdMin <= self.getGivensAngles(layerInd).abs()
+        numSignalParameters = angularMask.sum(dim=-1)  # Dim: numSignals
+        # angularMask: numSignals, numFreeParams
+        # numSignalParameters: numSignals
 
-        return angularMask.sum(dim=-1)  # Dim: numSignals
+        return numSignalParameters
 
     def getFeatureParams(self, layerInd):
         givensAngles, scalingFactors = self.getLinearParams(layerInd)  # Dim: numSignals, numParams
