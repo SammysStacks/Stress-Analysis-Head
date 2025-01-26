@@ -70,13 +70,13 @@ class trainingProtocolHelpers:
             modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=numProfileShots + 1)  # Profile training.
             self.accelerator.wait_for_everyone()
 
-    def cullNullWeights(self, allMetaModels, allModels):
+    def boundAngularWeights(self, allMetaModels, allModels, applyMinThresholding):
         # Unify all the model weights.
         self.unifyAllModelWeights(allMetaModels, allModels)
 
         # For each meta-training model.
         for modelPipeline in allMetaModels + allModels:
-            modelPipeline.model.removeZeroAngles()
+            modelPipeline.model.cullAngles(applyMinThresholding=applyMinThresholding)
 
         # Unify all the model weights and retrain the specific models.
         self.unifiedLayerData = self.modelMigration.copyModelWeights(allMetaModels[0], self.sharedModelWeights)

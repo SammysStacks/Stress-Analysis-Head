@@ -134,11 +134,11 @@ if __name__ == "__main__":
 
         # Get the saving information.
         saveFullModel, plotSteps = modelParameters.getEpochParameters(epoch, numEpoch_toSaveFull, numEpoch_toPlot)
-        cullNullWeights = (epoch % numEpoch_toCull == 0)
+        applyMinThresholding = (epoch % numEpoch_toCull == 0)
 
         # Train the model for a single epoch.
         trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders)
-        if cullNullWeights: trainingProtocols.cullNullWeights(allMetaModels, allModels)
+        trainingProtocols.boundAngularWeights(allMetaModels, allModels, applyMinThresholding=applyMinThresholding)
 
         # Store the initial loss information and plot.
         trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)

@@ -185,7 +185,7 @@ class generalVisualizations(globalPlottingProtocols):
                     if "shared" in moduleName and modelInd != 0: continue
 
                     if "specific" in moduleName: lineColor = self.darkColors[modelInd]; alpha = 0.8
-                    elif "shared" in moduleName: lineColor = self.blackColor; alpha = 0.5
+                    elif "shared" in moduleName: lineColor = self.blackColor; alpha = 0.75
                     else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
 
                     if modelInd == 0: modelLabel = modelLabels[modelInd]
@@ -240,7 +240,7 @@ class generalVisualizations(globalPlottingProtocols):
                     else: modelLabel = None
 
                     if "specific" in moduleName: lineColor = self.darkColors[modelInd]; alpha = 0.8
-                    elif "shared" in moduleName: lineColor = self.blackColor; alpha = 0.5
+                    elif "shared" in moduleName: lineColor = self.blackColor; alpha = 0.75
                     else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
 
                     plottingParams = activationParamsPaths[modelInd, :, layerInd, paramInd]
@@ -291,7 +291,7 @@ class generalVisualizations(globalPlottingProtocols):
                     else: modelLabel = None
 
                     if "specific" in moduleName: lineColor = self.darkColors[modelInd]; alpha = 0.8
-                    elif "shared" in moduleName: lineColor = self.blackColor; alpha = 0.5
+                    elif "shared" in moduleName: lineColor = self.blackColor; alpha = 0.75
                     else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
 
                     plottingParams = []
@@ -341,7 +341,7 @@ class generalVisualizations(globalPlottingProtocols):
                     else: modelLabel = None
 
                     if "specific" in moduleName: lineColor = self.darkColors[modelInd]; alpha = 0.8
-                    elif "shared" in moduleName: lineColor = self.blackColor; alpha = 0.5
+                    elif "shared" in moduleName: lineColor = self.blackColor; alpha = 0.75
                     else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
 
                     plottingParams = []

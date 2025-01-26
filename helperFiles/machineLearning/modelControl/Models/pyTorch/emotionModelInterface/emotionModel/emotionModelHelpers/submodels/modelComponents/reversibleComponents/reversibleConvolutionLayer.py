@@ -149,7 +149,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         givensAnglesFeatures = [givensAnglesMean, givensAnglesVar, givensAnglesRange, scalingFactorsMean]
         return givensAnglesFeatureNames, givensAnglesFeatures
 
-    def removeZeroWeights(self, layerInd):
+    def angularThresholding(self, layerInd, applyMinThresholding):
         with torch.no_grad():
             # Get the angular thresholds.
             angularThresholdMin = modelConstants.userInputParams['angularThresholdMin'] * torch.pi / 180  # Convert to radians
@@ -157,9 +157,9 @@ class reversibleConvolutionLayer(reversibleInterface):
             givensAngles = self.getGivensAngles(layerInd)
 
             # Apply the thresholding.
+            if applyMinThresholding: self.givensRotationParams[layerInd][givensAngles.abs() < angularThresholdMin] = 0
             self.givensRotationParams[layerInd][givensAngles < -angularThresholdMax] = -angularThresholdMax
             self.givensRotationParams[layerInd][angularThresholdMax < givensAngles] = angularThresholdMax
-            self.givensRotationParams[layerInd][givensAngles.abs() < angularThresholdMin] = 0
 
     def printParams(self):
         # Count the trainable parameters.

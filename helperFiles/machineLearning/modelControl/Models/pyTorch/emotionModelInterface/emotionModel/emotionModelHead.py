@@ -242,10 +242,10 @@ class emotionModelHead(nn.Module):
         activationCurvePath = np.asarray(activationCurvePath)
         return activationCurvePath, moduleNames
 
-    def removeZeroAngles(self):
+    def cullAngles(self, applyMinThresholding):
         for name, module in self.named_modules():
             if isinstance(module, reversibleConvolutionLayer):
-                module.removeZeroWeights(layerInd=0)
+                module.angularThresholding(layerInd=0, applyMinThresholding=applyMinThresholding)
 
     def getActivationParamsFullPassPath(self):
         activationParamsPath, moduleNames = [], []

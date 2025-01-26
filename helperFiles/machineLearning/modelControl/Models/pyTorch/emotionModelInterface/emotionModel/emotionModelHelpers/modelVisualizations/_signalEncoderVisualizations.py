@@ -356,7 +356,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
             # Get the angles for the current layer
             lines = np.asarray(givensAnglesPath[layerInd][signalInd:signalInd + len(self.darkColors)])  # Dimensions: numSignals, numParams
-            for lineInd in range(len(lines)): ax.plot(lines[lineInd], color=self.darkColors[lineInd], alpha=0.75, linewidth=1)
+            for lineInd in range(len(lines)): ax.plot(lines[lineInd], 'o', color=self.darkColors[lineInd], alpha=0.75, markersize=2, linewidth=1)
 
             # Customize subplot title and axes
             ax.set_title(f"{reversibleModuleNames[layerInd]}")
