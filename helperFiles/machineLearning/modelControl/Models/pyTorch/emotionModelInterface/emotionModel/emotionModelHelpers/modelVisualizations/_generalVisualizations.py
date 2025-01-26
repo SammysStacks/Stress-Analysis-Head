@@ -131,7 +131,7 @@ class generalVisualizations(globalPlottingProtocols):
 
             # Plot the training losses.
             plt.errorbar(x=np.arange(len(trainingLoss)), y=trainingLoss, yerr=trainingStandardError, color=self.darkColors[modelInd], linewidth=1)
-            plt.plot(modelTrainingLosses, '--', color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
+            plt.plot(modelTrainingLosses, color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
 
             if testingLosses is not None:
                 modelTestingLosses = np.asarray(testingLosses[modelInd])
@@ -297,7 +297,16 @@ class generalVisualizations(globalPlottingProtocols):
                     plottingParams = []
                     for epochInd in range(numEpochs):
                         plottingParams.append(scalingFactorsPaths[modelInd][epochInd][layerInd][:, paramInd])
-                    ax.plot(x, np.asarray(plottingParams).mean(axis=-1), color=lineColor, linewidth=1, alpha=alpha, label=modelLabel)
+                    plottingParams = np.asarray(plottingParams)
+
+                    # Calculate the average and standard deviation of the training losses.
+                    N = np.sum(~np.isnan(plottingParams), axis=-1)
+                    standardError = np.nanstd(plottingParams, ddof=1, axis=-1) / np.sqrt(N)
+                    meanValues = np.nanmean(plottingParams, axis=-1)
+
+                    # Plot the training losses.
+                    ax.errorbar(x=x, y=meanValues, yerr=standardError, color=self.darkColors[modelInd], linewidth=1)
+                    ax.plot(x, plottingParams, color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
                 ax.set_xlabel("Training Epoch")
                 ax.set_title(moduleName)
                 ax.set_xlim((0, numEpochs + 1))
@@ -312,7 +321,7 @@ class generalVisualizations(globalPlottingProtocols):
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle} {paramName}.pdf")
             else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotGivensAnglesFlow(self, givensAnglesFeaturesPaths, moduleNames, modelLabels, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
+    def plotGivensAnglesFlow(self, givensAnglesFeaturesPaths, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
         # givensAnglesFeaturesPaths: numModels, numEpochs, numModuleLayers, numFeatures=5, numFeatureValues*
         try: numModels, numEpochs, numModuleLayers = len(givensAnglesFeaturesPaths), len(givensAnglesFeaturesPaths[0]), len(givensAnglesFeaturesPaths[0][0])
         except Exception as e: print("plotAngularFeaturesFlow:", e); return None
@@ -337,17 +346,23 @@ class generalVisualizations(globalPlottingProtocols):
 
                 for modelInd in range(numModels):
                     if "shared" in moduleName and modelInd != 0: continue
-                    if modelInd == 0: modelLabel = modelLabels[modelInd]
-                    else: modelLabel = None
-
-                    if "specific" in moduleName: lineColor = self.darkColors[modelInd]; alpha = 0.8
-                    elif "shared" in moduleName: lineColor = self.blackColor; alpha = 0.75
+                    if "specific" in moduleName: lineColor = self.darkColors[modelInd]
+                    elif "shared" in moduleName: lineColor = self.blackColor
                     else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
 
                     plottingParams = []
                     for epochInd in range(numEpochs):
                         plottingParams.append(givensAnglesFeaturesPaths[modelInd][epochInd][layerInd][paramInd])
-                    ax.plot(x, plottingParams, color=lineColor, linewidth=0.67, alpha=alpha, label=modelLabel)
+                    plottingParams = np.asarray(plottingParams)
+
+                    # Calculate the average and standard deviation of the training losses.
+                    N = np.sum(~np.isnan(plottingParams), axis=-1)
+                    standardError = np.nanstd(plottingParams, ddof=1, axis=-1) / np.sqrt(N)
+                    meanValues = np.nanmean(plottingParams, axis=-1)
+
+                    # Plot the training losses.
+                    ax.errorbar(x=x, y=meanValues, yerr=standardError, color=lineColor, linewidth=1)
+                    ax.plot(x, plottingParams, color=lineColor, linewidth=1, alpha=0.05)
                 ax.set_xlabel("Training Epoch")
                 ax.set_title(moduleName)
                 ax.set_xlim((0, numEpochs + 1))
