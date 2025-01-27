@@ -303,6 +303,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Save the plot
         plt.tight_layout()
+        fig.set_constrained_layout(True)
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} cutoff{angularThresholdMax} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]}.pdf", clearFigure=True)
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
@@ -337,8 +338,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
             # Customize subplot title and axes
             ax.set_title(f"{reversibleModuleNames[layerInd]}")
-            ax.set_xlabel(f"Angle ({units})")
-            ax.set_ylabel("Density")
 
             # Shade the angular thresholds
             ax.fill_betweenx(ax.get_ylim(), -angularThresholdMin, angularThresholdMin,color=self.blackColor, alpha=0.2, zorder=0)
@@ -349,7 +348,10 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Adjust layout to prevent overlapping titles/labels
         plt.suptitle(t=f"{plotTitle}; Epoch {epoch}\n", fontsize=16)
         plt.xlim((-angularThresholdMax, angularThresholdMax))
+        plt.xlabel(f"Angle ({units})")
+        plt.ylabel("Density")
         plt.tight_layout()
+        fig.set_constrained_layout(True)
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')}.pdf", clearFigure=False, showPlot=False)
@@ -412,6 +414,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.suptitle(f"{plotTitle}; Epoch {epoch}\n", fontsize=16)
         plt.ylim((-degrees, degrees))
         plt.tight_layout()
+        fig.set_constrained_layout(True)
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", clearFigure=False, showPlot=False)

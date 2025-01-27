@@ -1,3 +1,6 @@
+import shutil
+import time
+
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
@@ -49,8 +52,14 @@ class globalPlottingProtocols:
         if fig is None: fig = plt.gcf()
 
         # Save to base location if specified
-        if baseSaveFigureName is not None: fig.savefig(os.path.join(self.baseSavingDataFolder, f"{self.datasetName} {baseSaveFigureName}"))
-        fig.savefig(os.path.join(self.saveDataFolder, f"{saveFigureLocation}{saveFigureName}"))
+        if baseSaveFigureName is not None:
+            base_path = os.path.join(self.baseSavingDataFolder, f"{self.datasetName} {baseSaveFigureName}")
+            fig.savefig(base_path, transparent=True, dpi=300)
+
+            # Copy the saved figure to the second location
+            shutil.copy(base_path, os.path.join(self.saveDataFolder, f"{saveFigureLocation}{saveFigureName}"))
+        else: fig.savefig(os.path.join(self.saveDataFolder, f"{saveFigureLocation}{saveFigureName}"), transparent=True, dpi=300)
+
         if clearFigure: self.clearFigure(fig=fig, legend=None, showPlot=showPlot)  # Clear the figure after saving
         elif showPlot: plt.show()
 
