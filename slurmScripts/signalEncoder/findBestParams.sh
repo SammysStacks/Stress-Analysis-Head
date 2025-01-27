@@ -21,9 +21,9 @@ angularThresholdMins=(0 1 2 3 4 5)  # 6
 angularThresholdMaxs=(10 20 30 45 60 90)  # 6
 cullingEpochs=(10 25 50 75 100)  # 5
 
-# Known interesting parameters: 128
-numSharedEncoderLayers_arr=(1 2 3 4 5 6 7 8 9 10 11 12 14 15 16)
-numSpecificEncoderLayers_arr=(1 2 3 4 5 6 7 8)
+# Known interesting parameters: 63
+numSharedEncoderLayers_arr=(0 1 2 3 4 5 6 7 8)  # 9
+numSpecificEncoderLayers_arr=(0 1 2 3 4 5 6)  # 7
 
 # Known interesting parameters: 7*7 = 49
 encodedDimensions_arr=(16 32 64 128 256 512 1024)  # 7

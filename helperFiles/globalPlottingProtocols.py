@@ -44,14 +44,15 @@ class globalPlottingProtocols:
         else: plt.cla(); plt.clf()
         plt.close('all')
 
-    def displayFigure(self, saveFigureLocation, saveFigureName, baseSaveFigureName=None, fig=None, showPlot=True):
+    def displayFigure(self, saveFigureLocation, saveFigureName, baseSaveFigureName=None, fig=None, showPlot=True, clearFigure=True):
         self._createFolder(self.saveDataFolder + saveFigureLocation)
         if fig is None: fig = plt.gcf()
 
         # Save to base location if specified
         if baseSaveFigureName is not None: fig.savefig(os.path.join(self.baseSavingDataFolder, f"{self.datasetName} {baseSaveFigureName}"))
         fig.savefig(os.path.join(self.saveDataFolder, f"{saveFigureLocation}{saveFigureName}"))
-        self.clearFigure(fig=fig, legend=None, showPlot=showPlot)  # Clear the figure after saving
+        if clearFigure: self.clearFigure(fig=fig, legend=None, showPlot=showPlot)  # Clear the figure after saving
+        elif showPlot: plt.show()
 
     def heatmap(self, data, saveDataPath=None, title=None, xlabel=None, ylabel=None):
         # Plot the heatmap

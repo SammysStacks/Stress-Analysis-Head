@@ -248,14 +248,72 @@ class generalVisualizations(globalPlottingProtocols):
 
                 ax.set_xlabel("Training Epoch")
                 ax.set_title(moduleName)
-                if 'Infinite' in paramName: ax.set_ylim((0, 1.1))
-                elif 'Linearity' in paramName: ax.set_ylim((0, 10.1))
-                elif 'Convergent' in paramName: ax.set_ylim((0, 2.1))
+                if 'infinite' in paramName.lower(): ax.set_ylim((0, 1.1))
+                elif 'linearity' in paramName.lower(): ax.set_ylim((0, 10.1))
+                elif 'convergent' in paramName.lower(): ax.set_ylim((0, 2.1))
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5)
                 ax.set_xlim((0, numEpochs + 1))
 
             # Label the plot.
             plt.suptitle(f"{plotTitle}: {paramName}\n")
+            plt.tight_layout()
+
+            # Save the figure if desired.
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle} {paramName}.pdf")
+            else: self.clearFigure(fig=None, legend=None, showPlot=True)
+
+    def plotFreeParamFlow(self, numFreeModelParams, maxFreeParamsPath, fullView, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
+        # scalingFactorsPaths: numModels, numEpochs, numModuleLayers, *numSignals*, numParams=1
+        # maxFreeParamsPath: numModels, numModuleLayers
+        numModels, numModuleLayers = np.asarray(maxFreeParamsPath).shape
+        nRows, nCols = self.getRowsCols(numModuleLayers)
+        numEpochs = len(numFreeModelParams[0])
+        numParams = len(paramNames)
+        x = np.arange(numEpochs)
+        if numEpochs == 0: return "No data to plot."
+
+        for paramInd in range(numParams):
+            # Create a figure and axes array
+            fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=fullView)
+            numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
+            paramName = paramNames[paramInd]
+
+            for layerInd in range(numModuleLayers):
+                moduleName = moduleNames[0][layerInd].lower()
+
+                if "processing" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
+                elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
+                elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
+                else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+                ax = axes[rowInd, colInd]
+
+                for modelInd in range(numModels):
+                    if "shared" in moduleName and modelInd != 0: continue
+                    maxFreeParams = maxFreeParamsPath[modelInd][layerInd]
+                    sequenceLength = int((1 + (1 + 8 * maxFreeParams) ** 0.5) // 2)
+
+                    plottingParams = []
+                    for epochInd in range(numEpochs):
+                        plottingParams.append(numFreeModelParams[modelInd][epochInd][layerInd][:, paramInd])
+                    plottingParams = np.asarray(plottingParams)
+
+                    # Calculate the average and standard deviation of the training losses.
+                    N = np.sum(~np.isnan(plottingParams), axis=-1)
+                    standardError = np.nanstd(plottingParams, ddof=1, axis=-1) / np.sqrt(N)
+                    meanValues = np.nanmean(plottingParams, axis=-1)
+
+                    # Plot the training losses.
+                    ax.errorbar(x=x, y=meanValues, yerr=standardError, color=self.darkColors[modelInd], linewidth=1)
+                    ax.plot(x, plottingParams, color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
+                    if fullView: ax.hlines(y=maxFreeParams, xmin=0, xmax=numEpochs + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
+                    if fullView: ax.hlines(y=sequenceLength, xmin=0, xmax=numEpochs + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
+                ax.set_xlabel("Training Epoch")
+                ax.set_title(moduleName)
+                ax.set_xlim((0, numEpochs + 1))
+                ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+
+            # Label the plot.
+            plt.suptitle(f"{plotTitle} {paramName}\n")
             plt.tight_layout()
 
             # Save the figure if desired.
@@ -272,7 +330,7 @@ class generalVisualizations(globalPlottingProtocols):
 
         for paramInd in range(numParams):
             # Create a figure and axes array
-            fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=False)
+            fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=True)
             numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
             paramName = paramNames[paramInd]
 
@@ -304,7 +362,7 @@ class generalVisualizations(globalPlottingProtocols):
                 ax.set_xlabel("Training Epoch")
                 ax.set_title(moduleName)
                 ax.set_xlim((0, numEpochs + 1))
-                if "scalar" in paramName: ax.set_ylim((0.9, 1.1))
+                ax.set_ylim((0.9, 1.1))
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
             # Label the plot.

@@ -59,9 +59,9 @@ if __name__ == "__main__":
     parser.add_argument('--initialProfileAmp', type=float, default=1e-3, help='The limits for profile initialization. Should be near zero.')
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model: [1, 2]')
     parser.add_argument('--numSharedEncoderLayers', type=int, default=4, help='The number of layers in the model: [2, 8]')
-    parser.add_argument('--angularThresholdMin', type=float, default=2, help='The minimum rotational threshold in degrees.')
+    parser.add_argument('--angularThresholdMin', type=float, default=2.5, help='The minimum rotational threshold in degrees.')
     parser.add_argument('--angularThresholdMax', type=float, default=30, help='The minimum rotational threshold in degrees.')
-    parser.add_argument('--cullingEpoch', type=int, default=25, help='The number of epochs before culling null weights.')
+    parser.add_argument('--cullingEpoch', type=int, default=50, help='The number of epochs before culling null weights.')
     parser.add_argument('--profileDimension', type=int, default=128, help='The number of profile weights: [32, 256]')
     parser.add_argument('--numProfileShots', type=int, default=24, help='The epochs for profile training: [16, 32]')
 
@@ -123,6 +123,7 @@ if __name__ == "__main__":
     # -------------------------- Meta-model Training ------------------------- #
 
     # Calculate the initial loss.
+    trainingProtocols.boundAngularWeights(allMetaModels, allModels, applyMinThresholding=False)
     trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate)
     trainingProtocols.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, profileOnlyTraining=True)
     if modelConstants.useInitialLoss: trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)  # Calculate the initial loss.

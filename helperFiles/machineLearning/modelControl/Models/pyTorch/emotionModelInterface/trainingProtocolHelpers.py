@@ -53,6 +53,9 @@ class trainingProtocolHelpers:
     def datasetSpecificTraining(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, profileOnlyTraining=False):
         # Unify all the model weights.
         self.unifyAllModelWeights(allMetaModels, allModels)
+        if allMetaModels[0].model.numSpecificEncoderLayers:
+            print("No specific training needed.")
+            profileOnlyTraining = True
 
         # For each meta-training model.
         for modelInd in range(len(allMetaModels) + len(allModels)):

@@ -44,7 +44,7 @@ class organizeTrainingLosses(lossCalculations):
             # Get the encoder information.
             givensAnglesPath, scalingFactorsPath, givensAnglesFeaturesPath, reversibleModuleNames, givensAnglesFeatureNames = model.getLearnableParams()
             activationParamsPath, moduleNames = model.getActivationParamsFullPassPath()
-            numFreeParamsPath, _ = model.getFreeParamsFullPassPath()
+            numFreeParamsPath, _, _ = model.getFreeParamsFullPassPath()
             # givensAnglesFeaturesPath: numModuleLayers, numFeatures=5, numValues*
             # scalingFactorsPath: numModuleLayers, numSignals, numParams=1
             # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
