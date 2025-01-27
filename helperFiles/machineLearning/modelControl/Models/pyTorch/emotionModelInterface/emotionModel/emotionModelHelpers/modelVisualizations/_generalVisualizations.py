@@ -323,10 +323,6 @@ class generalVisualizations(globalPlottingProtocols):
         numParams = len(paramNames)
         x = np.arange(numEpochs)
 
-        # Get the angular thresholds.
-        angularThresholdMin = modelConstants.userInputParams['angularThresholdMin'] * np.pi / 180  # Convert to radians
-        angularThresholdMax = modelConstants.userInputParams['angularThresholdMax'] * np.pi / 180  # Convert to radians
-
         for paramInd in range(numParams):
             # Create a figure and axes array
             fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=False)
@@ -365,12 +361,6 @@ class generalVisualizations(globalPlottingProtocols):
                 ax.set_title(moduleName)
                 ax.set_xlim((0, numEpochs + 1))
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5)
-
-                # Shade the angular thresholds
-                ax.fill_betweenx(ax.get_ylim(), -angularThresholdMin, angularThresholdMin, color='lightgray', alpha=0.25, zorder=0)
-                ax.axvspan(ax.get_xlim()[0], -angularThresholdMax, color='lightgray', alpha=0.25, zorder=0)
-                ax.axvspan(angularThresholdMax, ax.get_xlim()[1], color='lightgray', alpha=0.25, zorder=0)
-                ax.relim(); ax.autoscale_view()
 
             # Label the plot.
             plt.suptitle(f"{plotTitle}: {paramName}\n")
