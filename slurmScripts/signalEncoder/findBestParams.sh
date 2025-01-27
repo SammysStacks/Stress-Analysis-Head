@@ -16,9 +16,9 @@ lrs_profile=('0.067')  # 0.005 <= x <= 0.05
 lrs_reversible=('3e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
 lrs_profileGen=('1e-4') # # 5e-5 <= x == 1e-4; 
 
-# Known interesting parameters: 220
-angularThresholdMins=(0 1 2 3 4 5 6)  # 7
-angularThresholdMaxs=(10 15 30 45 60 90)  # 6
+# Known interesting parameters: 180
+angularThresholdMins=(0 1 2 3 4 5)  # 6
+angularThresholdMaxs=(10 20 30 45 60 90)  # 6
 cullingEpochs=(10 25 50 75 100)  # 5
 
 # Known interesting parameters: 128
