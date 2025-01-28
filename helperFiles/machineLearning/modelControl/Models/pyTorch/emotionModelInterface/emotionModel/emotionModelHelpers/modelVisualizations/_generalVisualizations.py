@@ -171,7 +171,7 @@ class generalVisualizations(globalPlottingProtocols):
         nRows, nCols = min(1, numParams // 3), numParams
 
         # Create a figure and axes array
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=False)
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey='col')
         axes = axes.flatten()  # Flatten axes for easy indexing if you prefer
 
         for paramInd in range(numParams):
@@ -221,7 +221,7 @@ class generalVisualizations(globalPlottingProtocols):
 
         for paramInd in range(numParams):
             # Create a figure and axes array
-            fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=False)
+            fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=True)
             numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
             paramName = paramNames[paramInd]
 
@@ -274,7 +274,7 @@ class generalVisualizations(globalPlottingProtocols):
 
         for paramInd in range(numParams):
             # Create a figure and axes array
-            fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=fullView)
+            fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey='col' if fullView else False)
             numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
             paramName = paramNames[paramInd]
 
@@ -383,7 +383,7 @@ class generalVisualizations(globalPlottingProtocols):
 
         for paramInd in range(numParams):
             # Create a figure and axes array
-            fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=False)
+            fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey='col')
             numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
             paramName = paramNames[paramInd]
 
