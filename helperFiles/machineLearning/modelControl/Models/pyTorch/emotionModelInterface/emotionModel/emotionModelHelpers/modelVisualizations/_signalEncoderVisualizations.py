@@ -234,8 +234,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.scatter(0, 0, color=centerColor, linewidth=1)
 
             # Draw coordinate lines
-            ax.axvline(0, ymin=-1, ymax=1, color=self.blackColor, linewidth=0.5, alpha=0.25)
-            ax.axhline(0, xmin=0, xmax=1, color=self.blackColor, linewidth=0.5, alpha=0.25)
+            # ax.axvline(0, ymin=-1, ymax=1, color=self.blackColor, linewidth=0.5, alpha=0.25)
+            ax.axhline(0, xmin=0, xmax=1, color=self.blackColor, linewidth=0.5, alpha=0.25, zorder=0)
 
             # Draw unit circle for reference
             arc = Arc(xy=center, width=2*radius, height=2*radius, theta1=-90, theta2=90, color=self.blackColor, linewidth=1)
@@ -277,6 +277,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Get the angular thresholds.
         angularThresholdMin = modelConstants.userInputParams['angularThresholdMin']
         angularThresholdMax = modelConstants.userInputParams['angularThresholdMax']
+        plt.xlim((-degrees, degrees))
         histogramPlots = []
 
         for layerInd in range(len(givensAnglesPath)):
@@ -297,13 +298,13 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
             # Shade the angular thresholds
             ax.fill_betweenx(ax.get_ylim(), -angularThresholdMin, angularThresholdMin, color=self.blackColor, alpha=0.2, zorder=0)
-            ax.axvspan(ax.get_xlim()[0], -angularThresholdMax, color=self.blackColor, alpha=1, zorder=0)
-            ax.axvspan(angularThresholdMax, ax.get_xlim()[1], color=self.blackColor, alpha=1, zorder=0)
-            ax.relim(); ax.autoscale_view()
-
+            ax.axvspan(-degrees, -angularThresholdMax, color=self.blackColor, alpha=1, zorder=0)
+            ax.axvspan(angularThresholdMax, degrees, color=self.blackColor, alpha=1, zorder=0)
+            # ax.relim(); ax.autoscale_view()
+        plt.xlim((-angularThresholdMax, angularThresholdMax))
+        plt.ylim((0, 0.67))
         # Adjust layout to prevent overlapping titles/labels
         plt.suptitle(t=f"{plotTitle}; Epoch {epoch}\n", fontsize=16)
-        plt.xlim((-angularThresholdMax, angularThresholdMax))
         fig.supxlabel(f"Angle ({units})")
         fig.supylabel("Density")
         plt.tight_layout()
@@ -361,9 +362,9 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
             # Shade the angular thresholds
             ax.fill_between(x=ax.get_xlim(), y1=-angularThresholdMin, y2=angularThresholdMin, color=self.blackColor, alpha=0.2, zorder=0)
-            ax.axhspan(ax.get_ylim()[0], -angularThresholdMax, color=self.blackColor, alpha=1, zorder=0)
-            ax.axhspan(angularThresholdMax, ax.get_ylim()[1], color=self.blackColor, alpha=1, zorder=0)
-            ax.relim(); ax.autoscale_view()
+            ax.axhspan(-degrees, -angularThresholdMax, color=self.blackColor, alpha=1, zorder=0)
+            ax.axhspan(angularThresholdMax, degrees, color=self.blackColor, alpha=1, zorder=0)
+            # ax.relim(); ax.autoscale_view()
 
         # Adjust layout to prevent overlapping titles/labels
         plt.suptitle(f"{plotTitle}; Epoch {epoch}\n", fontsize=16)
