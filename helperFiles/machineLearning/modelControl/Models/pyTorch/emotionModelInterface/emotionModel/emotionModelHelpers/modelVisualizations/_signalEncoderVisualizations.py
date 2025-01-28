@@ -199,7 +199,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         nRows, nCols = self.getRowsCols(numModuleLayers=len(givensAnglesPath))
 
         # Create a figure and axes array
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 8 * nRows), squeeze=False, sharex=True, sharey=False)  # squeeze=False ensures axes is 2D
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(4 * nCols, 8 * nRows), squeeze=False, sharex=True, sharey=False)  # squeeze=False ensures axes is 2D
         numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
 
         # Get the angular thresholds.
@@ -230,19 +230,16 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             line_segments = LineCollection(lines, colors=lineColor, linewidths=0.2, alpha=alpha)
             ax.add_collection(line_segments)  # Add all lines at once
 
-            # Highlight the origin
-            ax.scatter(0, 0, color=centerColor, linewidth=1)
-
-            # Draw coordinate lines
-            # ax.axvline(0, ymin=-1, ymax=1, color=self.blackColor, linewidth=0.5, alpha=0.25)
-            ax.axhline(0, xmin=0, xmax=1, color=self.blackColor, linewidth=0.5, alpha=0.25, zorder=0)
+            # Add details to the plot.
+            ax.axhline(0, xmin=0, xmax=1, color=self.blackColor, linewidth=0.5, alpha=0.25, zorder=0)  # Draw coordinate lines
+            ax.scatter(0, 0, color=centerColor, linewidth=1)  # Highlight the origin
 
             # Draw unit circle for reference
             arc = Arc(xy=center, width=2*radius, height=2*radius, theta1=-90, theta2=90, color=self.blackColor, linewidth=1)
             ax.add_patch(arc)
 
             # 1. Define the shaded region in the bounded range [-minAngle, minAngle]
-            bounded_wedge = Wedge(center=center, r=radius, theta1=-angularThresholdMin, theta2=angularThresholdMin, color=self.blackColor, alpha=0.2, zorder=0)
+            bounded_wedge = Wedge(center=center, r=radius, theta1=-angularThresholdMin, theta2=angularThresholdMin, color=self.blackColor, alpha=0.1, zorder=10)
             lower_wedge = Wedge(center=center, r=radius, theta1=-90, theta2=-angularThresholdMax, color=self.blackColor, alpha=1, zorder=0)
             upper_wedge = Wedge(center=center, r=radius, theta1=angularThresholdMax, theta2=90, color=self.blackColor, alpha=1, zorder=0)
             ax.add_patch(upper_wedge); ax.add_patch(bounded_wedge); ax.add_patch(lower_wedge)
@@ -261,7 +258,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def plotsGivensAnglesHist(self, givensAnglesPath, reversibleModuleNames, epoch, signalInd, degreesFlag, saveFigureLocation, plotTitle):
-        # givensAnglesPath: numModuleLayers, numSignals, numParams
+        # givensAnglesPath: numModuleLayers, numSignals, numAngles
         nRows, nCols = self.getRowsCols(numModuleLayers=len(givensAnglesPath))
         if not degreesFlag: scaleFactor = 180 / math.pi; degreesFlag = True
         else: scaleFactor = 1
@@ -272,7 +269,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         units = "degrees" if degreesFlag else "radians"
         degrees = (180 if degreesFlag else math.pi) / 2
         bins = np.arange(-degrees, degrees + 1, 1)
-        plt.ylim((0, 0.67))
+        plt.ylim((0, 1))
 
         # Get the angular thresholds.
         angularThresholdMin = modelConstants.userInputParams['angularThresholdMin']
@@ -290,19 +287,23 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax = axes[rowInd, colInd]
 
             # Plot training eigenvalue angles
-            histograms = scaleFactor * np.asarray(givensAnglesPath[layerInd][signalInd:signalInd + len(self.darkColors)])  # Get the histograms for the signal: numSignals, numParams
-            histogramPlots.append(ax.hist(histograms.T, bins=bins, color=self.darkColors[0:len(histograms)], alpha=1, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='left', cumulative=False))
+            histograms = scaleFactor * np.asarray(givensAnglesPath[layerInd][signalInd:signalInd + len(self.darkColors)]).T  # histograms: numAngles, numSignals=6
+            smallAngles = histograms.copy(); smallAngles[angularThresholdMin <= histograms] = np.nan
+            largeAngles = histograms.copy(); largeAngles[histograms < angularThresholdMin] = np.nan
+
+            # Plot the histograms.
+            histogramPlots.append(ax.hist(smallAngles, bins=bins, color=self.darkColors[0:len(histograms[0])], alpha=0.5, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='left', cumulative=False))
+            histogramPlots.append(ax.hist(largeAngles, bins=bins, color=self.darkColors[0:len(histograms[0])], alpha=1, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='left', cumulative=False))
 
             # Customize subplot title and axes
             ax.set_title(f"{reversibleModuleNames[layerInd]}")
 
             # Shade the angular thresholds
-            ax.fill_betweenx(ax.get_ylim(), -angularThresholdMin, angularThresholdMin, color=self.blackColor, alpha=0.2, zorder=0)
+            ax.fill_betweenx(ax.get_ylim(), -angularThresholdMin, angularThresholdMin, color=self.blackColor, alpha=0.1, zorder=10)
             ax.axvspan(-degrees, -angularThresholdMax, color=self.blackColor, alpha=1, zorder=0)
             ax.axvspan(angularThresholdMax, degrees, color=self.blackColor, alpha=1, zorder=0)
-            # ax.relim(); ax.autoscale_view()
         plt.xlim((-angularThresholdMax, angularThresholdMax))
-        plt.ylim((0, 0.67))
+
         # Adjust layout to prevent overlapping titles/labels
         plt.suptitle(t=f"{plotTitle}; Epoch {epoch}\n", fontsize=16)
         fig.supxlabel(f"Angle ({units})")
@@ -361,17 +362,16 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.set_title(f"{reversibleModuleNames[layerInd]}")
 
             # Shade the angular thresholds
-            ax.fill_between(x=ax.get_xlim(), y1=-angularThresholdMin, y2=angularThresholdMin, color=self.blackColor, alpha=0.2, zorder=0)
+            ax.fill_between(x=ax.get_xlim(), y1=-angularThresholdMin, y2=angularThresholdMin, color=self.blackColor, alpha=0.1, zorder=10)
             ax.axhspan(-degrees, -angularThresholdMax, color=self.blackColor, alpha=1, zorder=0)
             ax.axhspan(angularThresholdMax, degrees, color=self.blackColor, alpha=1, zorder=0)
-            # ax.relim(); ax.autoscale_view()
 
         # Adjust layout to prevent overlapping titles/labels
         plt.suptitle(f"{plotTitle}; Epoch {epoch}\n", fontsize=16)
         plt.tight_layout()
         fig.set_constrained_layout(True)
-        fig.supxlabel(f"Angle ({units})")
-        fig.supylabel("Parameter Index")
+        fig.supylabel(f"Angle ({units})")
+        fig.supxlabel("Parameter Index")
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", clearFigure=False, showPlot=False)
