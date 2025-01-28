@@ -194,60 +194,12 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     # --------------------- Visualize Model Training --------------------- #
 
-    def plotSignalComparison(self, originalSignal, comparisonSignal, signalNames, epoch, saveFigureLocation, plotTitle, numSignalPlots=1):
-        """ originalSignal dimension: batchSize, numSignals, numTotalPoints """
-        # Assert the integrity of the incoming data
-        assert originalSignal.shape[0:2] == comparisonSignal.shape[0:2], f"{originalSignal.shape} {comparisonSignal.shape}"
-
-        # Extract the shapes of the data
-        batchSize, numSignals, numTotalPoints = originalSignal.shape
-        batchSize, numSignals, numEncodedPoints = comparisonSignal.shape
-        if batchSize == 0: return None
-
-        batchInd = 0
-        # For each signal
-        for signalInd in range(numSignals):
-            # Plot both the signals alongside each other.
-            plt.plot(originalSignal[batchInd, signalInd], 'k', marker='o', linewidth=2)
-            plt.plot(np.linspace(0, numTotalPoints, numEncodedPoints), comparisonSignal[batchInd, signalInd], 'tab:red', marker='o', linewidth=1)
-
-            # Format the plotting
-            plt.ylabel("Arbitrary Axis (AU)")
-            plt.xlabel("Points")
-            plt.title(f"{plotTitle} {signalNames[signalInd]} epoch{epoch}")
-            plt.ylim((-2, 2))
-
-            # Save the plot
-            if self.saveDataFolder: self.displayFigure(saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]}.pdf")
-            else: self.clearFigure(fig=None, legend=None, showPlot=True)
-            if signalInd + 1 == numSignalPlots: break
-
-    def plotAllSignalComparisons(self, distortedSignals, reconstructedDistortedSignals, trueSignal, signalNames, epoch, signalInd, saveFigureLocation, plotTitle):
-        numSignals, numTotalPoints = reconstructedDistortedSignals.shape
-        alphas = np.linspace(0.1, 1, numSignals)
-
-        # Plot all signals in 'distortedSignals'
-        for i in range(numSignals):
-            plt.plot(distortedSignals[i], '-', color='k', alpha=alphas[i], linewidth=1, markersize=2, zorder=0)
-            plt.plot(trueSignal, 'o', color=self.darkColors[1], linewidth=1, markersize=2, zorder=10)
-            plt.plot(reconstructedDistortedSignals[i], '-', color='tab:red', linewidth=1, markersize=2, alpha=alphas[i], zorder=5)
-        
-        # Format the plotting
-        plt.title(f"{plotTitle} epoch{epoch} {signalNames[signalInd]}")
-        plt.xlabel('Time (Seconds)')
-        plt.ylabel("Arbitrary Axis (AU)")
-        plt.legend(['Noisy Signal', 'True Signal', 'Reconstructed Signal'], loc='best')
-
-        # Save the plot
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} {signalNames[signalInd]}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
-        else: self.clearFigure(fig=None, legend=None, showPlot=True)
-
     def plotAngleLocations(self, givensAnglesPath, reversibleModuleNames, signalNames, epoch, signalInd, saveFigureLocation, plotTitle):
         # givensAnglesPath: numModuleLayers, numSignals, numParams
         nRows, nCols = self.getRowsCols(numModuleLayers=len(givensAnglesPath))
 
         # Create a figure and axes array
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 8 * nRows), squeeze=False, sharex=False, sharey=False)  # squeeze=False ensures axes is 2D
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 8 * nRows), squeeze=False, sharex=True, sharey=False)  # squeeze=False ensures axes is 2D
         numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
 
         # Get the angular thresholds.
@@ -296,31 +248,35 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.add_patch(upper_wedge); ax.add_patch(bounded_wedge); ax.add_patch(lower_wedge)
 
             # Customize appearance
+            ax.set_ylim((-1.05, 1.05)); ax.set_xlim((-0.05, 1.05))
             ax.set_title(f"{moduleName}")
-            ax.set_xlabel("Real part")
-            ax.set_ylabel("Imag part")
-            ax.axis('equal')
+        fig.supxlabel("Real component")
+        fig.supylabel("Imaginary component")
+        plt.suptitle(t=f"{plotTitle}; Epoch {epoch}\n", fontsize=16)
 
         # Save the plot
         plt.tight_layout()
         fig.set_constrained_layout(True)
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} cutoff{angularThresholdMax} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]}.pdf", clearFigure=True)
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} cutoff{angularThresholdMax} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]}.pdf", clearFigure=True, showPlot=False)
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-    def plotsGivensAnglesHist(self, givensAnglesPath, reversibleModuleNames, numBins, epoch, signalInd, degreesFlag, saveFigureLocation, plotTitle):
+    def plotsGivensAnglesHist(self, givensAnglesPath, reversibleModuleNames, epoch, signalInd, degreesFlag, saveFigureLocation, plotTitle):
         # givensAnglesPath: numModuleLayers, numSignals, numParams
         nRows, nCols = self.getRowsCols(numModuleLayers=len(givensAnglesPath))
+        if not degreesFlag: scaleFactor = 180 / math.pi; degreesFlag = True
+        else: scaleFactor = 1
 
         # Create a figure and axes array
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=False)  # squeeze=False ensures axes is 2D
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=True)  # squeeze=False ensures axes is 2D
         numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
         units = "degrees" if degreesFlag else "radians"
         degrees = (180 if degreesFlag else math.pi) / 2
-        bins = np.arange(-degrees, degrees, degrees/numBins)
+        bins = np.arange(-degrees, degrees + 1, 1)
+        plt.ylim((0, 0.67))
 
         # Get the angular thresholds.
-        angularThresholdMin = modelConstants.userInputParams['angularThresholdMin'] * np.pi / 180  # Convert to radians
-        angularThresholdMax = modelConstants.userInputParams['angularThresholdMax'] * np.pi / 180  # Convert to radians
+        angularThresholdMin = modelConstants.userInputParams['angularThresholdMin']
+        angularThresholdMax = modelConstants.userInputParams['angularThresholdMax']
         histogramPlots = []
 
         for layerInd in range(len(givensAnglesPath)):
@@ -333,23 +289,23 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax = axes[rowInd, colInd]
 
             # Plot training eigenvalue angles
-            histograms = np.asarray(givensAnglesPath[layerInd][signalInd:signalInd + len(self.darkColors)])  # Get the histograms for the signal: numSignals, numParams
-            histogramPlots.append(ax.hist(histograms.T, bins=bins, color=self.darkColors[0:len(histograms)], alpha=1, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='left'))
+            histograms = scaleFactor * np.asarray(givensAnglesPath[layerInd][signalInd:signalInd + len(self.darkColors)])  # Get the histograms for the signal: numSignals, numParams
+            histogramPlots.append(ax.hist(histograms.T, bins=bins, color=self.darkColors[0:len(histograms)], alpha=1, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='left', cumulative=False))
 
             # Customize subplot title and axes
             ax.set_title(f"{reversibleModuleNames[layerInd]}")
 
             # Shade the angular thresholds
-            ax.fill_betweenx(ax.get_ylim(), -angularThresholdMin, angularThresholdMin,color=self.blackColor, alpha=0.2, zorder=0)
-            ax.axvspan(ax.get_xlim()[0], -angularThresholdMax,color=self.blackColor, alpha=1, zorder=0)
-            ax.axvspan(angularThresholdMax, ax.get_xlim()[1],color=self.blackColor, alpha=1, zorder=0)
+            ax.fill_betweenx(ax.get_ylim(), -angularThresholdMin, angularThresholdMin, color=self.blackColor, alpha=0.2, zorder=0)
+            ax.axvspan(ax.get_xlim()[0], -angularThresholdMax, color=self.blackColor, alpha=1, zorder=0)
+            ax.axvspan(angularThresholdMax, ax.get_xlim()[1], color=self.blackColor, alpha=1, zorder=0)
             ax.relim(); ax.autoscale_view()
 
         # Adjust layout to prevent overlapping titles/labels
         plt.suptitle(t=f"{plotTitle}; Epoch {epoch}\n", fontsize=16)
         plt.xlim((-angularThresholdMax, angularThresholdMax))
-        plt.xlabel(f"Angle ({units})")
-        plt.ylabel("Density")
+        fig.supxlabel(f"Angle ({units})")
+        fig.supylabel("Density")
         plt.tight_layout()
         fig.set_constrained_layout(True)
 
@@ -357,9 +313,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')}.pdf", clearFigure=False, showPlot=False)
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
-        # Save the plot
         plt.xlim((-degrees, degrees))
-
         # Access and modify patches correctly
         for histogramPlot in histogramPlots:  # Access histograms
             for bar_container in histogramPlot[2]:  # Access BarContainer objects
@@ -368,22 +322,26 @@ class signalEncoderVisualizations(globalPlottingProtocols):
                     patch.set_edgecolor(None)  # Remove edge color
                     patch.set_linewidth(0)  # Remove edge line width
 
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", clearFigure=True, showPlot=True)
+        # Save the plot
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", clearFigure=True, showPlot=False)
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def plotsGivensAnglesLine(self, givensAnglesPath, reversibleModuleNames, epoch, signalInd, degreesFlag, saveFigureLocation, plotTitle):
         # givensAnglesPath: numModuleLayers, numSignals, numParams
         nRows, nCols = self.getRowsCols(numModuleLayers=len(givensAnglesPath))
+        if not degreesFlag: scaleFactor = 180 / math.pi; degreesFlag = True
+        else: scaleFactor = 1
 
         # Create a figure and axes array
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=False, sharey=True)  # squeeze=False ensures axes is 2D
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex='col', sharey=True)  # squeeze=False ensures axes is 2D
         numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
         units = "degrees" if degreesFlag else "radians"
         degrees = (180 if degreesFlag else math.pi) / 2
+        plt.ylim((-degrees, degrees))
 
         # Get the angular thresholds.
-        angularThresholdMin = modelConstants.userInputParams['angularThresholdMin'] * np.pi / 180  # Convert to radians
-        angularThresholdMax = modelConstants.userInputParams['angularThresholdMax'] * np.pi / 180  # Convert to radians
+        angularThresholdMin = modelConstants.userInputParams['angularThresholdMin']
+        angularThresholdMax = modelConstants.userInputParams['angularThresholdMax']
 
         for layerInd in range(len(givensAnglesPath)):
             moduleName = reversibleModuleNames[layerInd].lower()
@@ -395,14 +353,11 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax = axes[rowInd, colInd]
 
             # Get the angles for the current layer
-            lines = np.asarray(givensAnglesPath[layerInd][signalInd:signalInd + len(self.darkColors)])  # Dimensions: numSignals, numParams
+            lines = scaleFactor * np.asarray(givensAnglesPath[layerInd][signalInd:signalInd + len(self.darkColors)])  # Dimensions: numSignals, numParams
             for lineInd in range(len(lines)): ax.plot(lines[lineInd], 'o', color=self.darkColors[lineInd], alpha=0.75, markersize=2, linewidth=1)
 
             # Customize subplot title and axes
             ax.set_title(f"{reversibleModuleNames[layerInd]}")
-            ax.set_xlabel("Parameter Index")
-            ax.set_ylim((-degrees, degrees))
-            ax.set_ylabel(f"Angle ({units})")
 
             # Shade the angular thresholds
             ax.fill_between(x=ax.get_xlim(), y1=-angularThresholdMin, y2=angularThresholdMin, color=self.blackColor, alpha=0.2, zorder=0)
@@ -412,9 +367,10 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Adjust layout to prevent overlapping titles/labels
         plt.suptitle(f"{plotTitle}; Epoch {epoch}\n", fontsize=16)
-        plt.ylim((-degrees, degrees))
         plt.tight_layout()
         fig.set_constrained_layout(True)
+        fig.supxlabel(f"Angle ({units})")
+        fig.supylabel("Parameter Index")
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", clearFigure=False, showPlot=False)
@@ -422,7 +378,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Save the plot
         plt.ylim((-angularThresholdMax, angularThresholdMax))
-        if self.saveDataFolder:  self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')}.pdf", clearFigure=True, showPlot=True)
+        if self.saveDataFolder:  self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')}.pdf", clearFigure=True, showPlot=False)
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def plotScaleFactorLines(self, scalingFactorsPath, reversibleModuleNames, epoch, saveFigureLocation, plotTitle):
@@ -449,7 +405,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.ylim((0.9, 1.1))
 
         # Save the plot
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", clearFigure=True, showPlot=True)
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def plotScaleFactorHist(self, scalingFactorsPath, reversibleModuleNames, epoch, saveFigureLocation, plotTitle):
@@ -480,45 +436,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.legend()
 
         # Save the plot
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
-        else: self.clearFigure(fig=None, legend=None, showPlot=True)
-
-    def modelPropagation3D(self, rotationAngles, epoch, degreesFlag, saveFigureLocation, plotTitle):
-        rotationAngles = np.asarray(rotationAngles)
-        numModelLayers, numAngles = rotationAngles.shape
-
-        # Create a meshgrid for encodedDimension and numModelLayers
-        x_data, y_data = np.meshgrid(np.arange(numAngles), np.arange(1, 1 + numModelLayers))
-
-        # Create a figure
-        fig = plt.figure(figsize=(14, 10))
-        ax = fig.add_subplot(111, projection='3d')
-
-        # Create the scatter plot
-        maxHalfAngle = 180 if degreesFlag else np.pi
-        if "3D Data Flow" in plotTitle: maxHalfAngle = 2*modelConstants.minMaxScale
-        surf = ax.scatter(x_data.flatten(), y_data.flatten(), rotationAngles.flatten(), c=rotationAngles.flatten(), cmap='viridis', alpha=1, s=7, vmin=0, vmax=maxHalfAngle)
-
-        # Customize the view angle
-        ax.view_init(elev=30, azim=135)
-
-        # Add labels and title
-        # Add labels and title
-        ax.set_title(plotTitle, fontsize=16, weight='bold', pad=20)
-        ax.set_xlabel("Eigenvalue Index", fontsize=12, labelpad=10)
-        ax.set_ylabel("Model Layer", fontsize=12, labelpad=10)
-        ax.set_zlabel("Complex Domain", fontsize=12, labelpad=10)
-
-        # Add a color bar for the last surface
-        cbar = fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10, pad=0.1)
-        cbar.set_label("Spatial Domain", fontsize=12)
-
-        # Adjust layout and aspect ratio
-        ax.set_box_aspect([2, 1, 1])
-        plt.tight_layout()
-
-        # Save the plot
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", clearFigure=True, showPlot=True)
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def modelFlow(self, dataTimes, dataStates, signalNames, epoch, batchInd, signalInd, saveFigureLocation, plotTitle):
@@ -558,7 +476,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.tight_layout()
 
         # Save the plot
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} batchInd{batchInd} {signalNames[signalInd]}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} batchInd{batchInd} {signalNames[signalInd]}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", clearFigure=True, showPlot=False)
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def plotActivationCurvesCompressed(self, activationCurves, moduleNames, epoch, saveFigureLocation, plotTitle):
@@ -601,7 +519,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.tight_layout()
 
         # Save the plot
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", clearFigure=True, showPlot=True)
         else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def plotActivationCurves(self, activationCurves, moduleNames, epoch, saveFigureLocation, plotTitle):
@@ -637,5 +555,5 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.tight_layout()
 
         # Save the plot
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", clearFigure=True, showPlot=False)
         else: self.clearFigure(fig=None, legend=None, showPlot=True)

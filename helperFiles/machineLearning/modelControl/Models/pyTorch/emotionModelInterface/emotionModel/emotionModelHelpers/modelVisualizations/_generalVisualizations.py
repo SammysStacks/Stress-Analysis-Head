@@ -259,7 +259,7 @@ class generalVisualizations(globalPlottingProtocols):
             plt.tight_layout()
 
             # Save the figure if desired.
-            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle} {paramName}.pdf")
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle} {paramName}.pdf", clearFigure=True, showPlot=False)
             else: self.clearFigure(fig=None, legend=None, showPlot=True)
 
     def plotFreeParamFlow(self, numFreeModelParams, maxFreeParamsPath, fullView, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):

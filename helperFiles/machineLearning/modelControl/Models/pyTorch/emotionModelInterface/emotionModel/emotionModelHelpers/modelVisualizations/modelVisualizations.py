@@ -133,6 +133,7 @@ class modelVisualizations(globalPlottingProtocols):
 
                 # ------------------- Signal Encoding Plots -------------------- #
                 globalPlottingProtocols.clearFigure(fig=None, legend=None, showPlot=False)
+                import time
 
                 if submodel == modelConstants.signalEncoderModel:
                     # Plot information collected across profile training.
@@ -150,9 +151,13 @@ class modelVisualizations(globalPlottingProtocols):
                     self.signalEncoderViz.plotProfileReconstruction(resampledBiomarkerTimes, healthProfile, reconstructedHealthProfile, epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="signalEncoding/", plotTitle="Health Profile Reconstruction")
 
                     # Plot the angular information.
-                    self.signalEncoderViz.plotsGivensAnglesHist(givensAnglesPath, reversibleModuleNames, numBins=64, epoch=currentEpoch, signalInd=signalInd, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="Rotation Angles Hist")
+                    t1 = time.time()
+                    self.signalEncoderViz.plotsGivensAnglesHist(givensAnglesPath, reversibleModuleNames, epoch=currentEpoch, signalInd=signalInd, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="Rotation Angles Hist")
+                    t2 = time.time(); print(f"Time to plot givens angles: {t2 - t1}"); t1 = time.time()
                     self.signalEncoderViz.plotAngleLocations(givensAnglesPath, reversibleModuleNames, signalNames=signalNames, epoch=currentEpoch, signalInd=signalInd, saveFigureLocation="signalEncoding/", plotTitle="Rotation Angles on Circle")
+                    t2 = time.time(); print(f"Time to plot givens angles: {t2 - t1}"); t1 = time.time()
                     self.signalEncoderViz.plotsGivensAnglesLine(givensAnglesPath, reversibleModuleNames, epoch=currentEpoch, signalInd=signalInd, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="Rotation Angles Line")
+                    t2 = time.time(); print(f"Time to plot givens angles: {t2 - t1}"); t1 = time.time()
 
                     # Plot the scale factor information.
                     self.signalEncoderViz.plotScaleFactorHist(scalingFactorsPath, reversibleModuleNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Scale Factors Hist")
