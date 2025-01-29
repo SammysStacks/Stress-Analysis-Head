@@ -1,15 +1,15 @@
-import shutil
-import time
-
 import matplotlib.pyplot as plt
-import seaborn as sns
+import shutil
 import os
+
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
 
 class globalPlottingProtocols:
 
     def __init__(self):
         # Setup matplotlib
+        self.hpcFlag = 'HPC' in modelConstants.userInputParams['deviceListed']
         self.baseFolderName = "_basePlots/"
         plt.rcdefaults()
         plt.ion()
@@ -62,18 +62,3 @@ class globalPlottingProtocols:
 
         if clearFigure: self.clearFigure(fig=fig, legend=None, showPlot=showPlot)  # Clear the figure after saving
         elif showPlot: plt.show()
-
-    def heatmap(self, data, saveDataPath=None, title=None, xlabel=None, ylabel=None):
-        # Plot the heatmap
-        ax = sns.heatmap(data, robust=True, cmap='icefire')
-        # Save the Figure
-        sns.set(rc={'figure.figsize': (7, 9)})
-        if title: ax.set_title(title)
-        if xlabel: plt.xlabel(xlabel)
-        if ylabel: plt.ylabel(ylabel)
-        fig = ax.get_figure()
-        if self.saveDataFolder and saveDataPath:
-            fig.savefig(f"{saveDataPath}.pdf", dpi=500, bbox_inches='tight')
-            fig.savefig(f"{saveDataPath}.png", dpi=500, bbox_inches='tight')
-        self.clearFigure(fig, legend=None, showPlot=True)
-        plt.rcdefaults()

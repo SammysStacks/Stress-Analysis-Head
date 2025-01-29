@@ -40,8 +40,9 @@ class reversibleConvolutionLayer(reversibleInterface):
         for layerInd in range(self.numLayers):
             # Create the neural weights.
             parameters = nn.Parameter(torch.randn(self.numSignals, self.numParams or 1, dtype=torch.float64))
-            parameters = nn.init.kaiming_uniform_(parameters)
-            # parameters = nn.init.zeros_(parameters)
+            parameters = nn.init.kaiming_uniform_(parameters)  # TODO
+            parameters = nn.init.xavier_uniform_(parameters)  # TODO
+            # parameters = nn.init.zeros_(parameters)  # TODO
 
             self.givensRotationParams.append(parameters)
 
@@ -120,11 +121,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         return givensAngles, scalingFactors
 
     def getNumFreeParams(self, layerInd):
-        # Get the angular thresholds.
         angularThresholdMin = modelConstants.userInputParams['angularThresholdMin'] * torch.pi / 180  # Convert to radians
-        angularThresholdMax = modelConstants.userInputParams['angularThresholdMax'] * torch.pi / 180  # Convert to radians
-
-        # Apply the thresholding.
         angularMask = angularThresholdMin <= self.getGivensAngles(layerInd).abs()
         numSignalParameters = angularMask.sum(dim=-1)  # Dim: numSignals
         # angularMask: numSignals, numFreeParams

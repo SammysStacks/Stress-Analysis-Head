@@ -110,8 +110,8 @@ class generalVisualizations(globalPlottingProtocols):
         plt.tight_layout()
 
         # Save the figure is desired.
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{emotionName} epochs{epoch}.pdf", baseSaveFigureName=f"{emotionName}.pdf")
-        else: self.clearFigure(fig=None, legend=None, showPlot=True)
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{emotionName} epochs{epoch}.pdf", baseSaveFigureName=f"{emotionName}.pdf", showPlot=not self.hpcFlag)
+        else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
     def plotTrainingLosses(self, trainingLosses, testingLosses, lossLabels, saveFigureLocation="", plotTitle="Model Convergence Loss", logY=True):
         # Assert the validity of the input data.
@@ -161,8 +161,8 @@ class generalVisualizations(globalPlottingProtocols):
         plt.legend(loc="upper right", bbox_to_anchor=(1.35, 1), borderaxespad=0)
 
         # Save the figure if desired.
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(trainingLosses[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
-        else: self.clearFigure(fig=None, legend=None, showPlot=True)
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(trainingLosses[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", showPlot=not self.hpcFlag)
+        else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
     def plotActivationFlowCompressed(self, activationParamsPaths, moduleNames, modelLabels, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
         activationParamsPaths = np.asarray(activationParamsPaths)
@@ -206,8 +206,8 @@ class generalVisualizations(globalPlottingProtocols):
         plt.tight_layout()
 
         # Save the figure if desired.
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle}.pdf")
-        else: self.clearFigure(fig=None, legend=None, showPlot=True)
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", showPlot=not self.hpcFlag)
+        else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
     def plotActivationFlow(self, activationParamsPaths, moduleNames, modelLabels, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
         activationParamsPaths = np.asarray(activationParamsPaths)
@@ -260,7 +260,7 @@ class generalVisualizations(globalPlottingProtocols):
 
             # Save the figure if desired.
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle} {paramName}.pdf", clearFigure=True, showPlot=False)
-            else: self.clearFigure(fig=None, legend=None, showPlot=True)
+            else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
     def plotFreeParamFlow(self, numFreeModelParams, maxFreeParamsPath, fullView, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
         # scalingFactorsPaths: numModels, numEpochs, numModuleLayers, *numSignals*, numParams=1
@@ -317,8 +317,8 @@ class generalVisualizations(globalPlottingProtocols):
             plt.tight_layout()
 
             # Save the figure if desired.
-            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle} {paramName}.pdf")
-            else: self.clearFigure(fig=None, legend=None, showPlot=True)
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle} {paramName}.pdf", showPlot=not self.hpcFlag)
+            else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
     def plotScaleFactorFlow(self, scalingFactorsPaths, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
         # scalingFactorsPaths: numModels, numEpochs, numModuleLayers, *numSignals*, numParams=1
@@ -370,8 +370,8 @@ class generalVisualizations(globalPlottingProtocols):
             plt.tight_layout()
 
             # Save the figure if desired.
-            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle} {paramName}.pdf")
-            else: self.clearFigure(fig=None, legend=None, showPlot=True)
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle} {paramName}.pdf", showPlot=not self.hpcFlag)
+            else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
     def plotGivensAnglesFlow(self, givensAnglesFeaturesPaths, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
         # givensAnglesFeaturesPaths: numModels, numEpochs, numModuleLayers, numFeatures=5, numFeatureValues*
@@ -425,5 +425,5 @@ class generalVisualizations(globalPlottingProtocols):
             plt.tight_layout()
 
             # Save the figure if desired.
-            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle} {paramName}.pdf")
-            else: self.clearFigure(fig=None, legend=None, showPlot=True)
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle} {paramName}.pdf", showPlot=not self.hpcFlag)
+            else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
