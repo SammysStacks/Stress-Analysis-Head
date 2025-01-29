@@ -160,8 +160,8 @@ class reversibleConvolutionLayer(reversibleInterface):
 
             # Apply the thresholding.
             if applyMinThresholding: self.givensRotationParams[layerInd][givensAngles.abs() < angularThresholdMin] = 0
-            self.givensRotationParams[layerInd][givensAngles < -angularThresholdMax] = -angularThresholdMax
-            self.givensRotationParams[layerInd][angularThresholdMax < givensAngles] = angularThresholdMax
+            self.givensRotationParams[layerInd][givensAngles <= -angularThresholdMax] = -angularThresholdMax
+            self.givensRotationParams[layerInd][angularThresholdMax <= givensAngles] = angularThresholdMax
 
     def printParams(self):
         # Count the trainable parameters.
