@@ -264,7 +264,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         else: scaleFactor = 1
 
         # Create a figure and axes array
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=True)  # squeeze=False ensures axes is 2D
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey='col')  # squeeze=False ensures axes is 2D
         numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
         units = "degrees" if degreesFlag else "radians"
         degrees = (180 if degreesFlag else math.pi) / 2
@@ -316,6 +316,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
         plt.xlim((-degrees, degrees))
+        plt.ylim((0, 0.25))
         # Access and modify patches correctly
         for histogramPlot in histogramPlots:  # Access histograms
             for bar_container in histogramPlot[2]:  # Access BarContainer objects
