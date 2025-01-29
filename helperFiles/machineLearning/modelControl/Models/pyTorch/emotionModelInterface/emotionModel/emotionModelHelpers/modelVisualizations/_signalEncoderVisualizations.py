@@ -269,7 +269,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         units = "degrees" if degreesFlag else "radians"
         degrees = (180 if degreesFlag else math.pi) / 2
         bins = np.arange(-degrees, degrees + 1, 1)
-        plt.ylim((0, 1))
+        plt.ylim((0, 0.5))
 
         # Get the angular thresholds.
         angularThresholdMin = modelConstants.userInputParams['angularThresholdMin']
@@ -288,8 +288,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
             # Plot training eigenvalue angles
             histograms = scaleFactor * np.asarray(givensAnglesPath[layerInd][signalInd:signalInd + len(self.darkColors)]).T  # histograms: numAngles, numSignals=6
-            smallAngles = histograms.copy(); smallAngles[angularThresholdMin <= histograms] = np.nan
-            largeAngles = histograms.copy(); largeAngles[histograms < angularThresholdMin] = np.nan
+            smallAngles = histograms.copy(); smallAngles[angularThresholdMin <= np.abs(histograms)] = np.nan
+            largeAngles = histograms.copy(); largeAngles[np.abs(histograms) < angularThresholdMin] = np.nan
 
             # Plot the histograms.
             histogramPlots.append(ax.hist(smallAngles, bins=bins, color=self.darkColors[0:len(histograms[0])], alpha=0.5, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='left', cumulative=False))

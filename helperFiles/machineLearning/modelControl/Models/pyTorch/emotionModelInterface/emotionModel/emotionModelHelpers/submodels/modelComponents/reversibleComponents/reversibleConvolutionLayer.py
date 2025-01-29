@@ -42,7 +42,7 @@ class reversibleConvolutionLayer(reversibleInterface):
             parameters = nn.Parameter(torch.randn(self.numSignals, self.numParams or 1, dtype=torch.float64))
             parameters = nn.init.kaiming_uniform_(parameters)  # TODO
             parameters = nn.init.xavier_uniform_(parameters)  # TODO
-            # parameters = nn.init.zeros_(parameters)  # TODO
+            parameters = nn.init.zeros_(parameters)  # TODO
 
             self.givensRotationParams.append(parameters)
 

@@ -57,13 +57,13 @@ if __name__ == "__main__":
 
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--initialProfileAmp', type=float, default=1e-3, help='The limits for profile initialization. Should be near zero.')
-    parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model: [1, 2]')
-    parser.add_argument('--numSharedEncoderLayers', type=int, default=6, help='The number of layers in the model: [2, 8]')
-    parser.add_argument('--angularThresholdMin', type=float, default=3, help='The minimum rotational threshold in degrees.')
-    parser.add_argument('--angularThresholdMax', type=float, default=45, help='The minimum rotational threshold in degrees.')
+    parser.add_argument('--numSpecificEncoderLayers', type=int, default=2, help='The number of layers in the model: [1, 2]')
+    parser.add_argument('--numSharedEncoderLayers', type=int, default=4, help='The number of layers in the model: [2, 8]')
+    parser.add_argument('--angularThresholdMin', type=float, default=4, help='The minimum rotational threshold in degrees.')
+    parser.add_argument('--angularThresholdMax', type=float, default=30, help='The minimum rotational threshold in degrees.')
     parser.add_argument('--cullingEpoch', type=int, default=25, help='The number of epochs before culling null weights.')
     parser.add_argument('--profileDimension', type=int, default=128, help='The number of profile weights: [32, 256]')
-    parser.add_argument('--numProfileShots', type=int, default=24, help='The epochs for profile training: [16, 32]')
+    parser.add_argument('--numProfileShots', type=int, default=16, help='The epochs for profile training: [16, 32]')
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions).')
@@ -81,7 +81,7 @@ if __name__ == "__main__":
 
     # Signal encoder weight decays.
     parser.add_argument('--profileWD', type=float, default=0, help='The learning rate of the general model.')
-    parser.add_argument('--reversibleWD', type=float, default=1e-2, help='The learning rate of the general model.')
+    parser.add_argument('--reversibleWD', type=float, default=1e-4, help='The learning rate of the general model.')
     parser.add_argument('--physGenWD', type=float, default=0, help='The learning rate of the general model.')
 
     # Add arguments for the emotion and activity architecture.
@@ -132,6 +132,8 @@ if __name__ == "__main__":
     for epoch in range(1, numEpochs + 1):
         print(f"\nEpoch: {epoch}")
         startEpochTime = time.time()
+
+        numEpoch_toPlot = 50 # TODO
 
         # Get the saving information.
         saveFullModel, plotSteps = modelParameters.getEpochParameters(epoch, numEpoch_toSaveFull, numEpoch_toPlot)
