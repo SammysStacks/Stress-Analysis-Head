@@ -8,8 +8,8 @@ beta2s_arr=('0.8')
 
 # Weight decay parameters.
 wds_profile=('0')  # 1e-6 ==> x <== 1e-3
+wds_reversible=('0' '1e-2')  # 1e-4 == x <= 1e-3
 wds_profileGen=('0')  # 1e-5 == x <= 1e-4
-wds_reversible=('0')  # 1e-4 == x <= 1e-3
 
 # Learning parameters.
 lrs_profile=('0.067')  # 0.005 <= x <= 0.05
@@ -18,8 +18,8 @@ lrs_profileGen=('1e-4') # # 5e-5 <= x == 1e-4;
 
 # Known interesting parameters: 112
 angularThresholdMins=(0 1 2)  # 3
-angularThresholdMaxs=(1 3 5 10 20 30 45)  # 7
-cullingEpochs=(5 10 25 50)  # 4
+angularThresholdMaxs=(1 3 5 10 20)  # 7
+cullingEpochs=(5 50)  # 4
 
 # Known interesting parameters: 63
 numSharedEncoderLayers_arr=(0 1 2 3 4 5 6 7 8)  # 9
@@ -61,8 +61,8 @@ waveletTypes_arr=(
 #cullingEpochs=(50)
 
 # Binary reference states.
-numSpecificEncoderLayers_arr=(1)
-numSharedEncoderLayers_arr=(4)
+numSpecificEncoderLayers_arr=(1 2)
+numSharedEncoderLayers_arr=(4 8)
 
 # Binary reference states.
 encodedDimensions_arr=(128)
@@ -71,6 +71,7 @@ profileParams=(128)
 # Reference states.
 waveletTypes_arr=('bior3.1')
 numProfileShots_arr=(24)
+numProfileShots_arr=(16)
 
 for angularThresholdMin in "${angularThresholdMins[@]}"
 do

@@ -57,8 +57,8 @@ if __name__ == "__main__":
 
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--initialProfileAmp', type=float, default=1e-3, help='The limits for profile initialization. Should be near zero.')
-    parser.add_argument('--numSpecificEncoderLayers', type=int, default=2, help='The number of layers in the model: [1, 2]')
-    parser.add_argument('--numSharedEncoderLayers', type=int, default=6, help='The number of layers in the model: [2, 8]')
+    parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model: [1, 2]')
+    parser.add_argument('--numSharedEncoderLayers', type=int, default=4, help='The number of layers in the model: [2, 8]')
     parser.add_argument('--angularThresholdMin', type=float, default=1, help='The minimum rotational threshold in degrees.')
     parser.add_argument('--angularThresholdMax', type=float, default=30, help='The minimum rotational threshold in degrees.')
     parser.add_argument('--cullingEpoch', type=int, default=10, help='The number of epochs before culling null weights.')
@@ -81,7 +81,7 @@ if __name__ == "__main__":
 
     # Signal encoder weight decays.
     parser.add_argument('--profileWD', type=float, default=0, help='The learning rate of the general model.')
-    parser.add_argument('--reversibleWD', type=float, default=1e-4, help='The learning rate of the general model.')
+    parser.add_argument('--reversibleWD', type=float, default=0, help='The learning rate of the general model.')
     parser.add_argument('--physGenWD', type=float, default=0, help='The learning rate of the general model.')
 
     # Add arguments for the emotion and activity architecture.
