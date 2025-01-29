@@ -239,7 +239,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.add_patch(arc)
 
             # 1. Define the shaded region in the bounded range [-minAngle, minAngle]
-            bounded_wedge = Wedge(center=center, r=radius, theta1=-angularThresholdMin, theta2=angularThresholdMin, color=self.blackColor, alpha=0.1, zorder=10)
+            bounded_wedge = Wedge(center=center, r=radius, theta1=-angularThresholdMin, theta2=angularThresholdMin, color=self.blackColor, alpha=0.1, zorder=0)
             lower_wedge = Wedge(center=center, r=radius, theta1=-90, theta2=-angularThresholdMax, color=self.blackColor, alpha=1, zorder=0)
             upper_wedge = Wedge(center=center, r=radius, theta1=angularThresholdMax, theta2=90, color=self.blackColor, alpha=1, zorder=0)
             ax.add_patch(upper_wedge); ax.add_patch(bounded_wedge); ax.add_patch(lower_wedge)
@@ -287,7 +287,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax = axes[rowInd, colInd]
 
             # Plot training eigenvalue angles
-            histograms = scaleFactor * np.asarray(givensAnglesPath[layerInd][signalInd:signalInd + len(self.darkColors)]).T  # histograms: numAngles, numSignals=6
+            histograms = scaleFactor * givensAnglesPath[layerInd][signalInd:signalInd + len(self.darkColors)].T  # histograms: numAngles, numSignals=6
             smallAngles = histograms.copy(); smallAngles[angularThresholdMin <= np.abs(histograms)] = np.nan
             largeAngles = histograms.copy(); largeAngles[np.abs(histograms) < angularThresholdMin] = np.nan
 
@@ -299,7 +299,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.set_title(f"{reversibleModuleNames[layerInd]}")
 
             # Shade the angular thresholds
-            ax.fill_betweenx(ax.get_ylim(), -angularThresholdMin, angularThresholdMin, color=self.blackColor, alpha=0.1, zorder=10)
+            ax.fill_betweenx(ax.get_ylim(), -angularThresholdMin, angularThresholdMin, color=self.blackColor, alpha=0.1, zorder=0)
             ax.axvspan(-degrees, -angularThresholdMax, color=self.blackColor, alpha=1, zorder=0)
             ax.axvspan(angularThresholdMax, degrees, color=self.blackColor, alpha=1, zorder=0)
         plt.xlim((-angularThresholdMax, angularThresholdMax))
@@ -363,7 +363,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.set_title(f"{reversibleModuleNames[layerInd]}")
 
             # Shade the angular thresholds
-            ax.fill_between(x=ax.get_xlim(), y1=-angularThresholdMin, y2=angularThresholdMin, color=self.blackColor, alpha=0.1, zorder=10)
+            ax.fill_between(x=ax.get_xlim(), y1=-angularThresholdMin, y2=angularThresholdMin, color=self.blackColor, alpha=0.1, zorder=0)
             ax.axhspan(-degrees, -angularThresholdMax, color=self.blackColor, alpha=1, zorder=0)
             ax.axhspan(angularThresholdMax, degrees, color=self.blackColor, alpha=1, zorder=0)
 
