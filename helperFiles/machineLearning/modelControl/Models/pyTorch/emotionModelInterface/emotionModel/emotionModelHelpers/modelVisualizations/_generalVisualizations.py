@@ -224,6 +224,7 @@ class generalVisualizations(globalPlottingProtocols):
             fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=True)
             numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
             paramName = paramNames[paramInd]
+            plt.xlim((0, numEpochs + 1))
 
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
@@ -252,7 +253,6 @@ class generalVisualizations(globalPlottingProtocols):
                 elif 'linearity' in paramName.lower(): ax.set_ylim((0, 10.1))
                 elif 'convergent' in paramName.lower(): ax.set_ylim((0, 2.1))
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5)
-                ax.set_xlim((0, numEpochs + 1))
 
             # Label the plot.
             plt.suptitle(f"{plotTitle}: {paramName}\n")
@@ -277,6 +277,7 @@ class generalVisualizations(globalPlottingProtocols):
             fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey='col' if fullView else False)
             numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
             paramName = paramNames[paramInd]
+            plt.xlim((0, numEpochs + 1))
 
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
@@ -309,7 +310,6 @@ class generalVisualizations(globalPlottingProtocols):
                     if fullView: ax.hlines(y=sequenceLength, xmin=0, xmax=numEpochs + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
                 ax.set_xlabel("Training Epoch")
                 ax.set_title(moduleName)
-                ax.set_xlim((0, numEpochs + 1))
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
             # Label the plot.
