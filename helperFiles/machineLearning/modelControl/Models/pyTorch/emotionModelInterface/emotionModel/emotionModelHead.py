@@ -244,6 +244,7 @@ class emotionModelHead(nn.Module):
 
     def cullAngles(self, applyMinThresholding):
         for name, module in self.named_modules():
+            if 'shared' in name.lower(): continue
             if isinstance(module, reversibleConvolutionLayer):
                 module.angularThresholding(layerInd=0, applyMinThresholding=applyMinThresholding)
 
