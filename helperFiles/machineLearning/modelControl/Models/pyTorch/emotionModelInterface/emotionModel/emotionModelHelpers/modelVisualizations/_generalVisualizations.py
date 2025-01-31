@@ -278,6 +278,7 @@ class generalVisualizations(globalPlottingProtocols):
             numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
             paramName = paramNames[paramInd]
             plt.xlim((0, numEpochs + 1))
+            if fullView: plt.yscale('log')
 
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
