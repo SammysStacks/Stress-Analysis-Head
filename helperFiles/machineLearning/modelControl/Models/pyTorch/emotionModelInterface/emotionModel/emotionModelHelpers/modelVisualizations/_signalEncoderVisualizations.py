@@ -263,6 +263,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         nRows, nCols = self.getRowsCols(numModuleLayers=len(givensAnglesPath))
         if not degreesFlag: scaleFactor = 180 / math.pi; degreesFlag = True
         else: scaleFactor = 1
+        yMax = 0.67
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey='col')  # squeeze=False ensures axes is 2D
@@ -270,7 +271,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         units = "degrees" if degreesFlag else "radians"
         degrees = (180 if degreesFlag else math.pi) / 2
         bins = np.arange(-degrees, degrees + 1, 1)
-        plt.ylim((0, 0.5))
 
         # Get the angular thresholds.
         angularThresholdMin = modelConstants.userInputParams['angularThresholdMin']
@@ -289,7 +289,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
             # Plot training eigenvalue angles
             histograms = scaleFactor * givensAnglesPath[layerInd][signalInd:signalInd + len(self.darkColors) - 1].T  # histograms: numAngles, numSignals=6
-            histogramsABS = np.abs(histograms); numSignals = len(histograms[0])
+            histogramsABS = np.abs(histograms); numSignals = histograms.shape[1]
 
             # Split the histograms into small and large angles
             smallAngles = np.where(histogramsABS < angularThresholdMin, histograms, np.nan)
@@ -301,9 +301,11 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
             # Customize subplot title and axes
             ax.set_title(f"{reversibleModuleNames[layerInd]}")
+            ax.set_ylim((0, yMax))
 
+        for ax in axes.flat:
             # Shade the angular thresholds
-            ax.fill_betweenx(y=(0, 1), x1=-angularThresholdMin, x2=angularThresholdMin, color=self.blackColor, alpha=0.1, zorder=0)
+            ax.fill_betweenx(y=(0, yMax), x1=-angularThresholdMin, x2=angularThresholdMin, color=self.blackColor, alpha=0.1, zorder=0)
             ax.axvspan(-degrees, -angularThresholdMax, color=self.blackColor, alpha=1, zorder=0)
             ax.axvspan(angularThresholdMax, degrees, color=self.blackColor, alpha=1, zorder=0)
         plt.xlim((-angularThresholdMax, angularThresholdMax))
@@ -320,7 +322,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
         plt.xlim((-degrees, degrees))
-        plt.ylim((0, 0.25))
         # Access and modify patches correctly
         for histogramPlot in histogramPlots:  # Access histograms
             for bar_container in histogramPlot[2]:  # Access BarContainer objects

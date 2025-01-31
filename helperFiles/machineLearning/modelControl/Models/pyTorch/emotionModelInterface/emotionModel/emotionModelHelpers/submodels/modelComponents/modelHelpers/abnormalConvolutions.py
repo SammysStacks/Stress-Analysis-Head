@@ -82,10 +82,11 @@ class subPixelUpsampling1D(nn.Module):
     def forward(self, x):
         batch_size, channels, width = x.size()
         new_channels = channels // self.upscale_factor
-        if channels % self.upscale_factor != 0: raise ValueError(f'The number of channels ({channels}) must be divisible by the upscale factor ({self.upscale_factor}).')
+        if channels % self.upscale_factor != 0:
+            raise ValueError(f'The number of channels ({channels}) must be divisible by the upscale factor ({self.upscale_factor}).')
 
-        # Perform the sub-pixel convolution.
-        x = x.contiguous().view(batch_size, new_channels, self.upscale_factor, width)
+        # Perform sub-pixel upsampling
+        x = x.view(batch_size, new_channels, self.upscale_factor, width)
         x = x.permute(0, 1, 3, 2).contiguous().view(batch_size, new_channels, width * self.upscale_factor)
 
         return x

@@ -20,7 +20,7 @@ class eegProtocol(globalProtocol):
         # High-pass filter parameters.
         self.stopband_edge = 1  # Common values for EEG are 1 Hz and 2 Hz. If you need to remove more noise, choose a higher stopband-edge frequency. If you need to preserve the signal more, choose a lower stopband-edge frequency.
         self.passband_ripple = 0.1  # Common values for EEG are 0.1 dB and 0.5 dB. If you need to remove more noise, choose a lower passband ripple. If you need to preserve the signal more, choose a higher passband ripple.
-        self.stopband_attenuation = 60  # Common values for EEG are 40 dB and 60 dB. If you need to remove more noise, choose a higher stopband attenuation. If you need to preserve the signal more, choose a lower stopband attenuation.
+        self.stopband_attenuation = 60  # Common values for EEG are 40 dB and 60 dB. If you need to remove more noise, choose higher stopband attenuation. If you need to preserve the signal more, choose lower stopband attenuation.
 
         # Reset analysis variables
         super().__init__("eeg", numPointsPerBatch, moveDataFinger, channelIndices, plottingClass, readData)

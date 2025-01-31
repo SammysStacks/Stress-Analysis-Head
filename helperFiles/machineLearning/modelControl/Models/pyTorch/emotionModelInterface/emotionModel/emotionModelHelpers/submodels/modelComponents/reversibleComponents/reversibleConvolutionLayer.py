@@ -40,7 +40,8 @@ class reversibleConvolutionLayer(reversibleInterface):
         for layerInd in range(self.numLayers):
             # Create the neural weights.
             parameters = nn.Parameter(torch.randn(self.numSignals, self.numParams or 1, dtype=torch.float64))
-            parameters = nn.init.kaiming_uniform_(parameters)  # TODO
+            # parameters = nn.init.kaiming_uniform_(parameters)  # TODO
+            parameters = nn.init.uniform_(parameters, a=-0.1, b=0.1)  # TODO
             # parameters = nn.init.zeros_(parameters)  # TODO
 
             self.givensRotationParams.append(parameters)
@@ -72,11 +73,12 @@ class reversibleConvolutionLayer(reversibleInterface):
     # ------------------- Rotation Methods ------------------- #
 
     def getExpA(self, layerInd, device):
-        A = self.getA(layerInd, device)  # Get the linear operator in the exponent.
-        if self.forwardDirection: A = -A  # Ensure the neural weights are symmetric.
+        # Get the linear operator in the exponent.
+        A = self.getA(layerInd, device)  # numSignals, sequenceLength, sequenceLength
 
         # Get the exponential of the linear operator.
         expA = A.matrix_exp()  # For orthogonal matrices: A.exp().inverse() = (-A).exp(); If A is Skewed Symmetric: A.exp().inverse() = A.exp().transpose()
+        if self.forwardDirection: expA = expA.transpose(-2, -1)  # Take the inverse of the exponential for the forward direction.
         return expA  # exp(A)
 
     def getA(self, layerInd, device):
@@ -176,9 +178,9 @@ if __name__ == "__main__":
 
     try:
         # for layers, sequenceLength2 in [(2, 256), (2, 128), (2, 64), (2, 32), (2, 16), (2, 8), (2, 4), (2, 2)]:
-        for _layerInd, sequenceLength2 in [(1, 8)]:
+        for _layerInd, sequenceLength2 in [(1, 256), (1, 128)]:
             # General parameters.
-            _batchSize, _numSignals, _sequenceLength = 256, 256, sequenceLength2
+            _batchSize, _numSignals, _sequenceLength = 128, 128, sequenceLength2
             _activationMethod = 'reversibleLinearSoftSign'  # reversibleLinearSoftSign
             _numLayers = _layerInd
 

@@ -1,4 +1,5 @@
 import os
+import time
 
 import numpy as np
 import torch
@@ -51,36 +52,49 @@ class modelVisualizations(globalPlottingProtocols):
                 datasetNames = [modelPipeline.model.datasetName for modelPipeline in allModelPipelines]  # Dim: numModels
 
                 # Plot reconstruction loss for the signal encoder.
+                t1 = time.time()
                 self.generalViz.plotTrainingLosses(trainingLosses=[specificModel.trainingLosses_signalReconstruction for specificModel in specificModels],
                                                    testingLosses=[specificModel.testingLosses_signalReconstruction for specificModel in specificModels],
                                                    lossLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Convergence Losses")
+                t2 = time.time(); print(f"Time to plot training losses: {t2 - t1}"); t1 = time.time()
 
                 # Plot the losses during few-shot retraining the profile.
                 self.generalViz.plotTrainingLosses(trainingLosses=[np.nanmean(specificModel.profileModel.retrainingProfileLosses, axis=1) for specificModel in specificModels], testingLosses=None,
                                                    lossLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Profile Convergence Losses")
+                t2 = time.time(); print(f"Time to plot training losses: {t2 - t1}"); t1 = time.time()
 
                 freeParamInformation = np.asarray([modelPipeline.model.getFreeParamsFullPassPath()[1:] for modelPipeline in allModelPipelines])
                 moduleNames, maxFreeParamsPath = freeParamInformation[:, 0], freeParamInformation[:, 1].astype(int)  # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
                 numFreeModelParams = [specificModel.numFreeParams for specificModel in specificModels]  # numModels, numEpochs, numModuleLayers, numSignals, numParams=1
+                t1 = time.time()
                 self.generalViz.plotFreeParamFlow(numFreeModelParams, maxFreeParamsPath, fullView=True, paramNames=["Free Params"], moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Free Parameters Path")
+                t2 = time.time(); print(f"Time to plot the free parameters: {t2 - t1}"); t1 = time.time()
                 self.generalViz.plotFreeParamFlow(numFreeModelParams, maxFreeParamsPath, fullView=False, paramNames=["Free Params"], moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Free Parameters Path Zoomed")
+                t2 = time.time(); print(f"Time to plot the free parameters: {t2 - t1}"); t1 = time.time()
 
                 # Plot the activation parameters for the signal encoder.
                 paramNames = ["Infinite Bound", "Linearity Factor", "Convergent Point"]
                 activationParamsPaths = np.asarray([specificModel.activationParamsPath for specificModel in specificModels])  # numModels, numEpochs, numActivations, numActivationParams=3
+                t1 = time.time()
                 self.generalViz.plotActivationFlowCompressed(activationParamsPaths=activationParamsPaths, moduleNames=moduleNames, modelLabels=datasetNames, paramNames=paramNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Activation Parameter Path")
+                t2 = time.time(); print(f"Time to plot activation parameters: {t2 - t1}"); t1 = time.time()
                 self.generalViz.plotActivationFlow(activationParamsPaths=activationParamsPaths, moduleNames=moduleNames, modelLabels=datasetNames, paramNames=paramNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Activation Parameter Path")
+                t2 = time.time(); print(f"Time to plot activation parameters: {t2 - t1}"); t1 = time.time()
 
                 # Plot the angle features for the signal encoder.
                 hasSpecificLayers = len(allModelPipelines[0].model.specificSignalEncoderModel.processingLayers) != 0
                 if hasSpecificLayers: givensAnglesFeatureNames = allModelPipelines[0].model.specificSignalEncoderModel.processingLayers[0].getFeatureParams(layerInd=0)[0]
                 else: givensAnglesFeatureNames = allModelPipelines[0].model.sharedSignalEncoderModel.processingLayers[0].getFeatureParams(layerInd=0)[0]
                 givensAnglesFeaturesPaths = [specificModel.givensAnglesFeaturesPath for specificModel in specificModels]  # numModels, numEpochs, numModuleLayers, numFeatures, numValues
+                t1 = time.time()
                 self.generalViz.plotGivensAnglesFlow(givensAnglesFeaturesPaths=givensAnglesFeaturesPaths, paramNames=givensAnglesFeatureNames, moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Angular Features Path")
+                t2 = time.time(); print(f"Time to plot givens angles: {t2 - t1}"); t1 = time.time()
 
                 # Plot the scaling factors for the signal encoder.
                 scalingFactorsPaths = [specificModel.scalingFactorsPath for specificModel in specificModels]  # numModels, numEpochs, numModuleLayers, numSignals, numParams=1
+                t1 = time.time()
                 self.generalViz.plotScaleFactorFlow(scalingFactorsPaths, paramNames=["Scalar"], moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Scalar Path")
+                t2 = time.time(); print(f"Time to plot scaling factors: {t2 - t1}"); t1 = time.time()
 
     def plotAllTrainingEvents(self, submodel, modelPipeline, lossDataLoader, trainingDate, currentEpoch):
         self.accelerator.print(f"\nPlotting results for the {modelPipeline.model.datasetName} model")
@@ -133,7 +147,6 @@ class modelVisualizations(globalPlottingProtocols):
 
                 # ------------------- Signal Encoding Plots -------------------- #
                 globalPlottingProtocols.clearFigure(fig=None, legend=None, showPlot=False)
-                import time
 
                 if submodel == modelConstants.signalEncoderModel:
                     # Plot information collected across profile training.

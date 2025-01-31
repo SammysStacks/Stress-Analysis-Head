@@ -125,7 +125,7 @@ class generalVisualizations(globalPlottingProtocols):
             # modelTrainingLosses: numEpochs, numSignals
 
             # Calculate the average and standard deviation of the training losses.
-            N = np.sum(~np.isnan(modelTrainingLosses), axis=-1)
+            N = np.count_nonzero(~np.isnan(modelTrainingLosses), axis=1)
             trainingStandardError = np.nanstd(modelTrainingLosses, ddof=1, axis=-1) / np.sqrt(N)
             trainingLoss = np.nanmean(modelTrainingLosses, axis=-1)
 
@@ -136,7 +136,7 @@ class generalVisualizations(globalPlottingProtocols):
             if testingLosses is not None:
                 modelTestingLosses = np.asarray(testingLosses[modelInd])
                 # Calculate the average and standard deviation of the testing losses.
-                N = np.sum(~np.isnan(modelTestingLosses), axis=-1)
+                N = np.count_nonzero(~np.isnan(modelTestingLosses), axis=-1)
                 testingStd = np.nanstd(modelTestingLosses, ddof=1, axis=-1) / np.sqrt(N)
                 testingLoss = np.nanmean(modelTestingLosses, axis=-1)
                 modelTestingLosses[np.isnan(modelTestingLosses)] = None
@@ -299,7 +299,7 @@ class generalVisualizations(globalPlottingProtocols):
                     plottingParams = np.asarray(plottingParams)
 
                     # Calculate the average and standard deviation of the training losses.
-                    N = np.sum(~np.isnan(plottingParams), axis=-1)
+                    N = np.count_nonzero(~np.isnan(plottingParams), axis=-1)
                     standardError = np.nanstd(plottingParams, ddof=1, axis=-1) / np.sqrt(N)
                     meanValues = np.nanmean(plottingParams, axis=-1)
 
@@ -352,7 +352,7 @@ class generalVisualizations(globalPlottingProtocols):
                     plottingParams = np.asarray(plottingParams)
 
                     # Calculate the average and standard deviation of the training losses.
-                    N = np.sum(~np.isnan(plottingParams), axis=-1)
+                    N = np.count_nonzero(~np.isnan(plottingParams), axis=-1)
                     standardError = np.nanstd(plottingParams, ddof=1, axis=-1) / np.sqrt(N)
                     meanValues = np.nanmean(plottingParams, axis=-1)
 
@@ -387,6 +387,7 @@ class generalVisualizations(globalPlottingProtocols):
             numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
             paramName = paramNames[paramInd]
 
+            plt.suptitle(f"{plotTitle}: {paramName}\n")
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
 
@@ -402,13 +403,12 @@ class generalVisualizations(globalPlottingProtocols):
                     elif "shared" in moduleName: lineColor = self.blackColor
                     else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
 
-                    plottingParams = []
-                    for epochInd in range(numEpochs):
-                        plottingParams.append(givensAnglesFeaturesPaths[modelInd][epochInd][layerInd][paramInd])
-                    plottingParams = np.asarray(plottingParams)
+                    plottingParams = np.zeros((numEpochs, len(givensAnglesFeaturesPaths[modelInd][0][layerInd][paramInd])))
+                    for epochInd in range(numEpochs): plottingParams[epochInd, :] = givensAnglesFeaturesPaths[modelInd][epochInd][layerInd][paramInd]
+                    # plottingParams: numEpochs, numFeatureValues
 
                     # Calculate the average and standard deviation of the training losses.
-                    N = np.sum(~np.isnan(plottingParams), axis=-1)
+                    N = np.count_nonzero(~np.isnan(plottingParams), axis=1)
                     standardError = np.nanstd(plottingParams, ddof=1, axis=-1) / np.sqrt(N)
                     meanValues = np.nanmean(plottingParams, axis=-1)
 
@@ -421,7 +421,6 @@ class generalVisualizations(globalPlottingProtocols):
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
             # Label the plot.
-            plt.suptitle(f"{plotTitle}: {paramName}\n")
             plt.tight_layout()
 
             # Save the figure if desired.
