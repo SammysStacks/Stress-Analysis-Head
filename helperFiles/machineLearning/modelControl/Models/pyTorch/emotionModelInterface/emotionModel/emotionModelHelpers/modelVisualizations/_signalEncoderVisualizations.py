@@ -269,7 +269,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey='col')  # squeeze=False ensures axes is 2D
         numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
         units = "degrees" if degreesFlag else "radians"
-        degrees = (180 if degreesFlag else math.pi) / 2
+        degrees = (180 if degreesFlag else math.pi) / 4
         bins = np.arange(-degrees, degrees + 1, 1)
 
         # Get the angular thresholds.
@@ -344,7 +344,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex='col', sharey=True)  # squeeze=False ensures axes is 2D
         numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
         units = "degrees" if degreesFlag else "radians"
-        degrees = (180 if degreesFlag else math.pi) / 2
+        degrees = (180 if degreesFlag else math.pi) / 4
         plt.ylim((-degrees, degrees))
 
         # Get the angular thresholds.
