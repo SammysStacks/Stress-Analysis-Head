@@ -133,7 +133,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
             # Plot the signal reconstruction.
-            plt.plot(times, reconstructedData - data, 'o', color=self.darkColors[0], markersize=2, alpha=0.75, label="Signal Reconstruction Error")
+            plt.plot(times, reconstructedData - data, 'o', color=self.darkColors[0], markersize=2, alpha=0.9, label="Signal Reconstruction Error")
             plt.axhline(y=0, color=self.blackColor, linewidth=0.5, alpha=0.25)
 
             # Plotting aesthetics.
@@ -477,14 +477,15 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         )
 
         # View and perspective adjustments
-        ax.view_init(elev=35, azim=140)  # Adjust for better visibility
-        ax.dist = 8  # Adjusts perspective depth
+        ax.view_init(elev=25, azim=135)
+        ax.dist = 4  # Adjusts perspective depth
 
         # Axis labels and title
         ax.set_title(plotTitle, fontsize=16, weight='bold', pad=20)
         ax.set_xlabel("Time (Sec)", fontsize=12, labelpad=10)
         ax.set_ylabel("Model Layer", fontsize=12, labelpad=10)
         ax.set_zlabel("Signal value (AU)", fontsize=12, labelpad=10)
+        ax.set_zlim(-1.5, 1.5)
 
         # Make the aspect ratio look nicer in 3D
         ax.set_box_aspect([2, 1, 1])

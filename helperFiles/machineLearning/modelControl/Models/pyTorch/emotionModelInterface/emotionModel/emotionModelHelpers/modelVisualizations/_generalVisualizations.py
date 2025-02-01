@@ -203,7 +203,7 @@ class generalVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", showPlot=not self.hpcFlag)
         else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
-    def plotActivationFlow(self, activationParamsPaths, moduleNames, modelLabels, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
+    def plotActivationFlow(self, activationParamsPaths, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
         activationParamsPaths = np.asarray(activationParamsPaths)
         if len(activationParamsPaths.shape) == 2: return "No data to plot."
 
@@ -369,7 +369,7 @@ class generalVisualizations(globalPlottingProtocols):
                         meanValues = np.nanmean(plottingParams, axis=-1)
 
                         ax.errorbar(x=x, y=meanValues, yerr=standardError, color=self.darkColors[modelInd], linewidth=1)
-                        ax.plot(x, plottingParams,color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
+                        ax.plot(x, plottingParams, color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
                     else:
                         alpha = numProcessing * nCols / numModuleLayers
                         ax.plot(x, plottingParams, color=self.darkColors[2], linewidth=1, alpha=0.6 * alpha)
