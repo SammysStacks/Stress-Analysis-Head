@@ -92,7 +92,7 @@ class trainingPlots(globalPlottingProtocols):
 
             # Label the plot.
             plt.legend(loc="upper right")
-            plt.xlabel("Training Epoch")
+            plt.xlabel("Training epoch")
             plt.ylabel("Loss Values")
             plt.title(f"{plotTitle}, timeWindow={timeWindow}s")
             plt.yscale('log')
@@ -112,7 +112,7 @@ class trainingPlots(globalPlottingProtocols):
 
             # Label the plot.
             plt.legend(loc="upper right")
-            plt.xlabel("Training Epoch")
+            plt.xlabel("Training epoch")
             plt.ylabel("Loss Values")
             plt.title(f"{plotTitle}, dataset={metadatasetName}")
             plt.yscale('log')
@@ -157,7 +157,7 @@ class trainingPlots(globalPlottingProtocols):
 
             # Label the plot.
             plt.legend(loc="upper right")
-            plt.xlabel("Training Epoch")
+            plt.xlabel("Training epoch")
             plt.ylabel("Loss Values")
             plt.title(f"{plotTitle}, timeWindow={timeWindow}s")
             plt.yscale('log')
@@ -177,7 +177,7 @@ class trainingPlots(globalPlottingProtocols):
 
             # Label the plot.
             # no legend for now
-            plt.xlabel("Training Epoch")
+            plt.xlabel("Training epoch")
             plt.ylabel("Loss Values")
             plt.title(f"{plotTitle}, dataset={metadatasetName}")
             plt.yscale('log')
