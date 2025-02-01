@@ -15,8 +15,8 @@ class globalPlottingProtocols:
         plt.ion()
 
         # Specify the color order.
-        self.lightColors = ["#F17FB1", "#5DCBF2", "#B497C9", "#90D6AD", "#FFC162", "#231F20"]  # Red, Blue, Purple, Green, Orange, Grey
-        self.darkColors = ["#F3757A", "#489AD4", "#7E71B4", "#50BC84", "#F9A770", "#4A4546"]  # Red, Blue, Purple, Green, Orange, Grey
+        self.lightColors = ["#F17FB1", "#5DCBF2", "#B497C9", "#90D6AD", "#FFC162", '#6f4a1f', "#231F20"]  # Red, Blue, Purple, Green, Orange, Brown, Grey
+        self.darkColors = ["#F3757A", "#489AD4", "#7E71B4", "#50BC84", "#F9A770", '#4c3007', "#4A4546"]  # Red, Blue, Purple, Green, Orange, Brown, Grey
         self.blackColor = "#231F20"
 
         # Set the saving folder
@@ -32,6 +32,15 @@ class globalPlottingProtocols:
         if baseSavingDataFolder:
             self._createFolder(self.baseSavingDataFolder)
             if stringID: self._createFolder(self.saveDataFolder)
+
+    @staticmethod
+    def getRowsCols(numModuleLayers, combineSharedLayers=False):
+        numSpecificEncoderLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
+        numSharedEncoderLayers = modelConstants.userInputParams['numSharedEncoderLayers']
+        nCols = numModuleLayers // (numSpecificEncoderLayers + numSharedEncoderLayers)
+        nRows = numSpecificEncoderLayers + (1 if combineSharedLayers else numSharedEncoderLayers)
+
+        return nRows, nCols
 
     @staticmethod
     def _createFolder(filePath):

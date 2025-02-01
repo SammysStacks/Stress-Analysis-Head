@@ -39,16 +39,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Create the colormap
         self.custom_cmap = LinearSegmentedColormap.from_list("red_transparent_blue", colors)
 
-    @staticmethod
-    def getRowsCols(numModuleLayers):
-        numSpecificEncoderLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
-        numSharedEncoderLayers = modelConstants.userInputParams['numSharedEncoderLayers']
-        nCols = numModuleLayers // (numSpecificEncoderLayers + numSharedEncoderLayers)
-        nRows = numSpecificEncoderLayers + numSharedEncoderLayers
-        assert nCols * nRows == numModuleLayers, f"{nCols} * {nRows} != {numModuleLayers}"
-
-        return nRows, nCols
-
     # --------------------- Visualize Model Parameters --------------------- #
 
     def plotProfilePath(self, relativeTimes, healthProfile, retrainingProfilePath, epoch, saveFigureLocation="signalEncoding/", plotTitle="Health Profile State Path"):

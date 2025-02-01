@@ -3,7 +3,6 @@ import math
 import torch
 import torch.nn as nn
 
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
 
 
@@ -34,7 +33,7 @@ def getActivationMethod(activationMethod):
 
 
 class reversibleLinearSoftSign(reversibleInterface):
-    def __init__(self, infiniteBound=0.5, linearity=1):
+    def __init__(self):
         super(reversibleLinearSoftSign, self).__init__()
         self.infiniteBoundParam = nn.Parameter(torch.zeros(1))  # The infinite bound controller.
         self.convergencePointParam = nn.Parameter(torch.zeros(1))  # The infinite bound controller.
@@ -51,7 +50,7 @@ class reversibleLinearSoftSign(reversibleInterface):
 
     def forward(self, x, linearModel, forwardFirst=True):
         # Set the parameters for the forward and inverse passes.
-        self.infiniteBound, self.linearity = self.getActivationParams()[0:2]
+        self.infiniteBound, self.linearity, _ = self.getActivationParams()
 
         # forwardPass: Increase the signal below inversion point; decrease above.
         x = self.forwardPass(x) if forwardFirst else self.inversePass(x)

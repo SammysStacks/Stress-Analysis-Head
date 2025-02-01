@@ -1,4 +1,5 @@
 # General
+import math
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -7,7 +8,6 @@ from torchviz import make_dot
 
 # Visualization protocols
 from helperFiles.globalPlottingProtocols import globalPlottingProtocols
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
 
 class generalVisualizations(globalPlottingProtocols):
@@ -15,16 +15,6 @@ class generalVisualizations(globalPlottingProtocols):
     def __init__(self, baseSavingFolder, stringID, datasetName):
         super(generalVisualizations, self).__init__()
         self.setSavingFolder(baseSavingFolder, stringID, datasetName)
-
-    @staticmethod
-    def getRowsCols(numModuleLayers):
-        numSpecificEncoderLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
-        numSharedEncoderLayers = modelConstants.userInputParams['numSharedEncoderLayers']
-        nCols = numModuleLayers // (numSpecificEncoderLayers + numSharedEncoderLayers)
-        nRows = numSpecificEncoderLayers + numSharedEncoderLayers
-        assert nCols * nRows == numModuleLayers, f"{nCols} * {nRows} != {numModuleLayers}"
-
-        return nRows, nCols
         
     # ---------------------------------------------------------------------- #
     # --------------------- Visualize Model Parameters --------------------- #
@@ -215,7 +205,7 @@ class generalVisualizations(globalPlottingProtocols):
 
         # activationParamsPaths: numModels, numEpochs, numModuleLayers, numParams
         numModels, numEpochs, numModuleLayers, numActivationParams = activationParamsPaths.shape
-        nRows, nCols = self.getRowsCols(numModuleLayers)
+        nRows, nCols = self.getRowsCols(numModuleLayers, combineSharedLayers=True)
         numParams = len(paramNames)
         x = np.arange(numEpochs)
 
@@ -233,6 +223,7 @@ class generalVisualizations(globalPlottingProtocols):
                 elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
                 elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
                 else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+                if 'shared' in moduleName: rowInd = -1
                 ax = axes[rowInd, colInd]
 
                 for modelInd in range(numModels):
@@ -244,8 +235,13 @@ class generalVisualizations(globalPlottingProtocols):
                     elif "shared" in moduleName: lineColor = self.blackColor; alpha = 0.75
                     else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
 
+                    # Plot the training losses.
+                    alpha = numProcessing * nCols / numModuleLayers
                     plottingParams = activationParamsPaths[modelInd, :, layerInd, paramInd]
-                    ax.plot(x, plottingParams, color=lineColor, linewidth=0.67, alpha=alpha, label=modelLabel)
+                    if 'specific' in moduleName: ax.plot(x, plottingParams, color=lineColor, linewidth=0.67, alpha=alpha, label=modelLabel)
+                    else:
+                        ax.plot(x, plottingParams, color=self.blackColor, linewidth=0.67, label=modelLabel, alpha=0.3 * alpha)
+                        ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=0.67, label=modelLabel, alpha=0.6 * alpha)
 
                 ax.set_xlabel("Training Epoch")
                 ax.set_title(moduleName)
@@ -266,7 +262,7 @@ class generalVisualizations(globalPlottingProtocols):
         # scalingFactorsPaths: numModels, numEpochs, numModuleLayers, *numSignals*, numParams=1
         # maxFreeParamsPath: numModels, numModuleLayers
         numModels, numModuleLayers = np.asarray(maxFreeParamsPath).shape
-        nRows, nCols = self.getRowsCols(numModuleLayers)
+        nRows, nCols = self.getRowsCols(numModuleLayers, combineSharedLayers=True)
         numEpochs = len(numFreeModelParams[0])
         numParams = len(paramNames)
         x = np.arange(numEpochs)
@@ -287,28 +283,34 @@ class generalVisualizations(globalPlottingProtocols):
                 elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
                 elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
                 else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+                if 'shared' in moduleName: rowInd = -1
                 ax = axes[rowInd, colInd]
 
                 for modelInd in range(numModels):
                     if "shared" in moduleName and modelInd != 0: continue
                     maxFreeParams = maxFreeParamsPath[modelInd][layerInd]
                     sequenceLength = int((1 + (1 + 8 * maxFreeParams) ** 0.5) // 2)
+                    alpha = numProcessing * nCols / numModuleLayers
 
                     plottingParams = []
                     for epochInd in range(numEpochs):
                         plottingParams.append(numFreeModelParams[modelInd][epochInd][layerInd][:, paramInd])
                     plottingParams = np.asarray(plottingParams)
 
-                    # Calculate the average and standard deviation of the training losses.
-                    N = np.count_nonzero(~np.isnan(plottingParams), axis=-1)
-                    standardError = np.nanstd(plottingParams, ddof=1, axis=-1) / np.sqrt(N)
-                    meanValues = np.nanmean(plottingParams, axis=-1)
-
                     # Plot the training losses.
-                    ax.errorbar(x=x, y=meanValues, yerr=standardError, color=self.darkColors[modelInd], linewidth=1)
-                    ax.plot(x, plottingParams, color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
-                    if fullView: ax.hlines(y=maxFreeParams, xmin=0, xmax=numEpochs + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
+                    if 'specific' in moduleName:
+                        # Calculate the average and standard deviation of the training losses.
+                        N = np.count_nonzero(~np.isnan(plottingParams), axis=1)
+                        standardError = np.nanstd(plottingParams, ddof=1, axis=-1) / np.sqrt(N)
+                        meanValues = np.nanmean(plottingParams, axis=-1)
+
+                        ax.errorbar(x=x, y=meanValues, yerr=standardError, color=self.darkColors[modelInd], linewidth=1)
+                        ax.plot(x, plottingParams, color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
+                    else:
+                        ax.plot(x, plottingParams, color=self.blackColor, linewidth=1, alpha=0.3 * alpha)
+                        ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * alpha)
                     if fullView: ax.hlines(y=sequenceLength, xmin=0, xmax=numEpochs + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
+                    if fullView: ax.hlines(y=maxFreeParams, xmin=0, xmax=numEpochs + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
                 ax.set_xlabel("Training Epoch")
                 ax.set_title(moduleName)
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5)
@@ -325,7 +327,7 @@ class generalVisualizations(globalPlottingProtocols):
         # scalingFactorsPaths: numModels, numEpochs, numModuleLayers, *numSignals*, numParams=1
         try: numModels, numEpochs, numModuleLayers = len(scalingFactorsPaths), len(scalingFactorsPaths[0]), len(scalingFactorsPaths[0][0])
         except Exception as e: print("plotAngularFeaturesFlow:", e); return None
-        nRows, nCols = self.getRowsCols(numModuleLayers)
+        nRows, nCols = self.getRowsCols(numModuleLayers, combineSharedLayers=True)
         numParams = len(paramNames)
         x = np.arange(numEpochs)
 
@@ -342,6 +344,7 @@ class generalVisualizations(globalPlottingProtocols):
                 elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
                 elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
                 else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+                if 'shared' in moduleName: rowInd = -1
                 ax = axes[rowInd, colInd]
 
                 for modelInd in range(numModels):
@@ -352,14 +355,19 @@ class generalVisualizations(globalPlottingProtocols):
                         plottingParams.append(scalingFactorsPaths[modelInd][epochInd][layerInd][:, paramInd])
                     plottingParams = np.asarray(plottingParams)
 
-                    # Calculate the average and standard deviation of the training losses.
-                    N = np.count_nonzero(~np.isnan(plottingParams), axis=-1)
-                    standardError = np.nanstd(plottingParams, ddof=1, axis=-1) / np.sqrt(N)
-                    meanValues = np.nanmean(plottingParams, axis=-1)
-
                     # Plot the training losses.
-                    ax.errorbar(x=x, y=meanValues, yerr=standardError, color=self.darkColors[modelInd], linewidth=1)
-                    ax.plot(x, plottingParams, color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
+                    if 'specific' in moduleName:
+                        # Calculate the average and standard deviation of the training losses.
+                        N = np.count_nonzero(~np.isnan(plottingParams), axis=1)
+                        standardError = np.nanstd(plottingParams, ddof=1, axis=-1) / np.sqrt(N)
+                        meanValues = np.nanmean(plottingParams, axis=-1)
+
+                        ax.errorbar(x=x, y=meanValues, yerr=standardError, color=self.darkColors[modelInd], linewidth=1)
+                        ax.plot(x, plottingParams,color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
+                    else:
+                        alpha = numProcessing * nCols / numModuleLayers
+                        ax.plot(x, plottingParams, color=self.blackColor, linewidth=1, alpha=0.3 * alpha)
+                        ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * alpha)
                 ax.set_xlabel("Training Epoch")
                 ax.set_title(moduleName)
                 ax.set_xlim((0, numEpochs + 1))
@@ -374,19 +382,26 @@ class generalVisualizations(globalPlottingProtocols):
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle} {paramName}.pdf", showPlot=not self.hpcFlag)
             else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
-    def plotGivensAnglesFlow(self, givensAnglesFeaturesPaths, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
+    def plotGivensFeaturesPath(self, givensAnglesFeaturesPaths, moduleNames, paramNames, degreesFlag, saveFigureLocation="", plotTitle="Model Convergence Loss"):
         # givensAnglesFeaturesPaths: numModels, numEpochs, numModuleLayers, numFeatures=5, numFeatureValues*
         try: numModels, numEpochs, numModuleLayers = len(givensAnglesFeaturesPaths), len(givensAnglesFeaturesPaths[0]), len(givensAnglesFeaturesPaths[0][0])
         except Exception as e: print("plotAngularFeaturesFlow:", e); return None
-        nRows, nCols = self.getRowsCols(numModuleLayers)
+        nRows, nCols = self.getRowsCols(numModuleLayers, combineSharedLayers=True)
         numParams = len(paramNames)
         x = np.arange(numEpochs)
 
+        # Initialize the scaling factor flag
+        degrees = (180 if degreesFlag else math.pi) / 4
+        if not degreesFlag: scaleFactor = 180 / math.pi
+        else: scaleFactor = 1
+
         for paramInd in range(numParams):
             # Create a figure and axes array
-            fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey='col')
+            fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=True)
             numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
             paramName = paramNames[paramInd]
+
+            if 'range' in paramName.lower(): plt.ylim((0, 2*degrees))
 
             plt.suptitle(f"{plotTitle}: {paramName}\n")
             for layerInd in range(numModuleLayers):
@@ -396,6 +411,7 @@ class generalVisualizations(globalPlottingProtocols):
                 elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
                 elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
                 else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+                if 'shared' in moduleName: rowInd = -1
                 ax = axes[rowInd, colInd]
 
                 for modelInd in range(numModels):
@@ -406,16 +422,20 @@ class generalVisualizations(globalPlottingProtocols):
 
                     plottingParams = np.zeros((numEpochs, len(givensAnglesFeaturesPaths[modelInd][0][layerInd][paramInd])))
                     for epochInd in range(numEpochs): plottingParams[epochInd, :] = givensAnglesFeaturesPaths[modelInd][epochInd][layerInd][paramInd]
+                    if 'range' in paramName.lower(): plottingParams = scaleFactor * plottingParams
                     # plottingParams: numEpochs, numFeatureValues
 
-                    # Calculate the average and standard deviation of the training losses.
-                    N = np.count_nonzero(~np.isnan(plottingParams), axis=1)
-                    standardError = np.nanstd(plottingParams, ddof=1, axis=-1) / np.sqrt(N)
-                    meanValues = np.nanmean(plottingParams, axis=-1)
-
                     # Plot the training losses.
-                    ax.errorbar(x=x, y=meanValues, yerr=standardError, color=lineColor, linewidth=1)
-                    ax.plot(x, plottingParams, color=lineColor, linewidth=1, alpha=0.05)
+                    if 'specific' in moduleName:
+                        # Calculate the average and standard deviation of the training losses.
+                        N = np.count_nonzero(~np.isnan(plottingParams), axis=1)
+                        standardError = np.nanstd(plottingParams, ddof=1, axis=-1) / np.sqrt(N)
+                        meanValues = np.nanmean(plottingParams, axis=-1)
+
+                        ax.errorbar(x=x, y=meanValues, yerr=standardError, color=lineColor, linewidth=1)
+                        ax.plot(x, plottingParams, color=lineColor, linewidth=1, alpha=0.05)
+                    else:
+                        ax.plot(x, plottingParams, color=lineColor, linewidth=1, alpha=1 / (1 + np.exp(- (numProcessing * nCols / numModuleLayers))))
                 ax.set_xlabel("Training Epoch")
                 ax.set_title(moduleName)
                 ax.set_xlim((0, numEpochs + 1))

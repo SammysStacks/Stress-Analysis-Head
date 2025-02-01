@@ -38,7 +38,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-01-29"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2025-01-31"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Architecture Parameters ----------------------- #
@@ -59,7 +59,7 @@ if __name__ == "__main__":
     parser.add_argument('--initialProfileAmp', type=float, default=1e-3, help='The limits for profile initialization. Should be near zero.')
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model: [1, 2]')
     parser.add_argument('--numSharedEncoderLayers', type=int, default=4, help='The number of layers in the model: [2, 8]')
-    parser.add_argument('--angularThresholdMin', type=float, default=4, help='The minimum rotational threshold in degrees.')
+    parser.add_argument('--angularThresholdMin', type=float, default=5, help='The minimum rotational threshold in degrees.')
     parser.add_argument('--angularThresholdMax', type=float, default=30, help='The minimum rotational threshold in degrees.')
     parser.add_argument('--cullingEpoch', type=int, default=5, help='The number of epochs before culling null weights.')
     parser.add_argument('--profileDimension', type=int, default=128, help='The number of profile weights: [32, 256]')
