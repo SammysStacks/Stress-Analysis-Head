@@ -199,16 +199,16 @@ class emotionModelHead(nn.Module):
         compiledName = ""; name = name.lower()
 
         # Add the model type information.
-        if 'specific' in name: compiledName = 'specific' + compiledName; assert 'shared' not in name
-        elif 'shared' in name: compiledName = 'shared' + compiledName; assert 'specific' not in name
+        if 'specific' in name: compiledName = 'Specific' + compiledName; assert 'shared' not in name
+        elif 'shared' in name: compiledName = 'Shared' + compiledName; assert 'specific' not in name
         else: raise Exception("Invalid name:", name)
 
         # Add the neural layer information.
-        if 'neural' in name: compiledName = compiledName + ' neural'; assert 'processing' not in name
-        if 'high' in name: compiledName = compiledName + ' highFreq'; assert 'low' not in name
-        elif 'low' in name: compiledName = compiledName + ' lowFreq'; assert 'high' not in name
+        if 'neural' in name: compiledName = compiledName + ' neural'; assert 'spatial' not in name
+        if 'high' in name: compiledName = compiledName + ' high frequency'; assert 'low' not in name
+        elif 'low' in name: compiledName = compiledName + ' low frequency'; assert 'high' not in name
         elif 'processing' not in name: raise Exception("Invalid name:", name)
-        else: compiledName = compiledName + ' processing'
+        else: compiledName = compiledName + ' spatial'
 
         return compiledName
 

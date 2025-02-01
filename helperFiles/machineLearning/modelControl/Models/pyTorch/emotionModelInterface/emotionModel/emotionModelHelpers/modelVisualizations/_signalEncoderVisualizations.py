@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.collections import LineCollection
 from matplotlib.colors import LinearSegmentedColormap
-from matplotlib.patches import Arc, Wedge
+from matplotlib.patches import Arc, Wedge, FancyArrow, Circle
 from shap.plots.colors._colors import lch2rgb
 
 # Visualization protocols
@@ -187,60 +187,61 @@ class signalEncoderVisualizations(globalPlottingProtocols):
     def plotAngleLocations(self, givensAnglesPath, reversibleModuleNames, signalNames, epoch, signalInd, saveFigureLocation, plotTitle):
         # givensAnglesPath: numModuleLayers, numSignals, numParams
         nRows, nCols = self.getRowsCols(numModuleLayers=len(givensAnglesPath))
+        initialAngle = np.pi / 4; initX, initY = np.cos(initialAngle), np.sin(initialAngle)
 
         # Create a figure and axes array
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(4 * nCols, 8 * nRows), squeeze=False, sharex=True, sharey=False)  # squeeze=False ensures axes is 2D
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(4 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=False)  # squeeze=False ensures axes is 2D
         numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
-        plt.ylim((-1.05, 1.05))
+        plt.ylim((-0.05, 1.05))
         plt.xlim((-0.05, 1.05))
 
         # Get the angular thresholds.
         angularThresholdMin = modelConstants.userInputParams['angularThresholdMin']
         angularThresholdMax = modelConstants.userInputParams['angularThresholdMax']
-        center = (0, 0); radius = 1
+        center = (0, 0)
 
         for layerInd in range(len(givensAnglesPath)):
             moduleName = reversibleModuleNames[layerInd].lower()
 
-            if "processing" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
+            if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
             elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
             elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
             else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
             ax = axes[rowInd, colInd]
 
-            if "specific" in moduleName: lineColor = self.lightColors[0]; alpha = 0.8; centerColor = self.darkColors[0]
+            if "specific" in moduleName: lineColor = self.lightColors[0]; alpha = 0.75; centerColor = self.darkColors[0]
             elif "shared" in moduleName: lineColor = self.lightColors[1]; alpha = 0.33; centerColor = self.darkColors[1]
             else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+            if rowInd == 0: ax.set_title(" ".join(moduleName.split(" ")[1:]).capitalize(), fontsize=16)
+            if colInd == 0: ax.set_ylabel(f"Layer {rowInd + 1}", fontsize=16)
 
-            # Scatter training eigenvalues
-            signalAngleLocations = np.exp(np.asarray(givensAnglesPath[layerInd][signalInd]) * 1j)
-            x, y = signalAngleLocations.real, signalAngleLocations.imag  # x[y < 0] = np.nan; y[y < 0] = np.nan
-            ax.scatter(x, y, color=lineColor, label="Training", s=10, linewidth=0.1, alpha=alpha)
-
-            # Create lines connecting points to the origin
-            lines = np.array([[[0, 0], [xi, yi]] for xi, yi in zip(x, y)])  # Define line segments
-            line_segments = LineCollection(lines, colors=lineColor, linewidths=0.2, alpha=alpha)
-            ax.add_collection(line_segments)  # Add all lines at once
-
-            # Add details to the plot.
-            ax.axhline(0, xmin=0, xmax=1, color=self.blackColor, linewidth=0.5, alpha=0.25, zorder=0)  # Draw coordinate lines
-            ax.scatter(0, 0, color=centerColor, linewidth=1)  # Highlight the origin
+            # Plot the potential output vectors.
+            angles = initialAngle + givensAnglesPath[layerInd][signalInd]; centerPoint = np.zeros_like(angles)
+            ax.quiver(centerPoint, centerPoint, np.cos(angles), np.sin(angles), scale=1, angles='xy', scale_units='xy', color=lineColor, width=0.0025, zorder=8, alpha=alpha)
 
             # Draw unit circle for reference
-            arc = Arc(xy=center, width=2*radius, height=2*radius, theta1=-90, theta2=90, color=self.blackColor, linewidth=1)
+            arc = Arc(xy=(0, 0), width=2, height=2, theta1=0, theta2=90, edgecolor=self.darkColors[-1], facecolor='none', linewidth=0.5, alpha=0.25, zorder=1)
+            ax.scatter(0, 0, color=centerColor, linewidth=1)  # Highlight the origin
             ax.add_patch(arc)
 
-            # 1. Define the shaded region in the bounded range [-minAngle, minAngle]
-            bounded_wedge = Wedge(center=center, r=radius, theta1=-angularThresholdMin, theta2=angularThresholdMin, color=self.blackColor, alpha=0.1, zorder=0)
-            lower_wedge = Wedge(center=center, r=radius, theta1=-90, theta2=-angularThresholdMax, color=self.blackColor, alpha=1, zorder=0)
-            upper_wedge = Wedge(center=center, r=radius, theta1=angularThresholdMax, theta2=90, color=self.blackColor, alpha=1, zorder=0)
-            ax.add_patch(upper_wedge); ax.add_patch(bounded_wedge); ax.add_patch(lower_wedge)
+            # Draw arrow from (0,0) to (arrow_x, arrow_y)
+            ax.quiver(0, 0, initX, initY, scale=1, angles='xy', scale_units='xy', color=self.darkColors[-1], width=0.0075, headwidth=4.5, headlength=6, zorder=10)
 
-            # Customize appearance
-            ax.set_title(f"{moduleName}")
-        fig.supxlabel("Real component")
-        fig.supylabel("Imaginary component")
-        plt.suptitle(t=f"{plotTitle}; Epoch {epoch}\n", fontsize=16)
+            # Axis arrows
+            ax.quiver(0, 0, 0, 1, scale=1, angles='xy', scale_units='xy', color=self.blackColor, width=0.01, headwidth=6, headlength=8, zorder=0)  # +Y direction
+            ax.quiver(0, 0, 1, 0, scale=1, angles='xy', scale_units='xy', color=self.blackColor, width=0.01, headwidth=6, headlength=8, zorder=0)  # +X direction
+
+            if 'shared' in moduleName or epoch == 0: continue
+            # Define the shaded region in the bounded range [-minAngle, minAngle]
+            bounded_wedge = Wedge(center=center, r=1, theta1=initialAngle * 180 / np.pi - angularThresholdMin, theta2=initialAngle * 180 / np.pi + angularThresholdMin, color=self.blackColor, alpha=0.1, zorder=0)
+            lower_wedge = Wedge(center=center, r=1, theta1=0, theta2=max(0, initialAngle * 180 / np.pi - angularThresholdMax), color=self.blackColor, alpha=1, zorder=0)
+            upper_wedge = Wedge(center=center, r=1, theta1=min(90, initialAngle * 180 / np.pi + angularThresholdMax), theta2=90, color=self.blackColor, alpha=1, zorder=0)
+            ax.add_patch(upper_wedge); ax.add_patch(bounded_wedge); ax.add_patch(lower_wedge)
+        plt.suptitle(t=f"{plotTitle}; Epoch {epoch}\n", fontsize=24)
+        fig.supylabel(r"Signal index: $\mathbb{\mathit{i}}$", fontsize=20)
+        fig.supxlabel(r"Signal index: $\mathbb{\mathit{j}}$", fontsize=20)
+        plt.ylim((-0.05, 1.05))
+        plt.xlim((-0.05, 1.05))
 
         # Save the plot
         plt.tight_layout()
@@ -271,7 +272,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         for layerInd in range(len(givensAnglesPath)):
             moduleName = reversibleModuleNames[layerInd].lower()
 
-            if "processing" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
+            if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
             elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
             elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
             else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
@@ -344,7 +345,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         for layerInd in range(len(givensAnglesPath)):
             moduleName = reversibleModuleNames[layerInd].lower()
 
-            if "processing" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
+            if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
             elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
             elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
             else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
@@ -476,8 +477,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
     def plotActivationCurvesCompressed(self, activationCurves, moduleNames, epoch, saveFigureLocation, plotTitle):
-        axNames = ["Specific Processing", "Specific Neural Low Freq", "Specific Neural High Freq",
-                   "Shared Processing", "Shared Neural Low Freq", "Shared Neural High Freq"]
+        axNames = ["Specific spatial", "Specific neural low frequency", "Specific neural high frequency",
+                   "Shared spatial", "Shared neural low frequency", "Shared neural high frequency"]
         numActivations, numPointsX, numPointsY = activationCurves.shape
         nCols, nRows = 3, 2
 
@@ -496,7 +497,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
             if "neural" in activationName and 'low' in activationName: axInd += 1
             elif "neural" in activationName and 'high' in activationName: axInd += 2
-            elif "processing" not in activationName: raise ValueError(f"Unknown activation module: {activationName}")
+            elif "spatial" not in activationName: raise ValueError(f"Unknown activation module: {activationName}")
 
             ax = axes[axInd]
             # Plot the activation curves
@@ -530,7 +531,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             moduleName = moduleNames[layerInd].lower()
             x, y = activationCurves[layerInd]
 
-            if "processing" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
+            if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
             elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
             elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
             else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")

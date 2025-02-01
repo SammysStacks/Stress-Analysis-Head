@@ -63,7 +63,7 @@ if __name__ == "__main__":
     parser.add_argument('--angularThresholdMax', type=float, default=30, help='The minimum rotational threshold in degrees.')
     parser.add_argument('--cullingEpoch', type=int, default=5, help='The number of epochs before culling null weights.')
     parser.add_argument('--profileDimension', type=int, default=128, help='The number of profile weights: [32, 256]')
-    parser.add_argument('--numProfileShots', type=int, default=24, help='The epochs for profile training: [16, 32]')
+    parser.add_argument('--numProfileShots', type=int, default=16, help='The epochs for profile training: [16, 32]')
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions).')

@@ -219,7 +219,7 @@ class generalVisualizations(globalPlottingProtocols):
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
 
-                if "processing" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
+                if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
                 elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
                 elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
                 else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
@@ -234,13 +234,13 @@ class generalVisualizations(globalPlottingProtocols):
                     if "specific" in moduleName: lineColor = self.darkColors[modelInd]; alpha = 0.8
                     elif "shared" in moduleName: lineColor = self.blackColor; alpha = 0.75
                     else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
-
-                    # Plot the training losses.
                     alpha = numProcessing * nCols / numModuleLayers
+                    
+                    # Plot the training losses.
                     plottingParams = activationParamsPaths[modelInd, :, layerInd, paramInd]
                     if 'specific' in moduleName: ax.plot(x, plottingParams, color=lineColor, linewidth=0.67, alpha=alpha, label=modelLabel)
                     else:
-                        ax.plot(x, plottingParams, color=self.blackColor, linewidth=0.67, label=modelLabel, alpha=0.3 * alpha)
+                        ax.plot(x, plottingParams, color=self.blackColor, linewidth=0.67, label=modelLabel, alpha=0.6 * alpha)
                         ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=0.67, label=modelLabel, alpha=0.6 * alpha)
 
                 ax.set_xlabel("Training Epoch")
@@ -274,12 +274,11 @@ class generalVisualizations(globalPlottingProtocols):
             numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
             paramName = paramNames[paramInd]
             plt.xlim((0, numEpochs + 1))
-            if fullView: plt.yscale('log')
 
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
 
-                if "processing" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
+                if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
                 elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
                 elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
                 else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
@@ -307,10 +306,11 @@ class generalVisualizations(globalPlottingProtocols):
                         ax.errorbar(x=x, y=meanValues, yerr=standardError, color=self.darkColors[modelInd], linewidth=1)
                         ax.plot(x, plottingParams, color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
                     else:
-                        ax.plot(x, plottingParams, color=self.blackColor, linewidth=1, alpha=0.3 * alpha)
+                        ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.6 * alpha)
                         ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * alpha)
                     if fullView: ax.hlines(y=sequenceLength, xmin=0, xmax=numEpochs + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
                     if fullView: ax.hlines(y=maxFreeParams, xmin=0, xmax=numEpochs + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
+                    if fullView and 120 < sequenceLength: ax.yscale('log')
                 ax.set_xlabel("Training Epoch")
                 ax.set_title(moduleName)
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5)
@@ -340,7 +340,7 @@ class generalVisualizations(globalPlottingProtocols):
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
 
-                if "processing" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
+                if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
                 elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
                 elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
                 else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
@@ -366,7 +366,7 @@ class generalVisualizations(globalPlottingProtocols):
                         ax.plot(x, plottingParams,color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
                     else:
                         alpha = numProcessing * nCols / numModuleLayers
-                        ax.plot(x, plottingParams, color=self.blackColor, linewidth=1, alpha=0.3 * alpha)
+                        ax.plot(x, plottingParams, color=self.darkColors[2], linewidth=1, alpha=0.6 * alpha)
                         ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * alpha)
                 ax.set_xlabel("Training Epoch")
                 ax.set_title(moduleName)
@@ -407,7 +407,7 @@ class generalVisualizations(globalPlottingProtocols):
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
 
-                if "processing" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
+                if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
                 elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
                 elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
                 else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
@@ -419,6 +419,7 @@ class generalVisualizations(globalPlottingProtocols):
                     if "specific" in moduleName: lineColor = self.darkColors[modelInd]
                     elif "shared" in moduleName: lineColor = self.blackColor
                     else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+                    alpha = numProcessing * nCols / numModuleLayers
 
                     plottingParams = np.zeros((numEpochs, len(givensAnglesFeaturesPaths[modelInd][0][layerInd][paramInd])))
                     for epochInd in range(numEpochs): plottingParams[epochInd, :] = givensAnglesFeaturesPaths[modelInd][epochInd][layerInd][paramInd]
@@ -435,7 +436,8 @@ class generalVisualizations(globalPlottingProtocols):
                         ax.errorbar(x=x, y=meanValues, yerr=standardError, color=lineColor, linewidth=1)
                         ax.plot(x, plottingParams, color=lineColor, linewidth=1, alpha=0.05)
                     else:
-                        ax.plot(x, plottingParams, color=lineColor, linewidth=1, alpha=1 / (1 + np.exp(- (numProcessing * nCols / numModuleLayers))))
+                        ax.plot(x, plottingParams, color=self.darkColors[3], linewidth=1, alpha=0.6 * alpha)
+                        ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * alpha)
                 ax.set_xlabel("Training Epoch")
                 ax.set_title(moduleName)
                 ax.set_xlim((0, numEpochs + 1))
