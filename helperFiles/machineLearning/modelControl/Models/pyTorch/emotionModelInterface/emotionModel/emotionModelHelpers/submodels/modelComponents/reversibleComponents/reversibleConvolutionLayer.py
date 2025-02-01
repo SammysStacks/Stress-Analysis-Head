@@ -40,9 +40,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         for layerInd in range(self.numLayers):
             # Create the neural weights.
             parameters = nn.Parameter(torch.randn(self.numSignals, self.numParams or 1, dtype=torch.float64))
-            # parameters = nn.init.kaiming_uniform_(parameters)  # TODO
-            parameters = nn.init.uniform_(parameters, a=-0.1, b=0.1)  # TODO
-            # parameters = nn.init.zeros_(parameters)  # TODO
+            parameters = nn.init.uniform_(parameters, a=-0.1, b=0.1)
 
             self.givensRotationParams.append(parameters)
 
@@ -133,6 +131,7 @@ class reversibleConvolutionLayer(reversibleInterface):
     def getFeatureParams(self, layerInd):
         givensAngles, scalingFactors = self.getLinearParams(layerInd)  # Dim: numSignals, numParams
         scalingFactors = scalingFactors.reshape(self.numSignals, 1)  # Dim: numSignals, numParams=1
+        givensAngles = givensAngles * 180 / torch.pi  # Convert to degrees
         givensAnglesABS = givensAngles.abs()
 
         # Calculate the mean, variance, and range of the Givens angles.
@@ -140,6 +139,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         givensAnglesMean = givensAngles.mean(dim=-1).cpu().detach().numpy()  # Dim: numSignals
         givensAnglesVar = givensAngles.var(dim=-1).cpu().detach().numpy()  # Dim: numSignals
         givensAnglesRange = givensAnglesRange.cpu().detach().numpy()
+        givensAnglesMedian = torch.median(givensAngles, dim=-1).values.cpu().detach().numpy()  # Dim: numSignals
 
         # Calculate the mean, variance, and range of the positive Givens angles.
         givensAnglesMeanABS = givensAnglesABS.mean(dim=-1).cpu().detach().numpy()  # Dim: numSignals
@@ -147,10 +147,11 @@ class reversibleConvolutionLayer(reversibleInterface):
 
         # Calculate the mean, variance, and range of the scaling factors.
         scalingFactorsMean = scalingFactors.mean(dim=-1).cpu().detach().numpy()  # Dim: numSignals=1
+        scalarMedian = torch.median(scalingFactors, dim=-1).values.cpu().detach().numpy()  # Dim: numSignals=1
 
         # Combine the features. Return dimension: numFeatures, numValues
-        givensAnglesFeatureNames = ["Angular Mean", "Angular Variance", "Angular Range", "Angular ABS Mean", "Angular ABS Variance" "Scalar Mean"]
-        givensAnglesFeatures = [givensAnglesMean, givensAnglesVar, givensAnglesRange, givensAnglesMeanABS, givensAnglesVarABS, scalingFactorsMean]
+        givensAnglesFeatureNames = ["Angular mean", "Angular variance", "Angular range", "Angular median", "Angular abs(mean)", "Angular abs(variance)" "Scalar mean", "Scalar median"]
+        givensAnglesFeatures = [givensAnglesMean, givensAnglesVar, givensAnglesRange, givensAnglesMedian, givensAnglesMeanABS, givensAnglesVarABS, scalingFactorsMean, scalarMedian]
         return givensAnglesFeatureNames, givensAnglesFeatures
 
     def angularThresholding(self, layerInd, applyMinThresholding):

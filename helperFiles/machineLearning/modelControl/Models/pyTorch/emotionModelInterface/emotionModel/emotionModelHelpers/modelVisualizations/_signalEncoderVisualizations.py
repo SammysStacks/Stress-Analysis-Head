@@ -221,15 +221,15 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
             # Draw unit circle for reference
             arc = Arc(xy=(0, 0), width=2, height=2, theta1=0, theta2=90, edgecolor=self.darkColors[-1], facecolor='none', linewidth=0.5, alpha=0.25, zorder=1)
-            ax.scatter(0, 0, color=centerColor, linewidth=1)  # Highlight the origin
+            ax.scatter(0, 0, color=centerColor, linewidth=0.5, s=10)  # Highlight the origin
             ax.add_patch(arc)
 
             # Draw arrow from (0,0) to (arrow_x, arrow_y)
-            ax.quiver(0, 0, initX, initY, scale=1, angles='xy', scale_units='xy', color=self.darkColors[-1], width=0.0075, headwidth=4.5, headlength=6, zorder=10)
+            ax.quiver(0, 0, initX, initY, scale=1, angles='xy', scale_units='xy', color=self.blackColor, width=0.0075, headwidth=4.5, headlength=6, zorder=10)
 
             # Axis arrows
-            ax.quiver(0, 0, 0, 1, scale=1, angles='xy', scale_units='xy', color=self.blackColor, width=0.01, headwidth=6, headlength=8, zorder=0)  # +Y direction
-            ax.quiver(0, 0, 1, 0, scale=1, angles='xy', scale_units='xy', color=self.blackColor, width=0.01, headwidth=6, headlength=8, zorder=0)  # +X direction
+            ax.quiver(0, 0, 0, 1, scale=1, angles='xy', scale_units='xy', color=self.darkColors[-1], width=0.01, headwidth=6, headlength=8, zorder=9)  # +Y direction
+            ax.quiver(0, 0, 1, 0, scale=1, angles='xy', scale_units='xy', color=self.darkColors[-1], width=0.01, headwidth=6, headlength=8, zorder=9)  # +X direction
 
             if 'shared' in moduleName or epoch == 0: continue
             # Define the shaded region in the bounded range [-minAngle, minAngle]
@@ -254,7 +254,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         nRows, nCols = self.getRowsCols(numModuleLayers=len(givensAnglesPath))
         if not degreesFlag: scaleFactor = 180 / math.pi; degreesFlag = True
         else: scaleFactor = 1
-        yMax = 0.67
+        yMax = 0.5
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey='col')  # squeeze=False ensures axes is 2D

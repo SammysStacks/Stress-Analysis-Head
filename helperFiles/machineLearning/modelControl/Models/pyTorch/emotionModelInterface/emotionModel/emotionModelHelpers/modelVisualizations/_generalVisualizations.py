@@ -310,7 +310,7 @@ class generalVisualizations(globalPlottingProtocols):
                         ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * alpha)
                     if fullView: ax.hlines(y=sequenceLength, xmin=0, xmax=numEpochs + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
                     if fullView: ax.hlines(y=maxFreeParams, xmin=0, xmax=numEpochs + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
-                    if fullView and 120 < sequenceLength: ax.yscale('log')
+                    if fullView and 120 < sequenceLength: ax.set_yscale('log')
                 ax.set_xlabel("Training Epoch")
                 ax.set_title(moduleName)
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5)
