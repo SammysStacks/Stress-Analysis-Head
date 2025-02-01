@@ -150,7 +150,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         scalarMedian = torch.median(scalingFactors, dim=-1).values.cpu().detach().numpy()  # Dim: numSignals=1
 
         # Combine the features. Return dimension: numFeatures, numValues
-        givensAnglesFeatureNames = ["Angular mean", "Angular variance", "Angular range", "Angular median", "Angular abs(mean)", "Angular abs(variance)" "Scalar mean", "Scalar median"]
+        givensAnglesFeatureNames = ["Angular mean", "Angular variance", "Angular range", "Angular median", "Angular abs(mean)", "Angular abs(variance)", "Scalar mean", "Scalar median"]
         givensAnglesFeatures = [givensAnglesMean, givensAnglesVar, givensAnglesRange, givensAnglesMedian, givensAnglesMeanABS, givensAnglesVarABS, scalingFactorsMean, scalarMedian]
         return givensAnglesFeatureNames, givensAnglesFeatures
 
