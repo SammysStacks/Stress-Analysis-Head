@@ -245,8 +245,9 @@ class generalVisualizations(globalPlottingProtocols):
                     plottingParams = activationParamsPaths[modelInd, :, layerInd, paramInd]
                     if 'specific' in moduleName: ax.plot(x, plottingParams, color=lineColor, linewidth=1, alpha=1)
                     else:
-                        alphas = np.linspace(0, 1, plottingParams.shape[1])
-                        for axisLineInd in range(plottingParams.shape[1]):
+                        numValues = 1 if len(plottingParams.shape) == 1 else plottingParams.shape[1]
+                        alphas = np.linspace(0, 1, numValues)
+                        for axisLineInd in range(numValues):
                             ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * alphas[axisLineInd])
                             ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * (1 - alphas[axisLineInd]))
 
@@ -312,8 +313,9 @@ class generalVisualizations(globalPlottingProtocols):
                         ax.errorbar(x=x, y=meanValues, yerr=standardError, color=self.darkColors[modelInd], linewidth=1)
                         ax.plot(x, plottingParams, color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
                     else:
-                        alphas = np.linspace(0, 1, plottingParams.shape[1])
-                        for axisLineInd in range(plottingParams.shape[1]):
+                        numValues = 1 if len(plottingParams.shape) == 1 else plottingParams.shape[1]
+                        alphas = np.linspace(0, 1, numValues)
+                        for axisLineInd in range(numValues):
                             ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * alphas[axisLineInd])
                             ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * (1 - alphas[axisLineInd]))
                     if fullView: ax.hlines(y=sequenceLength, xmin=0, xmax=numEpochs + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
@@ -373,8 +375,9 @@ class generalVisualizations(globalPlottingProtocols):
                         ax.errorbar(x=x, y=meanValues, yerr=standardError, color=self.darkColors[modelInd], linewidth=1)
                         ax.plot(x, plottingParams, color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
                     else:
-                        alphas = np.linspace(0, 1, plottingParams.shape[1])
-                        for axisLineInd in range(plottingParams.shape[1]):
+                        numValues = 1 if len(plottingParams.shape) == 1 else plottingParams.shape[1]
+                        alphas = np.linspace(0, 1, numValues)
+                        for axisLineInd in range(numValues):
                             ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * alphas[axisLineInd])
                             ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * (1 - alphas[axisLineInd]))
                 ax.set_xlabel("Training epoch")
@@ -439,8 +442,9 @@ class generalVisualizations(globalPlottingProtocols):
                         ax.errorbar(x=x, y=meanValues, yerr=standardError, color=lineColor, linewidth=1)
                         ax.plot(x, plottingParams, color=lineColor, linewidth=1, alpha=0.05)
                     else:
-                        alphas = np.linspace(0, 1, plottingParams.shape[1])
-                        for axisLineInd in range(plottingParams.shape[1]):
+                        numValues = 1 if len(plottingParams.shape) == 1 else plottingParams.shape[1]
+                        alphas = np.linspace(0, 1, numValues)
+                        for axisLineInd in range(numValues):
                             ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * alphas[axisLineInd])
                             ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * (1 - alphas[axisLineInd]))
                 ax.set_xlabel("Training epoch")
