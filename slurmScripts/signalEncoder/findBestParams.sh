@@ -21,8 +21,8 @@ angularThresholdMins=(0 1 2 3 4 5 6 7 8)  # 9; 2 <= x <= 5
 angularThresholdMaxs=(10 20 30 45)  # 4; 20 <= x == (30, 45)
 cullingEpochs=(1 2 3 4 5 6 7 8 9 10)  # 10
 # ----- # TODO
-angularThresholdMins=(4 5 6)  # 9; 2 <= x <= 5
-angularThresholdMaxs=(10 20 30 45)  # 4; 20 <= x == (30, 45)
+angularThresholdMins=(1 2 3 7 8 9 10)  # 9; 2 <= x <= 5
+angularThresholdMaxs=(45)  # 4; 20 <= x == (30, 45)
 cullingEpochs=(1 2 3 4 5 6 7 8 9 10)  # 10
 
 # Known interesting parameters: 63
@@ -61,7 +61,7 @@ waveletTypes_arr=(
 
 # Trinary reference states.
 #angularThresholdMins=(5)
-#angularThresholdMaxs=(30)
+#angularThresholdMaxs=(30 45)
 #cullingEpochs=(5)
 
 # Binary reference states.
