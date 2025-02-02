@@ -478,7 +478,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # View and perspective adjustments
         ax.view_init(elev=25, azim=135)
-        ax.dist = 4  # Adjusts perspective depth
+        # ax.dist = 4  # Adjusts perspective depth
 
         # Axis labels and title
         ax.set_title(plotTitle, fontsize=16, weight='bold', pad=20)
