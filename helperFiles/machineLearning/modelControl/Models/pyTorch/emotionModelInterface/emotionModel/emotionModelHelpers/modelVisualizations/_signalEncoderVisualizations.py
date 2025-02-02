@@ -55,7 +55,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.xlabel("Time (sec)")
         plt.title(f"{plotTitle} epoch{epoch}")
         plt.ylabel("Signal (AU)")
-        if "Health Profile Generation" in plotTitle: plt.ylim((-0.75, 0.75))
+        if "health profile" in plotTitle.lower(): plt.ylim((-0.75, 0.75))
         else: plt.ylim((-1.75, 1.75))
 
         # Save the figure.
@@ -485,6 +485,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         ax.set_ylabel("Model Layer", fontsize=12, labelpad=10)
         ax.set_zlabel("Signal value (AU)", fontsize=12, labelpad=10)
         ax.set_zlim(-1.75, 1.75)
+        ax.invert_yaxis()  # Flip the yticks
 
         # Make the aspect ratio look nicer in 3D
         ax.set_box_aspect([2, 1, 1])
