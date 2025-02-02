@@ -246,8 +246,9 @@ class generalVisualizations(globalPlottingProtocols):
                     if 'specific' in moduleName: ax.plot(x, plottingParams, color=lineColor, linewidth=1, alpha=1)
                     else:
                         alphas = np.linspace(0, 1, plottingParams.shape[1])
-                        ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * (1 - alphas[:, None]))
-                        ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * alphas[:, None])
+                        for axisLineInd in range(plottingParams.shape[1]):
+                            ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * alphas[axisLineInd])
+                            ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * (1 - alphas[axisLineInd]))
 
                 ax.set_xlabel("Training epoch")
                 ax.set_title(moduleName)
@@ -312,8 +313,9 @@ class generalVisualizations(globalPlottingProtocols):
                         ax.plot(x, plottingParams, color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
                     else:
                         alphas = np.linspace(0, 1, plottingParams.shape[1])
-                        ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * (1 - alphas[:, None]))
-                        ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * alphas[:, None])
+                        for axisLineInd in range(plottingParams.shape[1]):
+                            ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * alphas[axisLineInd])
+                            ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * (1 - alphas[axisLineInd]))
                     if fullView: ax.hlines(y=sequenceLength, xmin=0, xmax=numEpochs + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
                     if fullView: ax.hlines(y=maxFreeParams, xmin=0, xmax=numEpochs + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
                 if colInd == 0: ax.set_ylabel("Number of rotations")
@@ -372,8 +374,9 @@ class generalVisualizations(globalPlottingProtocols):
                         ax.plot(x, plottingParams, color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
                     else:
                         alphas = np.linspace(0, 1, plottingParams.shape[1])
-                        ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * (1 - alphas[:, None]))
-                        ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * alphas[:, None])
+                        for axisLineInd in range(plottingParams.shape[1]):
+                            ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * alphas[axisLineInd])
+                            ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * (1 - alphas[axisLineInd]))
                 ax.set_xlabel("Training epoch")
                 ax.set_title(moduleName)
                 ax.set_xlim((0, numEpochs))
@@ -437,8 +440,9 @@ class generalVisualizations(globalPlottingProtocols):
                         ax.plot(x, plottingParams, color=lineColor, linewidth=1, alpha=0.05)
                     else:
                         alphas = np.linspace(0, 1, plottingParams.shape[1])
-                        ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * (1 - alphas[:, None]))
-                        ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * alphas[:, None])
+                        for axisLineInd in range(plottingParams.shape[1]):
+                            ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * alphas[axisLineInd])
+                            ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * (1 - alphas[axisLineInd]))
                 ax.set_xlabel("Training epoch")
                 ax.set_title(moduleName)
                 ax.set_xlim((0, numEpochs))
