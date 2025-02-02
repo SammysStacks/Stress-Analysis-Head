@@ -431,7 +431,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             color=self.lightColors[1],
             alpha=0.7,
             label="Shared",
-            weights=sharedValues,  # Independent normalization
+            density=True,
         )
 
         plt.hist(
@@ -440,7 +440,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             color=self.lightColors[0],
             alpha=0.7,
             label="Specific",
-            weights=specificValues,  # Independent normalization
+            density=True,
         )
 
         # Customize plot title and axes
@@ -462,7 +462,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # dataStates: numModelLayers, encodedDimension
 
         # Create a meshgrid for encodedDimension and numModelLayers
-        x_data, y_data = np.meshgrid(dataTimes, np.arange(1, 1 + numModelLayers))
+        x_data, y_data = np.meshgrid(dataTimes, np.flip(np.arange(1, 1 + numModelLayers), axis=-1))
         x, y, z = x_data.flatten(), y_data.flatten(), dataStates.flatten()
 
         # Figure and axis settings
@@ -472,13 +472,12 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Improved scatter points
         ax.scatter(
             x, y, z, c=z,
-            cmap='viridis', edgecolors="black", linewidth=0.5,
-            alpha=0.95, s=20, vmin=np.min(dataStates), vmax=np.max(dataStates)
-        )
+            cmap='viridis', edgecolors=self.blackColor, linewidth=0.5,
+            alpha=0.95, s=20, vmin=-1.5, vmax=1.5)
 
         # View and perspective adjustments
         ax.view_init(elev=25, azim=135)
-        # ax.dist = 4  # Adjusts perspective depth
+        ax.dist = 8  # Adjusts perspective depth
 
         # Axis labels and title
         ax.set_title(plotTitle, fontsize=16, weight='bold', pad=20)
@@ -530,9 +529,9 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Set the main title
         fig.suptitle(f"{plotTitle} - Epoch {epoch}\nForward and Inverse from x ∈ [{-1.5}, {1.5}]", fontsize=16)
+        plt.tight_layout()
         fig.supylabel("Output (Y)")
         fig.supxlabel("Input (x)")
-        plt.tight_layout()
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", clearFigure=True, showPlot=not self.hpcFlag)
@@ -569,9 +568,9 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Set the main title
         fig.suptitle(f"{plotTitle} - Epoch {epoch}\n", fontsize=16)
-        fig.supylabel("Output (Y)")
-        fig.supxlabel("Input (x)")
         plt.tight_layout()
+        fig.supylabel("Output (Y)\n")
+        fig.supxlabel("Input (x)\n")
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", clearFigure=True, showPlot=False)

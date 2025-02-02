@@ -1,5 +1,4 @@
 # General
-import math
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -241,14 +240,14 @@ class generalVisualizations(globalPlottingProtocols):
                     if "specific" in moduleName: lineColor = self.darkColors[modelInd]
                     elif "shared" in moduleName: lineColor = self.blackColor
                     else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
-                    alpha = numProcessing * nCols / numModuleLayers
-                    
+
                     # Plot the training losses.
                     plottingParams = activationParamsPaths[modelInd, :, layerInd, paramInd]
-                    if 'specific' in moduleName: ax.plot(x, plottingParams, color=lineColor, linewidth=0.67, alpha=1)
+                    if 'specific' in moduleName: ax.plot(x, plottingParams, color=lineColor, linewidth=1, alpha=1)
                     else:
-                        ax.plot(x, plottingParams, color=self.blackColor, linewidth=0.67, alpha=0.6 * alpha)
-                        ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=0.67, alpha=0.6 * alpha)
+                        alpha = np.arange(1, plottingParams.shape[1] + 1) / plottingParams.shape[1]
+                        ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * alpha)
+                        ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * alpha)
 
                 ax.set_xlabel("Training epoch")
                 ax.set_title(moduleName)
@@ -296,7 +295,6 @@ class generalVisualizations(globalPlottingProtocols):
                     if "shared" in moduleName and modelInd != 0: continue
                     maxFreeParams = maxFreeParamsPath[modelInd][layerInd]
                     sequenceLength = int((1 + (1 + 8 * maxFreeParams) ** 0.5) // 2)
-                    alpha = numProcessing * nCols / numModuleLayers
 
                     plottingParams = []
                     for epochInd in range(numEpochs):
@@ -313,10 +311,12 @@ class generalVisualizations(globalPlottingProtocols):
                         ax.errorbar(x=x, y=meanValues, yerr=standardError, color=self.darkColors[modelInd], linewidth=1)
                         ax.plot(x, plottingParams, color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
                     else:
-                        ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.6 * alpha)
+                        alpha = np.arange(1, plottingParams.shape[1] + 1) / plottingParams.shape[1]
+                        ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * alpha)
                         ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * alpha)
                     if fullView: ax.hlines(y=sequenceLength, xmin=0, xmax=numEpochs + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
                     if fullView: ax.hlines(y=maxFreeParams, xmin=0, xmax=numEpochs + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
+                if colInd == 0: ax.set_ylabel("Number of rotations")
                 ax.set_xlabel("Training epoch")
                 ax.set_title(moduleName)
                 ax.grid(True, which='both', linestyle='--', linewidth=0.5)
@@ -371,8 +371,8 @@ class generalVisualizations(globalPlottingProtocols):
                         ax.errorbar(x=x, y=meanValues, yerr=standardError, color=self.darkColors[modelInd], linewidth=1)
                         ax.plot(x, plottingParams, color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
                     else:
-                        alpha = numProcessing * nCols / numModuleLayers
-                        ax.plot(x, plottingParams, color=self.darkColors[2], linewidth=1, alpha=0.6 * alpha)
+                        alpha = np.arange(1, plottingParams.shape[1] + 1) / plottingParams.shape[1]
+                        ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * alpha)
                         ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * alpha)
                 ax.set_xlabel("Training epoch")
                 ax.set_title(moduleName)
@@ -388,17 +388,13 @@ class generalVisualizations(globalPlottingProtocols):
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle} {paramName}.pdf", showPlot=not self.hpcFlag)
             else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
-    def plotGivensFeaturesPath(self, givensAnglesFeaturesPaths, moduleNames, paramNames, degreesFlag, saveFigureLocation="", plotTitle="Model Convergence Loss"):
+    def plotGivensFeaturesPath(self, givensAnglesFeaturesPaths, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
         # givensAnglesFeaturesPaths: numModels, numEpochs, numModuleLayers, numFeatures=5, numFeatureValues*
         try: numModels, numEpochs, numModuleLayers = len(givensAnglesFeaturesPaths), len(givensAnglesFeaturesPaths[0]), len(givensAnglesFeaturesPaths[0][0])
         except Exception as e: print("plotAngularFeaturesFlow:", e); return None
         nRows, nCols = self.getRowsCols(numModuleLayers, combineSharedLayers=True)
         numParams = len(paramNames)
         x = np.arange(numEpochs)
-
-        # Initialize the scaling factor flag
-        if not degreesFlag: scaleFactor = 180 / math.pi
-        else: scaleFactor = 1
 
         for paramInd in range(numParams):
             # Create a figure and axes array
@@ -418,20 +414,16 @@ class generalVisualizations(globalPlottingProtocols):
                 ax = axes[rowInd, colInd]
 
                 # Label the plot.
-                if rowInd == 0: ax.set_title(" ".join(moduleName.split(" ")[1:]).capitalize(), fontsize=16)
-                if colInd == 0 and 'shared' in moduleName.lower(): ax.set_ylabel("Shared layers", fontsize=16)
-                if colInd == 0 and 'specific' in moduleName.lower(): ax.set_ylabel("Specific layers", fontsize=16)
+                if rowInd == 0: ax.set_title(" ".join(moduleName.split(" ")[1:]).capitalize(), fontsize=12)
 
                 for modelInd in range(numModels):
                     if "shared" in moduleName and modelInd != 0: continue
                     if "specific" in moduleName: lineColor = self.darkColors[modelInd]
                     elif "shared" in moduleName: lineColor = self.blackColor
                     else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
-                    alpha = numProcessing * nCols / numModuleLayers
 
                     plottingParams = np.zeros((numEpochs, len(givensAnglesFeaturesPaths[modelInd][0][layerInd][paramInd])))
                     for epochInd in range(numEpochs): plottingParams[epochInd, :] = givensAnglesFeaturesPaths[modelInd][epochInd][layerInd][paramInd]
-                    if 'range' in paramName.lower(): plottingParams = scaleFactor * plottingParams
                     # plottingParams: numEpochs, numFeatureValues
 
                     # Plot the training losses.
@@ -444,7 +436,8 @@ class generalVisualizations(globalPlottingProtocols):
                         ax.errorbar(x=x, y=meanValues, yerr=standardError, color=lineColor, linewidth=1)
                         ax.plot(x, plottingParams, color=lineColor, linewidth=1, alpha=0.05)
                     else:
-                        ax.plot(x, plottingParams, color=self.darkColors[3], linewidth=1, alpha=0.6 * alpha)
+                        alpha = np.arange(1, plottingParams.shape[1] + 1) / plottingParams.shape[1]
+                        ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * alpha)
                         ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * alpha)
                 ax.set_xlabel("Training epoch")
                 ax.set_title(moduleName)

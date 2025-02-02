@@ -1,5 +1,4 @@
 import os
-import time
 
 import numpy as np
 import torch
@@ -21,7 +20,7 @@ class modelVisualizations(globalPlottingProtocols):
 
         # Initialize helper classes.
         self.signalEncoderViz = signalEncoderVisualizations(baseSavingFolder="", stringID="", datasetName=datasetName)
-        self.generalViz = generalVisualizations(baseSavingFolder="", stringID="", datasetName=datasetName)
+        self.generalViz = generalVisualizations(baseSavingFolder="", stringID="", datasetName="_comparison")
         plt.ioff()  # Turn off interactive mode
 
     def setModelSavingFolder(self, baseSavingFolder, stringID):
@@ -60,30 +59,24 @@ class modelVisualizations(globalPlottingProtocols):
                 self.generalViz.plotTrainingLosses(trainingLosses=[np.nanmean(specificModel.profileModel.retrainingProfileLosses, axis=1) for specificModel in specificModels], testingLosses=None,
                                                    lossLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Profile Convergence Losses")
 
-                t1 = time.time()
                 freeParamInformation = np.asarray([modelPipeline.model.getFreeParamsFullPassPath()[1:] for modelPipeline in allModelPipelines])
                 moduleNames, maxFreeParamsPath = freeParamInformation[:, 0], freeParamInformation[:, 1].astype(int)  # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
                 numFreeModelParams = [specificModel.numFreeParams for specificModel in specificModels]  # numModels, numEpochs, numModuleLayers, numSignals, numParams=1
                 self.generalViz.plotFreeParamFlow(numFreeModelParams, maxFreeParamsPath, fullView=True, paramNames=["Free Params"], moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Free Parameters Path")
                 self.generalViz.plotFreeParamFlow(numFreeModelParams, maxFreeParamsPath, fullView=False, paramNames=["Free Params"], moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Free Parameters Path Zoomed")
-                t2 = time.time(); print(f"Time to plot the free parameters: {t2 - t1}")
 
-                t1 = time.time()
                 # Plot the activation parameters for the signal encoder.
                 paramNames = ["Infinite Bound", "Linearity Factor", "Convergent Point"]
                 activationParamsPaths = np.asarray([specificModel.activationParamsPath for specificModel in specificModels])  # numModels, numEpochs, numActivations, numActivationParams=3
                 self.generalViz.plotActivationFlowCompressed(activationParamsPaths=activationParamsPaths, moduleNames=moduleNames, modelLabels=datasetNames, paramNames=paramNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Activation Parameter Compressed Path")
                 self.generalViz.plotActivationFlow(activationParamsPaths=activationParamsPaths, moduleNames=moduleNames, paramNames=paramNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Activation Parameter Path")
-                t2 = time.time(); print(f"Time to plot activation parameters: {t2 - t1}")
 
-                t1 = time.time()
                 # Plot the angle features for the signal encoder.
                 hasSpecificLayers = len(allModelPipelines[0].model.specificSignalEncoderModel.processingLayers) != 0
                 if hasSpecificLayers: givensAnglesFeatureNames = allModelPipelines[0].model.specificSignalEncoderModel.processingLayers[0].getFeatureParams(layerInd=0)[0]
                 else: givensAnglesFeatureNames = allModelPipelines[0].model.sharedSignalEncoderModel.processingLayers[0].getFeatureParams(layerInd=0)[0]
                 givensAnglesFeaturesPaths = [specificModel.givensAnglesFeaturesPath for specificModel in specificModels]  # numModels, numEpochs, numModuleLayers, numFeatures, numValues
-                self.generalViz.plotGivensFeaturesPath(givensAnglesFeaturesPaths=givensAnglesFeaturesPaths, paramNames=givensAnglesFeatureNames, moduleNames=moduleNames, degreesFlag=False, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Angular Features Path")
-                t2 = time.time(); print(f"Time to plot givens angles: {t2 - t1}")
+                self.generalViz.plotGivensFeaturesPath(givensAnglesFeaturesPaths=givensAnglesFeaturesPaths, paramNames=givensAnglesFeatureNames, moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Angular Features Path")
 
                 # Plot the scaling factors for the signal encoder.
                 scalingFactorsPaths = [specificModel.scalingFactorsPath for specificModel in specificModels]  # numModels, numEpochs, numModuleLayers, numSignals, numParams=1
@@ -157,20 +150,16 @@ class modelVisualizations(globalPlottingProtocols):
                     self.signalEncoderViz.plotProfileReconstruction(resampledBiomarkerTimes, healthProfile, reconstructedHealthProfile, epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="signalEncoding/", plotTitle="Health Profile Reconstruction")
 
                     # Plot the angular information.
-                    t1 = time.time()
                     self.signalEncoderViz.plotsGivensAnglesHist(givensAnglesPath, reversibleModuleNames, epoch=currentEpoch, signalInd=signalInd, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="Rotation Angles Hist")
-                    t2 = time.time(); print(f"Time to plot givens angles: {t2 - t1}"); t1 = time.time()
                     self.signalEncoderViz.plotAngleLocations(givensAnglesPath, reversibleModuleNames, signalNames=signalNames, epoch=currentEpoch, signalInd=signalInd, saveFigureLocation="signalEncoding/", plotTitle="Givens transformations")
-                    t2 = time.time(); print(f"Time to plot givens angles: {t2 - t1}"); t1 = time.time()
                     self.signalEncoderViz.plotsGivensAnglesLine(givensAnglesPath, reversibleModuleNames, epoch=currentEpoch, signalInd=signalInd, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="Rotation Angles Line")
-                    t2 = time.time(); print(f"Time to plot givens angles: {t2 - t1}")
 
                     # Plot the scale factor information.
                     self.signalEncoderViz.plotScaleFactorHist(scalingFactorsPath, reversibleModuleNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Scale Factors Hist")
                     self.signalEncoderViz.plotScaleFactorLines(scalingFactorsPath, reversibleModuleNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Scale Factors Line")
 
                     # Plot the activation information.
-                    self.signalEncoderViz.plotActivationCurvesCompressed(activationCurvePath, activationModuleNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Activation Parameters")
+                    self.signalEncoderViz.plotActivationCurvesCompressed(activationCurvePath, activationModuleNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Activation Parameters (Compressed)")
                     self.signalEncoderViz.plotActivationCurves(activationCurvePath, activationModuleNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Activation Parameters")
 
                 # Plot the autoencoder results.
