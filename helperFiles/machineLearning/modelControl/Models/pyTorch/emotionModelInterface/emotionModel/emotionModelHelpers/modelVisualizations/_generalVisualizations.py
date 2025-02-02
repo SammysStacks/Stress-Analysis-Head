@@ -245,9 +245,9 @@ class generalVisualizations(globalPlottingProtocols):
                     plottingParams = activationParamsPaths[modelInd, :, layerInd, paramInd]
                     if 'specific' in moduleName: ax.plot(x, plottingParams, color=lineColor, linewidth=1, alpha=1)
                     else:
-                        alpha = np.arange(1, plottingParams.shape[1] + 1) / plottingParams.shape[1]
-                        ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * alpha)
-                        ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * alpha)
+                        alphas = np.linspace(0, 1, plottingParams.shape[1])
+                        ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * (1 - alphas[:, None]))
+                        ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * alphas[:, None])
 
                 ax.set_xlabel("Training epoch")
                 ax.set_title(moduleName)
@@ -311,9 +311,9 @@ class generalVisualizations(globalPlottingProtocols):
                         ax.errorbar(x=x, y=meanValues, yerr=standardError, color=self.darkColors[modelInd], linewidth=1)
                         ax.plot(x, plottingParams, color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
                     else:
-                        alpha = np.arange(1, plottingParams.shape[1] + 1) / plottingParams.shape[1]
-                        ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * alpha)
-                        ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * alpha)
+                        alphas = np.linspace(0, 1, plottingParams.shape[1])
+                        ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * (1 - alphas[:, None]))
+                        ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * alphas[:, None])
                     if fullView: ax.hlines(y=sequenceLength, xmin=0, xmax=numEpochs + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
                     if fullView: ax.hlines(y=maxFreeParams, xmin=0, xmax=numEpochs + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
                 if colInd == 0: ax.set_ylabel("Number of rotations")
@@ -371,9 +371,9 @@ class generalVisualizations(globalPlottingProtocols):
                         ax.errorbar(x=x, y=meanValues, yerr=standardError, color=self.darkColors[modelInd], linewidth=1)
                         ax.plot(x, plottingParams, color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
                     else:
-                        alpha = np.arange(1, plottingParams.shape[1] + 1) / plottingParams.shape[1]
-                        ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * alpha)
-                        ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * alpha)
+                        alphas = np.linspace(0, 1, plottingParams.shape[1])
+                        ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * (1 - alphas[:, None]))
+                        ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * alphas[:, None])
                 ax.set_xlabel("Training epoch")
                 ax.set_title(moduleName)
                 ax.set_xlim((0, numEpochs))
@@ -436,9 +436,9 @@ class generalVisualizations(globalPlottingProtocols):
                         ax.errorbar(x=x, y=meanValues, yerr=standardError, color=lineColor, linewidth=1)
                         ax.plot(x, plottingParams, color=lineColor, linewidth=1, alpha=0.05)
                     else:
-                        alpha = np.arange(1, plottingParams.shape[1] + 1) / plottingParams.shape[1]
-                        ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * alpha)
-                        ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * alpha)
+                        alphas = np.linspace(0, 1, plottingParams.shape[1])
+                        ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * (1 - alphas[:, None]))
+                        ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * alphas[:, None])
                 ax.set_xlabel("Training epoch")
                 ax.set_title(moduleName)
                 ax.set_xlim((0, numEpochs))
