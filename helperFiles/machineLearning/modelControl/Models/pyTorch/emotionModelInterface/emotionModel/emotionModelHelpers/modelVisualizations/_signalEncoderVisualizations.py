@@ -56,7 +56,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.title(f"{plotTitle} epoch{epoch}")
         plt.ylabel("Signal (AU)")
         if "Health Profile Generation" in plotTitle: plt.ylim((-0.75, 0.75))
-        else: plt.ylim((-1.5, 1.5))
+        else: plt.ylim((-1.75, 1.75))
 
         # Save the figure.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", showPlot=not self.hpcFlag)
@@ -126,7 +126,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             plt.ylabel("Signal (AU)")
             plt.legend(loc="best")
             plt.xlabel("Time (sec)")
-            plt.ylim((-1.5, 1.5))
+            plt.ylim((-1.75, 1.75))
 
             # Save the figure.
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]}.pdf", showPlot=not self.hpcFlag)
@@ -141,7 +141,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             plt.ylabel("Signal (AU)")
             plt.legend(loc="best")
             plt.xlabel("Time (sec)")
-            plt.ylim((-1.5, 1.5))
+            plt.ylim((-1.75, 1.75))
 
             # Save the figure.
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} Error epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]} Error.pdf", showPlot=not self.hpcFlag)
@@ -254,7 +254,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         nRows, nCols = self.getRowsCols(numModuleLayers=len(givensAnglesPath))
         if not degreesFlag: scaleFactor = 180 / math.pi; degreesFlag = True
         else: scaleFactor = 1
-        yMax = 0.4
+        yMax = 1/3
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey='col')  # squeeze=False ensures axes is 2D
@@ -484,7 +484,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         ax.set_xlabel("Time (Sec)", fontsize=12, labelpad=10)
         ax.set_ylabel("Model Layer", fontsize=12, labelpad=10)
         ax.set_zlabel("Signal value (AU)", fontsize=12, labelpad=10)
-        ax.set_zlim(-1.5, 1.5)
+        ax.set_zlim(-1.75, 1.75)
 
         # Make the aspect ratio look nicer in 3D
         ax.set_box_aspect([2, 1, 1])
