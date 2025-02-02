@@ -55,7 +55,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.xlabel("Time (sec)")
         plt.title(f"{plotTitle} epoch{epoch}")
         plt.ylabel("Signal (AU)")
-        if "Health Profile Generation" in plotTitle: plt.ylim((-1, 1))
+        if "Health Profile Generation" in plotTitle: plt.ylim((-0.75, 0.75))
         else: plt.ylim((-1.5, 1.5))
 
         # Save the figure.
@@ -95,7 +95,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.xlabel("Time (sec)")
         plt.title(f"{plotTitle} epoch{epoch}")
         plt.ylabel("Signal (AU)")
-        plt.ylim((-1, 1))
+        plt.ylim((-0.75, 0.75))
 
         # Save the figure.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", showPlot=not self.hpcFlag)
