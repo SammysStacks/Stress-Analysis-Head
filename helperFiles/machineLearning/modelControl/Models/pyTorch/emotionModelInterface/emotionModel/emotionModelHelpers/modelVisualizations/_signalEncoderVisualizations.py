@@ -130,7 +130,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             plt.ylim((-1.75, 1.75))
 
             # Save the figure.
-            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]}.pdf", showPlot=not self.hpcFlag)
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]}.pdf", clearFigure=True, showPlot=False)
             else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
             # Plot the signal reconstruction.
@@ -145,7 +145,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             plt.ylim((-1.75, 1.75))
 
             # Save the figure.
-            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} Error epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]} Error.pdf", showPlot=not self.hpcFlag)
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} Error epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]} Error.pdf", clearFigure=True, showPlot=False)
             else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
             break
 
@@ -245,7 +245,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.xlim((-0.05, 1.05))
 
         # Save the plot
-        plt.tight_layout()
+        # plt.tight_layout()
         fig.set_constrained_layout(True)
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} cutoff{angularThresholdMax} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]} cutoff{angularThresholdMax}.pdf", clearFigure=True, showPlot=False)
         else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
@@ -313,7 +313,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.suptitle(t=f"{plotTitle}; Epoch {epoch}\n", fontsize=16)
         fig.supxlabel(f"Angle ({units})")
         fig.supylabel("Density")
-        plt.tight_layout()
+        # plt.tight_layout()
         fig.set_constrained_layout(True)
 
         # Save the plot
@@ -377,10 +377,10 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Adjust layout to prevent overlapping titles/labels
         plt.suptitle(f"{plotTitle}; Epoch {epoch}\n", fontsize=16)
-        plt.tight_layout()
-        fig.set_constrained_layout(True)
+        # plt.tight_layout()
         fig.supylabel(f"Angle ({units})")
         fig.supxlabel("Parameter Index")
+        fig.set_constrained_layout(True)
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", clearFigure=False, showPlot=False)
@@ -410,8 +410,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         for layerInd in range(len(givensAnglesPath)):
             moduleName = reversibleModuleNames[layerInd].lower()
-            numSignals, numAngles = givensAnglesPath[layerInd].shape
-            numSignalsPlotting = min(1, numSignals, len(self.darkColors) - 1)
 
             if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
             elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
@@ -422,32 +420,30 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             # Customize subplot title and axes
             if rowInd == 0: ax.set_title(" ".join(moduleName.split(" ")[1:]).capitalize(), fontsize=16)
             if colInd == 0: ax.set_ylabel(f"Layer {rowInd + 1}", fontsize=16)
+            numSignals, numAngles = givensAnglesPath[layerInd].shape
+            numSignalsPlotting = min(1, numSignals, len(self.darkColors) - 1)
 
             # Plot training eigenvalue angles
             weightMatrix = scaleFactor * givensAnglesPath[layerInd][0:numSignalsPlotting]  # histograms: numSignalsPlotting, numAngles
             sequenceLength = int((1 + (1 + 8 * numAngles) ** 0.5) // 2)
-
-            # The restricted window for the neural weights
-            upper_window_mask = np.triu(np.ones(shape=(sequenceLength, sequenceLength)), k=1)  # Equivalent to torch.triu with diagonal=1
-            row_inds, col_inds = np.nonzero(upper_window_mask)  # Calculate the offsets to map positions to kernel indices
+            rowInds, colInds = np.triu_indices(sequenceLength, k=1)
 
             # Create the signal weight matrix
             signalWeightMatrix = np.zeros((sequenceLength, sequenceLength))
-            signalWeightMatrix[row_inds, col_inds] = -weightMatrix[signalInd]
-            signalWeightMatrix[col_inds, row_inds] = weightMatrix[signalInd]
+            signalWeightMatrix[rowInds, colInds] = -weightMatrix[signalInd]
+            signalWeightMatrix[colInds, rowInds] = weightMatrix[signalInd]
 
             # Plot the heatmap
-            ax.imshow(signalWeightMatrix.copy(), cmap=self.custom_cmap, interpolation="nearest", aspect="equal", vmin=-degrees, vmax=degrees)
+            ax.imshow(signalWeightMatrix, cmap=self.custom_cmap, interpolation="nearest", aspect="equal", vmin=-degrees, vmax=degrees)
             ax.set_title(f"{reversibleModuleNames[layerInd]}")
         # Adjust layout to prevent overlapping titles/labels
         fig.suptitle(t=f"{plotTitle}; Epoch {epoch}\n", fontsize=24)
-        plt.tight_layout()
         fig.supylabel(r"$S_{i}$", fontsize=20)
         fig.supxlabel(r"$S_{j}$", fontsize=20)
         fig.set_constrained_layout(True)
 
         # Save the plot
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')}.pdf", clearFigure=False, showPlot=False)
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')}.pdf", clearFigure=True, showPlot=False)
         else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
     def plotScaleFactorLines(self, scalingFactorsPath, reversibleModuleNames, epoch, saveFigureLocation, plotTitle):
