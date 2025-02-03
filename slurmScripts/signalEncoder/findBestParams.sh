@@ -23,7 +23,7 @@ cullingEpochs=(1 2 3 4 5 6 7 8 9 10)  # 10
 # ----- # TODO
 angularThresholdMins=(1 2 3 4 5 6 7 8 9 10)  # 9; 2 <= x <= 5
 angularThresholdMaxs=(45)  # 4; 20 <= x == (30, 45)
-cullingEpochs=(1 2 3 4 5 6 7 8 9 10)  # 10
+cullingEpochs=(1 2 3 4 5 6 8 10)  # 10
 
 # Known interesting parameters: 63
 numSharedEncoderLayers_arr=(0 1 2 3 4 5 6 7 8)  # 9
@@ -77,11 +77,11 @@ waveletTypes_arr=('bior3.1')
 numProfileShots_arr=(24)
 numProfileShots_arr=(16)
 
-for angularThresholdMin in "${angularThresholdMins[@]}"
+for cullingEpoch in "${cullingEpochs[@]}"
 do
-  for angularThresholdMax in "${angularThresholdMaxs[@]}"
+  for angularThresholdMin in "${angularThresholdMins[@]}"
   do
-    for cullingEpoch in "${cullingEpochs[@]}"
+    for angularThresholdMax in "${angularThresholdMaxs[@]}"
     do
       for beta1s in "${beta1s_arr[@]}"
       do
