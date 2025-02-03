@@ -60,9 +60,9 @@ waveletTypes_arr=(
 )
 
 # Trinary reference states.
-#angularThresholdMins=(5)
+#angularThresholdMins=(6)
 #angularThresholdMaxs=(30 45)
-#cullingEpochs=(5)
+#cullingEpochs=(1)
 
 # Binary reference states.
 numSpecificEncoderLayers_arr=(1)
