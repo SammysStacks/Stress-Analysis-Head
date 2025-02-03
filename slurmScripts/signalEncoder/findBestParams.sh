@@ -26,8 +26,8 @@ angularThresholdMaxs=(45)  # 4; 20 <= x == (30, 45)
 cullingEpochs=(1 2 3 4 5 6 8 10)  # 10
 
 # Known interesting parameters: 63
-numSharedEncoderLayers_arr=(0 1 2 3 4 5 6 7 8)  # 9
-numSpecificEncoderLayers_arr=(0 1 2 3 4 5 6)  # 7
+numSharedEncoderLayers_arr=(0 1 2 3 4 5 6 7 8 9 10 11 12)  # 9
+numSpecificEncoderLayers_arr=(0 1 2 3 4)  # 7
 
 # Known interesting parameters: 7*7 = 49
 encodedDimensions_arr=(16 32 64 128 256 512 1024)  # 7
@@ -60,13 +60,13 @@ waveletTypes_arr=(
 )
 
 # Trinary reference states.
-#angularThresholdMins=(6)
-#angularThresholdMaxs=(30 45)
-#cullingEpochs=(1)
+angularThresholdMins=(6.6)
+angularThresholdMaxs=(45)
+cullingEpochs=(1)
 
 # Binary reference states.
-numSpecificEncoderLayers_arr=(1)
-numSharedEncoderLayers_arr=(4)
+#numSpecificEncoderLayers_arr=(1)
+#numSharedEncoderLayers_arr=(4)
 
 # Binary reference states.
 encodedDimensions_arr=(128)
