@@ -6,6 +6,7 @@ import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.patches import Arc, Wedge
 from shap.plots.colors._colors import lch2rgb
+import seaborn as sns
 
 # Visualization protocols
 from helperFiles.globalPlottingProtocols import globalPlottingProtocols
@@ -179,7 +180,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.grid(False)
 
         # Save or clear figure
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} {signalNames[signalInd]}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", showPlot=not self.hpcFlag)
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]}.pdf", showPlot=not self.hpcFlag)
         else: self.clearFigure(fig=None, legend=None, showPlot=False)
 
     # --------------------- Visualize Model Training --------------------- #
@@ -246,7 +247,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Save the plot
         plt.tight_layout()
         fig.set_constrained_layout(True)
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} cutoff{angularThresholdMax} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]}.pdf", clearFigure=True, showPlot=False)
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} cutoff{angularThresholdMax} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]} cutoff{angularThresholdMax}.pdf", clearFigure=True, showPlot=False)
         else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
     def plotsGivensAnglesHist(self, givensAnglesPath, reversibleModuleNames, epoch, signalInd, degreesFlag, saveFigureLocation, plotTitle):
@@ -363,7 +364,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             if colInd == 0: ax.set_ylabel(f"Layer {rowInd + 1}", fontsize=16)
 
             # Get the angles for the current layer
-            lines = scaleFactor * givensAnglesPath[layerInd][signalInd:signalInd + len(self.darkColors)]  # Dimensions: numSignals, numParams
+            lines = scaleFactor * givensAnglesPath[layerInd][signalInd:signalInd + len(self.darkColors) - 1]  # Dimensions: numSignals, numParams
             for lineInd in range(len(lines)): ax.plot(lines[lineInd], 'o', color=self.darkColors[lineInd], alpha=0.75, markersize=2, linewidth=1)
             # Customize subplot title and axes
             ax.set_title(f"{reversibleModuleNames[layerInd]}")
@@ -388,6 +389,65 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Save the plot
         plt.ylim((-angularThresholdMax, angularThresholdMax))
         if self.saveDataFolder:  self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')}.pdf", clearFigure=True, showPlot=False)
+        else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
+
+    def plotsGivensAnglesHeatmap(self, givensAnglesPath, reversibleModuleNames, signalInd, epoch, degreesFlag, saveFigureLocation, plotTitle):
+        # givensAnglesPath: numModuleLayers, numSignals, numAngles
+        # maxFreeParamsPath: numModuleLayers
+        nRows, nCols = self.getRowsCols(numModuleLayers=len(givensAnglesPath))
+        if not degreesFlag: scaleFactor = 180 / math.pi; degreesFlag = True
+        else: scaleFactor = 1
+
+        # Create a figure and axes array
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(4 * nCols, 4 * nRows), squeeze=False, sharex='col', sharey='col')  # squeeze=False ensures axes is 2D
+        numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
+        units = "degrees" if degreesFlag else "radians"
+        degrees = (180 if degreesFlag else math.pi) / 4
+
+        # Get the angular thresholds.
+        angularThresholdMin = modelConstants.userInputParams['angularThresholdMin']
+        angularThresholdMax = modelConstants.userInputParams['angularThresholdMax']
+
+        for layerInd in range(len(givensAnglesPath)):
+            moduleName = reversibleModuleNames[layerInd].lower()
+            numSignals, numAngles = givensAnglesPath[layerInd].shape
+            numSignalsPlotting = min(1, numSignals, len(self.darkColors) - 1)
+
+            if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
+            elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
+            elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
+            else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+            ax = axes[rowInd, colInd]
+
+            # Customize subplot title and axes
+            if rowInd == 0: ax.set_title(" ".join(moduleName.split(" ")[1:]).capitalize(), fontsize=16)
+            if colInd == 0: ax.set_ylabel(f"Layer {rowInd + 1}", fontsize=16)
+
+            # Plot training eigenvalue angles
+            weightMatrix = scaleFactor * givensAnglesPath[layerInd][0:numSignalsPlotting]  # histograms: numSignalsPlotting, numAngles
+            sequenceLength = int((1 + (1 + 8 * numAngles) ** 0.5) // 2)
+
+            # The restricted window for the neural weights
+            upper_window_mask = np.triu(np.ones(shape=(sequenceLength, sequenceLength)), k=1)  # Equivalent to torch.triu with diagonal=1
+            row_inds, col_inds = np.nonzero(upper_window_mask)  # Calculate the offsets to map positions to kernel indices
+
+            # Create the signal weight matrix
+            signalWeightMatrix = np.zeros((sequenceLength, sequenceLength))
+            signalWeightMatrix[row_inds, col_inds] = -weightMatrix[signalInd]
+            signalWeightMatrix[col_inds, row_inds] = weightMatrix[signalInd]
+
+            # Plot the heatmap
+            ax.imshow(signalWeightMatrix.copy(), cmap=self.custom_cmap, interpolation="nearest", aspect="equal", vmin=-degrees, vmax=degrees)
+            ax.set_title(f"{reversibleModuleNames[layerInd]}")
+        # Adjust layout to prevent overlapping titles/labels
+        fig.suptitle(t=f"{plotTitle}; Epoch {epoch}\n", fontsize=24)
+        plt.tight_layout()
+        fig.supylabel(r"$S_{i}$", fontsize=20)
+        fig.supxlabel(r"$S_{j}$", fontsize=20)
+        fig.set_constrained_layout(True)
+
+        # Save the plot
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')}.pdf", clearFigure=False, showPlot=False)
         else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
     def plotScaleFactorLines(self, scalingFactorsPath, reversibleModuleNames, epoch, saveFigureLocation, plotTitle):
@@ -492,7 +552,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.tight_layout()
 
         # Save the plot
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch} batchInd{batchInd} {signalNames[signalInd]}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", clearFigure=True, showPlot=False)
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} batchInd{batchInd} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]} batchInd{batchInd}.pdf", clearFigure=True, showPlot=False)
         else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
     def plotActivationCurvesCompressed(self, activationCurves, moduleNames, epoch, saveFigureLocation, plotTitle):

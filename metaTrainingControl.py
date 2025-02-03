@@ -57,10 +57,10 @@ if __name__ == "__main__":
 
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--initialProfileAmp', type=float, default=1e-3, help='The limits for profile initialization. Should be near zero.')
-    parser.add_argument('--numSpecificEncoderLayers', type=int, default=2, help='The number of layers in the model: [1, 2]')
-    parser.add_argument('--numSharedEncoderLayers', type=int, default=2, help='The number of layers in the model: [2, 8]')
-    parser.add_argument('--angularThresholdMin', type=float, default=6, help='The minimum rotational threshold in degrees.')
     parser.add_argument('--angularThresholdMax', type=float, default=45, help='The minimum rotational threshold in degrees.')
+    parser.add_argument('--angularThresholdMin', type=float, default=6, help='The minimum rotational threshold in degrees.')
+    parser.add_argument('--numSpecificEncoderLayers', type=int, default=3, help='The number of layers in the model: [1, 2]')
+    parser.add_argument('--numSharedEncoderLayers', type=int, default=6, help='The number of layers in the model: [2, 8]')
     parser.add_argument('--cullingEpoch', type=int, default=3, help='The number of epochs before culling null weights.')
     parser.add_argument('--profileDimension', type=int, default=128, help='The number of profile weights: [32, 256]')
     parser.add_argument('--numProfileShots', type=int, default=16, help='The epochs for profile training: [16, 32]')
@@ -124,7 +124,7 @@ if __name__ == "__main__":
 
     # Calculate the initial loss.
     trainingProtocols.boundAngularWeights(allMetaModels, allModels, applyMinThresholding=False)
-    trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate)
+    trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate, showMinimumPlots=False)
     trainingProtocols.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, profileOnlyTraining=True)
     if modelConstants.useInitialLoss: trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)  # Calculate the initial loss.
 
@@ -134,7 +134,7 @@ if __name__ == "__main__":
         startEpochTime = time.time()
 
         # Get the saving information.
-        saveFullModel, plotSteps = modelParameters.getEpochParameters(epoch, numEpoch_toSaveFull, numEpoch_toPlot)
+        saveFullModel, showAllPlots = modelParameters.getEpochParameters(epoch, numEpoch_toSaveFull, numEpoch_toPlot)
         applyMinThresholding = (epoch % numEpoch_toCull == 0)
 
         # Train the model for a single epoch.
@@ -143,7 +143,7 @@ if __name__ == "__main__":
 
         # Store the initial loss information and plot.
         trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)
-        if plotSteps: trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate)
+        trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate, showMinimumPlots=not showAllPlots)
 
         # Save the model sometimes (only on the main device).
         if saveFullModel and accelerator.is_local_main_process:

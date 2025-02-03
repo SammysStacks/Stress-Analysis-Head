@@ -98,7 +98,7 @@ class trainingProtocolHelpers:
             with torch.no_grad(): modelPipeline.organizeLossInfo.storeTrainingLosses(submodel, modelPipeline, lossDataLoader)
         t2 = time.time(); self.accelerator.print("Total loss calculation time:", t2 - t1)
 
-    def plotModelState(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate):
+    def plotModelState(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate, showMinimumPlots):
         self.unifyAllModelWeights(allMetaModels, allModels)  # Unify all the model weights.
 
         t1 = time.time()
@@ -109,8 +109,8 @@ class trainingProtocolHelpers:
 
             with torch.no_grad():
                 numEpochs = modelPipeline.getTrainingEpoch(submodel)
-                modelPipeline.modelVisualization.plotAllTrainingEvents(submodel, modelPipeline, lossDataLoader, trainingDate, numEpochs)
-        with torch.no_grad(): allMetaModels[0].modelVisualization.plotDatasetComparison(submodel, allMetaModels + allModels, trainingDate)
+                modelPipeline.modelVisualization.plotAllTrainingEvents(submodel, modelPipeline, lossDataLoader, trainingDate, numEpochs, showMinimumPlots=showMinimumPlots)
+        with torch.no_grad(): allMetaModels[0].modelVisualization.plotDatasetComparison(submodel, allMetaModels + allModels, trainingDate, showMinimumPlots=showMinimumPlots)
         t2 = time.time()
         self.accelerator.print("Total plotting time:", t2 - t1)
 
