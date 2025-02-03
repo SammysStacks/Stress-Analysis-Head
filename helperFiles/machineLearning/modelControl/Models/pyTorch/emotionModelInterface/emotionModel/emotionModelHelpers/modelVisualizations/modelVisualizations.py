@@ -35,7 +35,7 @@ class modelVisualizations(globalPlottingProtocols):
 
         # Initialize visualization protocols.
         self.signalEncoderViz.setSavingFolder(self.baseSavingDataFolder, stringID, self.datasetName)
-        self.generalViz.setSavingFolder(self.baseSavingDataFolder, stringID, self.datasetName)
+        self.generalViz.setSavingFolder(self.baseSavingDataFolder, stringID, datasetName="_comparison")
 
     # ---------------------------------------------------------------------- #
 
