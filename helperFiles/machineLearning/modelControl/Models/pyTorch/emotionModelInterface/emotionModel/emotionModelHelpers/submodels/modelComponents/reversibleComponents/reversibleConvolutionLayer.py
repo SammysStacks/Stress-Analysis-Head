@@ -179,10 +179,10 @@ if __name__ == "__main__":
 
     try:
         # for layers, sequenceLength2 in [(2, 256), (2, 128), (2, 64), (2, 32), (2, 16), (2, 8), (2, 4), (2, 2)]:
-        for _layerInd, sequenceLength2 in [(1, 256), (1, 128)]:
+        for _layerInd, sequenceLength2 in [(1, 256)]:
             # General parameters.
             _batchSize, _numSignals, _sequenceLength = 128, 128, sequenceLength2
-            _activationMethod = 'reversibleLinearSoftSign'  # reversibleLinearSoftSign
+            _activationMethod = 'none'  # reversibleLinearSoftSign
             _numLayers = _layerInd
 
             # Set up the parameters.
@@ -194,6 +194,7 @@ if __name__ == "__main__":
             if reconstructionFlag: _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(healthProfile, atol=1e-6, numLayers=1, plotResults=False)
             else: _forwardData = neuralLayerClass.forward(healthProfile)
             neuralLayerClass.printParams()
+            print((_forwardData - healthProfile)[0][0].sum())
 
             ratio = (_forwardData.norm(dim=-1) / healthProfile.norm(dim=-1)).view(-1).detach().numpy()
             if abs(ratio.mean() - 1) < 0.1: plt.hist(ratio, bins=150, alpha=0.2, label=f'len{_sequenceLength}_layers={_layerInd}', density=True)
