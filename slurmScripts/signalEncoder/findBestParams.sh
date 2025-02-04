@@ -20,10 +20,6 @@ lrs_profileGen=('1e-4') # # 5e-5 <= x == 1e-4;
 angularThresholdMins=(0 1 2 3 4 5 6 7 8)  # 9; 2 <= x <= 5
 angularThresholdMaxs=(10 20 30 45)  # 4; 20 <= x == (30, 45)
 cullingEpochs=(1 2 3 4 5 6 7 8 9 10)  # 10
-# ----- # TODO
-angularThresholdMins=(1 2 3 4 5 6 7 8 9 10)  # 9; 2 <= x <= 5
-angularThresholdMaxs=(45)  # 4; 20 <= x == (30, 45)
-cullingEpochs=(1 2 3 4 5 6 8 10)  # 10
 
 # Known interesting parameters: 63
 numSharedEncoderLayers_arr=(0 1 2 3 4 5 6 7 8 9 10 11 12)  # 9
@@ -60,13 +56,16 @@ waveletTypes_arr=(
 )
 
 # Trinary reference states.
-angularThresholdMins=('6.6')
+angularThresholdMins=(6)
 angularThresholdMaxs=(45)
 cullingEpochs=(1)
 
 # Binary reference states.
 #numSpecificEncoderLayers_arr=(1)
 #numSharedEncoderLayers_arr=(4)
+# Known interesting parameters: 63
+numSharedEncoderLayers_arr=(0 1 2 3 4 5 6 7 8 9 10 11 12)  # 13
+numSpecificEncoderLayers_arr=(0 1 2)  # 3
 
 # Binary reference states.
 encodedDimensions_arr=(128)
@@ -110,17 +109,17 @@ do
                               do
                                 for encodedDimension in "${encodedDimensions_arr[@]}"
                                 do
-                                  for numSpecificEncoderLayers in "${numSpecificEncoderLayers_arr[@]}"
+                                  for numSharedEncoderLayers in "${numSharedEncoderLayers_arr[@]}"
                                   do
-                                    for numSharedEncoderLayers in "${numSharedEncoderLayers_arr[@]}"
+                                    for numSpecificEncoderLayers in "${numSpecificEncoderLayers_arr[@]}"
                                     do
                                       if (( encodedDimension < profileDimension )); then
                                         continue
                                       fi
                                       
-                                      #if (( angularThresholdMax <= angularThresholdMin )); then
-                                      #  continue
-                                      #fi
+                                      if (( angularThresholdMax <= angularThresholdMin )); then
+                                        continue
+                                      fi
   
                                       if [ "$1" == "CPU" ]; then
                                         sbatch -J "signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_CPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$numProfileShots" "$1" "$waveletType" "$optimizer" "$lr_profile" "$lr_reversible" "$lr_profileGen" "$profileDimension" "$wd_profile" "$wd_reversible" "$wd_profileGen" "$beta1s" "$beta2s" "$momentums" "$cullingEpoch" "$angularThresholdMin" "$angularThresholdMax"
