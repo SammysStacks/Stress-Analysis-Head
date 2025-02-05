@@ -30,6 +30,7 @@ class emotionModelHead(nn.Module):
         self.emotionNames = emotionNames  # The names of each emotion we are predicting. Dim: numEmotions
         self.numSubjects = numSubjects  # The maximum number of subjects the model is training on.
         self.datasetName = datasetName  # The name of the dataset the model is training on.
+        self.numSignals = len(featureNames)  # The number of signals in the model.
 
         # General parameters.
         self.encodedDimension = userInputParams['encodedDimension']  # The dimension of the encoded signal.
@@ -207,7 +208,6 @@ class emotionModelHead(nn.Module):
         if 'neural' in name: compiledName = compiledName + ' neural'; assert 'spatial' not in name
         if 'high' in name: compiledName = compiledName + ' high frequency'; assert 'low' not in name
         elif 'low' in name: compiledName = compiledName + ' low frequency'; assert 'high' not in name
-        elif 'processing' not in name: raise Exception("Invalid name:", name)
         else: compiledName = compiledName + ' spatial'
 
         return compiledName
@@ -229,6 +229,14 @@ class emotionModelHead(nn.Module):
                 scalingFactorsPath.append(scalingFactors)  # scalingFactorsPath: numModuleLayers, numSignals, numParams=1
                 givensAnglesFeaturesPath.append(givensAnglesFeatures)  # givensAnglesFeaturesPath: numModuleLayers, numFeatures, numValues
                 reversibleModuleNames.append(self.compileModuleName(name))
+
+            elif isinstance(module, nn.Identity) and 'processing' in name:
+                givensAnglesFeatureNames = reversibleConvolutionLayer.getFeatureNames()
+
+                givensAnglesPath.append(np.zeros((self.numSignals, int(self.encodedDimension * (self.encodedDimension - 1) / 2))))  # givensAnglesPath: numModuleLayers, numSignals, numParams
+                scalingFactorsPath.append(np.ones((self.numSignals, 1)))  # scalingFactorsPath: numModuleLayers, numSignals, numParams=1
+                givensAnglesFeaturesPath.append(np.zeros((len(givensAnglesFeatureNames), self.numSignals)))  # givensAnglesFeaturesPath: numModuleLayers, numFeatures, numValues
+                reversibleModuleNames.append(self.compileModuleName(name))
         return givensAnglesPath, scalingFactorsPath, givensAnglesFeaturesPath, reversibleModuleNames, givensAnglesFeatureNames
 
     def getActivationCurvesFullPassPath(self):
@@ -238,7 +246,12 @@ class emotionModelHead(nn.Module):
                 x, y = module.activationFunction.getActivationCurve(x_min=-1.5, x_max=1.5, num_points=100)
                 activationCurvePath.append([x, y])
                 moduleNames.append(self.compileModuleName(name))
-        assert len(activationCurvePath) != 0
+
+            elif isinstance(module, nn.Identity) and 'processing' in name:
+                x = np.linspace(-1.5, stop=1.5, num=100); y = x
+
+                activationCurvePath.append([x, y])
+                moduleNames.append(self.compileModuleName(name))
         activationCurvePath = np.asarray(activationCurvePath)
         return activationCurvePath, moduleNames
 
@@ -255,6 +268,10 @@ class emotionModelHead(nn.Module):
                 params = module.activationFunction.getActivationParams()
                 activationParamsPath.append([param.detach().cpu().item() for param in params])
                 moduleNames.append(self.compileModuleName(name))
+
+            elif isinstance(module, nn.Identity) and 'processing' in name:
+                activationParamsPath.append(np.asarray([0.5, 1, 1]))
+                moduleNames.append(self.compileModuleName(name))
         assert len(activationParamsPath) != 0
         activationParamsPath = np.asarray(activationParamsPath)
         return activationParamsPath, moduleNames
@@ -268,6 +285,11 @@ class emotionModelHead(nn.Module):
 
                 numFreeParamsPath.append(params)  # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
                 maxFreeParamsPath.append(module.numParams)  # maxFreeParamsPath: numModuleLayers
+                moduleNames.append(self.compileModuleName(name))
+
+            elif isinstance(module, nn.Identity) and 'processing' in name:
+                maxFreeParamsPath.append(0)  # maxFreeParamsPath: numModuleLayers
+                numFreeParamsPath.append(np.zeros((self.numSignals, 1)))  # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
                 moduleNames.append(self.compileModuleName(name))
         assert len(numFreeParamsPath) != 0
         return numFreeParamsPath, moduleNames, maxFreeParamsPath

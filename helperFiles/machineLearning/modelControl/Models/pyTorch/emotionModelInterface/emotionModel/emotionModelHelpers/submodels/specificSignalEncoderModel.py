@@ -48,7 +48,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
     def addLayer(self):
         self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True))
-        if self.learningProtocol == 'rCNN': self.processingLayers.append(self.postProcessingLayerRCNN(numSignals=self.numSignals, sequenceLength=self.encodedDimension))
+        if self.learningProtocol == 'rCNN': self.processingLayers.append(nn.Identity())
         elif self.learningProtocol == 'FC': self.processingLayers.append(self.postProcessingLayerFC(sequenceLength=self.encodedDimension))
         elif self.learningProtocol == 'CNN': self.processingLayers.append(self.postProcessingLayerCNN(numSignals=self.numSignals))
         else: raise "The learning protocol is not yet implemented."
@@ -58,14 +58,12 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         if not reversibleInterface.forwardDirection:
             # Apply the neural operator layer with activation.
             signalData = self.neuralLayers[layerInd](signalData)
-            # signalData = self.processingLayers[layerInd](signalData)
         else:
             # Get the reverse layer index.
             pseudoLayerInd = len(self.neuralLayers) - layerInd - 1
             assert 0 <= pseudoLayerInd < len(self.neuralLayers), f"The pseudo layer index is out of bounds: {pseudoLayerInd}, {len(self.neuralLayers)}, {layerInd}"
 
             # Apply the neural operator layer with activation.
-            # signalData = self.processingLayers[pseudoLayerInd](signalData)
             signalData = self.neuralLayers[pseudoLayerInd](signalData)
 
         return signalData.contiguous()

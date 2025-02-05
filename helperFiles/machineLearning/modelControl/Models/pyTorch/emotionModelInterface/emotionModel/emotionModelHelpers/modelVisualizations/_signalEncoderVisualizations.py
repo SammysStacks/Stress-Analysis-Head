@@ -6,7 +6,6 @@ import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.patches import Arc, Wedge
 from shap.plots.colors._colors import lch2rgb
-import seaborn as sns
 
 # Visualization protocols
 from helperFiles.globalPlottingProtocols import globalPlottingProtocols
@@ -56,7 +55,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.xlabel("Time (sec)")
         plt.title(f"{plotTitle} epoch{epoch}")
         plt.ylabel("Signal (AU)")
-        if "health profile" in plotTitle.lower(): plt.ylim((-0.75, 0.75))
+        if "health profile" in plotTitle.lower(): plt.ylim((-1, 1))
         else: plt.ylim((-1.75, 1.75))
 
         # Save the figure.
@@ -96,7 +95,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.xlabel("Time (sec)")
         plt.title(f"{plotTitle} epoch{epoch}")
         plt.ylabel("Signal (AU)")
-        plt.ylim((-0.75, 0.75))
+        plt.ylim((-1, 1))
 
         # Save the figure.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", showPlot=not self.hpcFlag)
@@ -210,11 +209,12 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
             ax = axes[rowInd, colInd]
 
+            if colInd == 0: ax.set_ylabel(f"Layer {rowInd + 1}", fontsize=16)
+
             if "specific" in moduleName: lineColor = self.lightColors[0]; alpha = 0.75; centerColor = self.darkColors[0]
             elif "shared" in moduleName: lineColor = self.lightColors[1]; alpha = 0.33; centerColor = self.darkColors[1]
             else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
-            if rowInd == 0: ax.set_title(" ".join(moduleName.split(" ")[1:]).capitalize(), fontsize=16)
-            if colInd == 0: ax.set_ylabel(f"Layer {rowInd + 1}", fontsize=16)
+            ax.set_title(" ".join(moduleName.split(" ")[1:]).capitalize(), fontsize=16)
 
             # Plot the potential output vectors.
             angles = initialAngle + givensAnglesPath[layerInd][signalInd]; centerPoint = np.zeros_like(angles)
@@ -233,6 +233,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.quiver(0, 0, 1, 0, scale=1, angles='xy', scale_units='xy', color=self.darkColors[-1], width=0.01, headwidth=6, headlength=8, zorder=9)  # +X direction
 
             if 'shared' in moduleName or epoch == 0: continue
+            if 'specific' in moduleName and 'spatial' in moduleName: continue
             # Define the shaded region in the bounded range [-minAngle, minAngle]
             bounded_wedge = Wedge(center=center, r=1, theta1=initialAngle * 180 / np.pi - angularThresholdMin, theta2=initialAngle * 180 / np.pi + angularThresholdMin, color=self.blackColor, alpha=0.1, zorder=0)
             lower_wedge = Wedge(center=center, r=1, theta1=0, theta2=max(0, initialAngle * 180 / np.pi - angularThresholdMax), color=self.blackColor, alpha=1, zorder=0)
@@ -255,7 +256,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         nRows, nCols = self.getRowsCols(numModuleLayers=len(givensAnglesPath))
         if not degreesFlag: scaleFactor = 180 / math.pi; degreesFlag = True
         else: scaleFactor = 1
-        yMax = 1/3
+        yMax = 1/4
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey='col')  # squeeze=False ensures axes is 2D
@@ -280,8 +281,10 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax = axes[rowInd, colInd]
 
             # Customize subplot title and axes
-            if rowInd == 0: ax.set_title(" ".join(moduleName.split(" ")[1:]).capitalize(), fontsize=16)
             if colInd == 0: ax.set_ylabel(f"Layer {rowInd + 1}", fontsize=16)
+            ax.set_ylim((0, yMax))
+
+            ax.set_title(" ".join(moduleName.split(" ")[1:]).capitalize(), fontsize=16)
 
             # Plot training eigenvalue angles
             histograms = scaleFactor * givensAnglesPath[layerInd][signalInd:signalInd + len(self.darkColors) - 1].T  # histograms: numAngles, numSignals=6
@@ -298,12 +301,9 @@ class signalEncoderVisualizations(globalPlottingProtocols):
                 histogramPlots.append(ax.hist(smallAngles, bins=bins, color=self.darkColors[0:numSignals], alpha=0.5, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='left', cumulative=False))
                 histogramPlots.append(ax.hist(largeAngles, bins=bins, color=self.darkColors[0:numSignals], alpha=1, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='left', cumulative=False))
 
-            # Customize subplot title and axes
-            ax.set_title(f"{reversibleModuleNames[layerInd]}")
-            ax.set_ylim((0, yMax))
-
             # Shade the angular thresholds
             if 'shared' in moduleName or epoch == 0: continue
+            if 'specific' in moduleName and 'spatial' in moduleName: continue
             ax.fill_betweenx(y=(0, yMax), x1=-angularThresholdMin, x2=angularThresholdMin, color=self.blackColor, alpha=0.1, zorder=0)
             ax.axvspan(-degrees, -angularThresholdMax, color=self.blackColor, alpha=1, zorder=0)
             ax.axvspan(angularThresholdMax, degrees, color=self.blackColor, alpha=1, zorder=0)
@@ -360,17 +360,17 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax = axes[rowInd, colInd]
 
             # Customize subplot title and axes
-            if rowInd == 0: ax.set_title(" ".join(moduleName.split(" ")[1:]).capitalize(), fontsize=16)
             if colInd == 0: ax.set_ylabel(f"Layer {rowInd + 1}", fontsize=16)
+            ax.set_title(" ".join(moduleName.split(" ")[1:]).capitalize(), fontsize=16)
 
             # Get the angles for the current layer
             lines = scaleFactor * givensAnglesPath[layerInd][signalInd:signalInd + len(self.darkColors) - 1]  # Dimensions: numSignals, numParams
             for lineInd in range(len(lines)): ax.plot(lines[lineInd], 'o', color=self.darkColors[lineInd], alpha=0.75, markersize=2, linewidth=1)
             # Customize subplot title and axes
-            ax.set_title(f"{reversibleModuleNames[layerInd]}")
 
             # Shade the angular thresholds
             if 'shared' in moduleName or epoch == 0: continue
+            if 'specific' in moduleName and 'spatial' in moduleName: continue
             ax.fill_between(x=(0, lines.shape[1]), y1=-angularThresholdMin, y2=angularThresholdMin, color=self.blackColor, alpha=0.1, zorder=0)
             ax.axhspan(-degrees, -angularThresholdMax, color=self.blackColor, alpha=1, zorder=0)
             ax.axhspan(angularThresholdMax, degrees, color=self.blackColor, alpha=1, zorder=0)
@@ -401,11 +401,10 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(4 * nCols, 4 * nRows), squeeze=False, sharex='col', sharey='col')  # squeeze=False ensures axes is 2D
         numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
-        units = "degrees" if degreesFlag else "radians"
         degrees = (180 if degreesFlag else math.pi) / 4
+        cax = None
 
         # Get the angular thresholds.
-        angularThresholdMin = modelConstants.userInputParams['angularThresholdMin']
         angularThresholdMax = modelConstants.userInputParams['angularThresholdMax']
 
         for layerInd in range(len(givensAnglesPath)):
@@ -418,28 +417,32 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax = axes[rowInd, colInd]
 
             # Customize subplot title and axes
-            if rowInd == 0: ax.set_title(" ".join(moduleName.split(" ")[1:]).capitalize(), fontsize=16)
             if colInd == 0: ax.set_ylabel(f"Layer {rowInd + 1}", fontsize=16)
+            ax.set_title(" ".join(moduleName.split(" ")[1:]).capitalize(), fontsize=16)
+
             numSignals, numAngles = givensAnglesPath[layerInd].shape
             numSignalsPlotting = min(1, numSignals, len(self.darkColors) - 1)
-
-            # Plot training eigenvalue angles
-            weightMatrix = scaleFactor * givensAnglesPath[layerInd][0:numSignalsPlotting]  # histograms: numSignalsPlotting, numAngles
             sequenceLength = int((1 + (1 + 8 * numAngles) ** 0.5) // 2)
-            rowInds, colInds = np.triu_indices(sequenceLength, k=1)
-
-            # Create the signal weight matrix
             signalWeightMatrix = np.zeros((sequenceLength, sequenceLength))
-            signalWeightMatrix[rowInds, colInds] = -weightMatrix[signalInd]
-            signalWeightMatrix[colInds, rowInds] = weightMatrix[signalInd]
+
+            if not ('specific' in moduleName and 'spatial' in moduleName):
+                # Plot training eigenvalue angles
+                weightMatrix = scaleFactor * givensAnglesPath[layerInd][0:numSignalsPlotting]  # histograms: numSignalsPlotting, numAngles
+                rowInds, colInds = np.triu_indices(sequenceLength, k=1)
+
+                # Create the signal weight matrix
+                signalWeightMatrix[rowInds, colInds] = -weightMatrix[signalInd]
+                signalWeightMatrix[colInds, rowInds] = weightMatrix[signalInd]
 
             # Plot the heatmap
-            ax.imshow(signalWeightMatrix, cmap=self.custom_cmap, interpolation="nearest", aspect="equal", vmin=-degrees, vmax=degrees)
-            ax.set_title(f"{reversibleModuleNames[layerInd]}")
+            cax = ax.imshow(signalWeightMatrix, cmap=self.custom_cmap, interpolation="nearest", aspect="equal", vmin=-degrees, vmax=degrees)
         # Adjust layout to prevent overlapping titles/labels
         fig.suptitle(t=f"{plotTitle}; Epoch {epoch}\n", fontsize=24)
         fig.supylabel(r"$S_{i}$", fontsize=20)
         fig.supxlabel(r"$S_{j}$", fontsize=20)
+
+        cbar_ax = fig.add_axes([0.92, 0.2, 0.02, 0.6])  # (left, bottom, width, height)
+        if cax is not None: fig.colorbar(cax, cax=cbar_ax)
         fig.set_constrained_layout(True)
 
         # Save the plot
@@ -586,9 +589,10 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Set the main title
         fig.suptitle(f"{plotTitle} - Epoch {epoch}\nForward and Inverse from x ∈ [{-1.5}, {1.5}]", fontsize=16)
-        plt.tight_layout()
         fig.supylabel("Output (Y)")
         fig.supxlabel("Input (x)")
+        plt.tight_layout()
+        fig.set_constrained_layout(True)
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", clearFigure=True, showPlot=not self.hpcFlag)
@@ -613,8 +617,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax = axes[rowInd, colInd]
 
             # Customize subplot title and axes
-            if rowInd == 0: ax.set_title(" ".join(moduleName.split(" ")[1:]).capitalize(), fontsize=16)
             if colInd == 0: ax.set_ylabel(f"Layer {rowInd + 1}", fontsize=16)
+            ax.set_title(" ".join(moduleName.split(" ")[1:]).capitalize(), fontsize=16)
 
             # Plot the activation curves
             ax.plot(x, y, color=self.lightColors[1], linestyle='-', linewidth=1, label="Inverse Pass", alpha=1)  # Plot Inverse Pass
@@ -624,10 +628,11 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
         # Set the main title
-        fig.suptitle(f"{plotTitle} - Epoch {epoch}\n", fontsize=16)
+        fig.suptitle(f"{plotTitle} - Epoch {epoch}\nForward and Inverse from x ∈ [{-1.5}, {1.5}]", fontsize=16)
+        fig.supylabel("Output (Y)")
+        fig.supxlabel("Input (x)")
         plt.tight_layout()
-        fig.supylabel("Output (Y)\n")
-        fig.supxlabel("Input (x)\n")
+        fig.set_constrained_layout(True)
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", clearFigure=True, showPlot=False)

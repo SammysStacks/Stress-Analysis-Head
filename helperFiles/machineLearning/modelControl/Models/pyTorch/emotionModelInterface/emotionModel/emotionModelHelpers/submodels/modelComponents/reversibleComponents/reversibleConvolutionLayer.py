@@ -149,10 +149,14 @@ class reversibleConvolutionLayer(reversibleInterface):
         scalingFactorsMean = scalingFactors.mean(dim=-1).cpu().detach().numpy()  # Dim: numSignals=1
         scalarMedian = torch.median(scalingFactors, dim=-1).values.cpu().detach().numpy()  # Dim: numSignals=1
 
+        givensAnglesFeatureNames = self.getFeatureNames()
         # Combine the features. Return dimension: numFeatures, numValues
-        givensAnglesFeatureNames = ["Angular mean", "Angular variance", "Angular range", "Angular median", "Angular abs(mean)", "Angular abs(variance)", "Scalar mean", "Scalar median"]
         givensAnglesFeatures = [givensAnglesMean, givensAnglesVar, givensAnglesRange, givensAnglesMedian, givensAnglesMeanABS, givensAnglesVarABS, scalingFactorsMean, scalarMedian]
         return givensAnglesFeatureNames, givensAnglesFeatures
+
+    @staticmethod
+    def getFeatureNames():
+        return ["Angular mean", "Angular variance", "Angular range", "Angular median", "Angular abs(mean)", "Angular abs(variance)", "Scalar mean", "Scalar median"]
 
     def angularThresholding(self, layerInd, applyMinThresholding):
         with torch.no_grad():

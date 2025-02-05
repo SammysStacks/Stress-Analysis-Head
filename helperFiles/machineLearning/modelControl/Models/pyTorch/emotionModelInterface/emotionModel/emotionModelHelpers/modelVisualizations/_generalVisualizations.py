@@ -175,8 +175,11 @@ class generalVisualizations(globalPlottingProtocols):
                 for layerInd in range(numModuleLayers):
                     activationParams = activationParamsPaths[modelInd, :, layerInd, paramInd]
                     moduleName = moduleNames[modelInd, layerInd].lower()
+
+                    # Remove specific processing layers
                     if "shared" in moduleName and modelInd != 0: continue
 
+                    # Set the line color and alpha
                     if "specific" in moduleName: lineColor = self.darkColors[modelInd]; alpha = 0.8
                     elif "shared" in moduleName: lineColor = self.blackColor; alpha = 0.75
                     else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
@@ -230,9 +233,16 @@ class generalVisualizations(globalPlottingProtocols):
                 ax = axes[rowInd, colInd]
 
                 # Label the plot.
-                if rowInd == 0: ax.set_title(" ".join(moduleName.split(" ")[1:]).capitalize(), fontsize=16)
                 if colInd == 0 and 'shared' in moduleName.lower(): ax.set_ylabel("Shared layers", fontsize=16)
                 if colInd == 0 and 'specific' in moduleName.lower(): ax.set_ylabel("Specific layers", fontsize=16)
+
+                if 'infinite' in paramName.lower(): ax.set_ylim((0, 1.1))
+                elif 'linearity' in paramName.lower(): ax.set_ylim((0, 10.1))
+                elif 'convergent' in paramName.lower(): ax.set_ylim((0, 2.1))
+
+                ax.set_title(" ".join(moduleName.split(" ")[1:]).capitalize(), fontsize=16)
+                ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+                ax.set_xlabel("Training epoch")
 
                 for modelInd in range(numModels):
                     if "shared" in moduleName and modelInd != 0: continue
@@ -250,13 +260,6 @@ class generalVisualizations(globalPlottingProtocols):
                         for axisLineInd in range(numValues):
                             ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * alphas[axisLineInd])
                             ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * (1 - alphas[axisLineInd]))
-
-                ax.set_xlabel("Training epoch")
-                ax.set_title(moduleName)
-                if 'infinite' in paramName.lower(): ax.set_ylim((0, 1.1))
-                elif 'linearity' in paramName.lower(): ax.set_ylim((0, 10.1))
-                elif 'convergent' in paramName.lower(): ax.set_ylim((0, 2.1))
-                ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
             # Label the plot.
             plt.suptitle(f"{plotTitle}: {paramName}\n")
@@ -293,6 +296,11 @@ class generalVisualizations(globalPlottingProtocols):
                 if 'shared' in moduleName: rowInd = -1
                 ax = axes[rowInd, colInd]
 
+                if colInd == 0: ax.set_ylabel("Number of rotations")
+                ax.set_xlabel("Training epoch")
+                ax.set_title(moduleName)
+                ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+
                 for modelInd in range(numModels):
                     if "shared" in moduleName and modelInd != 0: continue
                     maxFreeParams = maxFreeParamsPath[modelInd][layerInd]
@@ -320,10 +328,6 @@ class generalVisualizations(globalPlottingProtocols):
                             ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * (1 - alphas[axisLineInd]))
                     if fullView: ax.hlines(y=sequenceLength, xmin=0, xmax=numEpochs + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
                     if fullView: ax.hlines(y=maxFreeParams, xmin=0, xmax=numEpochs + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
-                if colInd == 0: ax.set_ylabel("Number of rotations")
-                ax.set_xlabel("Training epoch")
-                ax.set_title(moduleName)
-                ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
             # Label the plot.
             plt.suptitle(f"{plotTitle} {paramName}\n")
@@ -357,6 +361,12 @@ class generalVisualizations(globalPlottingProtocols):
                 if 'shared' in moduleName: rowInd = -1
                 ax = axes[rowInd, colInd]
 
+                ax.set_xlabel("Training epoch")
+                ax.set_title(moduleName)
+                ax.set_xlim((0, numEpochs))
+                ax.set_ylim((0.9, 1.1))
+                ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+
                 for modelInd in range(numModels):
                     if "shared" in moduleName and modelInd != 0: continue
 
@@ -380,11 +390,6 @@ class generalVisualizations(globalPlottingProtocols):
                         for axisLineInd in range(numValues):
                             ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * alphas[axisLineInd])
                             ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * (1 - alphas[axisLineInd]))
-                ax.set_xlabel("Training epoch")
-                ax.set_title(moduleName)
-                ax.set_xlim((0, numEpochs))
-                ax.set_ylim((0.9, 1.1))
-                ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
             # Label the plot.
             plt.suptitle(f"{plotTitle} {paramName}\n")
@@ -421,6 +426,10 @@ class generalVisualizations(globalPlottingProtocols):
 
                 # Label the plot.
                 if rowInd == 0: ax.set_title(" ".join(moduleName.split(" ")[1:]).capitalize(), fontsize=12)
+                ax.set_xlabel("Training epoch")
+                ax.set_title(moduleName)
+                ax.set_xlim((0, numEpochs))
+                ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
                 for modelInd in range(numModels):
                     if "shared" in moduleName and modelInd != 0: continue
@@ -447,10 +456,6 @@ class generalVisualizations(globalPlottingProtocols):
                         for axisLineInd in range(numValues):
                             ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * alphas[axisLineInd])
                             ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * (1 - alphas[axisLineInd]))
-                ax.set_xlabel("Training epoch")
-                ax.set_title(moduleName)
-                ax.set_xlim((0, numEpochs))
-                ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
             # Label the plot.
             plt.tight_layout()

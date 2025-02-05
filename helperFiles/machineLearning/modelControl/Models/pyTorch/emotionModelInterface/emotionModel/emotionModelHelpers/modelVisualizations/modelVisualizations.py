@@ -9,6 +9,7 @@ from ._generalVisualizations import generalVisualizations
 from ._signalEncoderVisualizations import signalEncoderVisualizations
 from ..emotionDataInterface import emotionDataInterface
 from ..modelConstants import modelConstants
+from ..submodels.modelComponents.reversibleComponents.reversibleConvolutionLayer import reversibleConvolutionLayer
 
 
 class modelVisualizations(globalPlottingProtocols):
@@ -73,9 +74,7 @@ class modelVisualizations(globalPlottingProtocols):
                 self.generalViz.plotActivationFlow(activationParamsPaths=activationParamsPaths, moduleNames=moduleNames, paramNames=paramNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Activation Parameter Path")
 
                 # Plot the angle features for the signal encoder.
-                hasSpecificLayers = len(allModelPipelines[0].model.specificSignalEncoderModel.processingLayers) != 0
-                if hasSpecificLayers: givensAnglesFeatureNames = allModelPipelines[0].model.specificSignalEncoderModel.processingLayers[0].getFeatureParams(layerInd=0)[0]
-                else: givensAnglesFeatureNames = allModelPipelines[0].model.sharedSignalEncoderModel.processingLayers[0].getFeatureParams(layerInd=0)[0]
+                givensAnglesFeatureNames = reversibleConvolutionLayer.getFeatureNames()
                 givensAnglesFeaturesPaths = [specificModel.givensAnglesFeaturesPath for specificModel in specificModels]  # numModels, numEpochs, numModuleLayers, numFeatures, numValues
                 self.generalViz.plotGivensFeaturesPath(givensAnglesFeaturesPaths=givensAnglesFeaturesPaths, paramNames=givensAnglesFeatureNames, moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Angular Features Path")
 

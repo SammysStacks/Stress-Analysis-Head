@@ -71,7 +71,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         # Reshape the signal data.
         signalData = signalData.view(batchSize, numSignals, signalLength)
 
-        return signalData  #.contiguous()
+        return signalData
 
     def calculateOptimalLoss(self, initialSignalData, printLoss=True):
         with torch.no_grad():
