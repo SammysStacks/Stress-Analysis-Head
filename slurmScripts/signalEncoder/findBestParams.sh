@@ -73,7 +73,7 @@ profileParams=(128)
 
 # Reference states.
 waveletTypes_arr=('bior3.1')
-numProfileShots_arr=(16)
+numProfileShots_arr=(16 8)
 
 for cullingEpoch in "${cullingEpochs[@]}"
 do
