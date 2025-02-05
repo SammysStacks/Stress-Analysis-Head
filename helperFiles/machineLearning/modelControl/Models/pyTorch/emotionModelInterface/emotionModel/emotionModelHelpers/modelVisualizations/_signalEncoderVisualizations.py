@@ -440,10 +440,9 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         fig.suptitle(t=f"{plotTitle}; Epoch {epoch}\n", fontsize=24)
         fig.supylabel(r"$S_{i}$", fontsize=20)
         fig.supxlabel(r"$S_{j}$", fontsize=20)
-
         cbar_ax = fig.add_axes([0.92, 0.2, 0.02, 0.6])  # (left, bottom, width, height)
         if cax is not None: fig.colorbar(cax, cax=cbar_ax)
-        fig.set_constrained_layout(True)
+        plt.tight_layout()
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')}.pdf", clearFigure=True, showPlot=False)
