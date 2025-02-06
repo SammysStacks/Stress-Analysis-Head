@@ -76,7 +76,6 @@ class specificSignalEncoderModel(neuralOperatorInterface):
     def printParams(self):
         # Count the trainable parameters.
         numProfileParams = sum(p.numel() for name, p in self.named_parameters() if p.requires_grad and 'profileModel' in name) / self.numExperiments
-        # numParams = sum(p.numel() for name, p in self.named_parameters() if p.requires_grad and 'profileModel' not in name) / self.numSignals
         numParams = (sum(p.numel() for name, p in self.named_parameters()) - numProfileParams) / self.numSignals
 
         # Print the number of trainable parameters.

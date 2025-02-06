@@ -7,7 +7,6 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.modelHelpers.convolutionalHelpers import convolutionalHelpers, ResNet
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleConvolutionLayer import reversibleConvolutionLayer
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
 
 
 class emotionModelWeights(convolutionalHelpers):
@@ -83,20 +82,6 @@ class emotionModelWeights(convolutionalHelpers):
 
         # Construct the profile generation model.
         return nn.Sequential(*layers)
-
-    @staticmethod
-    def initializeJacobianParams(numSignals):
-        return nn.Parameter(torch.zeros((1, numSignals)))
-
-    @staticmethod
-    def getJacobianScalar(jacobianParameter):
-        jacobianMatrix = 0.8 + 0.4*torch.sigmoid(jacobianParameter)
-        return jacobianMatrix
-
-    def applyManifoldScale(self, healthProfile, healthProfileJacobians):
-        scalarValues = self.getJacobianScalar(healthProfileJacobians).expand_as(healthProfile)
-        if not reversibleInterface.forwardDirection: return healthProfile * scalarValues
-        else: return healthProfile / scalarValues
 
     # ------------------- Emotion/Activity Encoding Architectures ------------------- #
 

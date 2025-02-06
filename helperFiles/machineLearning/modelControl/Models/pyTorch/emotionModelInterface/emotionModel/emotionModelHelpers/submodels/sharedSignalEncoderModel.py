@@ -29,7 +29,6 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         # The neural layers for the signal encoder.
         self.healthGenerationModel = self.healthGeneration(numOutputFeatures=encodedDimension)
         self.processingLayers, self.neuralLayers = nn.ModuleList(), nn.ModuleList()
-        self.healthProfileJacobians = self.initializeJacobianParams(1)
         for _ in range(self.numSharedEncoderLayers): self.addLayer()
 
     def forward(self):
@@ -45,7 +44,6 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
     # Learned up-sampling of the health profile.
     def generateHealthProfile(self, healthProfile):
         healthProfile = self.healthGenerationModel(healthProfile.unsqueeze(1)).squeeze(1)
-        # healthProfile = self.applyManifoldScale(healthProfile, self.healthProfileJacobians)
 
         return healthProfile
 
