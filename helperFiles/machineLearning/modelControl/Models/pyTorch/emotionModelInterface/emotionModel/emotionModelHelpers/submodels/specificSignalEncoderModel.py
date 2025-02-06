@@ -1,3 +1,5 @@
+import copy
+
 from torch import nn
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
@@ -12,13 +14,16 @@ class specificSignalEncoderModel(neuralOperatorInterface):
     def __init__(self, numExperiments, operatorType, encodedDimension, featureNames, numSpecificEncoderLayers, learningProtocol, neuralOperatorParameters):
         super(specificSignalEncoderModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numInputSignals=len(featureNames), numOutputSignals=len(featureNames), addBiasTerm=False)
         # General model parameters.
-        self.neuralOperatorParameters = neuralOperatorParameters  # The parameters for the neural operator.
+        self.neuralOperatorParameters = copy.deepcopy(neuralOperatorParameters)  # The parameters for the neural operator.
         self.numSpecificEncoderLayers = numSpecificEncoderLayers  # The number of specific encoder layers.
         self.learningProtocol = learningProtocol  # The learning protocol for the model.
         self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
         self.numExperiments = numExperiments  # The number of experiments.
         self.numSignals = len(featureNames)  # The number of signals to encode.
         self.featureNames = featureNames  # The names of the signals to encode.
+
+        # Update the neural operator parameters.
+        self.neuralOperatorParameters['wavelet']['encodeHighFrequencyProtocol'] = 'highFreq-2'
 
         # The neural layers for the signal encoder.
         self.profileModel = profileModel(numExperiments=numExperiments, numSignals=self.numSignals, encodedDimension=encodedDimension)

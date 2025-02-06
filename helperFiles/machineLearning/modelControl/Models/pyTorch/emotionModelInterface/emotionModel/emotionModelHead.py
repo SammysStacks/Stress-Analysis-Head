@@ -237,6 +237,17 @@ class emotionModelHead(nn.Module):
                 scalingFactorsPath.append(np.ones((self.numSignals, 1)))  # scalingFactorsPath: numModuleLayers, numSignals, numParams=1
                 givensAnglesFeaturesPath.append(np.zeros((len(givensAnglesFeatureNames), self.numSignals)))  # givensAnglesFeaturesPath: numModuleLayers, numFeatures, numValues
                 reversibleModuleNames.append(self.compileModuleName(name))
+
+            elif isinstance(module, nn.Identity) and 'highFrequenciesWeights' in name:
+                givensAnglesFeatureNames = reversibleConvolutionLayer.getFeatureNames()
+                decompositionLevel = int(name.split('highFrequenciesWeights.')[-1])
+                sequenceLength = self.encodedDimension // 2**decompositionLevel
+
+                givensAnglesPath.append(np.zeros((self.numSignals, int(sequenceLength * (sequenceLength - 1) / 2))))  # givensAnglesPath: numModuleLayers, numSignals, numParams
+                scalingFactorsPath.append(np.ones((self.numSignals, 1)))  # scalingFactorsPath: numModuleLayers, numSignals, numParams=1
+                givensAnglesFeaturesPath.append(np.zeros((len(givensAnglesFeatureNames), self.numSignals)))  # givensAnglesFeaturesPath: numModuleLayers, numFeatures, numValues
+                reversibleModuleNames.append(self.compileModuleName(name))
+
         return givensAnglesPath, scalingFactorsPath, givensAnglesFeaturesPath, reversibleModuleNames, givensAnglesFeatureNames
 
     def getActivationCurvesFullPassPath(self):
@@ -247,7 +258,7 @@ class emotionModelHead(nn.Module):
                 activationCurvePath.append([x, y])
                 moduleNames.append(self.compileModuleName(name))
 
-            elif isinstance(module, nn.Identity) and 'processing' in name:
+            elif isinstance(module, nn.Identity) and ('processing' in name or 'highFrequenciesWeights' in name):
                 x = np.linspace(-1.5, stop=1.5, num=100); y = x
 
                 activationCurvePath.append([x, y])
@@ -269,7 +280,7 @@ class emotionModelHead(nn.Module):
                 activationParamsPath.append([param.detach().cpu().item() for param in params])
                 moduleNames.append(self.compileModuleName(name))
 
-            elif isinstance(module, nn.Identity) and 'processing' in name:
+            elif isinstance(module, nn.Identity) and ('processing' in name or 'highFrequenciesWeights' in name):
                 activationParamsPath.append(np.asarray([0.5, 1, 1]))
                 moduleNames.append(self.compileModuleName(name))
         assert len(activationParamsPath) != 0
@@ -287,7 +298,7 @@ class emotionModelHead(nn.Module):
                 maxFreeParamsPath.append(module.numParams)  # maxFreeParamsPath: numModuleLayers
                 moduleNames.append(self.compileModuleName(name))
 
-            elif isinstance(module, nn.Identity) and 'processing' in name:
+            elif isinstance(module, nn.Identity) and ('processing' in name or 'highFrequenciesWeights' in name):
                 maxFreeParamsPath.append(0)  # maxFreeParamsPath: numModuleLayers
                 numFreeParamsPath.append(np.zeros((self.numSignals, 1)))  # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
                 moduleNames.append(self.compileModuleName(name))

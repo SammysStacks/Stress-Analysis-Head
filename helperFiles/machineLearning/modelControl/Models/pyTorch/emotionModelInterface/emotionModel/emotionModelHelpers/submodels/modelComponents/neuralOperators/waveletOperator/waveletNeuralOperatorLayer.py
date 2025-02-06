@@ -1,4 +1,5 @@
 import torch
+from torch import nn
 
 from .waveletNeuralOperatorWeights import waveletNeuralOperatorWeights
 
@@ -68,6 +69,8 @@ class waveletNeuralOperatorLayer(waveletNeuralOperatorWeights):
         # frequencies dimension: batchSize, numLiftedChannels, frequencyDimension
 
         if weights is not None:
+            if isinstance(weights, nn.Module):
+                frequencies = weights(frequencies)  # Learn a new set of wavelet coefficients to transform the data.
             if 'FC' in self.learningProtocol or 'CNN' in self.learningProtocol:
                 frequencies = weights(frequencies)  # Learn a new set of wavelet coefficients to transform the data.
                 # frequencies dimension: batchSize, numOutputSignals, frequencyDimension

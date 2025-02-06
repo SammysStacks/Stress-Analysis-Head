@@ -91,6 +91,7 @@ class emotionModelWeights(convolutionalHelpers):
     @staticmethod
     def getJacobianScalar(jacobianParameter):
         jacobianMatrix = 0.75 + 1.25*torch.sigmoid(jacobianParameter)
+        print("getJacobianScalar", jacobianMatrix.min().item(), jacobianMatrix.mean().item(), jacobianMatrix.max().item())
         return jacobianMatrix
 
     def applyManifoldScale(self, healthProfile, healthProfileJacobians):

@@ -1,7 +1,10 @@
 # General
+from re import match
+
 import pywt
 import torch
 from pytorch_wavelets import DWT1DForward, DWT1DInverse
+from sympy.strategies.core import switch
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.emotionModelWeights import emotionModelWeights
 
@@ -67,8 +70,10 @@ class waveletNeuralHelpers(emotionModelWeights):
         self.assertValidParams()
 
         # Decide on the frequency encoding protocol.
-        self.encodeHighFrequencies = encodeHighFrequencyProtocol in ['highFreq']  # Whether to encode the high frequencies.
+        highFrequencyProtocolInfo = encodeHighFrequencyProtocol.split("-")
+        self.encodeHighFrequencies = highFrequencyProtocolInfo[0] in ['highFreq']  # Whether to encode the high frequencies.
         self.encodeLowFrequency = encodeLowFrequencyProtocol in ['lowFreq']  # Whether to encode the low-frequency signal.
+        self.minHighFreqDecompositionLevel = 0 if len(highFrequencyProtocolInfo) == 1 else int(highFrequencyProtocolInfo[1])
 
         # Initialize the wavelet decomposition and reconstruction layers.
         self.dwt = DWT1DForward(J=self.numDecompositions, wave=self.waveletType, mode=self.mode)
@@ -80,7 +85,7 @@ class waveletNeuralHelpers(emotionModelWeights):
     def assertValidParams(self):
         # Assert that the frequency protocol is valid.
         assert self.learningProtocol in ['FCC', 'rCNN', 'CNN', 'FC'], "Invalid learning protocol. Must be in ['FC', 'FCC', 'rCNN']."
-        assert self.encodeHighFrequencyProtocol in ['highFreq', 'none'], "The high-frequency encoding protocol must be 'highFreq', 'none'."
+        assert self.encodeHighFrequencyProtocol.split("-")[0] in ['highFreq', 'none'], "The high-frequency encoding protocol must be 'highFreq', 'none'."
         assert self.encodeLowFrequencyProtocol in ['lowFreq', 'none'], "The low-frequency encoding protocol must be 'lowFreq', 'none'."
         assert self.numInputSignals == self.numOutputSignals, "The number of input signals must equal the output signals for now."
 

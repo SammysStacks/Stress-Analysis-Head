@@ -39,8 +39,8 @@ class waveletNeuralOperatorWeights(waveletNeuralHelpers):
             # For each high frequency term.
             highFrequenciesWeights = nn.ModuleList()
             for highFrequenciesInd in range(len(self.highFrequenciesShapes)):
-                highFrequencyParam = self.getNeuralWeightParameters(inChannel=self.numInputSignals, initialFrequencyDim=self.highFrequenciesShapes[highFrequenciesInd])
-                # Store the high-frequency weights.
+                if highFrequenciesInd < self.minHighFreqDecompositionLevel: highFrequencyParam = nn.Identity()
+                else: highFrequencyParam = self.getNeuralWeightParameters(inChannel=self.numInputSignals, initialFrequencyDim=self.highFrequenciesShapes[highFrequenciesInd])
                 highFrequenciesWeights.append(highFrequencyParam)
 
         return highFrequenciesWeights
