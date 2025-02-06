@@ -57,7 +57,7 @@ waveletTypes_arr=(
 
 # Trinary reference states.
 angularThresholdMins=(0 1 2 3 4 5)
-angularThresholdMaxs=(45)
+angularThresholdMaxs=(40)
 cullingEpochs=(1)
 
 # Binary reference states.
@@ -73,7 +73,7 @@ profileParams=(128)
 
 # Reference states.
 waveletTypes_arr=('bior3.1')
-numProfileShots_arr=(32)
+numProfileShots_arr=(24)
 
 for cullingEpoch in "${cullingEpochs[@]}"
 do
