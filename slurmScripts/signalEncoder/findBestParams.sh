@@ -56,7 +56,7 @@ waveletTypes_arr=(
 )
 
 # Trinary reference states.
-angularThresholdMins=(1 2 3 4 5 6)
+angularThresholdMins=(0 1 2 3 4 5 6)
 angularThresholdMaxs=(45)
 cullingEpochs=(1)
 
