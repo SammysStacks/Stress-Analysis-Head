@@ -489,6 +489,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             alpha=0.7,
             label="Shared",
             density=True,
+            align= 'left',
         )
 
         plt.hist(
@@ -498,6 +499,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             alpha=0.7,
             label="Specific",
             density=True,
+            align='left',
         )
 
         # Customize plot title and axes
