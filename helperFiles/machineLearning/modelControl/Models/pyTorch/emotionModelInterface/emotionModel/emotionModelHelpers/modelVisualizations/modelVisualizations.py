@@ -24,7 +24,7 @@ class modelVisualizations(globalPlottingProtocols):
         self.generalViz = generalVisualizations(baseSavingFolder="", stringID="", datasetName="_comparison")
         plt.ioff()  # Turn off interactive mode
 
-    def setModelSavingFolder(self, baseSavingFolder, stringID):
+    def setModelSavingFolder(self, baseSavingFolder, stringID, epoch=None):
         # Compile and shorten the name of the model visualization folder.
         baseSavingDataFolder = os.path.normpath(os.path.dirname(__file__) + f"/../../../dataAnalysis/{baseSavingFolder}") + '/'
         saveDataFolder = os.path.normpath(baseSavingDataFolder + stringID + '/')
@@ -32,6 +32,7 @@ class modelVisualizations(globalPlottingProtocols):
         # Set the saving folder for the model visualizations.
         self.baseSavingDataFolder = os.path.relpath(baseSavingDataFolder, os.getcwd()) + '/'
         self.saveDataFolder = os.path.relpath(saveDataFolder, os.getcwd()) + '/'
+        if self.hpcFlag and epoch == 0 and os.path.exists(self.saveDataFolder): raise Exception(f"Folder already exists: {self.saveDataFolder}")
         self._createFolder(self.saveDataFolder)
 
         # Initialize visualization protocols.
@@ -86,7 +87,7 @@ class modelVisualizations(globalPlottingProtocols):
         self.accelerator.print(f"\nPlotting results for the {modelPipeline.model.datasetName} model")
 
         # Prepare the model/data for evaluation.
-        self.setModelSavingFolder(baseSavingFolder=f"trainingFigures/{submodel}/{trainingDate}/", stringID=f"{modelPipeline.model.datasetName}/")
+        self.setModelSavingFolder(baseSavingFolder=f"trainingFigures/{submodel}/{trainingDate}/", stringID=f"{modelPipeline.model.datasetName}/", epoch=currentEpoch)
         modelPipeline.setupTrainingFlags(modelPipeline.model, trainingFlag=False)  # Set all models into evaluation mode.
         model = modelPipeline.model
         numPlottingPoints = 4
