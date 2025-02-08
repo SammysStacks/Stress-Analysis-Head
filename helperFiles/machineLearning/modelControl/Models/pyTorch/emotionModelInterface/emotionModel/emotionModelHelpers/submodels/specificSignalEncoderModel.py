@@ -23,7 +23,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         self.featureNames = featureNames  # The names of the signals to encode.
 
         # Update the neural operator parameters.
-        self.neuralOperatorParameters['wavelet']['encodeHighFrequencyProtocol'] = 'highFreq-1'
+        self.neuralOperatorParameters['wavelet']['encodeHighFrequencyProtocol'] = 'highFreq'
 
         # The neural layers for the signal encoder.
         self.profileModel = profileModel(numExperiments=numExperiments, numSignals=self.numSignals, encodedDimension=encodedDimension)
