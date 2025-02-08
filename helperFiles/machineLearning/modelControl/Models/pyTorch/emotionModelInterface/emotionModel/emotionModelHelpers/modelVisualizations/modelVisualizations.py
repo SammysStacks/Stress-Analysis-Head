@@ -32,7 +32,7 @@ class modelVisualizations(globalPlottingProtocols):
         # Set the saving folder for the model visualizations.
         self.baseSavingDataFolder = os.path.relpath(baseSavingDataFolder, os.getcwd()) + '/'
         self.saveDataFolder = os.path.relpath(saveDataFolder, os.getcwd()) + '/'
-        #if self.hpcFlag and epoch == 0 and os.path.exists(self.saveDataFolder): raise Exception(f"Folder already exists: {self.saveDataFolder}")
+        if self.hpcFlag and epoch == 0 and os.path.exists(self.saveDataFolder): raise Exception(f"Folder already exists: {self.saveDataFolder}")
         self._createFolder(self.saveDataFolder)
 
         # Initialize visualization protocols.
@@ -167,8 +167,8 @@ class modelVisualizations(globalPlottingProtocols):
                         self.signalEncoderViz.plotActivationCurves(activationCurvePath, activationModuleNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Activation Parameters")
                         self.signalEncoderViz.plotsGivensAnglesHeatmap(givensAnglesPath, reversibleModuleNames, signalInd=signalInd, epoch=currentEpoch, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="Rotation Weight Matrix (S)")
 
-                    # Plot the autoencoder results.
-                    self.signalEncoderViz.plotEncoder(signalData, reconstructedSignalData, resampledBiomarkerTimes, resampledSignalData, signalNames=signalNames, epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="signalReconstruction/", plotTitle="Signal Reconstruction")
+                        # Plot the autoencoder results.
+                        self.signalEncoderViz.plotEncoder(signalData, reconstructedSignalData, resampledBiomarkerTimes, resampledSignalData, signalNames=signalNames, epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="signalReconstruction/", plotTitle="Signal Reconstruction")
 
                 # Dont keep plotting untrained models.
                 if submodel == modelConstants.signalEncoderModel: return None
