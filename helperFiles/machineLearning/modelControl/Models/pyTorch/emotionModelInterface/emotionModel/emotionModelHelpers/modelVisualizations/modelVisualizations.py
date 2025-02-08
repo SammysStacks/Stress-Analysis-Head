@@ -32,7 +32,7 @@ class modelVisualizations(globalPlottingProtocols):
         # Set the saving folder for the model visualizations.
         self.baseSavingDataFolder = os.path.relpath(baseSavingDataFolder, os.getcwd()) + '/'
         self.saveDataFolder = os.path.relpath(saveDataFolder, os.getcwd()) + '/'
-        if self.hpcFlag and epoch == 0 and os.path.exists(self.saveDataFolder): raise Exception(f"Folder already exists: {self.saveDataFolder}")
+        #if self.hpcFlag and epoch == 0 and os.path.exists(self.saveDataFolder): raise Exception(f"Folder already exists: {self.saveDataFolder}")
         self._createFolder(self.saveDataFolder)
 
         # Initialize visualization protocols.
