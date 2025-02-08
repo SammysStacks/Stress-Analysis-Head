@@ -56,13 +56,13 @@ waveletTypes_arr=(
 )
 
 # Trinary reference states.
-angularThresholdMins=(25 50 100 10)
+angularThresholdMins=(30 50 75)
 angularThresholdMaxs=(45)
 cullingEpochs=(1)
 
 # Binary reference states.
-numSpecificEncoderLayers_arr=(1)
-numSharedEncoderLayers_arr=(6)
+numSpecificEncoderLayers_arr=(4)
+numSharedEncoderLayers_arr=(4)
 # Known interesting parameters: 63
 #numSharedEncoderLayers_arr=(0 1 2 3 4 5 6 7 8 9 10 11 12)  # 13
 #numSpecificEncoderLayers_arr=(0 1 2)  # 3
