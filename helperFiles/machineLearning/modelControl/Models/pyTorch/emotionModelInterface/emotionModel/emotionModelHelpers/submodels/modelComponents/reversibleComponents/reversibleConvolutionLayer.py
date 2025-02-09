@@ -51,7 +51,6 @@ class reversibleConvolutionLayer(reversibleInterface):
         for layerInd in range(self.numLayers):
             if not self.forwardDirection: layerInd = self.numLayers - layerInd - 1
             performOptimalForwardFirst = self.optimalForwardFirst if layerInd % 2 == 0 else not self.optimalForwardFirst
-            if 1 < self.numLayers and self.forwardDirection: performOptimalForwardFirst = not performOptimalForwardFirst
 
             # Apply the weights to the input data.
             if self.activationMethod == 'none': inputData = self.applyLayer(inputData, layerInd)

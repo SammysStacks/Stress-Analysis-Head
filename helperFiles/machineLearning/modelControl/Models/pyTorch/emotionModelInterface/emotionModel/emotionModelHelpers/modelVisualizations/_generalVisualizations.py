@@ -235,6 +235,7 @@ class generalVisualizations(globalPlottingProtocols):
                     newColInd = sharedColCounter % (nCols + 1)
                     rowInd, colInd = numSpecific + newColInd, newRowInd
                     sharedColCounter += 1
+                if 'shared' in moduleName: rowInd = nRows - 1
                 ax = axes[rowInd, colInd]
 
                 # Label the plot.
@@ -304,6 +305,7 @@ class generalVisualizations(globalPlottingProtocols):
                     newColInd = sharedColCounter % (nCols + 1)
                     rowInd, colInd = numSpecific + newColInd, newRowInd
                     sharedColCounter += 1
+                if 'shared' in moduleName: rowInd = nRows - 1
                 ax = axes[rowInd, colInd]
 
                 if colInd == 0: ax.set_ylabel("Number of rotations")
@@ -374,6 +376,7 @@ class generalVisualizations(globalPlottingProtocols):
                     newColInd = sharedColCounter % (nCols + 1)
                     rowInd, colInd = numSpecific + newColInd, newRowInd
                     sharedColCounter += 1
+                if 'shared' in moduleName: rowInd = nRows - 1
                 ax = axes[rowInd, colInd]
 
                 ax.set_xlabel("Training epoch")
@@ -442,6 +445,7 @@ class generalVisualizations(globalPlottingProtocols):
                     newColInd = sharedColCounter % (nCols + 1)
                     rowInd, colInd = numSpecific + newColInd, newRowInd
                     sharedColCounter += 1
+                if 'shared' in moduleName: rowInd = nRows - 1
                 ax = axes[rowInd, colInd]
 
                 # Label the plot.
