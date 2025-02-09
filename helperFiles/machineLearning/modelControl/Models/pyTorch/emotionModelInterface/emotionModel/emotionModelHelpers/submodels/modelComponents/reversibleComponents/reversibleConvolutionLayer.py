@@ -205,7 +205,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         # sorted_values -> [0, 1, 2, 3, ...]
 
         # Find the threshold value per row
-        percentParamsKeeping = modelConstants.userInputParams['percentParamsKeeping']
+        percentParamsKeeping = float(modelConstants.userInputParams['percentParamsKeeping'])
         numAnglesThrowingAway = int((100 - percentParamsKeeping) * self.numParams / 100) - 1
         minAngleValues = sorted_values[:, numAnglesThrowingAway].unsqueeze(-1)  # Shape (numSignals, 1)
 

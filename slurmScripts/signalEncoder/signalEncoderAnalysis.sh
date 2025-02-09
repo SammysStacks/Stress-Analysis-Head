@@ -24,7 +24,7 @@ srun accelerate launch ./../../metaTrainingControl.py \
     --cullingEpoch "${18}" \
     --angularThresholdMin "${19}" \
     --angularThresholdMax "${20}" \
-    --percentParamsKeeping "${21}" \
+    --percentParamsKeeping "${21}"
 
 end=$(date +%s)
 runtime=$((end-start))
