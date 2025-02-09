@@ -1,10 +1,7 @@
 # General
-from re import match
-
 import pywt
 import torch
 from pytorch_wavelets import DWT1DForward, DWT1DInverse
-from sympy.strategies.core import switch
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.emotionModelWeights import emotionModelWeights
 
@@ -48,7 +45,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class waveletNeuralHelpers(emotionModelWeights):
 
-    def __init__(self, sequenceLength, numInputSignals, numOutputSignals, numDecompositions, waveletType, mode, addBiasTerm, activationMethod,
+    def __init__(self, sequenceLength, numInputSignals, numOutputSignals, numLayers, numDecompositions, waveletType, mode, addBiasTerm, activationMethod,
                  skipConnectionProtocol, encodeLowFrequencyProtocol='lowFreq', encodeHighFrequencyProtocol='highFreq', learningProtocol='CNN'):
         super(waveletNeuralHelpers, self).__init__()
         # Fourier neural operator parameters.
@@ -64,16 +61,17 @@ class waveletNeuralHelpers(emotionModelWeights):
         self.numInputSignals = numInputSignals  # Number of input signals.
         self.addBiasTerm = addBiasTerm  # Whether to add bias terms to the output.
         self.waveletType = waveletType  # The wavelet to use for the decomposition. Options: 'haar', 'db', 'sym', 'coif', 'bior', 'rbio', 'dmey', 'gaus', 'mexh', 'morl', 'cgau', 'shan', 'fbsp', 'cmor'
+        self.numLayers = numLayers  # The number of layers to use for the decomposition.
         self.mode = mode  # The padding mode to use for the decomposition. Options: 'zero', 'symmetric', 'reflect' or 'periodization'.
 
         # Assert that the parameters are valid.
         self.assertValidParams()
 
         # Decide on the frequency encoding protocol.
-        highFrequencyProtocolInfo = encodeHighFrequencyProtocol.split("-")
+        highFrequencyProtocolInfo = encodeHighFrequencyProtocol.split("-")  # ['highFreq', 'numHighFreq2Learn']
         self.encodeHighFrequencies = highFrequencyProtocolInfo[0] in ['highFreq']  # Whether to encode the high frequencies.
         self.encodeLowFrequency = encodeLowFrequencyProtocol in ['lowFreq']  # Whether to encode the low-frequency signal.
-        self.minHighFreqDecompositionLevel = 0 if len(highFrequencyProtocolInfo) == 1 else int(highFrequencyProtocolInfo[1])
+        self.numFrequenciesIgnore = 0 if len(highFrequencyProtocolInfo) == 1 else self.numDecompositions - int(highFrequencyProtocolInfo[1])
 
         # Initialize the wavelet decomposition and reconstruction layers.
         self.dwt = DWT1DForward(J=self.numDecompositions, wave=self.waveletType, mode=self.mode)

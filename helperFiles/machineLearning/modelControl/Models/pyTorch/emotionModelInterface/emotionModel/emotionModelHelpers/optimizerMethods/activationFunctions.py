@@ -86,8 +86,7 @@ class reversibleLinearSoftSign(reversibleInterface):
             y_vals = self.forwardPass(x_vals)
 
         # Convert to NumPy for plotting
-        x_vals, y_vals = x_vals.detach().cpu().numpy(), y_vals.detach().cpu().numpy()
-        return x_vals, y_vals
+        return x_vals.detach().cpu().numpy(), y_vals.detach().cpu().numpy()
 
 
 class boundedExp(nn.Module):

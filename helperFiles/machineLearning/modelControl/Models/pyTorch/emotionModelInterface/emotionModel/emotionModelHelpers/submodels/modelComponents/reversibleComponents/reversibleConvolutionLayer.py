@@ -22,7 +22,8 @@ class reversibleConvolutionLayer(reversibleInterface):
         self.sequenceLength = sequenceLength  # The length of the input signal.
         self.numSignals = numSignals  # The number of signals in the input data.
         self.numLayers = numLayers  # The number of layers in the reversible linear layer.
-        assert self.numLayers == 1, "Hard-coded as I assume layerInd=0; I am too tried to change this."
+        # assert self.numLayers == 1, "I once Hard-coded layerInd=0; I may have fully changed this? Need to graduate ..."
+        self.optimalForwardFirst = False  # Whether to apply the forward pass first.
 
         # The restricted window for the neural weights.
         upperWindowMask = torch.ones(self.sequenceLength, self.sequenceLength, dtype=torch.float64)
@@ -32,7 +33,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         self.rowInds, self.colInds = upperWindowMask.nonzero(as_tuple=False).T
 
         # Initialize the neural layers.
-        self.activationFunction = activationFunctions.getActivationMethod(activationMethod)
+        self.activationFunction = nn.ModuleList()
         self.jacobianParameter = self.initializeJacobianParams(numSignals)
         self.givensRotationParams = nn.ParameterList()
 
@@ -43,15 +44,18 @@ class reversibleConvolutionLayer(reversibleInterface):
             parameters = nn.init.uniform_(parameters, a=-0.1, b=0.1)  # Dim: numSignals, numParams
 
             self.givensRotationParams.append(parameters)
+            self.activationFunction.append(activationFunctions.getActivationMethod(activationMethod))
             # givensRotationParams: numLayers, numSignals, numParams
 
     def forward(self, inputData):
         for layerInd in range(self.numLayers):
             if not self.forwardDirection: layerInd = self.numLayers - layerInd - 1
+            performOptimalForwardFirst = self.optimalForwardFirst if layerInd % 2 == 0 else not self.optimalForwardFirst
+            if 1 < self.numLayers and self.forwardDirection: performOptimalForwardFirst = not performOptimalForwardFirst
 
             # Apply the weights to the input data.
             if self.activationMethod == 'none': inputData = self.applyLayer(inputData, layerInd)
-            else: inputData = self.activationFunction(inputData, lambda X: self.applyLayer(X, layerInd), forwardFirst=False)
+            else: inputData = self.activationFunction[layerInd](inputData, lambda X: self.applyLayer(X, layerInd), forwardFirst=performOptimalForwardFirst)
 
         return inputData
 
@@ -114,75 +118,117 @@ class reversibleConvolutionLayer(reversibleInterface):
 
     # ------------------------------------------------------------ #
 
+    def getAllLinearParams(self):
+        allGivensAngles, allScaleFactors = [], []
+        for layerInd in range(self.numLayers):
+            givensAngles, scalingFactors = self.getLinearParams(layerInd)
+            allScaleFactors.append(scalingFactors.detach().cpu().numpy())
+            allGivensAngles.append(givensAngles.detach().cpu().numpy())
+        allGivensAngles = np.asarray(allGivensAngles)
+        allScaleFactors = np.asarray(allScaleFactors)
+
+        return allGivensAngles, allScaleFactors
+
     def getLinearParams(self, layerInd):
         givensAngles = self.getGivensAngles(layerInd)  # Dim: numSignals, numParams
         scalingFactors = self.getJacobianScalar().flatten()  # Dim: numSignals
 
         return givensAngles, scalingFactors
 
-    def getNumFreeParams(self, layerInd):
+    def getNumFreeParams(self):
         angularThresholdMin = modelConstants.userInputParams['angularThresholdMin'] * torch.pi / 180  # Convert to radians
-        angularMask = angularThresholdMin <= self.getGivensAngles(layerInd).abs()
-        numSignalParameters = angularMask.sum(dim=-1)  # Dim: numSignals
-        # angularMask: numSignals, numFreeParams
-        # numSignalParameters: numSignals
+        allNumFreeParams = []
 
-        return numSignalParameters
+        for layerInd in range(self.numLayers):
+            angularMask = angularThresholdMin <= self.getGivensAngles(layerInd).abs()
+            numSignalParameters = angularMask.sum(dim=-1)  # Dim: numSignals
+            allNumFreeParams.append(numSignalParameters.detach().cpu().numpy().reshape(numSignalParameters.size(0), 1))
+            # angularMask: numSignals, numFreeParams
+            # numSignalParameters: numSignals
+        allNumFreeParams = np.asarray(allNumFreeParams)
 
-    def getFeatureParams(self, layerInd):
-        givensAngles, scalingFactors = self.getLinearParams(layerInd)  # Dim: numSignals, numParams
-        scalingFactors = scalingFactors.reshape(self.numSignals, 1)  # Dim: numSignals, numParams=1
-        givensAngles = givensAngles * 180 / torch.pi  # Convert to degrees
-        givensAnglesABS = givensAngles.abs()
+        return allNumFreeParams
 
-        # Calculate the mean, variance, and range of the Givens angles.
-        givensAnglesRange = givensAngles.max(dim=-1).values - givensAngles.min(dim=-1).values  # Dim: numSignals
-        givensAnglesMean = givensAngles.mean(dim=-1).cpu().detach().numpy()  # Dim: numSignals
-        givensAnglesVar = givensAngles.var(dim=-1).cpu().detach().numpy()  # Dim: numSignals
-        givensAnglesRange = givensAnglesRange.cpu().detach().numpy()
-        givensAnglesMedian = torch.median(givensAngles, dim=-1).values.cpu().detach().numpy()  # Dim: numSignals
-
-        # Calculate the mean, variance, and range of the positive Givens angles.
-        givensAnglesMeanABS = givensAnglesABS.mean(dim=-1).cpu().detach().numpy()  # Dim: numSignals
-        givensAnglesVarABS = givensAnglesABS.var(dim=-1).cpu().detach().numpy()  # Dim: numSignals
-
-        # Calculate the mean, variance, and range of the scaling factors.
-        scalingFactorsMean = scalingFactors.mean(dim=-1).cpu().detach().numpy()  # Dim: numSignals=1
-        scalarMedian = torch.median(scalingFactors, dim=-1).values.cpu().detach().numpy()  # Dim: numSignals=1
-
+    def getFeatureParams(self):
         givensAnglesFeatureNames = self.getFeatureNames()
-        # Combine the features. Return dimension: numFeatures, numValues
-        givensAnglesFeatures = [givensAnglesMean, givensAnglesVar, givensAnglesRange, givensAnglesMedian, givensAnglesMeanABS, givensAnglesVarABS, scalingFactorsMean, scalarMedian]
-        return givensAnglesFeatureNames, givensAnglesFeatures
+
+        allGivensAnglesFeatures = []
+        for layerInd in range(self.numLayers):
+            givensAngles, scalingFactors = self.getLinearParams(layerInd)  # Dim: numSignals, numParams
+            scalingFactors = scalingFactors.reshape(self.numSignals, 1)  # Dim: numSignals, numParams=1
+            givensAngles = givensAngles * 180 / torch.pi  # Convert to degrees
+            givensAnglesABS = givensAngles.abs()
+
+            # Calculate the mean, variance, and range of the Givens angles.
+            givensAnglesRange = givensAngles.max(dim=-1).values - givensAngles.min(dim=-1).values  # Dim: numSignals
+            givensAnglesMean = givensAngles.mean(dim=-1).cpu().detach().numpy()  # Dim: numSignals
+            givensAnglesVar = givensAngles.var(dim=-1).cpu().detach().numpy()  # Dim: numSignals
+            givensAnglesRange = givensAnglesRange.cpu().detach().numpy()
+            givensAnglesMedian = torch.median(givensAngles, dim=-1).values.cpu().detach().numpy()  # Dim: numSignals
+
+            # Calculate the mean, variance, and range of the positive Givens angles.
+            givensAnglesMeanABS = givensAnglesABS.mean(dim=-1).cpu().detach().numpy()  # Dim: numSignals
+            givensAnglesVarABS = givensAnglesABS.var(dim=-1).cpu().detach().numpy()  # Dim: numSignals
+
+            # Calculate the mean, variance, and range of the scaling factors.
+            scalingFactorsMean = scalingFactors.mean(dim=-1).cpu().detach().numpy()  # Dim: numSignals=1
+            scalarMedian = torch.median(scalingFactors, dim=-1).values.cpu().detach().numpy()  # Dim: numSignals=1
+
+            # Combine the features. Return dimension: numFeatures, numValues
+            allGivensAnglesFeatures.append([givensAnglesMean, givensAnglesVar, givensAnglesRange, givensAnglesMedian, givensAnglesMeanABS, givensAnglesVarABS, scalingFactorsMean, scalarMedian])
+
+        return givensAnglesFeatureNames, allGivensAnglesFeatures
 
     @staticmethod
     def getFeatureNames():
         return ["Angular mean", "Angular variance", "Angular range", "Angular median", "Angular abs(mean)", "Angular abs(variance)", "Scalar mean", "Scalar median"]
 
-    def angularThresholding(self, layerInd, applyMinThresholding):
-        with torch.no_grad():
-            # Get the angular thresholds.
-            angularThresholdMin = modelConstants.userInputParams['angularThresholdMin'] * torch.pi / 180  # Convert to radians
-            angularThresholdMax = modelConstants.userInputParams['angularThresholdMax'] * torch.pi / 180  # Convert to radians
-            givensAngles = self.getGivensAngles(layerInd)
+    def angularThresholding(self, applyMinThresholding):
+        # Get the angular thresholds.
+        angularThresholdMin = modelConstants.userInputParams['angularThresholdMin'] * torch.pi / 180  # Convert to radians
+        angularThresholdMax = modelConstants.userInputParams['angularThresholdMax'] * torch.pi / 180  # Convert to radians
 
-            # Apply the thresholding.
-            if applyMinThresholding: self.givensRotationParams[layerInd][givensAngles.abs() < angularThresholdMin] = 0
-            self.givensRotationParams[layerInd][givensAngles <= -angularThresholdMax] = -angularThresholdMax
-            self.givensRotationParams[layerInd][angularThresholdMax <= givensAngles] = angularThresholdMax
+        with torch.no_grad():
+            for layerInd in range(self.numLayers):
+                givensAngles = self.getGivensAngles(layerInd)
+
+                # Apply the thresholding.
+                if applyMinThresholding and 64 < self.sequenceLength: self.minThresholding(layerInd)
+                if applyMinThresholding: self.givensRotationParams[layerInd][givensAngles.abs() < angularThresholdMin] = 0
+                self.givensRotationParams[layerInd][givensAngles <= -angularThresholdMax] = -angularThresholdMax
+                self.givensRotationParams[layerInd][angularThresholdMax <= givensAngles] = angularThresholdMax
 
     # DEPRECATED
     def minThresholding(self, layerInd):
         # Sort each row by absolute value
-        givensAngles = self.getGivensAngles(layerInd).clone()  # Dim: numSignals, numParams
-        sorted_values, sorted_indices = torch.sort(givensAngles.abs(), dim=1)
+        givensAngles = self.getGivensAngles(layerInd).clone().abs()  # Dim: numSignals, numParams
+        sorted_values, sorted_indices = torch.sort(givensAngles, dim=-1)
+        # sorted_values -> [0, 1, 2, 3, ...]
 
+        percentParamsKeeping = 5
         # Find the threshold value per row
-        minThresholdCount = int(modelConstants.userInputParams['angularThresholdMin'] * self.numParams / 100)
-        if self.sequenceLength < 60: minThresholdCount = int(minThresholdCount * 2)
-        threshold_values = sorted_values[:, minThresholdCount - 1].unsqueeze(1)  # Shape (numSignals, 1)
-        mask = givensAngles.abs() <= threshold_values
-        self.givensRotationParams[layerInd][mask] = 0
+        numAnglesThrowingAway = int((100 - percentParamsKeeping) * self.numParams / 100) - 1
+        minAngleValues = sorted_values[:, numAnglesThrowingAway].unsqueeze(-1)  # Shape (numSignals, 1)
+
+        # Zero out the values below the threshold
+        self.givensRotationParams[layerInd][givensAngles < minAngleValues] = 0
+
+    def getAllActivationParams(self):
+        allActivationParams = []
+        for layerInd in range(self.numLayers):
+            infiniteBound, linearity, convergentPoint = self.activationFunction[layerInd].getActivationParams()
+            allActivationParams.append([infiniteBound.detach().cpu().item(), linearity.detach().cpu().item(), convergentPoint.detach().cpu().item()])
+        allActivationParams = np.asarray(allActivationParams)
+
+        return allActivationParams
+
+    def geAllActivationCurves(self, x_min=-1.5, x_max=1.5, num_points=100):
+        xs = []; ys = []
+        for layerInd in range(self.numLayers):
+            x, y = self.activationFunction[layerInd].getActivationCurve(x_min, x_max, num_points)
+            xs.append(x); ys.append(y)
+
+        return xs, ys
 
     def printParams(self):
         # Count the trainable parameters.
@@ -220,10 +266,10 @@ if __name__ == "__main__":
 
             # Plot the Gaussian fit
             xmin, xmax = plt.xlim()
-            x = np.linspace(xmin, xmax, num=1000)
+            x_ = np.linspace(xmin, xmax, num=1000)
             mu, std = scipy.stats.norm.fit(ratio)
-            p = scipy.stats.norm.pdf(x, mu, std)
-            plt.plot(x, p, 'k', linewidth=2, label=f'Gaussian fit: mu={mu:.8f}$, sigma={std:.8f}$')
+            p = scipy.stats.norm.pdf(x_, mu, std)
+            plt.plot(x_, p, 'k', linewidth=2, label=f'Gaussian fit: mu={mu:.8f}$, sigma={std:.8f}$')
 
             # Figure settings.
             plt.title(f'Fin', fontsize=14)  # Increase title font size for readability

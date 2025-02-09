@@ -5,7 +5,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class neuralOperatorInterface(emotionModelWeights):
 
-    def __init__(self, operatorType, sequenceLength, numInputSignals, numOutputSignals, addBiasTerm):
+    def __init__(self, operatorType, sequenceLength, numInputSignals, numOutputSignals, numLayers, addBiasTerm):
         super().__init__()
         # General parameters.
         self.numOutputSignals = numOutputSignals  # The number of output signals.
@@ -13,6 +13,7 @@ class neuralOperatorInterface(emotionModelWeights):
         self.sequenceLength = sequenceLength  # The length of the input signals.
         self.operatorType = operatorType  # The type of operator to use.
         self.addBiasTerm = addBiasTerm  # Whether to add a bias term to the neural operator.
+        self.numLayers = numLayers  # The number of layers in the neural operator.
 
     def getNeuralOperatorLayer(self, neuralOperatorParameters, reversibleFlag):
         # Decide on the neural operator layer.
@@ -33,7 +34,7 @@ class neuralOperatorInterface(emotionModelWeights):
         learningProtocol = 'rCNN' if reversibleFlag else 'FC'  # The protocol for learning the wavelet data.
         mode = 'periodization'  # Mode: 'zero' (lossy), 'symmetric' (lossy), 'reflect' (lossy), or 'periodization' (lossless).
 
-        return waveletNeuralOperatorLayer(sequenceLength=sequenceLength, numInputSignals=self.numInputSignals, numOutputSignals=self.numOutputSignals, numDecompositions=numDecompositions,
+        return waveletNeuralOperatorLayer(sequenceLength=sequenceLength, numInputSignals=self.numInputSignals, numOutputSignals=self.numOutputSignals, numLayers=self.numLayers, numDecompositions=numDecompositions,
                                           waveletType=waveletType, mode=mode, addBiasTerm=self.addBiasTerm, activationMethod=activationMethod, skipConnectionProtocol=skipConnectionProtocol,
                                           encodeLowFrequencyProtocol=encodeLowFrequencyProtocol, encodeHighFrequencyProtocol=encodeHighFrequencyProtocol, learningProtocol=learningProtocol)
 

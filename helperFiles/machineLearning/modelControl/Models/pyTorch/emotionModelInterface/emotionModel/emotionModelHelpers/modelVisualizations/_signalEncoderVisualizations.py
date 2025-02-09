@@ -85,7 +85,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Plot the signal reconstruction.
         plt.plot(relativeTimes, healthProfile[batchInd], c=self.blackColor, label=f"Health profile", linewidth=2, alpha=0.8)
-        plt.errorbar(x=np.arange(0, len(reconstructionError)), y=reconstructionError.mean(axis=-1), yerr=reconstructionError.std(axis=-1), color=self.darkColors[1], capsize=3, linewidth=2)
+        plt.errorbar(x=np.arange(0, reconstructionError.shape[0]), y=reconstructionError.mean(axis=-1), yerr=reconstructionError.std(axis=-1), color=self.darkColors[1], capsize=3, linewidth=2)
 
         # Plot the signal reconstruction.
         plt.plot(relativeTimes, reconstructedHealthProfile[batchInd].T, c=self.lightColors[0], linewidth=1, alpha=0.1)
@@ -191,7 +191,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(4 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=False)  # squeeze=False ensures axes is 2D
-        numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
+        numProcessing, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
         plt.ylim((-0.05, 1.05))
         plt.xlim((-0.05, 1.05))
 
@@ -203,10 +203,16 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         for layerInd in range(len(givensAnglesPath)):
             moduleName = reversibleModuleNames[layerInd].lower()
 
+            if "spatial" in moduleName and 'specific' in moduleName: numSpecific += 1
             if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
             elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
             elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
             else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+            if 'shared' in moduleName:
+                newRowInd = sharedColCounter // (nCols + 1)
+                newColInd = sharedColCounter % (nCols + 1)
+                rowInd, colInd = numSpecific + newColInd, newRowInd
+                sharedColCounter += 1
             ax = axes[rowInd, colInd]
 
             if colInd == 0: ax.set_ylabel(f"Layer {rowInd + 1}", fontsize=16)
@@ -260,7 +266,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey='col')  # squeeze=False ensures axes is 2D
-        numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
+        numProcessing, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
         units = "degrees" if degreesFlag else "radians"
         degrees = (180 if degreesFlag else math.pi) / 4
         bins = np.arange(-degrees, degrees + 1, 1)
@@ -274,10 +280,16 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         for layerInd in range(len(givensAnglesPath)):
             moduleName = reversibleModuleNames[layerInd].lower()
 
+            if "spatial" in moduleName and 'specific' in moduleName: numSpecific += 1
             if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
             elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
             elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
             else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+            if 'shared' in moduleName:
+                newRowInd = sharedColCounter // (nCols + 1)
+                newColInd = sharedColCounter % (nCols + 1)
+                rowInd, colInd = numSpecific + newColInd, newRowInd
+                sharedColCounter += 1
             ax = axes[rowInd, colInd]
 
             # Customize subplot title and axes
@@ -313,12 +325,11 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.suptitle(t=f"{plotTitle}; Epoch {epoch}\n", fontsize=16)
         fig.supxlabel(f"Angle ({units})")
         fig.supylabel("Density")
-        # plt.tight_layout()
         fig.set_constrained_layout(True)
-
-        # Save the plot
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')}.pdf", clearFigure=False, showPlot=False)
-        else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
+        #
+        # # Save the plot
+        # if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')}.pdf", clearFigure=False, showPlot=False)
+        # else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
         plt.xlim((-degrees, degrees))
         # Access and modify patches correctly
@@ -341,7 +352,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex='col', sharey=True)  # squeeze=False ensures axes is 2D
-        numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
+        numProcessing, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
         units = "degrees" if degreesFlag else "radians"
         degrees = (180 if degreesFlag else math.pi) / 4
         plt.ylim((-degrees, degrees))
@@ -353,10 +364,16 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         for layerInd in range(len(givensAnglesPath)):
             moduleName = reversibleModuleNames[layerInd].lower()
 
+            if "spatial" in moduleName and 'specific' in moduleName: numSpecific += 1
             if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
             elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
             elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
             else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+            if 'shared' in moduleName:
+                newRowInd = sharedColCounter // (nCols + 1)
+                newColInd = sharedColCounter % (nCols + 1)
+                rowInd, colInd = numSpecific + newColInd, newRowInd
+                sharedColCounter += 1
             ax = axes[rowInd, colInd]
 
             # Customize subplot title and axes
@@ -400,7 +417,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(4 * nCols, 4 * nRows), squeeze=False, sharex='col', sharey='col')  # squeeze=False ensures axes is 2D
-        numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
+        numProcessing, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
         degrees = (180 if degreesFlag else math.pi) / 4
         caxs = []  # Store the color scale references
 
@@ -410,10 +427,16 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         for layerInd in range(len(givensAnglesPath)):
             moduleName = reversibleModuleNames[layerInd].lower()
 
+            if "spatial" in moduleName and 'specific' in moduleName: numSpecific += 1
             if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
             elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
             elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
             else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+            if 'shared' in moduleName:
+                newRowInd = sharedColCounter // (nCols + 1)
+                newColInd = sharedColCounter % (nCols + 1)
+                rowInd, colInd = numSpecific + newColInd, newRowInd
+                sharedColCounter += 1
             ax = axes[rowInd, colInd]
 
             # Customize subplot title and axes
@@ -602,16 +625,22 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=True)
-        numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
+        numProcessing, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
 
         for layerInd in range(numActivations):
             moduleName = moduleNames[layerInd].lower()
             x, y = activationCurves[layerInd]
 
+            if "spatial" in moduleName and 'specific' in moduleName: numSpecific += 1
             if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
             elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
             elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
             else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+            if 'shared' in moduleName:
+                newRowInd = sharedColCounter // (nCols + 1)
+                newColInd = sharedColCounter % (nCols + 1)
+                rowInd, colInd = numSpecific + newColInd, newRowInd
+                sharedColCounter += 1
             ax = axes[rowInd, colInd]
 
             # Customize subplot title and axes

@@ -38,7 +38,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-02-08 32"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2025-02-08 Fixed"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Architecture Parameters ----------------------- #
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     parser.add_argument('--irreversibleLearningProtocol', type=str, default='FC', help='The learning protocol for the model: CNN, FC')
     parser.add_argument('--reversibleLearningProtocol', type=str, default='rCNN', help='The learning protocol for the model: rCNN')
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are using: cpu, cuda')
-    parser.add_argument('--encodedDimension', type=int, default=128, help='The dimension of the encoded signal.')
+    parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal.')
 
     # Add arguments for the neural operator.
     parser.add_argument('--waveletType', type=str, default='bior3.1', help='The wavelet type for the wavelet transform: bior3.1, bior3.3, bior2.2, bior3.5')
@@ -58,7 +58,7 @@ if __name__ == "__main__":
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--initialProfileAmp', type=float, default=1e-3, help='The limits for profile initialization. Should be near zero.')
     parser.add_argument('--angularThresholdMax', type=float, default=45, help='The minimum rotational threshold in degrees.')
-    parser.add_argument('--angularThresholdMin', type=float, default=2, help='The minimum rotational threshold in degrees.')
+    parser.add_argument('--angularThresholdMin', type=float, default=3, help='The minimum rotational threshold in degrees.')
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model: [1, 2]')
     parser.add_argument('--numSharedEncoderLayers', type=int, default=6, help='The number of layers in the model: [2, 8]')
     parser.add_argument('--cullingEpoch', type=int, default=1, help='The number of epochs before culling null weights.')
@@ -124,7 +124,7 @@ if __name__ == "__main__":
 
     # Calculate the initial loss.
     trainingProtocols.boundAngularWeights(allMetaModels, allModels, applyMinThresholding=False)
-    trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate, showMinimumPlots=False)
+    # trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate, showMinimumPlots=False)
     trainingProtocols.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, profileOnlyTraining=True)
     if modelConstants.useInitialLoss: trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)  # Calculate the initial loss.
 

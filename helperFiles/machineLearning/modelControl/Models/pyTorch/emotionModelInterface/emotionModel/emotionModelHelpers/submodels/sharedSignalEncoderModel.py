@@ -12,7 +12,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 class sharedSignalEncoderModel(neuralOperatorInterface):
 
     def __init__(self, operatorType, encodedDimension, numSharedEncoderLayers, learningProtocol, neuralOperatorParameters):
-        super(sharedSignalEncoderModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numInputSignals=1, numOutputSignals=1, addBiasTerm=False)
+        super(sharedSignalEncoderModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numLayers=numSharedEncoderLayers, numInputSignals=1, numOutputSignals=1, addBiasTerm=False)
         # General model parameters.
         self.neuralOperatorParameters = neuralOperatorParameters  # The parameters for the neural operator.
         self.encodedTimeWindow = modelConstants.modelTimeWindow  # The time window for the encoded signal.
@@ -29,13 +29,15 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         # The neural layers for the signal encoder.
         self.healthGenerationModel = self.healthGeneration(numOutputFeatures=encodedDimension)
         self.processingLayers, self.neuralLayers = nn.ModuleList(), nn.ModuleList()
+
+        # Add the layers.
+        self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True))
         for _ in range(self.numSharedEncoderLayers): self.addLayer()
 
     def forward(self):
         raise "You cannot call the dataset-specific signal encoder module."
 
     def addLayer(self):
-        self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True))
         if self.learningProtocol == 'rCNN': self.processingLayers.append(nn.Identity())  # self.postProcessingLayerRCNN(numSignals=1, sequenceLength=self.encodedDimension))
         elif self.learningProtocol == 'FC': self.processingLayers.append(self.postProcessingLayerFC(sequenceLength=self.encodedDimension))
         elif self.learningProtocol == 'CNN': self.processingLayers.append(self.postProcessingLayerCNN(numSignals=self.numSignals))
@@ -48,6 +50,8 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         return healthProfile
 
     def learningInterface(self, layerInd, signalData):
+        if layerInd != 0: return signalData
+
         # Extract the signal data parameters.
         batchSize, numSignals, signalLength = signalData.shape
         signalData = signalData.view(batchSize*numSignals, 1, signalLength)
@@ -56,14 +60,12 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         if not reversibleInterface.forwardDirection:
             # Apply the neural operator layer with activation.
             signalData = self.neuralLayers[layerInd](signalData)
-            # signalData = self.processingLayers[layerInd](signalData)
         else:
             # Get the reverse layer index.
             pseudoLayerInd = len(self.neuralLayers) - layerInd - 1
             assert 0 <= pseudoLayerInd < len(self.neuralLayers), f"The pseudo layer index is out of bounds: {pseudoLayerInd}, {len(self.neuralLayers)}, {layerInd}"
 
             # Apply the neural operator layer with activation.
-            # signalData = self.processingLayers[pseudoLayerInd](signalData)
             signalData = self.neuralLayers[pseudoLayerInd](signalData)
 
         # Reshape the signal data.

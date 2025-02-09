@@ -218,18 +218,23 @@ class generalVisualizations(globalPlottingProtocols):
         for paramInd in range(numParams):
             # Create a figure and axes array
             fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=True)
-            numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
+            numProcessing, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
             paramName = paramNames[paramInd]
             plt.xlim((0, numEpochs))
 
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
 
+                if "spatial" in moduleName and 'specific' in moduleName: numSpecific += 1
                 if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
                 elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
                 elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
                 else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
-                if 'shared' in moduleName.lower(): rowInd = -1
+                if 'shared' in moduleName:
+                    newRowInd = sharedColCounter // (nCols + 1)
+                    newColInd = sharedColCounter % (nCols + 1)
+                    rowInd, colInd = numSpecific + newColInd, newRowInd
+                    sharedColCounter += 1
                 ax = axes[rowInd, colInd]
 
                 # Label the plot.
@@ -282,18 +287,23 @@ class generalVisualizations(globalPlottingProtocols):
         for paramInd in range(numParams):
             # Create a figure and axes array
             fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey='col' if fullView else False)
-            numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
+            numProcessing, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
             paramName = paramNames[paramInd]
             plt.xlim((0, numEpochs))
 
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
 
+                if "spatial" in moduleName and 'specific' in moduleName: numSpecific += 1
                 if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
                 elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
                 elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
                 else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
-                if 'shared' in moduleName: rowInd = -1
+                if 'shared' in moduleName:
+                    newRowInd = sharedColCounter // (nCols + 1)
+                    newColInd = sharedColCounter % (nCols + 1)
+                    rowInd, colInd = numSpecific + newColInd, newRowInd
+                    sharedColCounter += 1
                 ax = axes[rowInd, colInd]
 
                 if colInd == 0: ax.set_ylabel("Number of rotations")
@@ -348,17 +358,22 @@ class generalVisualizations(globalPlottingProtocols):
         for paramInd in range(numParams):
             # Create a figure and axes array
             fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=True)
-            numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
+            numProcessing, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
             paramName = paramNames[paramInd]
 
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
 
+                if "spatial" in moduleName and 'specific' in moduleName: numSpecific += 1
                 if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
                 elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
                 elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
                 else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
-                if 'shared' in moduleName: rowInd = -1
+                if 'shared' in moduleName:
+                    newRowInd = sharedColCounter // (nCols + 1)
+                    newColInd = sharedColCounter % (nCols + 1)
+                    rowInd, colInd = numSpecific + newColInd, newRowInd
+                    sharedColCounter += 1
                 ax = axes[rowInd, colInd]
 
                 ax.set_xlabel("Training epoch")
@@ -410,18 +425,23 @@ class generalVisualizations(globalPlottingProtocols):
         for paramInd in range(numParams):
             # Create a figure and axes array
             fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey='col')
-            numProcessing, numLow, numHigh, highFreqCol = -1, -1, -1, -1
+            numProcessing, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
             paramName = paramNames[paramInd]
 
             plt.suptitle(f"{plotTitle}: {paramName}\n")
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
 
+                if "spatial" in moduleName and 'specific' in moduleName: numSpecific += 1
                 if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
                 elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
                 elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
                 else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
-                if 'shared' in moduleName: rowInd = -1
+                if 'shared' in moduleName:
+                    newRowInd = sharedColCounter // (nCols + 1)
+                    newColInd = sharedColCounter % (nCols + 1)
+                    rowInd, colInd = numSpecific + newColInd, newRowInd
+                    sharedColCounter += 1
                 ax = axes[rowInd, colInd]
 
                 # Label the plot.

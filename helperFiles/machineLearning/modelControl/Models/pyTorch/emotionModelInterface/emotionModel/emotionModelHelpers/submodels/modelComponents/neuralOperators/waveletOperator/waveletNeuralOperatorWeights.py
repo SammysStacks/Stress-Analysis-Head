@@ -6,9 +6,9 @@ from .waveletNeuralHelpers import waveletNeuralHelpers
 
 class waveletNeuralOperatorWeights(waveletNeuralHelpers):
 
-    def __init__(self, sequenceLength, numInputSignals, numOutputSignals, numDecompositions, waveletType, mode, addBiasTerm, activationMethod,
+    def __init__(self, sequenceLength, numInputSignals, numOutputSignals, numLayers, numDecompositions, waveletType, mode, addBiasTerm, activationMethod,
                  skipConnectionProtocol, encodeLowFrequencyProtocol='lowFreq', encodeHighFrequencyProtocol='highFreq', learningProtocol='CNN'):
-        super(waveletNeuralOperatorWeights, self).__init__(sequenceLength=sequenceLength, numInputSignals=numInputSignals, numOutputSignals=numOutputSignals, numDecompositions=numDecompositions,
+        super(waveletNeuralOperatorWeights, self).__init__(sequenceLength=sequenceLength, numInputSignals=numInputSignals, numOutputSignals=numOutputSignals, numLayers=numLayers, numDecompositions=numDecompositions,
                                                            waveletType=waveletType, mode=mode, addBiasTerm=addBiasTerm, activationMethod=activationMethod, skipConnectionProtocol=skipConnectionProtocol,
                                                            encodeLowFrequencyProtocol=encodeLowFrequencyProtocol, encodeHighFrequencyProtocol=encodeHighFrequencyProtocol, learningProtocol=learningProtocol)
         # Initialize wavelet neural operator parameters.
@@ -38,8 +38,9 @@ class waveletNeuralOperatorWeights(waveletNeuralHelpers):
 
             # For each high frequency term.
             highFrequenciesWeights = nn.ModuleList()
-            for highFrequenciesInd in range(len(self.highFrequenciesShapes)):
-                if highFrequenciesInd < self.minHighFreqDecompositionLevel: highFrequencyParam = nn.Identity()
+            numFrequencies = len(self.highFrequenciesShapes)
+            for highFrequenciesInd in range(numFrequencies):
+                if highFrequenciesInd < self.numFrequenciesIgnore: highFrequencyParam = nn.Identity()
                 else: highFrequencyParam = self.getNeuralWeightParameters(inChannel=self.numInputSignals, initialFrequencyDim=self.highFrequenciesShapes[highFrequenciesInd])
                 highFrequenciesWeights.append(highFrequencyParam)
 
@@ -53,6 +54,6 @@ class waveletNeuralOperatorWeights(waveletNeuralHelpers):
         return lowFrequencyWeights
 
     def getNeuralWeightParameters(self, inChannel, initialFrequencyDim):
-        if self.learningProtocol == 'rCNN': return self.reversibleNeuralWeightRCNN(numSignals=inChannel, sequenceLength=initialFrequencyDim)
+        if self.learningProtocol == 'rCNN': return self.reversibleNeuralWeightRCNN(numSignals=inChannel, sequenceLength=initialFrequencyDim, numLayers=self.numLayers)
         elif self.learningProtocol == 'FC': return self.neuralWeightFC(sequenceLength=initialFrequencyDim)
         else: raise ValueError(f"The learning protocol ({self.learningProtocol}) must be in ['FCC', 'rCNN', 'CNN'].")

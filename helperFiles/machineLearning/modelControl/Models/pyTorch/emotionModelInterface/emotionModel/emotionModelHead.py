@@ -215,39 +215,30 @@ class emotionModelHead(nn.Module):
     def getLearnableParams(self):
         # Initialize the learnable parameters.
         givensAnglesPath, scalingFactorsPath, givensAnglesFeaturesPath,  = [], [], []
-        givensAnglesFeatureNames, reversibleModuleNames = None, []
+        givensAnglesFeatureNames = reversibleConvolutionLayer.getFeatureNames()
+        numGivensFeatures = len(givensAnglesFeatureNames)
+        reversibleModuleNames = []
 
         # For each module.
         for name, module in self.named_modules():
             if isinstance(module, reversibleConvolutionLayer):
-                givensAnglesFeatureNames, givensAnglesFeatures = module.getFeatureParams(layerInd=0)
-                givensAngles, scalingFactors = module.getLinearParams(layerInd=0)
-                scalingFactors = scalingFactors.detach().cpu().numpy().reshape(len(scalingFactors), 1)  # scalingFactors: numSignals, numParam=1
-                givensAngles = givensAngles.detach().cpu().numpy()  # givensAngles: numSignals, numParams
+                _, allGivensAnglesFeatures = module.getFeatureParams()
+                allGivensAngles, allScaleFactors = module.getAllLinearParams()
+                allScaleFactors = allScaleFactors.reshape(len(allScaleFactors), len(allScaleFactors[0]), 1)  # scalingFactors: numLayers, numSignals, numParam=1
 
-                givensAnglesPath.append(givensAngles)  # givensAnglesPath: numModuleLayers, numSignals, numParams
-                scalingFactorsPath.append(scalingFactors)  # scalingFactorsPath: numModuleLayers, numSignals, numParams=1
-                givensAnglesFeaturesPath.append(givensAnglesFeatures)  # givensAnglesFeaturesPath: numModuleLayers, numFeatures, numValues
-                reversibleModuleNames.append(self.compileModuleName(name))
+                for givensAngles in allGivensAngles: givensAnglesPath.append(givensAngles)  # givensAnglesPath: numModuleLayers, numSignals, numParams
+                for scalingFactors in allScaleFactors: scalingFactorsPath.append(scalingFactors)  # scalingFactorsPath: numModuleLayers, numSignals, numParams=1
+                for givensAnglesFeatures in allGivensAnglesFeatures: givensAnglesFeaturesPath.append(givensAnglesFeatures)  # givensAnglesFeaturesPath: numModuleLayers, numFeatures, numValues
+                for _ in allGivensAngles: reversibleModuleNames.append(self.compileModuleName(name))
 
-            elif isinstance(module, nn.Identity) and 'highFrequenciesWeights' in name:
-                givensAnglesFeatureNames = reversibleConvolutionLayer.getFeatureNames()
-                decompositionLevel = int(name.split('highFrequenciesWeights.')[-1]) + 1
+            elif isinstance(module, nn.Identity) and ('processing' in name or 'highFrequenciesWeights' in name):
+                decompositionLevel = int(name.split('highFrequenciesWeights.')[-1]) + 1 if 'highFrequenciesWeights' in name else 0
                 sequenceLength = self.encodedDimension // 2**decompositionLevel
                 numSignals = self.numSignals if 'specific' in name else 1
 
                 givensAnglesPath.append(np.zeros((numSignals, int(sequenceLength * (sequenceLength - 1) / 2))))  # givensAnglesPath: numModuleLayers, numSignals, numParams
                 scalingFactorsPath.append(np.ones((numSignals, 1)))  # scalingFactorsPath: numModuleLayers, numSignals, numParams=1
-                givensAnglesFeaturesPath.append(np.zeros((len(givensAnglesFeatureNames), numSignals)))  # givensAnglesFeaturesPath: numModuleLayers, numFeatures, numValues
-                reversibleModuleNames.append(self.compileModuleName(name))
-
-            elif isinstance(module, nn.Identity) and 'processing' in name:
-                givensAnglesFeatureNames = reversibleConvolutionLayer.getFeatureNames()
-                numSignals = self.numSignals if 'specific' in name else 1
-
-                givensAnglesPath.append(np.zeros((numSignals, int(self.encodedDimension * (self.encodedDimension - 1) / 2))))  # givensAnglesPath: numModuleLayers, numSignals, numParams
-                scalingFactorsPath.append(np.ones((numSignals, 1)))  # scalingFactorsPath: numModuleLayers, numSignals, numParams=1
-                givensAnglesFeaturesPath.append(np.zeros((len(givensAnglesFeatureNames), numSignals)))  # givensAnglesFeaturesPath: numModuleLayers, numFeatures, numValues
+                givensAnglesFeaturesPath.append(np.zeros((numGivensFeatures, numSignals)))  # givensAnglesFeaturesPath: numModuleLayers, numFeatures, numValues
                 reversibleModuleNames.append(self.compileModuleName(name))
 
         return givensAnglesPath, scalingFactorsPath, givensAnglesFeaturesPath, reversibleModuleNames, givensAnglesFeatureNames
@@ -256,9 +247,9 @@ class emotionModelHead(nn.Module):
         activationCurvePath, moduleNames = [], []
         for name, module in self.named_modules():
             if isinstance(module, reversibleConvolutionLayer): 
-                x, y = module.activationFunction.getActivationCurve(x_min=-1.5, x_max=1.5, num_points=100)
-                activationCurvePath.append([x, y])
-                moduleNames.append(self.compileModuleName(name))
+                xs, ys = module.geAllActivationCurves(x_min=-1.5, x_max=1.5, num_points=100)
+                for ind in range(len(xs)): activationCurvePath.append([xs[ind], ys[ind]])
+                for _ in range(len(xs)): moduleNames.append(self.compileModuleName(name))
 
             elif isinstance(module, nn.Identity) and ('processing' in name or 'highFrequenciesWeights' in name):
                 x = np.linspace(-1.5, stop=1.5, num=100); y = x
@@ -266,21 +257,23 @@ class emotionModelHead(nn.Module):
                 activationCurvePath.append([x, y])
                 moduleNames.append(self.compileModuleName(name))
         activationCurvePath = np.asarray(activationCurvePath)
+        moduleNames = np.asarray(moduleNames)
+
         return activationCurvePath, moduleNames
 
     def cullAngles(self, applyMinThresholding):
         for name, module in self.named_modules():
             if 'shared' in name.lower(): continue
             if isinstance(module, reversibleConvolutionLayer):
-                module.angularThresholding(layerInd=0, applyMinThresholding=applyMinThresholding)
+                module.angularThresholding(applyMinThresholding=applyMinThresholding)
 
     def getActivationParamsFullPassPath(self):
         activationParamsPath, moduleNames = [], []
         for name, module in self.named_modules():
             if isinstance(module, reversibleConvolutionLayer): 
-                params = module.activationFunction.getActivationParams()
-                activationParamsPath.append([param.detach().cpu().item() for param in params])
-                moduleNames.append(self.compileModuleName(name))
+                allActivationParams = module.getAllActivationParams()
+                for activationParams in allActivationParams: activationParamsPath.append(activationParams)
+                for _ in allActivationParams: moduleNames.append(self.compileModuleName(name))
 
             elif isinstance(module, nn.Identity) and ('processing' in name or 'highFrequenciesWeights' in name):
                 activationParamsPath.append(np.asarray([0.5, 1, 1]))
@@ -293,12 +286,11 @@ class emotionModelHead(nn.Module):
         numFreeParamsPath, moduleNames, maxFreeParamsPath = [], [], []
         for name, module in self.named_modules():
             if isinstance(module, reversibleConvolutionLayer):
-                params = module.getNumFreeParams(layerInd=0)
-                params = params.detach().cpu().numpy().reshape(len(params), 1)
+                allNumFreeParams = module.getNumFreeParams()
 
-                numFreeParamsPath.append(params)  # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
-                maxFreeParamsPath.append(module.numParams)  # maxFreeParamsPath: numModuleLayers
-                moduleNames.append(self.compileModuleName(name))
+                for numFreeParams in allNumFreeParams: numFreeParamsPath.append(numFreeParams)  # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
+                for _ in allNumFreeParams: maxFreeParamsPath.append(module.numParams)  # maxFreeParamsPath: numModuleLayers
+                for _ in allNumFreeParams: moduleNames.append(self.compileModuleName(name))
 
             elif isinstance(module, nn.Identity) and ('processing' in name or 'highFrequenciesWeights' in name):
                 numSignals = self.numSignals if 'specific' in name else 1
