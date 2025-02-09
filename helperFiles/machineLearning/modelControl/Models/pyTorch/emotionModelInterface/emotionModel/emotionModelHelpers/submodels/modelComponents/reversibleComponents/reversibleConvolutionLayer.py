@@ -204,7 +204,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         sorted_values, sorted_indices = torch.sort(givensAngles, dim=-1)
         # sorted_values -> [0, 1, 2, 3, ...]
 
-        percentParamsKeeping = 5
+        percentParamsKeeping = modelConstants.userInputParams['percentParamsKeeping']
         # Find the threshold value per row
         numAnglesThrowingAway = int((100 - percentParamsKeeping) * self.numParams / 100) - 1
         minAngleValues = sorted_values[:, numAnglesThrowingAway].unsqueeze(-1)  # Shape (numSignals, 1)
