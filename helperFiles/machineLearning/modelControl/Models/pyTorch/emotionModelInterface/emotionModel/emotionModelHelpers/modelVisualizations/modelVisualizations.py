@@ -32,7 +32,7 @@ class modelVisualizations(globalPlottingProtocols):
         # Set the saving folder for the model visualizations.
         self.baseSavingDataFolder = os.path.relpath(baseSavingDataFolder, os.getcwd()) + '/'
         self.saveDataFolder = os.path.relpath(saveDataFolder, os.getcwd()) + '/'
-        if self.hpcFlag and epoch == 0 and os.path.exists(self.saveDataFolder): raise Exception(f"Folder already exists: {self.saveDataFolder}")
+        if not self.hpcFlag and epoch == 0 and os.path.exists(self.saveDataFolder): raise Exception(f"Folder already exists: {self.saveDataFolder}")
         self._createFolder(self.saveDataFolder)
 
         # Initialize visualization protocols.
@@ -45,7 +45,7 @@ class modelVisualizations(globalPlottingProtocols):
         self.accelerator.print(f"\nCalculating loss for model comparison")
 
         # Prepare the model/data for evaluation.
-        self.setModelSavingFolder(baseSavingFolder=f"trainingFigures/{submodel}/{trainingDate}/", stringID=f"modelComparison/")  # Label the correct folder to save this analysis.
+        self.setModelSavingFolder(baseSavingFolder=f"trainingFigures/{submodel}/{trainingDate}/", stringID=f"modelComparison/", epoch=-1)  # Label the correct folder to save this analysis.
 
         with torch.no_grad():
             if self.accelerator.is_local_main_process:
