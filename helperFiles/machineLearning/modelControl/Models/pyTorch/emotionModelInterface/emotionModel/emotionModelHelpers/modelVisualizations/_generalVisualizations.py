@@ -231,9 +231,9 @@ class generalVisualizations(globalPlottingProtocols):
                 elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
                 else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
                 if 'shared' in moduleName:
-                    newRowInd = sharedColCounter // (nCols + 1)
-                    newColInd = sharedColCounter % (nCols + 1)
-                    rowInd, colInd = numSpecific + newColInd, newRowInd
+                    newRowInd = sharedColCounter // nCols
+                    newColInd = sharedColCounter % nCols
+                    rowInd, colInd = ((numSpecific + newColInd) % nRows), (newRowInd % nCols)
                     sharedColCounter += 1
                 if 'shared' in moduleName: rowInd = nRows - 1
                 ax = axes[rowInd, colInd]
@@ -301,9 +301,9 @@ class generalVisualizations(globalPlottingProtocols):
                 elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
                 else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
                 if 'shared' in moduleName:
-                    newRowInd = sharedColCounter // (nCols + 1)
-                    newColInd = sharedColCounter % (nCols + 1)
-                    rowInd, colInd = numSpecific + newColInd, newRowInd
+                    newRowInd = sharedColCounter // nCols
+                    newColInd = sharedColCounter % nCols
+                    rowInd, colInd = ((numSpecific + newColInd) % nRows), (newRowInd % nCols)
                     sharedColCounter += 1
                 if 'shared' in moduleName: rowInd = nRows - 1
                 ax = axes[rowInd, colInd]
@@ -372,9 +372,9 @@ class generalVisualizations(globalPlottingProtocols):
                 elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
                 else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
                 if 'shared' in moduleName:
-                    newRowInd = sharedColCounter // (nCols + 1)
-                    newColInd = sharedColCounter % (nCols + 1)
-                    rowInd, colInd = numSpecific + newColInd, newRowInd
+                    newRowInd = sharedColCounter // nCols
+                    newColInd = sharedColCounter % nCols
+                    rowInd, colInd = ((numSpecific + newColInd) % nRows), (newRowInd % nCols)
                     sharedColCounter += 1
                 if 'shared' in moduleName: rowInd = nRows - 1
                 ax = axes[rowInd, colInd]
@@ -441,9 +441,9 @@ class generalVisualizations(globalPlottingProtocols):
                 elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
                 else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
                 if 'shared' in moduleName:
-                    newRowInd = sharedColCounter // (nCols + 1)
-                    newColInd = sharedColCounter % (nCols + 1)
-                    rowInd, colInd = numSpecific + newColInd, newRowInd
+                    newRowInd = sharedColCounter // nCols
+                    newColInd = sharedColCounter % nCols
+                    rowInd, colInd = ((numSpecific + newColInd) % nRows), (newRowInd % nCols)
                     sharedColCounter += 1
                 if 'shared' in moduleName: rowInd = nRows - 1
                 ax = axes[rowInd, colInd]
