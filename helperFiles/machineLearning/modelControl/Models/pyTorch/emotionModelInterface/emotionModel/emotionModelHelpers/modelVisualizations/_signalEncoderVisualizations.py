@@ -425,14 +425,12 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             sequenceLength = int((1 + (1 + 8 * numAngles) ** 0.5) // 2)
             signalWeightMatrix = np.zeros((sequenceLength, sequenceLength))
 
-            if not ('specific' in moduleName and 'spatial' in moduleName):
-                # Plot training eigenvalue angles
-                weightMatrix = scaleFactor * givensAnglesPath[layerInd][0:numSignalsPlotting]  # histograms: numSignalsPlotting, numAngles
-                rowInds, colInds = np.triu_indices(sequenceLength, k=1)
+            weightMatrix = scaleFactor * givensAnglesPath[layerInd][0:numSignalsPlotting]  # histograms: numSignalsPlotting, numAngles
+            rowInds, colInds = np.triu_indices(sequenceLength, k=1)
 
-                # Create the signal weight matrix
-                signalWeightMatrix[rowInds, colInds] = -weightMatrix[signalInd]
-                signalWeightMatrix[colInds, rowInds] = weightMatrix[signalInd]
+            # Create the signal weight matrix
+            signalWeightMatrix[rowInds, colInds] = -weightMatrix[signalInd]
+            signalWeightMatrix[colInds, rowInds] = weightMatrix[signalInd]
 
             # Plot the heatmap
             caxs.append(ax.imshow(signalWeightMatrix, cmap=self.custom_cmap, interpolation="nearest", aspect="equal", vmin=-degrees, vmax=degrees))

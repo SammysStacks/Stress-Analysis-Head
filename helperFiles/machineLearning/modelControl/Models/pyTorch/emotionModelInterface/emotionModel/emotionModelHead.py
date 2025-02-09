@@ -230,22 +230,22 @@ class emotionModelHead(nn.Module):
                 givensAnglesFeaturesPath.append(givensAnglesFeatures)  # givensAnglesFeaturesPath: numModuleLayers, numFeatures, numValues
                 reversibleModuleNames.append(self.compileModuleName(name))
 
+            elif isinstance(module, nn.Identity) and 'highFrequenciesWeights' in name:
+                givensAnglesFeatureNames = reversibleConvolutionLayer.getFeatureNames()
+                decompositionLevel = int(name.split('highFrequenciesWeights.')[-1]) + 1
+                sequenceLength = self.encodedDimension // 2**decompositionLevel
+                numSignals = self.numSignals if 'specific' in name else 1
+
+                givensAnglesPath.append(np.zeros((numSignals, int(sequenceLength * (sequenceLength - 1) / 2))))  # givensAnglesPath: numModuleLayers, numSignals, numParams
+                scalingFactorsPath.append(np.ones((numSignals, 1)))  # scalingFactorsPath: numModuleLayers, numSignals, numParams=1
+                givensAnglesFeaturesPath.append(np.zeros((len(givensAnglesFeatureNames), numSignals)))  # givensAnglesFeaturesPath: numModuleLayers, numFeatures, numValues
+                reversibleModuleNames.append(self.compileModuleName(name))
+
             elif isinstance(module, nn.Identity) and 'processing' in name:
                 givensAnglesFeatureNames = reversibleConvolutionLayer.getFeatureNames()
                 numSignals = self.numSignals if 'specific' in name else 1
 
                 givensAnglesPath.append(np.zeros((numSignals, int(self.encodedDimension * (self.encodedDimension - 1) / 2))))  # givensAnglesPath: numModuleLayers, numSignals, numParams
-                scalingFactorsPath.append(np.ones((numSignals, 1)))  # scalingFactorsPath: numModuleLayers, numSignals, numParams=1
-                givensAnglesFeaturesPath.append(np.zeros((len(givensAnglesFeatureNames), numSignals)))  # givensAnglesFeaturesPath: numModuleLayers, numFeatures, numValues
-                reversibleModuleNames.append(self.compileModuleName(name))
-
-            elif isinstance(module, nn.Identity) and 'highFrequenciesWeights' in name:
-                givensAnglesFeatureNames = reversibleConvolutionLayer.getFeatureNames()
-                decompositionLevel = int(name.split('highFrequenciesWeights.')[-1])
-                sequenceLength = self.encodedDimension // 2**decompositionLevel
-                numSignals = self.numSignals if 'specific' in name else 1
-
-                givensAnglesPath.append(np.zeros((numSignals, int(sequenceLength * (sequenceLength - 1) / 2))))  # givensAnglesPath: numModuleLayers, numSignals, numParams
                 scalingFactorsPath.append(np.ones((numSignals, 1)))  # scalingFactorsPath: numModuleLayers, numSignals, numParams=1
                 givensAnglesFeaturesPath.append(np.zeros((len(givensAnglesFeatureNames), numSignals)))  # givensAnglesFeaturesPath: numModuleLayers, numFeatures, numValues
                 reversibleModuleNames.append(self.compileModuleName(name))
