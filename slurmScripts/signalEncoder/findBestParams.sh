@@ -64,7 +64,7 @@ cullingEpochs=(1)
 
 # Binary reference states.
 numSpecificEncoderLayers_arr=(1)
-numSharedEncoderLayers_arr=(4 6 8)
+numSharedEncoderLayers_arr=(4 6 8 12)
 
 # Binary reference states.
 encodedDimensions_arr=(128 256)
