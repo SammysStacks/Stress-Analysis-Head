@@ -12,6 +12,7 @@ import argparse
 import torch
 import time
 
+torch._inductor.config.fallback = True
 # Import files for machine learning
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
