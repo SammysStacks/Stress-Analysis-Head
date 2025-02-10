@@ -11,6 +11,7 @@ class profileModel(emotionModelWeights):
         super(profileModel, self).__init__()
         self.embeddedHealthProfiles = self.getInitialPhysiologicalProfile(numExperiments)
         self.retrainingProfileLosses, self.generatingBiometricSignals = None, None
+        self.compiledLayerStates, self.compiledLayerStateInd = None, 0
         self.retrainingHealthProfilePath = None
         self.encodedDimension = encodedDimension
         self.numExperiments = numExperiments
@@ -28,6 +29,19 @@ class profileModel(emotionModelWeights):
         self.generatingBiometricSignals = np.zeros(shape=(numProfileShots + 1, self.numExperiments, self.numSignals, self.encodedDimension))  # Dim: numProfileShots, numLayers, numExperiments, numSignals, encodedDimension
         self.retrainingHealthProfilePath = np.zeros(shape=(numProfileShots + 1, self.numExperiments, self.encodedDimension))
         self.retrainingProfileLosses = np.zeros(shape=(numProfileShots + 1, self.numExperiments, self.numSignals))
+
+    def resetModelStates(self, metaLearningData):
+        # Pre-allocate each parameter.
+        numSpecificEncoderLayers, numSharedEncoderLayers = modelConstants.userInputParams['numSpecificEncoderLayers'], modelConstants.userInputParams['numSharedEncoderLayers']
+        self.compiledLayerStates = np.zeros(shape=(numSpecificEncoderLayers + numSharedEncoderLayers + 1, metaLearningData.shape[0], metaLearningData.shape[1], metaLearningData.shape[2]))
+        self.compiledLayerStateInd = 0
+
+        # Add the initial state.
+        self.addModelState(metaLearningData)
+
+    def addModelState(self, metaLearningData):
+        self.compiledLayerStates[self.compiledLayerStateInd] = metaLearningData.clone().detach().cpu().numpy().reshape((self.compiledLayerStates.shape[1], self.compiledLayerStates.shape[2], self.compiledLayerStates.shape[3]))
+        self.compiledLayerStateInd += 1
 
     def populateProfileState(self, profileEpoch, batchInds, profileStateLoss, resampledSignalData, healthProfile):
         if isinstance(batchInds, torch.Tensor): batchInds = batchInds.detach().cpu().numpy()

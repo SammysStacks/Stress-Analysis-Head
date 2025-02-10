@@ -32,7 +32,7 @@ class sharedActivityModel(neuralOperatorInterface):
         elif self.learningProtocol == 'CNN': self.processingLayers.append(self.postProcessingLayerCNN(numSignals=self.numSignals))
         else: raise "The learning protocol is not yet implemented."
 
-    def learningInterface(self, layerInd, signalData):
+    def learningInterface(self, layerInd, signalData, compilingFunction):
         # Apply the neural operator layer with activation.
         signalData = self.neuralLayers[layerInd](signalData)
         signalData = self.processingLayers[layerInd](signalData)

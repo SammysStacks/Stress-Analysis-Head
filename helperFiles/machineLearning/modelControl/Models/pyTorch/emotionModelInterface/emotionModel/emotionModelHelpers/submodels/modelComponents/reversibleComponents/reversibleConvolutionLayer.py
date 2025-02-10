@@ -1,3 +1,4 @@
+import math
 import os
 
 import numpy as np
@@ -22,7 +23,6 @@ class reversibleConvolutionLayer(reversibleInterface):
         self.sequenceLength = sequenceLength  # The length of the input signal.
         self.numSignals = numSignals  # The number of signals in the input data.
         self.numLayers = numLayers  # The number of layers in the reversible linear layer.
-        # assert self.numLayers == 1, "I once Hard-coded layerInd=0; I may have fully changed this? Need to graduate ..."
         self.optimalForwardFirst = False  # Whether to apply the forward pass first.
 
         # The restricted window for the neural weights.
@@ -47,14 +47,19 @@ class reversibleConvolutionLayer(reversibleInterface):
             self.activationFunction.append(activationFunctions.getActivationMethod(activationMethod))
             # givensRotationParams: numLayers, numSignals, numParams
 
+    def applySingleLayer(self, inputData, layerInd):
+        if not self.forwardDirection: layerInd = self.numLayers - layerInd - 1
+        performOptimalForwardFirst = self.optimalForwardFirst if layerInd % 2 == 0 else not self.optimalForwardFirst
+
+        # Apply the weights to the input data.
+        if self.activationMethod == 'none': inputData = self.applyLayer(inputData, layerInd)
+        else: inputData = self.activationFunction[layerInd](inputData, lambda X: self.applyLayer(X, layerInd), forwardFirst=performOptimalForwardFirst)
+
+        return inputData
+
     def forward(self, inputData):
         for layerInd in range(self.numLayers):
-            if not self.forwardDirection: layerInd = self.numLayers - layerInd - 1
-            performOptimalForwardFirst = self.optimalForwardFirst if layerInd % 2 == 0 else not self.optimalForwardFirst
-
-            # Apply the weights to the input data.
-            if self.activationMethod == 'none': inputData = self.applyLayer(inputData, layerInd)
-            else: inputData = self.activationFunction[layerInd](inputData, lambda X: self.applyLayer(X, layerInd), forwardFirst=performOptimalForwardFirst)
+            inputData = self.applySingleLayer(inputData, layerInd)
 
         return inputData
 
@@ -100,14 +105,14 @@ class reversibleConvolutionLayer(reversibleInterface):
     def getGivensAngles(self, layerInd):
         return self.getInfinitesimalAnglesA(layerInd)
 
-    # ------------------- Scaling Methods ------------------- #
+    # ------------------- Helper Methods ------------------- #
 
     @staticmethod
     def initializeJacobianParams(numSignals):
         return nn.Parameter(torch.zeros((1, numSignals, 1)))
 
     def getJacobianScalar(self):
-        jacobianMatrix = 0.9 + 0.2 * torch.sigmoid(self.jacobianParameter)
+        jacobianMatrix = 1.0 + 0.1 * torch.tanh(self.jacobianParameter) - math.log(8*(self.numLayers + 1)) * 0.001
         return jacobianMatrix
 
     def applyManifoldScale(self, inputData):
@@ -115,66 +120,68 @@ class reversibleConvolutionLayer(reversibleInterface):
         if not reversibleInterface.forwardDirection: return inputData * scalarValues
         else: return inputData / scalarValues
 
-    # ------------------------------------------------------------ #
-
-    def getAllLinearParams(self):
-        allGivensAngles, allScaleFactors = [], []
-        for layerInd in range(self.numLayers):
-            givensAngles, scalingFactors = self.getLinearParams(layerInd)
-            allScaleFactors.append(scalingFactors.detach().cpu().numpy())
-            allGivensAngles.append(givensAngles.detach().cpu().numpy())
-        allGivensAngles = np.asarray(allGivensAngles)
-        allScaleFactors = np.asarray(allScaleFactors)
-
-        return allGivensAngles, allScaleFactors
-
     def getLinearParams(self, layerInd):
         givensAngles = self.getGivensAngles(layerInd)  # Dim: numSignals, numParams
         scalingFactors = self.getJacobianScalar().flatten()  # Dim: numSignals
 
         return givensAngles, scalingFactors
 
+    # ------------------------------------------------------------ #
+
+    def getAllLinearParams(self):
+        allGivensAngles, allScaleFactors = [], []
+
+        with torch.no_grad():
+            for layerInd in range(self.numLayers):
+                givensAngles, scalingFactors = self.getLinearParams(layerInd)
+                allScaleFactors.append(scalingFactors.detach().cpu().numpy())
+                allGivensAngles.append(givensAngles.detach().cpu().numpy())
+            allGivensAngles = np.asarray(allGivensAngles)
+            allScaleFactors = np.asarray(allScaleFactors)
+
+        return allGivensAngles, allScaleFactors
+
     def getNumFreeParams(self):
         angularThresholdMin = modelConstants.userInputParams['angularThresholdMin'] * torch.pi / 180  # Convert to radians
         allNumFreeParams = []
 
-        for layerInd in range(self.numLayers):
-            angularMask = angularThresholdMin <= self.getGivensAngles(layerInd).abs()
-            numSignalParameters = angularMask.sum(dim=-1)  # Dim: numSignals
-            allNumFreeParams.append(numSignalParameters.detach().cpu().numpy().reshape(numSignalParameters.size(0), 1))
-            # angularMask: numSignals, numFreeParams
-            # numSignalParameters: numSignals
-        allNumFreeParams = np.asarray(allNumFreeParams)
+        with torch.no_grad():
+            for layerInd in range(self.numLayers):
+                angularMask = angularThresholdMin <= self.getGivensAngles(layerInd).abs()
+                numSignalParameters = angularMask.sum(dim=-1, keepdim=True)  # Dim: numSignals, 1
+                allNumFreeParams.append(numSignalParameters.detach().cpu().numpy())
+                # allNumFreeParams: numLayers, numSignals, numFreeParams=1
 
         return allNumFreeParams
 
     def getFeatureParams(self):
         givensAnglesFeatureNames = self.getFeatureNames()
-
         allGivensAnglesFeatures = []
-        for layerInd in range(self.numLayers):
-            givensAngles, scalingFactors = self.getLinearParams(layerInd)  # Dim: numSignals, numParams
-            scalingFactors = scalingFactors.reshape(self.numSignals, 1)  # Dim: numSignals, numParams=1
-            givensAngles = givensAngles * 180 / torch.pi  # Convert to degrees
-            givensAnglesABS = givensAngles.abs()
 
-            # Calculate the mean, variance, and range of the Givens angles.
-            givensAnglesRange = givensAngles.max(dim=-1).values - givensAngles.min(dim=-1).values  # Dim: numSignals
-            givensAnglesMean = givensAngles.mean(dim=-1).cpu().detach().numpy()  # Dim: numSignals
-            givensAnglesVar = givensAngles.var(dim=-1).cpu().detach().numpy()  # Dim: numSignals
-            givensAnglesRange = givensAnglesRange.cpu().detach().numpy()
-            givensAnglesMedian = torch.median(givensAngles, dim=-1).values.cpu().detach().numpy()  # Dim: numSignals
+        with torch.no_grad():
+            for layerInd in range(self.numLayers):
+                givensAngles, scalingFactors = self.getLinearParams(layerInd)  # Dim: numSignals, numParams
+                scalingFactors = scalingFactors.reshape(self.numSignals, 1)  # Dim: numSignals, numParams=1
+                givensAngles = givensAngles * 180 / torch.pi  # Convert to degrees
+                givensAnglesABS = givensAngles.abs()
 
-            # Calculate the mean, variance, and range of the positive Givens angles.
-            givensAnglesMeanABS = givensAnglesABS.mean(dim=-1).cpu().detach().numpy()  # Dim: numSignals
-            givensAnglesVarABS = givensAnglesABS.var(dim=-1).cpu().detach().numpy()  # Dim: numSignals
+                # Calculate the mean, variance, and range of the Givens angles.
+                givensAnglesRange = givensAngles.max(dim=-1).values - givensAngles.min(dim=-1).values  # Dim: numSignals
+                givensAnglesMean = givensAngles.mean(dim=-1).cpu().detach().numpy()  # Dim: numSignals
+                givensAnglesVar = givensAngles.var(dim=-1).cpu().detach().numpy()  # Dim: numSignals
+                givensAnglesRange = givensAnglesRange.cpu().detach().numpy()
+                givensAnglesMedian = torch.median(givensAngles, dim=-1).values.cpu().detach().numpy()  # Dim: numSignals
 
-            # Calculate the mean, variance, and range of the scaling factors.
-            scalingFactorsMean = scalingFactors.mean(dim=-1).cpu().detach().numpy()  # Dim: numSignals=1
-            scalarMedian = torch.median(scalingFactors, dim=-1).values.cpu().detach().numpy()  # Dim: numSignals=1
+                # Calculate the mean, variance, and range of the positive Givens angles.
+                givensAnglesMeanABS = givensAnglesABS.mean(dim=-1).cpu().detach().numpy()  # Dim: numSignals
+                givensAnglesVarABS = givensAnglesABS.var(dim=-1).cpu().detach().numpy()  # Dim: numSignals
 
-            # Combine the features. Return dimension: numFeatures, numValues
-            allGivensAnglesFeatures.append([givensAnglesMean, givensAnglesVar, givensAnglesRange, givensAnglesMedian, givensAnglesMeanABS, givensAnglesVarABS, scalingFactorsMean, scalarMedian])
+                # Calculate the mean, variance, and range of the scaling factors.
+                scalingFactorsMean = scalingFactors.mean(dim=-1).cpu().detach().numpy()  # Dim: numSignals=1
+                scalarMedian = torch.median(scalingFactors, dim=-1).values.cpu().detach().numpy()  # Dim: numSignals=1
+
+                # Combine the features. Return dimension: numFeatures, numValues
+                allGivensAnglesFeatures.append([givensAnglesMean, givensAnglesVar, givensAnglesRange, givensAnglesMedian, givensAnglesMeanABS, givensAnglesVarABS, scalingFactorsMean, scalarMedian])
 
         return givensAnglesFeatureNames, allGivensAnglesFeatures
 
@@ -199,35 +206,40 @@ class reversibleConvolutionLayer(reversibleInterface):
 
     # DEPRECATED
     def minThresholding(self, layerInd):
-        # Sort each row by absolute value
-        givensAngles = self.getGivensAngles(layerInd).clone().abs()  # Dim: numSignals, numParams
-        sorted_values, sorted_indices = torch.sort(givensAngles, dim=-1)
-        # sorted_values -> [0, 1, 2, 3, ...]
+        with torch.no_grad():
+            # Sort each row by absolute value
+            givensAngles = self.getGivensAngles(layerInd).clone().abs()  # Dim: numSignals, numParams
+            sorted_values, sorted_indices = torch.sort(givensAngles, dim=-1)
+            # sorted_values -> [0, 1, 2, 3, ...]
 
-        # Find the threshold value per row
-        percentParamsKeeping = float(modelConstants.userInputParams['percentParamsKeeping'])
-        numAnglesThrowingAway = int((100 - percentParamsKeeping) * self.numParams / 100) - 1
-        minAngleValues = sorted_values[:, numAnglesThrowingAway].unsqueeze(-1)  # Shape (numSignals, 1)
+            # Find the threshold value per row
+            percentParamsKeeping = float(modelConstants.userInputParams['percentParamsKeeping'])
+            numAnglesThrowingAway = int((100 - percentParamsKeeping) * self.numParams / 100) - 1
+            minAngleValues = sorted_values[:, numAnglesThrowingAway].unsqueeze(-1)  # Shape (numSignals, 1)
 
-        # Zero out the values below the threshold
-        self.givensRotationParams[layerInd][givensAngles < minAngleValues] = 0
+            # Zero out the values below the threshold
+            self.givensRotationParams[layerInd][givensAngles < minAngleValues] = 0
 
     def getAllActivationParams(self):
         allActivationParams = []
-        for layerInd in range(self.numLayers):
-            infiniteBound, linearity, convergentPoint = self.activationFunction[layerInd].getActivationParams()
-            allActivationParams.append([infiniteBound.detach().cpu().item(), linearity.detach().cpu().item(), convergentPoint.detach().cpu().item()])
-        allActivationParams = np.asarray(allActivationParams)
+        with torch.no_grad():
+            for layerInd in range(self.numLayers):
+                infiniteBound, linearity, convergentPoint = self.activationFunction[layerInd].getActivationParams()
+                allActivationParams.append([infiniteBound.detach().cpu().item(), linearity.detach().cpu().item(), convergentPoint.detach().cpu().item()])
+            allActivationParams = np.asarray(allActivationParams)
 
         return allActivationParams
 
     def geAllActivationCurves(self, x_min=-1.5, x_max=1.5, num_points=100):
-        xs = []; ys = []
-        for layerInd in range(self.numLayers):
-            x, y = self.activationFunction[layerInd].getActivationCurve(x_min, x_max, num_points)
-            xs.append(x); ys.append(y)
+        xs, ys = [], []
+        with torch.no_grad():
+            for layerInd in range(self.numLayers):
+                x, y = self.activationFunction[layerInd].getActivationCurve(x_min, x_max, num_points)
+                xs.append(x); ys.append(y)
 
         return xs, ys
+
+    # ------------------------------------------------------------ #
 
     def printParams(self):
         # Count the trainable parameters.
@@ -242,10 +254,13 @@ if __name__ == "__main__":
 
     try:
         # for layers, sequenceLength2 in [(2, 256), (2, 128), (2, 64), (2, 32), (2, 16), (2, 8), (2, 4), (2, 2)]:
-        for _layerInd, sequenceLength2 in [(1, 256)]:
+        # for _layerInd, sequenceLength2 in [(1, 32), (2, 32), (3, 32), (5, 32), (5, 32), (10, 32)]:
+        # for _layerInd, sequenceLength2 in [(1, 64), (2, 64), (3, 64), (5, 64), (5, 64), (10, 64)]:
+        # for _layerInd, sequenceLength2 in [(1, 128), (2, 128), (3, 128), (5, 128), (5, 128), (10, 128)]:
+        for _layerInd, sequenceLength2 in [(1, 256), (2, 256), (3, 256), (5, 256), (5, 256), (10, 256)]:
             # General parameters.
             _batchSize, _numSignals, _sequenceLength = 128, 128, sequenceLength2
-            _activationMethod = 'none'  # reversibleLinearSoftSign
+            _activationMethod = 'reversibleLinearSoftSign'  # reversibleLinearSoftSign
             _numLayers = _layerInd
 
             # Set up the parameters.
@@ -257,11 +272,10 @@ if __name__ == "__main__":
             if reconstructionFlag: _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(healthProfile, atol=1e-6, numLayers=1, plotResults=False)
             else: _forwardData = neuralLayerClass.forward(healthProfile)
             neuralLayerClass.printParams()
-            print((_forwardData - healthProfile)[0][0].sum())
 
             ratio = (_forwardData.norm(dim=-1) / healthProfile.norm(dim=-1)).view(-1).detach().numpy()
             if abs(ratio.mean() - 1) < 0.1: plt.hist(ratio, bins=150, alpha=0.2, label=f'len{_sequenceLength}_layers={_layerInd}', density=True)
-            print(ratio.mean())
+            print("Lipschitz constant:", ratio.mean())
 
             # Plot the Gaussian fit
             xmin, xmax = plt.xlim()

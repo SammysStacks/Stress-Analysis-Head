@@ -7,6 +7,7 @@ from torchviz import make_dot
 
 # Visualization protocols
 from helperFiles.globalPlottingProtocols import globalPlottingProtocols
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
 
 class generalVisualizations(globalPlottingProtocols):
@@ -182,7 +183,7 @@ class generalVisualizations(globalPlottingProtocols):
                     # Set the line color and alpha
                     if "specific" in moduleName: lineColor = self.darkColors[modelInd]; alpha = 0.8
                     elif "shared" in moduleName: lineColor = self.blackColor; alpha = 0.75
-                    else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+                    else: raise ValueError("Module name must contain 'specific' or 'shared'.")
 
                     if modelInd == 0: modelLabel = modelLabels[modelInd]
                     else: modelLabel = None
@@ -195,7 +196,7 @@ class generalVisualizations(globalPlottingProtocols):
             elif 'Linearity' in paramName: ax.set_ylim((0, 10.1))
             elif 'Convergent' in paramName: ax.set_ylim((0, 2.1))
             ax.set_xlim((0, numEpochs))
-            ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+            ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5, alpha=0.8)
 
         # Label the plot.
         plt.suptitle(f"{plotTitle}")
@@ -229,13 +230,11 @@ class generalVisualizations(globalPlottingProtocols):
                 if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
                 elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
                 elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
-                else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+                else: raise ValueError("Module name must contain 'specific' or 'shared'.")
                 if 'shared' in moduleName:
-                    newRowInd = sharedColCounter // nCols
-                    newColInd = sharedColCounter % nCols
-                    rowInd, colInd = ((numSpecific + newColInd) % nRows), (newRowInd % nCols)
+                    numShared = modelConstants.userInputParams['numSharedEncoderLayers']
+                    rowInd, colInd = min(nRows - 1, numSpecific + sharedColCounter % numShared), sharedColCounter // numShared
                     sharedColCounter += 1
-                if 'shared' in moduleName: rowInd = nRows - 1
                 ax = axes[rowInd, colInd]
 
                 # Label the plot.
@@ -246,8 +245,7 @@ class generalVisualizations(globalPlottingProtocols):
                 elif 'linearity' in paramName.lower(): ax.set_ylim((0, 10.1))
                 elif 'convergent' in paramName.lower(): ax.set_ylim((0, 2.1))
 
-                ax.set_title(" ".join(moduleName.split(" ")[1:]).capitalize(), fontsize=16)
-                ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+                ax.set_title(moduleName.capitalize(), fontsize=16)
                 ax.set_xlabel("Training epoch")
 
                 for modelInd in range(numModels):
@@ -255,7 +253,7 @@ class generalVisualizations(globalPlottingProtocols):
 
                     if "specific" in moduleName: lineColor = self.darkColors[modelInd]
                     elif "shared" in moduleName: lineColor = self.blackColor
-                    else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+                    else: raise ValueError("Module name must contain 'specific' or 'shared'.")
 
                     # Plot the training losses.
                     plottingParams = activationParamsPaths[modelInd, :, layerInd, paramInd]
@@ -266,6 +264,7 @@ class generalVisualizations(globalPlottingProtocols):
                         for axisLineInd in range(numValues):
                             ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * alphas[axisLineInd])
                             ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * (1 - alphas[axisLineInd]))
+                ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5, alpha=0.8)
 
             # Label the plot.
             plt.suptitle(f"{plotTitle}: {paramName}\n")
@@ -282,8 +281,8 @@ class generalVisualizations(globalPlottingProtocols):
         nRows, nCols = self.getRowsCols(numModuleLayers, combineSharedLayers=True)
         numEpochs = len(numFreeModelParams[0])
         numParams = len(paramNames)
-        x = np.arange(numEpochs)
-        if numEpochs == 0: return "No data to plot."
+        x = np.arange(numEpochs - (0 if fullView else 1))
+        if numEpochs < 3: return "No data to plot."
 
         for paramInd in range(numParams):
             # Create a figure and axes array
@@ -299,19 +298,17 @@ class generalVisualizations(globalPlottingProtocols):
                 if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
                 elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
                 elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
-                else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+                else: raise ValueError("Module name must contain 'specific' or 'shared'.")
                 if 'shared' in moduleName:
-                    newRowInd = sharedColCounter // nCols
-                    newColInd = sharedColCounter % nCols
-                    rowInd, colInd = ((numSpecific + newColInd) % nRows), (newRowInd % nCols)
+                    numShared = modelConstants.userInputParams['numSharedEncoderLayers']
+                    rowInd, colInd = min(nRows - 1, numSpecific + sharedColCounter % numShared), sharedColCounter // numShared
                     sharedColCounter += 1
-                if 'shared' in moduleName: rowInd = nRows - 1
                 ax = axes[rowInd, colInd]
 
                 if colInd == 0: ax.set_ylabel("Number of rotations")
+                ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5, alpha=0.8)
                 ax.set_xlabel("Training epoch")
                 ax.set_title(moduleName)
-                ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
                 for modelInd in range(numModels):
                     if "shared" in moduleName and modelInd != 0: continue
@@ -319,7 +316,7 @@ class generalVisualizations(globalPlottingProtocols):
                     sequenceLength = int((1 + (1 + 8 * maxFreeParams) ** 0.5) // 2)
 
                     plottingParams = []
-                    for epochInd in range(numEpochs):
+                    for epochInd in range(0 if fullView else 1, numEpochs):
                         plottingParams.append(numFreeModelParams[modelInd][epochInd][layerInd][:, paramInd])
                     plottingParams = np.asarray(plottingParams)
 
@@ -370,20 +367,17 @@ class generalVisualizations(globalPlottingProtocols):
                 if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
                 elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
                 elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
-                else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+                else: raise ValueError("Module name must contain 'specific' or 'shared'.")
                 if 'shared' in moduleName:
-                    newRowInd = sharedColCounter // nCols
-                    newColInd = sharedColCounter % nCols
-                    rowInd, colInd = ((numSpecific + newColInd) % nRows), (newRowInd % nCols)
+                    numShared = modelConstants.userInputParams['numSharedEncoderLayers']
+                    rowInd, colInd = min(nRows - 1, numSpecific + sharedColCounter % numShared), sharedColCounter // numShared
                     sharedColCounter += 1
-                if 'shared' in moduleName: rowInd = nRows - 1
                 ax = axes[rowInd, colInd]
 
                 ax.set_xlabel("Training epoch")
                 ax.set_title(moduleName)
                 ax.set_xlim((0, numEpochs))
-                ax.set_ylim((0.9, 1.1))
-                ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+                ax.set_ylim((0.85, 1.15))
 
                 for modelInd in range(numModels):
                     if "shared" in moduleName and modelInd != 0: continue
@@ -408,6 +402,7 @@ class generalVisualizations(globalPlottingProtocols):
                         for axisLineInd in range(numValues):
                             ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * alphas[axisLineInd])
                             ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * (1 - alphas[axisLineInd]))
+                ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5, alpha=0.8)
 
             # Label the plot.
             plt.suptitle(f"{plotTitle} {paramName}\n")
@@ -439,13 +434,12 @@ class generalVisualizations(globalPlottingProtocols):
                 if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
                 elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
                 elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
-                else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+                else: raise ValueError("Module name must contain 'specific' or 'shared'.")
                 if 'shared' in moduleName:
-                    newRowInd = sharedColCounter // nCols
-                    newColInd = sharedColCounter % nCols
-                    rowInd, colInd = ((numSpecific + newColInd) % nRows), (newRowInd % nCols)
+                    numShared = modelConstants.userInputParams['numSharedEncoderLayers']
+                    rowInd, colInd = min(nRows - 1, numSpecific + sharedColCounter % numShared), sharedColCounter // numShared
                     sharedColCounter += 1
-                if 'shared' in moduleName: rowInd = nRows - 1
+                if 'shared' in moduleName: print(rowInd, nRows - 1); rowInd = nRows - 1
                 ax = axes[rowInd, colInd]
 
                 # Label the plot.
@@ -453,13 +447,12 @@ class generalVisualizations(globalPlottingProtocols):
                 ax.set_xlabel("Training epoch")
                 ax.set_title(moduleName)
                 ax.set_xlim((0, numEpochs))
-                ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
                 for modelInd in range(numModels):
                     if "shared" in moduleName and modelInd != 0: continue
                     if "specific" in moduleName: lineColor = self.darkColors[modelInd]
                     elif "shared" in moduleName: lineColor = self.blackColor
-                    else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+                    else: raise ValueError("Module name must contain 'specific' or 'shared'.")
 
                     plottingParams = np.zeros((numEpochs, len(givensAnglesFeaturesPaths[modelInd][0][layerInd][paramInd])))
                     for epochInd in range(numEpochs): plottingParams[epochInd, :] = givensAnglesFeaturesPaths[modelInd][epochInd][layerInd][paramInd]
@@ -480,8 +473,7 @@ class generalVisualizations(globalPlottingProtocols):
                         for axisLineInd in range(numValues):
                             ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * alphas[axisLineInd])
                             ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * (1 - alphas[axisLineInd]))
-
-            # Label the plot.
+                ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5, alpha=0.8)
             plt.tight_layout()
 
             # Save the figure if desired.

@@ -157,7 +157,7 @@ class emotionModelHead(nn.Module):
 
         # Perform the backward pass: health profile -> signal data.
         resampledSignalData = healthProfile.unsqueeze(1).repeat(repeats=(1, numSignals, 1))
-        resampledSignalData, compiledSignalEncoderLayerState = self.signalEncoderPass(metaLearningData=resampledSignalData, forwardPass=False, compileLayerStates=onlyProfileTraining)
+        resampledSignalData = self.signalEncoderPass(metaLearningData=resampledSignalData, forwardPass=False, compileLayerStates=onlyProfileTraining)
         reconstructedSignalData = self.sharedSignalEncoderModel.interpolateOriginalSignals(signalData, resampledSignalData)
         # reconstructedSignalData: batchSize, numSignals, maxSequenceLength
         # resampledSignalData: batchSize, numSignals, encodedDimension
@@ -190,7 +190,7 @@ class emotionModelHead(nn.Module):
 
         # --------------------------------------------------------------- #
 
-        return validDataMask, reconstructedSignalData, resampledSignalData, compiledSignalEncoderLayerState, healthProfile, activityProfile, basicEmotionProfile, emotionProfile
+        return validDataMask, reconstructedSignalData, resampledSignalData, healthProfile, activityProfile, basicEmotionProfile, emotionProfile
 
     # ------------------------- Model Components ------------------------- #
 
@@ -272,7 +272,7 @@ class emotionModelHead(nn.Module):
         for name, module in self.named_modules():
             if isinstance(module, reversibleConvolutionLayer): 
                 allActivationParams = module.getAllActivationParams()
-                for activationParams in allActivationParams: activationParamsPath.append(activationParams)
+                activationParamsPath.extend(allActivationParams)
                 for _ in allActivationParams: moduleNames.append(self.compileModuleName(name))
 
             elif isinstance(module, nn.Identity) and ('processing' in name or 'highFrequenciesWeights' in name):
@@ -288,9 +288,9 @@ class emotionModelHead(nn.Module):
             if isinstance(module, reversibleConvolutionLayer):
                 allNumFreeParams = module.getNumFreeParams()
 
-                for numFreeParams in allNumFreeParams: numFreeParamsPath.append(numFreeParams)  # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
-                for _ in allNumFreeParams: maxFreeParamsPath.append(module.numParams)  # maxFreeParamsPath: numModuleLayers
-                for _ in allNumFreeParams: moduleNames.append(self.compileModuleName(name))
+                numFreeParamsPath.extend(allNumFreeParams)  # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
+                for _ in range(len(allNumFreeParams)): maxFreeParamsPath.append(module.numParams)  # maxFreeParamsPath: numModuleLayers
+                for _ in range(len(allNumFreeParams)): moduleNames.append(self.compileModuleName(name))
 
             elif isinstance(module, nn.Identity) and ('processing' in name or 'highFrequenciesWeights' in name):
                 numSignals = self.numSignals if 'specific' in name else 1
@@ -299,42 +299,33 @@ class emotionModelHead(nn.Module):
                 numFreeParamsPath.append(np.zeros((numSignals, 1)))  # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
                 moduleNames.append(self.compileModuleName(name))
         assert len(numFreeParamsPath) != 0
+
         return numFreeParamsPath, moduleNames, maxFreeParamsPath
 
     def signalEncoderPass(self, metaLearningData, forwardPass, compileLayerStates=False):
+        if compileLayerStates: self.specificSignalEncoderModel.profileModel.resetModelStates(metaLearningData)  # Add the initial state.
+        compilingFunction = self.specificSignalEncoderModel.profileModel.addModelState if compileLayerStates else None
         reversibleInterface.changeDirections(forwardDirection=forwardPass)
-        compiledLayerIndex = 0; compiledLayerStates = None
-
-        if compileLayerStates:
-            # Initialize the model's learning interface.
-            compiledLayerStates = np.zeros(shape=(self.numSpecificEncoderLayers + self.numSharedEncoderLayers + 1, metaLearningData.size(0), metaLearningData.size(1), metaLearningData.size(2)))
-            compiledLayerStates[compiledLayerIndex] = metaLearningData.clone().detach().cpu().numpy(); compiledLayerIndex += 1
-            # compiledLayerStates: numLayers, batchSize, numSignals, encodedDimension
 
         if forwardPass:
             # Signal encoder layers.
-            metaLearningData, compiledLayerStates, compiledLayerIndex = self.modelBlockPass(metaLearningData, compiledLayerStates, self.sharedSignalEncoderModel, self.numSharedEncoderLayers, compiledLayerIndex)
-            metaLearningData, compiledLayerStates, compiledLayerIndex = self.modelBlockPass(metaLearningData, compiledLayerStates, self.specificSignalEncoderModel, self.numSpecificEncoderLayers, compiledLayerIndex)
+            metaLearningData = self.modelBlockPass(metaLearningData, self.sharedSignalEncoderModel, self.numSharedEncoderLayers, compilingFunction)
+            metaLearningData = self.modelBlockPass(metaLearningData, self.specificSignalEncoderModel, self.numSpecificEncoderLayers, compilingFunction)
             # metaLearningData: batchSize, numSignals, encodedDimension
         else:
             # Signal encoder layers.
-            metaLearningData, compiledLayerStates, compiledLayerIndex = self.modelBlockPass(metaLearningData, compiledLayerStates, self.specificSignalEncoderModel, self.numSpecificEncoderLayers, compiledLayerIndex)
-            metaLearningData, compiledLayerStates, compiledLayerIndex = self.modelBlockPass(metaLearningData, compiledLayerStates, self.sharedSignalEncoderModel, self.numSharedEncoderLayers, compiledLayerIndex)
+            metaLearningData = self.modelBlockPass(metaLearningData, self.specificSignalEncoderModel, self.numSpecificEncoderLayers, compilingFunction)
+            metaLearningData = self.modelBlockPass(metaLearningData, self.sharedSignalEncoderModel, self.numSharedEncoderLayers, compilingFunction)
             # metaLearningData: batchSize, numSignals, encodedDimension
 
-        return metaLearningData, compiledLayerStates
+        return metaLearningData
 
     @staticmethod
-    def modelBlockPass(metaLearningData, compiledLayerStates, modelLayer, numLayers, compiledLayerIndex):
-        compileLayerStates = compiledLayerStates is not None
-
-        # Shared signal encoder layers.
-        for layerInd in range(numLayers):
-            metaLearningData = modelLayer.learningInterface(layerInd=layerInd, signalData=metaLearningData)
-            if compileLayerStates: compiledLayerStates[compiledLayerIndex] = metaLearningData.clone().detach().cpu().numpy(); compiledLayerIndex += 1
+    def modelBlockPass(metaLearningData, modelComponent, numLayers, compilingFunction):
+        for layerInd in range(numLayers): metaLearningData = modelComponent.learningInterface(layerInd=layerInd, signalData=metaLearningData, compilingFunction=compilingFunction)
         # metaLearningData: batchSize, numSignals, encodedDimension
 
-        return metaLearningData, compiledLayerStates, compiledLayerIndex
+        return metaLearningData
 
     def reconstructHealthProfile(self, resampledSignalData):
         return self.signalEncoderPass(metaLearningData=resampledSignalData, forwardPass=True, compileLayerStates=True)
@@ -359,7 +350,7 @@ class emotionModelHead(nn.Module):
             endBatchInd = startBatchInd + testingBatchSize
 
             # Perform a full pass of the model.
-            validDataMask[startBatchInd:endBatchInd], reconstructedSignalData[startBatchInd:endBatchInd], resampledSignalData[startBatchInd:endBatchInd], compiledSignalEncoderLayerStates, \
+            validDataMask[startBatchInd:endBatchInd], reconstructedSignalData[startBatchInd:endBatchInd], resampledSignalData[startBatchInd:endBatchInd], \
                 healthProfile[startBatchInd:endBatchInd], activityProfile[startBatchInd:endBatchInd], basicEmotionProfile[startBatchInd:endBatchInd], emotionProfile[startBatchInd:endBatchInd] \
                 = (element.cpu() if isinstance(element, torch.Tensor) else element for element in self.forward(submodel=submodel, signalData=signalData[startBatchInd:endBatchInd], signalIdentifiers=signalIdentifiers[startBatchInd:endBatchInd],
                                                                                                                metadata=metadata[startBatchInd:endBatchInd], device=device, onlyProfileTraining=onlyProfileTraining))
@@ -371,7 +362,7 @@ class emotionModelHead(nn.Module):
                 batchLossValues = self.calculateModelLosses.calculateSignalEncodingLoss(signalData.cpu(), reconstructedSignalData, validDataMask, allSignalMask=None, averageBatches=False)
                 self.specificSignalEncoderModel.profileModel.populateProfileState(profileEpoch, batchInds, batchLossValues, resampledSignalData, healthProfile)
 
-        return validDataMask, reconstructedSignalData, resampledSignalData, None, healthProfile, activityProfile, basicEmotionProfile, emotionProfile
+        return validDataMask, reconstructedSignalData, resampledSignalData, healthProfile, activityProfile, basicEmotionProfile, emotionProfile
 
     # ------------------------- Model Visualizations ------------------------- #
 

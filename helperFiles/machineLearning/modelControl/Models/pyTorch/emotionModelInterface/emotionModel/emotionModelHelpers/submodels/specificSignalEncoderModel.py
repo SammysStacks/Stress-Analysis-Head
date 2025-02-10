@@ -58,7 +58,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         elif self.learningProtocol == 'CNN': self.processingLayers.append(self.postProcessingLayerCNN(numSignals=self.numSignals))
         else: raise "The learning protocol is not yet implemented."
 
-    def learningInterface(self, layerInd, signalData):
+    def learningInterface(self, layerInd, signalData, compilingFunction):
         # For the forward/harder direction.
         if not reversibleInterface.forwardDirection:
             # Apply the neural operator layer with activation.
@@ -72,6 +72,9 @@ class specificSignalEncoderModel(neuralOperatorInterface):
             # Apply the neural operator layer with activation.
             signalData = self.neuralLayers[pseudoLayerInd](signalData)
             signalData = self.processingLayers[pseudoLayerInd](signalData)
+
+        # Store the signal data for plotting, if desired.
+        if compilingFunction is not None: compilingFunction(signalData)
 
         return signalData.contiguous()
 

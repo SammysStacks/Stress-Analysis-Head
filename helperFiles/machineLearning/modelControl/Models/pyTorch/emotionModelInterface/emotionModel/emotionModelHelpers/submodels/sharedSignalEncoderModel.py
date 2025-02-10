@@ -49,7 +49,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
 
         return healthProfile
 
-    def learningInterface(self, layerInd, signalData):
+    def learningInterface(self, layerInd, signalData, compilingFunction):
         if layerInd != 0: return signalData
 
         # Extract the signal data parameters.
@@ -59,6 +59,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         # For the forward/harder direction.
         if not reversibleInterface.forwardDirection:
             # Apply the neural operator layer with activation.
+            self.neuralLayers[layerInd].compilingFunction = compilingFunction
             signalData = self.neuralLayers[layerInd](signalData)
         else:
             # Get the reverse layer index.
@@ -66,6 +67,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
             assert 0 <= pseudoLayerInd < len(self.neuralLayers), f"The pseudo layer index is out of bounds: {pseudoLayerInd}, {len(self.neuralLayers)}, {layerInd}"
 
             # Apply the neural operator layer with activation.
+            self.neuralLayers[layerInd].compilingFunction = compilingFunction
             signalData = self.neuralLayers[pseudoLayerInd](signalData)
 
         # Reshape the signal data.

@@ -227,7 +227,7 @@ class plottingProtocolsMain:
         plt.ylabel('Loss', fontsize=14)
         plt.title('Therapy Results per Epoch', fontsize=16)
         plt.legend(frameon=True, loc='best', fontsize=12)
-        plt.grid(True, which='both', linestyle='--', linewidth=0.5)
+        ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5, alpha=0.8)
         plt.show()
 
     @staticmethod
@@ -333,5 +333,5 @@ class plottingProtocolsMain:
         plt.ylabel('temp', fontsize=14)
         plt.title('Therapy Results per Epoch', fontsize=16)
         plt.legend(frameon=True, loc='best', fontsize=12)
-        plt.grid(True, which='both', linestyle='--', linewidth=0.5)
+        ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5, alpha=0.8)
         plt.show()

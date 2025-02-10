@@ -207,24 +207,20 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
             elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
             elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
-            else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+            else: raise ValueError("Module name must contain 'specific' or 'shared'.")
             if 'shared' in moduleName:
-                newRowInd = sharedColCounter // nCols
-                newColInd = sharedColCounter % nCols
-                rowInd, colInd = ((numSpecific + newColInd) % nRows), (newRowInd % nCols)
+                numShared = modelConstants.userInputParams['numSharedEncoderLayers']
+                rowInd, colInd = min(nRows - 1, numSpecific + sharedColCounter % numShared), sharedColCounter // numShared
                 sharedColCounter += 1
             ax = axes[rowInd, colInd]
 
             if colInd == 0: ax.set_ylabel(f"Layer {rowInd + 1}", fontsize=16)
+            ax.set_title(moduleName.capitalize(), fontsize=16)
 
+            # Get the plot colors.
             if "specific" in moduleName: lineColor = self.lightColors[0]; alpha = 0.75; centerColor = self.darkColors[0]
             elif "shared" in moduleName: lineColor = self.lightColors[1]; alpha = 0.33; centerColor = self.darkColors[1]
-            else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
-            ax.set_title(" ".join(moduleName.split(" ")[1:]).capitalize(), fontsize=16)
-
-            # Plot the potential output vectors.
-            angles = initialAngle + givensAnglesPath[layerInd][signalInd]; centerPoint = np.zeros_like(angles)
-            ax.quiver(centerPoint, centerPoint, np.cos(angles), np.sin(angles), scale=1, angles='xy', scale_units='xy', color=lineColor, width=0.0025, zorder=8, alpha=alpha)
+            else: raise ValueError("Module name must contain 'specific' or 'shared'.")
 
             # Draw unit circle for reference
             arc = Arc(xy=(0, 0), width=2, height=2, theta1=0, theta2=90, edgecolor=self.darkColors[-1], facecolor='none', linewidth=0.5, alpha=0.25, zorder=1)
@@ -238,13 +234,18 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.quiver(0, 0, 0, 1, scale=1, angles='xy', scale_units='xy', color=self.darkColors[-1], width=0.01, headwidth=6, headlength=8, zorder=9)  # +Y direction
             ax.quiver(0, 0, 1, 0, scale=1, angles='xy', scale_units='xy', color=self.darkColors[-1], width=0.01, headwidth=6, headlength=8, zorder=9)  # +X direction
 
+            # Plot the potential output vectors.
+            if np.all(givensAnglesPath[layerInd][signalInd] == 0): continue
+            angles = initialAngle + givensAnglesPath[layerInd][signalInd]; centerPoint = np.zeros_like(angles)
+            ax.quiver(centerPoint, centerPoint, np.cos(angles), np.sin(angles), scale=1, angles='xy', scale_units='xy', color=lineColor, width=0.001, zorder=8, alpha=alpha, linewidth=0.1)
+
             if 'shared' in moduleName or epoch == 0: continue
-            if 'specific' in moduleName and 'spatial' in moduleName: continue
             # Define the shaded region in the bounded range [-minAngle, minAngle]
             bounded_wedge = Wedge(center=center, r=1, theta1=initialAngle * 180 / np.pi - angularThresholdMin, theta2=initialAngle * 180 / np.pi + angularThresholdMin, color=self.blackColor, alpha=0.1, zorder=0)
             lower_wedge = Wedge(center=center, r=1, theta1=0, theta2=max(0, initialAngle * 180 / np.pi - angularThresholdMax), color=self.blackColor, alpha=1, zorder=0)
             upper_wedge = Wedge(center=center, r=1, theta1=min(90, initialAngle * 180 / np.pi + angularThresholdMax), theta2=90, color=self.blackColor, alpha=1, zorder=0)
             ax.add_patch(upper_wedge); ax.add_patch(bounded_wedge); ax.add_patch(lower_wedge)
+
         plt.suptitle(t=f"{plotTitle}; Epoch {epoch}\n", fontsize=24)
         fig.supylabel(r"Signal index: $\mathbb{\mathit{i}}$", fontsize=20)
         fig.supxlabel(r"Signal index: $\mathbb{\mathit{j}}$", fontsize=20)
@@ -262,7 +263,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         nRows, nCols = self.getRowsCols(numModuleLayers=len(givensAnglesPath))
         if not degreesFlag: scaleFactor = 180 / math.pi; degreesFlag = True
         else: scaleFactor = 1
-        yMax = 1/4
+        yMax = 1/5
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey='col')  # squeeze=False ensures axes is 2D
@@ -284,23 +285,22 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
             elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
             elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
-            else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+            else: raise ValueError("Module name must contain 'specific' or 'shared'.")
             if 'shared' in moduleName:
-                newRowInd = sharedColCounter // nCols
-                newColInd = sharedColCounter % nCols
-                rowInd, colInd = ((numSpecific + newColInd) % nRows), (newRowInd % nCols)
+                numShared = modelConstants.userInputParams['numSharedEncoderLayers']
+                rowInd, colInd = min(nRows - 1, numSpecific + sharedColCounter % numShared), sharedColCounter // numShared
                 sharedColCounter += 1
             ax = axes[rowInd, colInd]
 
             # Customize subplot title and axes
             if colInd == 0: ax.set_ylabel(f"Layer {rowInd + 1}", fontsize=16)
+            ax.set_title(moduleName.capitalize(), fontsize=16)
             ax.set_ylim((0, yMax))
-
-            ax.set_title(" ".join(moduleName.split(" ")[1:]).capitalize(), fontsize=16)
 
             # Plot training eigenvalue angles
             histograms = scaleFactor * givensAnglesPath[layerInd][signalInd:signalInd + len(self.darkColors) - 1].T  # histograms: numAngles, numSignals=6
             histogramsABS = np.abs(histograms); numSignals = histograms.shape[1]
+            smallAngles = []
 
             if 'shared' in moduleName or epoch == 0:
                 histogramPlots.append(ax.hist(histograms, bins=bins, color=self.darkColors[0:numSignals], alpha=1, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='left', cumulative=False))
@@ -314,8 +314,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
                 histogramPlots.append(ax.hist(largeAngles, bins=bins, color=self.darkColors[0:numSignals], alpha=1, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='left', cumulative=False))
 
             # Shade the angular thresholds
+            if len(smallAngles) == 0: continue
             if 'shared' in moduleName or epoch == 0: continue
-            if 'specific' in moduleName and 'spatial' in moduleName: continue
             ax.fill_betweenx(y=(0, yMax), x1=-angularThresholdMin, x2=angularThresholdMin, color=self.blackColor, alpha=0.1, zorder=0)
             ax.axvspan(-degrees, -angularThresholdMax, color=self.blackColor, alpha=1, zorder=0)
             ax.axvspan(angularThresholdMax, degrees, color=self.blackColor, alpha=1, zorder=0)
@@ -326,10 +326,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         fig.supxlabel(f"Angle ({units})")
         fig.supylabel("Density")
         fig.set_constrained_layout(True)
-        #
-        # # Save the plot
-        # if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')}.pdf", clearFigure=False, showPlot=False)
-        # else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
         plt.xlim((-degrees, degrees))
         # Access and modify patches correctly
@@ -368,26 +364,25 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
             elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
             elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
-            else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+            else: raise ValueError("Module name must contain 'specific' or 'shared'.")
             if 'shared' in moduleName:
-                newRowInd = sharedColCounter // nCols
-                newColInd = sharedColCounter % nCols
-                rowInd, colInd = ((numSpecific + newColInd) % nRows), (newRowInd % nCols)
+                numShared = modelConstants.userInputParams['numSharedEncoderLayers']
+                rowInd, colInd = min(nRows - 1, numSpecific + sharedColCounter % numShared), sharedColCounter // numShared
                 sharedColCounter += 1
             ax = axes[rowInd, colInd]
 
             # Customize subplot title and axes
             if colInd == 0: ax.set_ylabel(f"Layer {rowInd + 1}", fontsize=16)
-            ax.set_title(" ".join(moduleName.split(" ")[1:]).capitalize(), fontsize=16)
+            ax.set_title(moduleName.capitalize(), fontsize=16)
 
             # Get the angles for the current layer
             lines = scaleFactor * givensAnglesPath[layerInd][signalInd:signalInd + len(self.darkColors) - 1]  # Dimensions: numSignals, numParams
-            for lineInd in range(len(lines)): ax.plot(lines[lineInd], 'o', color=self.darkColors[lineInd], alpha=0.75, markersize=2, linewidth=1)
+            for lineInd in range(len(lines)): ax.plot(sorted(lines[lineInd], reverse=True), 'o', color=self.darkColors[lineInd], alpha=0.75, markersize=2, linewidth=1)
             # Customize subplot title and axes
 
             # Shade the angular thresholds
+            if np.all(lines == 0): continue
             if 'shared' in moduleName or epoch == 0: continue
-            if 'specific' in moduleName and 'spatial' in moduleName: continue
             ax.fill_between(x=(0, lines.shape[1]), y1=-angularThresholdMin, y2=angularThresholdMin, color=self.blackColor, alpha=0.1, zorder=0)
             ax.axhspan(-degrees, -angularThresholdMax, color=self.blackColor, alpha=1, zorder=0)
             ax.axhspan(angularThresholdMax, degrees, color=self.blackColor, alpha=1, zorder=0)
@@ -396,15 +391,18 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.suptitle(f"{plotTitle}; Epoch {epoch}\n", fontsize=16)
         # plt.tight_layout()
         fig.supylabel(f"Angle ({units})")
-        fig.supxlabel("Parameter Index")
+        fig.supxlabel("Sorted parameter index")
         fig.set_constrained_layout(True)
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", clearFigure=False, showPlot=False)
         else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
-        # Save the plot
+        # Apply the angular threshold if needed.
+        if angularThresholdMax == degrees: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag); return None
         plt.ylim((-angularThresholdMax, angularThresholdMax))
+
+        # Save the plot
         if self.saveDataFolder:  self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')}.pdf", clearFigure=True, showPlot=False)
         else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
@@ -419,7 +417,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(4 * nCols, 4 * nRows), squeeze=False, sharex='col', sharey='col')  # squeeze=False ensures axes is 2D
         numProcessing, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
         degrees = (180 if degreesFlag else math.pi) / 4
-        caxs = []  # Store the color scale references
+        colorbarAxes = []  # Store the color scale references
 
         # Get the angular thresholds.
         angularThresholdMax = modelConstants.userInputParams['angularThresholdMax']
@@ -431,17 +429,16 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
             elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
             elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
-            else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+            else: raise ValueError("Module name must contain 'specific' or 'shared'.")
             if 'shared' in moduleName:
-                newRowInd = sharedColCounter // nCols
-                newColInd = sharedColCounter % nCols
-                rowInd, colInd = ((numSpecific + newColInd) % nRows), (newRowInd % nCols)
+                numShared = modelConstants.userInputParams['numSharedEncoderLayers']
+                rowInd, colInd = min(nRows - 1, numSpecific + sharedColCounter % numShared), sharedColCounter // numShared
                 sharedColCounter += 1
             ax = axes[rowInd, colInd]
 
             # Customize subplot title and axes
             if colInd == 0: ax.set_ylabel(f"Layer {rowInd + 1}", fontsize=16)
-            ax.set_title(" ".join(moduleName.split(" ")[1:]).capitalize(), fontsize=16)
+            ax.set_title(moduleName.capitalize(), fontsize=16)
 
             numSignals, numAngles = givensAnglesPath[layerInd].shape
             numSignalsPlotting = min(1, numSignals, len(self.darkColors) - 1)
@@ -456,12 +453,12 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             signalWeightMatrix[colInds, rowInds] = weightMatrix[signalInd]
 
             # Plot the heatmap
-            caxs.append(ax.imshow(signalWeightMatrix, cmap=self.custom_cmap, interpolation="nearest", aspect="equal", vmin=-degrees, vmax=degrees))
+            colorbarAxes.append(ax.imshow(signalWeightMatrix, cmap=self.custom_cmap, interpolation="nearest", aspect="equal", vmin=-degrees, vmax=degrees))
         # Adjust layout to prevent overlapping titles/labels
         fig.suptitle(t=f"{plotTitle}; Epoch {epoch}\n", fontsize=24)
         fig.supylabel(r"$S_{i}$", fontsize=20)
         fig.supxlabel(r"$S_{j}$", fontsize=20)
-        fig.colorbar(caxs[-1], ax=axes.ravel().tolist(), orientation='vertical', fraction=0.02, pad=0.04)
+        fig.colorbar(colorbarAxes[-1], ax=axes.ravel().tolist(), orientation='vertical', fraction=0.02, pad=0.04)
         fig.set_constrained_layout(True)
 
         # Save the plot
@@ -476,7 +473,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         for layerInd in range(numModuleLayers):
             if "shared" in reversibleModuleNames[layerInd].lower(): sharedValues.append(scalingFactorsPath[layerInd].flatten())
             elif "specific" in reversibleModuleNames[layerInd].lower(): specificValues.append(scalingFactorsPath[layerInd].flatten())
-            else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+            else: raise ValueError("Module name must contain 'specific' or 'shared'.")
         sharedValues = np.asarray(sharedValues); specificValues = np.asarray(specificValues)
         # sharedValues: numSharedLayers=5*y, numSignals=1; specificValues: numSpecificLayers=5*x, numSignals=numSignals
         # Every line represents one of the signals.
@@ -489,7 +486,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.title(f"{plotTitle}; Epoch {epoch}", fontsize=16)
         plt.xlabel("Module component")  # X-axis: values
         plt.ylabel("Scalar values")  # Y-axis: bin counts
-        plt.ylim((0.9, 1.1))
+        plt.ylim((0.85, 1.15))
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", clearFigure=True, showPlot=not self.hpcFlag)
@@ -501,11 +498,11 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         for layerInd in range(len(scalingFactorsPath)):
             if "shared" in reversibleModuleNames[layerInd].lower(): sharedValues.extend(scalingFactorsPath[layerInd].flatten())
             elif "specific" in reversibleModuleNames[layerInd].lower(): specificValues.extend(scalingFactorsPath[layerInd].flatten())
-            else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+            else: raise ValueError("Module name must contain 'specific' or 'shared'.")
 
         plt.hist(
             sharedValues,
-            bins=16,
+            bins=8,
             color=self.lightColors[1],
             alpha=0.7,
             label="Shared",
@@ -515,7 +512,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         plt.hist(
             specificValues,
-            bins=16,
+            bins=8,
             color=self.lightColors[0],
             alpha=0.7,
             label="Specific",
@@ -527,7 +524,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.title(f"{plotTitle}; Epoch {epoch}\n", fontsize=16)
         plt.xlabel("Scale factor")  # X-axis: values
         plt.ylabel("Frequency")  # Y-axis: bin counts
-        plt.xlim((0.9, 1.1))
+        plt.xlim((0.85, 1.15))
         plt.ylim((0, None))
         plt.legend()
 
@@ -543,7 +540,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Create a meshgrid for encodedDimension and numModelLayers
         x_data, y_data = np.meshgrid(dataTimes, np.flip(np.arange(1, 1 + numModelLayers), axis=-1))
-        x, y, z = x_data.flatten(), y_data.flatten(), dataStates.flatten()
+        x, y, z = x_data.flatten(), np.flip(y_data.flatten()), dataStates.flatten()
 
         # Figure and axis settings
         fig = plt.figure(figsize=(14, 10), facecolor="white")
@@ -554,6 +551,9 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             x, y, z, c=z,
             cmap='viridis', edgecolors=self.blackColor, linewidth=0.5,
             alpha=0.95, s=20, vmin=-1.5, vmax=1.5)
+        for modelLayerInd in range(numModelLayers):
+            ax.plot(x[modelLayerInd*encodedDimension:(modelLayerInd + 1)*encodedDimension], y[modelLayerInd*encodedDimension:(modelLayerInd + 1)*encodedDimension], z[modelLayerInd*encodedDimension:(modelLayerInd + 1)*encodedDimension],
+                    color=self.blackColor, linestyle='-', linewidth=0.5, alpha=0.5)
 
         # View and perspective adjustments
         ax.view_init(elev=25, azim=135)
@@ -565,7 +565,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         ax.set_ylabel("Model Layer", fontsize=12, labelpad=10)
         ax.set_zlabel("Signal value (AU)", fontsize=12, labelpad=10)
         ax.set_zlim(-1.75, 1.75)
-        ax.invert_yaxis()  # Flip the yticks
+        ax.invert_yaxis()
 
         # Make the aspect ratio look nicer in 3D
         ax.set_box_aspect([2, 1, 1])
@@ -583,8 +583,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=True)
-        axes = axes.flatten()  # Flatten to 1D array for easy indexing
         numSpecificActivations, numSharedActivations = 0, 0
+        axes = axes.flatten()
 
         for activationInd in range(numActivations):
             x, y = activationCurves[activationInd]
@@ -606,13 +606,12 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax = axes[axInd]
             ax.plot(x, x, color=self.blackColor, linestyle='--', linewidth=0.5)  # Plot Identity Line
             ax.set_title(f"{axNames[axInd]}")
-            ax.grid(True, which='both', linestyle='--', linewidth=0.5)
+            ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5, alpha=0.8)
 
         # Set the main title
         fig.suptitle(f"{plotTitle} - Epoch {epoch}\nForward and Inverse from x ∈ [{-1.5}, {1.5}]", fontsize=16)
         fig.supylabel("Output (Y)")
         fig.supxlabel("Input (x)")
-        plt.tight_layout()
         fig.set_constrained_layout(True)
 
         # Save the plot
@@ -620,14 +619,14 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
     def plotActivationCurves(self, activationCurves, moduleNames, epoch, saveFigureLocation, plotTitle):
-        numActivations, numPointsX, numPointsY = activationCurves.shape
-        nRows, nCols = self.getRowsCols(numActivations)
+        numModuleLayers, numPointsX, numPointsY = activationCurves.shape
+        nRows, nCols = self.getRowsCols(numModuleLayers)
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=True)
         numProcessing, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
 
-        for layerInd in range(numActivations):
+        for layerInd in range(numModuleLayers):
             moduleName = moduleNames[layerInd].lower()
             x, y = activationCurves[layerInd]
 
@@ -635,30 +634,27 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
             elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
             elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
-            else: raise ValueError("Activation module name must contain 'specific' or 'shared'.")
+            else: raise ValueError("Module name must contain 'specific' or 'shared'.")
             if 'shared' in moduleName:
-                newRowInd = sharedColCounter // nCols
-                newColInd = sharedColCounter % nCols
-                rowInd, colInd = ((numSpecific + newColInd) % nRows), (newRowInd % nCols)
+                numShared = modelConstants.userInputParams['numSharedEncoderLayers']
+                rowInd, colInd = min(nRows - 1, numSpecific + sharedColCounter % numShared), sharedColCounter // numShared
                 sharedColCounter += 1
             ax = axes[rowInd, colInd]
 
             # Customize subplot title and axes
             if colInd == 0: ax.set_ylabel(f"Layer {rowInd + 1}", fontsize=16)
-            ax.set_title(" ".join(moduleName.split(" ")[1:]).capitalize(), fontsize=16)
+            ax.set_title(moduleName.capitalize(), fontsize=16)
+            ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5, alpha=0.8)
 
             # Plot the activation curves
             ax.plot(x, y, color=self.lightColors[1], linestyle='-', linewidth=1, label="Inverse Pass", alpha=1)  # Plot Inverse Pass
             ax.plot(y, x, color=self.lightColors[0], linestyle='-', linewidth=1, label="Forward Pass", alpha=1)  # Plot Forward Pass
-
             ax.plot(x, x, color=self.blackColor, linestyle='--', linewidth=0.5)  # Plot Identity Line
-            ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
         # Set the main title
         fig.suptitle(f"{plotTitle} - Epoch {epoch}\nForward and Inverse from x ∈ [{-1.5}, {1.5}]", fontsize=16)
         fig.supylabel("Output (Y)")
         fig.supxlabel("Input (x)")
-        plt.tight_layout()
         fig.set_constrained_layout(True)
 
         # Save the plot

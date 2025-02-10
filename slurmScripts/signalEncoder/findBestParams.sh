@@ -57,17 +57,14 @@ waveletTypes_arr=(
 )
 
 # Trinary reference states.
-angularThresholdMins=(2 3 4)
+angularThresholdMins=(3 4 5 6)
 angularThresholdMaxs=(45)
-percentParamsKeepings=(1 2 3 4 5)
+percentParamsKeepings=(3 4 5 6)
 cullingEpochs=(1)
 
 # Binary reference states.
 numSpecificEncoderLayers_arr=(1)
 numSharedEncoderLayers_arr=(4 6 8)
-# Known interesting parameters: 63
-#numSharedEncoderLayers_arr=(0 1 2 3 4 5 6 7 8 9 10 11 12)  # 13
-#numSpecificEncoderLayers_arr=(0 1 2)  # 3
 
 # Binary reference states.
 encodedDimensions_arr=(128 256)
