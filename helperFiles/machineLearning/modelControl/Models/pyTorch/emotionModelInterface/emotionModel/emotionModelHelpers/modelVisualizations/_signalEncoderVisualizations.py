@@ -44,6 +44,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # retrainingProfilePath: (numProfileShots or numProcessingLayers, numExperiments, encodedDimension)
         # Extract the signal dimensions.
         numProfileSteps, batchInd = len(retrainingProfilePath), 0
+        fig = plt.figure()
 
         for profileStep in range(numProfileSteps):
             plt.plot(relativeTimes, retrainingProfilePath[profileStep, batchInd], '-', c=self.lightColors[1], linewidth=1, markersize=4, alpha=0.3*(numProfileSteps - profileStep)/numProfileSteps)
@@ -59,12 +60,13 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         else: plt.ylim((-1.75, 1.75))
 
         # Save the figure.
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", showPlot=not self.hpcFlag)
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
         else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
     def plotProfileReconstructionError(self, relativeTimes, healthProfile, reconstructedHealthProfile, epoch=0, batchInd=0, saveFigureLocation="", plotTitle="Signal Encoding"):
         # Extract the signal dimensions.
         healthError = (healthProfile[:, None, :] - reconstructedHealthProfile)[batchInd]
+        fig = plt.figure(figsize=(6.4, 4.8))
 
         # Plot the signal reconstruction error.
         plt.plot(relativeTimes, healthError.mean(axis=0), c=self.blackColor, label=f"Health profile error", linewidth=2, alpha=0.8)
@@ -76,12 +78,13 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.ylabel("Signal error (AU)")
 
         # Save the figure.
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", showPlot=not self.hpcFlag)
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
         else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
     def plotProfileReconstruction(self, relativeTimes, healthProfile, reconstructedHealthProfile, epoch=0, batchInd=0, saveFigureLocation="", plotTitle="Signal Encoding"):
         # Extract the signal dimensions.
         reconstructionError = np.square(healthProfile[:, None, :] - reconstructedHealthProfile)[batchInd]
+        fig = plt.figure(figsize=(6.4, 4.8))
 
         # Plot the signal reconstruction.
         plt.plot(relativeTimes, healthProfile[batchInd], c=self.blackColor, label=f"Health profile", linewidth=2, alpha=0.8)
@@ -98,7 +101,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.ylim((-1, 1))
 
         # Save the figure.
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", showPlot=not self.hpcFlag)
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
         else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
     def plotEncoder(self, initialSignalData, reconstructedSignals, comparisonTimes, comparisonSignal, signalNames, epoch, batchInd, saveFigureLocation="", plotTitle="Encoder Prediction"):
@@ -114,6 +117,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         for signalInd in range(min(2, numSignals)):
             times, data = timepoints[batchInd, signalInd, :], datapoints[batchInd, signalInd, :]
             reconstructedData = reconstructedSignals[batchInd, signalInd, :]
+            fig = plt.figure(figsize=(6.4, 4.8))
 
             # Plot the signal reconstruction.
             plt.plot(times, data, 'o', color=self.blackColor, markersize=2, alpha=0.75, label="Initial Signal")
@@ -129,9 +133,10 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             plt.ylim((-1.75, 1.75))
 
             # Save the figure.
-            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]}.pdf", clearFigure=True, showPlot=False)
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]}.pdf", fig=fig, clearFigure=False, showPlot=False)
             else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
+            fig = plt.figure(figsize=(6.4, 4.8))
             # Plot the signal reconstruction.
             plt.plot(times, reconstructedData - data, 'o', color=self.darkColors[0], markersize=2, alpha=0.9, label="Signal Reconstruction Error")
             plt.axhline(y=0, color=self.blackColor, linewidth=0.5, alpha=0.25)
@@ -144,7 +149,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             plt.ylim((-1.75, 1.75))
 
             # Save the figure.
-            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} Error epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]} Error.pdf", clearFigure=True, showPlot=False)
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} Error epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]} Error.pdf", fig=fig, clearFigure=True, showPlot=False)
             else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
             break
 
@@ -159,7 +164,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # These should be chosen based on your data and how you want to "zoom"
         relativeTimesExtent = (relativeTimes.min(), relativeTimes.max(), 0, numLayers)
-        plt.figure(figsize=(12, 8))
+        fig = plt.figure(figsize=(6.4, 4.8))
 
         # Plot the rest of the layers with the same normalization.
         im0 = plt.imshow(interpolated_states, cmap='viridis', interpolation=None, extent=relativeTimesExtent, aspect='auto', origin='lower', vmin=-vMin, vmax=vMin)
@@ -179,7 +184,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.grid(False)
 
         # Save or clear figure
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]}.pdf", showPlot=not self.hpcFlag)
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]}.pdf", fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
         else: self.clearFigure(fig=None, legend=None, showPlot=False)
 
     # --------------------- Visualize Model Training --------------------- #
@@ -255,7 +260,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Save the plot
         # plt.tight_layout()
         fig.set_constrained_layout(True)
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} cutoff{angularThresholdMax} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]} cutoff{angularThresholdMax}.pdf", clearFigure=True, showPlot=False)
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} cutoff{angularThresholdMax} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]} cutoff{angularThresholdMax}.pdf", fig=fig, clearFigure=True, showPlot=False)
         else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
     def plotsGivensAnglesHist(self, givensAnglesPath, reversibleModuleNames, epoch, signalInd, degreesFlag, saveFigureLocation, plotTitle):
@@ -266,7 +271,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         yMax = 1/5
 
         # Create a figure and axes array
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey='col')  # squeeze=False ensures axes is 2D
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=True, sharey='col')  # squeeze=False ensures axes is 2D
         numProcessing, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
         units = "degrees" if degreesFlag else "radians"
         degrees = (180 if degreesFlag else math.pi) / 4
@@ -337,7 +342,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
                     patch.set_linewidth(0)  # Remove edge line width
 
         # Save the plot
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", clearFigure=True, showPlot=False)
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=False)
         else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
     def plotsGivensAnglesLine(self, givensAnglesPath, reversibleModuleNames, epoch, signalInd, degreesFlag, saveFigureLocation, plotTitle):
@@ -347,7 +352,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         else: scaleFactor = 1
 
         # Create a figure and axes array
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex='col', sharey=True)  # squeeze=False ensures axes is 2D
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex='col', sharey=True)  # squeeze=False ensures axes is 2D
         numProcessing, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
         units = "degrees" if degreesFlag else "radians"
         degrees = (180 if degreesFlag else math.pi) / 4
@@ -403,7 +408,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.ylim((-angularThresholdMax, angularThresholdMax))
 
         # Save the plot
-        if self.saveDataFolder:  self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')}.pdf", clearFigure=True, showPlot=False)
+        if self.saveDataFolder:  self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')}.pdf", fig=fig, clearFigure=True, showPlot=False)
         else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
     def plotsGivensAnglesHeatmap(self, givensAnglesPath, reversibleModuleNames, signalInd, epoch, degreesFlag, saveFigureLocation, plotTitle):
@@ -462,7 +467,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         fig.set_constrained_layout(True)
 
         # Save the plot
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')}.pdf", clearFigure=True, showPlot=False)
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} cutoff{str(round(angularThresholdMax, 4)).replace('.', '-')}.pdf", fig=fig, clearFigure=True, showPlot=False)
         else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
     def plotScaleFactorLines(self, scalingFactorsPath, reversibleModuleNames, epoch, saveFigureLocation, plotTitle):
@@ -476,7 +481,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             else: raise ValueError("Module name must contain 'specific' or 'shared'.")
         sharedValues = np.asarray(sharedValues); specificValues = np.asarray(specificValues)
         # sharedValues: numSharedLayers=5*y, numSignals=1; specificValues: numSpecificLayers=5*x, numSignals=numSignals
-        # Every line represents one of the signals.
+        fig = plt.figure(figsize=(6.4, 4.8))
 
         # Get the angles for the current layer
         plt.plot(sharedValues, 'o', color=self.darkColors[1], alpha=0.75, linewidth=1, markersize=4, label="Shared")
@@ -489,7 +494,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.ylim((0.85, 1.15))
 
         # Save the plot
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", clearFigure=True, showPlot=not self.hpcFlag)
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
         else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
     def plotScaleFactorHist(self, scalingFactorsPath, reversibleModuleNames, epoch, saveFigureLocation, plotTitle):
@@ -500,25 +505,9 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             elif "specific" in reversibleModuleNames[layerInd].lower(): specificValues.extend(scalingFactorsPath[layerInd].flatten())
             else: raise ValueError("Module name must contain 'specific' or 'shared'.")
 
-        plt.hist(
-            sharedValues,
-            bins=8,
-            color=self.lightColors[1],
-            alpha=0.7,
-            label="Shared",
-            density=True,
-            align= 'left',
-        )
-
-        plt.hist(
-            specificValues,
-            bins=8,
-            color=self.lightColors[0],
-            alpha=0.7,
-            label="Specific",
-            density=True,
-            align='left',
-        )
+        fig = plt.figure(figsize=(6.4, 4.8))
+        plt.hist(sharedValues, bins=10, color=self.lightColors[1], alpha=0.7, label="Shared", density=True, align= 'left')
+        plt.hist(specificValues, bins=10, color=self.lightColors[0], alpha=0.7, label="Specific", density=True, align='left')
 
         # Customize plot title and axes
         plt.title(f"{plotTitle}; Epoch {epoch}\n", fontsize=16)
@@ -529,7 +518,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.legend()
 
         # Save the plot
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", clearFigure=True, showPlot=not self.hpcFlag)
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
         else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
     def modelFlow(self, dataTimes, dataStates, signalNames, epoch, batchInd, signalInd, saveFigureLocation, plotTitle):
@@ -543,7 +532,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         x, y, z = x_data.flatten(), np.flip(y_data.flatten()), dataStates.flatten()
 
         # Figure and axis settings
-        fig = plt.figure(figsize=(14, 10), facecolor="white")
+        fig = plt.figure(figsize=(6.4, 4.8), facecolor="white")
         ax = fig.add_subplot(111, projection='3d', facecolor="white")
 
         # Improved scatter points
@@ -572,7 +561,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         plt.tight_layout()
 
         # Save the plot
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} batchInd{batchInd} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]} batchInd{batchInd}.pdf", clearFigure=True, showPlot=False)
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} batchInd{batchInd} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]} batchInd{batchInd}.pdf", fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
         else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
     def plotActivationCurvesCompressed(self, activationCurves, moduleNames, epoch, saveFigureLocation, plotTitle):
@@ -582,7 +571,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         nCols, nRows = 3, 2
 
         # Create a figure and axes array
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=True)
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=True, sharey=True)
         numSpecificActivations, numSharedActivations = 0, 0
         axes = axes.flatten()
 
@@ -615,7 +604,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         fig.set_constrained_layout(True)
 
         # Save the plot
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", clearFigure=True, showPlot=not self.hpcFlag)
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
         else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
 
     def plotActivationCurves(self, activationCurves, moduleNames, epoch, saveFigureLocation, plotTitle):
@@ -623,7 +612,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         nRows, nCols = self.getRowsCols(numModuleLayers)
 
         # Create a figure and axes array
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=True)
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=True, sharey=True)
         numProcessing, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
 
         for layerInd in range(numModuleLayers):
@@ -658,5 +647,5 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         fig.set_constrained_layout(True)
 
         # Save the plot
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", clearFigure=True, showPlot=False)
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=False)
         else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)

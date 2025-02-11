@@ -18,6 +18,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.trainingProtocolHelpers import trainingProtocolHelpers
 from helperFiles.machineLearning.modelControl.Models.pyTorch.modelMigration import modelMigration
 from helperFiles.machineLearning.dataInterface.compileModelData import compileModelData
+import gc
 
 # Configure cuDNN and PyTorch's global settings.
 torch.backends.cudnn.deterministic = True  # If True: ensures that the model will be reproducible.
@@ -58,13 +59,13 @@ if __name__ == "__main__":
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--initialProfileAmp', type=float, default=1e-3, help='The limits for profile initialization. Should be near zero.')
     parser.add_argument('--angularThresholdMax', type=float, default=45, help='The minimum rotational threshold in degrees.')
-    parser.add_argument('--angularThresholdMin', type=float, default=5, help='The minimum rotational threshold in degrees.')
+    parser.add_argument('--angularThresholdMin', type=float, default=4, help='The minimum rotational threshold in degrees.')
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model: [1, 2]')
-    parser.add_argument('--numSharedEncoderLayers', type=int, default=6, help='The number of layers in the model: [2, 8]')
+    parser.add_argument('--numSharedEncoderLayers', type=int, default=8, help='The number of layers in the model: [2, 8]')
     parser.add_argument('--cullingEpoch', type=int, default=1, help='The number of epochs before culling null weights.')
     parser.add_argument('--profileDimension', type=int, default=128, help='The number of profile weights: [32, 256]')
     parser.add_argument('--numProfileShots', type=int, default=32, help='The epochs for profile training: [16, 32]')
-    parser.add_argument('--percentParamsKeeping', type=int, default=5, help='The percentage of parameters to keep in the model.')
+    parser.add_argument('--percentParamsKeeping', type=int, default=6, help='The percentage of parameters to keep in the model.')
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions).')
@@ -125,7 +126,7 @@ if __name__ == "__main__":
 
     # Calculate the initial loss.
     trainingProtocols.boundAngularWeights(allMetaModels, allModels, applyMinThresholding=False)
-    # trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate, showMinimumPlots=False)
+    trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate, showMinimumPlots=False)
     trainingProtocols.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, profileOnlyTraining=True)
     if modelConstants.useInitialLoss: trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)  # Calculate the initial loss.
 
@@ -153,6 +154,7 @@ if __name__ == "__main__":
         # Finalize the epoch parameters.
         accelerator.wait_for_everyone()  # Wait before continuing.
         endEpochTime = time.time()
+        gc.collect()
 
         print("Total epoch time:", endEpochTime - startEpochTime)
 

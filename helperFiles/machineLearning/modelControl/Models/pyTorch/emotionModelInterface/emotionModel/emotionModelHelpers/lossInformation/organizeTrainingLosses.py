@@ -50,7 +50,6 @@ class organizeTrainingLosses(lossCalculations):
             # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
             # givensAnglesPath: numModuleLayers, numSignals, numParams
             # activationParamsPath: numActivations, numParams=3
-            print("numFreeParamsPath", len(numFreeParamsPath))
 
             # Store the signal encoder loss information.
             self.storeLossInformation(trainingLoss=signalReconstructedTrainingLosses, testingLoss=signalReconstructedTestingLosses, trainingHolder=model.specificSignalEncoderModel.trainingLosses_signalReconstruction, testingHolder=model.specificSignalEncoderModel.testingLosses_signalReconstruction)

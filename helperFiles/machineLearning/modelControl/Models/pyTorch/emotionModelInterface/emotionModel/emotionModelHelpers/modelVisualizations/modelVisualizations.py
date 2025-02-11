@@ -18,11 +18,11 @@ class modelVisualizations(globalPlottingProtocols):
         super(modelVisualizations, self).__init__()
         self.accelerator = accelerator
         self.datasetName = datasetName
+        plt.ioff()  # Turn off interactive mode
 
         # Initialize helper classes.
         self.signalEncoderViz = signalEncoderVisualizations(baseSavingFolder="", stringID="", datasetName=datasetName)
         self.generalViz = generalVisualizations(baseSavingFolder="", stringID="", datasetName="_comparison")
-        plt.ioff()  # Turn off interactive mode
 
     def setModelSavingFolder(self, baseSavingFolder, stringID, epoch=None):
         # Compile and shorten the name of the model visualization folder.
@@ -136,7 +136,7 @@ class modelVisualizations(globalPlottingProtocols):
             if self.accelerator.is_local_main_process:
 
                 # ------------------- Signal Encoding Plots -------------------- #
-                globalPlottingProtocols.clearFigure(fig=None, legend=None, showPlot=False)
+                plt.close('all')
 
                 if submodel == modelConstants.signalEncoderModel:
                     # Plot the angular information.
