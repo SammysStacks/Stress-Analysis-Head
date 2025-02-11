@@ -34,7 +34,7 @@ class trainingProtocols(extractData):
         self.featureNames = [item for sublist in self.biomarkerFeatureNames for item in sublist]
 
         # Initialize important classes
-        self.analyzeFeatures = featurePlotting(self.trainingFolder + "dataAnalysis/", overwrite=False)
+        self.analyzeFeatures = featurePlotting(self.trainingFolder + "dataAnalysis/", overwrite=True)
         self.modelParameters = modelParameters(accelerator=None)
         self.compileModelInfo = compileModelInfo()
         self.saveInputs = saveExcelData()
@@ -184,7 +184,7 @@ class trainingProtocols(extractData):
             del currentSurveyAnswerTimes, currentSurveyAnswersList
 
             # -------------------- Plot the features ------------------- #
-            plotTrainingData = False
+            plotTrainingData = True
             if plotTrainingData:
                 startBiomarkerFeatureIndex = 0
                 for biomarkerInd in range(len(rawFeatureHolder)):
@@ -198,7 +198,7 @@ class trainingProtocols(extractData):
                     startBiomarkerFeatureIndex = endBiomarkerFeatureIndex
 
                     # Plot each biomarker's features from the training file.
-                    self.analyzeFeatures.singleFeatureAnalysis(self.readData, rawFeatureTimes, rawFeatures, self.biomarkerFeatureNames[biomarkerInd], preAveragingSeconds=0, averageIntervalList=[30, 60, 90],
+                    self.analyzeFeatures.singleFeatureAnalysis(self.readData, rawFeatureTimes, rawFeatures, self.biomarkerFeatureNames[biomarkerInd], preAveragingSeconds=0, averageIntervalList=[30, 60, 120],
                                                                surveyCollectionTimes=finalSurveyAnswerTimes, experimentTimes=experimentTimes, experimentNames=experimentNames,
                                                                folderName=excelFileName + "/Feature Analysis/singleFeatureAnalysis - " + self.biomarkerFeatureOrder[biomarkerInd].upper() + "/")
 

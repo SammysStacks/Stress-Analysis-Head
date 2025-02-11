@@ -58,7 +58,7 @@ class modelConstants:
     # Specify the saving parameters.
     specificModelWeights = [specificSignalEncoderModel, specificEmotionModel, specificActivityModel]
     sharedModelWeights = [sharedSignalEncoderModel, sharedEmotionModel, sharedActivityModel]
-    userInputParams = {}
+    userInputParams = {'deviceListed': 'cpu'}
 
     @classmethod
     def updateModelParams(cls, userInputParams):
