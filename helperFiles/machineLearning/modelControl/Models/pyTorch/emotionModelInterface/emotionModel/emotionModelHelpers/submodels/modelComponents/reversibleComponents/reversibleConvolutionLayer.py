@@ -48,7 +48,7 @@ class reversibleConvolutionLayer(reversibleInterface):
             # givensRotationParams: numLayers, numSignals, numParams
 
     def applySingleLayer(self, inputData, layerInd):
-        if not self.forwardDirection: layerInd = self.numLayers - layerInd - 1
+        # Determine the direction of the forward pass.
         performOptimalForwardFirst = self.optimalForwardFirst if layerInd % 2 == 0 else not self.optimalForwardFirst
 
         # Apply the weights to the input data.
@@ -59,6 +59,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
     def forward(self, inputData):
         for layerInd in range(self.numLayers):
+            if self.forwardDirection: layerInd = self.numLayers - layerInd - 1
             inputData = self.applySingleLayer(inputData, layerInd)
 
         return inputData
@@ -134,7 +135,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         with torch.no_grad():
             for layerInd in range(self.numLayers):
                 givensAngles, scalingFactors = self.getLinearParams(layerInd)
-                allScaleFactors.append(scalingFactors.detach().cpu().numpy())
+                allScaleFactors.append(scalingFactors.unsqueeze(-1).detach().cpu().numpy())
                 allGivensAngles.append(givensAngles.detach().cpu().numpy())
             allGivensAngles = np.asarray(allGivensAngles)
             allScaleFactors = np.asarray(allScaleFactors)
@@ -257,7 +258,7 @@ if __name__ == "__main__":
         # for _layerInd, sequenceLength2 in [(1, 32), (2, 32), (3, 32), (5, 32), (5, 32), (10, 32)]:
         # for _layerInd, sequenceLength2 in [(1, 64), (2, 64), (3, 64), (5, 64), (5, 64), (10, 64)]:
         # for _layerInd, sequenceLength2 in [(1, 128), (2, 128), (3, 128), (5, 128), (5, 128), (10, 128)]:
-        for _layerInd, sequenceLength2 in [(1, 256), (2, 256), (3, 256), (5, 256), (5, 256), (10, 256)]:
+        for _layerInd, sequenceLength2 in [(8, 128)]:
             # General parameters.
             _batchSize, _numSignals, _sequenceLength = 128, 128, sequenceLength2
             _activationMethod = 'reversibleLinearSoftSign'  # reversibleLinearSoftSign
@@ -269,7 +270,7 @@ if __name__ == "__main__":
             healthProfile = healthProfile / 6
 
             # Perform the convolution in the fourier and spatial domains.
-            if reconstructionFlag: _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(healthProfile, atol=1e-6, numLayers=1, plotResults=False)
+            if reconstructionFlag: _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(healthProfile, atol=1e-6, numLayers=1, plotResults=True)
             else: _forwardData = neuralLayerClass.forward(healthProfile)
             neuralLayerClass.printParams()
 

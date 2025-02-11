@@ -70,8 +70,8 @@ class specificSignalEncoderModel(neuralOperatorInterface):
             assert 0 <= pseudoLayerInd < len(self.neuralLayers), f"The pseudo layer index is out of bounds: {pseudoLayerInd}, {len(self.neuralLayers)}, {layerInd}"
 
             # Apply the neural operator layer with activation.
-            signalData = self.neuralLayers[pseudoLayerInd](signalData)
             signalData = self.processingLayers[pseudoLayerInd](signalData)
+            signalData = self.neuralLayers[pseudoLayerInd](signalData)
 
         # Store the signal data for plotting, if desired.
         if compilingFunction is not None: compilingFunction(signalData)

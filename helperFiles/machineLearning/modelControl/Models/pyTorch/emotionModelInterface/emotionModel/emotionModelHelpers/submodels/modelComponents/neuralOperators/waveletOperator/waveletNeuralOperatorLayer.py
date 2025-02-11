@@ -3,6 +3,7 @@ from torch import nn
 
 from .waveletNeuralOperatorWeights import waveletNeuralOperatorWeights
 from ...reversibleComponents.reversibleConvolutionLayer import reversibleConvolutionLayer
+from ...reversibleComponents.reversibleInterface import reversibleInterface
 
 
 class waveletNeuralOperatorLayer(waveletNeuralOperatorWeights):
@@ -31,6 +32,7 @@ class waveletNeuralOperatorLayer(waveletNeuralOperatorWeights):
         # For each layer in the neural operator.
         for layerInd in range(self.numLayers):
             # Perform wavelet decomposition.
+            if reversibleInterface.forwardDirection: layerInd = self.numLayers - layerInd - 1
             lowFrequency, highFrequencies = self.dwt(inputData)  # Note: each channel is treated independently here.
             # highFrequencies[decompositionLayer] dimension: batchSize, numLiftedChannels, highFrequenciesShapes[decompositionLayer]
             # lowFrequency dimension: batchSize, numLiftedChannels, lowFrequencyShape
@@ -76,15 +78,11 @@ class waveletNeuralOperatorLayer(waveletNeuralOperatorWeights):
 
         if weights is not None:
             # Learn a new set of wavelet coefficients to transform the data.
-            if isinstance(weights, reversibleConvolutionLayer):
-                frequencies = weights.applySingleLayer(frequencies, layerInd)
-            elif isinstance(weights, nn.Module):
-                frequencies = weights(frequencies)
-            elif 'FC' in self.learningProtocol or 'CNN' in self.learningProtocol:
-                frequencies = weights(frequencies)
-                # frequencies dimension: batchSize, numOutputSignals, frequencyDimension
-            else:
-                frequencies = torch.einsum(equationString, weights, frequencies)
-                # frequencies dimension: batchSize, numOutputSignals, frequencyDimension
+            if isinstance(weights, reversibleConvolutionLayer): frequencies = weights.applySingleLayer(frequencies, layerInd)
+            elif isinstance(weights, nn.Identity): frequencies = weights(frequencies)
+            elif isinstance(weights, nn.Module): frequencies = weights(frequencies)
+            elif 'FC' in self.learningProtocol or 'CNN' in self.learningProtocol:  frequencies = weights(frequencies)
+            else: frequencies = torch.einsum(equationString, weights, frequencies)
+        # frequencies dimension: batchSize, numOutputSignals, frequencyDimension
 
         return frequencies

@@ -224,7 +224,7 @@ class emotionModelHead(nn.Module):
             if isinstance(module, reversibleConvolutionLayer):
                 _, allGivensAnglesFeatures = module.getFeatureParams()
                 allGivensAngles, allScaleFactors = module.getAllLinearParams()
-                allScaleFactors = allScaleFactors.reshape(len(allScaleFactors), len(allScaleFactors[0]), 1)  # scalingFactors: numLayers, numSignals, numParam=1
+                if allScaleFactors.shape[0] == 0: continue
 
                 for givensAngles in allGivensAngles: givensAnglesPath.append(givensAngles)  # givensAnglesPath: numModuleLayers, numSignals, numParams
                 for scalingFactors in allScaleFactors: scalingFactorsPath.append(scalingFactors)  # scalingFactorsPath: numModuleLayers, numSignals, numParams=1
@@ -309,13 +309,13 @@ class emotionModelHead(nn.Module):
 
         if forwardPass:
             # Signal encoder layers.
-            metaLearningData = self.modelBlockPass(metaLearningData, self.sharedSignalEncoderModel, self.numSharedEncoderLayers, compilingFunction)
-            metaLearningData = self.modelBlockPass(metaLearningData, self.specificSignalEncoderModel, self.numSpecificEncoderLayers, compilingFunction)
+            metaLearningData = self.modelBlockPass(metaLearningData, self.sharedSignalEncoderModel, numLayers=self.numSharedEncoderLayers, compilingFunction=compilingFunction)
+            metaLearningData = self.modelBlockPass(metaLearningData, self.specificSignalEncoderModel, numLayers=self.numSpecificEncoderLayers, compilingFunction=compilingFunction)
             # metaLearningData: batchSize, numSignals, encodedDimension
         else:
             # Signal encoder layers.
-            metaLearningData = self.modelBlockPass(metaLearningData, self.specificSignalEncoderModel, self.numSpecificEncoderLayers, compilingFunction)
-            metaLearningData = self.modelBlockPass(metaLearningData, self.sharedSignalEncoderModel, self.numSharedEncoderLayers, compilingFunction)
+            metaLearningData = self.modelBlockPass(metaLearningData, self.specificSignalEncoderModel, numLayers=self.numSpecificEncoderLayers, compilingFunction=compilingFunction)
+            metaLearningData = self.modelBlockPass(metaLearningData, self.sharedSignalEncoderModel, numLayers=self.numSharedEncoderLayers, compilingFunction=compilingFunction)
             # metaLearningData: batchSize, numSignals, encodedDimension
 
         return metaLearningData

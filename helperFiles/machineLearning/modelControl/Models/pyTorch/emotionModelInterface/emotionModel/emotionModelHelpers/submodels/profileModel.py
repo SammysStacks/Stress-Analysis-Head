@@ -32,22 +32,23 @@ class profileModel(emotionModelWeights):
 
     def resetModelStates(self, metaLearningData):
         # Pre-allocate each parameter.
+        numExperiments, numSignals, encodedDimension = metaLearningData.shape
         numSpecificEncoderLayers, numSharedEncoderLayers = modelConstants.userInputParams['numSpecificEncoderLayers'], modelConstants.userInputParams['numSharedEncoderLayers']
-        self.compiledLayerStates = np.zeros(shape=(numSpecificEncoderLayers + numSharedEncoderLayers + 1, metaLearningData.shape[0], metaLearningData.shape[1], metaLearningData.shape[2]))
+        self.compiledLayerStates = np.zeros(shape=(numSpecificEncoderLayers + numSharedEncoderLayers + 1, numExperiments, numSignals, encodedDimension))
         self.compiledLayerStateInd = 0
 
         # Add the initial state.
         self.addModelState(metaLearningData)
 
     def addModelState(self, metaLearningData):
-        self.compiledLayerStates[self.compiledLayerStateInd] = metaLearningData.clone().detach().cpu().numpy().reshape((self.compiledLayerStates.shape[1], self.compiledLayerStates.shape[2], self.compiledLayerStates.shape[3]))
+        self.compiledLayerStates[self.compiledLayerStateInd] = metaLearningData.view((self.compiledLayerStates.shape[1], self.compiledLayerStates.shape[2], self.compiledLayerStates.shape[3])).detach().clone().cpu().numpy()
         self.compiledLayerStateInd += 1
 
     def populateProfileState(self, profileEpoch, batchInds, profileStateLoss, resampledSignalData, healthProfile):
         if isinstance(batchInds, torch.Tensor): batchInds = batchInds.detach().cpu().numpy()
-        self.retrainingProfileLosses[profileEpoch][batchInds] = profileStateLoss.clone().detach().cpu().numpy()
-        self.retrainingHealthProfilePath[profileEpoch][batchInds] = healthProfile.clone().detach().cpu().numpy()
-        self.generatingBiometricSignals[profileEpoch][batchInds] = resampledSignalData.clone().detach().cpu().numpy()
+        self.retrainingProfileLosses[profileEpoch][batchInds] = profileStateLoss.detach().clone().cpu().numpy()
+        self.retrainingHealthProfilePath[profileEpoch][batchInds] = healthProfile.detach().clone().cpu().numpy()
+        self.generatingBiometricSignals[profileEpoch][batchInds] = resampledSignalData.detach().clone().cpu().numpy()
 
     def getHealthEmbedding(self, batchInds):
         return self.embeddedHealthProfiles.to(batchInds.device)[batchInds]

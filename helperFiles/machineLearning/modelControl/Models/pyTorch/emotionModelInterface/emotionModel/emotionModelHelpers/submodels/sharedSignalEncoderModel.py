@@ -61,14 +61,16 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
             # Apply the neural operator layer with activation.
             self.neuralLayers[layerInd].compilingFunction = compilingFunction
             signalData = self.neuralLayers[layerInd](signalData)
+            self.neuralLayers[layerInd].compilingFunction = None
         else:
             # Get the reverse layer index.
             pseudoLayerInd = len(self.neuralLayers) - layerInd - 1
             assert 0 <= pseudoLayerInd < len(self.neuralLayers), f"The pseudo layer index is out of bounds: {pseudoLayerInd}, {len(self.neuralLayers)}, {layerInd}"
 
             # Apply the neural operator layer with activation.
-            self.neuralLayers[layerInd].compilingFunction = compilingFunction
+            self.neuralLayers[pseudoLayerInd].compilingFunction = compilingFunction
             signalData = self.neuralLayers[pseudoLayerInd](signalData)
+            self.neuralLayers[pseudoLayerInd].compilingFunction = None
 
         # Reshape the signal data.
         signalData = signalData.view(batchSize, numSignals, signalLength)
