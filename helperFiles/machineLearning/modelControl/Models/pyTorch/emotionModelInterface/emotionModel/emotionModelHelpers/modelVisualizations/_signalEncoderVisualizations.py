@@ -458,7 +458,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             signalWeightMatrix[colInds, rowInds] = weightMatrix[signalInd]
 
             # Plot the heatmap
-            colorbarAxes.append(ax.imshow(signalWeightMatrix, cmap=self.custom_cmap, interpolation="nearest", aspect="equal", vmin=-degrees, vmax=degrees))
+            # colorbarAxes.append(ax.imshow(signalWeightMatrix, cmap=self.custom_cmap, interpolation="nearest", aspect="equal", vmin=-degrees, vmax=degrees))
+            colorbarAxes.append(ax.imshow(signalWeightMatrix, cmap='viridis', interpolation="nearest", aspect="equal", vmin=-degrees, vmax=degrees))
         # Adjust layout to prevent overlapping titles/labels
         fig.suptitle(t=f"{plotTitle}; Epoch {epoch}\n", fontsize=24)
         fig.supylabel(r"$S_{i}$", fontsize=20)
