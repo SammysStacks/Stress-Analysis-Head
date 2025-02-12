@@ -380,6 +380,7 @@ class emotionModelHead(nn.Module):
         plt.title(f"batchInd{firstBatchInd}")
         plt.ylim((-1.75, 1.75))
         plt.show()
+        plt.close()
 
         # Get the first valid signal points.
         validReconstructedPoints = reconstructedSignalData[firstBatchInd, firstSignalInd, validPointMask].clone().detach().cpu().numpy()
@@ -396,3 +397,4 @@ class emotionModelHead(nn.Module):
         plt.ylim((-1.75, 1.75))
         plt.legend()
         plt.show()
+        plt.close()
