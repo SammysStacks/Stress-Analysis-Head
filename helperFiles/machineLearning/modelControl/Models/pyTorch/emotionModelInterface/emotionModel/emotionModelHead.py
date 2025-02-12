@@ -31,6 +31,7 @@ class emotionModelHead(nn.Module):
         self.numSubjects = numSubjects  # The maximum number of subjects the model is training on.
         self.datasetName = datasetName  # The name of the dataset the model is training on.
         self.numSignals = len(featureNames)  # The number of signals in the model.
+        self.hpcFlag = 'HPC' in userInputParams['deviceListed']  # Flag to determine if the model is running on an HPC.
 
         # General parameters.
         self.encodedDimension = userInputParams['encodedDimension']  # The dimension of the encoded signal.
@@ -163,7 +164,7 @@ class emotionModelHead(nn.Module):
         # resampledSignalData: batchSize, numSignals, encodedDimension
 
         # Visualize the data transformations within signal encoding.
-        if submodel == modelConstants.signalEncoderModel and not onlyProfileTraining and random.random() < 0.01:
+        if submodel == modelConstants.signalEncoderModel and not onlyProfileTraining and random.random() < 0.01 and not self.hpcFlag:
             with torch.no_grad(): self.visualizeSignalEncoding(embeddedProfile, healthProfile, resampledSignalData, reconstructedSignalData, signalData, validDataMask)
 
         # ------------------- Learned Emotion Mapping ------------------- #

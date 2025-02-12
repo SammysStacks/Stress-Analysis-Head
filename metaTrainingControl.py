@@ -96,6 +96,7 @@ if __name__ == "__main__":
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
     numEpoch_toCull = userInputParams['cullingEpoch']  # The number of epochs to cull the null weights.
+    hpcFlag = 'HPC' in userInputParams['deviceListed']  # Whether we are using the HPC.
 
     # Compile additional input parameters.
     userInputParams = modelParameters.getNeuralParameters(userInputParams)
@@ -145,7 +146,7 @@ if __name__ == "__main__":
 
         # Store the initial loss information and plot.
         trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)
-        trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate, showMinimumPlots=not showAllPlots)
+        trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate, showMinimumPlots=not showAllPlots if hpcFlag else False)
 
         # Save the model sometimes (only on the main device).
         if saveFullModel and accelerator.is_local_main_process:

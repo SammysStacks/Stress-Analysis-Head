@@ -22,7 +22,7 @@ class generalVisualizations(globalPlottingProtocols):
     @staticmethod
     def plotGradientFlow(model, currentVar, saveName):
         make_dot(currentVar, params=dict(list(model.named_parameters())), show_attrs=True, show_saved=True).render(saveName, format="svg")
-        
+
     @staticmethod
     def plotPredictions(allTrainingLabels, allTestingLabels, allPredictedTrainingLabels, allPredictedTestingLabels, numClasses, plotTitle="Emotion Prediction"):
         # Plot the data correlation.
@@ -96,19 +96,19 @@ class generalVisualizations(globalPlottingProtocols):
                              ha='center', va='center', color='black')
 
         axes[1].invert_yaxis()  # Reverse the order of y-axis ticks
-        plt.suptitle(f"{emotionName}")
-        plt.tight_layout()
+        fig.suptitle(f"{emotionName}")
+        fig.tight_layout()
 
         # Save the figure is desired.
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{emotionName} epochs{epoch}.pdf", baseSaveFigureName=f"{emotionName}.pdf", fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
-        else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{emotionName} epochs{epoch}.pdf", baseSaveFigureName=f"{emotionName}.pdf", fig=fig, clearFigure=True, showPlot=False)
+        else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
     def plotTrainingLosses(self, trainingLosses, testingLosses, lossLabels, saveFigureLocation="", plotTitle="Model Convergence Loss", logY=True):
         # Assert the validity of the input data.
         assert len(trainingLosses) == len(lossLabels), "Number of loss labels must match the number of loss indices."
         if len(trainingLosses[0]) == 0: return None
         numModels, numEpochs = len(trainingLosses), len(trainingLosses[0])
-        fig = plt.figure(figsize=(6.4, 4.8))
+        fig, ax = plt.subplots(figsize=(6.4, 4.8))
 
         # Plot the average losses.
         for modelInd in range(numModels):
@@ -121,8 +121,8 @@ class generalVisualizations(globalPlottingProtocols):
             trainingLoss = np.nanmean(modelTrainingLosses, axis=-1)
 
             # Plot the training losses.
-            plt.errorbar(x=np.arange(len(trainingLoss)), y=trainingLoss, yerr=trainingStandardError, color=self.darkColors[modelInd], linewidth=1)
-            plt.plot(modelTrainingLosses, color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
+            ax.errorbar(x=np.arange(len(trainingLoss)), y=trainingLoss, yerr=trainingStandardError, color=self.darkColors[modelInd], linewidth=1)
+            ax.plot(modelTrainingLosses, color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
 
             if testingLosses is not None:
                 modelTestingLosses = np.asarray(testingLosses[modelInd])
@@ -133,27 +133,27 @@ class generalVisualizations(globalPlottingProtocols):
                 modelTestingLosses[np.isnan(modelTestingLosses)] = None
 
                 # Plot the testing losses.
-                plt.errorbar(x=np.arange(len(testingLoss)), y=testingLoss, yerr=testingStd, color=self.darkColors[modelInd], linewidth=1)
-                plt.plot(modelTestingLosses, '-', color=self.darkColors[modelInd], linewidth=1, alpha=0.025)
+                ax.errorbar(x=np.arange(len(testingLoss)), y=testingLoss, yerr=testingStd, color=self.darkColors[modelInd], linewidth=1)
+                ax.plot(modelTestingLosses, '-', color=self.darkColors[modelInd], linewidth=1, alpha=0.025)
 
         # Plot gridlines.
-        plt.hlines(y=0.1, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=1)
-        for i in range(2, 10): plt.hlines(y=0.01*i, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=1, alpha=0.25)
-        plt.hlines(y=0.01, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=1)
-        plt.xlim((0, max(32, len(trainingLosses[0]) + 1)))
-        plt.ylim((0.001, 1))
-        plt.grid(True)
+        ax.hlines(y=0.1, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=1)
+        for i in range(2, 10): ax.hlines(y=0.01*i, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=1, alpha=0.25)
+        ax.hlines(y=0.01, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=1)
+        ax.set_xlim((0, max(32, len(trainingLosses[0]) + 1)))
+        ax.set_ylim((0.001, 1))
+        ax.grid(True)
 
         # Label the plot.
-        if logY: plt.yscale('log')
-        plt.xlabel("Training epoch")
-        plt.ylabel("Loss values")
-        plt.title(f"{plotTitle}")
-        plt.legend(loc="upper right", bbox_to_anchor=(1.35, 1), borderaxespad=0)
+        if logY: ax.set_yscale('log')
+        ax.set_xlabel("Training epoch")
+        ax.set_ylabel("Loss values")
+        ax.set_title(f"{plotTitle}")
+        ax.legend(loc="upper right", bbox_to_anchor=(1.35, 1), borderaxespad=0)
 
         # Save the figure if desired.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(trainingLosses[0])}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
-        else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
+        else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
     def plotActivationFlowCompressed(self, activationParamsPaths, moduleNames, modelLabels, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
         activationParamsPaths = np.asarray(activationParamsPaths)
@@ -167,7 +167,6 @@ class generalVisualizations(globalPlottingProtocols):
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=True, sharey='col')
         axes = axes.flatten()  # Flatten axes for easy indexing if you prefer
-        plt.xlim((0, numEpochs))
 
         for paramInd in range(numParams):
             ax = axes[paramInd]  # which subplot to use
@@ -200,12 +199,12 @@ class generalVisualizations(globalPlottingProtocols):
             ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5, alpha=0.8)
 
         # Label the plot.
-        plt.suptitle(f"{plotTitle}")
-        plt.tight_layout()
+        fig.suptitle(f"{plotTitle}")
+        fig.tight_layout()
 
         # Save the figure if desired.
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
-        else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=False)
+        else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
     def plotActivationFlow(self, activationParamsPaths, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
         activationParamsPaths = np.asarray(activationParamsPaths)
@@ -222,7 +221,6 @@ class generalVisualizations(globalPlottingProtocols):
             fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=True, sharey=True)
             numProcessing, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
             paramName = paramNames[paramInd]
-            plt.xlim((0, numEpochs))
 
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
@@ -248,6 +246,7 @@ class generalVisualizations(globalPlottingProtocols):
 
                 ax.set_title(moduleName.capitalize(), fontsize=16)
                 ax.set_xlabel("Training epoch")
+                ax.set_xlim((0, numEpochs))
 
                 for modelInd in range(numModels):
                     if "shared" in moduleName and modelInd != 0: continue
@@ -268,12 +267,12 @@ class generalVisualizations(globalPlottingProtocols):
                 ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5, alpha=0.8)
 
             # Label the plot.
-            plt.suptitle(f"{plotTitle}: {paramName}\n")
-            plt.tight_layout()
+            fig.suptitle(f"{plotTitle}: {paramName}\n")
+            fig.tight_layout()
 
             # Save the figure if desired.
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle} {paramName}.pdf", fig=fig, clearFigure=True, showPlot=False)
-            else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
+            else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
     def plotFreeParamFlow(self, numFreeModelParams, maxFreeParamsPath, fullView, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
         # scalingFactorsPaths: numModels, numEpochs, numModuleLayers, *numSignals*, numParams=1
@@ -290,7 +289,6 @@ class generalVisualizations(globalPlottingProtocols):
             fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=True, sharey='col' if fullView else False)
             numProcessing, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
             paramName = paramNames[paramInd]
-            plt.xlim((0, numEpochs))
 
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
@@ -309,6 +307,7 @@ class generalVisualizations(globalPlottingProtocols):
                 if colInd == 0: ax.set_ylabel("Number of rotations")
                 ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5, alpha=0.8)
                 ax.set_xlabel("Training epoch")
+                ax.set_xlim((0, numEpochs))
                 ax.set_title(moduleName)
 
                 for modelInd in range(numModels):
@@ -340,12 +339,12 @@ class generalVisualizations(globalPlottingProtocols):
                     if fullView: ax.hlines(y=maxFreeParams, xmin=0, xmax=numEpochs + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
 
             # Label the plot.
-            plt.suptitle(f"{plotTitle} {paramName}\n")
-            plt.tight_layout()
+            fig.suptitle(f"{plotTitle} {paramName}\n")
+            fig.tight_layout()
 
             # Save the figure if desired.
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle} {paramName}.pdf", fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
-            else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
+            else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
     def plotScaleFactorFlow(self, scalingFactorsPaths, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
         # scalingFactorsPaths: numModels, numEpochs, numModuleLayers, *numSignals*, numParams=1
@@ -406,12 +405,12 @@ class generalVisualizations(globalPlottingProtocols):
                 ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5, alpha=0.8)
 
             # Label the plot.
-            plt.suptitle(f"{plotTitle} {paramName}\n")
-            plt.tight_layout()
+            fig.suptitle(f"{plotTitle} {paramName}\n")
+            fig.tight_layout()
 
             # Save the figure if desired.
-            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle} {paramName}.pdf", fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
-            else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle} {paramName}.pdf", fig=fig, clearFigure=True, showPlot=False)
+            else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
     def plotGivensFeaturesPath(self, givensAnglesFeaturesPaths, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
         # givensAnglesFeaturesPaths: numModels, numEpochs, numModuleLayers, numFeatures=5, numFeatureValues*
@@ -427,7 +426,7 @@ class generalVisualizations(globalPlottingProtocols):
             numProcessing, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
             paramName = paramNames[paramInd]
 
-            plt.suptitle(f"{plotTitle}: {paramName}\n")
+            fig.suptitle(f"{plotTitle}: {paramName}\n")
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
 
@@ -474,8 +473,8 @@ class generalVisualizations(globalPlottingProtocols):
                             ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * alphas[axisLineInd])
                             ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * (1 - alphas[axisLineInd]))
                 ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5, alpha=0.8)
-            plt.tight_layout()
+            fig.tight_layout()
 
             # Save the figure if desired.
-            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle} {paramName}.pdf", fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
-            else: self.clearFigure(fig=None, legend=None, showPlot=not self.hpcFlag)
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle} {paramName}.pdf", fig=fig, clearFigure=True, showPlot=False)
+            else: self.clearFigure(fig=fig, legend=None, showPlot=True)

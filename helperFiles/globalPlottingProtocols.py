@@ -52,22 +52,21 @@ class globalPlottingProtocols:
 
         # Clear and close the figure/legend if provided
         if legend is not None: legend.remove()
-        if fig: fig.clear();  plt.close(fig)
-        else: plt.cla(); plt.clf()
-        plt.close('all')
+        if fig: plt.close(fig)
+        else: plt.cla(); plt.clf(); plt.close('all')
 
     def displayFigure(self, saveFigureLocation, saveFigureName, baseSaveFigureName=None, fig=None, showPlot=True, clearFigure=True):
         self._createFolder(self.saveDataFolder + saveFigureLocation)
-        if fig is None: fig = plt.gcf()
+        fig = fig or plt.gcf()
 
         # Save to base location if specified
         if baseSaveFigureName is not None:
-            base_path = os.path.join(self.baseSavingDataFolder, f"{self.datasetName} {baseSaveFigureName[:1].upper() + baseSaveFigureName[1:]}")
-            fig.savefig(base_path, transparent=True, dpi=300)
+            base_path = os.path.join(self.baseSavingDataFolder, f"{self.datasetName} {baseSaveFigureName[:1].upper()}{baseSaveFigureName[1:]}")
+            fig.savefig(base_path, transparent=True, dpi=300, format='pdf')
 
             # Copy the saved figure to the second location
             shutil.copy(base_path, os.path.join(self.saveDataFolder, f"{saveFigureLocation}{saveFigureName.lower()}"))
-        else: fig.savefig(os.path.join(self.saveDataFolder, f"{saveFigureLocation}{saveFigureName[:1].upper() + saveFigureName[1:]}"), transparent=True, dpi=300)
+        else: fig.savefig(os.path.join(self.saveDataFolder, f"{saveFigureLocation}{saveFigureName[:1].upper()}{saveFigureName[1:]}"), transparent=True, dpi=300, format='pdf')
 
         if clearFigure: self.clearFigure(fig=fig, legend=None, showPlot=showPlot)  # Clear the figure after saving
         elif showPlot: plt.show()
