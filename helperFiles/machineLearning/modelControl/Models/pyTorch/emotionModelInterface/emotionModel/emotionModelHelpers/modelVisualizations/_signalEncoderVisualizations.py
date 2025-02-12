@@ -532,7 +532,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         x, y, z = x_data.flatten(), np.flip(y_data.flatten()), dataStates.flatten()
 
         # Figure and axis settings
-        fig = plt.figure(figsize=(6.4, 4.8), facecolor="white")
+        fig = plt.figure(figsize=(12, 8), facecolor="white")
         ax = fig.add_subplot(111, projection='3d', facecolor="white")
 
         # Improved scatter points
