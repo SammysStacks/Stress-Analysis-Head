@@ -60,7 +60,7 @@ waveletTypes_arr=(
 angularThresholdMins=('0.5' '1')  # [0, 5]; Best: [0, 3]
 angularThresholdMaxs=(45)
 percentParamsKeepings=(6 7 8 9 10)  # [5, 10]; Best: 8?
-cullingEpochs=(1 2)
+cullingEpochs=(1 2 5)
 
 # Binary reference states.
 numSpecificEncoderLayers_arr=(1)
