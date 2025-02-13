@@ -48,7 +48,7 @@ class reversibleConvolutionLayer(reversibleInterface):
             # givensRotationParams: numLayers, numSignals, numParams
 
             # Register a gradient hook to scale the learning rate.
-            parameters.register_hook(lambda grad: grad * 8)  # Double the gradient -> Doubles the effective LR
+            parameters.register_hook(lambda grad: grad * 100)  # Double the gradient -> Doubles the effective LR
 
     def applySingleLayer(self, inputData, layerInd):
         # Determine the direction of the forward pass.
@@ -100,7 +100,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         entriesA = self.getInfinitesimalAnglesA(layerInd)
         A[:, self.rowInds, self.colInds] = -entriesA
         A[:, self.colInds, self.rowInds] = entriesA
-        if layerInd == 1: print(entriesA[0][0].item())
+        # if layerInd == 1: print(entriesA[0][0].item() * 180 / 3.14159)
 
         return A
 
