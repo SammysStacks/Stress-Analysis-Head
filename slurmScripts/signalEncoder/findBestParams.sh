@@ -57,14 +57,14 @@ waveletTypes_arr=(
 )
 
 # Trinary reference states.
-angularThresholdMins=(1)  # [0, 5]; Best: [0, 3]
+angularThresholdMins=('0.5' '1')  # [0, 5]; Best: [0, 3]
 angularThresholdMaxs=(45)
-percentParamsKeepings=(5 6 7 8 9 10)  # [5, 10]; Best: 8?
-cullingEpochs=(1)
+percentParamsKeepings=(6 7 8 9 10)  # [5, 10]; Best: 8?
+cullingEpochs=(1 2)
 
 # Binary reference states.
-numSpecificEncoderLayers_arr=(1 2 4)
-numSharedEncoderLayers_arr=(7 8 9)  # [4, 10]; Best: 6 and 8
+numSpecificEncoderLayers_arr=(1)
+numSharedEncoderLayers_arr=(6 7 8 9)  # [4, 10]; Best: 6 and 8
 
 # Binary reference states.
 encodedDimensions_arr=(256)
@@ -118,8 +118,8 @@ do
                                           continue
                                         fi
                                         
-                                        if (( angularThresholdMax <= angularThresholdMin )); then
-                                          continue
+                                        if (( $(echo "$angularThresholdMax <= $angularThresholdMin" | bc -l) )); then
+                                            continue
                                         fi
   
                                         if [ "$1" == "CPU" ]; then
