@@ -21,7 +21,7 @@ from helperFiles.machineLearning.dataInterface.compileModelData import compileMo
 import gc
 
 # Configure cuDNN and PyTorch's global settings.
-torch.backends.cudnn.deterministic = True  # If True: ensures that the model will be reproducible.
+torch.backends.cudnn.deterministic = False  # If True: ensures that the model will be reproducible.
 torch.autograd.set_detect_anomaly(False)  # If True: detect NaN values in the output of autograd. Will be slower.
 torch.backends.cudnn.benchmark = False  # Enable cuDNN's auto-tuner to find the most efficient algorithm. Keep true for fixed input sizes.
 
@@ -59,13 +59,13 @@ if __name__ == "__main__":
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--initialProfileAmp', type=float, default=1e-3, help='The limits for profile initialization. Should be near zero.')
     parser.add_argument('--angularThresholdMax', type=float, default=45, help='The minimum rotational threshold in degrees.')
-    parser.add_argument('--angularThresholdMin', type=float, default=4, help='The minimum rotational threshold in degrees.')
+    parser.add_argument('--angularThresholdMin', type=float, default=1, help='The minimum rotational threshold in degrees.')
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model: [1, 2]')
-    parser.add_argument('--numSharedEncoderLayers', type=int, default=8, help='The number of layers in the model: [2, 8]')
+    parser.add_argument('--numSharedEncoderLayers', type=int, default=6, help='The number of layers in the model: [2, 8]')
     parser.add_argument('--cullingEpoch', type=int, default=1, help='The number of epochs before culling null weights.')
-    parser.add_argument('--profileDimension', type=int, default=128, help='The number of profile weights: [32, 256]')
+    parser.add_argument('--profileDimension', type=int, default=256, help='The number of profile weights: [32, 256]')
     parser.add_argument('--numProfileShots', type=int, default=32, help='The epochs for profile training: [16, 32]')
-    parser.add_argument('--percentParamsKeeping', type=int, default=6, help='The percentage of parameters to keep in the model.')
+    parser.add_argument('--percentParamsKeeping', type=int, default=8, help='The percentage of parameters to keep in the model.')
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions).')
@@ -96,7 +96,6 @@ if __name__ == "__main__":
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
     numEpoch_toCull = userInputParams['cullingEpoch']  # The number of epochs to cull the null weights.
-    hpcFlag = 'HPC' in userInputParams['deviceListed']  # Whether we are using the HPC.
 
     # Compile additional input parameters.
     userInputParams = modelParameters.getNeuralParameters(userInputParams)
@@ -126,7 +125,7 @@ if __name__ == "__main__":
     # -------------------------- Meta-model Training ------------------------- #
 
     # Calculate the initial loss.
-    trainingProtocols.boundAngularWeights(allMetaModels, allModels, applyMinThresholding=False)
+    trainingProtocols.boundAngularWeights(allMetaModels, allModels, applyMinThresholding=False, doubleThresholding=False)
     trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate, showMinimumPlots=False)
     trainingProtocols.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, profileOnlyTraining=True)
     if modelConstants.useInitialLoss: trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)  # Calculate the initial loss.
@@ -139,14 +138,15 @@ if __name__ == "__main__":
         # Get the saving information.
         saveFullModel, showAllPlots = modelParameters.getEpochParameters(epoch, numEpoch_toSaveFull, numEpoch_toPlot)
         applyMinThresholding = (epoch % numEpoch_toCull == 0)
+        doubleThresholding = (epoch % 10 == 0)
 
         # Train the model for a single epoch.
         trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders)
-        trainingProtocols.boundAngularWeights(allMetaModels, allModels, applyMinThresholding=applyMinThresholding)
+        trainingProtocols.boundAngularWeights(allMetaModels, allModels, applyMinThresholding=applyMinThresholding, doubleThresholding=doubleThresholding)
 
         # Store the initial loss information and plot.
         trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)
-        trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate, showMinimumPlots=not showAllPlots if hpcFlag else False)
+        trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate, showMinimumPlots=not showAllPlots)
 
         # Save the model sometimes (only on the main device).
         if saveFullModel and accelerator.is_local_main_process:

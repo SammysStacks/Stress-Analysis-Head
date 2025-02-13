@@ -47,6 +47,9 @@ class reversibleConvolutionLayer(reversibleInterface):
             self.activationFunction.append(activationFunctions.getActivationMethod(activationMethod))
             # givensRotationParams: numLayers, numSignals, numParams
 
+            # Register a gradient hook to scale the learning rate.
+            parameters.register_hook(lambda grad: grad * 8)  # Double the gradient -> Doubles the effective LR
+
     def applySingleLayer(self, inputData, layerInd):
         # Determine the direction of the forward pass.
         performOptimalForwardFirst = self.optimalForwardFirst if layerInd % 2 == 0 else not self.optimalForwardFirst
@@ -118,7 +121,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
     def applyManifoldScale(self, inputData):
         scalarValues = self.getJacobianScalar().expand_as(inputData)
-        if not reversibleInterface.forwardDirection: return inputData * scalarValues
+        if reversibleInterface.forwardDirection: return inputData * scalarValues
         else: return inputData / scalarValues
 
     def getLinearParams(self, layerInd):
@@ -178,21 +181,21 @@ class reversibleConvolutionLayer(reversibleInterface):
                 givensAnglesVarABS = givensAnglesABS.var(dim=-1).cpu().detach().numpy()  # Dim: numSignals
 
                 # Calculate the mean, variance, and range of the scaling factors.
-                scalingFactorsMean = scalingFactors.mean(dim=-1).cpu().detach().numpy()  # Dim: numSignals=1
-                scalarMedian = torch.median(scalingFactors, dim=-1).values.cpu().detach().numpy()  # Dim: numSignals=1
+                scalingFactorsMean = scalingFactors.mean(dim=0).cpu().detach().numpy()  # Dim: numSignals=1
+                scalingFactorsVar = scalingFactors.var(dim=0).cpu().detach().numpy()  # Dim: numSignals
 
                 # Combine the features. Return dimension: numFeatures, numValues
-                allGivensAnglesFeatures.append([givensAnglesMean, givensAnglesVar, givensAnglesRange, givensAnglesMedian, givensAnglesMeanABS, givensAnglesVarABS, scalingFactorsMean, scalarMedian])
+                allGivensAnglesFeatures.append([givensAnglesMean, givensAnglesVar, givensAnglesRange, givensAnglesMedian, givensAnglesMeanABS, givensAnglesVarABS, scalingFactorsMean, scalingFactorsVar])
 
         return givensAnglesFeatureNames, allGivensAnglesFeatures
 
     @staticmethod
     def getFeatureNames():
-        return ["Angular mean", "Angular variance", "Angular range", "Angular median", "Angular abs(mean)", "Angular abs(variance)", "Scalar mean", "Scalar median"]
+        return ["Angular mean", "Angular variance", "Angular range", "Angular median", "Angular abs(mean)", "Angular abs(variance)", "Scalar mean", "Scalar variance"]
 
-    def angularThresholding(self, applyMinThresholding):
+    def angularThresholding(self, applyMinThresholding, doubleThresholding):
         # Get the angular thresholds.
-        angularThresholdMin = modelConstants.userInputParams['angularThresholdMin'] * torch.pi / 180  # Convert to radians
+        angularThresholdMin = (4 if doubleThresholding else 1)*modelConstants.userInputParams['angularThresholdMin'] * torch.pi / 180  # Convert to radians
         angularThresholdMax = modelConstants.userInputParams['angularThresholdMax'] * torch.pi / 180  # Convert to radians
 
         with torch.no_grad():
@@ -200,13 +203,12 @@ class reversibleConvolutionLayer(reversibleInterface):
                 givensAngles = self.getGivensAngles(layerInd)
 
                 # Apply the thresholding.
-                if applyMinThresholding and 64 < self.sequenceLength: self.minThresholding(layerInd)
+                if applyMinThresholding and 64 < self.sequenceLength: self.minThresholding(layerInd, doubleThresholding)
                 if applyMinThresholding: self.givensRotationParams[layerInd][givensAngles.abs() < angularThresholdMin] = 0
                 self.givensRotationParams[layerInd][givensAngles <= -angularThresholdMax] = -angularThresholdMax
                 self.givensRotationParams[layerInd][angularThresholdMax <= givensAngles] = angularThresholdMax
 
-    # DEPRECATED
-    def minThresholding(self, layerInd):
+    def minThresholding(self, layerInd, doubleThresholding):
         with torch.no_grad():
             # Sort each row by absolute value
             givensAngles = self.getGivensAngles(layerInd).clone().abs()  # Dim: numSignals, numParams
@@ -214,7 +216,7 @@ class reversibleConvolutionLayer(reversibleInterface):
             # sorted_values -> [0, 1, 2, 3, ...]
 
             # Find the threshold value per row
-            percentParamsKeeping = float(modelConstants.userInputParams['percentParamsKeeping'])
+            percentParamsKeeping = float(modelConstants.userInputParams['percentParamsKeeping']) / (2 if doubleThresholding else 1)
             numAnglesThrowingAway = int((100 - percentParamsKeeping) * self.numParams / 100) - 1
             minAngleValues = sorted_values[:, numAnglesThrowingAway].unsqueeze(-1)  # Shape (numSignals, 1)
 

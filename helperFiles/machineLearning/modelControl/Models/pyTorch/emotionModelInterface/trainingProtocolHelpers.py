@@ -73,13 +73,13 @@ class trainingProtocolHelpers:
             modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=numProfileShots + 1)  # Profile training.
             self.accelerator.wait_for_everyone()
 
-    def boundAngularWeights(self, allMetaModels, allModels, applyMinThresholding):
+    def boundAngularWeights(self, allMetaModels, allModels, applyMinThresholding, doubleThresholding):
         # Unify all the model weights.
         self.unifyAllModelWeights(allMetaModels, allModels)
 
         # For each meta-training model.
         for modelPipeline in allMetaModels + allModels:
-            modelPipeline.model.cullAngles(applyMinThresholding=applyMinThresholding)
+            modelPipeline.model.cullAngles(applyMinThresholding=applyMinThresholding, doubleThresholding=doubleThresholding)
 
         # Unify all the model weights and retrain the specific models.
         self.unifiedLayerData = self.modelMigration.copyModelWeights(allMetaModels[0], self.sharedModelWeights)
@@ -101,6 +101,7 @@ class trainingProtocolHelpers:
     def plotModelState(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate, showMinimumPlots):
         """ Parallelized version of the function for efficient plotting. """
         self.unifyAllModelWeights(allMetaModels, allModels)  # Unify model weights before plotting.
+        hpcFlag = 'HPC' in modelConstants.userInputParams['deviceListed']  # Whether we are using the HPC.
         numModels = len(allMetaModels) + len(allModels)
         t1 = time.time()
         plt.close('all')
@@ -116,7 +117,7 @@ class trainingProtocolHelpers:
             with torch.no_grad():  # Disable gradient computation for efficiency
                 numEpochs = modelPipeline.getTrainingEpoch(submodel)
                 modelPipeline.modelVisualization.plotAllTrainingEvents(
-                    submodel, modelPipeline, lossDataLoader, trainingDate, numEpochs, showMinimumPlots=showMinimumPlots
+                    submodel, modelPipeline, lossDataLoader, trainingDate, numEpochs, showMinimumPlots=showMinimumPlots if hpcFlag else False
                 )
 
         def process_model_comparison():
@@ -129,8 +130,8 @@ class trainingProtocolHelpers:
         # Use ThreadPoolExecutor to run everything in parallel
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = [executor.submit(process_model, modelInd) for modelInd in range(numModels)]
-            futures.append(executor.submit(process_model_comparison))
             concurrent.futures.wait(futures)
+        process_model_comparison()
 
         t2 = time.time()
         self.accelerator.print("Total plotting time:", t2 - t1)

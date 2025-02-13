@@ -57,7 +57,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         signalData = signalData.view(batchSize*numSignals, 1, signalLength)
 
         # For the forward/harder direction.
-        if not reversibleInterface.forwardDirection:
+        if reversibleInterface.forwardDirection:
             # Apply the neural operator layer with activation.
             self.neuralLayers[layerInd].compilingFunction = compilingFunction
             signalData = self.neuralLayers[layerInd](signalData)

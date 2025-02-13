@@ -262,11 +262,11 @@ class emotionModelHead(nn.Module):
 
         return activationCurvePath, moduleNames
 
-    def cullAngles(self, applyMinThresholding):
+    def cullAngles(self, applyMinThresholding, doubleThresholding):
         for name, module in self.named_modules():
             if 'shared' in name.lower(): continue
             if isinstance(module, reversibleConvolutionLayer):
-                module.angularThresholding(applyMinThresholding=applyMinThresholding)
+                module.angularThresholding(applyMinThresholding=applyMinThresholding, doubleThresholding=doubleThresholding)
 
     def getActivationParamsFullPassPath(self):
         activationParamsPath, moduleNames = [], []
@@ -372,6 +372,7 @@ class emotionModelHead(nn.Module):
         validSignalMask = torch.any(validDataMask, dim=-1)
         firstBatchInd, firstSignalInd = validSignalMask.nonzero(as_tuple=False)[0, :]
         validPointMask = validDataMask[firstBatchInd, firstSignalInd]
+        plt.close('all')
 
         # Optionally, plot the health profile for visual comparison
         resampledBiomarkerTimes = self.sharedSignalEncoderModel.hyperSampledTimes.clone().detach().cpu().numpy()

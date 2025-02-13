@@ -92,7 +92,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
     def applyManifoldScale(self, inputData):
         scalarValues = self.getJacobianScalar().expand_as(inputData)
-        if not reversibleInterface.forwardDirection: return inputData * scalarValues
+        if reversibleInterface.forwardDirection: return inputData * scalarValues
         else: return inputData / scalarValues
 
     @staticmethod
