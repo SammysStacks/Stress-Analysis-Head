@@ -100,6 +100,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         entriesA = self.getInfinitesimalAnglesA(layerInd)
         A[:, self.rowInds, self.colInds] = -entriesA
         A[:, self.colInds, self.rowInds] = entriesA
+        if layerInd == 1: print(entriesA[0][0].item())
 
         return A
 
