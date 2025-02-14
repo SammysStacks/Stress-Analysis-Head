@@ -194,9 +194,9 @@ class reversibleConvolutionLayer(reversibleInterface):
     def getFeatureNames():
         return ["Angular mean", "Angular variance", "Angular range", "Angular median", "Angular abs(mean)", "Angular abs(variance)", "Scalar mean", "Scalar variance"]
 
-    def angularThresholding(self, applyMinThresholding, doubleThresholding):
+    def angularThresholding(self, applyMinThresholding, applyMaxThresholding):
         # Get the angular thresholds.
-        angularThresholdMin = (4 if doubleThresholding else 1)*modelConstants.userInputParams['angularThresholdMin'] * torch.pi / 180  # Convert to radians
+        angularThresholdMin = (4 if applyMaxThresholding else modelConstants.userInputParams['angularThresholdMin']) * torch.pi / 180  # Convert to radians
         angularThresholdMax = modelConstants.userInputParams['angularThresholdMax'] * torch.pi / 180  # Convert to radians
 
         with torch.no_grad():
@@ -204,12 +204,12 @@ class reversibleConvolutionLayer(reversibleInterface):
                 givensAngles = self.getGivensAngles(layerInd)
 
                 # Apply the thresholding.
-                if applyMinThresholding and 64 < self.sequenceLength: self.minThresholding(layerInd, doubleThresholding)
+                if applyMinThresholding and 64 < self.sequenceLength: self.minThresholding(layerInd, applyMaxThresholding)
                 if applyMinThresholding: self.givensRotationParams[layerInd][givensAngles.abs() < angularThresholdMin] = 0
                 self.givensRotationParams[layerInd][givensAngles <= -angularThresholdMax] = -angularThresholdMax
                 self.givensRotationParams[layerInd][angularThresholdMax <= givensAngles] = angularThresholdMax
 
-    def minThresholding(self, layerInd, doubleThresholding):
+    def minThresholding(self, layerInd, applyMaxThresholding):
         with torch.no_grad():
             # Sort each row by absolute value
             givensAngles = self.getGivensAngles(layerInd).clone().abs()  # Dim: numSignals, numParams
@@ -217,7 +217,7 @@ class reversibleConvolutionLayer(reversibleInterface):
             # sorted_values -> [0, 1, 2, 3, ...]
 
             # Find the threshold value per row
-            percentParamsKeeping = float(modelConstants.userInputParams['percentParamsKeeping']) / (2 if doubleThresholding else 1)
+            percentParamsKeeping = float(250/self.numParams if applyMaxThresholding else modelConstants.userInputParams['percentParamsKeeping'])
             numAnglesThrowingAway = int((100 - percentParamsKeeping) * self.numParams / 100) - 1
             minAngleValues = sorted_values[:, numAnglesThrowingAway].unsqueeze(-1)  # Shape (numSignals, 1)
 
@@ -261,7 +261,7 @@ if __name__ == "__main__":
         # for _layerInd, sequenceLength2 in [(1, 32), (2, 32), (3, 32), (5, 32), (5, 32), (10, 32)]:
         # for _layerInd, sequenceLength2 in [(1, 64), (2, 64), (3, 64), (5, 64), (5, 64), (10, 64)]:
         # for _layerInd, sequenceLength2 in [(1, 128), (2, 128), (3, 128), (5, 128), (5, 128), (10, 128)]:
-        for _layerInd, sequenceLength2 in [(8, 128)]:
+        for _layerInd, sequenceLength2 in [(1, 256)]:
             # General parameters.
             _batchSize, _numSignals, _sequenceLength = 128, 128, sequenceLength2
             _activationMethod = 'reversibleLinearSoftSign'  # reversibleLinearSoftSign
@@ -270,7 +270,9 @@ if __name__ == "__main__":
             # Set up the parameters.
             neuralLayerClass = reversibleConvolutionLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, numLayers=_numLayers, activationMethod=_activationMethod)
             healthProfile = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float64)
-            healthProfile = healthProfile / 6
+            healthProfile = healthProfile - healthProfile.min(dim=-1, keepdim=True).values
+            healthProfile = healthProfile / healthProfile.max(dim=-1, keepdim=True).values
+            healthProfile = healthProfile * 2 - 1
 
             # Perform the convolution in the fourier and spatial domains.
             if reconstructionFlag: _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(healthProfile, atol=1e-6, numLayers=1, plotResults=True)

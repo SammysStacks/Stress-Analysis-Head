@@ -39,7 +39,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-02-13"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2025-02-14"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Architecture Parameters ----------------------- #
@@ -59,7 +59,7 @@ if __name__ == "__main__":
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--initialProfileAmp', type=float, default=1e-3, help='The limits for profile initialization. Should be near zero.')
     parser.add_argument('--angularThresholdMax', type=float, default=45, help='The minimum rotational threshold in degrees.')
-    parser.add_argument('--angularThresholdMin', type=float, default=1, help='The minimum rotational threshold in degrees.')
+    parser.add_argument('--angularThresholdMin', type=float, default=0.1, help='The minimum rotational threshold in degrees.')
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model: [1, 2]')
     parser.add_argument('--numSharedEncoderLayers', type=int, default=6, help='The number of layers in the model: [2, 8]')
     parser.add_argument('--cullingEpoch', type=int, default=1, help='The number of epochs before culling null weights.')
@@ -125,7 +125,7 @@ if __name__ == "__main__":
     # -------------------------- Meta-model Training ------------------------- #
 
     # Calculate the initial loss.
-    trainingProtocols.boundAngularWeights(allMetaModels, allModels, applyMinThresholding=False, doubleThresholding=False)
+    trainingProtocols.boundAngularWeights(allMetaModels, allModels, applyMinThresholding=False, applyMaxThresholding=False)
     trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate, showMinimumPlots=False)
     trainingProtocols.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, profileOnlyTraining=True)
     if modelConstants.useInitialLoss: trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)  # Calculate the initial loss.
@@ -138,11 +138,11 @@ if __name__ == "__main__":
         # Get the saving information.
         saveFullModel, showAllPlots = modelParameters.getEpochParameters(epoch, numEpoch_toSaveFull, numEpoch_toPlot)
         applyMinThresholding = (epoch % numEpoch_toCull == 0)
-        doubleThresholding = (epoch % 10 == 0)
+        applyMaxThresholding = (epoch % 10 == 0)
 
         # Train the model for a single epoch.
         trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders)
-        trainingProtocols.boundAngularWeights(allMetaModels, allModels, applyMinThresholding=applyMinThresholding, doubleThresholding=doubleThresholding)
+        trainingProtocols.boundAngularWeights(allMetaModels, allModels, applyMinThresholding=applyMinThresholding, applyMaxThresholding=applyMaxThresholding)
 
         # Store the initial loss information and plot.
         trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)

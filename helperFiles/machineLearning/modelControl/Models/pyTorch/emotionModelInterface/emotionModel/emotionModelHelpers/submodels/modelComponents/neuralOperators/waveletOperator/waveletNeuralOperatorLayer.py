@@ -28,24 +28,28 @@ class waveletNeuralOperatorLayer(waveletNeuralOperatorWeights):
         return neuralOperatorData
 
     def waveletNeuralOperator(self, inputData, residualLowFrequencyTerms=None, residualHighFrequencyTerms=None):
+        # Perform wavelet decomposition.
+        lowFrequency, highFrequencies = self.dwt(inputData)  # Note: each channel is treated independently here.
+        # highFrequencies[decompositionLayer] dimension: batchSize, numLiftedChannels, highFrequenciesShapes[decompositionLayer]
+        # lowFrequency dimension: batchSize, numLiftedChannels, lowFrequencyShape
 
         # For each layer in the neural operator.
         for layerInd in range(self.numLayers):
-            # Perform wavelet decomposition.
             if reversibleInterface.forwardDirection: layerInd = self.numLayers - layerInd - 1
-            lowFrequency, highFrequencies = self.dwt(inputData)  # Note: each channel is treated independently here.
-            # highFrequencies[decompositionLayer] dimension: batchSize, numLiftedChannels, highFrequenciesShapes[decompositionLayer]
-            # lowFrequency dimension: batchSize, numLiftedChannels, lowFrequencyShape
 
             # Encode each frequency decomposition, separating high and low frequencies.
             lowFrequency, highFrequencies = self.independentFrequencyAnalysis(layerInd, lowFrequency, highFrequencies, residualLowFrequencyTerms, residualHighFrequencyTerms)
             # highFrequencies[highFrequencyInd] dimension: batchSize, numOutputSignals, highFrequenciesShapes[decompositionLayer]
             # lowFrequency dimension: batchSize, numOutputSignals, lowFrequencyShape
 
-            # Perform wavelet reconstruction.
-            inputData = self.idwt((lowFrequency, highFrequencies))
-            if self.compilingFunction is not None: self.compilingFunction(inputData)
-            # reconstructedData dimension: batchSize, numOutputSignals, sequenceLength
+            # Store the layer data if needed.
+            if self.compilingFunction is not None:
+                with torch.no_grad():
+                    self.compilingFunction(self.idwt((lowFrequency, highFrequencies)))
+
+        # Perform wavelet reconstruction.
+        inputData = self.idwt((lowFrequency, highFrequencies))
+        # reconstructedData dimension: batchSize, numOutputSignals, sequenceLength
 
         # Add a bias term if needed.
         if self.addBiasTerm: inputData = inputData + self.operatorBiases

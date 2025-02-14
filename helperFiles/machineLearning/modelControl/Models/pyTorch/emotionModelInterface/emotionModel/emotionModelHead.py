@@ -262,11 +262,11 @@ class emotionModelHead(nn.Module):
 
         return activationCurvePath, moduleNames
 
-    def cullAngles(self, applyMinThresholding, doubleThresholding):
+    def cullAngles(self, applyMinThresholding, applyMaxThresholding):
         for name, module in self.named_modules():
             if 'shared' in name.lower(): continue
             if isinstance(module, reversibleConvolutionLayer):
-                module.angularThresholding(applyMinThresholding=applyMinThresholding, doubleThresholding=doubleThresholding)
+                module.angularThresholding(applyMinThresholding=applyMinThresholding, applyMaxThresholding=applyMaxThresholding)
 
     def getActivationParamsFullPassPath(self):
         activationParamsPath, moduleNames = [], []
