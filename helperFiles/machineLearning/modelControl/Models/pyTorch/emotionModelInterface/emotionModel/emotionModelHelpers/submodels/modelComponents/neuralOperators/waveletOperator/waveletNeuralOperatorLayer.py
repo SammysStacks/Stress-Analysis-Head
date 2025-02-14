@@ -35,9 +35,8 @@ class waveletNeuralOperatorLayer(waveletNeuralOperatorWeights):
 
         # For each layer in the neural operator.
         for layerInd in range(self.numLayers):
-            if reversibleInterface.forwardDirection: layerInd = self.numLayers - layerInd - 1
-
             # Encode each frequency decomposition, separating high and low frequencies.
+            if reversibleInterface.forwardDirection: layerInd = self.numLayers - layerInd - 1
             lowFrequency, highFrequencies = self.independentFrequencyAnalysis(layerInd, lowFrequency, highFrequencies, residualLowFrequencyTerms, residualHighFrequencyTerms)
             # highFrequencies[highFrequencyInd] dimension: batchSize, numOutputSignals, highFrequenciesShapes[decompositionLayer]
             # lowFrequency dimension: batchSize, numOutputSignals, lowFrequencyShape
