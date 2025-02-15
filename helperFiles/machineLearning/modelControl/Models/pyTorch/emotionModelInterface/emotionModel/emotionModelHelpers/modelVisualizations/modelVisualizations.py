@@ -45,7 +45,7 @@ class modelVisualizations(globalPlottingProtocols):
 
         # Prepare the model/data for evaluation.
         self.setModelSavingFolder(baseSavingFolder=f"trainingFigures/{submodel}/{trainingDate}/", stringID=f"modelComparison/", epoch=-1)  # Label the correct folder to save this analysis.
-        epoch = allModelPipelines[0].model.getTrainingEpoch(submodel)  # Get the current epoch for the model.
+        epoch = allModelPipelines[0].getTrainingEpoch(submodel)  # Get the current epoch for the model.
 
         with torch.no_grad():
             if self.accelerator.is_local_main_process:
