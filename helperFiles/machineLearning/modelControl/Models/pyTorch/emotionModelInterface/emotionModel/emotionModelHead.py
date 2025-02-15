@@ -283,10 +283,9 @@ class emotionModelHead(nn.Module):
         activationParamsPath = np.asarray(activationParamsPath)
         return activationParamsPath, moduleNames
 
-    def getFreeParamsFullPassPath(self):
+    def getFreeParamsFullPassPath(self, epoch):
         numFreeParamsPath, moduleNames, maxFreeParamsPath = [], [], []
-        numEpochs = self.getTrainingEpoch(submodel=modelConstants.signalEncoderModel) + 1
-        applyMaxThresholding = 250 < numEpochs
+        applyMaxThresholding = 250 < epoch
 
         for name, module in self.named_modules():
             if isinstance(module, reversibleConvolutionLayer):
