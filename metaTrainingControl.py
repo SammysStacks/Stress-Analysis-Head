@@ -39,7 +39,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-02-14"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2025-02-14 2"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Architecture Parameters ----------------------- #
@@ -137,8 +137,8 @@ if __name__ == "__main__":
 
         # Get the saving information.
         saveFullModel, showAllPlots = modelParameters.getEpochParameters(epoch, numEpoch_toSaveFull, numEpoch_toPlot)
+        applyMaxThresholding = (epoch % 10 == 0) or 200 < epoch
         applyMinThresholding = (epoch % numEpoch_toCull == 0)
-        applyMaxThresholding = (epoch % 10 == 0)
 
         # Train the model for a single epoch.
         trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders)
