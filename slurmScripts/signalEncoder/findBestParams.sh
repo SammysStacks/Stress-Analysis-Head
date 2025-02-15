@@ -14,13 +14,7 @@ wds_profileGen=('0')  # 1e-5 == x <= 1e-4
 # Learning parameters.
 lrs_profile=('0.067')  # 0.005 <= x <= 0.05
 lrs_reversible=('3e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
-lrs_profileGen=('1e-4') # # 5e-5 <= x == 1e-4; 
-
-# Known interesting parameters: 112
-angularThresholdMins=(0 1 2 3 4 5 6 7 8)  # 9; 2 <= x <= 5
-angularThresholdMaxs=(10 20 30 45)  # 4; 20 <= x == (30, 45)
-percentParamsKeepings=(0 1 2 3 4 5)
-cullingEpochs=(20)  # 10
+lrs_profileGen=('1e-4') # # 5e-5 <= x == 1e-4;
 
 # Known interesting parameters: 63
 numSharedEncoderLayers_arr=(0 1 2 3 4 5 6 7 8 9 10 11 12)  # 9
@@ -127,7 +121,7 @@ do
                                                 continue
                                             fi
                                         
-                                            if (( $(echo "$angularThresholdMax <= $angularThresholdMin" | bc -l) )); then
+                                            if (( $(echo "$maxAngularThreshold <= $minAngularThreshold" | bc -l) )); then
                                                 echo "Angular threshold max is less than or equal to angular threshold min."
                                                 continue
                                             fi
