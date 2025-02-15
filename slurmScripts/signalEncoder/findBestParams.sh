@@ -51,7 +51,7 @@ waveletTypes_arr=(
 )
 
 # Angular reference states.
-minNumParameters=(600 800 1000)
+minNumParameters_arr=(600 800 1000)
 finalMinAngularThresholds=(3 4)  # [0, 5]; Best: [0, 3]
 percentParamsKeepings=(8 10)  # [5, 10]; Best: 8?
 cullingEpochs=(10 20 30)
