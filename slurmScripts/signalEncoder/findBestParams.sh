@@ -137,7 +137,7 @@ do
                                             else
                                               echo "No known device listed: $1"
                                             fi
-					  done
+                                          done
                                         done
                                       done
                                     done
@@ -148,8 +148,8 @@ do
                           done
                         done
                       done
-                    done
-		  done
+		            done
+		          done
                 done
               done
             done
