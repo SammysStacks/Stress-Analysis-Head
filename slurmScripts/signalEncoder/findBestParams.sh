@@ -57,9 +57,9 @@ waveletTypes_arr=(
 )
 
 # Trinary reference states.
-angularThresholdMins=('0.01' '0.1' '0.25')  # [0, 5]; Best: [0, 3]
+angularThresholdMins=('0.05' '0.1' '0.2')  # [0, 5]; Best: [0, 3]
 angularThresholdMaxs=(45)
-percentParamsKeepings=(8)  # [5, 10]; Best: 8?
+percentParamsKeepings=(6 8)  # [5, 10]; Best: 8?
 cullingEpochs=(1)
 
 # Binary reference states.
@@ -68,10 +68,10 @@ numSharedEncoderLayers_arr=(6 8)  # [4, 10]; Best: 6 and 8
 
 # Binary reference states.
 encodedDimensions_arr=(256)
-profileParams=(64 256)
+profileParams=(32 64 128 256)
 
 # Reference states.
-waveletTypes_arr=('bior3.1')
+waveletTypes_arr=('bior3.1' 'bior3.7')
 numProfileShots_arr=(32)
 
 for cullingEpoch in "${cullingEpochs[@]}"
