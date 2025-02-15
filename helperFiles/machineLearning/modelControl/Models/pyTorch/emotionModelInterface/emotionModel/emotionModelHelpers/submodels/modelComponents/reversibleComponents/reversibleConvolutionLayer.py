@@ -145,8 +145,8 @@ class reversibleConvolutionLayer(reversibleInterface):
 
         return allGivensAngles, allScaleFactors
 
-    def getNumFreeParams(self):
-        minAngularThreshold = modelConstants.userInputParams['minAngularThreshold'] * torch.pi / 180  # Convert to radians
+    def getNumFreeParams(self, applyMaxThresholding):
+        minAngularThreshold = modelConstants.userInputParams['finalMinAngularThreshold' if applyMaxThresholding else 'minAngularThreshold'] * torch.pi / 180  # Convert to radians
         allNumFreeParams = []
 
         with torch.no_grad():

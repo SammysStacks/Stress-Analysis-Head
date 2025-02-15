@@ -16,7 +16,6 @@ class nnTherapyProtocol(generalTherapyProtocol):
         super().__init__(temperatureBounds, simulationParameters)
         # General model parameters.
         self.onlineTraining = onlineTraining  # Whether to train the model live.
-        self.modelName = modelConstants.modelName  # The model's unique identifier.
 
         # Model parameters.
         self.optimizer = None  # The optimizer for the model.

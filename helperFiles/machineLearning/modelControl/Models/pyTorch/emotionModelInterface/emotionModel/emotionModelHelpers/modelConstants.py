@@ -25,7 +25,6 @@ class modelConstants:
 
     # Specify the models.
     signalEncoderModel = "signalEncoderModel"
-    modelName = "observationModel"
     emotionModel = "emotionModel"
 
     # Specify the subject identifiers.
