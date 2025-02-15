@@ -92,7 +92,7 @@ class modelVisualizations(globalPlottingProtocols):
         self.setModelSavingFolder(baseSavingFolder=f"trainingFigures/{submodel}/{trainingDate}/", stringID=f"{modelPipeline.model.datasetName}/", epoch=currentEpoch)
         modelPipeline.setupTrainingFlags(modelPipeline.model, trainingFlag=False)  # Set all models into evaluation mode.
         model = modelPipeline.model
-        numPlottingPoints = 4
+        numPlottingPoints = 3
 
         # Load in all the data and labels for final predictions and calculate the activity and emotion class weights.
         allLabels, allSignalData, allSignalIdentifiers, allMetadata, allTrainingLabelMask, allTrainingSignalMask, allTestingLabelMask, allTestingSignalMask = modelPipeline.prepareInformation(lossDataLoader)
@@ -104,8 +104,6 @@ class modelVisualizations(globalPlottingProtocols):
         # allSignalIdentifiers: batchSize, numSignals, numSignalIdentifiers
         # allLabels: batchSize, numEmotions + 1 (activity) + numSignals
         # allMetadata: batchSize, numMetadata
-
-        import time
 
         with torch.no_grad():
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.

@@ -267,7 +267,7 @@ class generalVisualizations(globalPlottingProtocols):
                 ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5, alpha=0.8)
 
             # Label the plot.
-            fig.suptitle(f"{plotTitle}: {paramName}\n")
+            fig.suptitle(f"{plotTitle}: {paramName}")
             fig.tight_layout()
 
             # Save the figure if desired.
@@ -288,7 +288,7 @@ class generalVisualizations(globalPlottingProtocols):
             # Create a figure and axes array
             fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=True, sharey='col' if fullView else False)
             numProcessing, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
-            paramName = paramNames[paramInd]
+            paramName = paramNames[paramInd].lower()
 
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
@@ -339,7 +339,7 @@ class generalVisualizations(globalPlottingProtocols):
                     if fullView: ax.hlines(y=maxFreeParams, xmin=0, xmax=numEpochs + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
 
             # Label the plot.
-            fig.suptitle(f"{plotTitle} {paramName}\n")
+            fig.suptitle(f"{plotTitle}: {paramName}")
             fig.tight_layout()
 
             # Save the figure if desired.
@@ -377,7 +377,7 @@ class generalVisualizations(globalPlottingProtocols):
                 ax.set_xlabel("Training epoch")
                 ax.set_title(moduleName)
                 ax.set_xlim((0, numEpochs))
-                ax.set_ylim((0.85, 1.15))
+                ax.set_ylim((0.89, 1.11))
 
                 for modelInd in range(numModels):
                     if "shared" in moduleName and modelInd != 0: continue
@@ -405,7 +405,7 @@ class generalVisualizations(globalPlottingProtocols):
                 ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5, alpha=0.8)
 
             # Label the plot.
-            fig.suptitle(f"{plotTitle} {paramName}\n")
+            fig.suptitle(f"{plotTitle}: {paramName}")
             fig.tight_layout()
 
             # Save the figure if desired.
@@ -426,7 +426,7 @@ class generalVisualizations(globalPlottingProtocols):
             numProcessing, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
             paramName = paramNames[paramInd]
 
-            fig.suptitle(f"{plotTitle}: {paramName}\n")
+            fig.suptitle(f"{plotTitle}: {paramName}")
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
 

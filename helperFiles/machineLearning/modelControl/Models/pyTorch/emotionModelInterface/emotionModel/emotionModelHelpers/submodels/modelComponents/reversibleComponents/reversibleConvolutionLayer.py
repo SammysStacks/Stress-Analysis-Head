@@ -1,13 +1,11 @@
-import math
-import os
-import random
-
+from matplotlib import pyplot as plt
+import torch.nn as nn
 import numpy as np
+import torch.fft
 import scipy
 import torch
-import torch.fft
-import torch.nn as nn
-from matplotlib import pyplot as plt
+import math
+import os
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
@@ -148,12 +146,12 @@ class reversibleConvolutionLayer(reversibleInterface):
         return allGivensAngles, allScaleFactors
 
     def getNumFreeParams(self):
-        angularThresholdMin = modelConstants.userInputParams['angularThresholdMin'] * torch.pi / 180  # Convert to radians
+        minAngularThreshold = modelConstants.userInputParams['minAngularThreshold'] * torch.pi / 180  # Convert to radians
         allNumFreeParams = []
 
         with torch.no_grad():
             for layerInd in range(self.numLayers):
-                angularMask = angularThresholdMin <= self.getGivensAngles(layerInd).abs()
+                angularMask = minAngularThreshold <= self.getGivensAngles(layerInd).abs()
                 numSignalParameters = angularMask.sum(dim=-1, keepdim=True)  # Dim: numSignals, 1
                 allNumFreeParams.append(numSignalParameters.detach().cpu().numpy())
                 # allNumFreeParams: numLayers, numSignals, numFreeParams=1
@@ -176,49 +174,54 @@ class reversibleConvolutionLayer(reversibleInterface):
                 givensAnglesMean = givensAngles.mean(dim=-1).cpu().detach().numpy()  # Dim: numSignals
                 givensAnglesVar = givensAngles.var(dim=-1).cpu().detach().numpy()  # Dim: numSignals
                 givensAnglesRange = givensAnglesRange.cpu().detach().numpy()
-                givensAnglesMedian = torch.median(givensAngles, dim=-1).values.cpu().detach().numpy()  # Dim: numSignals
 
                 # Calculate the mean, variance, and range of the positive Givens angles.
                 givensAnglesMeanABS = givensAnglesABS.mean(dim=-1).cpu().detach().numpy()  # Dim: numSignals
                 givensAnglesVarABS = givensAnglesABS.var(dim=-1).cpu().detach().numpy()  # Dim: numSignals
 
                 # Calculate the mean, variance, and range of the scaling factors.
-                scalingFactorsMean = scalingFactors.mean(dim=0).cpu().detach().numpy()  # Dim: numSignals=1
                 scalingFactorsVar = scalingFactors.var(dim=0).cpu().detach().numpy()  # Dim: numSignals
 
                 # Combine the features. Return dimension: numFeatures, numValues
-                allGivensAnglesFeatures.append([givensAnglesMean, givensAnglesVar, givensAnglesRange, givensAnglesMedian, givensAnglesMeanABS, givensAnglesVarABS, scalingFactorsMean, scalingFactorsVar])
+                allGivensAnglesFeatures.append([givensAnglesMean, givensAnglesVar, givensAnglesRange, givensAnglesMeanABS, givensAnglesVarABS, scalingFactorsVar])
 
         return givensAnglesFeatureNames, allGivensAnglesFeatures
 
     @staticmethod
     def getFeatureNames():
-        return ["Angular mean", "Angular variance", "Angular range", "Angular median", "Angular abs(mean)", "Angular abs(variance)", "Scalar mean", "Scalar variance"]
+        return ["Angular mean", "Angular variance", "Angular range", "Angular abs(mean)", "Angular abs(variance)", "Scalar variance"]
 
-    def angularThresholding(self, applyMinThresholding, applyMaxThresholding):
+    def angularThresholding(self, applyMaxThresholding):
         # Get the angular thresholds.
-        angularThresholdMin = (4 if applyMaxThresholding else modelConstants.userInputParams['angularThresholdMin']) * torch.pi / 180  # Convert to radians
-        angularThresholdMax = modelConstants.userInputParams['angularThresholdMax'] * torch.pi / 180  # Convert to radians
+        minAngularThreshold = modelConstants.userInputParams['finalMinAngularThreshold' if applyMaxThresholding else 'minAngularThreshold'] * torch.pi / 180  # Convert to radians
+        maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold'] * torch.pi / 180  # Convert to radians
 
         with torch.no_grad():
             for layerInd in range(self.numLayers):
                 givensAngles = self.getGivensAngles(layerInd)
 
-                # Apply the thresholding.
-                if applyMinThresholding and 64 < self.sequenceLength: self.minThresholding(layerInd, applyMaxThresholding)
-                if applyMinThresholding: self.givensRotationParams[layerInd][givensAngles.abs() < angularThresholdMin] = 0
-                self.givensRotationParams[layerInd][givensAngles <= -angularThresholdMax] = -angularThresholdMax
-                self.givensRotationParams[layerInd][angularThresholdMax <= givensAngles] = angularThresholdMax
+                # Apply the maximum thresholding.
+                self.givensRotationParams[layerInd][givensAngles <= -maxAngularThreshold] = -maxAngularThreshold
+                self.givensRotationParams[layerInd][maxAngularThreshold <= givensAngles] = maxAngularThreshold
 
-    def minThresholding(self, layerInd, applyMaxThresholding):
+                # Apply the minimum thresholding.
+                self.givensRotationParams[layerInd][givensAngles.abs() < minAngularThreshold] = 0
+                if 64 < self.sequenceLength: self.percentParamThresholding(layerInd, applyMaxThresholding)
+
+    def percentParamThresholding(self, layerInd, applyMaxThresholding):
         with torch.no_grad():
             # Sort each row by absolute value
             givensAngles = self.getGivensAngles(layerInd).clone().abs()  # Dim: numSignals, numParams
             sorted_values, sorted_indices = torch.sort(givensAngles, dim=-1)
             # sorted_values -> [0, 1, 2, 3, ...]
 
-            # Find the threshold value per row
-            percentParamsKeeping = float(200/self.numParams if applyMaxThresholding else modelConstants.userInputParams['percentParamsKeeping'])
+            # Get the thresholding information.
+            percentParamsKeeping = float(modelConstants.userInputParams['percentParamsKeeping'])
+            if applyMaxThresholding:
+                maxPercentParamsKeeping = int(modelConstants.userInputParams['minNumParameters']) / self.numParams
+                percentParamsKeeping = min(percentParamsKeeping, maxPercentParamsKeeping)
+
+            # Find the threshold angles.
             numAnglesThrowingAway = int((100 - percentParamsKeeping) * self.numParams / 100) - 1
             minAngleValues = sorted_values[:, numAnglesThrowingAway].unsqueeze(-1)  # Shape (numSignals, 1)
 

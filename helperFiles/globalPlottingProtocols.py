@@ -53,7 +53,7 @@ class globalPlottingProtocols:
         # Clear and close the figure/legend if provided
         if legend is not None: legend.remove()
         if fig: plt.close(fig)
-        else: plt.cla(); plt.clf(); plt.close('all')
+        else: plt.close('all')
 
     def displayFigure(self, saveFigureLocation, saveFigureName, baseSaveFigureName=None, fig=None, showPlot=True, clearFigure=True):
         self._createFolder(self.saveDataFolder + saveFigureLocation)
@@ -70,3 +70,4 @@ class globalPlottingProtocols:
 
         if clearFigure: self.clearFigure(fig=fig, legend=None, showPlot=showPlot)  # Clear the figure after saving
         elif showPlot: plt.show()
+        plt.close(fig)
