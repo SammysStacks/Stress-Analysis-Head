@@ -42,7 +42,7 @@ class plotting():
                 # plot histogram of feature, using only data with specific label
                 features = self.allFinalFeaturesCull[:,featureInd][self.allFinalLabelsCull == label]
                 
-                plt.hist(features, bins=min(100, len(features)), alpha=0.5, label = self.featureLabelOptions[label],  align='mid', density=True, stacked=True)
+                plt.hist(features, bins=min(100, len(features)), alpha=0.5, label = self.featureLabelOptions[label],  align='left', density=True, stacked=True)
     
             plt.legend()
             plt.ylabel(self.featureNames[featureInd])

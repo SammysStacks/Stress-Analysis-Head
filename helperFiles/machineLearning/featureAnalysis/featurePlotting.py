@@ -515,7 +515,7 @@ class featurePlotting(globalPlottingProtocols):
             for label in classDistribution.keys():
                 features = allFinalFeatures[:, featureInd][finalLabels == label]
 
-                plt.hist(features, bins=min(100, len(features)), alpha=0.5, label=label, align='mid', density=True)
+                plt.hist(features, bins=min(100, len(features)), alpha=0.5, label=label, align='left', density=True)
 
             plt.legend()
             plt.ylabel(featureNames[featureInd])

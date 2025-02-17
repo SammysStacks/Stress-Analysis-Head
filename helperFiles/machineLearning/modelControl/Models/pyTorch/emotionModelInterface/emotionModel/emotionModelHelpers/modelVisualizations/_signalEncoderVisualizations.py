@@ -312,15 +312,15 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             smallAngles = []
 
             if 'shared' in moduleName or epoch == 0:
-                histogramPlots.append(ax.hist(histograms, bins=bins, color=self.darkColors[0:numSignals], alpha=1, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='mid', cumulative=False))
+                histogramPlots.append(ax.hist(histograms, bins=bins, color=self.darkColors[0:numSignals], alpha=1, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='left', cumulative=False))
             else:
                 # Split the histograms into small and large angles
                 smallAngles = np.where(histogramsABS < minAngularThreshold, histograms, np.nan)
                 largeAngles = np.where(histogramsABS >= minAngularThreshold, histograms, np.nan)
 
                 # Plot the histograms.
-                histogramPlots.append(ax.hist(smallAngles, bins=bins, color=self.darkColors[0:numSignals], alpha=0.5, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='mid', cumulative=False))
-                histogramPlots.append(ax.hist(largeAngles, bins=bins, color=self.darkColors[0:numSignals], alpha=1, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='mid', cumulative=False))
+                histogramPlots.append(ax.hist(smallAngles, bins=bins, color=self.darkColors[0:numSignals], alpha=0.5, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='left', cumulative=False))
+                histogramPlots.append(ax.hist(largeAngles, bins=bins, color=self.darkColors[0:numSignals], alpha=1, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='left', cumulative=False))
 
             # Shade the angular thresholds
             if len(smallAngles) == 0: continue
@@ -511,8 +511,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             else: raise ValueError("Module name must contain 'specific' or 'shared'.")
 
         fig, ax = plt.subplots(figsize=(6.4, 4.8))
-        ax.hist(sharedValues, bins=10, color=self.lightColors[1], alpha=0.7, label="Shared", density=True, align= 'left')
-        ax.hist(specificValues, bins=10, color=self.lightColors[0], alpha=0.7, label="Specific", density=True, align='mid')
+        ax.hist(sharedValues, bins=10, color=self.lightColors[1], alpha=0.7, label="Shared", density=True, align='left')
+        ax.hist(specificValues, bins=10, color=self.lightColors[0], alpha=0.7, label="Specific", density=True, align='left')
 
         # Customize plot title and axes
         ax.set_title(f"{plotTitle}; Epoch {epoch}", fontsize=16)
