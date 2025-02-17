@@ -100,7 +100,6 @@ if __name__ == "__main__":
 
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
-    numEpoch_toCull = userInputParams['cullingEpoch']  # The number of epochs to cull the null weights.
 
     # Compile additional input parameters.
     userInputParams = modelParameters.getNeuralParameters(userInputParams)
@@ -141,7 +140,7 @@ if __name__ == "__main__":
 
         # Get the saving information.
         saveFullModel, showAllPlots = modelParameters.getEpochParameters(epoch, numEpoch_toSaveFull, numEpoch_toPlot)
-        applyMaxThresholding = (epoch % numEpoch_toCull == 0) or 100 < epoch
+        applyMaxThresholding = (epoch % userInputParams['cullingEpoch'] == 0) or 100 < epoch
 
         # Train the model for a single epoch.
         trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders)

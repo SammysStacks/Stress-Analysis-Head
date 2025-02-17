@@ -9,6 +9,7 @@ from shap.plots.colors._colors import lch2rgb
 
 # Visualization protocols
 from helperFiles.globalPlottingProtocols import globalPlottingProtocols
+from helperFiles.machineLearning.feedbackControl.virtualRealityControl.Vizard1 import model
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
@@ -203,7 +204,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         numProcessing, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
 
         # Get the angular thresholds.
-        minAngularThreshold = modelConstants.userInputParams['finalMinAngularThreshold' if 100 < epoch else 'minAngularThreshold']
+        applyMaxThresholding = (epoch % modelConstants.userInputParams['cullingEpoch'] == 0) or 100 < epoch
+        minAngularThreshold = modelConstants.userInputParams['finalMinAngularThreshold' if applyMaxThresholding else 'minAngularThreshold']
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
         center = (0, 0)
 
@@ -280,7 +282,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         bins = np.arange(-degrees, degrees + 1, 1)
 
         # Get the angular thresholds.
-        minAngularThreshold = modelConstants.userInputParams['finalMinAngularThreshold' if 100 < epoch else 'minAngularThreshold']
+        applyMaxThresholding = (epoch % modelConstants.userInputParams['cullingEpoch'] == 0) or 100 < epoch
+        minAngularThreshold = modelConstants.userInputParams['finalMinAngularThreshold' if applyMaxThresholding else 'minAngularThreshold']
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
         histogramPlots = []
 
@@ -359,7 +362,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         degrees = (180 if degreesFlag else math.pi) / 4
 
         # Get the angular thresholds.
-        minAngularThreshold = modelConstants.userInputParams['finalMinAngularThreshold' if 100 < epoch else 'minAngularThreshold']
+        applyMaxThresholding = (epoch % modelConstants.userInputParams['cullingEpoch'] == 0) or 100 < epoch
+        minAngularThreshold = modelConstants.userInputParams['finalMinAngularThreshold' if applyMaxThresholding else 'minAngularThreshold']
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
 
         for layerInd in range(len(givensAnglesPath)):
