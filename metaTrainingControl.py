@@ -39,7 +39,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-02-15 2"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2025-02-16"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Architecture Parameters ----------------------- #
