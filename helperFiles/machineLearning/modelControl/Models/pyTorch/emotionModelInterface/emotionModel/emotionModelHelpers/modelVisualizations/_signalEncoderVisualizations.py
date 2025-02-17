@@ -9,7 +9,6 @@ from shap.plots.colors._colors import lch2rgb
 
 # Visualization protocols
 from helperFiles.globalPlottingProtocols import globalPlottingProtocols
-from helperFiles.machineLearning.feedbackControl.virtualRealityControl.Vizard1 import model
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
