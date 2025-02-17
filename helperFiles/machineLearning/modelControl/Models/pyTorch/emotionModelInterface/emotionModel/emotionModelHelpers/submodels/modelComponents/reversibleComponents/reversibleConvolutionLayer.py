@@ -217,11 +217,11 @@ class reversibleConvolutionLayer(reversibleInterface):
                 xyInd = angularLocationsInd - 2
 
                 # Update the four angles in the 4D sub-rotation matrix: [X, Y, Z, W]
-                angularUpdateValue = self.givensRotationParams[layerInd][angularLocationsInd]*self.updatePercent
-                self.givensRotationParams[layerInd][angularLocationsInd] -= angularUpdateValue  # XW
-                self.givensRotationParams[layerInd][xyInd] -= angularUpdateValue*self.alpha  # XY
-                self.givensRotationParams[layerInd][yzInd] += angularUpdateValue*self.beta  # YZ
-                self.givensRotationParams[layerInd][zwInd] -= angularUpdateValue*self.alpha  # ZW
+                angularUpdateValue = self.givensRotationParams[layerInd][:, angularLocationsInd]*self.updatePercent
+                self.givensRotationParams[layerInd][:, angularLocationsInd] -= angularUpdateValue  # XW
+                self.givensRotationParams[layerInd][:, xyInd] -= angularUpdateValue*self.alpha  # XY
+                self.givensRotationParams[layerInd][:, yzInd] += angularUpdateValue*self.beta  # YZ
+                self.givensRotationParams[layerInd][:, zwInd] -= angularUpdateValue*self.alpha  # ZW
 
     def angularThresholding(self, applyMaxThresholding):
         # Get the angular thresholds.
