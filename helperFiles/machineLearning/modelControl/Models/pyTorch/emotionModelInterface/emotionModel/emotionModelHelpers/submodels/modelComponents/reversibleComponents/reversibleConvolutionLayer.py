@@ -35,7 +35,12 @@ class reversibleConvolutionLayer(reversibleInterface):
         angleMask = angleMask[angleMask != 0].flatten()
         angleMask[angleMask == 1] = 0
 
+        # Define angular update parameters.
+        self.alpha, self.beta = 1/2, 1/2
+        self.updatePercent = 1/100
+
         # Calculate the offsets to map positions to kernel indices
+        self.angularLocationsInds = (angleMask == 0).nonzero(as_tuple=False).T[0]
         self.rowInds, self.colInds = upperWindowMask.nonzero(as_tuple=False).T
         self.angularMaskInds = angleMask.nonzero(as_tuple=False).T[0]
 
@@ -198,17 +203,39 @@ class reversibleConvolutionLayer(reversibleInterface):
     def getFeatureNames():
         return ["Angular mean", "Angular variance", "Angular range", "Angular abs(mean)", "Angular abs(variance)", "Scalar variance"]
 
+    def applyAngularBias(self, layerInd):
+        with torch.no_grad():
+            # Apply pressure to the angular parameters.
+            for angularLocationsInd in self.angularLocationsInds:
+                i, j = self.rowInds[angularLocationsInd], self.colInds[angularLocationsInd]
+                if j - i == 1: continue  # Skip the first upper diagonal elements
+
+                nextRowLength = self.sequenceLength - i - 2
+                # Get the four sub-rotation indices: [X, Y, Z, W]
+                zwInd = angularLocationsInd + 2 * nextRowLength - 1
+                yzInd = angularLocationsInd + nextRowLength - 1
+                xyInd = angularLocationsInd - 2
+
+                # Update the four angles in the 4D sub-rotation matrix: [X, Y, Z, W]
+                angularUpdateValue = self.givensRotationParams[layerInd][angularLocationsInd]*self.updatePercent
+                self.givensRotationParams[layerInd][angularLocationsInd] -= angularUpdateValue  # XW
+                self.givensRotationParams[layerInd][xyInd] -= angularUpdateValue*self.alpha  # XY
+                self.givensRotationParams[layerInd][yzInd] += angularUpdateValue*self.beta  # YZ
+                self.givensRotationParams[layerInd][zwInd] -= angularUpdateValue*self.alpha  # ZW
+
     def angularThresholding(self, applyMaxThresholding):
         # Get the angular thresholds.
         minAngularThreshold = modelConstants.userInputParams['finalMinAngularThreshold' if applyMaxThresholding else 'minAngularThreshold'] * torch.pi / 180  # Convert to radians
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold'] * torch.pi / 180  # Convert to radians
+        if 64 < self.sequenceLength: minAngularThreshold = minAngularThreshold*2
 
         with torch.no_grad():
             for layerInd in range(self.numLayers):
                 givensAngles = self.getGivensAngles(layerInd)
 
-                # Apply checkerboard thresholding.
-                self.givensRotationParams[layerInd][:, self.angularMaskInds] = 0
+                # Observational learning.
+                self.applyAngularBias(layerInd)  # Inject bias towards banded structure.
+                self.givensRotationParams[layerInd][:, self.angularMaskInds] = 0  # Apply checkerboard thresholding.
 
                 # Apply the maximum thresholding.
                 self.givensRotationParams[layerInd][givensAngles <= -maxAngularThreshold] = -maxAngularThreshold
@@ -227,9 +254,8 @@ class reversibleConvolutionLayer(reversibleInterface):
 
             # Get the thresholding information.
             percentParamsKeeping = float(modelConstants.userInputParams['percentParamsKeeping'])
-            # if applyMaxThresholding:
-            #     maxPercentParamsKeeping = int(modelConstants.userInputParams['minNumParameters']) / self.numParams
-            #     percentParamsKeeping = min(percentParamsKeeping, maxPercentParamsKeeping)
+            if applyMaxThresholding: percentParamsKeeping = percentParamsKeeping / 2
+            percentParamsKeeping = max(percentParamsKeeping, 500 / self.numParams)
 
             # Find the threshold angles.
             numAnglesThrowingAway = int((100 - percentParamsKeeping) * self.numParams / 100) - 1
@@ -275,7 +301,7 @@ if __name__ == "__main__":
         # for _layerInd, sequenceLength2 in [(1, 32), (2, 32), (3, 32), (5, 32), (5, 32), (10, 32)]:
         # for _layerInd, sequenceLength2 in [(1, 64), (2, 64), (3, 64), (5, 64), (5, 64), (10, 64)]:
         # for _layerInd, sequenceLength2 in [(1, 128), (2, 128), (3, 128), (5, 128), (5, 128), (10, 128)]:
-        for _layerInd, sequenceLength2 in [(1, 8)]:
+        for _layerInd, sequenceLength2 in [(1, 10)]:
             # General parameters.
             _batchSize, _numSignals, _sequenceLength = 128, 128, sequenceLength2
             _activationMethod = 'reversibleLinearSoftSign'  # reversibleLinearSoftSign

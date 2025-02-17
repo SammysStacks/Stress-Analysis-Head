@@ -66,12 +66,11 @@ if __name__ == "__main__":
     parser.add_argument('--numProfileShots', type=int, default=24, help='The epochs for profile training: [16, 32]')
 
     # Add arguments for observational learning.
-    parser.add_argument('--minNumParameters', type=int, default=1000, help='The minimum number of parameters in any transformation.')
     parser.add_argument('--finalMinAngularThreshold', type=float, default=1, help='The final min rotational threshold in degrees.')
-    parser.add_argument('--percentParamsKeeping', type=int, default=10, help='The percentage of parameters to keep in the model.')
+    parser.add_argument('--percentParamsKeeping', type=int, default=6, help='The percentage of parameters to keep in the model.')
     parser.add_argument('--minAngularThreshold', type=float, default=0.1, help='The smaller rotational threshold in degrees.')
     parser.add_argument('--maxAngularThreshold', type=float, default=45, help='The larger rotational threshold in degrees.')
-    parser.add_argument('--cullingEpoch', type=int, default=5, help='The number of epochs before culling large weights.')
+    parser.add_argument('--cullingEpoch', type=int, default=10, help='The number of epochs before culling large weights.')
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions).')
