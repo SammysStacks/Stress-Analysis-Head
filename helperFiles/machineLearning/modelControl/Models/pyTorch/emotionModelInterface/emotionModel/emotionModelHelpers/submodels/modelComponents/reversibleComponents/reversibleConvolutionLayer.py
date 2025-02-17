@@ -25,11 +25,19 @@ class reversibleConvolutionLayer(reversibleInterface):
         self.optimalForwardFirst = False  # Whether to apply the forward pass first.
 
         # The restricted window for the neural weights.
-        upperWindowMask = torch.ones(self.sequenceLength, self.sequenceLength, dtype=torch.float64)
+        upperWindowMask = torch.ones(self.sequenceLength, self.sequenceLength)
         upperWindowMask = torch.triu(upperWindowMask, diagonal=1)
+
+        # Create a mask for the angles.
+        angleMask = torch.ones(self.sequenceLength, self.sequenceLength, dtype=torch.int32)
+        angleMask[::2, ::2] = -1; angleMask[1::2, 1::2] = -1
+        angleMask = torch.triu(angleMask, diagonal=1)
+        angleMask = angleMask[angleMask != 0].flatten()
+        angleMask[angleMask == 1] = 0
 
         # Calculate the offsets to map positions to kernel indices
         self.rowInds, self.colInds = upperWindowMask.nonzero(as_tuple=False).T
+        self.angularMaskInds = angleMask.nonzero(as_tuple=False).T[0]
 
         # Initialize the neural layers.
         self.activationFunction = nn.ModuleList()
@@ -99,7 +107,6 @@ class reversibleConvolutionLayer(reversibleInterface):
         entriesA = self.getInfinitesimalAnglesA(layerInd)
         A[:, self.rowInds, self.colInds] = -entriesA
         A[:, self.colInds, self.rowInds] = entriesA
-        # if layerInd == 1: print(entriesA[0][0].item() * 180 / 3.14159)
 
         return A
 
@@ -200,6 +207,9 @@ class reversibleConvolutionLayer(reversibleInterface):
             for layerInd in range(self.numLayers):
                 givensAngles = self.getGivensAngles(layerInd)
 
+                # Apply checkerboard thresholding.
+                self.givensRotationParams[layerInd][:, self.angularMaskInds] = 0
+
                 # Apply the maximum thresholding.
                 self.givensRotationParams[layerInd][givensAngles <= -maxAngularThreshold] = -maxAngularThreshold
                 self.givensRotationParams[layerInd][maxAngularThreshold <= givensAngles] = maxAngularThreshold
@@ -217,9 +227,9 @@ class reversibleConvolutionLayer(reversibleInterface):
 
             # Get the thresholding information.
             percentParamsKeeping = float(modelConstants.userInputParams['percentParamsKeeping'])
-            if applyMaxThresholding:
-                maxPercentParamsKeeping = int(modelConstants.userInputParams['minNumParameters']) / self.numParams
-                percentParamsKeeping = min(percentParamsKeeping, maxPercentParamsKeeping)
+            # if applyMaxThresholding:
+            #     maxPercentParamsKeeping = int(modelConstants.userInputParams['minNumParameters']) / self.numParams
+            #     percentParamsKeeping = min(percentParamsKeeping, maxPercentParamsKeeping)
 
             # Find the threshold angles.
             numAnglesThrowingAway = int((100 - percentParamsKeeping) * self.numParams / 100) - 1
@@ -265,7 +275,7 @@ if __name__ == "__main__":
         # for _layerInd, sequenceLength2 in [(1, 32), (2, 32), (3, 32), (5, 32), (5, 32), (10, 32)]:
         # for _layerInd, sequenceLength2 in [(1, 64), (2, 64), (3, 64), (5, 64), (5, 64), (10, 64)]:
         # for _layerInd, sequenceLength2 in [(1, 128), (2, 128), (3, 128), (5, 128), (5, 128), (10, 128)]:
-        for _layerInd, sequenceLength2 in [(1, 256)]:
+        for _layerInd, sequenceLength2 in [(1, 8)]:
             # General parameters.
             _batchSize, _numSignals, _sequenceLength = 128, 128, sequenceLength2
             _activationMethod = 'reversibleLinearSoftSign'  # reversibleLinearSoftSign

@@ -14,7 +14,7 @@ from ..submodels.modelComponents.reversibleComponents.reversibleConvolutionLayer
 class modelVisualizations(globalPlottingProtocols):
 
     def __init__(self, accelerator, datasetName):
-        super(modelVisualizations, self).__init__()
+        super(modelVisualizations, self).__init__(interactivePlots=False)
         self.accelerator = accelerator
         self.datasetName = datasetName
         plt.ioff()  # Turn off interactive mode

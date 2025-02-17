@@ -7,12 +7,12 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class globalPlottingProtocols:
 
-    def __init__(self):
+    def __init__(self, interactivePlots=True):
         # Setup matplotlib
         self.hpcFlag = 'HPC' in modelConstants.userInputParams['deviceListed']
         self.baseFolderName = "_basePlots/"
+        if interactivePlots: plt.ion()
         plt.rcdefaults()
-        plt.ion()
 
         # Specify the color order.
         self.lightColors = ["#F17FB1", "#5DCBF2", "#B497C9", "#90D6AD", "#FFC162", '#6f4a1f', "#231F20"]  # Red, Blue, Purple, Green, Orange, Brown, Grey

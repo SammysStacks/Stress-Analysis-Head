@@ -17,7 +17,7 @@ from ...globalPlottingProtocols import globalPlottingProtocols
 class featurePlotting(globalPlottingProtocols):
 
     def __init__(self, saveDataFolder, overwrite):
-        super().__init__()
+        super().__init__(interactivePlots=True)
         # Save Information
         self.overwrite = overwrite
         self.saveDataFolder = saveDataFolder

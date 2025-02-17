@@ -16,7 +16,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 class signalEncoderVisualizations(globalPlottingProtocols):
 
     def __init__(self, baseSavingFolder, stringID, datasetName):
-        super(signalEncoderVisualizations, self).__init__()
+        super(signalEncoderVisualizations, self).__init__(interactivePlots=False)
         self.setSavingFolder(baseSavingFolder, stringID, datasetName)
 
         # Create custom colormap (as in your original code)
@@ -310,15 +310,15 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             smallAngles = []
 
             if 'shared' in moduleName or epoch == 0:
-                histogramPlots.append(ax.hist(histograms, bins=bins, color=self.darkColors[0:numSignals], alpha=1, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='left', cumulative=False))
+                histogramPlots.append(ax.hist(histograms, bins=bins, color=self.darkColors[0:numSignals], alpha=1, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='mid', cumulative=False))
             else:
                 # Split the histograms into small and large angles
                 smallAngles = np.where(histogramsABS < minAngularThreshold, histograms, np.nan)
                 largeAngles = np.where(histogramsABS >= minAngularThreshold, histograms, np.nan)
 
                 # Plot the histograms.
-                histogramPlots.append(ax.hist(smallAngles, bins=bins, color=self.darkColors[0:numSignals], alpha=0.5, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='left', cumulative=False))
-                histogramPlots.append(ax.hist(largeAngles, bins=bins, color=self.darkColors[0:numSignals], alpha=1, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='left', cumulative=False))
+                histogramPlots.append(ax.hist(smallAngles, bins=bins, color=self.darkColors[0:numSignals], alpha=0.5, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='mid', cumulative=False))
+                histogramPlots.append(ax.hist(largeAngles, bins=bins, color=self.darkColors[0:numSignals], alpha=1, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='mid', cumulative=False))
 
             # Shade the angular thresholds
             if len(smallAngles) == 0: continue
@@ -383,7 +383,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
             # Get the angles for the current layer
             lines = scaleFactor * givensAnglesPath[layerInd][signalInd:signalInd + len(self.darkColors) - 1]  # Dimensions: numSignals, numParams
-            for lineInd in range(len(lines)): ax.plot(sorted(lines[lineInd], reverse=True), 'o', color=self.darkColors[lineInd], alpha=0.75, markersize=2, linewidth=1)
+            # for lineInd in range(len(lines)): ax.plot(sorted(lines[lineInd], reverse=True), 'o', color=self.darkColors[lineInd], alpha=0.75, markersize=2, linewidth=1)
+            for lineInd in range(len(lines)): ax.plot(lines[lineInd], 'o', color=self.darkColors[lineInd], alpha=0.75, markersize=2, linewidth=1)
             # Customize subplot title and axes
 
             # Shade the angular thresholds
@@ -396,7 +397,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Adjust layout to prevent overlapping titles/labels
         fig.suptitle(f"{plotTitle}; Epoch {epoch}", fontsize=24)
         fig.supylabel(f"Angle ({units})", fontsize=20)
-        fig.supxlabel("Sorted parameter index", fontsize=20)
+        # fig.supxlabel("Sorted parameter index", fontsize=20)
+        fig.supxlabel("Parameter index", fontsize=20)
         fig.set_constrained_layout(True)
 
         # Save the plot
@@ -507,7 +509,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         fig, ax = plt.subplots(figsize=(6.4, 4.8))
         ax.hist(sharedValues, bins=10, color=self.lightColors[1], alpha=0.7, label="Shared", density=True, align= 'left')
-        ax.hist(specificValues, bins=10, color=self.lightColors[0], alpha=0.7, label="Specific", density=True, align='left')
+        ax.hist(specificValues, bins=10, color=self.lightColors[0], alpha=0.7, label="Specific", density=True, align='mid')
 
         # Customize plot title and axes
         ax.set_title(f"{plotTitle}; Epoch {epoch}", fontsize=16)
