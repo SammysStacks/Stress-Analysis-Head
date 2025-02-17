@@ -81,25 +81,25 @@ class reversibleConvolutionLayer(reversibleInterface):
         assert numSignals == self.numSignals, f"The number of signals is not correct: {numSignals}, {self.numSignals}"
 
         # Apply the neural weights to the input data.
-        expA = self.getExpA(layerInd, inputData.device)  # = exp(A)
-        outputData = torch.einsum('bns,nsi->bni', inputData, expA)  # Rotate: exp(A) @ f(x)
+        expA = self.getExpS(layerInd, inputData.device)  # = exp(S)
+        outputData = torch.einsum('bns,nsi->bni', inputData, expA)  # Rotate: exp(S) @ f(x)
         outputData = self.applyManifoldScale(outputData)  # Scale: by jacobian
-        # The inverse would be f-1(exp(-A) @ [exp(A) @ f(x)]) = X
+        # The inverse would be f-1(exp(-A) @ [exp(S) @ f(x)]) = X
 
         return outputData
 
     # ------------------- Rotation Methods ------------------- #
 
-    def getExpA(self, layerInd, device):
+    def getExpS(self, layerInd, device):
         # Get the linear operator in the exponent.
-        A = self.getA(layerInd, device)  # numSignals, sequenceLength, sequenceLength
+        A = self.getS(layerInd, device)  # numSignals, sequenceLength, sequenceLength
 
         # Get the exponential of the linear operator.
         expA = A.matrix_exp()  # For orthogonal matrices: A.exp().inverse() = (-A).exp(); If A is Skewed Symmetric: A.exp().inverse() = A.exp().transpose()
         if self.forwardDirection: expA = expA.transpose(-2, -1)  # Take the inverse of the exponential for the forward direction.
-        return expA  # exp(A)
+        return expA  # exp(S)
 
-    def getA(self, layerInd, device):
+    def getS(self, layerInd, device):
         # Gather the corresponding kernel values for each position for a skewed symmetric matrix.
         A = torch.zeros(self.numSignals, self.sequenceLength, self.sequenceLength, device=device, dtype=torch.float64)
 
