@@ -41,7 +41,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         self.angularMaskInds = angleMask.nonzero(as_tuple=False).T[0]
 
         # Define angular update parameters.
-        self.alpha, self.beta = 1/2, 1/2
+        self.alpha, self.beta = 1/4, 1/2
         self.updatePercent = 0.01
 
         self.xwInds, self.zwInds, self.yzInds, self.xyInds = [], [], [], []
@@ -225,7 +225,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
             # Update the four angles in the 4D sub-rotation matrix: [X, Y, Z, W]
             angularUpdateValue = self.givensRotationParams[layerInd][:, self.xwInds]*self.updatePercent  # Dim: numSignals, numParams
-            angularUpdateMatrix[:, self.xwInds] += angularUpdateValue  # XW
+            angularUpdateMatrix[:, self.xwInds] -= angularUpdateValue  # XW
             angularUpdateMatrix[:, self.xyInds] += angularUpdateValue*self.alpha  # XY
             angularUpdateMatrix[:, self.yzInds] -= angularUpdateValue*self.beta  # YZ
             angularUpdateMatrix[:, self.zwInds] += angularUpdateValue*self.alpha  # ZW
