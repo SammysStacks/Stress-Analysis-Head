@@ -105,7 +105,6 @@ class trainingProtocolHelpers:
         numModels = len(allMetaModels) + len(allModels)
         t1 = time.time()
         plt.close('all')
-        hpcFlag = True
 
         def process_model(modelInd):
             """ Function to process and plot a model in parallel. """
