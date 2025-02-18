@@ -59,8 +59,8 @@ class reversibleConvolutionLayer(reversibleInterface):
         assert numSignals == self.numSignals, f"The number of signals is not correct: {numSignals}, {self.numSignals}"
 
         # Apply the neural weights to the input data.
-        expA = self.getExpA(layerInd, inputData.device)  # = exp(A)
-        outputData = torch.einsum('bns,nsi->bni', inputData, expA)  # Rotate: exp(A) @ f(x)
+        expS = self.getExpA(layerInd, inputData.device)  # = exp(A)
+        outputData = torch.einsum('bns,nsi->bni', inputData, expS)  # Rotate: exp(A) @ f(x)
         outputData = self.applyManifoldScale(outputData)  # Scale: by jacobian
         # The inverse would be f-1(exp(-A) @ [exp(A) @ f(x)]) = X
 
@@ -73,12 +73,12 @@ class reversibleConvolutionLayer(reversibleInterface):
         if self.forwardDirection: A = -A  # Ensure the neural weights are symmetric.
 
         # Get the exponential of the linear operator.
-        expA = A.matrix_exp()  # For orthogonal matrices: A.exp().inverse() = (-A).exp(); If A is Skewed Symmetric: A.exp().inverse() = A.exp().transpose()
+        expS = A.matrix_exp()  # For orthogonal matrices: A.exp().inverse() = (-A).exp(); If A is Skewed Symmetric: A.exp().inverse() = A.exp().transpose()
         # print(A[0, 0:6, 0:6])
-        # print(expA[0, 0:6, 0:6])
+        # print(expS[0, 0:6, 0:6])
         # print(torch.linalg.eigh(A)[0])
 
-        return expA  # exp(A)
+        return expS  # exp(A)
 
     def getA(self, layerInd, device):
         # Gather the corresponding kernel values for each position for a skewed symmetric matrix.

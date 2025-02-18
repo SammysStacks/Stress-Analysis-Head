@@ -100,7 +100,7 @@ class generalVisualizations(globalPlottingProtocols):
         fig.tight_layout()
 
         # Save the figure is desired.
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{emotionName} epochs{epoch}.pdf", baseSaveFigureName=None, fig=fig, clearFigure=True, showPlot=False)
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=None, baseSaveFigureName=f"{emotionName}.pdf", fig=fig, clearFigure=True, showPlot=False)
         else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
     def plotTrainingLosses(self, trainingLosses, testingLosses, lossLabels, saveFigureLocation="", plotTitle="Model Convergence Loss", logY=True):
@@ -152,7 +152,7 @@ class generalVisualizations(globalPlottingProtocols):
         ax.legend(loc="upper right", bbox_to_anchor=(1.35, 1), borderaxespad=0)
 
         # Save the figure if desired.
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{len(trainingLosses[0])}.pdf", baseSaveFigureName=None, fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=None, baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
         else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
     def plotActivationFlowCompressed(self, activationParamsPaths, moduleNames, modelLabels, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
@@ -203,7 +203,7 @@ class generalVisualizations(globalPlottingProtocols):
         fig.tight_layout()
 
         # Save the figure if desired.
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{numEpochs}.pdf", baseSaveFigureName=None, fig=fig, clearFigure=True, showPlot=False)
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=None, baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=False)
         else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
     def plotActivationFlow(self, activationParamsPaths, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
@@ -271,7 +271,7 @@ class generalVisualizations(globalPlottingProtocols):
             fig.tight_layout()
 
             # Save the figure if desired.
-            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=None, fig=fig, clearFigure=True, showPlot=False)
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=None, baseSaveFigureName=f"{plotTitle} {paramName}.pdf", fig=fig, clearFigure=True, showPlot=False)
             else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
     def plotFreeParamFlow(self, numFreeModelParams, maxFreeParamsPath, fullView, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
@@ -343,7 +343,7 @@ class generalVisualizations(globalPlottingProtocols):
             fig.tight_layout()
 
             # Save the figure if desired.
-            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=None, fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=None, baseSaveFigureName=f"{plotTitle} {paramName}.pdf", fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
             else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
     def plotScaleFactorFlow(self, scalingFactorsPaths, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
@@ -409,7 +409,7 @@ class generalVisualizations(globalPlottingProtocols):
             fig.tight_layout()
 
             # Save the figure if desired.
-            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=None, fig=fig, clearFigure=True, showPlot=False)
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=None, baseSaveFigureName=f"{plotTitle} {paramName}.pdf", fig=fig, clearFigure=True, showPlot=False)
             else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
     def plotGivensFeaturesPath(self, givensAnglesFeaturesPaths, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
@@ -476,5 +476,5 @@ class generalVisualizations(globalPlottingProtocols):
             fig.tight_layout()
 
             # Save the figure if desired.
-            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epochs{numEpochs}.pdf", baseSaveFigureName=None, fig=fig, clearFigure=True, showPlot=False)
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=None, baseSaveFigureName=f"{plotTitle} {paramName}.pdf", fig=fig, clearFigure=True, showPlot=False)
             else: self.clearFigure(fig=fig, legend=None, showPlot=True)

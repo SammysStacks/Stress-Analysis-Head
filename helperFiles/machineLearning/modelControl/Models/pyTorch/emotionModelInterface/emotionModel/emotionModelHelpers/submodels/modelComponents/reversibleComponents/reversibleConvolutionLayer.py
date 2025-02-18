@@ -35,14 +35,26 @@ class reversibleConvolutionLayer(reversibleInterface):
         angleMask = angleMask[angleMask != 0].flatten()
         angleMask[angleMask == 1] = 0
 
-        # Define angular update parameters.
-        self.alpha, self.beta = 1/2, 1/2
-        self.updatePercent = 1/100
-
         # Calculate the offsets to map positions to kernel indices
         self.angularLocationsInds = (angleMask == 0).nonzero(as_tuple=False).T[0]
         self.rowInds, self.colInds = upperWindowMask.nonzero(as_tuple=False).T
         self.angularMaskInds = angleMask.nonzero(as_tuple=False).T[0]
+
+        # Define angular update parameters.
+        self.alpha, self.beta = 1/2, 1/2
+        self.updatePercent = 0.001
+
+        self.xwInds, self.zwInds, self.yzInds, self.xyInds = [], [], [], []
+        for angularLocationsInd in self.angularLocationsInds:
+            i, j = self.rowInds[angularLocationsInd], self.colInds[angularLocationsInd]
+            if j - i == 1: continue  # Skip the first upper diagonal elements
+
+            nextRowLength = self.sequenceLength - i - 2
+            # Get the four sub-rotation indices: [X, Y, Z, W]
+            self.zwInds.append(angularLocationsInd + 2 * nextRowLength - 1)
+            self.yzInds.append(angularLocationsInd + nextRowLength - 1)
+            self.xyInds.append(angularLocationsInd - 2)
+            self.xwInds.append(angularLocationsInd)
 
         # Initialize the neural layers.
         self.activationFunction = nn.ModuleList()
@@ -54,7 +66,8 @@ class reversibleConvolutionLayer(reversibleInterface):
             # Create the neural weights.
             parameters = nn.Parameter(torch.randn(self.numSignals, self.numParams or 1, dtype=torch.float64))
             parameters = nn.init.uniform_(parameters, a=-0.1, b=0.1)  # Dim: numSignals, numParams
-
+            
+            # Store the parameters.
             self.givensRotationParams.append(parameters)
             self.activationFunction.append(activationFunctions.getActivationMethod(activationMethod))
             # givensRotationParams: numLayers, numSignals, numParams
@@ -86,8 +99,8 @@ class reversibleConvolutionLayer(reversibleInterface):
         assert numSignals == self.numSignals, f"The number of signals is not correct: {numSignals}, {self.numSignals}"
 
         # Apply the neural weights to the input data.
-        expA = self.getExpS(layerInd, inputData.device)  # = exp(S)
-        outputData = torch.einsum('bns,nsi->bni', inputData, expA)  # Rotate: exp(S) @ f(x)
+        expS = self.getExpS(layerInd, inputData.device)  # = exp(S)
+        outputData = torch.einsum('bns,nsi->bni', inputData, expS)  # Rotate: exp(S) @ f(x)
         outputData = self.applyManifoldScale(outputData)  # Scale: by jacobian
         # The inverse would be f-1(exp(-A) @ [exp(S) @ f(x)]) = X
 
@@ -97,23 +110,23 @@ class reversibleConvolutionLayer(reversibleInterface):
 
     def getExpS(self, layerInd, device):
         # Get the linear operator in the exponent.
-        A = self.getS(layerInd, device)  # numSignals, sequenceLength, sequenceLength
+        S = self.getS(layerInd, device)  # numSignals, sequenceLength, sequenceLength
 
         # Get the exponential of the linear operator.
-        expA = A.matrix_exp()  # For orthogonal matrices: A.exp().inverse() = (-A).exp(); If A is Skewed Symmetric: A.exp().inverse() = A.exp().transpose()
-        if self.forwardDirection: expA = expA.transpose(-2, -1)  # Take the inverse of the exponential for the forward direction.
-        return expA  # exp(S)
+        expS = S.matrix_exp()  # For orthogonal matrices: A.exp().inverse() = (-A).exp(); If A is Skewed Symmetric: A.exp().inverse() = A.exp().transpose()
+        if self.forwardDirection: expS = expS.transpose(-2, -1)  # Take the inverse of the exponential for the forward direction.
+        return expS  # exp(S)
 
     def getS(self, layerInd, device):
         # Gather the corresponding kernel values for each position for a skewed symmetric matrix.
-        A = torch.zeros(self.numSignals, self.sequenceLength, self.sequenceLength, device=device, dtype=torch.float64)
+        S = torch.zeros(self.numSignals, self.sequenceLength, self.sequenceLength, device=device, dtype=torch.float64)
 
         # Populate the Givens rotation angles.
         entriesA = self.getInfinitesimalAnglesA(layerInd)
-        A[:, self.rowInds, self.colInds] = -entriesA
-        A[:, self.colInds, self.rowInds] = entriesA
+        S[:, self.rowInds, self.colInds] = -entriesA
+        S[:, self.colInds, self.rowInds] = entriesA
 
-        return A
+        return S
 
     def getInfinitesimalAnglesA(self, layerInd):
         return torch.pi * torch.tanh(self.givensRotationParams[layerInd]) / 2  # [-pi/2, pi/2]
@@ -163,7 +176,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
         with torch.no_grad():
             for layerInd in range(self.numLayers):
-                angularMask = minAngularThreshold <= self.getGivensAngles(layerInd).abs()
+                angularMask = minAngularThreshold < self.getGivensAngles(layerInd).abs()
                 numSignalParameters = angularMask.sum(dim=-1, keepdim=True)  # Dim: numSignals, 1
                 allNumFreeParams.append(numSignalParameters.detach().cpu().numpy())
                 # allNumFreeParams: numLayers, numSignals, numFreeParams=1
@@ -205,23 +218,19 @@ class reversibleConvolutionLayer(reversibleInterface):
 
     def applyAngularBias(self, layerInd):
         with torch.no_grad():
-            # Apply pressure to the angular parameters.
-            for angularLocationsInd in self.angularLocationsInds:
-                i, j = self.rowInds[angularLocationsInd], self.colInds[angularLocationsInd]
-                if j - i == 1: continue  # Skip the first upper diagonal elements
+            # Create update matrix.
+            angularUpdateMatrix = torch.zeros_like(self.givensRotationParams[layerInd])
+            # angularUpdateMatrix: numSignals, numParams
 
-                nextRowLength = self.sequenceLength - i - 2
-                # Get the four sub-rotation indices: [X, Y, Z, W]
-                zwInd = angularLocationsInd + 2 * nextRowLength - 1
-                yzInd = angularLocationsInd + nextRowLength - 1
-                xyInd = angularLocationsInd - 2
+            # Update the four angles in the 4D sub-rotation matrix: [X, Y, Z, W]
+            angularUpdateValue = self.givensRotationParams[layerInd][:, self.xwInds]*self.updatePercent  # Dim: numSignals, numParams
+            angularUpdateMatrix[:, self.xwInds] += angularUpdateValue  # XW
+            angularUpdateMatrix[:, self.xyInds] += angularUpdateValue*self.alpha  # XY
+            angularUpdateMatrix[:, self.yzInds] -= angularUpdateValue*self.beta  # YZ
+            angularUpdateMatrix[:, self.zwInds] += angularUpdateValue*self.alpha  # ZW
 
-                # Update the four angles in the 4D sub-rotation matrix: [X, Y, Z, W]
-                angularUpdateValue = self.givensRotationParams[layerInd][:, angularLocationsInd]*self.updatePercent
-                self.givensRotationParams[layerInd][:, angularLocationsInd] -= angularUpdateValue  # XW
-                self.givensRotationParams[layerInd][:, xyInd] -= angularUpdateValue*self.alpha  # XY
-                self.givensRotationParams[layerInd][:, yzInd] += angularUpdateValue*self.beta  # YZ
-                self.givensRotationParams[layerInd][:, zwInd] -= angularUpdateValue*self.alpha  # ZW
+            # Apply the update.
+            self.givensRotationParams[layerInd] = self.givensRotationParams[layerInd] - angularUpdateMatrix
 
     def angularThresholding(self, applyMaxThresholding):
         # Get the angular thresholds.
@@ -233,16 +242,16 @@ class reversibleConvolutionLayer(reversibleInterface):
             for layerInd in range(self.numLayers):
                 givensAngles = self.getGivensAngles(layerInd)
 
-                # Observational learning.
-                self.applyAngularBias(layerInd)  # Inject bias towards banded structure.
+                # Removing (approximate) geometric symmetries.
                 self.givensRotationParams[layerInd][:, self.angularMaskInds] = 0  # Apply checkerboard thresholding.
+                self.applyAngularBias(layerInd)  # Inject bias towards banded structure.
 
                 # Apply the maximum thresholding.
                 self.givensRotationParams[layerInd][givensAngles <= -maxAngularThreshold] = -maxAngularThreshold
                 self.givensRotationParams[layerInd][maxAngularThreshold <= givensAngles] = maxAngularThreshold
 
                 # Apply the minimum thresholding.
-                self.givensRotationParams[layerInd][givensAngles.abs() < minAngularThreshold] = 0
+                self.givensRotationParams[layerInd][givensAngles.abs() <= minAngularThreshold] = 0
                 if 64 < self.sequenceLength: self.percentParamThresholding(layerInd, applyMaxThresholding)
 
     def percentParamThresholding(self, layerInd, applyMaxThresholding):
@@ -255,7 +264,7 @@ class reversibleConvolutionLayer(reversibleInterface):
             # Get the thresholding information.
             percentParamsKeeping = float(modelConstants.userInputParams['percentParamsKeeping'])
             if applyMaxThresholding: percentParamsKeeping = percentParamsKeeping / 2
-            percentParamsKeeping = max(percentParamsKeeping, 500 / self.numParams)
+            percentParamsKeeping = max(percentParamsKeeping, 1024 / self.numParams)
 
             # Find the threshold angles.
             numAnglesThrowingAway = int((100 - percentParamsKeeping) * self.numParams / 100) - 1

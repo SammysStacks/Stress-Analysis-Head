@@ -65,7 +65,7 @@ class globalPlottingProtocols:
             fig.savefig(base_path, transparent=True, dpi=300, format='pdf')
 
             # Copy the saved figure to the second location
-            shutil.copy(base_path, os.path.join(self.saveDataFolder, f"{saveFigureLocation}{saveFigureName.lower()}"))
+            if saveFigureName is not None: shutil.copy(base_path, os.path.join(self.saveDataFolder, f"{saveFigureLocation}{saveFigureName.lower()}"))
         else: fig.savefig(os.path.join(self.saveDataFolder, f"{saveFigureLocation}{saveFigureName[:1].upper()}{saveFigureName[1:]}"), transparent=True, dpi=300, format='pdf')
 
         if clearFigure: self.clearFigure(fig=fig, legend=None, showPlot=showPlot)  # Clear the figure after saving

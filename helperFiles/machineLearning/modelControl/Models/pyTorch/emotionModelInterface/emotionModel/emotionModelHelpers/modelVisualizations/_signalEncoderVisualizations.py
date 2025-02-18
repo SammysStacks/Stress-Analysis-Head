@@ -315,8 +315,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
                 histogramPlots.append(ax.hist(histograms, bins=bins, color=self.darkColors[0:numSignals], alpha=1, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='left', cumulative=False))
             else:
                 # Split the histograms into small and large angles
-                smallAngles = np.where(histogramsABS < minAngularThreshold, histograms, np.nan)
-                largeAngles = np.where(histogramsABS >= minAngularThreshold, histograms, np.nan)
+                smallAngles = np.where(histogramsABS <= minAngularThreshold, histograms, np.nan)
+                largeAngles = np.where(histogramsABS > minAngularThreshold, histograms, np.nan)
 
                 # Plot the histograms.
                 histogramPlots.append(ax.hist(smallAngles, bins=bins, color=self.darkColors[0:numSignals], alpha=0.5, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='left', cumulative=False))
