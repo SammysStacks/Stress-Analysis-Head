@@ -285,7 +285,7 @@ class emotionModelHead(nn.Module):
 
     def getFreeParamsFullPassPath(self, epoch):
         numFreeParamsPath, moduleNames, maxFreeParamsPath = [], [], []
-        applyMaxThresholding = (epoch % modelConstants.userInputParams['cullingEpoch'] == 0) or 100 < epoch
+        applyMaxThresholding = (epoch % modelConstants.userInputParams['cullingEpoch'] == 0) or 250 < epoch
 
         for name, module in self.named_modules():
             if isinstance(module, reversibleConvolutionLayer):

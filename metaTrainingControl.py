@@ -18,7 +18,6 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.trainingProtocolHelpers import trainingProtocolHelpers
 from helperFiles.machineLearning.modelControl.Models.pyTorch.modelMigration import modelMigration
 from helperFiles.machineLearning.dataInterface.compileModelData import compileModelData
-import gc
 
 # Configure cuDNN and PyTorch's global settings.
 torch.backends.cudnn.deterministic = False  # If True: ensures that the model will be reproducible.
@@ -39,7 +38,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-02-16"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2025-02-17"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Architecture Parameters ----------------------- #
@@ -68,9 +67,9 @@ if __name__ == "__main__":
     # Add arguments for observational learning.
     parser.add_argument('--finalMinAngularThreshold', type=float, default=1, help='The final min rotational threshold in degrees.')
     parser.add_argument('--percentParamsKeeping', type=int, default=10, help='The percentage of parameters to keep in the model.')
-    parser.add_argument('--minAngularThreshold', type=float, default=0.1, help='The smaller rotational threshold in degrees.')
+    parser.add_argument('--minAngularThreshold', type=float, default=0.05, help='The smaller rotational threshold in degrees.')
     parser.add_argument('--maxAngularThreshold', type=float, default=45, help='The larger rotational threshold in degrees.')
-    parser.add_argument('--cullingEpoch', type=int, default=5, help='The number of epochs before culling large weights.')
+    parser.add_argument('--cullingEpoch', type=int, default=10, help='The number of epochs before culling large weights.')
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions).')
@@ -140,7 +139,7 @@ if __name__ == "__main__":
 
         # Get the saving information.
         saveFullModel, showAllPlots = modelParameters.getEpochParameters(epoch, numEpoch_toSaveFull, numEpoch_toPlot)
-        applyMaxThresholding = (epoch % userInputParams['cullingEpoch'] == 0) or 100 < epoch
+        applyMaxThresholding = (epoch % userInputParams['cullingEpoch'] == 0) or 250 < epoch
 
         # Train the model for a single epoch.
         trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders)
@@ -157,7 +156,6 @@ if __name__ == "__main__":
         # Finalize the epoch parameters.
         accelerator.wait_for_everyone()  # Wait before continuing.
         endEpochTime = time.time()
-        gc.collect()
 
         print("Total epoch time:", endEpochTime - startEpochTime)
 

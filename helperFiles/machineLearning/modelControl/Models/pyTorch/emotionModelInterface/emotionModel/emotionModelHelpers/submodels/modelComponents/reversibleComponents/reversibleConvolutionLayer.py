@@ -42,7 +42,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
         # Define angular update parameters.
         self.alpha, self.beta = 1/2, 1/2
-        self.updatePercent = 0.001
+        self.updatePercent = 0.01
 
         self.xwInds, self.zwInds, self.yzInds, self.xyInds = [], [], [], []
         for angularLocationsInd in self.angularLocationsInds:
@@ -66,14 +66,15 @@ class reversibleConvolutionLayer(reversibleInterface):
             # Create the neural weights.
             parameters = nn.Parameter(torch.randn(self.numSignals, self.numParams or 1, dtype=torch.float64))
             parameters = nn.init.uniform_(parameters, a=-0.1, b=0.1)  # Dim: numSignals, numParams
-            
+            parameters[:, self.angularMaskInds].fill_(0)  # Apply checkerboard thresholding.
+
             # Store the parameters.
             self.givensRotationParams.append(parameters)
             self.activationFunction.append(activationFunctions.getActivationMethod(activationMethod))
             # givensRotationParams: numLayers, numSignals, numParams
 
             # Register a gradient hook to scale the learning rate.
-            parameters.register_hook(lambda grad: grad * 100)  # Double the gradient -> Doubles the effective LR
+            self.givensRotationParams[-1].register_hook(lambda grad: grad * 200)  # Double the gradient -> Doubles the effective LR
 
     def applySingleLayer(self, inputData, layerInd):
         # Determine the direction of the forward pass.
@@ -122,9 +123,9 @@ class reversibleConvolutionLayer(reversibleInterface):
         S = torch.zeros(self.numSignals, self.sequenceLength, self.sequenceLength, device=device, dtype=torch.float64)
 
         # Populate the Givens rotation angles.
-        entriesA = self.getInfinitesimalAnglesA(layerInd)
-        S[:, self.rowInds, self.colInds] = -entriesA
-        S[:, self.colInds, self.rowInds] = entriesA
+        entriesS = self.getInfinitesimalAnglesA(layerInd)
+        S[:, self.rowInds, self.colInds] = -entriesS
+        S[:, self.colInds, self.rowInds] = entriesS
 
         return S
 
@@ -176,7 +177,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
         with torch.no_grad():
             for layerInd in range(self.numLayers):
-                angularMask = minAngularThreshold < self.getGivensAngles(layerInd).abs()
+                angularMask = minAngularThreshold <= self.getGivensAngles(layerInd).abs()
                 numSignalParameters = angularMask.sum(dim=-1, keepdim=True)  # Dim: numSignals, 1
                 allNumFreeParams.append(numSignalParameters.detach().cpu().numpy())
                 # allNumFreeParams: numLayers, numSignals, numFreeParams=1
@@ -236,7 +237,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         # Get the angular thresholds.
         minAngularThreshold = modelConstants.userInputParams['finalMinAngularThreshold' if applyMaxThresholding else 'minAngularThreshold'] * torch.pi / 180  # Convert to radians
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold'] * torch.pi / 180  # Convert to radians
-        if 64 < self.sequenceLength: minAngularThreshold = minAngularThreshold*2
+        if 64 < self.sequenceLength: minAngularThreshold = min(4, minAngularThreshold*4)
 
         with torch.no_grad():
             for layerInd in range(self.numLayers):
@@ -251,10 +252,10 @@ class reversibleConvolutionLayer(reversibleInterface):
                 self.givensRotationParams[layerInd][maxAngularThreshold <= givensAngles] = maxAngularThreshold
 
                 # Apply the minimum thresholding.
-                self.givensRotationParams[layerInd][givensAngles.abs() <= minAngularThreshold] = 0
-                if 64 < self.sequenceLength: self.percentParamThresholding(layerInd, applyMaxThresholding)
+                self.givensRotationParams[layerInd][givensAngles.abs() < minAngularThreshold] = 0
+                if 64 < self.sequenceLength: self.percentParamThresholding(layerInd)
 
-    def percentParamThresholding(self, layerInd, applyMaxThresholding):
+    def percentParamThresholding(self, layerInd):
         with torch.no_grad():
             # Sort each row by absolute value
             givensAngles = self.getGivensAngles(layerInd).clone().abs()  # Dim: numSignals, numParams
@@ -263,8 +264,6 @@ class reversibleConvolutionLayer(reversibleInterface):
 
             # Get the thresholding information.
             percentParamsKeeping = float(modelConstants.userInputParams['percentParamsKeeping'])
-            if applyMaxThresholding: percentParamsKeeping = percentParamsKeeping / 2
-            percentParamsKeeping = max(percentParamsKeeping, 1024 / self.numParams)
 
             # Find the threshold angles.
             numAnglesThrowingAway = int((100 - percentParamsKeeping) * self.numParams / 100) - 1

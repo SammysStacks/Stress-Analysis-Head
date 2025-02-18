@@ -51,12 +51,12 @@ waveletTypes_arr=(
 )
 
 # Angular reference states.
-finalMinAngularThresholds=(1 2 3)  # [0, 5]; Best: [0, 3]
-percentParamsKeepings=(4 6 8)  # [5, 10]; Best: 8?
+finalMinAngularThresholds=('0.05' '1' '2')  # [0, 5]; Best: [0, 3]
+percentParamsKeeping_arr=(6 8 10)  # [5, 10]; Best: 8?
 cullingEpochs=(5 10)
 
 # Angular reference states.
-minAngularThresholds=('0.01' '0.1')
+minAngularThresholds=('0.05' '0.1' '0.25')
 maxAngularThresholds=(45)
 
 # Binary reference states.
@@ -77,7 +77,7 @@ do
   do
     for maxAngularThreshold in "${maxAngularThresholds[@]}"
     do
-      for percentParamsKeeping in "${percentParamsKeepings[@]}"
+      for percentParamsKeeping in "${percentParamsKeeping_arr[@]}"
       do
         for finalMinAngularThreshold in "${finalMinAngularThresholds[@]}"
         do

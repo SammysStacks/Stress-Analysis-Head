@@ -203,7 +203,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         numProcessing, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
 
         # Get the angular thresholds.
-        applyMaxThresholding = (epoch % modelConstants.userInputParams['cullingEpoch'] == 0) or 100 < epoch
+        applyMaxThresholding = (epoch % modelConstants.userInputParams['cullingEpoch'] == 0) or 250 < epoch
         minAngularThreshold = modelConstants.userInputParams['finalMinAngularThreshold' if applyMaxThresholding else 'minAngularThreshold']
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
         center = (0, 0)
@@ -281,7 +281,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         bins = np.arange(-degrees, degrees + 1, 1)
 
         # Get the angular thresholds.
-        applyMaxThresholding = (epoch % modelConstants.userInputParams['cullingEpoch'] == 0) or 100 < epoch
+        applyMaxThresholding = (epoch % modelConstants.userInputParams['cullingEpoch'] == 0) or 250 < epoch
         minAngularThreshold = modelConstants.userInputParams['finalMinAngularThreshold' if applyMaxThresholding else 'minAngularThreshold']
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
         histogramPlots = []
@@ -315,8 +315,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
                 histogramPlots.append(ax.hist(histograms, bins=bins, color=self.darkColors[0:numSignals], alpha=1, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='left', cumulative=False))
             else:
                 # Split the histograms into small and large angles
-                smallAngles = np.where(histogramsABS <= minAngularThreshold, histograms, np.nan)
-                largeAngles = np.where(histogramsABS > minAngularThreshold, histograms, np.nan)
+                smallAngles = np.where(histogramsABS < minAngularThreshold, histograms, np.nan)
+                largeAngles = np.where(histogramsABS >= minAngularThreshold, histograms, np.nan)
 
                 # Plot the histograms.
                 histogramPlots.append(ax.hist(smallAngles, bins=bins, color=self.darkColors[0:numSignals], alpha=0.5, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='left', cumulative=False))
@@ -361,7 +361,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         degrees = (180 if degreesFlag else math.pi) / 4
 
         # Get the angular thresholds.
-        applyMaxThresholding = (epoch % modelConstants.userInputParams['cullingEpoch'] == 0) or 100 < epoch
+        applyMaxThresholding = (epoch % modelConstants.userInputParams['cullingEpoch'] == 0) or 250 < epoch
         minAngularThreshold = modelConstants.userInputParams['finalMinAngularThreshold' if applyMaxThresholding else 'minAngularThreshold']
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
 
