@@ -42,7 +42,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
         # Define angular update parameters.
         self.alpha, self.beta = 1/4, 1/2
-        self.updatePercent = 0.001
+        self.updatePercent = 0.0001
 
         self.xwInds, self.zwInds, self.yzInds, self.xyInds = [], [], [], []
         for angularLocationsInd in self.angularLocationsInds:
@@ -66,7 +66,7 @@ class reversibleConvolutionLayer(reversibleInterface):
             # Create the neural weights.
             parameters = nn.Parameter(torch.randn(self.numSignals, self.numParams or 1, dtype=torch.float64))
             parameters = nn.init.uniform_(parameters, a=-0.1, b=0.1)  # Dim: numSignals, numParams
-            parameters[:, self.angularMaskInds].fill_(0)  # Apply checkerboard thresholding.
+            # parameters[:, self.angularMaskInds].fill_(0)  # Apply checkerboard thresholding.
 
             # Store the parameters.
             self.givensRotationParams.append(parameters)
@@ -237,7 +237,7 @@ class reversibleConvolutionLayer(reversibleInterface):
         # Get the angular thresholds.
         minAngularThreshold = modelConstants.userInputParams['finalMinAngularThreshold' if applyMaxThresholding else 'minAngularThreshold'] * torch.pi / 180  # Convert to radians
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold'] * torch.pi / 180  # Convert to radians
-        if 64 < self.sequenceLength: minAngularThreshold = min(4, minAngularThreshold*4)
+        if 64 < self.sequenceLength: minAngularThreshold = min(2, minAngularThreshold*2)
 
         with torch.no_grad():
             for layerInd in range(self.numLayers):
