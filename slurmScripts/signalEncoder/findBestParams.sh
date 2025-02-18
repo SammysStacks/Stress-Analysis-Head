@@ -51,9 +51,9 @@ waveletTypes_arr=(
 )
 
 # Angular reference states.
-finalMinAngularThresholds=('0.05' '1' '2')  # [0, 5]; Best: [0, 3]
+finalMinAngularThresholds=('0.5' '1' '2')  # [0, 5]; Best: [0, 3]
 percentParamsKeeping_arr=(6 8 10)  # [5, 10]; Best: 8?
-cullingEpochs=(5 10)
+cullingEpochs=(1 5 10)
 
 # Angular reference states.
 minAngularThresholds=('0.05' '0.1' '0.25')

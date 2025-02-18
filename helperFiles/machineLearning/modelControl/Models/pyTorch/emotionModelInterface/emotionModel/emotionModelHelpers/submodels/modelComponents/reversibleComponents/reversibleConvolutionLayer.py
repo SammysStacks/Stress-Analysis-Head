@@ -42,7 +42,7 @@ class reversibleConvolutionLayer(reversibleInterface):
 
         # Define angular update parameters.
         self.alpha, self.beta = 1/4, 1/2
-        self.updatePercent = 0.01
+        self.updatePercent = 0.001
 
         self.xwInds, self.zwInds, self.yzInds, self.xyInds = [], [], [], []
         for angularLocationsInd in self.angularLocationsInds:
@@ -74,7 +74,7 @@ class reversibleConvolutionLayer(reversibleInterface):
             # givensRotationParams: numLayers, numSignals, numParams
 
             # Register a gradient hook to scale the learning rate.
-            self.givensRotationParams[-1].register_hook(lambda grad: grad * 200)  # Double the gradient -> Doubles the effective LR
+            self.givensRotationParams[-1].register_hook(lambda grad: grad * 50)  # Double the gradient -> Doubles the effective LR
 
     def applySingleLayer(self, inputData, layerInd):
         # Determine the direction of the forward pass.
@@ -231,7 +231,7 @@ class reversibleConvolutionLayer(reversibleInterface):
             angularUpdateMatrix[:, self.zwInds] += angularUpdateValue*self.alpha  # ZW
 
             # Apply the update.
-            self.givensRotationParams[layerInd] = self.givensRotationParams[layerInd] - angularUpdateMatrix
+            self.givensRotationParams[layerInd] = self.givensRotationParams[layerInd] + angularUpdateMatrix
 
     def angularThresholding(self, applyMaxThresholding):
         # Get the angular thresholds.
