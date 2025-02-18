@@ -140,7 +140,7 @@ class generalVisualizations(globalPlottingProtocols):
         ax.hlines(y=0.1, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=1)
         for i in range(2, 10): ax.hlines(y=0.01*i, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=1, alpha=0.25)
         ax.hlines(y=0.01, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=1)
-        ax.set_xlim((0, max(32, len(trainingLosses[0]) + 1)))
+        if 'Profile' not in plotTitle: ax.set_xlim((0, max(128, len(trainingLosses[0]) + 1)))
         ax.set_ylim((0.001, 1))
         ax.grid(True)
 
