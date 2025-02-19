@@ -1,5 +1,5 @@
 """ Written by Samuel Solomon: https://scholar.google.com/citations?user=9oq12oMAAAAJ&hl=en """
-
+import math
 import os
 import sys
 # Set specific environmental parameters.
@@ -38,7 +38,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-02-19 1e-2"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2025-02-19"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Architecture Parameters ----------------------- #
@@ -66,10 +66,9 @@ if __name__ == "__main__":
 
     # Add arguments for observational learning.
     parser.add_argument('--finalMinAngularThreshold', type=float, default=1, help='The final min rotational threshold in degrees.')
-    parser.add_argument('--percentParamsKeeping', type=int, default=10, help='The percentage of parameters to keep in the model.')
-    parser.add_argument('--minAngularThreshold', type=float, default=0.01, help='The smaller rotational threshold in degrees.')
+    parser.add_argument('--percentParamsKeeping', type=int, default=6, help='The percentage of parameters to keep in the model.')
+    parser.add_argument('--minAngularThreshold', type=float, default=0.05, help='The smaller rotational threshold in degrees.')
     parser.add_argument('--maxAngularThreshold', type=float, default=45, help='The larger rotational threshold in degrees.')
-    parser.add_argument('--cullingEpoch', type=int, default=5, help='The number of epochs before culling large weights.')
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions).')
@@ -99,6 +98,7 @@ if __name__ == "__main__":
 
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
+    userInputParams['cullingEpoch'] = math.ceil(1.5 * userInputParams['finalMinAngularThreshold'] / userInputParams['minAngularThreshold'])
 
     # Compile additional input parameters.
     userInputParams = modelParameters.getNeuralParameters(userInputParams)
@@ -128,7 +128,7 @@ if __name__ == "__main__":
     # -------------------------- Meta-model Training ------------------------- #
 
     # Calculate the initial loss.
-    trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate, showMinimumPlots=False)
+    # trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate, showMinimumPlots=False)
     trainingProtocols.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, profileOnlyTraining=True)
     if modelConstants.useInitialLoss: trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)  # Calculate the initial loss.
 

@@ -21,11 +21,10 @@ srun accelerate launch ./../../metaTrainingControl.py \
     --beta1 "${15}" \
     --beta2 "${16}" \
     --momentum_decay "${17}" \
-    --cullingEpoch "${18}" \
-    --minAngularThreshold "${19}" \
-    --maxAngularThreshold "${20}" \
-    --percentParamsKeeping "${21}" \
-    --finalMinAngularThreshold "${22}" \
+    --minAngularThreshold "${18}" \
+    --maxAngularThreshold "${19}" \
+    --percentParamsKeeping "${20}" \
+    --finalMinAngularThreshold "${21}" \
 
 end=$(date +%s)
 runtime=$((end-start))

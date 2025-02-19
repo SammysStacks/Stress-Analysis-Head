@@ -4,7 +4,6 @@ import numpy as np
 import torch
 import torch.fft
 import torch.nn as nn
-from matplotlib import pyplot as plt
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
@@ -41,8 +40,8 @@ class reversibleLieLayer(reversibleInterface):
 
         # Define angular update parameters.
         coupling = 1/32; self.alpha = 1/4 - coupling
+        self.numDegreesShifting = 0.1
         self.beta = 1/2 + 2*coupling
-        self.degreePercent = 1e-2
 
         self.xwInds, self.zwInds, self.yzInds, self.xyInds = [], [], [], []
         for angularLocationsInd in self.angularLocationsInds:
@@ -74,7 +73,7 @@ class reversibleLieLayer(reversibleInterface):
             # givensRotationParams: numLayers, numSignals, numParams
 
             # Register a gradient hook to scale the learning rate.
-            self.givensRotationParams[-1].register_hook(lambda grad: grad * 10)  # Double the gradient -> Doubles the effective LR
+            self.givensRotationParams[-1].register_hook(lambda grad: grad * 100)  # Double the gradient -> Doubles the effective LR
             self.applyAngularBias(layerInd)
 
     def applySingleLayer(self, inputData, layerInd):
@@ -226,7 +225,7 @@ class reversibleLieLayer(reversibleInterface):
             # angularUpdateMatrix: numSignals, numParams
 
             # Update the four angles in the 4D sub-rotation matrix: [X, Y, Z, W]
-            angularUpdateValue = self.givensRotationParams[layerInd][:, self.xwInds].sign() * self.degreePercent * torch.pi / 180  # Dim: numSignals, numParams
+            angularUpdateValue = self.givensRotationParams[layerInd][:, self.xwInds].sign() * self.numDegreesShifting * torch.pi / 180  # Dim: numSignals, numParams
             angularUpdateMatrix[:, self.xwInds] -= angularUpdateValue  # XW
             angularUpdateMatrix[:, self.xyInds] += angularUpdateValue*self.alpha  # XY
             angularUpdateMatrix[:, self.yzInds] -= angularUpdateValue*self.beta  # YZ
@@ -237,11 +236,13 @@ class reversibleLieLayer(reversibleInterface):
             countMatrix[:, self.xyInds] += 1
             countMatrix[:, self.yzInds] += 1
             countMatrix[:, self.zwInds] += 1
+            countMatrix[countMatrix == 0] = 1
 
             # Apply a gradient mask.
             angularUpdateMatrix[:, self.angularLocationsInds] *= (self.colInds[self.angularLocationsInds] - self.rowInds[self.angularLocationsInds]
                                                                   ).abs().to(angularUpdateMatrix.device) / self.sequenceLength
 
+            # import matplotlib.pyplot as plt
             # S = torch.zeros((self.numSignals, self.sequenceLength, self.sequenceLength), dtype=torch.float64)
             # S[:, self.rowInds, self.colInds] = angularUpdateMatrix
             # S[:, self.colInds, self.rowInds] = -angularUpdateMatrix
@@ -268,9 +269,9 @@ class reversibleLieLayer(reversibleInterface):
                 self.givensRotationParams[layerInd][givensAngles.abs() < minAngularThreshold].fill_(0)
 
                 # Removing (approximate) geometric symmetries.
+                self.givensRotationParams[layerInd][:, self.angularMaskInds].fill_(0)
                 if 64 < self.sequenceLength: self.percentParamThresholding(layerInd)
-                self.givensRotationParams[layerInd][:, self.angularMaskInds].fill_(0)  # Apply checkerboard thresholding.
-                if applyMaxThresholding: self.applyAngularBias(layerInd)  # Inject bias towards banded structure.
+                self.applyAngularBias(layerInd)  # Inject bias towards banded structure.
 
     def percentParamThresholding(self, layerInd):
         with torch.no_grad():
@@ -287,7 +288,7 @@ class reversibleLieLayer(reversibleInterface):
             minAngleValues = sorted_values[:, numAnglesThrowingAway].unsqueeze(-1)  # Shape (numSignals, 1)
 
             # Zero out the values below the threshold
-            self.givensRotationParams[layerInd][givensAngles < minAngleValues] = 0
+            self.givensRotationParams[layerInd][givensAngles < minAngleValues].fill_(0)
 
     def getAllActivationParams(self):
         allActivationParams = []
@@ -319,13 +320,12 @@ class reversibleLieLayer(reversibleInterface):
 if __name__ == "__main__":
     # for i in [2, 4, 8, 16, 32, 64, 128, 256]:
     # for i in [16, 32, 64, 128, 256]:
-    reconstructionFlag = True
 
     # for layers, sequenceLength2 in [(2, 256), (2, 128), (2, 64), (2, 32), (2, 16), (2, 8), (2, 4), (2, 2)]:
     # for _layerInd, sequenceLength2 in [(1, 32), (2, 32), (3, 32), (5, 32), (5, 32), (10, 32)]:
     # for _layerInd, sequenceLength2 in [(1, 64), (2, 64), (3, 64), (5, 64), (5, 64), (10, 64)]:
     # for _layerInd, sequenceLength2 in [(1, 128), (2, 128), (3, 128), (5, 128), (5, 128), (10, 128)]:
-    for _layerInd, sequenceLength2 in [(1, 32)]:
+    for _layerInd, sequenceLength2 in [(4, 256)]:
         # General parameters.
         _batchSize, _numSignals, _sequenceLength = 128, 64, sequenceLength2
         _activationMethod = 'reversibleLinearSoftSign'  # reversibleLinearSoftSign
@@ -339,8 +339,7 @@ if __name__ == "__main__":
         healthProfile = healthProfile * 2 - 1
 
         # Perform the convolution in the fourier and spatial domains.
-        if reconstructionFlag: _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(healthProfile, atol=1e-6, numLayers=1, plotResults=False)
-        else: _forwardData = neuralLayerClass.forward(healthProfile)
+        _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(healthProfile, atol=1e-6, numLayers=1, plotResults=True)
         neuralLayerClass.printParams()
 
         # ratio = (_forwardData.norm(dim=-1) / healthProfile.norm(dim=-1)).view(-1).detach().numpy()
