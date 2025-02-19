@@ -251,17 +251,17 @@ class reversibleLieLayer(reversibleInterface):
             for layerInd in range(self.numLayers):
                 givensAngles = self.getGivensAngles(layerInd)
 
-                # Removing (approximate) geometric symmetries.
-                if 64 < self.sequenceLength: self.percentParamThresholding(layerInd)
-                self.givensRotationParams[layerInd][:, self.angularMaskInds] = 0  # Apply checkerboard thresholding.
-                if applyMaxThresholding: self.applyAngularBias(layerInd)  # Inject bias towards banded structure.
-
                 # Apply the maximum thresholding.
                 self.givensRotationParams[layerInd][givensAngles <= -maxAngularThreshold] = -maxAngularThreshold
                 self.givensRotationParams[layerInd][maxAngularThreshold <= givensAngles] = maxAngularThreshold
 
                 # Apply the minimum thresholding.
                 self.givensRotationParams[layerInd][givensAngles.abs() < minAngularThreshold] = 0
+
+                # Removing (approximate) geometric symmetries.
+                if 64 < self.sequenceLength: self.percentParamThresholding(layerInd)
+                self.givensRotationParams[layerInd][:, self.angularMaskInds] = 0  # Apply checkerboard thresholding.
+                if applyMaxThresholding: self.applyAngularBias(layerInd)  # Inject bias towards banded structure.
 
     def percentParamThresholding(self, layerInd):
         with torch.no_grad():
