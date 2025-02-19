@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import torch.fft
 import torch.nn as nn
+from matplotlib import pyplot as plt
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
@@ -65,6 +66,7 @@ class reversibleLieLayer(reversibleInterface):
             # Create the neural weights.
             parameters = nn.Parameter(torch.randn(self.numSignals, self.numParams or 1, dtype=torch.float64))
             parameters = nn.init.uniform_(parameters, a=-0.1, b=0.1)  # Dim: numSignals, numParams
+            parameters[:, self.angularMaskInds].fill_(0)  # Apply checkerboard thresholding.
 
             # Store the parameters.
             self.givensRotationParams.append(parameters)
@@ -72,7 +74,7 @@ class reversibleLieLayer(reversibleInterface):
             # givensRotationParams: numLayers, numSignals, numParams
 
             # Register a gradient hook to scale the learning rate.
-            self.givensRotationParams[-1].register_hook(lambda grad: grad * 100)  # Double the gradient -> Doubles the effective LR
+            self.givensRotationParams[-1].register_hook(lambda grad: grad * 10)  # Double the gradient -> Doubles the effective LR
             self.applyAngularBias(layerInd)
 
     def applySingleLayer(self, inputData, layerInd):
@@ -220,6 +222,7 @@ class reversibleLieLayer(reversibleInterface):
         with (torch.no_grad()):
             # Create update matrix.
             angularUpdateMatrix = torch.zeros_like(self.givensRotationParams[layerInd])
+            countMatrix = torch.zeros_like(self.givensRotationParams[layerInd])
             # angularUpdateMatrix: numSignals, numParams
 
             # Update the four angles in the 4D sub-rotation matrix: [X, Y, Z, W]
@@ -228,6 +231,12 @@ class reversibleLieLayer(reversibleInterface):
             angularUpdateMatrix[:, self.xyInds] += angularUpdateValue*self.alpha  # XY
             angularUpdateMatrix[:, self.yzInds] -= angularUpdateValue*self.beta  # YZ
             angularUpdateMatrix[:, self.zwInds] += angularUpdateValue*self.alpha  # ZW
+
+            # Average the update matrix.
+            countMatrix[:, self.xwInds] += 1
+            countMatrix[:, self.xyInds] += 1
+            countMatrix[:, self.yzInds] += 1
+            countMatrix[:, self.zwInds] += 1
 
             # Apply a gradient mask.
             angularUpdateMatrix[:, self.angularLocationsInds] *= (self.colInds[self.angularLocationsInds] - self.rowInds[self.angularLocationsInds]
@@ -240,7 +249,7 @@ class reversibleLieLayer(reversibleInterface):
             # print(S[0].cpu().detach().numpy()[0])
 
             # Apply the update.
-            self.givensRotationParams[layerInd] = self.givensRotationParams[layerInd] + angularUpdateMatrix
+            self.givensRotationParams[layerInd].add_(angularUpdateMatrix / countMatrix)
 
     def angularThresholding(self, applyMaxThresholding):
         # Get the angular thresholds.
@@ -252,15 +261,15 @@ class reversibleLieLayer(reversibleInterface):
                 givensAngles = self.getGivensAngles(layerInd)
 
                 # Apply the maximum thresholding.
-                self.givensRotationParams[layerInd][givensAngles <= -maxAngularThreshold] = -maxAngularThreshold
-                self.givensRotationParams[layerInd][maxAngularThreshold <= givensAngles] = maxAngularThreshold
+                self.givensRotationParams[layerInd][givensAngles <= -maxAngularThreshold].fill_(-maxAngularThreshold)
+                self.givensRotationParams[layerInd][maxAngularThreshold <= givensAngles].fill_(maxAngularThreshold)
 
                 # Apply the minimum thresholding.
-                self.givensRotationParams[layerInd][givensAngles.abs() < minAngularThreshold] = 0
+                self.givensRotationParams[layerInd][givensAngles.abs() < minAngularThreshold].fill_(0)
 
                 # Removing (approximate) geometric symmetries.
                 if 64 < self.sequenceLength: self.percentParamThresholding(layerInd)
-                self.givensRotationParams[layerInd][:, self.angularMaskInds] = 0  # Apply checkerboard thresholding.
+                self.givensRotationParams[layerInd][:, self.angularMaskInds].fill_(0)  # Apply checkerboard thresholding.
                 if applyMaxThresholding: self.applyAngularBias(layerInd)  # Inject bias towards banded structure.
 
     def percentParamThresholding(self, layerInd):
@@ -312,47 +321,45 @@ if __name__ == "__main__":
     # for i in [16, 32, 64, 128, 256]:
     reconstructionFlag = True
 
-    try:
-        # for layers, sequenceLength2 in [(2, 256), (2, 128), (2, 64), (2, 32), (2, 16), (2, 8), (2, 4), (2, 2)]:
-        # for _layerInd, sequenceLength2 in [(1, 32), (2, 32), (3, 32), (5, 32), (5, 32), (10, 32)]:
-        # for _layerInd, sequenceLength2 in [(1, 64), (2, 64), (3, 64), (5, 64), (5, 64), (10, 64)]:
-        # for _layerInd, sequenceLength2 in [(1, 128), (2, 128), (3, 128), (5, 128), (5, 128), (10, 128)]:
-        for _layerInd, sequenceLength2 in [(1, 32)]:
-            # General parameters.
-            _batchSize, _numSignals, _sequenceLength = 128, 64, sequenceLength2
-            _activationMethod = 'reversibleLinearSoftSign'  # reversibleLinearSoftSign
-            _numLayers = _layerInd
+    # for layers, sequenceLength2 in [(2, 256), (2, 128), (2, 64), (2, 32), (2, 16), (2, 8), (2, 4), (2, 2)]:
+    # for _layerInd, sequenceLength2 in [(1, 32), (2, 32), (3, 32), (5, 32), (5, 32), (10, 32)]:
+    # for _layerInd, sequenceLength2 in [(1, 64), (2, 64), (3, 64), (5, 64), (5, 64), (10, 64)]:
+    # for _layerInd, sequenceLength2 in [(1, 128), (2, 128), (3, 128), (5, 128), (5, 128), (10, 128)]:
+    for _layerInd, sequenceLength2 in [(1, 32)]:
+        # General parameters.
+        _batchSize, _numSignals, _sequenceLength = 128, 64, sequenceLength2
+        _activationMethod = 'reversibleLinearSoftSign'  # reversibleLinearSoftSign
+        _numLayers = _layerInd
 
-            # Set up the parameters.
-            neuralLayerClass = reversibleLieLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, numLayers=_numLayers, activationMethod=_activationMethod)
-            healthProfile = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float64)
-            healthProfile = healthProfile - healthProfile.min(dim=-1, keepdim=True).values
-            healthProfile = healthProfile / healthProfile.max(dim=-1, keepdim=True).values
-            healthProfile = healthProfile * 2 - 1
+        # Set up the parameters.
+        neuralLayerClass = reversibleLieLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, numLayers=_numLayers, activationMethod=_activationMethod)
+        healthProfile = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float64)
+        healthProfile = healthProfile - healthProfile.min(dim=-1, keepdim=True).values
+        healthProfile = healthProfile / healthProfile.max(dim=-1, keepdim=True).values
+        healthProfile = healthProfile * 2 - 1
 
-            # Perform the convolution in the fourier and spatial domains.
-            if reconstructionFlag: _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(healthProfile, atol=1e-6, numLayers=1, plotResults=False)
-            else: _forwardData = neuralLayerClass.forward(healthProfile)
-            neuralLayerClass.printParams()
+        # Perform the convolution in the fourier and spatial domains.
+        if reconstructionFlag: _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(healthProfile, atol=1e-6, numLayers=1, plotResults=False)
+        else: _forwardData = neuralLayerClass.forward(healthProfile)
+        neuralLayerClass.printParams()
 
-            # ratio = (_forwardData.norm(dim=-1) / healthProfile.norm(dim=-1)).view(-1).detach().numpy()
-            # if abs(ratio.mean() - 1) < 0.1: plt.hist(ratio, bins=150, alpha=0.2, label=f'len{_sequenceLength}_layers={_layerInd}', density=True)
-            # print("Lipschitz constant:", ratio.mean())
-            #
-            # # Plot the Gaussian fit
-            # xmin, xmax = plt.xlim()
-            # x_ = np.linspace(xmin, xmax, num=1000)
-            # mu, std = scipy.stats.norm.fit(ratio)
-            # p = scipy.stats.norm.pdf(x_, mu, std)
-            # plt.plot(x_, p, 'k', linewidth=2, label=f'Gaussian fit: mu={mu:.8f}$, sigma={std:.8f}$')
-            #
-            # # Figure settings.
-            # plt.title(f'Fin', fontsize=14)  # Increase title font size for readability
-            # # plt.xlim(0.98, 1.02)
-            # plt.legend()
-            #
-            # # Save the plot.
-            # os.makedirs('_lipshitz/', exist_ok=True)
-            # plt.savefig(f'_lipshitz/len{sequenceLength2}_layers={_numLayers}')
-            # plt.show()
-    except Exception as e: print(f"Error: {e}")
+        # ratio = (_forwardData.norm(dim=-1) / healthProfile.norm(dim=-1)).view(-1).detach().numpy()
+        # if abs(ratio.mean() - 1) < 0.1: plt.hist(ratio, bins=150, alpha=0.2, label=f'len{_sequenceLength}_layers={_layerInd}', density=True)
+        # print("Lipschitz constant:", ratio.mean())
+        #
+        # # Plot the Gaussian fit
+        # xmin, xmax = plt.xlim()
+        # x_ = np.linspace(xmin, xmax, num=1000)
+        # mu, std = scipy.stats.norm.fit(ratio)
+        # p = scipy.stats.norm.pdf(x_, mu, std)
+        # plt.plot(x_, p, 'k', linewidth=2, label=f'Gaussian fit: mu={mu:.8f}$, sigma={std:.8f}$')
+        #
+        # # Figure settings.
+        # plt.title(f'Fin', fontsize=14)  # Increase title font size for readability
+        # # plt.xlim(0.98, 1.02)
+        # plt.legend()
+        #
+        # # Save the plot.
+        # os.makedirs('_lipshitz/', exist_ok=True)
+        # plt.savefig(f'_lipshitz/len{sequenceLength2}_layers={_numLayers}')
+        # plt.show()
