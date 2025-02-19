@@ -51,12 +51,12 @@ waveletTypes_arr=(
 )
 
 # Angular reference states.
-finalMinAngularThresholds=('0.5' '1' '2')  # [0, 5]; Best: [0, 3]
-percentParamsKeeping_arr=(6 8 10)  # [5, 10]; Best: 8?
-cullingEpochs=(1 5 10)
+finalMinAngularThresholds=('0.5' '1' '2' '3')  # [0, 5]; Best: [0, 3]
+percentParamsKeeping_arr=(4 6 8 10)  # [5, 10]; Best: 8?
+cullingEpochs=(5 10)
 
 # Angular reference states.
-minAngularThresholds=('0.05' '0.1' '0.25')
+minAngularThresholds=(0.01)
 maxAngularThresholds=(45)
 
 # Binary reference states.
@@ -69,7 +69,7 @@ profileParams=(256)
 
 # Reference states.
 waveletTypes_arr=('bior3.1')
-numProfileShots_arr=(32)
+numProfileShots_arr=(16 24)
 
 for cullingEpoch in "${cullingEpochs[@]}"
 do

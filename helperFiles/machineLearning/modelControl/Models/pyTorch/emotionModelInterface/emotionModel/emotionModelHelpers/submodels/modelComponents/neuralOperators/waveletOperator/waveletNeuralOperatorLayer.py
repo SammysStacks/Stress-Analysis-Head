@@ -2,7 +2,7 @@ import torch
 from torch import nn
 
 from .waveletNeuralOperatorWeights import waveletNeuralOperatorWeights
-from ...reversibleComponents.reversibleConvolutionLayer import reversibleConvolutionLayer
+from ...reversibleComponents.reversibleLieLayer import reversibleLieLayer
 from ...reversibleComponents.reversibleInterface import reversibleInterface
 
 
@@ -81,7 +81,7 @@ class waveletNeuralOperatorLayer(waveletNeuralOperatorWeights):
 
         if weights is not None:
             # Learn a new set of wavelet coefficients to transform the data.
-            if isinstance(weights, reversibleConvolutionLayer): frequencies = weights.applySingleLayer(frequencies, layerInd)
+            if isinstance(weights, reversibleLieLayer): frequencies = weights.applySingleLayer(frequencies, layerInd)
             elif isinstance(weights, nn.Identity): frequencies = weights(frequencies)
             elif isinstance(weights, nn.Module): frequencies = weights(frequencies)
             elif 'FC' in self.learningProtocol or 'CNN' in self.learningProtocol:  frequencies = weights(frequencies)

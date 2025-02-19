@@ -9,7 +9,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.lossInformation.lossCalculations import lossCalculations
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleConvolutionLayer import reversibleConvolutionLayer
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleLieLayer import reversibleLieLayer
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.sharedActivityModel import sharedActivityModel
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.sharedEmotionModel import sharedEmotionModel
@@ -216,13 +216,13 @@ class emotionModelHead(nn.Module):
     def getLearnableParams(self):
         # Initialize the learnable parameters.
         givensAnglesPath, scalingFactorsPath, givensAnglesFeaturesPath,  = [], [], []
-        givensAnglesFeatureNames = reversibleConvolutionLayer.getFeatureNames()
+        givensAnglesFeatureNames = reversibleLieLayer.getFeatureNames()
         numGivensFeatures = len(givensAnglesFeatureNames)
         reversibleModuleNames = []
 
         # For each module.
         for name, module in self.named_modules():
-            if isinstance(module, reversibleConvolutionLayer):
+            if isinstance(module, reversibleLieLayer):
                 _, allGivensAnglesFeatures = module.getFeatureParams()
                 allGivensAngles, allScaleFactors = module.getAllLinearParams()
                 if allScaleFactors.shape[0] == 0: continue
@@ -247,7 +247,7 @@ class emotionModelHead(nn.Module):
     def getActivationCurvesFullPassPath(self):
         activationCurvePath, moduleNames = [], []
         for name, module in self.named_modules():
-            if isinstance(module, reversibleConvolutionLayer): 
+            if isinstance(module, reversibleLieLayer):
                 xs, ys = module.geAllActivationCurves(x_min=-1.5, x_max=1.5, num_points=100)
                 for ind in range(len(xs)): activationCurvePath.append([xs[ind], ys[ind]])
                 for _ in range(len(xs)): moduleNames.append(self.compileModuleName(name))
@@ -265,13 +265,13 @@ class emotionModelHead(nn.Module):
     def cullAngles(self, applyMaxThresholding):
         for name, module in self.named_modules():
             if 'shared' in name.lower(): continue
-            if isinstance(module, reversibleConvolutionLayer):
+            if isinstance(module, reversibleLieLayer):
                 module.angularThresholding(applyMaxThresholding=applyMaxThresholding)
 
     def getActivationParamsFullPassPath(self):
         activationParamsPath, moduleNames = [], []
         for name, module in self.named_modules():
-            if isinstance(module, reversibleConvolutionLayer): 
+            if isinstance(module, reversibleLieLayer):
                 allActivationParams = module.getAllActivationParams()
                 activationParamsPath.extend(allActivationParams)
                 for _ in allActivationParams: moduleNames.append(self.compileModuleName(name))
@@ -285,10 +285,10 @@ class emotionModelHead(nn.Module):
 
     def getFreeParamsFullPassPath(self, epoch):
         numFreeParamsPath, moduleNames, maxFreeParamsPath = [], [], []
-        applyMaxThresholding = (epoch % modelConstants.userInputParams['cullingEpoch'] == 0) or 250 < epoch
+        applyMaxThresholding = (epoch % modelConstants.userInputParams['cullingEpoch'] == 0) or 200 < epoch
 
         for name, module in self.named_modules():
-            if isinstance(module, reversibleConvolutionLayer):
+            if isinstance(module, reversibleLieLayer):
                 allNumFreeParams = module.getNumFreeParams(applyMaxThresholding=applyMaxThresholding)
 
                 numFreeParamsPath.extend(allNumFreeParams)  # numFreeParamsPath: numModuleLayers, numSignals, numParams=1

@@ -6,7 +6,7 @@ from torch import nn
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.modelHelpers.convolutionalHelpers import convolutionalHelpers, ResNet
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleConvolutionLayer import reversibleConvolutionLayer
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleLieLayer import reversibleLieLayer
 
 
 class emotionModelWeights(convolutionalHelpers):
@@ -52,11 +52,11 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def reversibleNeuralWeightRCNN(numSignals, sequenceLength, numLayers):
-        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, numLayers=numLayers, activationMethod=f"{emotionModelWeights.getReversibleActivation()}")
+        return reversibleLieLayer(numSignals=numSignals, sequenceLength=sequenceLength, numLayers=numLayers, activationMethod=f"{emotionModelWeights.getReversibleActivation()}")
 
     @staticmethod
     def postProcessingLayerRCNN(numSignals, sequenceLength, numLayers=1):
-        return reversibleConvolutionLayer(numSignals=numSignals, sequenceLength=sequenceLength, numLayers=numLayers, activationMethod=f"{emotionModelWeights.getReversibleActivation()}")
+        return reversibleLieLayer(numSignals=numSignals, sequenceLength=sequenceLength, numLayers=numLayers, activationMethod=f"{emotionModelWeights.getReversibleActivation()}")
 
     def postProcessingLayerCNN(self, numSignals):
         return self.convolutionalFilters_resNetBlocks(numResNets=1, numBlocks=4, numChannels=[numSignals, numSignals], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False)
