@@ -51,11 +51,11 @@ waveletTypes_arr=(
 )
 
 # Angular reference states.
-finalMinAngularThresholds=('0.5' '1' '2' '3')  # [0, 5]; Best: [0, 3]
-percentParamsKeeping_arr=(4 6 8 10)  # [5, 10]; Best: 8?
+finalMinAngularThresholds=(1 2 3 4)  # [0, 5]; Best: [0, 3]
+percentParamsKeeping_arr=(4 6 8)  # [5, 10]; Best: 8?
 
 # Angular reference states.
-minAngularThresholds=(0.05)
+minAngularThresholds=(0.1 0.2 0.3 0.4 0.5)
 maxAngularThresholds=(45)
 
 # Binary reference states.
@@ -68,7 +68,7 @@ profileParams=(256)
 
 # Reference states.
 waveletTypes_arr=('bior3.1')
-numProfileShots_arr=(8 12 16 24)
+numProfileShots_arr=(16)
 
 for minAngularThreshold in "${minAngularThresholds[@]}"
 do
