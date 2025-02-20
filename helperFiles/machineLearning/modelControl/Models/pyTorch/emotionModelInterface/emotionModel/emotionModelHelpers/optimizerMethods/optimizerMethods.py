@@ -14,11 +14,13 @@ class optimizerMethods:
     def getModelParams(self, submodel, model):
         modelParams = [
             # Specify the model parameters for the shared signal encoding.
-            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "healthGenerationModel" not in name), 'weight_decay': self.userInputParams['reversibleWD'], 'lr': self.userInputParams['reversibleLR']},  # 1e-6 - 1e-2
+            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if ("givensRotationParams" not in name and "healthGenerationModel" not in name)), 'weight_decay': self.userInputParams['reversibleWD'], 'lr': self.userInputParams['reversibleLR']},  # 1e-5 - 5e-4
+            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "givensRotationParams" in name), 'weight_decay': self.userInputParams['reversibleWD'], 'lr': 1e-3},  # 1e-4 - 0.1
             {'params': model.sharedSignalEncoderModel.healthGenerationModel.parameters(), 'weight_decay': self.userInputParams['physGenWD'], 'lr': self.userInputParams['physGenLR']},  # 1e-2 - 1e2
 
             # Specify the model parameters for the specific signal encoding.
-            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "profileModel" not in name), 'weight_decay': self.userInputParams['reversibleWD'], 'lr': self.userInputParams['reversibleLR']},  # 1e-2 - 1e2
+            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if ("givensRotationParams" not in name and "profileModel" not in name)), 'weight_decay': self.userInputParams['reversibleWD'], 'lr': self.userInputParams['reversibleLR']},  # 1e-2 - 1e2
+            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "givensRotationParams" in name), 'weight_decay': self.userInputParams['reversibleWD'], 'lr': 1e-3},  # 1e-2 - 1e2
             {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': self.userInputParams['profileWD'], 'lr': self.userInputParams['profileLR']},  # 0.1 - 0.01
         ]
 
@@ -56,7 +58,7 @@ class optimizerMethods:
         # Reduce on plateau (need further editing of loop): optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=0.5, patience=10, threshold=1e-4, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08)
         # Defined lambda function: optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda=lambda_function); lambda_function = lambda epoch: (epoch/50) if epoch < -1 else 1
         # torch.optim.lr_scheduler.constrainedLR(optimizer, start_factor=0.3333333333333333, end_factor=1.0, total_iters=5, last_epoch=-1)
-        return CosineAnnealingLR_customized(optimizer=optimizer,  T_max=1, absolute_min_lr=1e-4, multiplicativeFactor=10, numWarmupEpochs=modelConstants.numEpochs_minLR, warmupFactor=2, last_epoch=-1)
+        return CosineAnnealingLR_customized(optimizer=optimizer,  T_max=1, absolute_min_lr=1e-4, multiplicativeFactor=10, numWarmupEpochs=0, warmupFactor=2, last_epoch=-1)
 
     @staticmethod
     def getOptimizer(optimizerType, params, lr, weight_decay, momentum=0.9):

@@ -12,8 +12,8 @@ wds_reversible=('0')  # 1e-4 == x <= 1e-3
 wds_profileGen=('0')  # 1e-5 == x <= 1e-4
 
 # Learning parameters.
-lrs_profile=('0.067')  # 0.005 <= x <= 0.05
-lrs_reversible=('3e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
+lrs_profile=('0.1')  # 0.005 <= x <= 0.05
+lrs_reversible=('1e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
 lrs_profileGen=('1e-4') # # 5e-5 <= x == 1e-4;
 
 # Known interesting parameters: 63
@@ -68,7 +68,7 @@ profileParams=(256)
 
 # Reference states.
 waveletTypes_arr=('bior3.1')
-numProfileShots_arr=(16 24 32)
+numProfileShots_arr=(8 12 16 24)
 
 for minAngularThreshold in "${minAngularThresholds[@]}"
 do

@@ -68,13 +68,9 @@ class reversibleLieLayer(reversibleInterface):
             parameters[:, self.angularMaskInds].fill_(0)  # Apply checkerboard thresholding.
 
             # Store the parameters.
-            self.givensRotationParams.append(parameters)
             self.activationFunction.append(activationFunctions.getActivationMethod(activationMethod))
-            # givensRotationParams: numLayers, numSignals, numParams
-
-            # Register a gradient hook to scale the learning rate.
-            self.givensRotationParams[-1].register_hook(lambda grad: grad * 100)  # Double the gradient -> Doubles the effective LR
-            self.applyAngularBias(layerInd)
+            self.givensRotationParams.append(parameters)  # givensRotationParams: numLayers, numSignals, numParams
+            self.applyAngularBias(layerInd)  # Inject bias towards banded structure.
 
     def applySingleLayer(self, inputData, layerInd):
         # Determine the direction of the forward pass.
