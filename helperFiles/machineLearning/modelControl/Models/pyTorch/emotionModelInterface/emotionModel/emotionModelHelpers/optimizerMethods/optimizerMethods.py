@@ -15,12 +15,12 @@ class optimizerMethods:
         modelParams = [
             # Specify the model parameters for the shared signal encoding.
             {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if ("givensRotationParams" not in name and "healthGenerationModel" not in name)), 'weight_decay': self.userInputParams['reversibleWD'], 'lr': self.userInputParams['reversibleLR']},  # 1e-5 - 5e-4
-            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "givensRotationParams" in name), 'weight_decay': self.userInputParams['reversibleWD'], 'lr': 4e-4},  # 1e-4 - 0.1
+            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "givensRotationParams" in name), 'weight_decay': self.userInputParams['reversibleWD'], 'lr': 2e-4},  # 1e-4 - 0.1
             {'params': model.sharedSignalEncoderModel.healthGenerationModel.parameters(), 'weight_decay': self.userInputParams['physGenWD'], 'lr': self.userInputParams['physGenLR']},  # 1e-2 - 1e2
 
             # Specify the model parameters for the specific signal encoding.
             {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if ("givensRotationParams" not in name and "profileModel" not in name)), 'weight_decay': self.userInputParams['reversibleWD'], 'lr': self.userInputParams['reversibleLR']},  # 1e-2 - 1e2
-            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "givensRotationParams" in name), 'weight_decay': self.userInputParams['reversibleWD'], 'lr': 4e-4},  # 1e-2 - 1e2
+            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "givensRotationParams" in name), 'weight_decay': self.userInputParams['reversibleWD'], 'lr': 2e-4},  # 1e-2 - 1e2
             {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': self.userInputParams['profileWD'], 'lr': self.userInputParams['profileLR']},  # 0.1 - 0.01
         ]
 

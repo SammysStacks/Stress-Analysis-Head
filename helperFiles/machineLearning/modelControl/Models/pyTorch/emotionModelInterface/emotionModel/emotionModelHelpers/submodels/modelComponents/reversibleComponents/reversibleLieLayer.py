@@ -40,7 +40,7 @@ class reversibleLieLayer(reversibleInterface):
 
         # Define angular update parameters.
         coupling = 1/32; self.alpha = 1/4 - coupling
-        self.numDegreesShifting = 4
+        self.numDegreesShifting = 1
         self.beta = 1/2 + 2*coupling
 
         self.xwInds, self.zwInds, self.yzInds, self.xyInds = [], [], [], []
