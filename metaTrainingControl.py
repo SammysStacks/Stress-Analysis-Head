@@ -38,7 +38,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-02-19"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2025-02-19 Opt4 Shift2"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Architecture Parameters ----------------------- #
@@ -62,12 +62,12 @@ if __name__ == "__main__":
     # Add arguments for the health profile.
     parser.add_argument('--initialProfileAmp', type=float, default=1e-3, help='The limits for profile initialization. Should be near zero.')
     parser.add_argument('--profileDimension', type=int, default=256, help='The number of profile weights: [32, 256]')
-    parser.add_argument('--numProfileShots', type=int, default=16, help='The epochs for profile training: [16, 32]')
+    parser.add_argument('--numProfileShots', type=int, default=12, help='The epochs for profile training: [16, 32]')
 
     # Add arguments for observational learning.
-    parser.add_argument('--finalMinAngularThreshold', type=float, default=2, help='The final min rotational threshold in degrees.')
-    parser.add_argument('--percentParamsKeeping', type=int, default=6, help='The percentage of parameters to keep in the model.')
-    parser.add_argument('--minAngularThreshold', type=float, default=0.25, help='The smaller rotational threshold in degrees.')
+    parser.add_argument('--finalMinAngularThreshold', type=float, default=4, help='The final min rotational threshold in degrees.')
+    parser.add_argument('--percentParamsKeeping', type=int, default=4, help='The percentage of parameters to keep in the model.')
+    parser.add_argument('--minAngularThreshold', type=float, default=1, help='The smaller rotational threshold in degrees.')
     parser.add_argument('--maxAngularThreshold', type=float, default=45, help='The larger rotational threshold in degrees.')
 
     # Add arguments for the emotion and activity architecture.
@@ -80,7 +80,7 @@ if __name__ == "__main__":
 
     # ----------------------- Training Parameters ----------------------- #
     # Signal encoder learning rates.
-    parser.add_argument('--profileLR', type=float, default=0.1, help='The learning rate of the health model.')
+    parser.add_argument('--profileLR', type=float, default=0.075, help='The learning rate of the health model.')
     parser.add_argument('--reversibleLR', type=float, default=1e-4, help='The learning rate of the general model.')
     parser.add_argument('--physGenLR', type=float, default=1e-4, help='The learning rate of the general model.')
 
@@ -128,7 +128,7 @@ if __name__ == "__main__":
     # -------------------------- Meta-model Training ------------------------- #
 
     # Calculate the initial loss.
-    trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate, showMinimumPlots=False)
+    # trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate, showMinimumPlots=False)
     trainingProtocols.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, profileOnlyTraining=True)
     if modelConstants.useInitialLoss: trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)  # Calculate the initial loss.
 

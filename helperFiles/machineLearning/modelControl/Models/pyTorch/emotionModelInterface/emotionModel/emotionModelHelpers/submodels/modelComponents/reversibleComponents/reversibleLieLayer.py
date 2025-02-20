@@ -229,9 +229,9 @@ class reversibleLieLayer(reversibleInterface):
 
             # Average the update matrix.
             countMatrix[:, self.xwInds] += 1
-            countMatrix[:, self.xyInds] += 1
-            countMatrix[:, self.yzInds] += 1
-            countMatrix[:, self.zwInds] += 1
+            countMatrix[:, self.xyInds] += self.alpha
+            countMatrix[:, self.yzInds] += self.beta
+            countMatrix[:, self.zwInds] += self.alpha
             countMatrix[countMatrix == 0] = 1
 
             # Apply a gradient mask.

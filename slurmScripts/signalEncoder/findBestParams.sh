@@ -12,7 +12,7 @@ wds_reversible=('0')  # 1e-4 == x <= 1e-3
 wds_profileGen=('0')  # 1e-5 == x <= 1e-4
 
 # Learning parameters.
-lrs_profile=('0.1')  # 0.005 <= x <= 0.05
+lrs_profile=('0.075')  # 0.005 <= x <= 0.05
 lrs_reversible=('1e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
 lrs_profileGen=('1e-4') # # 5e-5 <= x == 1e-4;
 
@@ -51,11 +51,11 @@ waveletTypes_arr=(
 )
 
 # Angular reference states.
-finalMinAngularThresholds=(1 2 3 4)  # [0, 5]; Best: [0, 3]
-percentParamsKeeping_arr=(4 6 8)  # [5, 10]; Best: 8?
+finalMinAngularThresholds=(3 4 5 6)  # [0, 5]; Best: [0, 3]
+percentParamsKeeping_arr=(2 4 6 8)  # [5, 10]; Best: 8?
 
 # Angular reference states.
-minAngularThresholds=(0.1 0.2 0.3 0.4 0.5)
+minAngularThresholds=(0.5 1 1.5 2)
 maxAngularThresholds=(45)
 
 # Binary reference states.
