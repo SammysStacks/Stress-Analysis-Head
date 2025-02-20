@@ -28,7 +28,7 @@ class emotionModelWeights(convolutionalHelpers):
     @staticmethod
     def getInitialPhysiologicalProfile(numExperiments):
         # Initialize the health profile.
-        healthProfile = torch.randn(numExperiments, modelConstants.profileDimension, dtype=torch.float64)
+        healthProfile = torch.randn(numExperiments, modelConstants.userInputParams['profileDimension'], dtype=torch.float64)
         emotionModelWeights.healthInitialization(healthProfile)
         healthProfile = nn.Parameter(healthProfile)
 
@@ -36,7 +36,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def healthInitialization(healthProfile):
-        nn.init.uniform_(healthProfile, a=-modelConstants.initialProfileAmp, b=modelConstants.initialProfileAmp)
+        nn.init.uniform_(healthProfile, a=-modelConstants.userInputParams['initialProfileAmp'], b=modelConstants.userInputParams['initialProfileAmp'])
 
     # ------------------- Neural Operator Architectures ------------------- #
 
@@ -66,11 +66,11 @@ class emotionModelWeights(convolutionalHelpers):
         return emotionModelWeights.linearModel(numInputFeatures=sequenceLength, numOutputFeatures=sequenceLength, activationMethod="SoftSign", addBias=False)
 
     def healthGeneration(self, numOutputFeatures):
-        if numOutputFeatures < modelConstants.profileDimension: raise ValueError(f"Number of outputs ({numOutputFeatures}) must be greater than inputs ({modelConstants.profileDimension})")
-        numUpSamples = int(math.log2(numOutputFeatures // modelConstants.profileDimension))
+        if numOutputFeatures < modelConstants.userInputParams['profileDimension']: raise ValueError(f"Number of outputs ({numOutputFeatures}) must be greater than inputs ({modelConstants.userInputParams['profileDimension']})")
+        numUpSamples = int(math.log2(numOutputFeatures // modelConstants.userInputParams['profileDimension']))
 
         layers = []
-        for i in range(numUpSamples): layers.append(self.linearModel(numInputFeatures=modelConstants.profileDimension*2**i, numOutputFeatures=modelConstants.profileDimension*2**(i+1), activationMethod='SoftSign', addBias=False, addResidualConnection=False))
+        for i in range(numUpSamples): layers.append(self.linearModel(numInputFeatures=modelConstants.userInputParams['profileDimension']*2**i, numOutputFeatures=modelConstants.userInputParams['profileDimension']*2**(i+1), activationMethod='SoftSign', addBias=False, addResidualConnection=False))
 
         layers.extend([
             self.linearModel(numInputFeatures=numOutputFeatures, numOutputFeatures=numOutputFeatures, activationMethod='SoftSign', addBias=False, addResidualConnection=True),

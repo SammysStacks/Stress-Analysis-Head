@@ -18,9 +18,9 @@ class reversibleLieLayer(reversibleInterface):
         self.numParams = int(sequenceLength * (sequenceLength - 1) / 2)  # The number of free parameters in the model.
         self.activationMethod = activationMethod  # The activation method to use.
         self.sequenceLength = sequenceLength  # The length of the input signal.
+        self.optimalForwardFirst = False  # Whether to apply the forward pass first.
         self.numSignals = numSignals  # The number of signals in the input data.
         self.numLayers = numLayers  # The number of layers in the reversible linear layer.
-        self.optimalForwardFirst = False  # Whether to apply the forward pass first.
 
         # The restricted window for the neural weights.
         upperWindowMask = torch.ones(self.sequenceLength, self.sequenceLength)
@@ -40,7 +40,7 @@ class reversibleLieLayer(reversibleInterface):
 
         # Define angular update parameters.
         coupling = 1/32; self.alpha = 1/4 - coupling
-        self.numDegreesShifting = 1
+        self.angularShiftingPercent = modelConstants.userInputParams['angularShiftingPercent']
         self.beta = 1/2 + 2*coupling
 
         self.xwInds, self.zwInds, self.yzInds, self.xyInds = [], [], [], []
@@ -59,17 +59,29 @@ class reversibleLieLayer(reversibleInterface):
         self.activationFunction = nn.ModuleList()
         self.jacobianParameter = self.initializeJacobianParams(numSignals)
         self.givensRotationParams = nn.ParameterList()
+        self.numShiftedRotations = []
 
         # Create the neural layers.
         for layerInd in range(self.numLayers):
             # Create the neural weights.
             parameters = nn.Parameter(torch.randn(self.numSignals, self.numParams or 1, dtype=torch.float64))
-            parameters = nn.init.uniform_(parameters, a=-0.1, b=0.1)  # Dim: numSignals, numParams
-            parameters[:, self.angularMaskInds].fill_(0)  # Apply checkerboard thresholding.
+            parameters = nn.init.uniform_(parameters, a=-0.05, b=0.05)
+            # parameters: numSignals, numParams
 
             # Store the parameters.
             self.activationFunction.append(activationFunctions.getActivationMethod(activationMethod))
             self.givensRotationParams.append(parameters)  # givensRotationParams: numLayers, numSignals, numParams
+
+            # Create the shifted rotation counter.
+            self.numShiftedRotations.append(torch.zeros_like(parameters))
+            self.numShiftedRotations[layerInd][:, self.xwInds] += 1
+            self.numShiftedRotations[layerInd][:, self.xyInds] += self.alpha
+            self.numShiftedRotations[layerInd][:, self.yzInds] += self.beta
+            self.numShiftedRotations[layerInd][:, self.zwInds] += self.alpha
+            self.numShiftedRotations[layerInd][self.numShiftedRotations[layerInd] == 0] = 1
+
+            # Angular thresholding.
+            self.givensRotationParams[layerInd][:, self.angularMaskInds].fill_(0)
             self.applyAngularBias(layerInd)  # Inject bias towards banded structure.
 
     def applySingleLayer(self, inputData, layerInd):
@@ -217,26 +229,18 @@ class reversibleLieLayer(reversibleInterface):
         with (torch.no_grad()):
             # Create update matrix.
             angularUpdateMatrix = torch.zeros_like(self.givensRotationParams[layerInd])
-            countMatrix = torch.zeros_like(self.givensRotationParams[layerInd])
             # angularUpdateMatrix: numSignals, numParams
 
             # Update the four angles in the 4D sub-rotation matrix: [X, Y, Z, W]
-            angularUpdateValue = self.givensRotationParams[layerInd][:, self.xwInds].sign() * self.numDegreesShifting * torch.pi / 180  # Dim: numSignals, numParams
-            angularUpdateMatrix[:, self.xwInds] -= angularUpdateValue  # XW
-            angularUpdateMatrix[:, self.xyInds] += angularUpdateValue*self.alpha  # XY
-            angularUpdateMatrix[:, self.yzInds] -= angularUpdateValue*self.beta  # YZ
-            angularUpdateMatrix[:, self.zwInds] += angularUpdateValue*self.alpha  # ZW
-
-            # Average the update matrix.
-            countMatrix[:, self.xwInds] += 1
-            countMatrix[:, self.xyInds] += self.alpha
-            countMatrix[:, self.yzInds] += self.beta
-            countMatrix[:, self.zwInds] += self.alpha
-            countMatrix[countMatrix == 0] = 1
+            angularUpdateValues = self.getGivensAngles(layerInd)[:, self.xwInds].clone() * self.angularShiftingPercent / 100  # Dim: numSignals, numParams
+            angularUpdateMatrix[:, self.xwInds] -= angularUpdateValues  # XW
+            angularUpdateMatrix[:, self.xyInds] += angularUpdateValues*self.alpha  # XY
+            angularUpdateMatrix[:, self.yzInds] -= angularUpdateValues*self.beta  # YZ
+            angularUpdateMatrix[:, self.zwInds] += angularUpdateValues*self.alpha  # ZW
 
             # Apply a gradient mask.
             angularUpdateMatrix[:, self.angularLocationsInds] *= (self.colInds[self.angularLocationsInds] - self.rowInds[self.angularLocationsInds]
-                                                                  ).abs().to(angularUpdateMatrix.device) / self.sequenceLength
+                                                                  ).to(self.givensRotationParams[layerInd].device).abs() / self.sequenceLength
 
             # import matplotlib.pyplot as plt
             # S = torch.zeros((self.numSignals, self.sequenceLength, self.sequenceLength), dtype=torch.float64)
@@ -246,7 +250,7 @@ class reversibleLieLayer(reversibleInterface):
             # print(S[0].cpu().detach().numpy()[0])
 
             # Apply the update.
-            self.givensRotationParams[layerInd].add_(angularUpdateMatrix / countMatrix)
+            self.givensRotationParams[layerInd].add_(angularUpdateMatrix / self.numShiftedRotations[layerInd].to(self.givensRotationParams[layerInd].device))
 
     def angularThresholding(self, applyMaxThresholding):
         # Get the angular thresholds.
@@ -256,6 +260,7 @@ class reversibleLieLayer(reversibleInterface):
         with torch.no_grad():
             for layerInd in range(self.numLayers):
                 givensAngles = self.getGivensAngles(layerInd)
+                self.applyAngularBias(layerInd)  # Inject bias towards banded structure.
 
                 # Apply the maximum thresholding.
                 self.givensRotationParams[layerInd][givensAngles <= -maxAngularThreshold].fill_(-maxAngularThreshold)
@@ -267,7 +272,6 @@ class reversibleLieLayer(reversibleInterface):
                 # Removing (approximate) geometric symmetries.
                 self.givensRotationParams[layerInd][:, self.angularMaskInds].fill_(0)
                 if 64 < self.sequenceLength: self.percentParamThresholding(layerInd)
-                self.applyAngularBias(layerInd)  # Inject bias towards banded structure.
 
     def percentParamThresholding(self, layerInd):
         with torch.no_grad():
@@ -316,6 +320,7 @@ class reversibleLieLayer(reversibleInterface):
 if __name__ == "__main__":
     # for i in [2, 4, 8, 16, 32, 64, 128, 256]:
     # for i in [16, 32, 64, 128, 256]:
+    modelConstants.userInputParams['angularShiftingPercent'] = 10
 
     # for layers, sequenceLength2 in [(2, 256), (2, 128), (2, 64), (2, 32), (2, 16), (2, 8), (2, 4), (2, 2)]:
     # for _layerInd, sequenceLength2 in [(1, 32), (2, 32), (3, 32), (5, 32), (5, 32), (10, 32)]:

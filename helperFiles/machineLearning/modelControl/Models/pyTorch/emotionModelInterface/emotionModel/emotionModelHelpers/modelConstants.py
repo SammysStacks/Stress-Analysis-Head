@@ -43,8 +43,6 @@ class modelConstants:
     metadata = [datasetIndexMD, subjectIndexMD]
 
     # Specify the model parameters.
-    initialProfileAmp = None  # The limits for the uniform initialization.
-    profileDimension = None  # The number of encoded weights.
     useInitialLoss = True  # Use the initial loss.
     modelTimeWindow = 120  # The time window for the model.
     minMaxScale = 1  # The maximum value for the min-max scaling.
@@ -61,10 +59,6 @@ class modelConstants:
     @classmethod
     def updateModelParams(cls, userInputParams):
         cls.userInputParams = userInputParams
-
-        # Update the model constants.
-        modelConstants.initialProfileAmp = userInputParams['initialProfileAmp']
-        modelConstants.profileDimension = userInputParams['profileDimension']
 
     # ---------------- Hard-coded therapy parameters --------------------- #
 
