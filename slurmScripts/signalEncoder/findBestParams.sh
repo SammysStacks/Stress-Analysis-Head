@@ -62,6 +62,7 @@ maxAngularThresholds=(45)
 #finalMinAngularThresholds=(3)
 percentParamsKeeping_arr=(6)
 minAngularThresholds=(0.05)
+angularShiftingPercents=(0.1)
 
 # Binary reference states.
 numSpecificEncoderLayers_arr=(1)
