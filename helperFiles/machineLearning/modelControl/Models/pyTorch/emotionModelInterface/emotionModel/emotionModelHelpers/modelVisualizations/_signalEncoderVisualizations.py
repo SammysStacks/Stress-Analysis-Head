@@ -246,7 +246,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
             # Plot the potential output vectors.
             if np.all(givensAnglesPath[layerInd][signalInd] == 0): continue
-            angles = initialAngle + givensAnglesPath[layerInd][signalInd]; centerPoint = np.zeros_like(angles)
+            angles = givensAnglesPath[layerInd][signalInd]; angles = initialAngle + angles[angles != 0]; centerPoint = np.zeros_like(angles)
             ax.quiver(centerPoint, centerPoint, np.cos(angles), np.sin(angles), scale=1, angles='xy', scale_units='xy', color=lineColor, width=0.001, zorder=8, alpha=alpha, linewidth=0.1)
 
             if 'shared' in moduleName or epoch == 0: continue
@@ -319,8 +319,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
                 largeAngles = np.where(histogramsABS >= minAngularThreshold, histograms, np.nan)
 
                 # Plot the histograms.
-                histogramPlots.append(ax.hist(smallAngles, bins=bins, color=self.darkColors[0:numSignals], alpha=0.5, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='left', cumulative=False))
-                histogramPlots.append(ax.hist(largeAngles, bins=bins, color=self.darkColors[0:numSignals], alpha=1, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='left', cumulative=False))
+                histogramPlots.append(ax.hist(smallAngles[smallAngles != 0], bins=bins, color=self.darkColors[0:numSignals], alpha=0.5, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='left', cumulative=False))
+                histogramPlots.append(ax.hist(largeAngles[largeAngles != 0], bins=bins, color=self.darkColors[0:numSignals], alpha=1, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='left', cumulative=False))
 
             # Shade the angular thresholds
             if len(smallAngles) == 0: continue
@@ -387,7 +387,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             # Get the angles for the current layer
             lines = scaleFactor * givensAnglesPath[layerInd][signalInd:signalInd + len(self.darkColors) - 1]  # Dimensions: numSignals, numParams
             # for lineInd in range(len(lines)): ax.plot(sorted(lines[lineInd], reverse=True), 'o', color=self.darkColors[lineInd], alpha=0.75, markersize=2, linewidth=1)
-            for lineInd in range(len(lines)): ax.plot(lines[lineInd], 'o', color=self.darkColors[lineInd], alpha=0.75, markersize=2, linewidth=1); print(lines.max(), lines.min())
+            for lineInd in range(len(lines)): ax.plot(lines[lineInd][lines[lineInd] != 0], 'o', color=self.darkColors[lineInd], alpha=0.75, markersize=2, linewidth=1); print(lines.max(), lines.min())
             # Customize subplot title and axes
 
             # Shade the angular thresholds

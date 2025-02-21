@@ -97,7 +97,7 @@ class generalMethods:
         )
         # Normalize the Gaussian matrix
         if gaussMatrix.sum() == 0:
-            gaussMatrix.fill_(1.0) # ensure no nan values
+            gaussMatrix.fill_(1.0)  # ensure no nan values
         gaussMatrix = gaussMatrix / gaussMatrix.sum()  # Normalize the Gaussian matrix
         return gaussMatrix
 

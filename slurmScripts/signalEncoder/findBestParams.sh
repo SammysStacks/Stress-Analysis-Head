@@ -69,7 +69,7 @@ profileParams=(256)
 
 # Reference states.
 waveletTypes_arr=('bior3.1')
-numProfileShots_arr=(24)
+numProfileShots_arr=(16)
 
 for angularShiftingPercent in "${angularShiftingPercents[@]}"
 do
