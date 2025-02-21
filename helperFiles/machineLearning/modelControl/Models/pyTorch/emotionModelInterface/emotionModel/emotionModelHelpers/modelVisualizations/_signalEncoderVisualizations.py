@@ -319,8 +319,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
                 largeAngles = np.where(histogramsABS >= minAngularThreshold, histograms, np.nan)
 
                 # Plot the histograms.
-                histogramPlots.append(ax.hist(smallAngles[smallAngles != 0], bins=bins, color=self.darkColors[0:numSignals], alpha=0.5, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='left', cumulative=False))
-                histogramPlots.append(ax.hist(largeAngles[largeAngles != 0], bins=bins, color=self.darkColors[0:numSignals], alpha=1, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='left', cumulative=False))
+                histogramPlots.append(ax.hist(smallAngles, bins=bins, color=self.darkColors[0:numSignals], alpha=0.5, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='left', cumulative=False))
+                histogramPlots.append(ax.hist(largeAngles, bins=bins, color=self.darkColors[0:numSignals], alpha=1, density=True, edgecolor=self.blackColor, linewidth=0.1, histtype='bar', stacked=True, align='left', cumulative=False))
 
             # Shade the angular thresholds
             if len(smallAngles) == 0: continue
