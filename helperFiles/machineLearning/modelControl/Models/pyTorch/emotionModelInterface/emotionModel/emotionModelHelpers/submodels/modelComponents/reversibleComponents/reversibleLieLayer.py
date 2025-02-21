@@ -123,7 +123,8 @@ class reversibleLieLayer(reversibleLieLayerInterface):
             lastIndexKeeping = math.ceil(percentParamsKeeping * self.numParams / 100)
 
             # Zero out the values below the threshold
-            self.givensRotationParams[layerInd][sortedIndices[:, 0:self.numParams - lastIndexKeeping]].fill_(0)
+            minAngleValues = sortedGivensAngles[:,  0:self.numParams - lastIndexKeeping].unsqueeze(-1)  # Shape (numSignals, 1)
+            self.givensRotationParams[layerInd][givensAngles < minAngleValues].fill_(0)
 
     def applyAngularBias(self, layerInd):
         with (torch.no_grad()):
