@@ -1,71 +1,23 @@
 import math
 
-import numpy as np
 import torch
 import torch.fft
 import torch.nn as nn
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleLieLayerInterface import reversibleLieLayerInterface
 
 
-class reversibleLieLayer(reversibleInterface):
+class reversibleLieLayer(reversibleLieLayerInterface):
 
     def __init__(self, numSignals, sequenceLength, numLayers, activationMethod):
-        super(reversibleLieLayer, self).__init__()
-        # General parameters.
-        self.numParams = int(sequenceLength * (sequenceLength - 1) / 2)  # The number of free parameters in the model.
-        self.activationMethod = activationMethod  # The activation method to use.
-        self.sequenceLength = sequenceLength  # The length of the input signal.
-        self.optimalForwardFirst = False  # Whether to apply the forward pass first.
-        self.numSignals = numSignals  # The number of signals in the input data.
-        self.numLayers = numLayers  # The number of layers in the reversible linear layer.
-
-        # The restricted window for the neural weights.
-        upperWindowMask = torch.ones(self.sequenceLength, self.sequenceLength)
-        upperWindowMask = torch.triu(upperWindowMask, diagonal=1)
-
-        # Create a mask for the angles.
-        angleMask = torch.ones(self.sequenceLength, self.sequenceLength, dtype=torch.int32)
-        angleMask[::2, ::2] = -1; angleMask[1::2, 1::2] = -1
-        angleMask = torch.triu(angleMask, diagonal=1)
-        angleMask = angleMask[angleMask != 0].flatten()
-        angleMask[angleMask == 1] = 0
-
-        # Calculate the offsets to map positions to kernel indices
-        self.angularLocationsInds = (angleMask == 0).nonzero(as_tuple=False).T[0]
-        self.rowInds, self.colInds = upperWindowMask.nonzero(as_tuple=False).T
-        self.angularMaskInds = angleMask.nonzero(as_tuple=False).T[0]
-
-        # Define angular update parameters.
-        coupling = 1/32; self.alpha = 1/4 - coupling
-        self.angularShiftingPercent = modelConstants.userInputParams['angularShiftingPercent']
-        self.beta = 1/2 + 2*coupling
-
-        self.xwInds, self.zwInds, self.yzInds, self.xyInds = [], [], [], []
-        for angularLocationsInd in self.angularLocationsInds:
-            i, j = self.rowInds[angularLocationsInd], self.colInds[angularLocationsInd]
-            if j - i == 1: continue  # Skip the first upper diagonal elements
-
-            nextRowLength = self.sequenceLength - i - 2
-            # Get the four sub-rotation indices: [X, Y, Z, W]
-            self.zwInds.append(angularLocationsInd + 2 * nextRowLength - 1)
-            self.yzInds.append(angularLocationsInd + nextRowLength - 1)
-            self.xyInds.append(angularLocationsInd - 2)
-            self.xwInds.append(angularLocationsInd)
-
-        # Initialize the neural layers.
-        self.activationFunction = nn.ModuleList()
-        self.jacobianParameter = self.initializeJacobianParams(numSignals)
-        self.givensRotationParams = nn.ParameterList()
-        self.numShiftedRotations = []
-
+        super(reversibleLieLayer, self).__init__( numSignals, sequenceLength, numLayers, activationMethod)
         # Create the neural layers.
         for layerInd in range(self.numLayers):
             # Create the neural weights.
             parameters = nn.Parameter(torch.randn(self.numSignals, self.numParams or 1, dtype=torch.float64))
-            parameters = nn.init.uniform_(parameters, a=-0.05, b=0.05)
+            parameters = nn.init.uniform_(parameters, a=-0.1, b=0.1)
             # parameters: numSignals, numParams
 
             # Store the parameters.
@@ -84,15 +36,7 @@ class reversibleLieLayer(reversibleInterface):
             self.givensRotationParams[layerInd][:, self.angularMaskInds].fill_(0)
             self.applyAngularBias(layerInd)  # Inject bias towards banded structure.
 
-    def applySingleLayer(self, inputData, layerInd):
-        # Determine the direction of the forward pass.
-        performOptimalForwardFirst = self.optimalForwardFirst if layerInd % 2 == 0 else not self.optimalForwardFirst
-
-        # Apply the weights to the input data.
-        if self.activationMethod == 'none': inputData = self.applyLayer(inputData, layerInd)
-        else: inputData = self.activationFunction[layerInd](inputData, lambda X: self.applyLayer(X, layerInd), forwardFirst=performOptimalForwardFirst)
-
-        return inputData
+    # ------------------- Main Sections ------------------- #
 
     def forward(self, inputData):
         for layerInd in range(self.numLayers):
@@ -101,6 +45,26 @@ class reversibleLieLayer(reversibleInterface):
 
         return inputData
 
+    def getExpS(self, layerInd):
+        # Get the exponential of the linear operator.
+        expS = self.getS(layerInd).matrix_exp()  # For orthogonal matrices: A.exp().inverse() = (-A).exp(); If A is Skewed Symmetric: A.exp().inverse() = A.exp().transpose()
+        if self.forwardDirection: expS = expS.transpose(-2, -1)  # Take the inverse of the exponential for the forward direction.
+
+        return expS
+
+    def getS(self, layerInd):
+        # Gather the corresponding kernel values for each position for a skewed symmetric matrix.
+        S = torch.zeros(self.numSignals, self.sequenceLength, self.sequenceLength, dtype=torch.float64, device=self.givensRotationParams[layerInd].device)
+
+        # Populate the Givens rotation angles.
+        entriesS = self.getGivensAngles(layerInd)
+        S[:, self.rowInds, self.colInds] = -entriesS
+        S[:, self.colInds, self.rowInds] = entriesS
+
+        return S
+
+    # ------------------- General Sections ------------------- #
+
     def applyLayer(self, inputData, layerInd):
         # Assert the validity of the input parameters.
         batchSize, numSignals, sequenceLength = inputData.size()
@@ -108,149 +72,24 @@ class reversibleLieLayer(reversibleInterface):
         assert numSignals == self.numSignals, f"The number of signals is not correct: {numSignals}, {self.numSignals}"
 
         # Apply the neural weights to the input data.
-        expS = self.getExpS(layerInd, inputData.device)  # = exp(S)
+        expS = self.getExpS(layerInd)  # = exp(S)
         outputData = torch.einsum('bns,nsi->bni', inputData, expS)  # Rotate: exp(S) @ f(x)
         outputData = self.applyManifoldScale(outputData)  # Scale: by jacobian
         # The inverse would be f-1(exp(-A) @ [exp(S) @ f(x)]) = X
 
         return outputData
 
-    # ------------------- Rotation Methods ------------------- #
+    def applySingleLayer(self, inputData, layerInd):
+        # Determine the direction of the forward pass.
+        performOptimalForwardFirst = self.optimalForwardFirst if layerInd % 2 == 0 else not self.optimalForwardFirst
 
-    def getExpS(self, layerInd, device):
-        # Get the linear operator in the exponent.
-        S = self.getS(layerInd, device)  # numSignals, sequenceLength, sequenceLength
+        # Apply the layer.
+        inputData = self.applyLayer(inputData, layerInd) if self.activationMethod == 'none' \
+            else self.activationFunction[layerInd](inputData, lambda X: self.applyLayer(X, layerInd), forwardFirst=performOptimalForwardFirst)
 
-        # Get the exponential of the linear operator.
-        expS = S.matrix_exp()  # For orthogonal matrices: A.exp().inverse() = (-A).exp(); If A is Skewed Symmetric: A.exp().inverse() = A.exp().transpose()
-        if self.forwardDirection: expS = expS.transpose(-2, -1)  # Take the inverse of the exponential for the forward direction.
-        return expS  # exp(S)
+        return inputData
 
-    def getS(self, layerInd, device):
-        # Gather the corresponding kernel values for each position for a skewed symmetric matrix.
-        S = torch.zeros(self.numSignals, self.sequenceLength, self.sequenceLength, device=device, dtype=torch.float64)
-
-        # Populate the Givens rotation angles.
-        entriesS = self.getInfinitesimalAnglesA(layerInd)
-        S[:, self.rowInds, self.colInds] = -entriesS
-        S[:, self.colInds, self.rowInds] = entriesS
-
-        return S
-
-    def getInfinitesimalAnglesA(self, layerInd):
-        return torch.pi * torch.tanh(self.givensRotationParams[layerInd]) / 2  # [-pi/2, pi/2]
-
-    def getGivensAngles(self, layerInd):
-        return self.getInfinitesimalAnglesA(layerInd)
-
-    # ------------------- Helper Methods ------------------- #
-
-    @staticmethod
-    def initializeJacobianParams(numSignals):
-        return nn.Parameter(torch.zeros((1, numSignals, 1)))
-
-    def getJacobianScalar(self):
-        jacobianMatrix = 1.0 + 0.1 * torch.tanh(self.jacobianParameter) - math.log(8*(self.numLayers + 1)) * 0.001
-        return jacobianMatrix
-
-    def applyManifoldScale(self, inputData):
-        scalarValues = self.getJacobianScalar().expand_as(inputData)
-        if reversibleInterface.forwardDirection: return inputData * scalarValues
-        else: return inputData / scalarValues
-
-    def getLinearParams(self, layerInd):
-        givensAngles = self.getGivensAngles(layerInd)  # Dim: numSignals, numParams
-        scalingFactors = self.getJacobianScalar().flatten()  # Dim: numSignals
-
-        return givensAngles, scalingFactors
-
-    # ------------------------------------------------------------ #
-
-    def getAllLinearParams(self):
-        allGivensAngles, allScaleFactors = [], []
-
-        with torch.no_grad():
-            for layerInd in range(self.numLayers):
-                givensAngles, scalingFactors = self.getLinearParams(layerInd)
-                allScaleFactors.append(scalingFactors.unsqueeze(-1).detach().cpu().numpy())
-                allGivensAngles.append(givensAngles.detach().cpu().numpy())
-            allGivensAngles = np.asarray(allGivensAngles)
-            allScaleFactors = np.asarray(allScaleFactors)
-
-        return allGivensAngles, allScaleFactors
-
-    def getNumFreeParams(self, applyMaxThresholding):
-        minAngularThreshold = modelConstants.userInputParams['finalMinAngularThreshold' if applyMaxThresholding else 'minAngularThreshold'] * torch.pi / 180  # Convert to radians
-        allNumFreeParams = []
-
-        with torch.no_grad():
-            for layerInd in range(self.numLayers):
-                angularMask = minAngularThreshold <= self.getGivensAngles(layerInd).abs()
-                numSignalParameters = angularMask.sum(dim=-1, keepdim=True)  # Dim: numSignals, 1
-                allNumFreeParams.append(numSignalParameters.detach().cpu().numpy())
-                # allNumFreeParams: numLayers, numSignals, numFreeParams=1
-
-        return allNumFreeParams
-
-    def getFeatureParams(self):
-        givensAnglesFeatureNames = self.getFeatureNames()
-        allGivensAnglesFeatures = []
-
-        with torch.no_grad():
-            for layerInd in range(self.numLayers):
-                givensAngles, scalingFactors = self.getLinearParams(layerInd)  # Dim: numSignals, numParams
-                scalingFactors = scalingFactors.reshape(self.numSignals, 1)  # Dim: numSignals, numParams=1
-                givensAngles = givensAngles * 180 / torch.pi  # Convert to degrees
-                givensAnglesABS = givensAngles.abs()
-
-                # Calculate the mean, variance, and range of the Givens angles.
-                givensAnglesRange = givensAngles.max(dim=-1).values - givensAngles.min(dim=-1).values  # Dim: numSignals
-                givensAnglesMean = givensAngles.mean(dim=-1).cpu().detach().numpy()  # Dim: numSignals
-                givensAnglesVar = givensAngles.var(dim=-1).cpu().detach().numpy()  # Dim: numSignals
-                givensAnglesRange = givensAnglesRange.cpu().detach().numpy()
-
-                # Calculate the mean, variance, and range of the positive Givens angles.
-                givensAnglesMeanABS = givensAnglesABS.mean(dim=-1).cpu().detach().numpy()  # Dim: numSignals
-                givensAnglesVarABS = givensAnglesABS.var(dim=-1).cpu().detach().numpy()  # Dim: numSignals
-
-                # Calculate the mean, variance, and range of the scaling factors.
-                scalingFactorsVar = scalingFactors.var(dim=0).cpu().detach().numpy()  # Dim: numSignals
-
-                # Combine the features. Return dimension: numFeatures, numValues
-                allGivensAnglesFeatures.append([givensAnglesMean, givensAnglesVar, givensAnglesRange, givensAnglesMeanABS, givensAnglesVarABS, scalingFactorsVar])
-
-        return givensAnglesFeatureNames, allGivensAnglesFeatures
-
-    @staticmethod
-    def getFeatureNames():
-        return ["Angular mean", "Angular variance", "Angular range", "Angular abs(mean)", "Angular abs(variance)", "Scalar variance"]
-
-    def applyAngularBias(self, layerInd):
-        with (torch.no_grad()):
-            # Create update matrix.
-            angularUpdateMatrix = torch.zeros_like(self.givensRotationParams[layerInd])
-            # angularUpdateMatrix: numSignals, numParams
-
-            # Update the four angles in the 4D sub-rotation matrix: [X, Y, Z, W]
-            angularUpdateValues = self.getGivensAngles(layerInd)[:, self.xwInds].clone() * self.angularShiftingPercent / 100  # Dim: numSignals, numParams
-            angularUpdateMatrix[:, self.xwInds] -= angularUpdateValues  # XW
-            angularUpdateMatrix[:, self.xyInds] += angularUpdateValues*self.alpha  # XY
-            angularUpdateMatrix[:, self.yzInds] -= angularUpdateValues*self.beta  # YZ
-            angularUpdateMatrix[:, self.zwInds] += angularUpdateValues*self.alpha  # ZW
-
-            # Apply a gradient mask.
-            angularUpdateMatrix[:, self.angularLocationsInds] *= (self.colInds[self.angularLocationsInds] - self.rowInds[self.angularLocationsInds]
-                                                                  ).to(self.givensRotationParams[layerInd].device).abs() / self.sequenceLength
-
-            # import matplotlib.pyplot as plt
-            # S = torch.zeros((self.numSignals, self.sequenceLength, self.sequenceLength), dtype=torch.float64)
-            # S[:, self.rowInds, self.colInds] = angularUpdateMatrix
-            # S[:, self.colInds, self.rowInds] = -angularUpdateMatrix
-            # plt.imshow(S[0].cpu().detach().numpy(), cmap='plasma'); plt.colorbar(); plt.show()
-            # print(S[0].cpu().detach().numpy()[0])
-
-            # Apply the update.
-            self.givensRotationParams[layerInd].add_(angularUpdateMatrix / self.numShiftedRotations[layerInd].to(self.givensRotationParams[layerInd].device))
+    # ------------------- Observational Learning ------------------- #
 
     def angularThresholding(self, applyMaxThresholding):
         # Get the angular thresholds.
@@ -259,55 +98,56 @@ class reversibleLieLayer(reversibleInterface):
 
         with torch.no_grad():
             for layerInd in range(self.numLayers):
-                givensAngles = self.getGivensAngles(layerInd)
+                # Max 1 degree of separation between rotational nodes.
+                self.givensRotationParams[layerInd][:, self.angularMaskInds].fill_(0)
                 self.applyAngularBias(layerInd)  # Inject bias towards banded structure.
 
-                # Apply the maximum thresholding.
+                # Apply the angular bounds.
+                givensAngles = self.getGivensAngles(layerInd)
                 self.givensRotationParams[layerInd][givensAngles <= -maxAngularThreshold].fill_(-maxAngularThreshold)
                 self.givensRotationParams[layerInd][maxAngularThreshold <= givensAngles].fill_(maxAngularThreshold)
-
-                # Apply the minimum thresholding.
                 self.givensRotationParams[layerInd][givensAngles.abs() < minAngularThreshold].fill_(0)
 
-                # Removing (approximate) geometric symmetries.
-                self.givensRotationParams[layerInd][:, self.angularMaskInds].fill_(0)
+                # Apply an extra thresholding if the sequence length is large.
                 if 64 < self.sequenceLength: self.percentParamThresholding(layerInd)
 
     def percentParamThresholding(self, layerInd):
         with torch.no_grad():
             # Sort each row by absolute value
-            givensAngles = self.getGivensAngles(layerInd).clone().abs()  # Dim: numSignals, numParams
-            sorted_values, sorted_indices = torch.sort(givensAngles, dim=-1)
-            # sorted_values -> [0, 1, 2, 3, ...]
+            givensAngles = self.getGivensAngles(layerInd).abs()  # Dim: numSignals, numParams
+            sortedGivensAngles, sortedIndices = torch.sort(givensAngles, dim=-1)
+            # sortedGivensAngles -> [0, 0.1, 0.2, ... pi/2]
 
-            # Get the thresholding information.
+            # Get the threshold.
             percentParamsKeeping = float(modelConstants.userInputParams['percentParamsKeeping'])
-
-            # Find the threshold angles.
-            numAnglesThrowingAway = int((100 - percentParamsKeeping) * self.numParams / 100) - 1
-            minAngleValues = sorted_values[:, numAnglesThrowingAway].unsqueeze(-1)  # Shape (numSignals, 1)
+            lastIndexKeeping = math.ceil(percentParamsKeeping * self.numParams / 100)
 
             # Zero out the values below the threshold
-            self.givensRotationParams[layerInd][givensAngles < minAngleValues].fill_(0)
+            self.givensRotationParams[layerInd][sortedIndices[:, 0:self.numParams - lastIndexKeeping]].fill_(0)
 
-    def getAllActivationParams(self):
-        allActivationParams = []
-        with torch.no_grad():
-            for layerInd in range(self.numLayers):
-                infiniteBound, linearity, convergentPoint = self.activationFunction[layerInd].getActivationParams()
-                allActivationParams.append([infiniteBound.detach().cpu().item(), linearity.detach().cpu().item(), convergentPoint.detach().cpu().item()])
-            allActivationParams = np.asarray(allActivationParams)
+    def applyAngularBias(self, layerInd):
+        with (torch.no_grad()):
+            # Create update matrix.
+            device = self.givensRotationParams[layerInd].device
+            angularUpdateMatrix = torch.zeros_like(self.givensRotationParams[layerInd], device=device)
+            # angularUpdateMatrix: numSignals, numParams
 
-        return allActivationParams
+            # Update the four angles in the 4D sub-rotation matrix: [X, Y, Z, W]
+            angularUpdateValues = self.getGivensAngles(layerInd)[:, self.xwInds].to(device) * self.angularShiftingPercent / 100  # Dim: numSignals, numParams
+            angularUpdateMatrix[:, self.xwInds] -= angularUpdateValues  # XW
+            angularUpdateMatrix[:, self.xyInds] += angularUpdateValues*self.alpha  # XY
+            angularUpdateMatrix[:, self.yzInds] -= angularUpdateValues*self.beta  # YZ
+            angularUpdateMatrix[:, self.zwInds] += angularUpdateValues*self.alpha  # ZW
 
-    def geAllActivationCurves(self, x_min=-1.5, x_max=1.5, num_points=100):
-        xs, ys = [], []
-        with torch.no_grad():
-            for layerInd in range(self.numLayers):
-                x, y = self.activationFunction[layerInd].getActivationCurve(x_min, x_max, num_points)
-                xs.append(x); ys.append(y)
+            # Apply a 4D convolutional rotation update
+            angularUpdateMatrix[:, self.angularLocationsInds] *= (self.colInds[self.angularLocationsInds] - self.rowInds[self.angularLocationsInds]).abs().to(device) / self.sequenceLength
+            self.givensRotationParams[layerInd].add_(angularUpdateMatrix / self.numShiftedRotations[layerInd].to(device))
 
-        return xs, ys
+            # import matplotlib.pyplot as plt
+            # S = torch.zeros((self.numSignals, self.sequenceLength, self.sequenceLength), dtype=torch.float64, device=device)
+            # S[:, self.rowInds, self.colInds] = angularUpdateMatrix
+            # S[:, self.colInds, self.rowInds] = -angularUpdateMatrix
+            # plt.imshow(S[0].cpu().detach().numpy(), cmap='plasma'); plt.colorbar(); plt.show()
 
     # ------------------------------------------------------------ #
 
@@ -326,7 +166,7 @@ if __name__ == "__main__":
     # for _layerInd, sequenceLength2 in [(1, 32), (2, 32), (3, 32), (5, 32), (5, 32), (10, 32)]:
     # for _layerInd, sequenceLength2 in [(1, 64), (2, 64), (3, 64), (5, 64), (5, 64), (10, 64)]:
     # for _layerInd, sequenceLength2 in [(1, 128), (2, 128), (3, 128), (5, 128), (5, 128), (10, 128)]:
-    for _layerInd, sequenceLength2 in [(4, 256)]:
+    for _layerInd, sequenceLength2 in [(4, 32)]:
         # General parameters.
         _batchSize, _numSignals, _sequenceLength = 128, 64, sequenceLength2
         _activationMethod = 'reversibleLinearSoftSign'  # reversibleLinearSoftSign
@@ -340,7 +180,7 @@ if __name__ == "__main__":
         healthProfile = healthProfile * 2 - 1
 
         # Perform the convolution in the fourier and spatial domains.
-        _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(healthProfile, atol=1e-6, numLayers=1, plotResults=True)
+        _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(healthProfile, atol=1e-6, numLayers=1, plotResults=False)
         neuralLayerClass.printParams()
 
         # ratio = (_forwardData.norm(dim=-1) / healthProfile.norm(dim=-1)).view(-1).detach().numpy()
