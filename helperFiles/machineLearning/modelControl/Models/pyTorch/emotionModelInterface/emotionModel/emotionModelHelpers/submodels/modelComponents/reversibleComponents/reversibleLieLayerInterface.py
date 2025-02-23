@@ -38,22 +38,29 @@ class reversibleLieLayerInterface(reversibleInterface):
         self.angularMaskInds = angleMask.nonzero(as_tuple=False).T[0]
 
         # Define angular update parameters.
-        coupling = 1/6; self.alpha = 1/2 - coupling
         self.angularShiftingPercent = modelConstants.userInputParams['angularShiftingPercent']
-        self.beta = 1/2 + 2*coupling
-        self.beta = 2*coupling
+        self.alpha, self.beta, self.gamma = 1/2, 0, 1/2
+        self.decayFactorCheckerboard, self.decayFactorThreshold = 1/4, 1/2
 
-        self.xwInds, self.zwInds, self.yzInds, self.xyInds = [], [], [], []
+        # Get the four sub-rotation indices: [X, Y, Z, W]
+        self.xwInds, self.xzInds, self.yWInds = [], [], []
+        self.zwInds, self.yzInds, self.xyInds = [], [], []
         for angularLocationsInd in self.angularLocationsInds:
             i, j = self.rowInds[angularLocationsInd], self.colInds[angularLocationsInd]
             if j - i == 1: continue  # Skip the first upper diagonal elements
-
             nextRowLength = self.sequenceLength - i - 2
-            # Get the four sub-rotation indices: [X, Y, Z, W]
-            self.zwInds.append(angularLocationsInd + 2 * nextRowLength - 1)
+
+            # Static terms.
             self.yzInds.append(angularLocationsInd + nextRowLength - 1)
-            self.xyInds.append(angularLocationsInd - 2)
             self.xwInds.append(angularLocationsInd)
+
+            # Alpha terms.
+            self.zwInds.append(angularLocationsInd + 2 * nextRowLength - 1)
+            self.xyInds.append(angularLocationsInd - 2)
+
+            # Coupling terms.
+            self.xzInds.append(angularLocationsInd - 1)
+            self.yWInds.append(angularLocationsInd + nextRowLength)
 
         # Initialize the neural layers.
         self.activationFunction = nn.ModuleList()

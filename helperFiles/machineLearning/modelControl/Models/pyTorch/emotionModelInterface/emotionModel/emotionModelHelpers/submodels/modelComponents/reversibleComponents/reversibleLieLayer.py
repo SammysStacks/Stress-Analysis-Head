@@ -21,11 +21,8 @@ class reversibleLieLayer(reversibleLieLayerInterface):
         for layerInd in range(self.numLayers):
             # Create the neural weights.
             parameters = torch.randn(self.numSignals, self.numParams or 1, dtype=torch.float64)
-            parameters = nn.init.uniform_(parameters, a=-0.1, b=0.1)
+            parameters = nn.init.uniform_(parameters, a=-0.125, b=0.125)
             # parameters: numSignals, numParams
-
-            # Apply the angular thresholding.
-            parameters[:, self.angularMaskInds] = 0
 
             # Store the parameters.
             self.activationFunction.append(activationFunctions.getActivationMethod(activationMethod))
@@ -37,6 +34,8 @@ class reversibleLieLayer(reversibleLieLayerInterface):
             self.numShiftedRotations[layerInd][:, self.xyInds] += self.alpha
             self.numShiftedRotations[layerInd][:, self.yzInds] += self.beta
             self.numShiftedRotations[layerInd][:, self.zwInds] += self.alpha
+            self.numShiftedRotations[layerInd][:, self.xzInds] += self.gamma
+            self.numShiftedRotations[layerInd][:, self.yWInds] += self.gamma
             self.numShiftedRotations[layerInd][self.numShiftedRotations[layerInd] == 0] = 1
 
     # ------------------- Main Sections ------------------- #
@@ -102,19 +101,19 @@ class reversibleLieLayer(reversibleLieLayerInterface):
         with torch.no_grad():
             for layerInd in range(self.numLayers):
                 # Max 1 degree of separation between rotational nodes.
-                self.givensRotationParams[layerInd][:, self.angularMaskInds] = 0
-                self.applyAngularBias(layerInd)  # Inject bias towards banded structure.
+                self.givensRotationParams[layerInd][:, self.angularMaskInds] *= self.decayFactorCheckerboard if not applyMaxThresholding else 0
+                self.applyAngularShift(layerInd)  # Inject bias towards banded structure.
+
+                # Apply an extra thresholding if the sequence length is large.
+                if 64 < self.sequenceLength: self.percentParamThresholding(layerInd, applyMaxThresholding)  # Must be every epoch! Helps diminish overfitting.
 
                 # Apply the angular bounds.
                 givensAngles = self.getGivensAngles(layerInd)  # Dim: numSignals, numParams
                 self.givensRotationParams[layerInd][givensAngles <= -maxAngularThreshold] = -maxAngularThreshold
                 self.givensRotationParams[layerInd][maxAngularThreshold <= givensAngles] = maxAngularThreshold
-                self.givensRotationParams[layerInd][givensAngles.abs() < minAngularThreshold] = 0
+                self.givensRotationParams[layerInd][givensAngles.abs() < minAngularThreshold] *= self.decayFactorThreshold if not applyMaxThresholding else 0
 
-                # Apply an extra thresholding if the sequence length is large.
-                if 64 < self.sequenceLength: self.percentParamThresholding(layerInd)
-
-    def percentParamThresholding(self, layerInd):
+    def percentParamThresholding(self, layerInd, applyMaxThresholding):
         with torch.no_grad():
             # Sort each row by absolute value
             givensAngles = self.getGivensAngles(layerInd).abs()  # Dim: numSignals, numParams
@@ -127,9 +126,9 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
             # Zero out the values below the threshold
             minAngleValues = sortedGivensAngles[:,  -lastIndexKeeping:1-lastIndexKeeping]  # Shape (numSignals, 1)
-            self.givensRotationParams[layerInd][givensAngles < minAngleValues] = 0
+            self.givensRotationParams[layerInd][givensAngles < minAngleValues] *= self.decayFactorThreshold if not applyMaxThresholding else 0
 
-    def applyAngularBias(self, layerInd):
+    def applyAngularShift(self, layerInd):
         with (torch.no_grad()):
             # Create update matrix.
             device = self.givensRotationParams[layerInd].device
@@ -138,16 +137,23 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
             # Update the four angles in the 4D sub-rotation matrix: [X, Y, Z, W]
             angularUpdateValues = self.getGivensAngles(layerInd)[:, self.xwInds].to(device) * self.angularShiftingPercent / 100  # Dim: numSignals, numParams
+
+            # Static terms.
             angularUpdateMatrix[:, self.xwInds] -= angularUpdateValues  # XW
-            angularUpdateMatrix[:, self.xyInds] += angularUpdateValues*self.alpha  # XY
             angularUpdateMatrix[:, self.yzInds] -= angularUpdateValues*self.beta  # YZ
-            angularUpdateMatrix[:, self.zwInds] += angularUpdateValues*self.alpha  # ZW
+
+            # Alpha terms.
+            angularUpdateMatrix[:, self.xyInds] += angularUpdateValues*self.alpha  # XY
+            angularUpdateMatrix[:, self.zwInds] -= angularUpdateValues*self.alpha  # ZW
+
+            # Coupling terms.
+            angularUpdateMatrix[:, self.xzInds] += angularUpdateValues*self.gamma  # XZ
+            angularUpdateMatrix[:, self.yWInds] -= angularUpdateValues*self.gamma  # YW
 
             # Apply a 4D convolutional rotation update
             angularUpdateMatrix[:, self.angularLocationsInds] *= (self.colInds[self.angularLocationsInds] - self.rowInds[self.angularLocationsInds]).abs().to(device) / self.sequenceLength
             self.givensRotationParams[layerInd].add_(angularUpdateMatrix / self.numShiftedRotations[layerInd].to(device))
 
-            # import matplotlib.pyplot as plt
             # S = torch.zeros((self.numSignals, self.sequenceLength, self.sequenceLength), dtype=torch.float64, device=device)
             # S[:, self.rowInds, self.colInds] = angularUpdateMatrix
             # S[:, self.colInds, self.rowInds] = -angularUpdateMatrix
@@ -173,7 +179,7 @@ if __name__ == "__main__":
     # for _layerInd, sequenceLength2 in [(1, 32), (2, 32), (3, 32), (5, 32), (5, 32), (10, 32)]:
     # for _layerInd, sequenceLength2 in [(1, 64), (2, 64), (3, 64), (5, 64), (5, 64), (10, 64)]:
     # for _layerInd, sequenceLength2 in [(1, 128), (2, 128), (3, 128), (5, 128), (5, 128), (10, 128)]:
-    for _layerInd, sequenceLength2 in [(4, 6)]:
+    for _layerInd, sequenceLength2 in [(1, 8), (1, 32), (1, 64)]:
         # General parameters.
         _batchSize, _numSignals, _sequenceLength = 128, 64, sequenceLength2
         _activationMethod = 'reversibleLinearSoftSign'  # reversibleLinearSoftSign
