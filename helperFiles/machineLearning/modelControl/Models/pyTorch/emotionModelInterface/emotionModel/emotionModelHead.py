@@ -394,7 +394,7 @@ class emotionModelHead(nn.Module):
 
         # Optionally, plot the original and reconstructed signals for visual comparison
         plt.plot(validTimepoints, validDatapoints, 'ok', markersize=3, label='Initial Signal', alpha=0.75)
-        plt.plot(validTimepoints, validReconstructedPoints, 'o', color='tab:red', markersize=3, label='Reconstructed Signal', alpha=0.75)
+        plt.plot(validTimepoints, validReconstructedPoints, 'o-', color='tab:red', markersize=3, label='Reconstructed Signal', alpha=0.75)
         plt.plot(resampledBiomarkerTimes, resampledSignalData[firstBatchInd, firstSignalInd, :].clone().detach().cpu().numpy(), 'tab:blue', linewidth=1, label='Resampled Signal', alpha=0.75)
         plt.title(f"batchInd{firstBatchInd} signalInd{firstSignalInd} numPoints{len(validTimepoints)}")
         plt.ylim((-1.75, 1.75))

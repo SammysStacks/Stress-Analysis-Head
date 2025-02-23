@@ -51,12 +51,12 @@ waveletTypes_arr=(
 )
 
 # Angular reference states.
-angularShiftingPercents=(0.1 0.5 1 2)
+angularShiftingPercents=(0.1 0.5 1 2 5 10)
 percentParamsKeeping_arr=(10)  # [6, 10];
 
 # Angular reference states.
 minAngularThresholds=(0.05 0.1 0.25 0.5 1)
-finalMinAngularThresholds=(2 3 4)  # [0, 5]; Best: [0, 3]
+finalMinAngularThresholds=(1 2 3 4)  # [0, 5]; Best: [0, 3]
 maxAngularThresholds=(45)
 
 # Binary reference states.
@@ -69,7 +69,7 @@ profileParams=(256)
 
 # Reference states.
 waveletTypes_arr=('bior3.1')
-numProfileShots_arr=(20)
+numProfileShots_arr=(32)
 
 for angularShiftingPercent in "${angularShiftingPercents[@]}"
 do
