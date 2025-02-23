@@ -12,8 +12,8 @@ wds_reversible=('0')  # 1e-4 == x <= 1e-3
 wds_profileGen=('0')  # 1e-5 == x <= 1e-4
 
 # Learning parameters.
-lrs_profile=('0.07')  # 0.005 <= x <= 0.05
-lrs_reversible=('5e-4' '3e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
+lrs_profile=('0.075')  # 0.005 <= x <= 0.05
+lrs_reversible=('5e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
 lrs_profileGen=('1e-4') # # 5e-5 <= x == 1e-4;
 
 # Known interesting parameters: 63
@@ -51,22 +51,17 @@ waveletTypes_arr=(
 )
 
 # Angular reference states.
-finalMinAngularThresholds=(1 2 3 4 5 6)  # [0, 5]; Best: [0, 3]
-percentParamsKeeping_arr=(2 4 6 8)  # [5, 10]; Best: 8?
-angularShiftingPercents=(0.1 1 10 25 50 100)
+angularShiftingPercents=(0.1 0.5 1 2)
+percentParamsKeeping_arr=(10)  # [6, 10];
 
 # Angular reference states.
-minAngularThresholds=(0.01 0.05 0.1 0.25)
+minAngularThresholds=(0.05 0.1 0.25 0.5 1)
+finalMinAngularThresholds=(2 3 4)  # [0, 5]; Best: [0, 3]
 maxAngularThresholds=(45)
-
-finalMinAngularThresholds=(1 2 3 4)
-percentParamsKeeping_arr=(8 10)
-minAngularThresholds=(0.05)
-angularShiftingPercents=(0.01 0.1 1)
 
 # Binary reference states.
 numSpecificEncoderLayers_arr=(1)
-numSharedEncoderLayers_arr=(6)  # [4, 10]; Best: 6 and 8
+numSharedEncoderLayers_arr=(8)  # [4, 10]; Best: 6 and 8
 
 # Binary reference states.
 encodedDimensions_arr=(256)
@@ -74,7 +69,7 @@ profileParams=(256)
 
 # Reference states.
 waveletTypes_arr=('bior3.1')
-numProfileShots_arr=(16)
+numProfileShots_arr=(20)
 
 for angularShiftingPercent in "${angularShiftingPercents[@]}"
 do
