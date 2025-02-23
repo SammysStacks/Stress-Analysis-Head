@@ -38,7 +38,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-02-22"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2025-02-22 4"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Architecture Parameters ----------------------- #
@@ -62,12 +62,12 @@ if __name__ == "__main__":
     # Add arguments for the health profile.
     parser.add_argument('--initialProfileAmp', type=float, default=1e-3, help='The limits for profile initialization. Should be near zero.')
     parser.add_argument('--profileDimension', type=int, default=256, help='The number of profile weights: [32, 256]')
-    parser.add_argument('--numProfileShots', type=int, default=16, help='The epochs for profile training: [16, 32]')
+    parser.add_argument('--numProfileShots', type=int, default=32, help='The epochs for profile training: [16, 32]')
 
     # Add arguments for observational learning.
-    parser.add_argument('--finalMinAngularThreshold', type=float, default=2.5, help='The final min rotational threshold in degrees.')
+    parser.add_argument('--finalMinAngularThreshold', type=float, default=3, help='The final min rotational threshold in degrees.')
     parser.add_argument('--percentParamsKeeping', type=int, default=10, help='The percentage of parameters to keep in the model.')
-    parser.add_argument('--minAngularThreshold', type=float, default=0.25, help='The smaller rotational threshold in degrees.')
+    parser.add_argument('--minAngularThreshold', type=float, default=0.1, help='The smaller rotational threshold in degrees.')
     parser.add_argument('--maxAngularThreshold', type=float, default=45, help='The larger rotational threshold in degrees.')
     parser.add_argument('--angularShiftingPercent', type=float, default=1, help='The percentage of the angular shift.')
 
