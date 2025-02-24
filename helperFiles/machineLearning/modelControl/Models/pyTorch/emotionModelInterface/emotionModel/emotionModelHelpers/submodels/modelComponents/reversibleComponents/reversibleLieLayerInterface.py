@@ -1,9 +1,7 @@
-import math
-
-import numpy as np
-import torch
-import torch.fft
 import torch.nn as nn
+import numpy as np
+import torch.fft
+import torch
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
@@ -72,7 +70,7 @@ class reversibleLieLayerInterface(reversibleInterface):
         return torch.pi * torch.tanh(self.givensRotationParams[layerInd]) / 2  # [-pi/2, pi/2]
 
     def getJacobianScalar(self):
-        return 1.0 + 0.1 * torch.tanh(self.jacobianParameter) - math.log(8*(self.numLayers + 1)) * 0.001
+        return 1.0 + 0.05 * torch.tanh(self.jacobianParameter)
 
     # ------------------- Helper Methods ------------------- #
 

@@ -51,17 +51,17 @@ waveletTypes_arr=(
 )
 
 # Angular reference states.
-angularShiftingPercents=(1 2 3 4 5)
+angularShiftingPercents=(0.1 1 2 3 4 5 10)
 percentParamsKeeping_arr=(10)  # [6, 10];
 
 # Angular reference states.
-minAngularThresholds=(0.01 0.05 0.1 0.25 0.5)
+minAngularThresholds=(0.01 0.05 0.1 0.25 0.5 1)
 finalMinAngularThresholds=(1 2 3 4)  # [0, 5]; Best: [0, 3]
 maxAngularThresholds=(45)
 
 # Binary reference states.
 numSpecificEncoderLayers_arr=(1)
-numSharedEncoderLayers_arr=(8)  # [4, 10]; Best: 6 and 8
+numSharedEncoderLayers_arr=(6)  # [4, 10]; Best: 6 and 8
 
 # Binary reference states.
 encodedDimensions_arr=(256)
