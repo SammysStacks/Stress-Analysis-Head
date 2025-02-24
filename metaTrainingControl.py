@@ -65,11 +65,11 @@ if __name__ == "__main__":
     parser.add_argument('--numProfileShots', type=int, default=32, help='The epochs for profile training: [16, 32]')
 
     # Add arguments for observational learning.
-    parser.add_argument('--finalMinAngularThreshold', type=float, default=3, help='The final min rotational threshold in degrees.')
+    parser.add_argument('--finalMinAngularThreshold', type=float, default=2, help='The final min rotational threshold in degrees.')
     parser.add_argument('--percentParamsKeeping', type=int, default=10, help='The percentage of parameters to keep in the model.')
-    parser.add_argument('--minAngularThreshold', type=float, default=0.05, help='The smaller rotational threshold in degrees.')
+    parser.add_argument('--minAngularThreshold', type=float, default=0.01, help='The smaller rotational threshold in degrees.')
     parser.add_argument('--maxAngularThreshold', type=float, default=45, help='The larger rotational threshold in degrees.')
-    parser.add_argument('--angularShiftingPercent', type=float, default=5, help='The percentage of the angular shift.')
+    parser.add_argument('--angularShiftingPercent', type=float, default=2, help='The percentage of the angular shift.')
 
     # dd arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions).')
@@ -100,7 +100,7 @@ if __name__ == "__main__":
 
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
-    userInputParams['cullingEpoch'] = 2 + math.ceil(userInputParams['finalMinAngularThreshold'] / userInputParams['minAngularThreshold'])
+    userInputParams['cullingEpoch'] = math.ceil(userInputParams['finalMinAngularThreshold'] / 0.05)
 
     # Compile additional input parameters.
     userInputParams = modelParameters.getNeuralParameters(userInputParams)
