@@ -51,11 +51,11 @@ waveletTypes_arr=(
 )
 
 # Angular reference states.
-angularShiftingPercents=(0.1 0.5 1 2 5 10)
+angularShiftingPercents=(1 2 3 4 5)
 percentParamsKeeping_arr=(10)  # [6, 10];
 
 # Angular reference states.
-minAngularThresholds=(0.05 0.1 0.25 0.5 1)
+minAngularThresholds=(0.01 0.05 0.1 0.25 0.5)
 finalMinAngularThresholds=(1 2 3 4)  # [0, 5]; Best: [0, 3]
 maxAngularThresholds=(45)
 

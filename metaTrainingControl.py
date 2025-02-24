@@ -38,7 +38,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-02-22 6"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2025-02-23"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Architecture Parameters ----------------------- #
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     # Add arguments for observational learning.
     parser.add_argument('--finalMinAngularThreshold', type=float, default=3, help='The final min rotational threshold in degrees.')
     parser.add_argument('--percentParamsKeeping', type=int, default=10, help='The percentage of parameters to keep in the model.')
-    parser.add_argument('--minAngularThreshold', type=float, default=0.1, help='The smaller rotational threshold in degrees.')
+    parser.add_argument('--minAngularThreshold', type=float, default=0.05, help='The smaller rotational threshold in degrees.')
     parser.add_argument('--maxAngularThreshold', type=float, default=45, help='The larger rotational threshold in degrees.')
     parser.add_argument('--angularShiftingPercent', type=float, default=5, help='The percentage of the angular shift.')
 
