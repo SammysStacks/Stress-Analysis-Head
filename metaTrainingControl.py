@@ -67,7 +67,7 @@ if __name__ == "__main__":
     # Add arguments for observational learning.
     parser.add_argument('--finalMinAngularThreshold', type=float, default=2, help='The final min rotational threshold in degrees.')
     parser.add_argument('--percentParamsKeeping', type=int, default=10, help='The percentage of parameters to keep in the model.')
-    parser.add_argument('--minAngularThreshold', type=float, default=0.01, help='The smaller rotational threshold in degrees.')
+    parser.add_argument('--minAngularThreshold', type=float, default=0.05, help='The smaller rotational threshold in degrees.')
     parser.add_argument('--maxAngularThreshold', type=float, default=45, help='The larger rotational threshold in degrees.')
     parser.add_argument('--angularShiftingPercent', type=float, default=2, help='The percentage of the angular shift.')
 
@@ -100,7 +100,7 @@ if __name__ == "__main__":
 
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
-    userInputParams['cullingEpoch'] = math.ceil(userInputParams['finalMinAngularThreshold'] / 0.05)
+    userInputParams['cullingEpoch'] = math.ceil(userInputParams['finalMinAngularThreshold'] / 0.1)
 
     # Compile additional input parameters.
     userInputParams = modelParameters.getNeuralParameters(userInputParams)
