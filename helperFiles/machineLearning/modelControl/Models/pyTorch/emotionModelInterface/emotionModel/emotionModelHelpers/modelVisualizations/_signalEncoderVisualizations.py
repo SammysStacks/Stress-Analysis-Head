@@ -387,7 +387,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             # Get the angles for the current layer
             lines = scaleFactor * givensAnglesPath[layerInd][signalInd:signalInd + len(self.darkColors) - 1]  # Dimensions: numSignals, numParams
             # for lineInd in range(len(lines)): ax.plot(sorted(lines[lineInd], reverse=True), 'o', color=self.darkColors[lineInd], alpha=0.75, markersize=2, linewidth=1)
-            for lineInd in range(len(lines)): ax.plot(lines[lineInd][lines[lineInd] != 0], 'o', color=self.darkColors[lineInd], alpha=0.75, markersize=2, linewidth=1)
+            # for lineInd in range(len(lines)): ax.plot(lines[lineInd][lines[lineInd] != 0], 'o', color=self.darkColors[lineInd], alpha=0.75, markersize=2, linewidth=1)
+            for lineInd in range(len(lines)): ax.plot(lines[lineInd], 'o', color=self.darkColors[lineInd], alpha=0.75, markersize=2, linewidth=1)
             # Customize subplot title and axes
 
             # Shade the angular thresholds
@@ -496,7 +497,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         ax.set_title(f"{plotTitle}; Epoch {epoch}", fontsize=16)
         ax.set_xlabel("Module component")  # X-axis: values
         ax.set_ylabel("Scalar values")  # Y-axis: bin counts
-        ax.set_ylim((0.89, 1.11))
+        ax.set_ylim((0.925, 1.075))
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=False)
@@ -518,7 +519,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         ax.set_title(f"{plotTitle}; Epoch {epoch}", fontsize=16)
         ax.set_xlabel("Scale factor")  # X-axis: values
         ax.set_ylabel("Frequency")  # Y-axis: bin counts
-        ax.set_xlim((0.89, 1.11))
+        ax.set_xlim((0.925, 1.075))
         ax.set_ylim((0, None))
         ax.legend()
 

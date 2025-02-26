@@ -37,7 +37,7 @@ class reversibleLieLayerInterface(reversibleInterface):
 
         # Define angular update parameters.
         self.angularShiftingPercent = modelConstants.userInputParams['angularShiftingPercent']
-        self.decayFactorCheckerboard, self.decayFactorThreshold = 0, 1/8
+        self.decayFactorCheckerboard, self.decayFactorThreshold = 0, 0
         self.alpha, self.beta, self.gamma = 1, 1, 1
 
         # Get the four sub-rotation indices: [X, Y, Z, W]
@@ -68,6 +68,10 @@ class reversibleLieLayerInterface(reversibleInterface):
 
     def getGivensAngles(self, layerInd):
         return torch.pi * torch.tanh(self.givensRotationParams[layerInd]) / 2  # [-pi/2, pi/2]
+
+    @staticmethod
+    def getInverseAngleParams(givensAngles):
+        return torch.atanh(2 * givensAngles / torch.pi)
 
     def getJacobianScalar(self):
         return 1.0 + 0.05 * torch.tanh(self.jacobianParameter)

@@ -97,21 +97,22 @@ class reversibleLieLayer(reversibleLieLayerInterface):
         # Get the angular thresholds.
         minAngularThreshold = modelConstants.userInputParams['finalMinAngularThreshold' if applyMaxThresholding else 'minAngularThreshold'] * torch.pi / 180  # Convert to radians
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold'] * torch.pi / 180  # Convert to radians
+        maxAngularParam = self.getInverseAngleParams(torch.tensor(maxAngularThreshold))
 
         with torch.no_grad():
             for layerInd in range(self.numLayers):
                 # Max 1 degree of separation between rotational nodes.
-                self.givensRotationParams[layerInd][:, self.angularMaskInds] *= self.decayFactorCheckerboard if not applyMaxThresholding else 0
-                self.applyAngularShift(layerInd)  # Inject bias towards banded structure.
+                self.givensRotationParams[layerInd][:, self.angularMaskInds] = 0
 
                 # Apply an extra thresholding if the sequence length is large.
                 if 64 < self.sequenceLength: self.percentParamThresholding(layerInd, applyMaxThresholding)  # Must be every epoch! Helps diminish overfitting.
 
                 # Apply the angular bounds.
                 givensAngles = self.getGivensAngles(layerInd)  # Dim: numSignals, numParams
-                self.givensRotationParams[layerInd][givensAngles <= -maxAngularThreshold] = -maxAngularThreshold
-                self.givensRotationParams[layerInd][maxAngularThreshold <= givensAngles] = maxAngularThreshold
+                self.givensRotationParams[layerInd][givensAngles <= -maxAngularThreshold] = -maxAngularParam
+                self.givensRotationParams[layerInd][maxAngularThreshold <= givensAngles] = maxAngularParam
                 self.givensRotationParams[layerInd][givensAngles.abs() < minAngularThreshold] = 0
+                self.applyAngularShift(layerInd)  # Inject bias towards banded structure.
 
     def percentParamThresholding(self, layerInd, applyMaxThresholding):
         with torch.no_grad():
@@ -139,7 +140,10 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
             # Apply a 4D convolutional rotation update
             angularUpdateValues *= (self.colInds - self.rowInds).abs().to(device) / self.sequenceLength
-            self.givensRotationParams[layerInd].add_(angularUpdateValues)
+            angularUpdateParams = self.getInverseAngleParams(angularUpdateValues)
+
+            # Apply the update.
+            self.givensRotationParams[layerInd].add_(angularUpdateParams)
 
             # S = torch.zeros((self.numSignals, self.sequenceLength, self.sequenceLength), dtype=torch.float64, device=device)
             # S[:, self.rowInds, self.colInds] = angularUpdateValues
@@ -170,7 +174,10 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
             # Apply a 4D convolutional rotation update
             angularUpdateMatrix[:, self.angularLocationsInds] *= (self.colInds[self.angularLocationsInds] - self.rowInds[self.angularLocationsInds]).abs().to(device) / self.sequenceLength
-            self.givensRotationParams[layerInd].add_(angularUpdateMatrix / self.numShiftedRotations[layerInd].to(device))
+            angularUpdateParams = self.getInverseAngleParams(angularUpdateMatrix / self.numShiftedRotations[layerInd].to(device))
+
+            # Apply the update.
+            self.givensRotationParams[layerInd].add_(angularUpdateParams)
 
             # S = torch.zeros((self.numSignals, self.sequenceLength, self.sequenceLength), dtype=torch.float64, device=device)
             # S[:, self.rowInds, self.colInds] = angularUpdateMatrix

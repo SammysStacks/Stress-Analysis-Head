@@ -377,7 +377,7 @@ class generalVisualizations(globalPlottingProtocols):
                 ax.set_xlabel("Training epoch")
                 ax.set_title(moduleName)
                 ax.set_xlim((0, numEpochs))
-                ax.set_ylim((0.89, 1.11))
+                ax.set_ylim((0.925, 1.075))
 
                 for modelInd in range(numModels):
                     if "shared" in moduleName and modelInd != 0: continue
