@@ -132,13 +132,10 @@ class reversibleLieLayer(reversibleLieLayerInterface):
     def applyAngularShift(self, layerInd):
         with (torch.no_grad()):
             # Create update matrix.
+            angularUpdateValues = -self.getGivensAngles(layerInd) * self.angularShiftingPercent / 100  # Dim: numSignals, numParams
+
+            # Dampen the update.
             device = self.givensRotationParams[layerInd].device
-            # angularUpdateMatrix: numSignals, numParams
-
-            # Update the four angles in the 4D sub-rotation matrix: [X, Y, Z, W]
-            angularUpdateValues = -self.getGivensAngles(layerInd).to(device) * self.angularShiftingPercent / 100  # Dim: numSignals, numParams
-
-            # Apply a 4D convolutional rotation update
             angularUpdateValues *= (self.colInds - self.rowInds).abs().to(device) / self.sequenceLength
             angularUpdateParams = self.getInverseAngleParams(angularUpdateValues)
 
