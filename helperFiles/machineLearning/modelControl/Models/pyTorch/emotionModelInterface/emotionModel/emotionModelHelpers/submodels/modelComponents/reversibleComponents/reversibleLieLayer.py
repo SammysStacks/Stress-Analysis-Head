@@ -111,7 +111,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
                 givensAngles = self.getGivensAngles(layerInd)  # Dim: numSignals, numParams
                 self.givensRotationParams[layerInd][givensAngles <= -maxAngularThreshold] = -maxAngularThreshold
                 self.givensRotationParams[layerInd][maxAngularThreshold <= givensAngles] = maxAngularThreshold
-                self.givensRotationParams[layerInd][givensAngles.abs() < minAngularThreshold] *= self.decayFactorThreshold if not applyMaxThresholding else 0
+                self.givensRotationParams[layerInd][givensAngles.abs() < minAngularThreshold] = 0
 
     def percentParamThresholding(self, layerInd, applyMaxThresholding):
         with torch.no_grad():
@@ -129,6 +129,24 @@ class reversibleLieLayer(reversibleLieLayerInterface):
             self.givensRotationParams[layerInd][givensAngles < minAngleValues] *= self.decayFactorThreshold if not applyMaxThresholding else 0
 
     def applyAngularShift(self, layerInd):
+        with (torch.no_grad()):
+            # Create update matrix.
+            device = self.givensRotationParams[layerInd].device
+            # angularUpdateMatrix: numSignals, numParams
+
+            # Update the four angles in the 4D sub-rotation matrix: [X, Y, Z, W]
+            angularUpdateValues = -self.getGivensAngles(layerInd).to(device) * self.angularShiftingPercent / 100  # Dim: numSignals, numParams
+
+            # Apply a 4D convolutional rotation update
+            angularUpdateValues *= (self.colInds - self.rowInds).abs().to(device) / self.sequenceLength
+            self.givensRotationParams[layerInd].add_(angularUpdateValues)
+
+            # S = torch.zeros((self.numSignals, self.sequenceLength, self.sequenceLength), dtype=torch.float64, device=device)
+            # S[:, self.rowInds, self.colInds] = angularUpdateValues
+            # S[:, self.colInds, self.rowInds] = -angularUpdateValues
+            # plt.imshow(S[0].cpu().detach().numpy(), cmap='plasma'); plt.colorbar(); plt.show()
+
+    def applyAngularShift2(self, layerInd):
         with (torch.no_grad()):
             # Create update matrix.
             device = self.givensRotationParams[layerInd].device
@@ -171,7 +189,7 @@ if __name__ == "__main__":
     # for i in [2, 4, 8, 16, 32, 64, 128, 256]:
     # for i in [16, 32, 64, 128, 256]:
     modelConstants.userInputParams['finalMinAngularThreshold'] = 1
-    modelConstants.userInputParams['angularShiftingPercent'] = 10
+    modelConstants.userInputParams['angularShiftingPercent'] = 1
     modelConstants.userInputParams['minAngularThreshold'] = 0.1
     modelConstants.userInputParams['maxAngularThreshold'] = 4
 

@@ -55,7 +55,7 @@ angularShiftingPercents=(0.1 1 2 3 4 5 10)
 percentParamsKeeping_arr=(10)  # [6, 10];
 
 # Angular reference states.
-minAngularThresholds=(0.01 0.05 0.1 0.25 0.5 1)
+minAngularThresholds=(0.01 0.05)
 finalMinAngularThresholds=(1 2 3 4)  # [0, 5]; Best: [0, 3]
 maxAngularThresholds=(45)
 

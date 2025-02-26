@@ -37,8 +37,8 @@ class reversibleLieLayerInterface(reversibleInterface):
 
         # Define angular update parameters.
         self.angularShiftingPercent = modelConstants.userInputParams['angularShiftingPercent']
-        self.alpha, self.beta, self.gamma = 1/2, 0, 1/2
-        self.decayFactorCheckerboard, self.decayFactorThreshold = 1/8, 1/8
+        self.decayFactorCheckerboard, self.decayFactorThreshold = 0, 1/8
+        self.alpha, self.beta, self.gamma = 1, 1, 1
 
         # Get the four sub-rotation indices: [X, Y, Z, W]
         self.xwInds, self.xzInds, self.yWInds = [], [], []
