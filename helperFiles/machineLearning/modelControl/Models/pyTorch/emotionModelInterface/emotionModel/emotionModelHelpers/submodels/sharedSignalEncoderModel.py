@@ -32,20 +32,13 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
 
         # Add the layers.
         self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True))
-        for _ in range(self.numSharedEncoderLayers): self.addLayer()
 
     def forward(self):
         raise "You cannot call the dataset-specific signal encoder module."
 
-    def addLayer(self):
-        if self.learningProtocol == 'rCNN': self.processingLayers.append(nn.Identity())  # self.postProcessingLayerRCNN(numSignals=1, sequenceLength=self.encodedDimension))
-        elif self.learningProtocol == 'FC': self.processingLayers.append(self.postProcessingLayerFC(sequenceLength=self.encodedDimension))
-        elif self.learningProtocol == 'CNN': self.processingLayers.append(self.postProcessingLayerCNN(numSignals=self.numSignals))
-        else: raise "The learning protocol is not yet implemented."
-
     # Learned up-sampling of the health profile.
     def generateHealthProfile(self, healthProfile):
-        healthProfile = self.healthGenerationModel(healthProfile.unsqueeze(1)).squeeze(1)
+        healthProfile = 2*self.healthGenerationModel(healthProfile.unsqueeze(1)).squeeze(1)
 
         return healthProfile
 
@@ -123,20 +116,20 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
     def printParams(self):
         # Count the trainable parameters.
         numInitParams = sum(p.numel() for name, p in self.named_parameters() if p.requires_grad and 'healthGenerationModel' in name)
-        numJacobians = sum(p.numel() for name, p in self.named_parameters() if p.requires_grad and 'healthProfileJacobian' in name)
-        numParams = sum(p.numel() for name, p in self.named_parameters()) - numJacobians - numInitParams
+        numParams = sum(p.numel() for name, p in self.named_parameters()) - numInitParams
 
         # Print the number of trainable parameters.
         totalParams = sum(p.numel() for name, p in self.named_parameters())
-        print(f'The model has {totalParams} trainable parameters: {numJacobians} jacobians, {numParams} meta-weights, and {numInitParams} initial weights.')
+        print(f'The model has {totalParams} trainable parameters: {numParams} meta-weights, and {numInitParams} initial weights.')
 
 
 if __name__ == "__main__":
     # General parameters.
     _neuralOperatorParameters = modelParameters.getNeuralParameters({'waveletType': 'bior3.1'})['neuralOperatorParameters']
-    _batchSize, _numSignals, _sequenceLength = 1, 1, 256
+    modelConstants.userInputParams['angularShiftingPercent'] = 1
     modelConstants.userInputParams['profileDimension'] = 64
-    _numSharedEncoderLayers = 1
+    _batchSize, _numSignals, _sequenceLength = 1, 1, 256
+    _numSharedEncoderLayers = 4
 
     # Set up the parameters.
     neuralLayerClass = sharedSignalEncoderModel(operatorType='wavelet', encodedDimension=_sequenceLength, numSharedEncoderLayers=_numSharedEncoderLayers, learningProtocol='rCNN', neuralOperatorParameters=_neuralOperatorParameters)

@@ -22,6 +22,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
             # Create the neural weights.
             parameters = torch.randn(self.numSignals, self.numParams or 1, dtype=torch.float64)
             parameters = nn.init.uniform_(parameters, a=-0.125, b=0.125)
+            # parameters[:, self.angularMaskInds] = 0
             # parameters: numSignals, numParams
 
             # Store the parameters.
@@ -101,11 +102,11 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
         with torch.no_grad():
             for layerInd in range(self.numLayers):
-                # Max 1 degree of separation between rotational nodes.
-                self.givensRotationParams[layerInd][:, self.angularMaskInds] = 0
+                # Maintain a max 1 degree of separation between rotational nodes.
+                # self.givensRotationParams[layerInd][:, self.angularMaskInds] = 0
 
                 # Apply an extra thresholding if the sequence length is large.
-                if 64 < self.sequenceLength: self.percentParamThresholding(layerInd, applyMaxThresholding)  # Must be every epoch! Helps diminish overfitting.
+                if 64 < self.sequenceLength: self.percentParamThresholding(layerInd)  # Must be every epoch! Helps diminish overfitting.
 
                 # Apply the angular bounds.
                 givensAngles = self.getGivensAngles(layerInd)  # Dim: numSignals, numParams
@@ -114,7 +115,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
                 self.givensRotationParams[layerInd][givensAngles.abs() < minAngularThreshold] = 0
                 self.applyAngularShift(layerInd)  # Inject bias towards banded structure.
 
-    def percentParamThresholding(self, layerInd, applyMaxThresholding):
+    def percentParamThresholding(self, layerInd):
         with torch.no_grad():
             # Sort each row by absolute value
             givensAngles = self.getGivensAngles(layerInd).abs()  # Dim: numSignals, numParams
@@ -127,7 +128,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
             # Zero out the values below the threshold
             minAngleValues = sortedGivensAngles[:,  -lastIndexKeeping:1-lastIndexKeeping]  # Shape (numSignals, 1)
-            self.givensRotationParams[layerInd][givensAngles < minAngleValues] *= self.decayFactorThreshold if not applyMaxThresholding else 0
+            self.givensRotationParams[layerInd][givensAngles < minAngleValues] = 0
 
     def applyAngularShift(self, layerInd):
         with (torch.no_grad()):
@@ -136,7 +137,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
             # Dampen the update.
             device = self.givensRotationParams[layerInd].device
-            angularUpdateValues *= (self.colInds - self.rowInds).abs().to(device) / self.sequenceLength
+            angularUpdateValues *= 0.5*(1 + (self.colInds - self.rowInds).abs().to(device) / self.sequenceLength)
             angularUpdateParams = self.getInverseAngleParams(angularUpdateValues)
 
             # Apply the update.

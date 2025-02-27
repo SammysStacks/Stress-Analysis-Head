@@ -91,15 +91,13 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 if __name__ == "__main__":
     # General parameters.
     _neuralOperatorParameters = modelParameters.getNeuralParameters({'waveletType': 'bior3.1'})['neuralOperatorParameters']
-    _batchSize, _numSignals, _sequenceLength = 1, 1, 128
-    _featureNames = [f"signal_{i}" for i in range(_numSignals)]
-    modelConstants.userInputParams['profileDimension'] = 128
+    modelConstants.userInputParams['angularShiftingPercent'] = 1
+    modelConstants.userInputParams['initialProfileAmp'] = 1e-3
+    modelConstants.userInputParams['profileDimension'] = 64
+    _batchSize, _numSignals, _sequenceLength = 1, 1, 256
     _numSpecificEncoderLayers = 1
-    _numSharedEncoderLayers = 4
 
     # Set up the parameters.
-    modelConstants.userInputParams['initialProfileAmp'] = 0.001
-    modelConstants.userInputParams['numSharedEncoderLayers'] = _numSharedEncoderLayers
-    modelConstants.userInputParams['numSpecificEncoderLayers'] = _numSpecificEncoderLayers
+    _featureNames = [f"signal_{i}" for i in range(_numSignals)]
     neuralLayerClass = specificSignalEncoderModel(numExperiments=_batchSize, operatorType='wavelet', encodedDimension=_sequenceLength, featureNames=_featureNames, numSpecificEncoderLayers=_numSpecificEncoderLayers, learningProtocol='rCNN', neuralOperatorParameters=_neuralOperatorParameters)
     neuralLayerClass.printParams()
