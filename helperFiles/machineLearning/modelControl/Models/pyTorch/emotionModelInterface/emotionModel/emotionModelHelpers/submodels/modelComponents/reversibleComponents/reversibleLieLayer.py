@@ -104,11 +104,10 @@ class reversibleLieLayer(reversibleLieLayerInterface):
         with torch.no_grad():
             for layerInd in range(self.numLayers):
                 # Maintain a max 1 degree of separation between rotational nodes.
-                # self.givensRotationParams[layerInd][:, self.angularMaskInds] = 0
+                self.applyAngularShift(layerInd)  # Inject bias towards banded structure.
 
                 # Apply an extra thresholding if the sequence length is large.
                 if 64 < self.sequenceLength: self.percentParamThresholding(layerInd)  # Must be every epoch! Helps diminish overfitting.
-                self.applyAngularShift(layerInd)  # Inject bias towards banded structure.
 
                 # Apply the angular bounds.
                 givensAngles = self.getGivensAngles(layerInd)  # Dim: numSignals, numParams
@@ -138,15 +137,15 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
             # Dampen the update.
             device = self.givensRotationParams[layerInd].device
-            angularUpdateValues *= 1 + (self.colInds - self.rowInds).abs().to(device) / self.sequenceLength
+            angularUpdateValues *= (self.colInds - self.rowInds).abs().to(device) / self.sequenceLength
             angularUpdateParams = self.getInverseAngleParams(angularUpdateValues)
 
             # Apply the update.
             self.givensRotationParams[layerInd].add_(angularUpdateParams)
-
+            #
             # S = torch.zeros((self.numSignals, self.sequenceLength, self.sequenceLength), dtype=torch.float64, device=device)
-            # S[:, self.rowInds, self.colInds] = angularUpdateValues
-            # S[:, self.colInds, self.rowInds] = -angularUpdateValues
+            # S[:, self.rowInds, self.colInds] = angularUpdateParams
+            # S[:, self.colInds, self.rowInds] = -angularUpdateParams
             # plt.imshow(S[0].cpu().detach().numpy(), cmap='plasma'); plt.colorbar(); plt.show()
 
     def applyAngularShift2(self, layerInd):

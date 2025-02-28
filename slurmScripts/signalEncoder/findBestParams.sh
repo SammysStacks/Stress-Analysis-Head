@@ -12,9 +12,9 @@ wds_reversible=('0')  # 1e-4 == x <= 1e-3
 wds_profileGen=('0')  # 1e-5 == x <= 1e-4
 
 # Learning parameters.
-lrs_profile=('0.075')  # 0.005 <= x <= 0.05
-lrs_reversible=('5e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
-lrs_profileGen=('1e-4') # # 5e-5 <= x == 1e-4;
+lrs_profile=('0.07')  # 0.005 <= x <= 0.05
+lrs_reversible=('4e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
+lrs_profileGen=('5e-5') # # 5e-5 <= x == 1e-4;
 
 # Known interesting parameters: 63
 numSharedEncoderLayers_arr=(0 1 2 3 4 5 6 7 8 9 10 11 12)  # 9
@@ -51,7 +51,7 @@ waveletTypes_arr=(
 )
 
 # Angular reference states.
-angularShiftingPercents=(1 0.1)
+angularShiftingPercents=(2 1)
 percentParamsKeeping_arr=(10)  # [6, 10];
 
 # Angular reference states.
