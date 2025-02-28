@@ -61,11 +61,11 @@ maxAngularThresholds=(45)
 
 # Binary reference states.
 numSpecificEncoderLayers_arr=(1)
-numSharedEncoderLayers_arr=(4)  # [4, 10]; Best: 6 and 8
+numSharedEncoderLayers_arr=(4 6 8)  # [4, 10]; Best: 6 and 8
 
 # Binary reference states.
 encodedDimensions_arr=(256)
-profileParams=(256 128 64 32)
+profileParams=(256 128 64)
 
 # Reference states.
 waveletTypes_arr=('bior3.1')
