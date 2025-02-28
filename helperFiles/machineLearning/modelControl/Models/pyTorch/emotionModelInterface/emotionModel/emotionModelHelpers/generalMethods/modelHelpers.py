@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 from torch.nn import utils
 
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleLieLayer import reversibleLieLayer
+
 
 class modelHelpers:
 
@@ -27,8 +29,12 @@ class modelHelpers:
 
     @staticmethod
     def roundModelWeights(model, decimals=4):
-        for param in model.parameters():
-            param.data.round_(decimals=decimals)
+        for name, module in model.named_modules():
+            if isinstance(module, reversibleLieLayer):
+                for layerInd in range(len(module.givensRotationParams)):
+                    module.givensRotationParams[layerInd].round_(decimals=decimals)
+                    module.activationFunction[layerInd].infiniteBoundParam.round_(decimals=decimals)
+                    module.activationFunction[layerInd].convergencePointParam.round_(decimals=decimals)
 
     @staticmethod
     def printModelParams(model):

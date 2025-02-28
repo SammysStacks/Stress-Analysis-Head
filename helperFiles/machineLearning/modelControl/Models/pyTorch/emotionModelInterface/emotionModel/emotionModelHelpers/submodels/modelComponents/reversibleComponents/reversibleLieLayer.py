@@ -21,8 +21,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
         for layerInd in range(self.numLayers):
             # Create the neural weights.
             parameters = torch.randn(self.numSignals, self.numParams or 1, dtype=torch.float64)
-            parameters = nn.init.uniform_(parameters, a=-0.125, b=0.125)
-            # parameters[:, self.angularMaskInds] = 0
+            parameters = nn.init.uniform_(parameters, a=-0.01, b=0.01)
             # parameters: numSignals, numParams
 
             # Store the parameters.
@@ -107,13 +106,13 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
                 # Apply an extra thresholding if the sequence length is large.
                 if 64 < self.sequenceLength: self.percentParamThresholding(layerInd)  # Must be every epoch! Helps diminish overfitting.
+                self.applyAngularShift(layerInd)  # Inject bias towards banded structure.
 
                 # Apply the angular bounds.
                 givensAngles = self.getGivensAngles(layerInd)  # Dim: numSignals, numParams
                 self.givensRotationParams[layerInd][givensAngles <= -maxAngularThreshold] = -maxAngularParam
                 self.givensRotationParams[layerInd][maxAngularThreshold <= givensAngles] = maxAngularParam
                 self.givensRotationParams[layerInd][givensAngles.abs() < minAngularThreshold] = 0
-                self.applyAngularShift(layerInd)  # Inject bias towards banded structure.
 
     def percentParamThresholding(self, layerInd):
         with torch.no_grad():
