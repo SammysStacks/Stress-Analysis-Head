@@ -82,7 +82,7 @@ if __name__ == "__main__":
 
     # Signal encoder learning rates.
     parser.add_argument('--profileLR', type=float, default=0.07, help='The learning rate of the health model.')
-    parser.add_argument('--reversibleLR', type=float, default=4e-4, help='The learning rate of the general model.')
+    parser.add_argument('--reversibleLR', type=float, default=3e-4, help='The learning rate of the general model.')
     parser.add_argument('--physGenLR', type=float, default=5e-5, help='The learning rate of the general model.')
 
     # Signal encoder weight decays.
@@ -139,7 +139,7 @@ if __name__ == "__main__":
 
         # Get the saving information.
         saveFullModel, showAllPlots = modelParameters.getEpochParameters(epoch, numEpoch_toSaveFull, numEpoch_toPlot)
-        applyMaxThresholding = 150 < epoch
+        applyMaxThresholding = 0 < epoch
 
         # Train the model for a single epoch.
         trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders)
