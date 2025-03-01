@@ -200,7 +200,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(4 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=False)  # squeeze=False ensures axes is 2D
-        numProcessing, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
+        numSpatialLayers, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
 
         # Get the angular thresholds.
         applyMaxThresholding = 50 < epoch
@@ -212,7 +212,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             moduleName = reversibleModuleNames[layerInd].lower()
 
             if "spatial" in moduleName and 'specific' in moduleName: numSpecific += 1
-            if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
+            if "spatial" in moduleName: numSpatialLayers += 1; rowInd, colInd = numSpatialLayers, 0
             elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
             elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
             else: raise ValueError("Module name must contain 'specific' or 'shared'.")
@@ -275,7 +275,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=True, sharey='col')  # squeeze=False ensures axes is 2D
-        numProcessing, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
+        numSpatialLayers, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
         units = "degrees" if degreesFlag else "radians"
         degrees = (180 if degreesFlag else math.pi) / 4
         bins = np.arange(-degrees, degrees + 1, 1)
@@ -290,7 +290,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             moduleName = reversibleModuleNames[layerInd].lower()
 
             if "spatial" in moduleName and 'specific' in moduleName: numSpecific += 1
-            if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
+            if "spatial" in moduleName: numSpatialLayers += 1; rowInd, colInd = numSpatialLayers, 0
             elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
             elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
             else: raise ValueError("Module name must contain 'specific' or 'shared'.")
@@ -356,7 +356,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex='col', sharey=True)  # squeeze=False ensures axes is 2D
-        numProcessing, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
+        numSpatialLayers, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
         units = "degrees" if degreesFlag else "radians"
         degrees = (180 if degreesFlag else math.pi) / 4
 
@@ -369,7 +369,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             moduleName = reversibleModuleNames[layerInd].lower()
 
             if "spatial" in moduleName and 'specific' in moduleName: numSpecific += 1
-            if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
+            if "spatial" in moduleName: numSpatialLayers += 1; rowInd, colInd = numSpatialLayers, 0
             elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
             elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
             else: raise ValueError("Module name must contain 'specific' or 'shared'.")
@@ -426,7 +426,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(4 * nCols, 4 * nRows), squeeze=False, sharex='col', sharey='col')  # squeeze=False ensures axes is 2D
-        numProcessing, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
+        numSpatialLayers, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
         degrees = (180 if degreesFlag else math.pi) / 4
         colorbarAxes = []  # Store the color scale references
 
@@ -437,7 +437,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             moduleName = reversibleModuleNames[layerInd].lower()
 
             if "spatial" in moduleName and 'specific' in moduleName: numSpecific += 1
-            if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
+            if "spatial" in moduleName: numSpatialLayers += 1; rowInd, colInd = numSpatialLayers, 0
             elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
             elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
             else: raise ValueError("Module name must contain 'specific' or 'shared'.")
@@ -619,14 +619,14 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=True, sharey=True)
-        numProcessing, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
+        numSpatialLayers, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
 
         for layerInd in range(numModuleLayers):
             moduleName = moduleNames[layerInd].lower()
             x, y = activationCurves[layerInd]
 
             if "spatial" in moduleName and 'specific' in moduleName: numSpecific += 1
-            if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
+            if "spatial" in moduleName: numSpatialLayers += 1; rowInd, colInd = numSpatialLayers, 0
             elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
             elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
             else: raise ValueError("Module name must contain 'specific' or 'shared'.")
