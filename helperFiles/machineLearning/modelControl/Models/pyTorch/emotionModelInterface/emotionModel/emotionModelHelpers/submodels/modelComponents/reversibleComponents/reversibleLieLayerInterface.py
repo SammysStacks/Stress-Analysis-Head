@@ -115,7 +115,6 @@ class reversibleLieLayerInterface(reversibleInterface):
                 numSignalParameters = angularMask.sum(dim=-1, keepdim=True)  # Dim: numSignals, 1
                 allNumFreeParams.append(numSignalParameters.detach().cpu().numpy())
                 # allNumFreeParams: numLayers, numSignals, numFreeParams=1
-                print(allNumFreeParams[0].shape)
         return allNumFreeParams
 
     def getFeatureParams(self):

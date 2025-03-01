@@ -69,7 +69,7 @@ class waveletNeuralOperatorLayer(waveletNeuralOperatorWeights):
             # highFrequencies[highFrequencyInd] dimension: batchSize, numOutputSignals, highFrequenciesShapes[decompositionLayer]
 
         # Learn a new set of wavelet coefficients to transform the data.
-        lowFrequency = self.applyEncoding(equationString, layerInd, lowFrequency, self.lowFrequencyWeights, residualLowFrequencyTerms)
+        lowFrequency = self.applyEncoding(equationString, layerInd, lowFrequency, self.lowFrequencyWeights[0], residualLowFrequencyTerms)
         # lowFrequency dimension: batchSize, numOutputSignals, lowFrequencyShape
 
         return lowFrequency, highFrequencies

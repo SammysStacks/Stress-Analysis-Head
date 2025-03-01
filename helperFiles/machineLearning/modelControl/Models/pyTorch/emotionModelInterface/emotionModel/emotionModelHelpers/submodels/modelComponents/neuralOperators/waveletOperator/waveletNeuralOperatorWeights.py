@@ -48,7 +48,9 @@ class waveletNeuralOperatorWeights(waveletNeuralHelpers):
 
     def getLowFrequencyWeights(self):
         # Initialize the low-frequency weights.
-        if self.encodeLowFrequency: lowFrequencyWeights = self.getNeuralWeightParameters(inChannel=self.numInputSignals, initialFrequencyDim=self.lowFrequencyShape)
+        if self.encodeLowFrequency:
+            lowFrequencyWeights = nn.ModuleList()
+            lowFrequencyWeights.append(self.getNeuralWeightParameters(inChannel=self.numInputSignals, initialFrequencyDim=self.lowFrequencyShape))
         else: lowFrequencyWeights = None
 
         return lowFrequencyWeights

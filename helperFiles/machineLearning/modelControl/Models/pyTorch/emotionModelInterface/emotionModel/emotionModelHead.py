@@ -290,7 +290,7 @@ class emotionModelHead(nn.Module):
             if isinstance(module, reversibleLieLayer):
                 allNumFreeParams = module.getNumFreeParams()
 
-                numFreeParamsPath.append(allNumFreeParams)  # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
+                numFreeParamsPath.extend(allNumFreeParams)  # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
                 for _ in range(len(allNumFreeParams)): maxFreeParamsPath.append(module.numParams)  # maxFreeParamsPath: numModuleLayers
                 for _ in range(len(allNumFreeParams)): moduleNames.append(self.compileModuleName(name))
 
