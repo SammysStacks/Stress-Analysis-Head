@@ -108,12 +108,11 @@ class reversibleLieLayerInterface(reversibleInterface):
         return allGivensAngles, allScaleFactors
 
     def getNumFreeParams(self):
-        minAngularThreshold = modelConstants.userInputParams['minAngularThreshold']
         allNumFreeParams = []
 
         with torch.no_grad():
             for layerInd in range(self.numLayers):
-                angularMask = minAngularThreshold <= self.getGivensAngles(layerInd).abs()
+                angularMask = 0 != self.givensRotationParams[layerInd]
                 numSignalParameters = angularMask.sum(dim=-1, keepdim=True)  # Dim: numSignals, 1
                 allNumFreeParams.append(numSignalParameters.detach().cpu().numpy())
                 # allNumFreeParams: numLayers, numSignals, numFreeParams=1
