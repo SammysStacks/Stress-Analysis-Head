@@ -27,7 +27,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
         # The neural layers for the signal encoder.
         self.profileModel = profileModel(numExperiments=numExperiments, numSignals=self.numSignals, encodedDimension=encodedDimension)
-        self.processingLayers, self.neuralLayers = nn.ModuleList(), nn.ModuleList()
+        self.spatialLayers, self.neuralLayers = nn.ModuleList(), nn.ModuleList()
         for _ in range(self.numSpecificEncoderLayers): self.addLayer()
 
         # Assert the validity of the input parameters.
@@ -53,16 +53,16 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
     def addLayer(self):
         self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True))
-        if self.learningProtocol == 'rCNN': self.processingLayers.append(self.postProcessingLayerRCNN(numSignals=self.numSignals, sequenceLength=self.encodedDimension))
-        elif self.learningProtocol == 'FC': self.processingLayers.append(self.postProcessingLayerFC(sequenceLength=self.encodedDimension))
-        elif self.learningProtocol == 'CNN': self.processingLayers.append(self.postProcessingLayerCNN(numSignals=self.numSignals))
+        if self.learningProtocol == 'rCNN': self.spatialLayers.append(self.postspatialLayerRCNN(numSignals=self.numSignals, sequenceLength=self.encodedDimension))
+        elif self.learningProtocol == 'FC': self.spatialLayers.append(self.postspatialLayerFC(sequenceLength=self.encodedDimension))
+        elif self.learningProtocol == 'CNN': self.spatialLayers.append(self.postspatialLayerCNN(numSignals=self.numSignals))
         else: raise "The learning protocol is not yet implemented."
 
     def learningInterface(self, layerInd, signalData, compilingFunction):
         # For the forward/harder direction.
         if reversibleInterface.forwardDirection:
             # Apply the neural operator layer with activation.
-            signalData = self.processingLayers[layerInd](signalData)
+            signalData = self.spatialLayers[layerInd](signalData)
             signalData = self.neuralLayers[layerInd](signalData)
         else:
             # Get the reverse layer index.
@@ -71,7 +71,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
             # Apply the neural operator layer with activation.
             signalData = self.neuralLayers[pseudoLayerInd](signalData)
-            signalData = self.processingLayers[pseudoLayerInd](signalData)
+            signalData = self.spatialLayers[pseudoLayerInd](signalData)
 
         # Store the signal data for plotting, if desired.
         if compilingFunction is not None: compilingFunction(signalData)

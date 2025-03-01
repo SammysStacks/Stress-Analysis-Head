@@ -206,7 +206,7 @@ class emotionModelHead(nn.Module):
         else: raise Exception("Invalid name:", name)
 
         # Add the neural layer information.
-        if 'processingLayer' in name: compiledName = compiledName + ' spatial'; assert 'neural' not in name
+        if 'spatial' in name: compiledName = compiledName + ' spatial'; assert 'neural' not in name
         elif 'high' in name: compiledName = compiledName + ' neural high frequency'; assert 'low' not in name
         elif 'low' in name: compiledName = compiledName + ' neural low frequency'; assert 'high' not in name
         else: raise Exception("Invalid name:", name)

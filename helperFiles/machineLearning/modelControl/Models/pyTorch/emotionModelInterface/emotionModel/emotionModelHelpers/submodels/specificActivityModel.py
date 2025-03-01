@@ -18,7 +18,7 @@ class specificActivityModel(neuralOperatorInterface):
         self.numSpecificEncoderLayers = numSpecificEncoderLayers  # The golden ratio for the model.
 
         # The neural layers for the signal encoder.
-        self.processingLayers, self.neuralLayers = nn.ModuleList(), nn.ModuleList()
+        self.spatialLayers, self.neuralLayers = nn.ModuleList(), nn.ModuleList()
         for layerInd in range(1 + self.numModelLayers // self.numSpecificEncoderLayers): self.addLayer()
 
         # Assert the validity of the input parameters.
@@ -42,13 +42,13 @@ class specificActivityModel(neuralOperatorInterface):
     def addLayer(self):
         # Create the layers.
         self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=False))
-        if self.learningProtocol == 'FC': self.processingLayers.append(self.postProcessingLayerFC(sequenceLength=self.encodedDimension))
-        elif self.learningProtocol == 'CNN': self.processingLayers.append(self.postProcessingLayerCNN(numSignals=self.numSignals))
+        if self.learningProtocol == 'FC': self.spatialLayers.append(self.postspatialLayerFC(sequenceLength=self.encodedDimension))
+        elif self.learningProtocol == 'CNN': self.spatialLayers.append(self.postspatialLayerCNN(numSignals=self.numSignals))
         else: raise "The learning protocol is not yet implemented."
 
     def learningInterface(self, layerInd, signalData, compilingFunction):
         # Apply the neural operator layer with activation.
         signalData = self.neuralLayers[layerInd](signalData)
-        signalData = self.processingLayers[layerInd](signalData)
+        signalData = self.spatialLayers[layerInd](signalData)
 
         return signalData

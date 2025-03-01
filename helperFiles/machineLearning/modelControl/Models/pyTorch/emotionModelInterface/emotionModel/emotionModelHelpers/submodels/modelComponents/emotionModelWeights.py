@@ -55,14 +55,14 @@ class emotionModelWeights(convolutionalHelpers):
         return reversibleLieLayer(numSignals=numSignals, sequenceLength=sequenceLength, numLayers=numLayers, activationMethod=f"{emotionModelWeights.getReversibleActivation()}")
 
     @staticmethod
-    def postProcessingLayerRCNN(numSignals, sequenceLength, numLayers=1):
+    def postspatialLayerRCNN(numSignals, sequenceLength, numLayers=1):
         return reversibleLieLayer(numSignals=numSignals, sequenceLength=sequenceLength, numLayers=numLayers, activationMethod=f"{emotionModelWeights.getReversibleActivation()}")
 
-    def postProcessingLayerCNN(self, numSignals):
+    def postspatialLayerCNN(self, numSignals):
         return self.convolutionalFilters_resNetBlocks(numResNets=1, numBlocks=4, numChannels=[numSignals, numSignals], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False)
 
     @staticmethod
-    def postProcessingLayerFC(sequenceLength):
+    def postspatialLayerFC(sequenceLength):
         return emotionModelWeights.linearModel(numInputFeatures=sequenceLength, numOutputFeatures=sequenceLength, activationMethod="SoftSign", addBias=False)
 
     def healthGeneration(self, numOutputFeatures):
@@ -81,10 +81,10 @@ class emotionModelWeights(convolutionalHelpers):
     # ------------------- Emotion/Activity Encoding Architectures ------------------- #
 
     @staticmethod
-    def postProcessingLayerFC___(sequenceLength):
+    def postspatialLayerFC___(sequenceLength):
         return emotionModelWeights.linearModel(numInputFeatures=sequenceLength, numOutputFeatures=sequenceLength, activationMethod="boundedExp", addBias=False)
 
-    def postProcessingLayerCNN___(self, numSignals):
+    def postspatialLayerCNN___(self, numSignals):
         return self.convolutionalFiltersBlocks(numBlocks=4, numChannels=[numSignals, numSignals], kernel_sizes=3, dilations=1, groups=numSignals, strides=1, convType='conv1D', activationMethod="boundedExp", numLayers=None, addBias=False)
 
     def skipConnectionCNN(self, numSignals):
