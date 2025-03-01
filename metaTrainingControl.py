@@ -99,6 +99,7 @@ if __name__ == "__main__":
 
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
+    userInputParams['minWaveletDim'] = 32
 
     # Compile additional input parameters.
     userInputParams = modelParameters.getNeuralParameters(userInputParams)

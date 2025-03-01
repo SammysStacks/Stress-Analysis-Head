@@ -1,3 +1,4 @@
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.emotionModelWeights import emotionModelWeights
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.neuralOperators.fourierOperator.fourierNeuralOperatorLayer import fourierNeuralOperatorLayer
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.neuralOperators.waveletOperator.waveletNeuralOperatorLayer import waveletNeuralOperatorLayer
@@ -28,7 +29,7 @@ class neuralOperatorInterface(emotionModelWeights):
         waveletType = neuralOperatorParameters['wavelet'].get('waveletType', None)  # The type of wavelet to use for the wavelet transform.
 
         # Hardcoded parameters.
-        numDecompositions = waveletNeuralOperatorLayer.max_decompositions(signal_length=sequenceLength, wavelet_name=waveletType, minSignalLength=max(int(sequenceLength/2**8), 32))  # [8, 16, 32]. 8 might be unstable.
+        numDecompositions = waveletNeuralOperatorLayer.max_decompositions(signal_length=sequenceLength, wavelet_name=waveletType, minSignalLength=modelConstants.userInputParams['minWaveletDim'])  # [8, 16, 32]. 8 might be unstable.
         activationMethod = 'none' if reversibleFlag else emotionModelWeights.getIrreversibleActivation()  # The activation method to use.
         skipConnectionProtocol = 'none' if reversibleFlag else 'CNN'  # The protocol for the skip connections.
         learningProtocol = 'rCNN' if reversibleFlag else 'FC'  # The protocol for learning the wavelet data.
