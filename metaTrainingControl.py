@@ -65,8 +65,8 @@ if __name__ == "__main__":
 
     # Add arguments for observational learning.
     parser.add_argument('--finalMinAngularThreshold', type=float, default=1, help='The final min rotational threshold in degrees.')
-    parser.add_argument('--percentParamsKeeping', type=int, default=10, help='The percentage of parameters to keep in the model.')
-    parser.add_argument('--minAngularThreshold', type=float, default=0.01, help='The smaller rotational threshold in degrees.')
+    parser.add_argument('--percentParamsKeeping', type=int, default=25, help='The percentage of parameters to keep in the model.')
+    parser.add_argument('--minAngularThreshold', type=float, default=1, help='The smaller rotational threshold in degrees.')
     parser.add_argument('--maxAngularThreshold', type=float, default=45, help='The larger rotational threshold in degrees.')
     parser.add_argument('--angularShiftingPercent', type=float, default=1, help='The percentage of the angular shift.')
 
@@ -139,7 +139,7 @@ if __name__ == "__main__":
 
         # Get the saving information.
         saveFullModel, showAllPlots = modelParameters.getEpochParameters(epoch, numEpoch_toSaveFull, numEpoch_toPlot)
-        applyMaxThresholding = 0 < epoch
+        applyMaxThresholding = 0 <= epoch
 
         # Train the model for a single epoch.
         trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders)
