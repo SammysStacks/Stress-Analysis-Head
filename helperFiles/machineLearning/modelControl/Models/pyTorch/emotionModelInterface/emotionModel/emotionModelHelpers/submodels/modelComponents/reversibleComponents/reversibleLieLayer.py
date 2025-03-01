@@ -17,13 +17,16 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
     def __init__(self, numSignals, sequenceLength, numLayers, activationMethod):
         super(reversibleLieLayer, self).__init__(numSignals, sequenceLength, numLayers, activationMethod)
-        initialMaxGivensAngle = self.getInverseAngleParams(torch.tensor(6*math.pi/180))
+        initialMaxGivensAngle = self.getInverseAngleParams(torch.tensor(10*math.pi/180))
+        minMaxGivensAngle = self.getInverseAngleParams(torch.tensor(1*math.pi/180))
+        initialMaxGivensAngle = initialMaxGivensAngle - minMaxGivensAngle
 
         # Create the neural layers.
         for layerInd in range(self.numLayers):
             # Create the neural weights.
             parameters = torch.randn(self.numSignals, self.numParams or 1, dtype=torch.float64)
             parameters = nn.init.uniform_(parameters, a=-initialMaxGivensAngle, b=initialMaxGivensAngle)
+            parameters.add_(parameters.sign() * minMaxGivensAngle)
             # parameters: numSignals, numParams
 
             # Store the parameters.
