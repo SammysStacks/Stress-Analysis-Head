@@ -28,7 +28,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
 
         # The neural layers for the signal encoder.
         self.healthGenerationModel = self.healthGeneration(numOutputFeatures=encodedDimension)
-        self.processingLayers, self.neuralLayers = nn.ModuleList(), nn.ModuleList()
+        self.processingLayers, self.neuralLayers = nn.Identity(), nn.ModuleList()
 
         # Add the layers.
         self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True))
