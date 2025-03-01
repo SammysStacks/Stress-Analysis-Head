@@ -303,6 +303,7 @@ class generalVisualizations(globalPlottingProtocols):
                     rowInd, colInd = min(nRows - 1, numSpecific + sharedColCounter % numShared), sharedColCounter // numShared
                     sharedColCounter += 1
                 ax = axes[rowInd, colInd]
+                print(rowInd, colInd)
 
                 if colInd == 0: ax.set_ylabel("Number of rotations")
                 ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5, alpha=0.8)
@@ -319,6 +320,7 @@ class generalVisualizations(globalPlottingProtocols):
                     for epochInd in range(0 if fullView else 1, numEpochs):
                         plottingParams.append(numFreeModelParams[modelInd][epochInd][layerInd][:, paramInd])
                     plottingParams = np.asarray(plottingParams)
+                    print(plottingParams.shape)
 
                     # Plot the training losses.
                     if 'specific' in moduleName:

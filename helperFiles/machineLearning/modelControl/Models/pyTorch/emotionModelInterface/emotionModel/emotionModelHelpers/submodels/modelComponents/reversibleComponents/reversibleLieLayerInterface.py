@@ -145,8 +145,8 @@ class reversibleLieLayerInterface(reversibleInterface):
         return ["Angular variance", "Angular range", "Scalar variance"]
 
     def getAllActivationParams(self):
-        allActivationParams = []
         with torch.no_grad():
+            allActivationParams = []
             for layerInd in range(self.numLayers):
                 infiniteBound, linearity, convergentPoint = self.activationFunction[layerInd].getActivationParams()
                 allActivationParams.append([infiniteBound.detach().cpu().item(), linearity.detach().cpu().item(), convergentPoint.detach().cpu().item()])
