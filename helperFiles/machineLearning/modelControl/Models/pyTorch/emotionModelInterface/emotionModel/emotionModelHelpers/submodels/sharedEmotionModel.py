@@ -29,8 +29,8 @@ class sharedEmotionModel(neuralOperatorInterface):
     def addLayer(self):
         # Create the layers.
         self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=False))
-        if self.learningProtocol == 'FC': self.spatialLayers.append(self.postspatialLayerFC(sequenceLength=self.encodedDimension))
-        elif self.learningProtocol == 'CNN': self.spatialLayers.append(self.postspatialLayerCNN(numSignals=self.numSignals))
+        if self.learningProtocol == 'FC': self.spatialLayers.append(self.postSpatialLayerFC(sequenceLength=self.encodedDimension))
+        elif self.learningProtocol == 'CNN': self.spatialLayers.append(self.postSpatialLayerCNN(numSignals=self.numSignals))
         else: raise "The learning protocol is not yet implemented."
 
     def learningInterface(self, layerInd, signalData, compilingFunction):

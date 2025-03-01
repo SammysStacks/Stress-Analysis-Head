@@ -53,9 +53,9 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
     def addLayer(self):
         self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True))
-        if self.learningProtocol == 'rCNN': self.spatialLayers.append(self.postspatialLayerRCNN(numSignals=self.numSignals, sequenceLength=self.encodedDimension))
-        elif self.learningProtocol == 'FC': self.spatialLayers.append(self.postspatialLayerFC(sequenceLength=self.encodedDimension))
-        elif self.learningProtocol == 'CNN': self.spatialLayers.append(self.postspatialLayerCNN(numSignals=self.numSignals))
+        if self.learningProtocol == 'rCNN': self.spatialLayers.append(self.postSpatialLayerRCNN(numSignals=self.numSignals, sequenceLength=self.encodedDimension))
+        elif self.learningProtocol == 'FC': self.spatialLayers.append(self.postSpatialLayerFC(sequenceLength=self.encodedDimension))
+        elif self.learningProtocol == 'CNN': self.spatialLayers.append(self.postSpatialLayerCNN(numSignals=self.numSignals))
         else: raise "The learning protocol is not yet implemented."
 
     def learningInterface(self, layerInd, signalData, compilingFunction):

@@ -1,7 +1,7 @@
-import torch.nn as nn
 import numpy as np
-import torch.fft
 import torch
+import torch.fft
+import torch.nn as nn
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
@@ -108,13 +108,16 @@ class reversibleLieLayerInterface(reversibleInterface):
         return allGivensAngles, allScaleFactors
 
     def getNumFreeParams(self):
+        minAngularThreshold = modelConstants.userInputParams['minAngularThreshold']
         allNumFreeParams = []
+
         with torch.no_grad():
             for layerInd in range(self.numLayers):
-                angularMask = 0 != self.getGivensAngles(layerInd)
+                angularMask = minAngularThreshold <= self.getGivensAngles(layerInd).abs()
                 numSignalParameters = angularMask.sum(dim=-1, keepdim=True)  # Dim: numSignals, 1
                 allNumFreeParams.append(numSignalParameters.detach().cpu().numpy())
                 # allNumFreeParams: numLayers, numSignals, numFreeParams=1
+
         return allNumFreeParams
 
     def getFeatureParams(self):

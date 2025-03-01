@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model: [1, 2]')
-    parser.add_argument('--numSharedEncoderLayers', type=int, default=6, help='The number of layers in the model: [2, 10]')
+    parser.add_argument('--numSharedEncoderLayers', type=int, default=8, help='The number of layers in the model: [2, 10]')
 
     # Add arguments for the health profile.
     parser.add_argument('--initialProfileAmp', type=float, default=1e-3, help='The limits for profile initialization. Should be near zero.')
@@ -64,11 +64,11 @@ if __name__ == "__main__":
     parser.add_argument('--numProfileShots', type=int, default=16, help='The epochs for profile training: [16, 32]')
 
     # Add arguments for observational learning.
-    parser.add_argument('--finalMinAngularThreshold', type=float, default=2, help='The final min rotational threshold in degrees.')
+    parser.add_argument('--finalMinAngularThreshold', type=float, default=1, help='The final min rotational threshold in degrees.')
     parser.add_argument('--percentParamsKeeping', type=int, default=8, help='The percentage of parameters to keep in the model.')
     parser.add_argument('--minAngularThreshold', type=float, default=0.01, help='The smaller rotational threshold in degrees.')
     parser.add_argument('--maxAngularThreshold', type=float, default=45, help='The larger rotational threshold in degrees.')
-    parser.add_argument('--angularShiftingPercent', type=float, default=1, help='The percentage of the angular shift.')
+    parser.add_argument('--angularShiftingPercent', type=float, default=0.1, help='The percentage of the angular shift.')
 
     # dd arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions).')
@@ -129,7 +129,7 @@ if __name__ == "__main__":
     # -------------------------- Meta-model Training ------------------------- #
 
     # Calculate the initial loss.
-    trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate, showMinimumPlots=False)
+    # trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate, showMinimumPlots=False)
     trainingProtocols.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, profileOnlyTraining=True)
     if modelConstants.useInitialLoss: trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)  # Calculate the initial loss.
 
