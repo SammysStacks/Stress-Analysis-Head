@@ -65,7 +65,7 @@ if __name__ == "__main__":
 
     # Add arguments for observational learning.
     parser.add_argument('--finalMinAngularThreshold', type=float, default=1, help='The final min rotational threshold in degrees.')
-    parser.add_argument('--percentParamsKeeping', type=int, default=25, help='The percentage of parameters to keep in the model.')
+    parser.add_argument('--percentParamsKeeping', type=int, default=8, help='The percentage of parameters to keep in the model.')
     parser.add_argument('--minAngularThreshold', type=float, default=0.01, help='The smaller rotational threshold in degrees.')
     parser.add_argument('--maxAngularThreshold', type=float, default=45, help='The larger rotational threshold in degrees.')
     parser.add_argument('--angularShiftingPercent', type=float, default=1, help='The percentage of the angular shift.')
