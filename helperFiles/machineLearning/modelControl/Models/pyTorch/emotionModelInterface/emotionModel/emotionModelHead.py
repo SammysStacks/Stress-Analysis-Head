@@ -234,18 +234,20 @@ class emotionModelHead(nn.Module):
 
             elif isinstance(module, nn.Identity) and ('spatial' in name or 'highFrequenciesWeights' in name):
                 decompositionLevel = int(name.split('highFrequenciesWeights.')[-1]) + 1 if 'highFrequenciesWeights' in name else 0
+                numLayers = modelConstants.userInputParams['numSharedEncoderLayers'] if 'shared' in name else 1
                 sequenceLength = self.encodedDimension // 2**decompositionLevel
                 numSignals = self.numSignals if 'specific' in name else 1
 
-                givensAnglesPath.append(np.zeros((numSignals, int(sequenceLength * (sequenceLength - 1) / 2))))  # givensAnglesPath: numModuleLayers, numSignals, numParams
-                scalingFactorsPath.append(np.ones((numSignals, 1)))  # scalingFactorsPath: numModuleLayers, numSignals, numParams=1
-                givensAnglesFeaturesPath.append(np.zeros((numGivensFeatures, numSignals)))  # givensAnglesFeaturesPath: numModuleLayers, numFeatures, numValues
-                reversibleModuleNames.append(self.compileModuleName(name))
+                for _ in range(numLayers): givensAnglesPath.append(np.zeros((numSignals, int(sequenceLength * (sequenceLength - 1) / 2))))  # givensAnglesPath: numModuleLayers, numSignals, numParams
+                for _ in range(numLayers): scalingFactorsPath.append(np.ones((numSignals, 1)))  # scalingFactorsPath: numModuleLayers, numSignals, numParams=1
+                for _ in range(numLayers): givensAnglesFeaturesPath.append(np.zeros((numGivensFeatures, numSignals)))  # givensAnglesFeaturesPath: numModuleLayers, numFeatures, numValues
+                for _ in range(numLayers): reversibleModuleNames.append(self.compileModuleName(name))
 
         return givensAnglesPath, scalingFactorsPath, givensAnglesFeaturesPath, reversibleModuleNames, givensAnglesFeatureNames
 
     def getActivationCurvesFullPassPath(self):
         activationCurvePath, moduleNames = [], []
+
         for name, module in self.named_modules():
             if isinstance(module, reversibleLieLayer):
                 xs, ys = module.geAllActivationCurves(x_min=-1.5, x_max=1.5, num_points=100)
@@ -253,10 +255,11 @@ class emotionModelHead(nn.Module):
                 for _ in range(len(xs)): moduleNames.append(self.compileModuleName(name))
 
             elif isinstance(module, nn.Identity) and ('spatial' in name or 'highFrequenciesWeights' in name):
+                numLayers = modelConstants.userInputParams['numSharedEncoderLayers'] if 'shared' in name else 1
                 x = np.linspace(-1.5, stop=1.5, num=100); y = x
 
-                activationCurvePath.append([x, y])
-                moduleNames.append(self.compileModuleName(name))
+                for _ in range(numLayers): activationCurvePath.append([x, y])
+                for _ in range(numLayers): moduleNames.append(self.compileModuleName(name))
         activationCurvePath = np.asarray(activationCurvePath)
         moduleNames = np.asarray(moduleNames)
 
@@ -277,8 +280,9 @@ class emotionModelHead(nn.Module):
                 for _ in allActivationParams: moduleNames.append(self.compileModuleName(name))
 
             elif isinstance(module, nn.Identity) and ('spatial' in name or 'highFrequenciesWeights' in name):
-                activationParamsPath.append(np.asarray([0.5, 1, 1]))
-                moduleNames.append(self.compileModuleName(name))
+                numLayers = modelConstants.userInputParams['numSharedEncoderLayers'] if 'shared' in name else 1
+                for _ in range(numLayers): activationParamsPath.append(np.asarray([0.5, 1, 1]))
+                for _ in range(numLayers): moduleNames.append(self.compileModuleName(name))
         assert len(activationParamsPath) != 0
         activationParamsPath = np.asarray(activationParamsPath)
         return activationParamsPath, moduleNames
@@ -295,11 +299,12 @@ class emotionModelHead(nn.Module):
                 for _ in range(len(allNumFreeParams)): moduleNames.append(self.compileModuleName(name))
 
             elif isinstance(module, nn.Identity) and ('spatial' in name or 'highFrequenciesWeights' in name):
+                numLayers = modelConstants.userInputParams['numSharedEncoderLayers'] if 'shared' in name else 1
                 numSignals = self.numSignals if 'specific' in name else 1
 
-                maxFreeParamsPath.append(0)  # maxFreeParamsPath: numModuleLayers
-                numFreeParamsPath.append(np.zeros((numSignals, 1)))  # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
-                moduleNames.append(self.compileModuleName(name))
+                for _ in range(numLayers): maxFreeParamsPath.append(0)  # maxFreeParamsPath: numModuleLayers
+                for _ in range(numLayers): numFreeParamsPath.append(np.zeros((numSignals, 1)))  # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
+                for _ in range(numLayers): moduleNames.append(self.compileModuleName(name))
         assert len(numFreeParamsPath) != 0
 
         return numFreeParamsPath, moduleNames, maxFreeParamsPath
