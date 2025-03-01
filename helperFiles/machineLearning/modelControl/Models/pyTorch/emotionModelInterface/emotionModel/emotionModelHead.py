@@ -285,10 +285,6 @@ class emotionModelHead(nn.Module):
 
     def getFreeParamsFullPassPath(self):
         numFreeParamsPath, moduleNames, maxFreeParamsPath = [], [], []
-<<<<<<< HEAD
-        applyMaxThresholding = 0 <= epoch
-=======
->>>>>>> 93ceea6ab (HEAD)
 
         for name, module in self.named_modules():
             if isinstance(module, reversibleLieLayer):
