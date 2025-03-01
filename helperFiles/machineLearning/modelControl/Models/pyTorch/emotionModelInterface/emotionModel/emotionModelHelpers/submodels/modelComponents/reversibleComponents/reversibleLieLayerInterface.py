@@ -66,7 +66,7 @@ class reversibleLieLayerInterface(reversibleInterface):
         self.numShiftedRotations = []
 
     def getGivensAngles(self, layerInd):
-        return torch.pi * torch.tanh(self.givensRotationParams[layerInd]) / 2  # [-pi/2, pi/2]
+        return torch.pi * torch.tanh(self.givensRotationParams[layerInd]) / 2  # [-pi/2, pi/2], Dim: numSignals, numParams
 
     @staticmethod
     def getInverseAngleParams(givensAngles):
@@ -107,17 +107,14 @@ class reversibleLieLayerInterface(reversibleInterface):
 
         return allGivensAngles, allScaleFactors
 
-    def getNumFreeParams(self, applyMaxThresholding):
-        minAngularThreshold = modelConstants.userInputParams['finalMinAngularThreshold' if applyMaxThresholding else 'minAngularThreshold'] * torch.pi / 180  # Convert to radians
+    def getNumFreeParams(self):
         allNumFreeParams = []
-
         with torch.no_grad():
             for layerInd in range(self.numLayers):
-                angularMask = minAngularThreshold <= self.getGivensAngles(layerInd).abs()
+                angularMask = 0 != self.getGivensAngles(layerInd)
                 numSignalParameters = angularMask.sum(dim=-1, keepdim=True)  # Dim: numSignals, 1
                 allNumFreeParams.append(numSignalParameters.detach().cpu().numpy())
                 # allNumFreeParams: numLayers, numSignals, numFreeParams=1
-
         return allNumFreeParams
 
     def getFeatureParams(self):
@@ -129,29 +126,23 @@ class reversibleLieLayerInterface(reversibleInterface):
                 givensAngles, scalingFactors = self.getLinearParams(layerInd)  # Dim: numSignals, numParams
                 scalingFactors = scalingFactors.reshape(self.numSignals, 1)  # Dim: numSignals, numParams=1
                 givensAngles = givensAngles * 180 / torch.pi  # Convert to degrees
-                givensAnglesABS = givensAngles.abs()
 
                 # Calculate the mean, variance, and range of the Givens angles.
                 givensAnglesRange = givensAngles.max(dim=-1).values - givensAngles.min(dim=-1).values  # Dim: numSignals
-                givensAnglesMean = givensAngles.mean(dim=-1).cpu().detach().numpy()  # Dim: numSignals
                 givensAnglesVar = givensAngles.var(dim=-1).cpu().detach().numpy()  # Dim: numSignals
                 givensAnglesRange = givensAnglesRange.cpu().detach().numpy()
-
-                # Calculate the mean, variance, and range of the positive Givens angles.
-                givensAnglesMeanABS = givensAnglesABS.mean(dim=-1).cpu().detach().numpy()  # Dim: numSignals
-                givensAnglesVarABS = givensAnglesABS.var(dim=-1).cpu().detach().numpy()  # Dim: numSignals
 
                 # Calculate the mean, variance, and range of the scaling factors.
                 scalingFactorsVar = scalingFactors.var(dim=0).cpu().detach().numpy()  # Dim: numSignals
 
                 # Combine the features. Return dimension: numFeatures, numValues
-                allGivensAnglesFeatures.append([givensAnglesMean, givensAnglesVar, givensAnglesRange, givensAnglesMeanABS, givensAnglesVarABS, scalingFactorsVar])
+                allGivensAnglesFeatures.append([givensAnglesVar, givensAnglesRange, scalingFactorsVar])
 
         return givensAnglesFeatureNames, allGivensAnglesFeatures
 
     @staticmethod
     def getFeatureNames():
-        return ["Angular mean", "Angular variance", "Angular range", "Angular abs(mean)", "Angular abs(variance)", "Scalar variance"]
+        return ["Angular variance", "Angular range", "Scalar variance"]
 
     def getAllActivationParams(self):
         allActivationParams = []

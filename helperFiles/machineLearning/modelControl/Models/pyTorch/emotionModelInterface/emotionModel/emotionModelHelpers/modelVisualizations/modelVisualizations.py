@@ -45,7 +45,6 @@ class modelVisualizations(globalPlottingProtocols):
 
         # Prepare the model/data for evaluation.
         self.setModelSavingFolder(baseSavingFolder=f"trainingFigures/{submodel}/{trainingDate}/", stringID=f"modelComparison/", epoch=-1)  # Label the correct folder to save this analysis.
-        epoch = allModelPipelines[0].getTrainingEpoch(submodel)  # Get the current epoch for the model.
 
         with torch.no_grad():
             if self.accelerator.is_local_main_process:
@@ -61,7 +60,7 @@ class modelVisualizations(globalPlottingProtocols):
                 self.generalViz.plotTrainingLosses(trainingLosses=[np.nanmean(specificModel.profileModel.retrainingProfileLosses, axis=1) for specificModel in specificModels], testingLosses=None,
                                                    lossLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Profile Convergence Losses")
 
-                freeParamInformation = np.asarray([modelPipeline.model.getFreeParamsFullPassPath(epoch=epoch)[1:] for modelPipeline in allModelPipelines])
+                freeParamInformation = np.asarray([modelPipeline.model.getFreeParamsFullPassPath()[1:] for modelPipeline in allModelPipelines])
                 moduleNames, maxFreeParamsPath = freeParamInformation[:, 0], freeParamInformation[:, 1].astype(int)  # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
                 numFreeModelParams = [specificModel.numFreeParams for specificModel in specificModels]  # numModels, numEpochs, numModuleLayers, numSignals, numParams=1
                 self.generalViz.plotFreeParamFlow(numFreeModelParams, maxFreeParamsPath, fullView=False, paramNames=["Free params"], moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle="Signal Encoder Free Parameters Path Zoomed")
@@ -126,7 +125,7 @@ class modelVisualizations(globalPlottingProtocols):
             # Compile additional information for the model.getActivationParamsFullPassPath
             givensAnglesPath, scalingFactorsPath, _, reversibleModuleNames, givensAnglesFeatureNames = model.getLearnableParams()
             activationCurvePath, activationModuleNames = model.getActivationCurvesFullPassPath()  # numModuleLayers, 2=(x, y), numPoints=100
-            _, _, maxFreeParamsPath = model.getFreeParamsFullPassPath(epoch=currentEpoch)
+            _, _, maxFreeParamsPath = model.getFreeParamsFullPassPath()
             # givensAnglesPath: numModuleLayers, numSignals, numParams
             # scalingFactorsPath: numModuleLayers, numSignals, numParam=1
             signalNames = model.featureNames

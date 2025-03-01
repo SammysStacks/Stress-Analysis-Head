@@ -283,13 +283,16 @@ class emotionModelHead(nn.Module):
         activationParamsPath = np.asarray(activationParamsPath)
         return activationParamsPath, moduleNames
 
-    def getFreeParamsFullPassPath(self, epoch):
+    def getFreeParamsFullPassPath(self):
         numFreeParamsPath, moduleNames, maxFreeParamsPath = [], [], []
+<<<<<<< HEAD
         applyMaxThresholding = 0 <= epoch
+=======
+>>>>>>> 93ceea6ab (HEAD)
 
         for name, module in self.named_modules():
             if isinstance(module, reversibleLieLayer):
-                allNumFreeParams = module.getNumFreeParams(applyMaxThresholding=applyMaxThresholding)
+                allNumFreeParams = module.getNumFreeParams()
 
                 numFreeParamsPath.extend(allNumFreeParams)  # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
                 for _ in range(len(allNumFreeParams)): maxFreeParamsPath.append(module.numParams)  # maxFreeParamsPath: numModuleLayers

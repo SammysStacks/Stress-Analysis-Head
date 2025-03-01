@@ -42,10 +42,9 @@ class organizeTrainingLosses(lossCalculations):
             # signalReconstructedTestingLosses: numTestingSignals
 
             # Get the encoder information.
-            epoch = modelPipeline.getTrainingEpoch(submodel)
             givensAnglesPath, scalingFactorsPath, givensAnglesFeaturesPath, reversibleModuleNames, givensAnglesFeatureNames = model.getLearnableParams()
             activationParamsPath, moduleNames = model.getActivationParamsFullPassPath()
-            numFreeParamsPath, _, _ = model.getFreeParamsFullPassPath(epoch=epoch)
+            numFreeParamsPath, _, _ = model.getFreeParamsFullPassPath()
             # givensAnglesFeaturesPath: numModuleLayers, numFeatures=5, numValues*
             # scalingFactorsPath: numModuleLayers, numSignals, numParams=1
             # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
