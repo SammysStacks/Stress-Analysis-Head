@@ -292,6 +292,7 @@ class generalVisualizations(globalPlottingProtocols):
 
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
+                print(moduleName)
 
                 if "spatial" in moduleName and 'specific' in moduleName: numSpecific += 1
                 if "spatial" in moduleName: numProcessing += 1; rowInd, colInd = numProcessing, 0
