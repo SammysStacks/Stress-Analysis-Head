@@ -3,7 +3,6 @@ import torch
 import torch.fft
 import torch.nn as nn
 
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
 
 
@@ -23,47 +22,42 @@ class reversibleLieLayerInterface(reversibleInterface):
         upperWindowMask = torch.ones(self.sequenceLength, self.sequenceLength)
         upperWindowMask = torch.triu(upperWindowMask, diagonal=1)
 
-        # Create a mask for the angles.
-        angleMask = torch.ones(self.sequenceLength, self.sequenceLength, dtype=torch.int32)
-        angleMask[::2, ::2] = -1; angleMask[1::2, 1::2] = -1
-        angleMask = torch.triu(angleMask, diagonal=1)
-        angleMask = angleMask[angleMask != 0].flatten()
-        angleMask[angleMask == 1] = 0
-
         # Calculate the offsets to map positions to kernel indices
-        self.angularLocationsInds = (angleMask == 0).nonzero(as_tuple=False).T[0]
         self.rowInds, self.colInds = upperWindowMask.nonzero(as_tuple=False).T
-        self.angularMaskInds = angleMask.nonzero(as_tuple=False).T[0]
+        self.smoothingFactor = 0.1/100
 
-        # Define angular update parameters.
-        self.angularShiftingPercent = modelConstants.userInputParams['angularShiftingPercent']
-        self.alpha, self.beta, self.gamma = 1, 1, 1
-
-        # Get the four sub-rotation indices: [X, Y, Z, W]
-        self.xwInds, self.xzInds, self.yWInds = [], [], []
-        self.zwInds, self.yzInds, self.xyInds = [], [], []
-        for angularLocationsInd in self.angularLocationsInds:
+        # Get the sub-rotation indices: [X, Y, Z; Q, R, S]
+        self.xrInds, self.xqInds, self.xsInds = [], [], []  # [XQ, XR, XS]
+        self.yrInds, self.yqInds, self.ysInds = [], [], []  # [YQ, YR, YS]
+        self.zrInds, self.zqInds, self.zsInds = [], [], []  # [ZQ, ZR, ZS]
+        for angularLocationsInd in range(self.numParams):
             i, j = self.rowInds[angularLocationsInd], self.colInds[angularLocationsInd]
-            if j - i == 1: continue  # Skip the first upper diagonal elements
-            nextRowLength = self.sequenceLength - i - 2
+            downwardShift = self.sequenceLength - i - 2
+            upwardShift = -(downwardShift + 1)
 
-            # Static terms.
-            self.yzInds.append(angularLocationsInd + nextRowLength - 1)
-            self.xwInds.append(angularLocationsInd)
+            # Boolean location flags.
+            onRightEdge = j == self.sequenceLength - 1
+            onLeftEdge = abs(i - j) == 1
+            topRow = i == 0
 
-            # Alpha terms.
-            self.zwInds.append(angularLocationsInd + 2 * nextRowLength - 1)
-            self.xyInds.append(angularLocationsInd - 2)
+            # Y terms.
+            yrInd = angularLocationsInd
+            self.yqInds.append(yrInd - (1 if not onLeftEdge else 0))
+            self.yrInds.append(yrInd)
+            self.ysInds.append(yrInd + (1 if not onRightEdge else 0))
 
-            # Coupling terms.
-            self.xzInds.append(angularLocationsInd - 1)
-            self.yWInds.append(angularLocationsInd + nextRowLength)
+            # X terms.
+            xrInd = yrInd + (upwardShift if not topRow else 0)
+            self.xrInds.append(xrInd)
+
+            # Z terms.
+            zrInd = yrInd + (downwardShift if not onLeftEdge else 0)
+            self.zrInds.append(zrInd)
 
         # Initialize the neural layers.
-        self.activationFunction = nn.ModuleList()
         self.jacobianParameter = self.initializeJacobianParams(numSignals)
         self.givensRotationParams = nn.ParameterList()
-        self.numShiftedRotations = []
+        self.activationFunction = nn.ModuleList()
 
     def getGivensAngles(self, layerInd):
         return torch.pi * torch.tanh(self.givensRotationParams[layerInd]) / 2  # [-pi/2, pi/2], Dim: numSignals, numParams
