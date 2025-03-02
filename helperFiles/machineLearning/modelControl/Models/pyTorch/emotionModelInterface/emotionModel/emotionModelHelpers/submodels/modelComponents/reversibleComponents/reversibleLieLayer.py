@@ -131,7 +131,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
             # angularUpdateMatrix: numSignals, numParams
 
             # Update the four angles in the 4D sub-rotation matrix: [X, Y, Z, W]
-            angularUpdateValues = self.getGivensAngles(layerInd)[:, self.yrInds].to(device) * self.angularShiftingPercent  # Dim: numSignals, numParams
+            angularUpdateValues = self.getGivensAngles(layerInd)[:, self.yrInds].to(device) * self.smoothingFactor  # Dim: numSignals, numParams
 
             # X terms.
             angularUpdateMatrix[:, self.xrInds] += angularUpdateValues  # XW
@@ -164,7 +164,7 @@ if __name__ == "__main__":
     # for i in [2, 4, 8, 16, 32, 64, 128, 256]:
     # for i in [16, 32, 64, 128, 256]:
     modelConstants.userInputParams['finalMinAngularThreshold'] = 1
-    modelConstants.userInputParams['angularShiftingPercent'] = 1
+    modelConstants.userInputParams['smoothingFactor'] = 1
     modelConstants.userInputParams['minAngularThreshold'] = 0.1
     modelConstants.userInputParams['maxAngularThreshold'] = 4
 

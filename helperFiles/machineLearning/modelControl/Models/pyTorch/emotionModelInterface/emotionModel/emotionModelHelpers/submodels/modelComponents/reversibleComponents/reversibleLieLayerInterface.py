@@ -25,7 +25,7 @@ class reversibleLieLayerInterface(reversibleInterface):
 
         # Calculate the offsets to map positions to kernel indices
         self.rowInds, self.colInds = upperWindowMask.nonzero(as_tuple=False).T
-        self.angularShiftingPercent = modelConstants.userInputParams['angularShiftingPercent'] / 100
+        self.smoothingFactor = modelConstants.userInputParams['smoothingFactor'] / 100
 
         # Get the sub-rotation indices: [X, Y, Z; Q, R, S]
         self.xrInds, self.xqInds, self.xsInds = [], [], []  # [XQ, XR, XS]

@@ -126,7 +126,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
 if __name__ == "__main__":
     # General parameters.
     _neuralOperatorParameters = modelParameters.getNeuralParameters({'waveletType': 'bior3.1'})['neuralOperatorParameters']
-    modelConstants.userInputParams['angularShiftingPercent'] = 1
+    modelConstants.userInputParams['smoothingFactor'] = 1
     modelConstants.userInputParams['profileDimension'] = 64
     _batchSize, _numSignals, _sequenceLength = 1, 1, 256
     _numSharedEncoderLayers = 4
