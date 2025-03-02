@@ -37,7 +37,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-02-28 no check"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2025-02-28 no shift"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Architecture Parameters ----------------------- #
@@ -144,7 +144,7 @@ if __name__ == "__main__":
 
         # Train the model for a single epoch.
         trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders)
-        trainingProtocols.boundAngularWeights(allMetaModels, allModels, applyMaxThresholding=applyMaxThresholding)
+        # trainingProtocols.boundAngularWeights(allMetaModels, allModels, applyMaxThresholding=applyMaxThresholding)
 
         # Store the initial loss information and plot.
         trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)
