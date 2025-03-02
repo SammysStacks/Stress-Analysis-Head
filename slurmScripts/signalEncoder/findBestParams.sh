@@ -46,7 +46,7 @@ waveletTypes_arr=(
 )
 
 # Angular reference states.
-angularShiftingPercents=(0.01 0.1 1)
+angularShiftingPercents=(0.1 1 4)
 percentParamsKeeping_arr=(6 8 10)  # [6, 10]
 
 # Angular reference states.
@@ -64,7 +64,7 @@ profileParams=(256 128 64)
 
 # Reference states.
 waveletTypes_arr=('bior3.1')
-numProfileShots_arr=(32)
+numProfileShots_arr=(32 24)
 
 for angularShiftingPercent in "${angularShiftingPercents[@]}"
 do
