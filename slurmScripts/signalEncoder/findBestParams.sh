@@ -46,7 +46,7 @@ waveletTypes_arr=(
 )
 
 # Angular reference states.
-angularShiftingPercents=(0.1 1 4)
+angularShiftingPercents=(0.1 1 2 4 6)
 percentParamsKeeping_arr=(6 8 10)  # [6, 10]
 
 # Angular reference states.
@@ -60,7 +60,7 @@ numSharedEncoderLayers_arr=(6)  # [4, 10]; Best: 6 and 8
 
 # Binary reference states.
 encodedDimensions_arr=(256)
-profileParams=(256 128 64)
+profileParams=(256 128)
 
 # Reference states.
 waveletTypes_arr=('bior3.1')
