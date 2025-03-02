@@ -3,6 +3,7 @@ import torch
 import torch.fft
 import torch.nn as nn
 
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
 
 
@@ -24,7 +25,7 @@ class reversibleLieLayerInterface(reversibleInterface):
 
         # Calculate the offsets to map positions to kernel indices
         self.rowInds, self.colInds = upperWindowMask.nonzero(as_tuple=False).T
-        self.smoothingFactor = 0.1/100
+        self.angularShiftingPercent = modelConstants.userInputParams['angularShiftingPercent'] / 100
 
         # Get the sub-rotation indices: [X, Y, Z; Q, R, S]
         self.xrInds, self.xqInds, self.xsInds = [], [], []  # [XQ, XR, XS]

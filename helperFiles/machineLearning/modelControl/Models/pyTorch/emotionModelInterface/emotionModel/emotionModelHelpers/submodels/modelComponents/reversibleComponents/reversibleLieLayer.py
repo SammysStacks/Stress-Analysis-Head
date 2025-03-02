@@ -33,7 +33,6 @@ class reversibleLieLayer(reversibleLieLayerInterface):
             # Store the parameters.
             self.activationFunction.append(activationFunctions.getActivationMethod(activationMethod))
             self.givensRotationParams.append(nn.Parameter(parameters))  # givensRotationParams: numLayers, numSignals, numParams
-        self.smoothAdjacentRotations(0)
 
     # ------------------- Main Sections ------------------- #
 
@@ -132,7 +131,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
             # angularUpdateMatrix: numSignals, numParams
 
             # Update the four angles in the 4D sub-rotation matrix: [X, Y, Z, W]
-            angularUpdateValues = self.getGivensAngles(layerInd)[:, self.yrInds].to(device) * self.smoothingFactor  # Dim: numSignals, numParams
+            angularUpdateValues = self.getGivensAngles(layerInd)[:, self.yrInds].to(device) * self.angularShiftingPercent  # Dim: numSignals, numParams
 
             # X terms.
             angularUpdateMatrix[:, self.xrInds] += angularUpdateValues  # XW
