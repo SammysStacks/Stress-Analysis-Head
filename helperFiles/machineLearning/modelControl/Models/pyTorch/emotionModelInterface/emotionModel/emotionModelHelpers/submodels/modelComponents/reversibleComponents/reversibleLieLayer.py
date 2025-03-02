@@ -116,7 +116,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
                 self.givensRotationParams[layerInd][maxAngularThreshold <= givensAngles] = maxAngularParam
                 self.givensRotationParams[layerInd][givensAngles.abs() < minAngularThreshold] = 0
                 # self.givensRotationParams[layerInd][:, self.angularMaskInds] = 0
-                self.applyAngularShift(layerInd)  # Inject bias towards banded structure.
+                # self.applyAngularShift(layerInd)  # Inject bias towards banded structure.
 
     def percentParamThresholding(self, layerInd):
         with torch.no_grad():
