@@ -81,8 +81,8 @@ if __name__ == "__main__":
     # ----------------------- Training Parameters ----------------------- #
 
     # Signal encoder learning rates.
-    parser.add_argument('--profileLR', type=float, default=0.05, help='The learning rate of the health model.')
-    parser.add_argument('--reversibleLR', type=float, default=2e-4, help='The learning rate of the general model.')
+    parser.add_argument('--profileLR', type=float, default=0.07, help='The learning rate of the health model.')
+    parser.add_argument('--reversibleLR', type=float, default=3e-4, help='The learning rate of the general model.')
     parser.add_argument('--physGenLR', type=float, default=5e-5, help='The learning rate of the general model.')
 
     # Signal encoder weight decays.
