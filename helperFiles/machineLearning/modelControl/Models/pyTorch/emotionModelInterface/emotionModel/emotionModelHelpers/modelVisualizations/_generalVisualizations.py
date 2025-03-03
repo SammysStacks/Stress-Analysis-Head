@@ -281,8 +281,8 @@ class generalVisualizations(globalPlottingProtocols):
         nRows, nCols = self.getRowsCols(numModuleLayers, combineSharedLayers=True)
         numEpochs = len(numFreeModelParams[0])
         numParams = len(paramNames)
-        x = np.arange(numEpochs - (0 if fullView else 1))
-        if numEpochs < 3: return "No data to plot."
+        x = np.arange(numEpochs - (0 if fullView else 5))
+        if numEpochs <= 5: return "No data to plot."
 
         for paramInd in range(numParams):
             # Create a figure and axes array
@@ -314,9 +314,10 @@ class generalVisualizations(globalPlottingProtocols):
                     if "shared" in moduleName and modelInd != 0: continue
                     maxFreeParams = maxFreeParamsPath[modelInd][layerInd]
                     sequenceLength = int((1 + (1 + 8 * maxFreeParams) ** 0.5) // 2)
+                    if sequenceLength == 1: sequenceLength = 0
 
                     plottingParams = []
-                    for epochInd in range(0 if fullView else 1, numEpochs):
+                    for epochInd in range(0 if fullView else 5, numEpochs):
                         plottingParams.append(numFreeModelParams[modelInd][epochInd][layerInd][:, paramInd])
                     plottingParams = np.asarray(plottingParams)
 
@@ -335,8 +336,9 @@ class generalVisualizations(globalPlottingProtocols):
                         for axisLineInd in range(numValues):
                             ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * alphas[axisLineInd])
                             ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * (1 - alphas[axisLineInd]))
-                    if fullView: ax.hlines(y=sequenceLength, xmin=0, xmax=numEpochs + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
                     if fullView: ax.hlines(y=maxFreeParams, xmin=0, xmax=numEpochs + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
+                    ax.hlines(y=sequenceLength, xmin=0, xmax=numEpochs + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
+                ax.set_ylim((0, ax.get_ylim()[-1]))
 
             # Label the plot.
             fig.suptitle(f"{plotTitle}: {paramName}")

@@ -18,7 +18,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
     def __init__(self, numSignals, sequenceLength, numLayers, activationMethod):
         super(reversibleLieLayer, self).__init__(numSignals, sequenceLength, numLayers, activationMethod)
         minAngularThreshold = modelConstants.userInputParams['minAngularThreshold'] * math.pi/180
-        initialMaxGivensAngle = self.getInverseAngleParams(torch.tensor(4 * math.pi/180))
+        initialMaxGivensAngle = self.getInverseAngleParams(torch.tensor(3 * math.pi/180))
         minGivensAngle = 2*self.getInverseAngleParams(torch.tensor(minAngularThreshold))
         initialMaxGivensAngle = initialMaxGivensAngle - minGivensAngle
 
@@ -117,8 +117,9 @@ class reversibleLieLayer(reversibleLieLayerInterface):
             # sortedGivensAngles -> [0, 0.1, 0.2, ... pi/2]
 
             # Get the threshold.
-            percentParamsKeeping = float(modelConstants.userInputParams['percentParamsKeeping'])
-            lastIndexKeeping = math.ceil(percentParamsKeeping * self.numParams / 100)
+            lastIndexKeeping = min(int(modelConstants.userInputParams['maxNumParamsKeeping']), self.numParams)
+            if lastIndexKeeping == 0: self.givensRotationParams[layerInd] = 0; return None
+            if lastIndexKeeping == self.numParams: return None
 
             # Zero out the values below the threshold
             minAngleValues = sortedGivensAngles[:,  -lastIndexKeeping].unsqueeze(-1)  # Shape (numSignals, 1)
@@ -135,24 +136,25 @@ class reversibleLieLayer(reversibleLieLayerInterface):
             angularUpdateValues = self.getGivensAngles(layerInd)[:, self.yrInds].to(device) * self.smoothingFactor  # Dim: numSignals, numParams
 
             # X terms.
-            angularUpdateMatrix[:, self.xrInds] += angularUpdateValues  # XW
+            angularUpdateMatrix[:, self.xrInds] += angularUpdateValues / 4
 
             # Y terms.
-            angularUpdateMatrix[:, self.yqInds] += angularUpdateValues  # XY
-            angularUpdateMatrix[:, self.yrInds] -= angularUpdateValues  # ZW
-            angularUpdateMatrix[:, self.ysInds] += angularUpdateValues  # ZW
+            angularUpdateMatrix[:, self.yqInds] += angularUpdateValues / 4
+            angularUpdateMatrix[:, self.yrInds] -= angularUpdateValues
+            angularUpdateMatrix[:, self.ysInds] += angularUpdateValues / 4
 
             # Z terms.
-            angularUpdateMatrix[:, self.zrInds] += angularUpdateValues  # XZ
+            angularUpdateMatrix[:, self.zrInds] += angularUpdateValues / 4
 
             # Apply the update.
-            angularUpdateParams = self.getInverseAngleParams(angularUpdateMatrix / 4)
+            angularUpdateParams = self.getInverseAngleParams(angularUpdateMatrix)
             self.givensRotationParams[layerInd].add_(angularUpdateParams)
 
             # S = torch.zeros((self.numSignals, self.sequenceLength, self.sequenceLength), dtype=torch.float64, device=device)
             # S[:, self.rowInds, self.colInds] = angularUpdateMatrix
             # S[:, self.colInds, self.rowInds] = -angularUpdateMatrix
             # plt.imshow(S[0].cpu().detach().numpy(), cmap='plasma'); plt.colorbar(); plt.show()
+            # print(np.round(100*S[0].cpu().detach().numpy(), 3))
 
     # ------------------------------------------------------------ #
 

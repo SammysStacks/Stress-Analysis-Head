@@ -61,14 +61,14 @@ if __name__ == "__main__":
     # Add arguments for the health profile.
     parser.add_argument('--initialProfileAmp', type=float, default=1e-3, help='The limits for profile initialization. Should be near zero.')
     parser.add_argument('--profileDimension', type=int, default=128, help='The number of profile weights: [32, 256]')
-    parser.add_argument('--numProfileShots', type=int, default=24, help='The epochs for profile training: [16, 32]')
+    parser.add_argument('--numProfileShots', type=int, default=32, help='The epochs for profile training: [16, 32]')
 
     # Add arguments for observational learning.
     parser.add_argument('--finalMinAngularThreshold', type=float, default=1, help='The final min rotational threshold in degrees.')
-    parser.add_argument('--percentParamsKeeping', type=int, default=4, help='The percentage of parameters to keep in the model.')
+    parser.add_argument('--maxNumParamsKeeping', type=int, default=2000, help='The percentage of parameters to keep in the model.')
     parser.add_argument('--minAngularThreshold', type=float, default=0.01, help='The smaller rotational threshold in degrees.')
     parser.add_argument('--maxAngularThreshold', type=float, default=45, help='The larger rotational threshold in degrees.')
-    parser.add_argument('--smoothingFactor', type=float, default=0.1, help='The percentage of the angular shift.')
+    parser.add_argument('--smoothingFactor', type=float, default=0.01, help='The percentage of the angular shift.')
 
     # dd arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions).')
@@ -81,8 +81,8 @@ if __name__ == "__main__":
     # ----------------------- Training Parameters ----------------------- #
 
     # Signal encoder learning rates.
-    parser.add_argument('--profileLR', type=float, default=0.07, help='The learning rate of the health model.')
-    parser.add_argument('--reversibleLR', type=float, default=3e-4, help='The learning rate of the general model.')
+    parser.add_argument('--profileLR', type=float, default=0.06, help='The learning rate of the health model.')
+    parser.add_argument('--reversibleLR', type=float, default=5e-4, help='The learning rate of the general model.')
     parser.add_argument('--physGenLR', type=float, default=5e-5, help='The learning rate of the general model.')
 
     # Signal encoder weight decays.
@@ -144,7 +144,7 @@ if __name__ == "__main__":
 
         # Train the model for a single epoch.
         trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders)
-        trainingProtocols.boundAngularWeights(allMetaModels, allModels, applyMaxThresholding=applyMaxThresholding)
+        if 2 <= epoch: trainingProtocols.boundAngularWeights(allMetaModels, allModels, applyMaxThresholding=applyMaxThresholding)
 
         # Store the initial loss information and plot.
         trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)

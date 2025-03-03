@@ -28,9 +28,9 @@ class reversibleLieLayerInterface(reversibleInterface):
         self.smoothingFactor = modelConstants.userInputParams['smoothingFactor'] / 100
 
         # Get the sub-rotation indices: [X, Y, Z; Q, R, S]
-        self.xrInds, self.xqInds, self.xsInds = [], [], []  # [XQ, XR, XS]
-        self.yrInds, self.yqInds, self.ysInds = [], [], []  # [YQ, YR, YS]
-        self.zrInds, self.zqInds, self.zsInds = [], [], []  # [ZQ, ZR, ZS]
+        self.xrInds, self.xqInds, self.xsInds = (torch.zeros(self.numParams, dtype=torch.int) for _ in range(3))  # [XQ, XR, XS]
+        self.yrInds, self.yqInds, self.ysInds = (torch.zeros(self.numParams, dtype=torch.int) for _ in range(3))  # [YQ, YR, YS]
+        self.zrInds, self.zqInds, self.zsInds = (torch.zeros(self.numParams, dtype=torch.int) for _ in range(3))  # [ZQ, ZR, ZS]
         for angularLocationsInd in range(self.numParams):
             i, j = self.rowInds[angularLocationsInd], self.colInds[angularLocationsInd]
             downwardShift = self.sequenceLength - i - 2
@@ -43,17 +43,17 @@ class reversibleLieLayerInterface(reversibleInterface):
 
             # Y terms.
             yrInd = angularLocationsInd
-            self.yqInds.append(yrInd - (1 if not onLeftEdge else 0))
-            self.yrInds.append(yrInd)
-            self.ysInds.append(yrInd + (1 if not onRightEdge else 0))
+            self.yqInds[angularLocationsInd] = yrInd - (1 if not onLeftEdge else 0)
+            self.yrInds[angularLocationsInd] = yrInd
+            self.ysInds[angularLocationsInd] = yrInd + (1 if not onRightEdge else 0)
 
             # X terms.
             xrInd = yrInd + (upwardShift if not topRow else 0)
-            self.xrInds.append(xrInd)
+            self.xrInds[angularLocationsInd] = xrInd
 
             # Z terms.
             zrInd = yrInd + (downwardShift if not onLeftEdge else 0)
-            self.zrInds.append(zrInd)
+            self.zrInds[angularLocationsInd] = zrInd
 
         # Initialize the neural layers.
         self.jacobianParameter = self.initializeJacobianParams(numSignals)

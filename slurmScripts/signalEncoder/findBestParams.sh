@@ -7,8 +7,8 @@ beta1s_arr=('0.7')
 beta2s_arr=('0.8')
 
 # Learning parameters.
-lrs_profile=('0.07' '0.06' '0.05')  # 0.005 <= x <= 0.05
-lrs_reversible=('3e-4' '5e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
+lrs_profile=('0.06')  # 0.005 <= x <= 0.05
+lrs_reversible=('5e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
 lrs_profileGen=('5e-5') # # 5e-5 <= x == 1e-4;
 
 # Known interesting parameters: 63
@@ -46,12 +46,12 @@ waveletTypes_arr=(
 )
 
 # Angular reference states.
-smoothingFactors=(0.01 0.1 1 2 3)
-percentParamsKeeping_arr=(4 6 8 10)  # [6, 10]
+smoothingFactors=(0.001 0.01 1 5)
+maxNumParamsKeeping_arr=(2500 3000 3500)  # [6, 10]
 
 # Angular reference states.
 minAngularThresholds=(0.01)
-finalMinAngularThresholds=(1)  # [1, 3]
+finalMinAngularThresholds=(1 2)  # [1, 3]
 maxAngularThresholds=(45)
 
 # Binary reference states.
@@ -60,7 +60,7 @@ numSharedEncoderLayers_arr=(6)  # [4, 10]; Best: 6 and 8
 
 # Binary reference states.
 encodedDimensions_arr=(256)
-profileParams=(128)
+profileParams=(256 128 64)
 
 # Reference states.
 waveletTypes_arr=('bior3.1')
@@ -72,7 +72,7 @@ do
     do
         for maxAngularThreshold in "${maxAngularThresholds[@]}"
         do
-            for percentParamsKeeping in "${percentParamsKeeping_arr[@]}"
+            for maxNumParamsKeeping in "${maxNumParamsKeeping_arr[@]}"
             do
                 for finalMinAngularThreshold in "${finalMinAngularThresholds[@]}"
                 do
@@ -113,9 +113,9 @@ do
                                                                         fi
 
                                                                         if [ "$1" == "CPU" ]; then
-                                                                            sbatch -J "signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_CPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$numProfileShots" "$1" "$waveletType" "$optimizer" "$lr_profile" "$lr_reversible" "$lr_profileGen" "$profileDimension" "$beta1s" "$beta2s" "$momentums" "$minAngularThreshold" "$maxAngularThreshold" "$percentParamsKeeping" "$finalMinAngularThreshold" "$smoothingFactor"
+                                                                            sbatch -J "signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_CPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$numProfileShots" "$1" "$waveletType" "$optimizer" "$lr_profile" "$lr_reversible" "$lr_profileGen" "$profileDimension" "$beta1s" "$beta2s" "$momentums" "$minAngularThreshold" "$maxAngularThreshold" "$maxNumParamsKeeping" "$finalMinAngularThreshold" "$smoothingFactor"
                                                                         elif [ "$1" == "GPU" ]; then
-                                                                            sbatch -J "signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_GPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$numProfileShots" "$1" "$waveletType" "$optimizer" "$lr_profile" "$lr_reversible" "$lr_profileGen" "$profileDimension" "$beta1s" "$beta2s" "$momentums" "$minAngularThreshold" "$maxAngularThreshold" "$percentParamsKeeping" "$finalMinAngularThreshold" "$smoothingFactor"
+                                                                            sbatch -J "signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_${waveletType}_${optimizer}_$1" submitSignalEncoder_GPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$numProfileShots" "$1" "$waveletType" "$optimizer" "$lr_profile" "$lr_reversible" "$lr_profileGen" "$profileDimension" "$beta1s" "$beta2s" "$momentums" "$minAngularThreshold" "$maxAngularThreshold" "$maxNumParamsKeeping" "$finalMinAngularThreshold" "$smoothingFactor"
                                                                         else
                                                                             echo "No known device listed: $1"
                                                                         fi

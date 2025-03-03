@@ -20,7 +20,7 @@ srun accelerate launch ./../../metaTrainingControl.py \
     --momentum_decay "${14}" \
     --minAngularThreshold "${15}" \
     --maxAngularThreshold "${16}" \
-    --percentParamsKeeping "${17}" \
+    --maxNumParamsKeeping "${17}" \
     --finalMinAngularThreshold "${18}" \
     --smoothingFactor "${19}" \
 
