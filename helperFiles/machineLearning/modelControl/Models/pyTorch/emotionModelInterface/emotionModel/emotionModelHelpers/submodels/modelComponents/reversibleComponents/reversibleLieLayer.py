@@ -97,6 +97,8 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
         with torch.no_grad():
             for layerInd in range(self.numLayers):
+                self.smoothAdjacentRotations(layerInd)  # Smoothen out the angles.
+
                 # Apply the angular bounds.
                 givensAngles = self.getGivensAngles(layerInd)  # Dim: numSignals, numParams
                 self.givensRotationParams[layerInd][givensAngles <= -maxAngularThreshold] = -maxAngularParam
@@ -105,7 +107,6 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
                 # Apply an extra thresholding if the sequence length is large.
                 if 64 < self.sequenceLength: self.percentParamThresholding(layerInd)  # Must be every epoch! Helps diminish overfitting.
-                self.smoothAdjacentRotations(layerInd)  # Smoothen out the angles.
 
     def percentParamThresholding(self, layerInd):
         with torch.no_grad():
@@ -137,6 +138,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
             # Y terms.
             angularUpdateMatrix[:, self.yqInds] += angularUpdateValues  # XY
+            angularUpdateMatrix[:, self.yrInds] -= angularUpdateValues  # ZW
             angularUpdateMatrix[:, self.ysInds] += angularUpdateValues  # ZW
 
             # Z terms.
