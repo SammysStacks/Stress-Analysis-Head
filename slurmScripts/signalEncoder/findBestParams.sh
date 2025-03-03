@@ -13,11 +13,11 @@ lrs_profileGen=('5e-5') # # 5e-5 <= x == 1e-4;
 
 # Known interesting parameters: 63
 numSharedEncoderLayers_arr=(0 1 2 3 4 5 6 7 8 9 10 11 12)  # 9
-numSpecificEncoderLayers_arr=(0 1 2 3 4)  # 7
+numSpecificEncoderLayers_arr=(0 1 2)  # 7
 
 # Known interesting parameters: 7*7 = 49
-encodedDimensions_arr=(16 32 64 128 256 512 1024)  # 7
-profileParams=(16 32 64 128 256 512 1024)  # 7
+encodedDimensions_arr=(128 256 512 1024)  # 7
+profileParams=(64 128 256 512 1024)  # 7
 
 # Single switchable: 7
 numProfileShots_arr=(24 32)  # 6; 12 <= x <= 24
