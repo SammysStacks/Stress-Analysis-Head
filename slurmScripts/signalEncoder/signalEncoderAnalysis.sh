@@ -15,14 +15,14 @@ srun accelerate launch ./../../metaTrainingControl.py \
     --reversibleLR "$9" \
     --physGenLR "${10}" \
     --profileDimension "${11}" \
-    --beta1 "${15}" \
-    --beta2 "${16}" \
-    --momentum_decay "${17}" \
-    --minAngularThreshold "${18}" \
-    --maxAngularThreshold "${19}" \
-    --percentParamsKeeping "${20}" \
-    --finalMinAngularThreshold "${21}" \
-    --angularShiftingPercent "${22}" \
+    --beta1 "${12}" \
+    --beta2 "${13}" \
+    --momentum_decay "${14}" \
+    --minAngularThreshold "${15}" \
+    --maxAngularThreshold "${16}" \
+    --percentParamsKeeping "${17}" \
+    --finalMinAngularThreshold "${18}" \
+    --angularShiftingPercent "${19}" \
 
 end=$(date +%s)
 runtime=$((end-start))

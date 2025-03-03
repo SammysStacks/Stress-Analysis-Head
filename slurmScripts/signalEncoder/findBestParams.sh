@@ -7,8 +7,8 @@ beta1s_arr=('0.7')
 beta2s_arr=('0.8')
 
 # Learning parameters.
-lrs_profile=('0.07')  # 0.005 <= x <= 0.05
-lrs_reversible=('3e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
+lrs_profile=('0.07' '0.06' '0.05')  # 0.005 <= x <= 0.05
+lrs_reversible=('3e-4' '5e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
 lrs_profileGen=('5e-5') # # 5e-5 <= x == 1e-4;
 
 # Known interesting parameters: 63
@@ -20,7 +20,7 @@ encodedDimensions_arr=(16 32 64 128 256 512 1024)  # 7
 profileParams=(16 32 64 128 256 512 1024)  # 7
 
 # Single switchable: 7
-numProfileShots_arr=(4 8 12 16 24 32 48)  # 6; 12 <= x <= 24
+numProfileShots_arr=(24 32)  # 6; 12 <= x <= 24
 
 # Neural operator parameters.
 waveletTypes_arr=(
@@ -46,8 +46,8 @@ waveletTypes_arr=(
 )
 
 # Angular reference states.
-angularShiftingPercents=(0.1 1 2 4 6)
-percentParamsKeeping_arr=(6 8 10)  # [6, 10]
+angularShiftingPercents=(0.01 0.1 1 2 3)
+percentParamsKeeping_arr=(4 6 8 10)  # [6, 10]
 
 # Angular reference states.
 minAngularThresholds=(0.01)
@@ -60,11 +60,11 @@ numSharedEncoderLayers_arr=(6)  # [4, 10]; Best: 6 and 8
 
 # Binary reference states.
 encodedDimensions_arr=(256)
-profileParams=(256 128)
+profileParams=(128)
 
 # Reference states.
 waveletTypes_arr=('bior3.1')
-numProfileShots_arr=(32 24)
+numProfileShots_arr=(32)
 
 for angularShiftingPercent in "${angularShiftingPercents[@]}"
 do
