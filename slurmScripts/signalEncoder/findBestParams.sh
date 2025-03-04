@@ -60,7 +60,7 @@ numSharedEncoderLayers_arr=(6)  # [4, 10]; Best: 6 and 8
 
 # Binary reference states.
 encodedDimensions_arr=(256)
-profileParams=(256 128 64)
+profileParams=(128 64)
 
 # Reference states.
 waveletTypes_arr=('bior3.1')
