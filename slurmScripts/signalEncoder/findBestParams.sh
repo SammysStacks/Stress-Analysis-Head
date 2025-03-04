@@ -7,7 +7,7 @@ beta1s_arr=('0.7')
 beta2s_arr=('0.8')
 
 # Learning parameters.
-lrs_profile=('0.06')  # 0.005 <= x <= 0.05
+lrs_profile=('0.06' '0.05' '0.07' '0.08')  # 0.005 <= x <= 0.05
 lrs_reversible=('5e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
 lrs_profileGen=('5e-5') # # 5e-5 <= x == 1e-4;
 
@@ -46,12 +46,12 @@ waveletTypes_arr=(
 )
 
 # Angular reference states.
-smoothingFactors=(0.001 0.01 1 5)
-maxNumParamsKeeping_arr=(2500 3000 3500)  # [6, 10]
+smoothingFactors=(0.001 0.01 0.1)
+maxNumParamsKeeping_arr=(3000)  # [6, 10]
 
 # Angular reference states.
 minAngularThresholds=(0.01)
-finalMinAngularThresholds=(1 2)  # [1, 3]
+finalMinAngularThresholds=(1)  # [1, 3]
 maxAngularThresholds=(45)
 
 # Binary reference states.
@@ -60,11 +60,11 @@ numSharedEncoderLayers_arr=(6)  # [4, 10]; Best: 6 and 8
 
 # Binary reference states.
 encodedDimensions_arr=(256)
-profileParams=(256)
+profileParams=(128 64 32)
 
 # Reference states.
 waveletTypes_arr=('bior3.1')
-numProfileShots_arr=(32)
+numProfileShots_arr=(32 24)
 
 for smoothingFactor in "${smoothingFactors[@]}"
 do
