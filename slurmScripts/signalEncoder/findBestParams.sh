@@ -12,7 +12,7 @@ lrs_reversible=('5e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
 lrs_profileGen=('5e-5') # # 5e-5 <= x == 1e-4;
 
 # Known interesting parameters: 63
-numSharedEncoderLayers_arr=(0 1 2 3 4 5 6 7 8 9 10 11 12)  # 9
+numSharedEncoderLayers_arr=(0 1 2 3 4 5 6 7 8 9)  # 9
 numSpecificEncoderLayers_arr=(0 1 2)  # 7
 
 # Known interesting parameters: 7*7 = 49
