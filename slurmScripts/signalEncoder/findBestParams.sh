@@ -47,20 +47,20 @@ waveletTypes_arr=(
 
 # Angular reference states.
 smoothingFactors=(0)
-maxNumParamsKeeping_arr=(2000 3000 4000)  # [6, 10]
+maxNumParamsKeeping_arr=(5000)  # [6, 10]
 
 # Angular reference states.
-minAngularThresholds=(0.001 0.01 0.025 0.05)
+minAngularThresholds=(0.01 0.033 0.1)
 finalMinAngularThresholds=(1)  # [1, 3]
 maxAngularThresholds=(45)
 
 # Binary reference states.
 numSpecificEncoderLayers_arr=(1)
-numSharedEncoderLayers_arr=(5 7)  # [4, 10]; Best: 6 and 8
+numSharedEncoderLayers_arr=(3 5)  # [4, 10]; Best: 6 and 8
 
 # Binary reference states.
-encodedDimensions_arr=(256)
-profileParams=(256 128 64)
+encodedDimensions_arr=(256 512)
+profileParams=(128 64)
 
 # Reference states.
 waveletTypes_arr=('bior3.1')
