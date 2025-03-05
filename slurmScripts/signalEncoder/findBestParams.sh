@@ -47,10 +47,10 @@ waveletTypes_arr=(
 
 # Angular reference states.
 smoothingFactors=(0)
-maxNumParamsKeeping_arr=(2500 3000)  # [6, 10]
+maxNumParamsKeeping_arr=(2000 3000 4000)  # [6, 10]
 
 # Angular reference states.
-minAngularThresholds=(0.01 0.025 0.05)
+minAngularThresholds=(0.001 0.01 0.025 0.05)
 finalMinAngularThresholds=(1)  # [1, 3]
 maxAngularThresholds=(45)
 
