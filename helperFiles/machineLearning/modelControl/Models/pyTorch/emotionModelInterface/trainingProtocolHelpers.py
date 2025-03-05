@@ -99,7 +99,7 @@ class trainingProtocolHelpers:
             with torch.no_grad(): modelPipeline.organizeLossInfo.storeTrainingLosses(submodel, modelPipeline, lossDataLoader)
         t2 = time.time(); self.accelerator.print("Total loss calculation time:", t2 - t1)
 
-    def plotModelState(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate, showMinimumPlots):
+    def plotModelState_Parallel(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate, showMinimumPlots):
         """ Parallelized version of the function for efficient plotting. """
         self.unifyAllModelWeights(allMetaModels, allModels)  # Unify model weights before plotting.
         hpcFlag = 'HPC' in modelConstants.userInputParams['deviceListed']  # Whether we are using the HPC.
@@ -138,7 +138,7 @@ class trainingProtocolHelpers:
         t2 = time.time()
         self.accelerator.print("Total plotting time:", t2 - t1)
 
-    def plotModelState_Old(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate, showMinimumPlots):
+    def plotModelState(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate, showMinimumPlots):
         self.unifyAllModelWeights(allMetaModels, allModels)  # Unify all the model weights.
 
         t1 = time.time()

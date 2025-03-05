@@ -115,44 +115,46 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         timepoints = emotionDataInterface.getChannelData(initialSignalData, channelName=modelConstants.timeChannel)
 
         for signalInd in range(min(2, numSignals)):
-            times, data = timepoints[batchInd, signalInd, :], datapoints[batchInd, signalInd, :]
-            reconstructedData = reconstructedSignals[batchInd, signalInd, :]
-            fig, ax = plt.subplots(figsize=(6.4, 4.8))
+            try:
+                times, data = timepoints[batchInd, signalInd, :], datapoints[batchInd, signalInd, :]
+                reconstructedData = reconstructedSignals[batchInd, signalInd, :]
+                fig, ax = plt.subplots(figsize=(6.4, 4.8))
 
-            # Plot the signal reconstruction.
-            ax.plot(times, data, 'o', color=self.blackColor, markersize=2, alpha=0.75, label="Initial Signal")
-            ax.plot(times, reconstructedData, 'o', color=self.lightColors[0], markersize=2, alpha=1, label="Reconstructed Signal")
-            ax.plot(comparisonTimes, comparisonSignal[batchInd, signalInd, :], self.lightColors[1], linewidth=2, alpha=1, label="Resampled Signal")
-            ax.axhline(y=0, color=self.blackColor, linewidth=0.5, alpha=0.25)
+                # Plot the signal reconstruction.
+                ax.plot(times, data, 'o', color=self.blackColor, markersize=2, alpha=0.75, label="Initial Signal")
+                ax.plot(times, reconstructedData, 'o', color=self.lightColors[0], markersize=2, alpha=1, label="Reconstructed Signal")
+                ax.plot(comparisonTimes, comparisonSignal[batchInd, signalInd, :], self.lightColors[1], linewidth=2, alpha=1, label="Resampled Signal")
+                ax.axhline(y=0, color=self.blackColor, linewidth=0.5, alpha=0.25)
 
-            # Plotting aesthetics.
-            ax.set_title(f"{plotTitle} {signalNames[signalInd]} epoch{epoch}")
-            ax.set_ylabel("Signal (AU)")
-            ax.legend(loc="best")
-            ax.set_xlabel("Time (sec)")
-            ax.set_ylim((-1.75, 1.75))
+                # Plotting aesthetics.
+                ax.set_title(f"{plotTitle} {signalNames[signalInd]} epoch{epoch}")
+                ax.set_ylabel("Signal (AU)")
+                ax.legend(loc="best")
+                ax.set_xlabel("Time (sec)")
+                ax.set_ylim((-1.75, 1.75))
 
-            # Save the figure.
-            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]}.pdf", fig=fig, clearFigure=False, showPlot=False)
-            else: self.clearFigure(fig=fig, legend=None, showPlot=True)
-            plt.close(fig)
+                # Save the figure.
+                if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]}.pdf", fig=fig, clearFigure=False, showPlot=False)
+                else: self.clearFigure(fig=fig, legend=None, showPlot=True)
+                plt.close(fig)
 
-            fig, ax = plt.subplots(figsize=(6.4, 4.8))
-            # Plot the signal reconstruction.
-            ax.plot(times, reconstructedData - data, 'o', color=self.darkColors[0], markersize=2, alpha=0.9, label="Signal Reconstruction Error")
-            ax.axhline(y=0, color=self.blackColor, linewidth=0.5, alpha=0.25)
+                fig, ax = plt.subplots(figsize=(6.4, 4.8))
+                # Plot the signal reconstruction.
+                ax.plot(times, reconstructedData - data, 'o', color=self.darkColors[0], markersize=2, alpha=0.9, label="Signal Reconstruction Error")
+                ax.axhline(y=0, color=self.blackColor, linewidth=0.5, alpha=0.25)
 
-            # Plotting aesthetics.
-            ax.set_title(f"{plotTitle} {signalNames[signalInd]} Error epoch{epoch}")
-            ax.set_ylabel("Signal (AU)")
-            ax.legend(loc="best")
-            ax.set_xlabel("Time (sec)")
-            ax.set_ylim((-1.75, 1.75))
+                # Plotting aesthetics.
+                ax.set_title(f"{plotTitle} {signalNames[signalInd]} Error epoch{epoch}")
+                ax.set_ylabel("Signal (AU)")
+                ax.legend(loc="best")
+                ax.set_xlabel("Time (sec)")
+                ax.set_ylim((-1.75, 1.75))
 
-            # Save the figure.
-            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} Error epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]} Error.pdf", fig=fig, clearFigure=True, showPlot=False)
-            else: self.clearFigure(fig=fig, legend=None, showPlot=True)
-            plt.close(fig)
+                # Save the figure.
+                if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} Error epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]} Error.pdf", fig=fig, clearFigure=True, showPlot=False)
+                else: self.clearFigure(fig=fig, legend=None, showPlot=True)
+                plt.close(fig)
+            except Exception as e: print("plotEncoder:", e)
             break
 
     def plotSignalEncodingStatePath(self, relativeTimes, compiledSignalEncoderLayerStates, batchInd, signalInd, signalNames, epoch, saveFigureLocation, plotTitle):
