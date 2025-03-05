@@ -127,6 +127,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
     def smoothAdjacentRotations(self, layerInd):
         if self.smoothingFactor == 0: return None
+        assert False, "Not implemented"
 
         with torch.no_grad():
             # Create update matrix.
