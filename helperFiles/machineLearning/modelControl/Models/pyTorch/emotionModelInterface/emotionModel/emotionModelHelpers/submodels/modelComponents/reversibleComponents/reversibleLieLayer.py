@@ -21,6 +21,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
         initialMaxGivensAngle = self.getInverseAngleParams(torch.tensor(3 * math.pi/180))
         minGivensAngle = 2*self.getInverseAngleParams(torch.tensor(minAngularThreshold))
         initialMaxGivensAngle = initialMaxGivensAngle - minGivensAngle
+        self.identityMatrix = torch.eye(self.sequenceLength, dtype=torch.float64)
 
         # Create the neural layers.
         for layerInd in range(self.numLayers):
@@ -45,7 +46,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
     def getExpS(self, layerInd):
         # Get the exponential of the linear operator.
-        expS = self.getS(layerInd).matrix_exp()  # For orthogonal matrices: A.exp().inverse() = (-A).exp(); If A is Skewed Symmetric: A.exp().inverse() = A.exp().transpose()
+        expS = self.matrixExp_skewSymmetric(self.getS(layerInd))  # For orthogonal matrices: A.exp().inverse() = (-A).exp(); If A is Skewed Symmetric: A.exp().inverse() = A.exp().transpose()
         if self.forwardDirection: expS = expS.transpose(-2, -1)  # Take the inverse of the exponential for the forward direction.
 
         return expS
@@ -60,6 +61,20 @@ class reversibleLieLayer(reversibleLieLayerInterface):
         S[:, self.colInds, self.rowInds] = entriesS
 
         return S
+
+    def matrixExp_skewSymmetric(self, S):
+        if S.size(-1) <= 256: return S.matrix_exp()
+        else: return self.matrix_exp_approx(S, terms=4)
+
+    def matrix_exp_approx(self, S, terms):
+        """ Approximates the matrix exponential using a higher-order Taylor series expansion. """
+        identityMatrix = self.identityMatrix.to(S.device).expand_as(S)
+        result = identityMatrix + S
+        term = S
+        for i in range(2, terms + 1):
+            term = term @ S / i
+            result = result + term
+        return result
 
     # ------------------- General Sections ------------------- #
 
@@ -98,9 +113,6 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
         with torch.no_grad():
             for layerInd in range(self.numLayers):
-                self.smoothAdjacentRotations(layerInd)  # Smoothen out the angles.
-
-                # Apply the angular bounds.
                 givensAngles = self.getGivensAngles(layerInd)  # Dim: numSignals, numParams
                 self.givensRotationParams[layerInd][givensAngles <= -maxAngularThreshold] = -maxAngularParam
                 self.givensRotationParams[layerInd][maxAngularThreshold <= givensAngles] = maxAngularParam
@@ -125,40 +137,6 @@ class reversibleLieLayer(reversibleLieLayerInterface):
             minAngleValues = sortedGivensAngles[:,  -lastIndexKeeping].unsqueeze(-1)  # Shape (numSignals, 1)
             self.givensRotationParams[layerInd][givensAngles <= minAngleValues] = 0
 
-    def smoothAdjacentRotations(self, layerInd):
-        if self.smoothingFactor == 0: return None
-        assert False, "Not implemented"
-
-        with torch.no_grad():
-            # Create update matrix.
-            device = self.givensRotationParams[layerInd].device
-            angularUpdateMatrix = torch.zeros_like(self.givensRotationParams[layerInd], device=device)
-            # angularUpdateMatrix: numSignals, numParams
-
-            # Update the four angles in the 4D sub-rotation matrix: [X, Y, Z, W]
-            angularUpdateValues = self.getGivensAngles(layerInd)[:, self.yrInds].to(device) * self.smoothingFactor  # Dim: numSignals, numParams
-
-            # X terms.
-            angularUpdateMatrix[:, self.xrInds] += angularUpdateValues / 4
-
-            # Y terms.
-            angularUpdateMatrix[:, self.yqInds] += angularUpdateValues / 4
-            angularUpdateMatrix[:, self.yrInds] -= angularUpdateValues
-            angularUpdateMatrix[:, self.ysInds] += angularUpdateValues / 4
-
-            # Z terms.
-            angularUpdateMatrix[:, self.zrInds] += angularUpdateValues / 4
-
-            # Apply the update.
-            angularUpdateParams = self.getInverseAngleParams(angularUpdateMatrix)
-            self.givensRotationParams[layerInd].add_(angularUpdateParams)
-
-            # S = torch.zeros((self.numSignals, self.sequenceLength, self.sequenceLength), dtype=torch.float64, device=device)
-            # S[:, self.rowInds, self.colInds] = angularUpdateMatrix
-            # S[:, self.colInds, self.rowInds] = -angularUpdateMatrix
-            # plt.imshow(S[0].cpu().detach().numpy(), cmap='plasma'); plt.colorbar(); plt.show()
-            # print(np.round(100*S[0].cpu().detach().numpy(), 3))
-
     # ------------------------------------------------------------ #
 
     def printParams(self):
@@ -179,7 +157,7 @@ if __name__ == "__main__":
     # for _layerInd, sequenceLength2 in [(1, 32), (2, 32), (3, 32), (5, 32), (5, 32), (10, 32)]:
     # for _layerInd, sequenceLength2 in [(1, 64), (2, 64), (3, 64), (5, 64), (5, 64), (10, 64)]:
     # for _layerInd, sequenceLength2 in [(1, 128), (2, 128), (3, 128), (5, 128), (5, 128), (10, 128)]:
-    for _layerInd, sequenceLength2 in [(1, 8), (1, 32), (1, 64)]:
+    for _layerInd, sequenceLength2 in [(1, 32), (1, 64), (1, 512)]:
         # General parameters.
         _batchSize, _numSignals, _sequenceLength = 128, 64, sequenceLength2
         _activationMethod = 'reversibleLinearSoftSign'  # reversibleLinearSoftSign
@@ -193,7 +171,7 @@ if __name__ == "__main__":
         healthProfile = healthProfile * 2 - 1
 
         # Perform the convolution in the fourier and spatial domains.
-        _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(healthProfile, atol=1e-6, numLayers=1, plotResults=False)
+        _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(healthProfile, atol=1e-6, numLayers=1, plotResults=True)
         neuralLayerClass.printParams()
 
         ratio = (_forwardData.norm(dim=-1) / healthProfile.norm(dim=-1)).view(-1).detach().numpy()
