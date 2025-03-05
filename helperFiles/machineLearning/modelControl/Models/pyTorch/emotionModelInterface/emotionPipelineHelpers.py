@@ -101,6 +101,7 @@ class emotionPipelineHelpers:
             self.setupTrainingFlags(self.model.sharedSignalEncoderModel, trainingFlag=trainSharedLayers)
             self.setupTrainingFlags(self.model.specificSignalEncoderModel, trainingFlag=specificTraining)
             self.setupTrainingFlags(self.model.specificSignalEncoderModel.profileModel, trainingFlag=profileTraining)
+            if profileTraining: assert not specificTraining and not trainSharedLayers, "We cannot train layers during profile training."
 
     @staticmethod
     def setupTrainingFlags(model, trainingFlag):

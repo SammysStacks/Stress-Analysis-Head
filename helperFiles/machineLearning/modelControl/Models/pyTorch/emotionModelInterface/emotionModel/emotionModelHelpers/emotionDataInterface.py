@@ -95,9 +95,9 @@ class emotionDataInterface:
         maxSequencePoints = totalLength - numMetadata - numSignalIdentifiers
 
         # Separate the sequence and demographic information.
-        signalIdentifiers = inputData[:, :, maxSequencePoints:maxSequencePoints+numSignalIdentifiers, 0]
-        metadata = inputData[:, 0, maxSequencePoints+numSignalIdentifiers:, 0]
-        signalData = inputData[:, :, 0:maxSequencePoints, :]
+        signalIdentifiers = inputData[:, :, maxSequencePoints:maxSequencePoints+numSignalIdentifiers, 0].clone()
+        metadata = inputData[:, 0, maxSequencePoints+numSignalIdentifiers:, 0].clone()
+        signalData = inputData[:, :, 0:maxSequencePoints, :].clone()
         # signalData dimension: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
         # signalIdentifiers dimension: batchSize, numSignals, numSignalIdentifiers
         # metadata dimension: batchSize, numMetadata

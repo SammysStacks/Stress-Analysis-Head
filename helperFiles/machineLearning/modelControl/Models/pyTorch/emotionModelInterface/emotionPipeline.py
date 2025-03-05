@@ -34,7 +34,6 @@ class emotionPipeline(emotionPipelineHelpers):
 
             # For each data batch in the epoch.
             for batchDataInd, batchData in enumerate(dataLoader):
-                batchData = (element.clone() for element in batchData)
                 with (self.accelerator.accumulate(self.model)):  # Accumulate the gradients.
                     with self.accelerator.autocast():  # Enable mixed precision auto-casting
                         # Extract the data, labels, and testing/training indices.
@@ -103,14 +102,12 @@ class emotionPipeline(emotionPipelineHelpers):
                         self.accelerator.backward(finalTrainingLoss)  # Calculate the gradients.
                         self.backpropogateModel()  # Backpropagation.
                         if self.model.debugging: t2 = time.time(); self.accelerator.print(f"{'Shared' if trainSharedLayers else '\tSpecific'} layer training {self.datasetName} {numPointsAnalyzed}: {t22 - t11} {t2 - t1}\n")
-            self.accelerator.wait_for_everyone()  # Wait before continuing.
 
         # Update the learning rate.
         if stepScheduler: self.scheduler.step()
 
         # Prepare the model/data for evaluation.
         self.setupTrainingFlags(self.model, trainingFlag=False)  # Turn off training flags.
-        self.accelerator.wait_for_everyone()  # Wait before continuing.
 
     def backpropogateModel(self):
         if self.accelerator.sync_gradients:

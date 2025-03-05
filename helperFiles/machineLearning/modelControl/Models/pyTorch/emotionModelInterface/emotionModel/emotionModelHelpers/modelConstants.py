@@ -46,7 +46,7 @@ class modelConstants:
     useInitialLoss = True  # Use the initial loss.
     modelTimeWindow = 120  # The time window for the model.
     minMaxScale = 1  # The maximum value for the min-max scaling.
-    numBatches = 16  # The number of batches to use in the model.
+    numBatches = 12  # The number of batches to use in the model.
 
     # Specify the data interface parameter names.
     signalChannelNames = [timeChannel, signalChannel]

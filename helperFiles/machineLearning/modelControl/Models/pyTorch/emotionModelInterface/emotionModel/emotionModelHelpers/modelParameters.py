@@ -34,18 +34,20 @@ class modelParameters:
         return userInputParams
 
     def getTrainingBatchSize(self, submodel, numExperiments, datasetName):
-        # Wesad: Found 32 (out of 32) emotions across 60 experiments for 28 signals with 4.0 batches of 15 experiments
-        # Amigos: Found 12 (out of 12) emotions across 673 experiments for 60 signals with 15.651 batches of 43 experiments
-        # Dapper: Found 12 (out of 12) emotions across 364 experiments for 15 signals with 15.167 batches of 24 experiments
-        # Case: Found 2 (out of 2) emotions across 1442 experiments for 35 signals with 15.846 batches of 91 experiments
-        # Emognition: Found 12 (out of 12) emotions across 407 experiments for 39 signals with 15.654 batches of 26 experiments
-        # Empatch: Found 30 (out of 30) emotions across 165 experiments for 28 signals with 7.5 batches of 22 experiments
-        if submodel == modelConstants.signalEncoderModel: effectiveMinBatchSize, effectiveMaxBatchSize = 24, 96
-        elif submodel == modelConstants.emotionModel: effectiveMinBatchSize, effectiveMaxBatchSize = 24, 96
+        """
+            Wesad: Found 32 (out of 32) emotions across 60 experiments for 28 signals with 2.0 batches of 30 experiments
+            Amigos: Found 12 (out of 12) emotions across 673 experiments for 60 signals with 11.807 batches of 57 experiments
+            Dapper: Found 12 (out of 12) emotions across 364 experiments for 15 signals with 11.742 batches of 31 experiments
+            Case: Found 2 (out of 2) emotions across 1442 experiments for 35 signals with 11.917 batches of 121 experiments
+            Emognition: Found 12 (out of 12) emotions across 407 experiments for 39 signals with 11.971 batches of 34 experiments
+            Empatch: Found 30 (out of 30) emotions across 165 experiments for 28 signals with 5.0 batches of 33 experiments
+        """
+        if submodel == modelConstants.signalEncoderModel: effectiveMinBatchSize, effectiveMaxBatchSize = 24, 128
+        elif submodel == modelConstants.emotionModel: effectiveMinBatchSize, effectiveMaxBatchSize = 24, 128
         else: raise Exception()
 
-        if datasetName == modelConstants.wesadDatasetName: effectiveMinBatchSize = 15
-        if datasetName == modelConstants.empatchDatasetName: effectiveMinBatchSize = 22
+        if datasetName == modelConstants.wesadDatasetName: effectiveMinBatchSize = 30
+        if datasetName == modelConstants.empatchDatasetName: effectiveMinBatchSize = 33
         # Adjust the batch size based on the number of gradient accumulations.
         gradientAccumulation = self.accelerator.gradient_accumulation_steps
         minBatchSize_perLoop = effectiveMinBatchSize / gradientAccumulation
