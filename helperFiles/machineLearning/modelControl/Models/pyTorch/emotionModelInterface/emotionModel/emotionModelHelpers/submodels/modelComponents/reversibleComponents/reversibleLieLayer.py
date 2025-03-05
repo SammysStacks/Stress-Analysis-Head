@@ -126,6 +126,8 @@ class reversibleLieLayer(reversibleLieLayerInterface):
             self.givensRotationParams[layerInd][givensAngles <= minAngleValues] = 0
 
     def smoothAdjacentRotations(self, layerInd):
+        if self.smoothingFactor == 0: return None
+
         with torch.no_grad():
             # Create update matrix.
             device = self.givensRotationParams[layerInd].device
