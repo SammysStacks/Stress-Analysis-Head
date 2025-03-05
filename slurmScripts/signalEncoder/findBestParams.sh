@@ -7,7 +7,7 @@ beta1s_arr=('0.7')
 beta2s_arr=('0.8')
 
 # Learning parameters.
-lrs_profile=('0.07' '0.05')  # 0.005 <= x <= 0.05
+lrs_profile=('0.067')  # 0.005 <= x <= 0.05
 lrs_reversible=('5e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
 lrs_profileGen=('5e-5') # # 5e-5 <= x == 1e-4;
 
@@ -20,7 +20,7 @@ encodedDimensions_arr=(128 256 512 1024)  # 7
 profileParams=(64 128 256 512 1024)  # 7
 
 # Single switchable: 7
-numProfileShots_arr=(24 32)  # 6; 12 <= x <= 24
+numProfileShots_arr=(24)  # 6; 12 <= x <= 24
 
 # Neural operator parameters.
 waveletTypes_arr=(
@@ -56,11 +56,11 @@ maxAngularThresholds=(45)
 
 # Binary reference states.
 numSpecificEncoderLayers_arr=(1)
-numSharedEncoderLayers_arr=(5)  # [4, 10]; Best: 6 and 8
+numSharedEncoderLayers_arr=(5 7)  # [4, 10]; Best: 6 and 8
 
 # Binary reference states.
 encodedDimensions_arr=(256)
-profileParams=(256 128)
+profileParams=(256 128 64)
 
 # Reference states.
 waveletTypes_arr=('bior3.1')
