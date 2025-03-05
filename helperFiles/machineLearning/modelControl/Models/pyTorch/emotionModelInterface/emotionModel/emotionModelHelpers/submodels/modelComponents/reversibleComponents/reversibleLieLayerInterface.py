@@ -25,7 +25,6 @@ class reversibleLieLayerInterface(reversibleInterface):
 
         # Calculate the offsets to map positions to kernel indices
         self.rowInds, self.colInds = upperWindowMask.nonzero(as_tuple=False).T
-        self.smoothingFactor = modelConstants.userInputParams['smoothingFactor'] / 100
 
         # # Get the sub-rotation indices: [X, Y, Z; Q, R, S]
         # self.xrInds, self.xqInds, self.xsInds = (torch.zeros(self.numParams, dtype=torch.int) for _ in range(3))  # [XQ, XR, XS]

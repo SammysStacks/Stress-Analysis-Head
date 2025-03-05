@@ -148,7 +148,6 @@ if __name__ == "__main__":
     # for i in [2, 4, 8, 16, 32, 64, 128, 256]:
     # for i in [16, 32, 64, 128, 256]:
     modelConstants.userInputParams['finalMinAngularThreshold'] = 1
-    modelConstants.userInputParams['smoothingFactor'] = 1
     modelConstants.userInputParams['minAngularThreshold'] = 0.1
     modelConstants.userInputParams['maxAngularThreshold'] = 4
 

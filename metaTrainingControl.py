@@ -37,7 +37,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-03-05 1e2"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2025-03-05"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Architecture Parameters ----------------------- #
@@ -68,7 +68,6 @@ if __name__ == "__main__":
     parser.add_argument('--maxNumParamsKeeping', type=int, default=5000, help='The percentage of parameters to keep in the model.')
     parser.add_argument('--minAngularThreshold', type=float, default=0.05, help='The smaller rotational threshold in degrees.')
     parser.add_argument('--maxAngularThreshold', type=float, default=45, help='The larger rotational threshold in degrees.')
-    parser.add_argument('--smoothingFactor', type=float, default=0, help='The percentage of the angular shift.')
 
     # dd arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions).')
