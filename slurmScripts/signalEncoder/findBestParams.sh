@@ -50,7 +50,7 @@ reversibleWDs=('1e-2' '1e-3' '1e-4' '0')
 
 # Angular reference states.
 minAngularThresholds=(0.01 0.033 0.1)
-maxNumParamsKeeping_arr=(2500 5000)  # [2500, 5000]
+maxNumParamsKeeping_arr=(2500 000)  # [2500, 5000]
 finalMinAngularThresholds=(1)  # [1, 3]
 maxAngularThresholds=(45)
 
