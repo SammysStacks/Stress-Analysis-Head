@@ -49,13 +49,8 @@ waveletTypes_arr=(
 reversibleWDs=('1e-4')
 
 # Angular reference states.
-<<<<<<< HEAD
-minAngularThresholds=(0.01 0.033 0.1)
-maxNumParamsKeeping_arr=(2500 000)  # [2500, 5000]
-=======
 minAngularThresholds=(0.01 0.05 0.1)
 maxNumParamsKeeping_arr=(5000)  # [2500, 5000]
->>>>>>> 5d314f650 (HEAD)
 finalMinAngularThresholds=(1)  # [1, 3]
 maxAngularThresholds=(45)
 
