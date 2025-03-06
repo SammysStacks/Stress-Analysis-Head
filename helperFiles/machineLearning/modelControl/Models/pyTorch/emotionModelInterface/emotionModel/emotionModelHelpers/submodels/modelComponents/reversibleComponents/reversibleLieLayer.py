@@ -17,8 +17,8 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
     def __init__(self, numSignals, sequenceLength, numLayers, activationMethod):
         super(reversibleLieLayer, self).__init__(numSignals, sequenceLength, numLayers, activationMethod)
-        initialMaxGivensAngle = self.getInverseAngleParams(torch.tensor(3 * math.pi/180))
-        minGivensAngle = self.getInverseAngleParams(torch.tensor(1 * math.pi/180))
+        initialMaxGivensAngle = self.getInverseAngleParams(torch.tensor(5 * math.pi/180))
+        minGivensAngle = self.getInverseAngleParams(torch.tensor(0.1 * math.pi/180))
         self.identityMatrix = torch.eye(self.sequenceLength, dtype=torch.float64)
         initialMaxGivensAngle = initialMaxGivensAngle - minGivensAngle
 
@@ -63,7 +63,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
     def matrixExp_skewSymmetric(self, S):
         if S.size(-1) < 256: return S.matrix_exp()
-        else: return self.matrix_exp_approx(S, terms=8)
+        else: return self.matrix_exp_approx(S, terms=4)
 
     def matrix_exp_approx(self, S, terms):
         """ Approximates the matrix exponential using a higher-order Taylor series expansion. """

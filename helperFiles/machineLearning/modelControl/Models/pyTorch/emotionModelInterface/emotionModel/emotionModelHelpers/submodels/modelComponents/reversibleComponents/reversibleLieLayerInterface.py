@@ -3,7 +3,6 @@ import torch
 import torch.fft
 import torch.nn as nn
 
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
 
 
@@ -25,34 +24,6 @@ class reversibleLieLayerInterface(reversibleInterface):
 
         # Calculate the offsets to map positions to kernel indices
         self.rowInds, self.colInds = upperWindowMask.nonzero(as_tuple=False).T
-
-        # # Get the sub-rotation indices: [X, Y, Z; Q, R, S]
-        # self.xrInds, self.xqInds, self.xsInds = (torch.zeros(self.numParams, dtype=torch.int) for _ in range(3))  # [XQ, XR, XS]
-        # self.yrInds, self.yqInds, self.ysInds = (torch.zeros(self.numParams, dtype=torch.int) for _ in range(3))  # [YQ, YR, YS]
-        # self.zrInds, self.zqInds, self.zsInds = (torch.zeros(self.numParams, dtype=torch.int) for _ in range(3))  # [ZQ, ZR, ZS]
-        # for angularLocationsInd in range(self.numParams):
-        #     i, j = self.rowInds[angularLocationsInd], self.colInds[angularLocationsInd]
-        #     downwardShift = self.sequenceLength - i - 2
-        #     upwardShift = -(downwardShift + 1)
-        #
-        #     # Boolean location flags.
-        #     onRightEdge = j == self.sequenceLength - 1
-        #     onLeftEdge = abs(i - j) == 1
-        #     topRow = i == 0
-        #
-        #     # Y terms.
-        #     yrInd = angularLocationsInd
-        #     self.yqInds[angularLocationsInd] = yrInd - (1 if not onLeftEdge else 0)
-        #     self.yrInds[angularLocationsInd] = yrInd
-        #     self.ysInds[angularLocationsInd] = yrInd + (1 if not onRightEdge else 0)
-        #
-        #     # X terms.
-        #     xrInd = yrInd + (upwardShift if not topRow else 0)
-        #     self.xrInds[angularLocationsInd] = xrInd
-        #
-        #     # Z terms.
-        #     zrInd = yrInd + (downwardShift if not onLeftEdge else 0)
-        #     self.zrInds[angularLocationsInd] = zrInd
 
         # Initialize the neural layers.
         self.jacobianParameter = self.initializeJacobianParams(numSignals)

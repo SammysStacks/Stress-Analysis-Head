@@ -22,7 +22,7 @@ srun accelerate launch ./../../metaTrainingControl.py \
     --maxAngularThreshold "${16}" \
     --maxNumParamsKeeping "${17}" \
     --finalMinAngularThreshold "${18}" \
-    --reversibleWD "${19}" \
+    --profileWD "${19}" \
 
 end=$(date +%s)
 runtime=$((end-start))
