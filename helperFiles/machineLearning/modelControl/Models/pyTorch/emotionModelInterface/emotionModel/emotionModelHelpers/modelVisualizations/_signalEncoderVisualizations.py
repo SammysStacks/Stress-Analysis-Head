@@ -205,7 +205,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         numSpatialLayers, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
 
         # Get the angular thresholds.
-        applyMaxThresholding = 50 < epoch
+        applyMaxThresholding =  modelConstants.userInputParams['numInitialEpochs'] < epoch
         minAngularThreshold = modelConstants.userInputParams['finalMinAngularThreshold' if applyMaxThresholding else 'minAngularThreshold']
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
         center = (0, 0)
@@ -283,7 +283,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         bins = np.arange(-degrees, degrees + 1, 1)
 
         # Get the angular thresholds.
-        applyMaxThresholding = 50 < epoch
+        applyMaxThresholding = modelConstants.userInputParams['numInitialEpochs'] < epoch
         minAngularThreshold = modelConstants.userInputParams['finalMinAngularThreshold' if applyMaxThresholding else 'minAngularThreshold']
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
         histogramPlots = []
@@ -363,7 +363,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         degrees = (180 if degreesFlag else math.pi) / 4
 
         # Get the angular thresholds.
-        applyMaxThresholding = 50 < epoch
+        applyMaxThresholding = modelConstants.userInputParams['numInitialEpochs'] < epoch
         minAngularThreshold = modelConstants.userInputParams['finalMinAngularThreshold' if applyMaxThresholding else 'minAngularThreshold']
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
 

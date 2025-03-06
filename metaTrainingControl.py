@@ -80,7 +80,7 @@ if __name__ == "__main__":
     # ----------------------- Training Parameters ----------------------- #
 
     # Signal encoder learning rates.
-    parser.add_argument('--profileLR', type=float, default=0.067, help='The learning rate of the health model.')
+    parser.add_argument('--profileLR', type=float, default=0.1, help='The learning rate of the health model.')
     parser.add_argument('--physGenLR', type=float, default=5e-5, help='The learning rate of the general model.')
     parser.add_argument('--reversibleLR', type=float, default=5e-4, help='The learning rate of the general model.')
 
@@ -98,6 +98,7 @@ if __name__ == "__main__":
 
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
+    userInputParams['numInitialEpochs'] = 25
     userInputParams['minWaveletDim'] = 32
 
     # Compile additional input parameters.
@@ -139,7 +140,7 @@ if __name__ == "__main__":
 
         # Get the saving information.
         saveFullModel, showAllPlots = modelParameters.getEpochParameters(epoch, numEpoch_toSaveFull, numEpoch_toPlot)
-        applyMaxThresholding = 50 < epoch
+        applyMaxThresholding = userInputParams['numInitialEpochs'] < epoch
 
         # Train the model for a single epoch.
         trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders)
