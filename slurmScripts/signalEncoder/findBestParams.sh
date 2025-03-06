@@ -4,12 +4,12 @@
 optimizers_arr=('NAdam')  # NAdam > AdamW > RAdam >= Adam > Adamax
 momentums_arr=('0.001')
 beta1s_arr=('0.7')
-beta2s_arr=('0.8' '0.9')
+beta2s_arr=('0.8')
 
 # Learning parameters.
-lrs_profile=('0.07' '0.1' '0.05')  # 0.005 <= x <= 0.05
-lrs_reversible=('5e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
-lrs_profileGen=('5e-5') # # 5e-5 <= x == 1e-4;
+lrs_profile=('0.075' '0.1' '0.05' '0.01')  # 0.005 <= x <= 0.05
+lrs_reversible=('4e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
+lrs_profileGen=('1e-5') # # 5e-5 <= x == 1e-4;
 
 # Known interesting parameters: 63
 numSharedEncoderLayers_arr=(0 1 2 3 4 5 6 7 8 9)  # 9
@@ -56,7 +56,7 @@ maxAngularThresholds=(45)
 
 # Binary reference states.
 numSpecificEncoderLayers_arr=(1)
-numSharedEncoderLayers_arr=(5)  # [4, 10]; Best: 6 and 8
+numSharedEncoderLayers_arr=(7)  # [4, 10]; Best: 6 and 8
 
 # Binary reference states.
 encodedDimensions_arr=(512)
@@ -64,7 +64,7 @@ profileParams=(64)
 
 # Reference states.
 waveletTypes_arr=('bior3.1')
-numProfileShots_arr=(16 32)
+numProfileShots_arr=(20)
 
 for reversibleWD in "${reversibleWDs[@]}"
 do
