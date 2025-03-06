@@ -47,8 +47,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         fig, ax = plt.subplots(figsize=(6.4, 4.8))
 
         for profileStep in range(numProfileSteps):
-            ax.plot(relativeTimes, retrainingProfilePath[profileStep, batchInd], 'o-', c=self.lightColors[1], linewidth=1, markersize=3, alpha=0.3*(numProfileSteps - profileStep)/numProfileSteps)
-            ax.plot(relativeTimes, retrainingProfilePath[profileStep, batchInd], 'o-', c=self.lightColors[0], linewidth=1, markersize=3, alpha=0.6*(1 - (numProfileSteps - profileStep)/numProfileSteps))
+            ax.plot(relativeTimes, retrainingProfilePath[profileStep, batchInd], 'o-', c=self.lightColors[1], linewidth=1, markersize=2, alpha=0.3*(numProfileSteps - profileStep)/numProfileSteps)
+            ax.plot(relativeTimes, retrainingProfilePath[profileStep, batchInd], 'o-', c=self.lightColors[0], linewidth=1, markersize=2, alpha=0.6*(1 - (numProfileSteps - profileStep)/numProfileSteps))
         ax.plot(relativeTimes, healthProfile[batchInd], '-', c=self.blackColor, label=f"Health profile", linewidth=1, markersize=6, alpha=0.3)
         ax.hlines(y=0, xmin=ax.get_xlim()[0], xmax=ax.get_xlim()[1], colors=self.blackColor, linestyles='-', linewidth=1)
 

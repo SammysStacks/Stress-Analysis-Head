@@ -62,7 +62,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
         return S
 
     def matrixExp_skewSymmetric(self, S):
-        if S.size(-1) <= 256: return S.matrix_exp()
+        if S.size(-1) < 256: return S.matrix_exp()
         else: return self.matrix_exp_approx(S, terms=8)
 
     def matrix_exp_approx(self, S, terms):
