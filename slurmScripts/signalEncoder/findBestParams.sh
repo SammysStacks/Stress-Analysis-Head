@@ -7,8 +7,8 @@ beta1s_arr=('0.7')
 beta2s_arr=('0.8')
 
 # Learning parameters.
-lrs_profile=('0.075' '0.1' '0.05' '0.01')  # 0.005 <= x <= 0.05
-lrs_reversible=('1e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
+lrs_profile=('0.075' '0.05' '0.01')  # 0.005 <= x <= 0.05
+lrs_reversible=('5e-4' '1e-3')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
 lrs_profileGen=('1e-5') # # 5e-5 <= x == 1e-4;
 
 # Known interesting parameters: 63
@@ -49,7 +49,7 @@ waveletTypes_arr=(
 reversibleWDs=('1e-4')
 
 # Angular reference states.
-minAngularThresholds=(0.05)
+minAngularThresholds=(0.01 0.1 0.5 1)
 maxNumParamsKeeping_arr=(5000)  # [2500, 5000]
 finalMinAngularThresholds=(1)  # [1, 3]
 maxAngularThresholds=(45)
@@ -64,7 +64,7 @@ profileParams=(64)
 
 # Reference states.
 waveletTypes_arr=('bior3.1')
-numProfileShots_arr=(20)
+numProfileShots_arr=(16 8)
 
 for reversibleWD in "${reversibleWDs[@]}"
 do
