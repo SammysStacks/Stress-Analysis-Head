@@ -4,10 +4,10 @@
 optimizers_arr=('NAdam')  # NAdam > AdamW > RAdam >= Adam > Adamax
 momentums_arr=('0.001')
 beta1s_arr=('0.7')
-beta2s_arr=('0.8')
+beta2s_arr=('0.8' '0.9')
 
 # Learning parameters.
-lrs_profile=('0.067')  # 0.005 <= x <= 0.05
+lrs_profile=('0.07' '0.1' '0.05')  # 0.005 <= x <= 0.05
 lrs_reversible=('5e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
 lrs_profileGen=('5e-5') # # 5e-5 <= x == 1e-4;
 
@@ -46,17 +46,22 @@ waveletTypes_arr=(
 )
 
 # Angular reference states.
-reversibleWDs=('1e-2' '1e-3' '1e-4' '0')
+reversibleWDs=('1e-4')
 
 # Angular reference states.
+<<<<<<< HEAD
 minAngularThresholds=(0.01 0.033 0.1)
 maxNumParamsKeeping_arr=(2500 000)  # [2500, 5000]
+=======
+minAngularThresholds=(0.01 0.05 0.1)
+maxNumParamsKeeping_arr=(5000)  # [2500, 5000]
+>>>>>>> 5d314f650 (HEAD)
 finalMinAngularThresholds=(1)  # [1, 3]
 maxAngularThresholds=(45)
 
 # Binary reference states.
 numSpecificEncoderLayers_arr=(1)
-numSharedEncoderLayers_arr=(3 5 7)  # [4, 10]; Best: 6 and 8
+numSharedEncoderLayers_arr=(7)  # [4, 10]; Best: 6 and 8
 
 # Binary reference states.
 encodedDimensions_arr=(512)
@@ -64,7 +69,7 @@ profileParams=(64)
 
 # Reference states.
 waveletTypes_arr=('bior3.1')
-numProfileShots_arr=(24)
+numProfileShots_arr=(16 32)
 
 for reversibleWD in "${reversibleWDs[@]}"
 do
