@@ -25,7 +25,7 @@ class trainingProtocolHelpers:
         self.modelMigration = modelMigration(accelerator)
         self.modelHelpers = modelHelpers
 
-    def trainEpoch(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders):
+    def trainEpoch(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, applyMaxThresholding):
         # Set random order to loop through the models.
         self.unifyAllModelWeights(allMetaModels, allModels)
         modelIndices = list(range(len(allMetaModels)))
@@ -49,9 +49,11 @@ class trainingProtocolHelpers:
 
         # Unify all the model weights.
         self.unifyAllModelWeights(allMetaModels, allModels)
-        self.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, profileOnlyTraining=False)
+        self.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, applyMaxThresholding, profileOnlyTraining=False)
 
-    def datasetSpecificTraining(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, profileOnlyTraining=False):
+    def datasetSpecificTraining(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, applyMaxThresholding, profileOnlyTraining=False):
+        if applyMaxThresholding: assert not profileOnlyTraining, "Cannot apply max thresholding with profile only training."
+
         # Unify all the model weights.
         self.unifyAllModelWeights(allMetaModels, allModels)
         if allMetaModels[0].model.numSpecificEncoderLayers == 0:
@@ -67,24 +69,14 @@ class trainingProtocolHelpers:
             else: numEpochs = 1
 
             # Train the updated model.
-            if not profileOnlyTraining: modelPipeline.trainModel(dataLoader, submodel, profileTraining=False, specificTraining=True, trainSharedLayers=False, stepScheduler=False, numEpochs=numEpochs)  # Signal-specific training.
+            if not profileOnlyTraining:
+                modelPipeline.trainModel(dataLoader, submodel, profileTraining=False, specificTraining=True, trainSharedLayers=False, stepScheduler=False, numEpochs=numEpochs)  # Signal-specific training.
+                modelPipeline.model.cullAngles(applyMaxThresholding=applyMaxThresholding)
 
             # Health profile training.
             numProfileShots = modelPipeline.resetPhysiologicalProfile(submodel)
             modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=numProfileShots + 1)  # Profile training.
             self.accelerator.wait_for_everyone()
-
-    def boundAngularWeights(self, allMetaModels, allModels, applyMaxThresholding):
-        # Unify all the model weights.
-        self.unifyAllModelWeights(allMetaModels, allModels)
-
-        # For each meta-training model.
-        for modelPipeline in allMetaModels + allModels:
-            modelPipeline.model.cullAngles(applyMaxThresholding=applyMaxThresholding)
-
-        # Unify all the model weights and retrain the specific models.
-        self.unifiedLayerData = self.modelMigration.copyModelWeights(allMetaModels[0], self.sharedModelWeights)
-        self.unifyAllModelWeights(allMetaModels, allModels)
 
     def calculateLossInformation(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel):
         self.unifyAllModelWeights(allMetaModels, allModels)  # Unify all the model weights.
