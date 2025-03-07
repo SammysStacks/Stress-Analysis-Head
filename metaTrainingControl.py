@@ -37,7 +37,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-03-06 2"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2025-03-06"  # The current date we are training the model. Unique identifier of this training set.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Architecture Parameters ----------------------- #
@@ -130,7 +130,7 @@ if __name__ == "__main__":
 
     # Calculate the initial loss.
     trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate, showMinimumPlots=False)
-    trainingProtocols.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, applyMaxThresholding=False, profileOnlyTraining=True)
+    trainingProtocols.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, profileOnlyTraining=True)
     if modelConstants.useInitialLoss: trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)  # Calculate the initial loss.
 
     # For each training epoch
@@ -143,7 +143,8 @@ if __name__ == "__main__":
         applyMaxThresholding = userInputParams['numInitialEpochs'] < epoch
 
         # Train the model for a single epoch.
-        trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, applyMaxThresholding)
+        trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders)
+        trainingProtocols.boundAngularWeights(allMetaModels, allModels, applyMaxThresholding=applyMaxThresholding)
 
         # Store the initial loss information and plot.
         trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)
