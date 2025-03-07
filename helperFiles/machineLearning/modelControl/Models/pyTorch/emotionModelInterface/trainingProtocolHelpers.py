@@ -67,9 +67,7 @@ class trainingProtocolHelpers:
             else: numEpochs = 1
 
             # Train the updated model.
-            if not profileOnlyTraining:
-                modelPipeline.model.cullAngles(applyMaxThresholding=False)
-                modelPipeline.trainModel(dataLoader, submodel, profileTraining=False, specificTraining=True, trainSharedLayers=False, stepScheduler=False, numEpochs=numEpochs)  # Signal-specific training.
+            if not profileOnlyTraining: modelPipeline.trainModel(dataLoader, submodel, profileTraining=False, specificTraining=True, trainSharedLayers=False, stepScheduler=False, numEpochs=numEpochs)  # Signal-specific training.
 
             # Health profile training.
             numProfileShots = modelPipeline.resetPhysiologicalProfile(submodel)
@@ -108,7 +106,7 @@ class trainingProtocolHelpers:
         numModels = len(allMetaModels) + len(allModels)
         t1 = time.time()
         plt.close('all')
-        hpcFlag = False
+        hpcFlag = True
 
         def process_model(modelInd):
             """ Function to process and plot a model in parallel. """
