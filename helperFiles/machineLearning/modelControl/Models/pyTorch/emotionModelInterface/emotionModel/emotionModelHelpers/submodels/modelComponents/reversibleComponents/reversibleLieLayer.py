@@ -21,6 +21,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
         minGivensAngle = self.getInverseAngleParams(torch.tensor(0.1 * math.pi/180))
         self.identityMatrix = torch.eye(self.sequenceLength, dtype=torch.float64)
         initialMaxGivensAngle = initialMaxGivensAngle - minGivensAngle
+        self.thresholdMask = []
 
         # Create the neural layers.
         for layerInd in range(self.numLayers):
@@ -33,6 +34,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
             # Store the parameters.
             self.activationFunction.append(activationFunctions.getActivationMethod(activationMethod))
             self.givensRotationParams.append(nn.Parameter(parameters))  # givensRotationParams: numLayers, numSignals, numParams
+            self.thresholdMask.append(torch.ones_like(self.givensRotationParams[-1], dtype=torch.bool))
 
     # ------------------- Main Sections ------------------- #
 
@@ -55,7 +57,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
         S = torch.zeros(self.numSignals, self.sequenceLength, self.sequenceLength, dtype=torch.float64, device=self.givensRotationParams[layerInd].device)
 
         # Populate the Givens rotation angles.
-        entriesS = self.getGivensAngles(layerInd)
+        entriesS = self.getGivensAngles(layerInd) * self.thresholdMask[layerInd]
         S[:, self.rowInds, self.colInds] = -entriesS
         S[:, self.colInds, self.rowInds] = entriesS
 
@@ -119,6 +121,9 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
                 # Apply an extra thresholding if the sequence length is large.
                 if 64 < self.sequenceLength: self.percentParamThresholding(layerInd)  # Must be every epoch! Helps diminish overfitting.
+
+                if applyMaxThresholding:
+                    self.thresholdMask[layerInd] = minAngularThreshold <= self.getGivensAngles(layerInd).abs()
 
     def percentParamThresholding(self, layerInd):
         with torch.no_grad():
