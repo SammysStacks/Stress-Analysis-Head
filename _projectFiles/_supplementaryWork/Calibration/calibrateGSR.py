@@ -1,21 +1,10 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Dec 13 17:39:29 2022
 
-@author: samuelsolomon
-"""
-
-# -------------------------------------------------------------------------- #
-# ----------------------------- Import Modules ----------------------------- #
-
-import scipy
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import UnivariateSpline
 
 
-# -------------------------------------------------------------------------- #
 # ------------------------ Specify Calibration Data ------------------------ #
 
 V_0 = np.asarray([0.1647, 0.2172, 0.3205, 0.4773, 0.5136, 0.556 , 0.5786, 0.6028,
@@ -157,7 +146,6 @@ plt.plot(V_1_5, R_1_5, 'k', linewidth=4)
 plt.plot(voltageInterp_1_5, interpR_1_5, 'o', c='tab:blue', markersize=1)
 plt.plot(voltageInterp_1_5, fitV_1_5, 'tab:red', linewidth=2)
 plt.show()
-sys.exit()
 
 
 plt.plot(voltageInterp_0, interpR_0, 'o', c='k', markersize=2, label="Resistance Calibration")
