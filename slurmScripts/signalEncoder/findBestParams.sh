@@ -46,17 +46,17 @@ waveletTypes_arr=(
 )
 
 # Angular reference states.
-profileWDs=('1e-4' '1e-3' '1e-6')
+profileWDs=('1e-4' '1e-3')
 
 # Angular reference states.
 minAngularThresholds=(0.01)
-maxNumParamsKeeping_arr=(5000 3000)  # [2500, 5000]
+maxNumParamsKeeping_arr=(5000)  # [2500, 5000]
 finalMinAngularThresholds=(1)  # [1, 3]
 maxAngularThresholds=(45)
 
 # Binary reference states.
 numSpecificEncoderLayers_arr=(1)
-numSharedEncoderLayers_arr=(7)  # [4, 10]; Best: 6 and 8
+numSharedEncoderLayers_arr=(7 5)  # [4, 10]; Best: 6 and 8
 
 # Binary reference states.
 encodedDimensions_arr=(512)
@@ -64,7 +64,7 @@ profileParams=(64 128)
 
 # Reference states.
 waveletTypes_arr=('bior3.1')
-numProfileShots_arr=(24)
+numProfileShots_arr=(16 24)
 
 for profileWD in "${profileWDs[@]}"
 do
