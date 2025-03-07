@@ -64,7 +64,7 @@ profileParams=(64 128)
 
 # Reference states.
 waveletTypes_arr=('bior3.1')
-numProfileShots_arr=(16 24)
+numProfileShots_arr=(16 24)  # (8, [16, 24], 32)
 
 for profileWD in "${profileWDs[@]}"
 do
