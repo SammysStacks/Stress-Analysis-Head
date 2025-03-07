@@ -46,7 +46,7 @@ waveletTypes_arr=(
 )
 
 # Angular reference states.
-profileWDs=('1e-4' '1e-3')
+profileWDs=('1e-4' '1e-3')  # [1e-3, 1e-4]
 
 # Angular reference states.
 minAngularThresholds=(0.01)
