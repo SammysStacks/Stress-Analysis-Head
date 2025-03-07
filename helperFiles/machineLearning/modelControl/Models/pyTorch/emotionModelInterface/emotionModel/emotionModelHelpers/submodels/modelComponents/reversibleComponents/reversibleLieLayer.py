@@ -53,11 +53,14 @@ class reversibleLieLayer(reversibleLieLayerInterface):
         return expS
 
     def getS(self, layerInd):
+        # Get the relevant model parameters.
+        entriesS = self.getGivensAngles(layerInd)
+        entriesS = entriesS * self.thresholdMask[layerInd].to(entriesS.device)
+
         # Gather the corresponding kernel values for each position for a skewed symmetric matrix.
-        S = torch.zeros(self.numSignals, self.sequenceLength, self.sequenceLength, dtype=torch.float64, device=self.givensRotationParams[layerInd].device)
+        S = torch.zeros(self.numSignals, self.sequenceLength, self.sequenceLength, dtype=entriesS.dtype, device=entriesS.device)
 
         # Populate the Givens rotation angles.
-        entriesS = self.getGivensAngles(layerInd) * self.thresholdMask[layerInd]
         S[:, self.rowInds, self.colInds] = -entriesS
         S[:, self.colInds, self.rowInds] = entriesS
 
