@@ -36,7 +36,7 @@ class pulsePlottingProtocols:
                     continue
                 ax.fill_between(xData[pulsePeakInds[groupInd]:pulsePeakInds[groupInd+1]+1], min(yData), yData[pulsePeakInds[groupInd]:pulsePeakInds[groupInd+1]+1], color=self.sectionColors[groupInd], alpha=0.15)
         # Add Axis Labels and Figure Title
-        ax.set_xlabel("Time (seconds)")
+        ax.set_xlabel("Time (s)")
         ax.set_ylabel("Capacitance (pF)")
         ax.set_title(title)
         # Change Axis Limits If Given
@@ -167,7 +167,7 @@ class pulsePlottingProtocols:
 
         # Add figure labels
         plt.suptitle('Pulse Peaks Extraction', fontsize = 22, x = 0.525, fontweight = "bold")
-        plt.xlabel("Time (Seconds)", labelpad = 15)
+        plt.xlabel("Time (s)", labelpad = 15)
                 
         # Remove overlap in yTicks
         nbins = len(axes[0].get_yticklabels())
@@ -248,7 +248,7 @@ class pulsePlottingProtocols:
 
         # Add figure labels
         plt.suptitle('Tidal Peak Extraction', fontsize = 22, x = 0.525, fontweight = "bold")
-        plt.xlabel("Time (Seconds)", labelpad = 15)
+        plt.xlabel("Time (s)", labelpad = 15)
                 
         # Remove overlap in yTicks
         nbins = len(axes[0].get_yticklabels())

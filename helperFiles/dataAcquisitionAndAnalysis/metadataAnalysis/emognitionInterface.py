@@ -249,8 +249,8 @@ class emognitionInterface(globalMetaAnalysis):
                             plt.plot(timepoints, allData[dataInd])
                         # plt.xlim(500, 510)
                         plt.title(combinedSignalTypes[signalInd])
-                        plt.xlabel("Time (Seconds)")
-                        plt.ylabel("Arbitrary Units (AU)")
+                        plt.xlabel("Time (s)")
+                        plt.ylabel("Arbitrary Units (au)")
                         plt.show()
 
                 # Assert the integrity of data compilation

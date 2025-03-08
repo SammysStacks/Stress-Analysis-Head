@@ -659,7 +659,7 @@ class eogProtocol(globalProtocol):
                     continue
                 ax.fill_between(xData[sepInds[groupInd]:sepInds[groupInd + 1] + 1], min(yData), yData[sepInds[groupInd]:sepInds[groupInd + 1] + 1], color=sectionColors[groupInd], alpha=0.15)
         # Add Axis Labels and Figure Title
-        ax.set_xlabel("Time (seconds)")
+        ax.set_xlabel("Time (s)")
         ax.set_ylabel("Voltage (V)")
         ax.set_title(title)
         # Change Axis Limits If Given

@@ -56,7 +56,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Plotting aesthetics.
         ax.set_xlabel("Time (sec)")
         ax.set_title(f"{plotTitle} epoch{epoch}")
-        ax.set_ylabel("Signal (AU)")
+        ax.set_ylabel("Signal amplitude (au)")
         if "health profile" in plotTitle.lower(): ax.set_ylim((-1, 1))
         else: ax.set_ylim((-1.75, 1.75))
 
@@ -74,9 +74,9 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         ax.plot(relativeTimes, healthError.T, c=self.lightColors[0], linewidth=1, alpha=0.1)
 
         # Plotting aesthetics.
-        ax.set_xlabel("Time (Seconds)")
+        ax.set_xlabel("Time (sec)")
         ax.set_title(f"{plotTitle} epoch{epoch}")
-        ax.set_ylabel("Signal error (AU)")
+        ax.set_ylabel("Signal error (au)")
 
         # Save the figure.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=False)
@@ -94,7 +94,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Plotting aesthetics.
         ax.set_xlabel("Time (sec)")
         ax.set_title(f"{plotTitle} epoch{epoch}")
-        ax.set_ylabel("Signal (AU)")
+        ax.set_ylabel("Signal amplitude (au)")
         ax.set_ylim((-1, 1))
 
         # Save the figure.
@@ -111,47 +111,45 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         datapoints = emotionDataInterface.getChannelData(initialSignalData, channelName=modelConstants.signalChannel)
         timepoints = emotionDataInterface.getChannelData(initialSignalData, channelName=modelConstants.timeChannel)
 
-        for signalInd in range(min(2, numSignals)):
-            try:
-                times, data = timepoints[batchInd, signalInd, :], datapoints[batchInd, signalInd, :]
-                reconstructedData = reconstructedSignals[batchInd, signalInd, :]
-                fig, ax = plt.subplots(figsize=(6.4, 4.8))
+        for signalInd in range(numSignals):
+            times, data = timepoints[batchInd, signalInd, :], datapoints[batchInd, signalInd, :]
+            reconstructedData = reconstructedSignals[batchInd, signalInd, :]
+            fig, ax = plt.subplots(figsize=(6.4, 4.8))
 
-                # Plot the signal reconstruction.
-                ax.plot(times, data, 'o', color=self.blackColor, markersize=2, alpha=0.75, label="Initial Signal")
-                ax.plot(times, reconstructedData, 'o', color=self.lightColors[0], markersize=2, alpha=1, label="Reconstructed Signal")
-                ax.plot(comparisonTimes, comparisonSignal[batchInd, signalInd, :], self.lightColors[1], linewidth=2, alpha=1, label="Resampled Signal")
-                ax.axhline(y=0, color=self.blackColor, linewidth=0.5, alpha=0.25)
+            # Plot the signal reconstruction.
+            ax.plot(times, data, 'o', color=self.blackColor, markersize=2, alpha=0.75, label="Initial Signal")
+            ax.plot(times, reconstructedData, 'o', color=self.lightColors[0], markersize=2, alpha=1, label="Reconstructed Signal")
+            ax.plot(comparisonTimes, comparisonSignal[batchInd, signalInd, :], self.lightColors[1], linewidth=2, alpha=1, label="Resampled Signal")
+            ax.axhline(y=0, color=self.blackColor, linewidth=0.5, alpha=0.25)
 
-                # Plotting aesthetics.
-                ax.set_title(f"{plotTitle} {signalNames[signalInd]} epoch{epoch}")
-                ax.set_ylabel("Signal (AU)")
-                ax.legend(loc="best")
-                ax.set_xlabel("Time (sec)")
-                ax.set_ylim((-1.75, 1.75))
+            # Plotting aesthetics.
+            ax.set_title(f"{plotTitle} {signalNames[signalInd]} epoch{epoch}")
+            ax.set_ylabel("Signal amplitude (au)")
+            ax.legend(loc="best")
+            ax.set_xlabel("Time (sec)")
+            ax.set_ylim((-1.75, 1.75))
 
-                # Save the figure.
-                if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]}.pdf", fig=fig, clearFigure=False, showPlot=False)
-                else: self.clearFigure(fig=fig, legend=None, showPlot=True)
-                plt.close(fig)
+            # Save the figure.
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]}.pdf", fig=fig, clearFigure=False, showPlot=False)
+            else: self.clearFigure(fig=fig, legend=None, showPlot=True)
+            plt.close(fig)
 
-                fig, ax = plt.subplots(figsize=(6.4, 4.8))
-                # Plot the signal reconstruction.
-                ax.plot(times, reconstructedData - data, 'o', color=self.darkColors[0], markersize=2, alpha=0.9, label="Signal Reconstruction Error")
-                ax.axhline(y=0, color=self.blackColor, linewidth=0.5, alpha=0.25)
+            fig, ax = plt.subplots(figsize=(6.4, 4.8))
+            # Plot the signal reconstruction.
+            ax.plot(times, reconstructedData - data, 'o', color=self.darkColors[0], markersize=2, alpha=0.9, label="Signal Reconstruction Error")
+            ax.axhline(y=0, color=self.blackColor, linewidth=0.5, alpha=0.25)
 
-                # Plotting aesthetics.
-                ax.set_title(f"{plotTitle} {signalNames[signalInd]} Error epoch{epoch}")
-                ax.set_ylabel("Signal (AU)")
-                ax.legend(loc="best")
-                ax.set_xlabel("Time (sec)")
-                ax.set_ylim((-1.75, 1.75))
+            # Plotting aesthetics.
+            ax.set_title(f"{plotTitle} {signalNames[signalInd]} Error epoch{epoch}")
+            ax.set_ylabel("Signal amplitude (au)")
+            ax.legend(loc="best")
+            ax.set_xlabel("Time (sec)")
+            ax.set_ylim((-1.75, 1.75))
 
-                # Save the figure.
-                if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} Error epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]} Error.pdf", fig=fig, clearFigure=True, showPlot=False)
-                else: self.clearFigure(fig=fig, legend=None, showPlot=True)
-                plt.close(fig)
-            except Exception as e: print("plotEncoder:", e)
+            # Save the figure.
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} Error epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]} Error.pdf", fig=fig, clearFigure=True, showPlot=False)
+            else: self.clearFigure(fig=fig, legend=None, showPlot=True)
+            plt.close(fig)
             break
 
     def plotSignalEncodingStatePath(self, relativeTimes, compiledSignalEncoderLayerStates, batchInd, signalInd, signalNames, epoch, saveFigureLocation, plotTitle):
@@ -250,7 +248,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
             if 'shared' in moduleName or epoch == 0: continue
             # Define the shaded region in the bounded range [-minAngle, minAngle]
-            bounded_wedge = Wedge(center=center, r=1, theta1=initialAngle * 180 / np.pi - minAngularThreshold, theta2=initialAngle * 180 / np.pi + minAngularThreshold, color=self.blackColor, alpha=0.1, zorder=0)
+            bounded_wedge = Wedge(center=center, r=1, theta1=initialAngle * 180 / np.pi - minAngularThreshold*(2 if rowInd == 0 else 1), theta2=initialAngle * 180 / np.pi + minAngularThreshold*(2 if rowInd == 0 else 1), color=self.blackColor, alpha=0.1, zorder=0)
             lower_wedge = Wedge(center=center, r=1, theta1=0, theta2=max(0, initialAngle * 180 / np.pi - maxAngularThreshold), color=self.blackColor, alpha=1, zorder=0)
             upper_wedge = Wedge(center=center, r=1, theta1=min(90, initialAngle * 180 / np.pi + maxAngularThreshold), theta2=90, color=self.blackColor, alpha=1, zorder=0)
             ax.add_patch(upper_wedge); ax.add_patch(bounded_wedge); ax.add_patch(lower_wedge)
@@ -324,7 +322,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             # Shade the angular thresholds
             if len(smallAngles) == 0: continue
             if 'shared' in moduleName or epoch == 0: continue
-            ax.fill_betweenx(y=(0, yMax), x1=-minAngularThreshold, x2=minAngularThreshold, color=self.blackColor, alpha=0.1, zorder=0)
+            ax.fill_betweenx(y=(0, yMax), x1=-minAngularThreshold*(2 if rowInd == 0 else 1), x2=minAngularThreshold*(2 if rowInd == 0 else 1), color=self.blackColor, alpha=0.1, zorder=0)
             ax.axvspan(-degrees, -maxAngularThreshold, color=self.blackColor, alpha=1, zorder=0)
             ax.axvspan(maxAngularThreshold, degrees, color=self.blackColor, alpha=1, zorder=0)
 
@@ -557,7 +555,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         ax.set_title(f"{plotTitle}; Epoch {epoch}", fontsize=16, weight='bold', pad=20)
         ax.set_xlabel("Time (Sec)", fontsize=12, labelpad=10)
         ax.set_ylabel("Model Layer", fontsize=12, labelpad=10)
-        ax.set_zlabel("Signal value (AU)", fontsize=12, labelpad=10)
+        ax.set_zlabel("Signal value (au)", fontsize=12, labelpad=10)
         ax.set_zlim(-1.75, 1.75)
         ax.invert_yaxis()
 

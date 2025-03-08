@@ -76,7 +76,7 @@ class saveExcelData(handlingExcelFormat):
         experimentInfoPointer, featureInfoPointer = 0, 0
 
         # Get the Header for the experiment and survey
-        header = ["Start Experiment (Seconds)", "End Experiment (Seconds)", "Experiment Label", "Feature Collection (Seconds)"]
+        header = ["Start Experiment (s)", "End Experiment (s)", "Experiment Label", "Feature Collection (s)"]
         header.extend(surveyQuestions)
 
         # Loop through/save all the data in batches of maxAddToExcelSheet.
@@ -139,7 +139,7 @@ class saveExcelData(handlingExcelFormat):
         # Create a combined header with time and corresponding signal data columns for each channel
         header = []
         for i, dataHeader in enumerate(dataHeaders):
-            header.append(f"Time_{dataHeader.upper()} (Seconds)")
+            header.append(f"Time_{dataHeader.upper()} (s)")
             header.append(f"{dataHeader.upper()} Raw Data")
 
         # Write the header to the worksheet
@@ -251,7 +251,7 @@ class saveExcelData(handlingExcelFormat):
             rawFeatures = rawFeatureHolder[biomarkerInd]
 
             # Create the header bar
-            header = ["Time (Seconds)"]
+            header = ["Time (s)"]
             header.extend(currentFeatureNames)
 
             # Loop through/save all the data in batches of maxAddToExcelSheet.

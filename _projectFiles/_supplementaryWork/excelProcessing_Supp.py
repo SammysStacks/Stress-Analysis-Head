@@ -431,8 +431,8 @@ class saveExcelData(handlingExcelFormat):
         experimentInfoPointer = 0; featureInfoPointer = 0
     
         # Get the Header for the experiment and survey
-        header = ["Start Experiment (Seconds)", "End Experiment (Seconds)", "Experiment Label"]
-        header.append("Feature Collection (Seconds)")
+        header = ["Start Experiment (s)", "End Experiment (s)", "Experiment Label"]
+        header.append("Feature Collection (s)")
         header.extend(surveyQuestions)
                 
         # Loop through/save all the data in batches of maxAddToexcelSheet.
@@ -508,7 +508,7 @@ class saveExcelData(handlingExcelFormat):
             rawFeatures = rawFeatureHolder[featureTypeInd] 
             
             # Create the header bar
-            header = ["Time (Seconds)"]
+            header = ["Time (s)"]
             header.extend(featureNames)
             
             # Loop through/save all the data in batches of maxAddToexcelSheet.

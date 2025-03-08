@@ -138,7 +138,7 @@ class ppgProtocol:
             self.bioelectricPlotAxes[channelIndex].set_ylim(yLimLow, yLimHigh)
             # Label Axis + Add Title
             self.bioelectricPlotAxes[channelIndex].set_title("Bioelectric Signal in Channel " + str(channelIndex + 1))
-            self.bioelectricPlotAxes[channelIndex].set_xlabel("Time (Seconds)")
+            self.bioelectricPlotAxes[channelIndex].set_xlabel("Time (s)")
             self.bioelectricPlotAxes[channelIndex].set_ylabel("Bioelectric Signal (Volts)")
             
         # Create the Data Plots
@@ -157,7 +157,7 @@ class ppgProtocol:
             self.filteredBioelectricPlotAxes[channelIndex].set_ylim(yLimLow, yLimHigh)
             # Label Axis + Add Title
             self.filteredBioelectricPlotAxes[channelIndex].set_title("Filtered Bioelectric Signal in Channel " + str(channelIndex + 1))
-            self.filteredBioelectricPlotAxes[channelIndex].set_xlabel("Time (Seconds)")
+            self.filteredBioelectricPlotAxes[channelIndex].set_xlabel("Time (s)")
             self.filteredBioelectricPlotAxes[channelIndex].set_ylabel("Filtered Signal (Volts)")
             
         # Tighten Figure White Space (Must be After wW Add Fig Info)

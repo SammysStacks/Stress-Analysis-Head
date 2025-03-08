@@ -33,7 +33,7 @@ class plottingProtocols:
         plt.tick_params(labelcolor="none", bottom=False, left=False)
         # Add figure labels
         plt.suptitle('Streaming Incoming Biolectric Signals', fontsize=22, x=0.525, fontweight="bold")
-        plt.xlabel("Time (Seconds)", labelpad=15)
+        plt.xlabel("Time (s)", labelpad=15)
         # Add axis column labels
         colHeaders = ["Raw Signals", "Filtered Signals", "Selected Features"]
         for ax, colHeader in zip(axes[0], colHeaders):

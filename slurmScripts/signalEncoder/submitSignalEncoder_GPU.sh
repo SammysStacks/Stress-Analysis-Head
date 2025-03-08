@@ -15,7 +15,6 @@
 #SBATCH --output="slurmOutputs/%x-%j.out"  # Standard output file
 
 # Load in your modules
-module load python/3.10.12-gcc-11.3.1-n4zmj3v
 nvcc --version
 
 # Set the PyTorch CUDA allocation configuration
@@ -23,5 +22,3 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 # RUN FILE
 sh signalEncoderAnalysis.sh "$1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" "$9" "${10}" "${11}" "${12}" "${13}" "${14}" "${15}" "${16}" "${17}" "${18}" "${19}"
-
-

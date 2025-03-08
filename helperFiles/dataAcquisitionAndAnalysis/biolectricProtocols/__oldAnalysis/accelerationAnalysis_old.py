@@ -140,7 +140,7 @@ class accelerationProtocol:
                 plt.plot(time, features[:, i], label=label, alpha=0.5, marker='o', markersize=4)
 
             plt.title(f'{feature_name} over Time with Different Window Sizes')
-            plt.xlabel('Time (seconds)')
+            plt.xlabel('Time (s)')
             plt.ylabel(f'Normalized {feature_name}')
             plt.legend(loc='upper right')
             plt.grid(True)

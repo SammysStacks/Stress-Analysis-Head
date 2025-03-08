@@ -33,12 +33,12 @@ if __name__ == "__main__":
         cpu=torch.backends.mps.is_available(),  # Whether to use the CPU. MPS is NOT fully compatible yet.
         step_scheduler_with_optimizer=False,  # Whether to wrap the optimizer in a scheduler.
         gradient_accumulation_steps=1,  # The number of gradient accumulation steps.
-        mixed_precision="no",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"
+        mixed_precision="bf16",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"
     )
 
     # General model parameters.
-    trainingDate = "2025-03-08 doubleCull 01-1"  # The current date we are training the model. Unique identifier of this training set.
-    plotAllEpochs = False  # Whether to plot all epochs or not.
+    trainingDate = "2025-03-08"  # The current date we are training the model. Unique identifier of this training set.
+    plotAllEpochs = True  # Whether to plot all epochs or not.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Architecture Parameters ----------------------- #
@@ -66,7 +66,7 @@ if __name__ == "__main__":
 
     # Add arguments for observational learning.
     parser.add_argument('--finalMinAngularThreshold', type=float, default=1, help='The final min rotational threshold in degrees.')
-    parser.add_argument('--maxNumParamsKeeping', type=int, default=4000, help='The percentage of parameters to keep in the model.')
+    parser.add_argument('--maxNumParamsKeeping', type=int, default=2500, help='The percentage of parameters to keep in the model.')
     parser.add_argument('--minAngularThreshold', type=float, default=0.01, help='The smaller rotational threshold in degrees.')
     parser.add_argument('--maxAngularThreshold', type=float, default=45, help='The larger rotational threshold in degrees.')
 

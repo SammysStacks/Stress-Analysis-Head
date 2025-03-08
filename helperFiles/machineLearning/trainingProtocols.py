@@ -324,7 +324,7 @@ class trainingProtocols(extractData):
             ax.set(title='Feature:' + self.biomarkerFeatureNames[biomarkerInd][featureInd])
             # Save the Figure
             sns.set(rc={'figure.figsize': (7, 9)})
-            plt.xlabel("Time (Seconds)")
+            plt.xlabel("Time (s)")
             plt.ylabel("Sliding Window Size")
             fig = ax.get_figure()
             fig.savefig(self.biomarkerFeatureNames[biomarkerInd][featureInd] + "Sliding Window.png", dpi=300)

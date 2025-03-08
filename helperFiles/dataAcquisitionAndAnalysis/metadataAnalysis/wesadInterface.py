@@ -243,7 +243,7 @@ class wesadInterface(globalMetaAnalysis):
             plt.vlines(experimentTimes[:, 0], 0, 7, 'tab:red', label="Start Experiment")
             plt.vlines(experimentTimes[:, 1], 0, 7, 'black', label="End Experiment")
             plt.title("WESAD Experiment")
-            plt.xlabel("Time (Seconds)")
+            plt.xlabel("Time (s)")
             plt.ylabel("Experiment Label")
             plt.legend()
             plt.show()

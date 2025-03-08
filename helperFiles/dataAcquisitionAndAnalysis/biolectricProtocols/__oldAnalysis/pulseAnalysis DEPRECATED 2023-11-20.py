@@ -135,7 +135,7 @@ class pulseAnalysis(_globalProtocol.globalProtocol):
         """
         ----------------------------------------------------------------------
         Input Parameters:
-            time: xData-Axis Data for the Blood Pulse (Seconds)
+            time: xData-Axis Data for the Blood Pulse (s)
             signalChannel:  yData-Axis Data for Blood Pulse (Capacitance)
             minBPM = Minimum Beats Per Minute Possible. 27 BPM is the lowest recorded; 30 is a good threshold
             maxBPM: Maximum Beats Per Minute Possible. 480 is the maximum recorded. 220 is a good threshold

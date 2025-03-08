@@ -47,7 +47,7 @@ class generalVisualizations(globalPlottingProtocols):
         # plt.plot(xAxis, trueDistributions[0], 'k', linewidth=2, alpha = 0.4,label = "True Emotion Distribution")
         plt.plot(xAxis, predictionDistributions[0], 'tab:red',
                  linewidth=2, alpha=0.6, label="Predicted Emotion Distribution")
-        plt.ylabel("Probability (AU)")
+        plt.ylabel("Probability (au)")
         plt.xlabel("Emotion Rating")
         plt.title(f"{plotTitle}")
         plt.legend(loc="best")

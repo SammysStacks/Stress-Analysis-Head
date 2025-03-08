@@ -186,7 +186,7 @@ class plottingMethods:
         color = "tab:brown"
         # Add the raw data plots
         yLimLow = 0; yLimHigh = 5; 
-        self.addRawPlots(axes, (yLimLow, yLimHigh), yLabel = "Signal (AU)", color = color)
+        self.addRawPlots(axes, (yLimLow, yLimHigh), yLabel = "Signal amplitude (au)", color = color)
         # Add the filtered data plots
         self.addFilteredPlots(axes, (yLimLow, yLimHigh), color = color)
         # Add the feature plots
@@ -200,7 +200,7 @@ class plottingMethods:
         color = "tab:brown"
         # Add the raw data plots
         yLimLow = 0; yLimHigh = 5; 
-        self.addRawPlots(axes, (yLimLow, yLimHigh), yLabel = "Signal (AU)", color = color)
+        self.addRawPlots(axes, (yLimLow, yLimHigh), yLabel = "Signal amplitude (au)", color = color)
         # Add the filtered data plots
         self.addFilteredPlots(axes, (yLimLow, yLimHigh), color = color)
         # Add the feature plots

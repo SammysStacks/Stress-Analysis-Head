@@ -58,7 +58,7 @@ ax.plot(serialReads[cutoff_2], calibratedVoltages[cutoff_2], marker='o', color='
 
 # Formatting
 ax.set_title("ADC Calibration", fontsize=14, fontweight='bold')
-ax.set_xlabel("Serial Reading (AU)", fontsize=12)
+ax.set_xlabel("Serial Reading (au)", fontsize=12)
 ax.set_ylabel("Voltage (Volts)", fontsize=12)
 ax.legend()
 ax.grid(True, linestyle='--', alpha=0.7)
