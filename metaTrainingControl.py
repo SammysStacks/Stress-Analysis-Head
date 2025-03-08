@@ -38,7 +38,7 @@ if __name__ == "__main__":
 
     # General model parameters.
     trainingDate = "2025-03-08"  # The current date we are training the model. Unique identifier of this training set.
-    plotAllEpochs = True  # Whether to plot all epochs or not.
+    plotAllEpochs = False  # Whether to plot all epochs or not.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Architecture Parameters ----------------------- #
@@ -61,12 +61,12 @@ if __name__ == "__main__":
 
     # Add arguments for the health profile.
     parser.add_argument('--initialProfileAmp', type=float, default=1e-3, help='The limits for profile initialization. Should be near zero.')
-    parser.add_argument('--profileDimension', type=int, default=128, help='The number of profile weights: [32, 256]')
-    parser.add_argument('--numProfileShots', type=int, default=16, help='The epochs for profile training: [16, 32]')
+    parser.add_argument('--profileDimension', type=int, default=64, help='The number of profile weights: [32, 256]')
+    parser.add_argument('--numProfileShots', type=int, default=20, help='The epochs for profile training: [16, 32]')
 
     # Add arguments for observational learning.
     parser.add_argument('--finalMinAngularThreshold', type=float, default=1, help='The final min rotational threshold in degrees.')
-    parser.add_argument('--maxNumParamsKeeping', type=int, default=2500, help='The percentage of parameters to keep in the model.')
+    parser.add_argument('--maxNumParamsKeeping', type=int, default=5000, help='The percentage of parameters to keep in the model.')
     parser.add_argument('--minAngularThreshold', type=float, default=0.01, help='The smaller rotational threshold in degrees.')
     parser.add_argument('--maxAngularThreshold', type=float, default=45, help='The larger rotational threshold in degrees.')
 
@@ -82,12 +82,12 @@ if __name__ == "__main__":
 
     # Signal encoder learning rates.
     parser.add_argument('--profileLR', type=float, default=0.075, help='The learning rate of the health model.')
-    parser.add_argument('--physGenLR', type=float, default=1e-5, help='The learning rate of the general model.')
+    parser.add_argument('--physGenLR', type=float, default=1e-6, help='The learning rate of the general model.')
     parser.add_argument('--reversibleLR', type=float, default=1e-3, help='The learning rate of the general model.')
 
     # Signal encoder weight decays.
     parser.add_argument('--profileWD', type=float, default=1e-4, help='The learning rate of the general model.')
-    parser.add_argument('--physGenWD', type=float, default=1e-6, help='The learning rate of the general model.')
+    parser.add_argument('--physGenWD', type=float, default=1e-7, help='The learning rate of the general model.')
     parser.add_argument('--reversibleWD', type=float, default=1e-4, help='The learning rate of the general model.')
 
     # Add arguments for the emotion and activity architecture.
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
     userInputParams['numInitialEpochs'] = 100
-    userInputParams['minWaveletDim'] = 32  # max(32, userInputParams['encodedDimension'] // 8)
+    userInputParams['minWaveletDim'] = 64  # max(32, userInputParams['encodedDimension'] // 8)
 
     # Compile additional input parameters.
     userInputParams = modelParameters.getNeuralParameters(userInputParams)
