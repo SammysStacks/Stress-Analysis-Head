@@ -17,7 +17,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
     def __init__(self, numSignals, sequenceLength, numLayers, activationMethod):
         super(reversibleLieLayer, self).__init__(numSignals, sequenceLength, numLayers, activationMethod)
-        initialMaxGivensAngle = self.getInverseAngleParams(torch.tensor(5 * math.pi/180))
+        initialMaxGivensAngle = self.getInverseAngleParams(torch.tensor(1 * math.pi/180))
         minGivensAngle = self.getInverseAngleParams(torch.tensor(0.1 * math.pi/180))
         self.identityMatrix = torch.eye(self.sequenceLength, dtype=torch.float64)
         initialMaxGivensAngle = initialMaxGivensAngle - minGivensAngle
@@ -102,7 +102,6 @@ class reversibleLieLayer(reversibleLieLayerInterface):
             else self.activationFunction[layerInd](inputData, lambda X: self.applyLayer(X, layerInd), forwardFirst=performOptimalForwardFirst)
 
         return inputData
-
     # ------------------- Observational Learning ------------------- #
 
     def angularThresholding(self, applyMaxThresholding):

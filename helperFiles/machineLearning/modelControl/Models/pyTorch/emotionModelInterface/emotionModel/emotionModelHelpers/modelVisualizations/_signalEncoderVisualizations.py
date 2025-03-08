@@ -84,14 +84,10 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     def plotProfileReconstruction(self, relativeTimes, healthProfile, reconstructedHealthProfile, batchInd, epoch, saveFigureLocation="", plotTitle="Signal Encoding"):
         # Extract the signal dimensions.
-        reconstructionError = np.square(healthProfile[:, None, :] - reconstructedHealthProfile)[batchInd]
         fig, ax = plt.subplots(figsize=(6.4, 4.8))
 
         # Plot the signal reconstruction.
         ax.plot(relativeTimes, healthProfile[batchInd], c=self.blackColor, label=f"Health profile", linewidth=2, alpha=0.8)
-        ax.errorbar(x=np.arange(0, reconstructionError.shape[0]), y=reconstructionError.mean(axis=-1), yerr=reconstructionError.std(axis=-1), color=self.darkColors[1], capsize=3, linewidth=2)
-
-        # Plot the signal reconstruction.
         ax.plot(relativeTimes, reconstructedHealthProfile[batchInd].T, c=self.lightColors[0], linewidth=1, alpha=0.1)
         ax.axhline(y=0, color=self.blackColor, linewidth=0.5, alpha=0.25)
 

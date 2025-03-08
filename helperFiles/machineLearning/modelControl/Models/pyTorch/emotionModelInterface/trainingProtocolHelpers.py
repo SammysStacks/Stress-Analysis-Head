@@ -1,9 +1,8 @@
 # General
-import concurrent.futures
 import random
 import time
+
 import torch
-from matplotlib import pyplot as plt
 
 # Helper classes.
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.generalMethods.modelHelpers import modelHelpers
@@ -68,7 +67,7 @@ class trainingProtocolHelpers:
 
             # Train the updated model.
             if not profileOnlyTraining:
-                # modelPipeline.model.cullAngles(applyMaxThresholding=False)
+                modelPipeline.model.cullAngles(applyMaxThresholding=False)
                 modelPipeline.trainModel(dataLoader, submodel, profileTraining=False, specificTraining=True, trainSharedLayers=False, stepScheduler=False, numEpochs=numEpochs)  # Signal-specific training.
 
             # Health profile training.
@@ -100,45 +99,6 @@ class trainingProtocolHelpers:
             # Calculate and store all the training and testing losses of the untrained model.
             with torch.no_grad(): modelPipeline.organizeLossInfo.storeTrainingLosses(submodel, modelPipeline, lossDataLoader)
         t2 = time.time(); self.accelerator.print("Total loss calculation time:", t2 - t1)
-
-    def plotModelState_Parallel(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate, showMinimumPlots):
-        """ Parallelized version of the function for efficient plotting. """
-        self.unifyAllModelWeights(allMetaModels, allModels)  # Unify model weights before plotting.
-        hpcFlag = 'HPC' in modelConstants.userInputParams['deviceListed']  # Whether we are using the HPC.
-        numModels = len(allMetaModels) + len(allModels)
-        t1 = time.time()
-        plt.close('all')
-        hpcFlag = False
-
-        def process_model(modelInd):
-            """ Function to process and plot a model in parallel. """
-            # Select appropriate data loader and model pipeline
-            lossDataLoader = (allMetadataLoaders[modelInd] if modelInd < len(allMetadataLoaders)
-                              else allDataLoaders[modelInd - len(allMetaModels)])
-            modelPipeline = (allMetaModels[modelInd] if modelInd < len(allMetaModels)
-                             else allModels[modelInd - len(allMetaModels)])
-
-            with torch.no_grad():  # Disable gradient computation for efficiency
-                numEpochs = modelPipeline.getTrainingEpoch(submodel)
-                modelPipeline.modelVisualization.plotAllTrainingEvents(
-                    submodel, modelPipeline, lossDataLoader, trainingDate, numEpochs, showMinimumPlots=showMinimumPlots if hpcFlag else False
-                )
-
-        def process_model_comparison():
-            """ Function to plot the model comparison separately in parallel. """
-            with torch.no_grad():
-                allMetaModels[0].modelVisualization.plotDatasetComparison(
-                    submodel, allMetaModels + allModels, trainingDate, showMinimumPlots=showMinimumPlots
-                )
-
-        # Use ThreadPoolExecutor to run everything in parallel
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            futures = [executor.submit(process_model, modelInd) for modelInd in range(numModels)]
-            concurrent.futures.wait(futures)
-        process_model_comparison()
-
-        t2 = time.time()
-        self.accelerator.print("Total plotting time:", t2 - t1)
 
     def plotModelState(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate, showMinimumPlots):
         self.unifyAllModelWeights(allMetaModels, allModels)  # Unify all the model weights.
