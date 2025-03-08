@@ -98,8 +98,8 @@ if __name__ == "__main__":
 
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
-    userInputParams['minWaveletDim'] = 32  # max(32, userInputParams['encodedDimension'] // 8)
     userInputParams['numInitialEpochs'] = 100
+    userInputParams['minWaveletDim'] = 32  # max(32, userInputParams['encodedDimension'] // 8)
 
     # Compile additional input parameters.
     userInputParams = modelParameters.getNeuralParameters(userInputParams)
