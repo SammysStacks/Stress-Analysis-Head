@@ -26,16 +26,16 @@ class profileModel(emotionModelWeights):
 
     def resetProfileHolders(self, numProfileShots):
         # Pre-allocate each parameter.
-        self.generatingBiometricSignals = np.zeros(shape=(numProfileShots + 1, self.numExperiments, 1, self.encodedDimension))  # Dim: numProfileShots, numLayers, numExperiments, numSignals, encodedDimension
-        self.retrainingHealthProfilePath = np.zeros(shape=(numProfileShots + 1, self.numExperiments, self.encodedDimension))
-        self.retrainingProfileLosses = np.zeros(shape=(numProfileShots + 1, self.numExperiments, self.numSignals))
+        self.generatingBiometricSignals = np.zeros(shape=(numProfileShots + 1, 1, 1, self.encodedDimension), dtype=np.float16)  # Dim: numProfileShots, numLayers, numExperiments, numSignals, encodedDimension
+        self.retrainingHealthProfilePath = np.zeros(shape=(numProfileShots + 1, 1, self.encodedDimension), dtype=np.float16)  # Dim: numProfileShots, numExperiments, numSignals, encodedDimension
+        self.retrainingProfileLosses = np.zeros(shape=(numProfileShots + 1, self.numExperiments, self.numSignals), dtype=np.float16)
 
     def resetModelStates(self, metaLearningData):
         with torch.no_grad():
             # Pre-allocate each parameter.
             numExperiments, numSignals, encodedDimension = metaLearningData.shape
             numSpecificEncoderLayers, numSharedEncoderLayers = modelConstants.userInputParams['numSpecificEncoderLayers'], modelConstants.userInputParams['numSharedEncoderLayers']
-            self.compiledLayerStates = np.zeros(shape=(numSpecificEncoderLayers + numSharedEncoderLayers + 1, numExperiments, numSignals, encodedDimension))
+            self.compiledLayerStates = np.zeros(shape=(numSpecificEncoderLayers + numSharedEncoderLayers + 1, numExperiments, numSignals, encodedDimension), dtype=np.float16)
             self.compiledLayerStateInd = 0
 
             # Add the initial state.
@@ -48,9 +48,12 @@ class profileModel(emotionModelWeights):
     def populateProfileState(self, profileEpoch, batchInds, profileStateLoss, resampledSignalData, healthProfile):
         with torch.no_grad():
             if isinstance(batchInds, torch.Tensor): batchInds = batchInds.detach().cpu().numpy()
-            self.retrainingProfileLosses[profileEpoch][batchInds] = profileStateLoss.detach().clone().cpu().numpy()
-            self.retrainingHealthProfilePath[profileEpoch][batchInds] = healthProfile.detach().clone().cpu().numpy()
-            self.generatingBiometricSignals[profileEpoch][batchInds] = resampledSignalData.detach().clone().cpu().numpy()[:, 0:1, :]
+            self.retrainingProfileLosses[profileEpoch][batchInds] = profileStateLoss.detach().cpu().numpy().round(decimals=8)
+
+            if 0 not in batchInds: return None
+            # For space efficiency, only store the first batch and signal.
+            self.retrainingHealthProfilePath[profileEpoch][0] = healthProfile[batchInds == 0].detach().cpu().numpy().round(decimals=8)
+            self.generatingBiometricSignals[profileEpoch][0] = resampledSignalData[batchInds == 0, 0:1, :].detach().cpu().numpy().round(decimals=8)
 
     def getHealthEmbedding(self, batchInds):
         return self.embeddedHealthProfiles.to(batchInds.device)[batchInds]

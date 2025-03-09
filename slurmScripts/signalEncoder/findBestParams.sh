@@ -7,9 +7,9 @@ beta1s_arr=('0.7')
 beta2s_arr=('0.8')
 
 # Learning parameters.
-lrs_profile=('0.05')  # 0.005 <= x <= 0.05
-lrs_reversible=('5e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
-lrs_profileGen=('1e-5') # # 5e-5 <= x == 1e-4;
+lrs_profile=('0.01')  # 0.005 <= x <= 0.075
+lrs_profileGen=('1e-6') # x <= 1e-4;
+lrs_reversible=('4e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
 
 # Known interesting parameters: 63
 numSharedEncoderLayers_arr=(0 1 2 3 4 5 6 7 8 9)  # 9
@@ -49,8 +49,8 @@ waveletTypes_arr=(
 profileWDs=('1e-4' '1e-3')  # [1e-3, 1e-4]
 
 # Angular reference states.
-minAngularThresholds=(0.01)
-maxNumParamsKeeping_arr=(2500)  # [2500, 5000]
+minAngularThresholds=(0.01 0.1)
+maxNumParamsKeeping_arr=(3000 5000)  # [2500, 5000]
 finalMinAngularThresholds=(1)  # [1, 3]
 maxAngularThresholds=(45)
 
@@ -60,11 +60,11 @@ numSharedEncoderLayers_arr=(7 5 3)  # [4, 10]; Best: 6 and 8
 
 # Binary reference states.
 encodedDimensions_arr=(512)
-profileParams=(128 256 64 32)
+profileParams=(128 256 64)
 
 # Reference states.
 waveletTypes_arr=('bior3.1')
-numProfileShots_arr=(16 24 32 12)  # (8, [16, 24], 32)
+numProfileShots_arr=(16 24 32)  # (8, [16, 24], 32)
 
 for profileWD in "${profileWDs[@]}"
 do

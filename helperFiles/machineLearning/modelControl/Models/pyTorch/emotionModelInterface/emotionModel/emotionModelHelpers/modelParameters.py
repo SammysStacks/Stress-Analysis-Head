@@ -77,9 +77,10 @@ class modelParameters:
     def getProfileEpochs(): return modelConstants.userInputParams['numProfileShots']  # numEpochs
 
     @staticmethod
-    def getEpochParameters(epoch, numEpoch_toSaveFull, numEpoch_toPlot):
+    def getEpochParameters(epoch, numEpoch_toSaveFull, numEpoch_toPlot, plotAllEpochs):
         saveFullModel = (epoch % numEpoch_toSaveFull == 0)
         plotSteps = (epoch % numEpoch_toPlot == 0)
+        if plotAllEpochs: plotSteps = True
 
         return saveFullModel, plotSteps
 
