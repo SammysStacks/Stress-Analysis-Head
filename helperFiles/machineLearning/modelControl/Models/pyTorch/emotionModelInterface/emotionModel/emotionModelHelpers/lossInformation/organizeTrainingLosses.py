@@ -1,5 +1,7 @@
 # General
 import time
+
+import numpy as np
 import torch
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.lossInformation.lossCalculations import lossCalculations
@@ -127,8 +129,8 @@ class organizeTrainingLosses(lossCalculations):
 
         # Store the loss information.
         if isinstance(gatheredTrainingLoss, torch.Tensor):
-            trainingHolder.append(gatheredTrainingLoss.detach().cpu().numpy())
-            if testingLoss is not None: testingHolder.append(gatheredTestingLoss.detach().cpu().numpy())
+            trainingHolder.append(gatheredTrainingLoss.detach().cpu().numpy().astype(np.float16))
+            if testingLoss is not None: testingHolder.append(gatheredTestingLoss.detach().cpu().numpy().astype(np.float16))
         else:
             trainingHolder.append(gatheredTrainingLoss)
             if testingLoss is not None: testingHolder.append(gatheredTestingLoss)

@@ -33,12 +33,12 @@ if __name__ == "__main__":
         cpu=torch.backends.mps.is_available(),  # Whether to use the CPU. MPS is NOT fully compatible yet.
         step_scheduler_with_optimizer=False,  # Whether to wrap the optimizer in a scheduler.
         gradient_accumulation_steps=1,  # The number of gradient accumulation steps.
-        mixed_precision="bf16",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"
+        mixed_precision="no",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"
     )
 
     # General model parameters.
-    trainingDate = "2025-03-10"  # The current date we are training the model. Unique identifier of this training set.
-    plotAllEpochs = True  # Whether to plot all epochs or not.
+    trainingDate = "2025-03-10 8CNN"  # The current date we are training the model. Unique identifier of this training set.
+    plotAllEpochs = False  # Whether to plot all epochs or not.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Architecture Parameters ----------------------- #
@@ -81,13 +81,13 @@ if __name__ == "__main__":
     # ----------------------- Training Parameters ----------------------- #
 
     # Signal encoder learning rates.
-    parser.add_argument('--profileLR', type=float, default=0.025, help='The learning rate of the health model.')
-    parser.add_argument('--physGenLR', type=float, default=1e-5, help='The learning rate of the general model.')
+    parser.add_argument('--profileLR', type=float, default=0.05, help='The learning rate of the health model.')
+    parser.add_argument('--physGenLR', type=float, default=5e-5, help='The learning rate of the general model.')
     parser.add_argument('--reversibleLR', type=float, default=5e-4, help='The learning rate of the general model.')
 
     # Signal encoder weight decays.
     parser.add_argument('--profileWD', type=float, default=1e-4, help='The learning rate of the general model.')
-    parser.add_argument('--physGenWD', type=float, default=1e-5, help='The learning rate of the general model.')
+    parser.add_argument('--physGenWD', type=float, default=1e-6, help='The learning rate of the general model.')
     parser.add_argument('--reversibleWD', type=float, default=1e-4, help='The learning rate of the general model.')
 
     # Add arguments for the emotion and activity architecture.

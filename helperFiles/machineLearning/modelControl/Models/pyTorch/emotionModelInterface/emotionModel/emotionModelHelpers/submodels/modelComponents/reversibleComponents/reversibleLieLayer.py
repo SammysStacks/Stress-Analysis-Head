@@ -61,8 +61,8 @@ class reversibleLieLayer(reversibleLieLayerInterface):
         return S
 
     def matrixExp_skewSymmetric(self, S):
-        if S.size(-1) <= 256: return S.matrix_exp()
-        else: return self.matrix_exp_approx(S, terms=4)
+        if S.size(-1) <= 512: return S.matrix_exp()
+        else: return self.matrix_exp_approx(S, terms=8)
 
     def matrix_exp_approx(self, S, terms):
         """ Approximates the matrix exponential using a higher-order Taylor series expansion. """
@@ -153,7 +153,7 @@ if __name__ == "__main__":
     # for _layerInd, sequenceLength2 in [(1, 32), (2, 32), (3, 32), (5, 32), (5, 32), (10, 32)]:
     # for _layerInd, sequenceLength2 in [(1, 64), (2, 64), (3, 64), (5, 64), (5, 64), (10, 64)]:
     # for _layerInd, sequenceLength2 in [(1, 128), (2, 128), (3, 128), (5, 128), (5, 128), (10, 128)]:
-    for _layerInd, sequenceLength2 in [(1, 32), (1, 64), (1, 512)]:
+    for _layerInd, sequenceLength2 in [(1, 32), (1, 256), (1, 512)]:
         # General parameters.
         _batchSize, _numSignals, _sequenceLength = 128, 64, sequenceLength2
         _activationMethod = 'reversibleLinearSoftSign'  # reversibleLinearSoftSign
@@ -161,6 +161,9 @@ if __name__ == "__main__":
 
         # Set up the parameters.
         neuralLayerClass = reversibleLieLayer(numSignals=_numSignals, sequenceLength=_sequenceLength, numLayers=_numLayers, activationMethod=_activationMethod)
+        neuralLayerClass = neuralLayerClass.double()
+
+        # Generate the health profile.
         healthProfile = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float64)
         healthProfile = healthProfile - healthProfile.min(dim=-1, keepdim=True).values
         healthProfile = healthProfile / healthProfile.max(dim=-1, keepdim=True).values
@@ -170,7 +173,7 @@ if __name__ == "__main__":
         _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(healthProfile, atol=1e-6, numLayers=1, plotResults=True)
         neuralLayerClass.printParams()
 
-        ratio = (_forwardData.norm(dim=-1) / healthProfile.norm(dim=-1)).view(-1).detach().numpy()
+        ratio = (_forwardData.norm(dim=-1) / healthProfile.norm(dim=-1)).view(-1).detach().numpy().astype(np.float32)
         if abs(ratio.mean() - 1) < 0.1: plt.hist(ratio, bins=150, alpha=0.2, label=f'len{_sequenceLength}_layers={_layerInd}', density=True)
         print("Lipschitz constant:", ratio.mean())
 

@@ -65,8 +65,8 @@ class reversibleLieLayerInterface(reversibleInterface):
         with torch.no_grad():
             for layerInd in range(self.numLayers):
                 givensAngles, scalingFactors = self.getLinearParams(layerInd)
-                allScaleFactors.append(scalingFactors.unsqueeze(-1).detach().cpu().numpy())
-                allGivensAngles.append(givensAngles.detach().cpu().numpy())
+                allScaleFactors.append(scalingFactors.unsqueeze(-1).detach().cpu().numpy().astype(np.float16))
+                allGivensAngles.append(givensAngles.detach().cpu().numpy().astype(np.float16))
             allGivensAngles = np.asarray(allGivensAngles)
             allScaleFactors = np.asarray(allScaleFactors)
 
@@ -79,7 +79,7 @@ class reversibleLieLayerInterface(reversibleInterface):
             for layerInd in range(self.numLayers):
                 angularMask = 0 != self.givensRotationParams[layerInd]
                 numSignalParameters = angularMask.sum(dim=-1, keepdim=True)  # Dim: numSignals, 1
-                allNumFreeParams.append(numSignalParameters.detach().cpu().numpy())
+                allNumFreeParams.append(numSignalParameters.detach().cpu().numpy().astype(np.float16))
                 # allNumFreeParams: numLayers, numSignals, numFreeParams=1
 
         return allNumFreeParams
@@ -96,11 +96,11 @@ class reversibleLieLayerInterface(reversibleInterface):
 
                 # Calculate the mean, variance, and range of the Givens angles.
                 givensAnglesRange = givensAngles.max(dim=-1).values - givensAngles.min(dim=-1).values  # Dim: numSignals
-                givensAnglesVar = givensAngles.var(dim=-1).cpu().detach().numpy()  # Dim: numSignals
-                givensAnglesRange = givensAnglesRange.cpu().detach().numpy()
+                givensAnglesVar = givensAngles.var(dim=-1).cpu().detach().numpy().astype(np.float16)  # Dim: numSignals
+                givensAnglesRange = givensAnglesRange.cpu().detach().numpy().astype(np.float16)
 
                 # Calculate the mean, variance, and range of the scaling factors.
-                scalingFactorsVar = scalingFactors.var(dim=0).cpu().detach().numpy()  # Dim: numSignals
+                scalingFactorsVar = scalingFactors.var(dim=0).cpu().detach().numpy().astype(np.float16)  # Dim: numSignals
 
                 # Combine the features. Return dimension: numFeatures, numValues
                 allGivensAnglesFeatures.append([givensAnglesVar, givensAnglesRange, scalingFactorsVar])

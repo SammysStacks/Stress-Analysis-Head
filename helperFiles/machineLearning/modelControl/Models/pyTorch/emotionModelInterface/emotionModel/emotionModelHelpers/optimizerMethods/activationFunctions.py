@@ -1,5 +1,6 @@
 import math
 
+import numpy as np
 import torch
 import torch.nn as nn
 
@@ -86,7 +87,7 @@ class reversibleLinearSoftSign(reversibleInterface):
             y_vals = self.forwardPass(x_vals)
 
         # Convert to NumPy for plotting
-        return x_vals.detach().cpu().numpy(), y_vals.detach().cpu().numpy()
+        return x_vals.detach().cpu().numpy().astype(np.float16), y_vals.detach().cpu().numpy().astype(np.float16)
 
 
 class boundedExp(nn.Module):

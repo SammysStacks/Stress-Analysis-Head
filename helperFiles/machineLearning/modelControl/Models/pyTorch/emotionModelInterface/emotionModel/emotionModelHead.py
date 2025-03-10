@@ -381,25 +381,25 @@ class emotionModelHead(nn.Module):
         plt.close('all')
 
         # Optionally, plot the health profile for visual comparison
-        resampledBiomarkerTimes = self.sharedSignalEncoderModel.hyperSampledTimes.clone().detach().cpu().numpy()
-        plt.plot(resampledBiomarkerTimes, healthProfile[firstBatchInd].clone().detach().cpu().numpy(), 'o-', color='tab:red', linewidth=0.25, label='Health Profile', alpha=2/3, markersize=2)
-        plt.plot(torch.linspace(start=resampledBiomarkerTimes[0], end=resampledBiomarkerTimes[-1], steps=embeddedProfile.size(-1)).clone().detach().cpu().numpy(), embeddedProfile[firstBatchInd].clone().detach().cpu().numpy(), 'ok', linewidth=1, markersize=3,  label='Embedded Profile', alpha=0.75)
+        resampledBiomarkerTimes = self.sharedSignalEncoderModel.hyperSampledTimes.clone().detach().cpu().numpy().astype(np.float16)
+        plt.plot(resampledBiomarkerTimes, healthProfile[firstBatchInd].clone().detach().cpu().numpy().astype(np.float16), 'o-', color='tab:red', linewidth=0.25, label='Health Profile', alpha=2/3, markersize=2)
+        plt.plot(torch.linspace(start=resampledBiomarkerTimes[0], end=resampledBiomarkerTimes[-1], steps=embeddedProfile.size(-1)).clone().detach().cpu().numpy().astype(np.float16), embeddedProfile[firstBatchInd].clone().detach().cpu().numpy().astype(np.float16), 'ok', linewidth=1, markersize=3,  label='Embedded Profile', alpha=0.75)
         plt.title(f"batchInd{firstBatchInd}")
         plt.ylim((-1.75, 1.75))
         plt.show()
         plt.close()
 
         # Get the first valid signal points.
-        validReconstructedPoints = reconstructedSignalData[firstBatchInd, firstSignalInd, validPointMask].clone().detach().cpu().numpy()
+        validReconstructedPoints = reconstructedSignalData[firstBatchInd, firstSignalInd, validPointMask].clone().detach().cpu().numpy().astype(np.float16)
         datapoints = emotionDataInterface.getChannelData(signalData, channelName=modelConstants.signalChannel)
         timepoints = emotionDataInterface.getChannelData(signalData, channelName=modelConstants.timeChannel)
-        validTimepoints = timepoints[firstBatchInd, firstSignalInd, validPointMask].clone().detach().cpu().numpy()
-        validDatapoints = datapoints[firstBatchInd, firstSignalInd, validPointMask].clone().detach().cpu().numpy()
+        validTimepoints = timepoints[firstBatchInd, firstSignalInd, validPointMask].clone().detach().cpu().numpy().astype(np.float16)
+        validDatapoints = datapoints[firstBatchInd, firstSignalInd, validPointMask].clone().detach().cpu().numpy().astype(np.float16)
 
         # Optionally, plot the original and reconstructed signals for visual comparison
         plt.plot(validTimepoints, validDatapoints, 'ok', markersize=3, label='Initial Signal', alpha=0.75)
         plt.plot(validTimepoints, validReconstructedPoints, 'o-', color='tab:red', markersize=3, label='Reconstructed Signal', alpha=0.75, linewidth=0.25)
-        plt.plot(resampledBiomarkerTimes, resampledSignalData[firstBatchInd, firstSignalInd, :].clone().detach().cpu().numpy(), 'tab:blue', linewidth=1, label='Resampled Signal', alpha=0.75)
+        plt.plot(resampledBiomarkerTimes, resampledSignalData[firstBatchInd, firstSignalInd, :].clone().detach().cpu().numpy().astype(np.float16), 'tab:blue', linewidth=1, label='Resampled Signal', alpha=0.75)
         plt.title(f"batchInd{firstBatchInd} signalInd{firstSignalInd} numPoints{len(validTimepoints)}")
         plt.ylim((-1.75, 1.75))
         plt.legend()

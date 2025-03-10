@@ -3,6 +3,8 @@ import numpy as np
 import torch
 import os
 
+from numpy import dtype
+
 from helperFiles.globalPlottingProtocols import globalPlottingProtocols
 from ._generalVisualizations import generalVisualizations
 from ._signalEncoderVisualizations import signalEncoderVisualizations
@@ -114,13 +116,13 @@ class modelVisualizations(globalPlottingProtocols):
             # Extract the model's internal variables.
             retrainingHealthProfilePath = np.asarray(model.specificSignalEncoderModel.profileModel.retrainingHealthProfilePath)  # numProfileShots, numExperiments, profileDimension
             generatingBiometricSignals = np.asarray(model.specificSignalEncoderModel.profileModel.generatingBiometricSignals)  # numProfileShots, numSpatialLayers, numExperiments, numSignals=1***, encodedDimension
-            resampledBiomarkerTimes = model.sharedSignalEncoderModel.hyperSampledTimes.detach().cpu().numpy()  # numTimePoints
+            resampledBiomarkerTimes = model.sharedSignalEncoderModel.hyperSampledTimes.detach().cpu().numpy().astype(np.float16)  # numTimePoints
             backwardModelPassSignals = np.flip(forwardModelPassSignals, axis=0)
 
             # Detach the data from the GPU and tensor format.
-            reconstructedHealthProfile, activityProfile, basicEmotionProfile, emotionProfile = reconstructedHealthProfile.detach().cpu().numpy(), activityProfile.detach().cpu().numpy(), basicEmotionProfile.detach().cpu().numpy(), emotionProfile.detach().cpu().numpy()
-            validDataMask, reconstructedSignalData, resampledSignalData, healthProfile = validDataMask.detach().cpu().numpy(), reconstructedSignalData.detach().cpu().numpy(), resampledSignalData.detach().cpu().numpy(), healthProfile.detach().cpu().numpy()
-            signalData = signalData.detach().cpu().numpy()
+            reconstructedHealthProfile, activityProfile, basicEmotionProfile, emotionProfile = reconstructedHealthProfile.detach().cpu().numpy().astype(np.float32), activityProfile.detach().cpu().numpy().astype(np.float16), basicEmotionProfile.detach().cpu().numpy().astype(np.float16), emotionProfile.detach().cpu().numpy().astype(np.float16)
+            validDataMask, reconstructedSignalData, resampledSignalData, healthProfile = validDataMask.detach().cpu().numpy().astype(np.float16), reconstructedSignalData.detach().cpu().numpy().astype(np.float16), resampledSignalData.detach().cpu().numpy().astype(np.float16), healthProfile.detach().cpu().numpy().astype(np.float16)
+            signalData = signalData.detach().cpu().numpy().astype(np.float16)
             
             # Compile additional information for the model.getActivationParamsFullPassPath
             givensAnglesPath, scalingFactorsPath, _, reversibleModuleNames, givensAnglesFeatureNames = model.getLearnableParams()

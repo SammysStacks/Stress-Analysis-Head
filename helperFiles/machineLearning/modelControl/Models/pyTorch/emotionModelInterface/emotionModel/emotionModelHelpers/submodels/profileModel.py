@@ -42,18 +42,18 @@ class profileModel(emotionModelWeights):
             self.addModelState(metaLearningData)
 
     def addModelState(self, metaLearningData):
-        self.compiledLayerStates[self.compiledLayerStateInd] = metaLearningData.view((self.compiledLayerStates.shape[1], self.compiledLayerStates.shape[2], self.compiledLayerStates.shape[3])).detach().clone().cpu().numpy()
+        self.compiledLayerStates[self.compiledLayerStateInd] = metaLearningData.view((self.compiledLayerStates.shape[1], self.compiledLayerStates.shape[2], self.compiledLayerStates.shape[3])).detach().clone().cpu().numpy().astype(np.float16)
         self.compiledLayerStateInd += 1
 
     def populateProfileState(self, profileEpoch, batchInds, profileStateLoss, resampledSignalData, healthProfile):
         with torch.no_grad():
-            if isinstance(batchInds, torch.Tensor): batchInds = batchInds.detach().cpu().numpy()
-            self.retrainingProfileLosses[profileEpoch][batchInds] = profileStateLoss.detach().cpu().numpy().round(decimals=8)
+            if isinstance(batchInds, torch.Tensor): batchInds = batchInds.detach().cpu().numpy().astype(np.int32)
+            self.retrainingProfileLosses[profileEpoch][batchInds] = profileStateLoss.detach().cpu().numpy().astype(np.float16)
 
             if 0 not in batchInds: return None
             # For space efficiency, only store the first batch and signal.
-            self.retrainingHealthProfilePath[profileEpoch][0] = healthProfile[batchInds == 0].detach().cpu().numpy().round(decimals=8)
-            self.generatingBiometricSignals[profileEpoch][0] = resampledSignalData[batchInds == 0, 0:1, :].detach().cpu().numpy().round(decimals=8)
+            self.retrainingHealthProfilePath[profileEpoch][0] = healthProfile[batchInds == 0].detach().cpu().numpy().astype(np.float16)
+            self.generatingBiometricSignals[profileEpoch][0] = resampledSignalData[batchInds == 0, 0:1, :].detach().cpu().numpy().astype(np.float16)
 
     def getHealthEmbedding(self, batchInds):
         return self.embeddedHealthProfiles.to(batchInds.device)[batchInds]

@@ -64,11 +64,19 @@ class globalPlottingProtocols:
         # Save to base location if specified
         if baseSaveFigureName is not None:
             base_path = os.path.join(self.baseSavingDataFolder, f"{self.datasetName} {baseSaveFigureName[:1].upper()}{baseSaveFigureName[1:]}")
-            fig.savefig(base_path, transparent=True, dpi=300, format='pdf')
+
+            while True:
+                try: fig.savefig(base_path, transparent=True, dpi=300, format='pdf')
+                except Exception as e: print(f"Error saving figure: {e}")
+                else: break
 
             # Copy the saved figure to the second location
             if saveFigureName is not None: shutil.copy(base_path, os.path.join(self.saveDataFolder, f"{saveFigureLocation}{saveFigureName.lower()}"))
-        else: fig.savefig(os.path.join(self.saveDataFolder, f"{saveFigureLocation}{saveFigureName[:1].upper()}{saveFigureName[1:]}"), transparent=True, dpi=300, format='pdf')
+        else:
+            while True:
+                try: fig.savefig(os.path.join(self.saveDataFolder, f"{saveFigureLocation}{saveFigureName[:1].upper()}{saveFigureName[1:]}"), transparent=True, dpi=300, format='pdf')
+                except Exception as e: print(f"Error saving figure: {e}")
+                else: break
 
         if clearFigure: self.clearFigure(fig=fig, legend=None, showPlot=showPlot)  # Clear the figure after saving
         elif showPlot: plt.show()
