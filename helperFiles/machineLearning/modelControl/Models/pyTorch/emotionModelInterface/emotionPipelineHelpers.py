@@ -1,3 +1,5 @@
+import torch
+
 from .emotionModel.emotionModelHead import emotionModelHead
 from .emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
 from .emotionModel.emotionModelHelpers.generalMethods.dataAugmentation import dataAugmentation
@@ -34,9 +36,9 @@ class emotionPipelineHelpers:
         self.model = emotionModelHead(submodel=submodel, userInputParams=userInputParams, emotionNames=emotionNames, activityNames=activityNames,
                                       featureNames=featureNames, numSubjects=numSubjects, datasetName=datasetName, numExperiments=numExperiments)
         self.model = self.model.double()  # Convert the model to double precision.
-        # if 'HPC' not in modelConstants.userInputParams['deviceListed']:
-        #     try: self.model = torch.compile(self.model, backend='inductor')  # ['cudagraphs', 'inductor', 'onnxrt', 'openxla', 'tvm']
-        #     except Exception as e: print(f"\t\tCannot use torch compilation yet: {e}")
+        if 'HPC' not in modelConstants.userInputParams['deviceListed']:
+            try: self.model = torch.compile(self.model, backend='inductor')  # ['cudagraphs', 'inductor', 'onnxrt', 'openxla', 'tvm']
+            except Exception as e: print(f"\t\tCannot use torch compilation yet: {e}")
         # self.model = torch.jit.script(self.model)
 
         # Initialize helper classes.
