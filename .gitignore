@@ -21,6 +21,7 @@ venv/
 !.git*
 
 _projectFiles/_supplementaryWork/Machine Learning Predictions/finalFigures/*
+_projectFiles/_supplementaryWork/signalVideos/modelInstances/*
 
 # Machine learning control files and folders
 helperFiles/machineLearning/modelControl/Models/pyTorch/emotionModelInterface/dataAnalysis/trainingFigures/
