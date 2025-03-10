@@ -50,7 +50,7 @@ profileWDs=('1e-4' '1e-3')  # [1e-3, 1e-4]
 
 # Angular reference states.
 minAngularThresholds=(0.01)
-maxNumParamsKeeping_arr=(5000)  # [2500, 5000]
+maxNumParamsKeeping_arr=(5000 3000)  # [2500, 5000]
 finalMinAngularThresholds=(1)  # [1, 3]
 maxAngularThresholds=(45)
 
@@ -64,7 +64,7 @@ profileParams=(128 256 512)
 
 # Reference states.
 waveletTypes_arr=('bior3.1')
-numProfileShots_arr=(24 32 16)  # (8, [16, 24], 32)
+numProfileShots_arr=(24 32)  # (8, [16, 24], 32)
 
 for profileWD in "${profileWDs[@]}"
 do
