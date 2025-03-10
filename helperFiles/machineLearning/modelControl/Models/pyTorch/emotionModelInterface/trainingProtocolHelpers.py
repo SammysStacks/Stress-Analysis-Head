@@ -73,7 +73,7 @@ class trainingProtocolHelpers:
 
             # Health profile training.
             numProfileShots = modelPipeline.resetPhysiologicalProfile(submodel)
-            modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=numProfileShots + 1)  # Profile training.
+            modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=numProfileShots)  # Profile training.
             self.accelerator.wait_for_everyone()
 
     def boundAngularWeights(self, allMetaModels, allModels, applyMaxThresholding):
