@@ -23,7 +23,7 @@ class trainingPlots(globalPlottingProtocols):
         self.accelerator = accelerator  # Hugging face model optimizations.
 
         # Initialize relevant classes.
-        self.modelCompiler = compileModelData(submodel=None, userInputParams={}, accelerator=accelerator)
+        self.modelCompiler = compileModelData(useTherapyData=False, accelerator=accelerator)
         self.modelMigration = modelMigration(accelerator=accelerator)
 
         self.rawDataOrder = ['EOG', 'EEG', 'EDA', 'Temp']

@@ -22,7 +22,7 @@ class trainingPlots(globalPlottingProtocols):
         self.modelName = modelName  # The emotion model's unique identifier. Options: emotionModel
 
         # Initialize relevant classes.
-        self.modelCompiler = compileModelData(submodel=None, userInputParams={}, accelerator=accelerator)
+        self.modelCompiler = compileModelData(useTherapyData=False, accelerator=accelerator)
         self.modelMigration = modelMigration(accelerator=accelerator)
 
         self.rawDataOrder = ['EOG', 'EEG', 'EDA', 'Temp']

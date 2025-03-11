@@ -20,7 +20,7 @@ venv/
 
 !.git*
 
-_projectFiles/_supplementaryWork/Machine Learning Predictions/finalFigures/*
+_projectFiles/_supplementaryWork/machineLearning/finalFigures/*
 _projectFiles/_supplementaryWork/signalVideos/modelInstances/*
 
 # Machine learning control files and folders
@@ -33,7 +33,7 @@ helperFiles/machineLearning/feedbackControl/virtualRealityControl/Virtual Images
 helperFiles/machineLearning/feedbackControl/musicTherapy/musicHelpers/organizedSounds/_compiledSounds/
 
 # Supplementary information
-_projectFiles/_supplementaryWork/Signal Data and Features/Figures/Feature Time Windows/
+_projectFiles/_supplementaryWork/signalDataFeatures/Figures/Feature Time Windows/
 _projectFiles/_adobeIllustrator/
 _projectFiles/_backgroundInfo/
 _projectFiles/_finalDocuments/

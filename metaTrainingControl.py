@@ -110,8 +110,8 @@ if __name__ == "__main__":
     submodel = userInputParams['submodel']
 
     # Initialize the model information classes.
-    modelCompiler = compileModelData(submodel, userInputParams, useTherapyData=False, accelerator=accelerator)  # Initialize the model compiler.
     trainingProtocols = trainingProtocolHelpers(submodel=submodel, accelerator=accelerator)  # Initialize the training protocols.
+    modelCompiler = compileModelData(useTherapyData=False, accelerator=accelerator)  # Initialize the model compiler.
     modelParameters = modelParameters(accelerator)  # Initialize the model parameters class.
     modelMigration = modelMigration(accelerator)  # Initialize the model migration class.
 

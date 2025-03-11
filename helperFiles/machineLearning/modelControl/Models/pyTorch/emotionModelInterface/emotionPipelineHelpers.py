@@ -13,7 +13,7 @@ from .emotionModel.emotionModelHelpers.optimizerMethods.optimizerMethods import 
 
 class emotionPipelineHelpers:
 
-    def __init__(self, accelerator, datasetName, allEmotionClasses, numSubjects, userInputParams,
+    def __init__(self, accelerator, datasetName, allEmotionClasses, numSubjects,
                  emotionNames, activityNames, featureNames, submodel, numExperiments):
         # General parameters.
         self.accelerator = accelerator  # Hugging face interface to speed up the training process.
@@ -33,11 +33,10 @@ class emotionPipelineHelpers:
         self.datasetName = datasetName  # The name of the specific dataset being used in this model (case, wesad, etc.)
 
         # Initialize the emotion model.
-        self.model = emotionModelHead(submodel=submodel, userInputParams=userInputParams, emotionNames=emotionNames, activityNames=activityNames,
-                                      featureNames=featureNames, numSubjects=numSubjects, datasetName=datasetName, numExperiments=numExperiments)
+        self.model = emotionModelHead(submodel=submodel, emotionNames=emotionNames, activityNames=activityNames, featureNames=featureNames, numSubjects=numSubjects, datasetName=datasetName, numExperiments=numExperiments)
         self.model = self.model.double()  # Convert the model to double precision.
 
-        if 'HPC' not in userInputParams['deviceListed']:
+        if 'HPC' not in modelConstants.userInputParams['deviceListed']:
             # Speed up the model training process, if possible.
             try: self.model = torch.compile(self.model, backend='inductor')  # ['cudagraphs', 'inductor', 'onnxrt', 'openxla', 'tvm']
             except Exception as e: print(f"\t\tCannot use torch compilation yet: {e}")
@@ -45,7 +44,7 @@ class emotionPipelineHelpers:
         # Initialize helper classes.
         self.organizeLossInfo = organizeTrainingLosses(accelerator, allEmotionClasses, self.activityLabelInd)
         self.modelVisualization = modelVisualizations(accelerator, datasetName=datasetName)
-        self.optimizerMethods = optimizerMethods(userInputParams)
+        self.optimizerMethods = optimizerMethods()
         self.dataAugmentation = dataAugmentation()
         self.modelHelpers = modelHelpers()
 

@@ -1,38 +1,34 @@
 import torch.optim as optim
 from torch.optim import Optimizer
-from torch.optim.lr_scheduler import LRScheduler, _warn_get_lr_called_within_step
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
 
 class optimizerMethods:
 
-    def __init__(self, userInputParams):
-        # Set the user input parameters.
-        self.userInputParams = userInputParams
-
-    def getModelParams(self, submodel, model):
+    @staticmethod
+    def getModelParams(submodel, model):
         modelParams = [
             # Specify the model parameters for the shared signal encoding.
             {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if ("givensRotationParams" not in name and "healthGenerationModel" not in name)), 'weight_decay': 1e-4, 'lr': 1e-4},  # 1e-5 - 5e-4
-            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "givensRotationParams" in name), 'weight_decay': self.userInputParams['reversibleWD'], 'lr': self.userInputParams['reversibleLR']},  # 1e-4 - 0.1
-            {'params': model.sharedSignalEncoderModel.healthGenerationModel.parameters(), 'weight_decay': self.userInputParams['physGenWD'], 'lr': self.userInputParams['physGenLR']},  # 1e-2 - 1e2
+            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "givensRotationParams" in name), 'weight_decay': modelConstants.userInputParams['reversibleWD'], 'lr': modelConstants.userInputParams['reversibleLR']},  # 1e-4 - 0.1
+            {'params': model.sharedSignalEncoderModel.healthGenerationModel.parameters(), 'weight_decay': modelConstants.userInputParams['physGenWD'], 'lr': modelConstants.userInputParams['physGenLR']},  # 1e-2 - 1e2
 
             # Specify the model parameters for the specific signal encoding.
             {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if ("givensRotationParams" not in name and "profileModel" not in name)), 'weight_decay': 1e-4, 'lr': 1e-4},  # 1e-2 - 1e2
-            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "givensRotationParams" in name), 'weight_decay': self.userInputParams['reversibleWD'], 'lr': self.userInputParams['reversibleLR']},  # 1e-2 - 1e2
-            {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': self.userInputParams['profileWD'], 'lr': self.userInputParams['profileLR']},  # 0.1 - 0.01
+            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "givensRotationParams" in name), 'weight_decay': modelConstants.userInputParams['reversibleWD'], 'lr': modelConstants.userInputParams['reversibleLR']},  # 1e-2 - 1e2
+            {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': modelConstants.userInputParams['profileWD'], 'lr': modelConstants.userInputParams['profileLR']},  # 0.1 - 0.01
         ]
 
         if submodel == modelConstants.emotionModel:
             modelParams.extend([
                 # Specify the model parameters for the emotion prediction.
-                {'params': model.specificEmotionModel.parameters(), 'weight_decay': 1e-6, 'lr': self.userInputParams["emotionLearningRate"]},
-                {'params': model.sharedEmotionModel.parameters(), 'weight_decay': 1e-6, 'lr': self.userInputParams["emotionLearningRate"]},
+                {'params': model.specificEmotionModel.parameters(), 'weight_decay': 1e-6, 'lr': modelConstants.userInputParams["emotionLearningRate"]},
+                {'params': model.sharedEmotionModel.parameters(), 'weight_decay': 1e-6, 'lr': modelConstants.userInputParams["emotionLearningRate"]},
 
                 # Specify the model parameters for the human activity recognition.
-                {'params': model.specificActivityModel.parameters(), 'weight_decay': 1e-6, 'lr': self.userInputParams["activityLearningRate"]},
-                {'params': model.sharedActivityModel.parameters(), 'weight_decay': 1e-6, 'lr': self.userInputParams["activityLearningRate"]},
+                {'params': model.specificActivityModel.parameters(), 'weight_decay': 1e-6, 'lr': modelConstants.userInputParams["activityLearningRate"]},
+                {'params': model.sharedActivityModel.parameters(), 'weight_decay': 1e-6, 'lr': modelConstants.userInputParams["activityLearningRate"]},
             ])
 
         return modelParams
@@ -42,7 +38,7 @@ class optimizerMethods:
         modelParams = self.getModelParams(submodel, model)
 
         # Set the optimizer and scheduler.
-        optimizer = self.setOptimizer(modelParams, lr=1e-5, weight_decay=1e-6, optimizerType=self.userInputParams["optimizerType"])
+        optimizer = self.setOptimizer(modelParams, lr=1e-5, weight_decay=1e-6, optimizerType=modelConstants.userInputParams["optimizerType"])
         scheduler = self.getLearningRateScheduler(optimizer)
 
         return optimizer, scheduler
@@ -119,7 +115,8 @@ class optimizerMethods:
             return optim.SGD(params, lr=lr, momentum=momentum, dampening=0, weight_decay=weight_decay, nesterov=True)
         else: assert False, f"No optimizer initialized: {optimizerType}"
 
-class CosineAnnealingLR_customized(LRScheduler):
+
+class CosineAnnealingLR_customized(optim.lr_scheduler.LRScheduler):
     def __init__(self, optimizer: Optimizer, T_max: int, absolute_min_lr: float, multiplicativeFactor: float, numWarmupEpochs: int, warmupFactor: float,  last_epoch: int = -1):
         self.multiplicativeFactor = multiplicativeFactor  # The multiplicative factor for the learning rate decay.
         self.absolute_min_lr = absolute_min_lr  # The absolute minimum learning rate to use.
@@ -133,7 +130,7 @@ class CosineAnnealingLR_customized(LRScheduler):
 
     def get_lr(self):
         """Retrieve the learning rate of each parameter group."""
-        _warn_get_lr_called_within_step(self)
+        optim.lr_scheduler._warn_get_lr_called_within_step(self)
 
         # Base case: learning rate is constant.
         if self.last_epoch <= self.numWarmupEpochs: return self.updateStep(multiplicativeFactor=self.warmupFactor, base_lrs=[max(self.absolute_min_lr, base_lr / 10) for base_lr in self.base_lrs])

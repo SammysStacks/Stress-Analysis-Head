@@ -21,8 +21,8 @@ from helperFiles.machineLearning.modelControl.modelSpecifications.compileModelIn
 
 class compileModelData(compileModelDataHelpers):
 
-    def __init__(self, submodel, userInputParams, useTherapyData, accelerator=None):
-        super().__init__(submodel, userInputParams, accelerator)
+    def __init__(self, useTherapyData, accelerator=None):
+        super().__init__(accelerator)
         # Initialize relevant information.
         self.compileModelInfo = compileModelInfo()  # Initialize the model information class.
 
@@ -272,7 +272,7 @@ class compileModelData(compileModelDataHelpers):
             modelDataLoader = pytorchDataClass.getDataLoader(allSignalData, allFeatureLabels, currentTrainingMask, currentTestingMask)
 
             # Initialize and train the model class.
-            modelPipeline = emotionPipeline(accelerator=self.accelerator, datasetName=metadatasetName, allEmotionClasses=numQuestionOptions, numSubjects=numSubjects, userInputParams=self.userInputParams,
+            modelPipeline = emotionPipeline(accelerator=self.accelerator, datasetName=metadatasetName, allEmotionClasses=numQuestionOptions, numSubjects=numSubjects,
                                             emotionNames=surveyQuestions, activityNames=activityNames, featureNames=featureNames, submodel=submodel, numExperiments=len(allSignalData))
             modelDataLoader = modelPipeline.acceleratorInterface(modelDataLoader)  # Hugging face integration.
 
@@ -305,8 +305,7 @@ class compileModelData(compileModelDataHelpers):
                 datasetName = datasetNames[metadataInd]
 
                 # Initialize and train the model class.
-                dummyModelPipeline = emotionPipeline(accelerator=self.accelerator, datasetName=datasetName, allEmotionClasses=[], numSubjects=1, userInputParams=userInputParams,
-                                                     emotionNames=[], activityNames=[], featureNames=[], submodel=loadSubmodel, numExperiments=1)
+                dummyModelPipeline = emotionPipeline(accelerator=self.accelerator, datasetName=datasetName, allEmotionClasses=[], numSubjects=1, emotionNames=[], activityNames=[], featureNames=[], submodel=loadSubmodel, numExperiments=1)
                 dummyModelPipeline.acceleratorInterface()
 
                 # Store the information.

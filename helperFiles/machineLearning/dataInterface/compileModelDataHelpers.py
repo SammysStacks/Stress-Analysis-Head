@@ -14,10 +14,9 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.modelMigration impo
 
 
 class compileModelDataHelpers:
-    def __init__(self, submodel, userInputParams, accelerator=None):
+    def __init__(self, accelerator=None):
         # General parameters
         self.compiledInfoLocation = os.path.dirname(__file__) + "/../../../_experimentalData/_compiledData/"
-        self.userInputParams = userInputParams
         self.missingLabelValue = torch.nan
         self.compiledExtension = ".pkl.gz"
         self.accelerator = accelerator

@@ -46,7 +46,7 @@ class humanMachineInterface:
         # model helpers intialization
         self.compileFeatureNames = compileFeatureNames()  # Initialize the Feature Information
         self.compileModelInfo = compileModelInfo()  # Initialize the Model Information
-        self.compileModelHelpers = compileModelDataHelpers(self.submodel, userInputParams=self.compileModelInfo.getUserInputParameters(), accelerator=accelerator)
+        self.compileModelHelpers = compileModelDataHelpers(accelerator=accelerator)
 
         # Compile the feature information.
         _, self.surveyQuestions, _, _ = self.compileModelInfo.compileSurveyInformation()

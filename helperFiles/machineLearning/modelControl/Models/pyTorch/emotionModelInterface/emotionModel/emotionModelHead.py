@@ -20,7 +20,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 
 class emotionModelHead(nn.Module):
-    def __init__(self, submodel, userInputParams, emotionNames, activityNames, featureNames, numSubjects, datasetName, numExperiments):
+    def __init__(self, submodel, emotionNames, activityNames, featureNames, numSubjects, datasetName, numExperiments):
         super(emotionModelHead, self).__init__()
         # General model parameters.
         self.numActivities = len(activityNames)  # The number of activities to predict.
@@ -31,25 +31,25 @@ class emotionModelHead(nn.Module):
         self.numSubjects = numSubjects  # The maximum number of subjects the model is training on.
         self.datasetName = datasetName  # The name of the dataset the model is training on.
         self.numSignals = len(featureNames)  # The number of signals in the model.
-        self.hpcFlag = 'HPC' in userInputParams['deviceListed']  # Flag to determine if the model is running on an HPC.
+        self.hpcFlag = 'HPC' in modelConstants.userInputParams['deviceListed']  # Flag to determine if the model is running on an HPC.
 
         # General parameters.
-        self.encodedDimension = userInputParams['encodedDimension']  # The dimension of the encoded signal.
-        self.operatorType = userInputParams['operatorType']  # The type of operator to use for the neural operator.
+        self.encodedDimension = modelConstants.userInputParams['encodedDimension']  # The dimension of the encoded signal.
+        self.operatorType = modelConstants.userInputParams['operatorType']  # The type of operator to use for the neural operator.
         self.debugging = True
 
         # Signal encoder parameters.
-        self.reversibleLearningProtocol = userInputParams['reversibleLearningProtocol']   # The learning protocol for the model.
-        self.neuralOperatorParameters = userInputParams['neuralOperatorParameters']   # The parameters for the neural operator.
-        self.numSpecificEncoderLayers = userInputParams['numSpecificEncoderLayers']  # The number of specific layers.
-        self.numSharedEncoderLayers = userInputParams['numSharedEncoderLayers']  # The number of shared layers.
+        self.reversibleLearningProtocol = modelConstants.userInputParams['reversibleLearningProtocol']   # The learning protocol for the model.
+        self.neuralOperatorParameters = modelConstants.userInputParams['neuralOperatorParameters']   # The parameters for the neural operator.
+        self.numSpecificEncoderLayers = modelConstants.userInputParams['numSpecificEncoderLayers']  # The number of specific layers.
+        self.numSharedEncoderLayers = modelConstants.userInputParams['numSharedEncoderLayers']  # The number of shared layers.
 
         # Emotion and activity parameters.
-        self.irreversibleLearningProtocol = userInputParams['irreversibleLearningProtocol']  # The learning protocol for the model.
-        self.numActivityModelLayers = userInputParams['numActivityModelLayers']  # The number of basic emotions (basis states of emotions).
-        self.numEmotionModelLayers = userInputParams['numEmotionModelLayers']  # The number of basic emotions (basis states of emotions).
-        self.numActivityChannels = userInputParams['numActivityChannels']  # The number of activity channels to predict.
-        self.numBasicEmotions = userInputParams['numBasicEmotions']  # The number of basic emotions (basis states of emotions).
+        self.irreversibleLearningProtocol = modelConstants.userInputParams['irreversibleLearningProtocol']  # The learning protocol for the model.
+        self.numActivityModelLayers = modelConstants.userInputParams['numActivityModelLayers']  # The number of basic emotions (basis states of emotions).
+        self.numEmotionModelLayers = modelConstants.userInputParams['numEmotionModelLayers']  # The number of basic emotions (basis states of emotions).
+        self.numActivityChannels = modelConstants.userInputParams['numActivityChannels']  # The number of activity channels to predict.
+        self.numBasicEmotions = modelConstants.userInputParams['numBasicEmotions']  # The number of basic emotions (basis states of emotions).
 
         # Setup holder for the model's training information
         self.calculateModelLosses = lossCalculations(accelerator=None, allEmotionClasses=None, activityLabelInd=None)

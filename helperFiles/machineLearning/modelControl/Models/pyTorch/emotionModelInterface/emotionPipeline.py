@@ -8,11 +8,11 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class emotionPipeline(emotionPipelineHelpers):
 
-    def __init__(self, accelerator, datasetName, allEmotionClasses, numSubjects, userInputParams,
+    def __init__(self, accelerator, datasetName, allEmotionClasses, numSubjects,
                  emotionNames, activityNames, featureNames, submodel, numExperiments):
         # General parameters.
-        super().__init__(accelerator=accelerator, datasetName=datasetName, allEmotionClasses=allEmotionClasses, numSubjects=numSubjects, userInputParams=userInputParams,
-                         emotionNames=emotionNames, activityNames=activityNames, featureNames=featureNames, submodel=submodel, numExperiments=numExperiments)
+        super().__init__(accelerator=accelerator, datasetName=datasetName, allEmotionClasses=allEmotionClasses, numSubjects=numSubjects, emotionNames=emotionNames,
+                         activityNames=activityNames, featureNames=featureNames, submodel=submodel, numExperiments=numExperiments)
         # Finish setting up the model.
         self.compileOptimizer(submodel)  # Initialize the optimizer (for back propagation)
 
