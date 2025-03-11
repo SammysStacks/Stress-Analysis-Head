@@ -77,7 +77,7 @@ class emotionModelWeights(convolutionalHelpers):
             layers.append(self.convolutionalFilters_resNetBlocks(numResNets=1, numBlocks=1, numChannels=[1, 2], kernel_sizes=1, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
 
         # Best [2, 6]
-        for _ in range(8):  # TODO 4 is too small, 8 has superposition of waves, 12 looked like bumps
+        for _ in range(12):  # TODO 4 is too small, 8 has superposition of waves, 12 looked like bumps
             layers.append(self.convolutionalFilters_resNetBlocks(numResNets=3, numBlocks=3, numChannels=[1, 1], kernel_sizes=3, dilations=[1, 2, 3, 1], groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
             layers.append(self.convolutionalFilters_resNetBlocks(numResNets=3, numBlocks=3, numChannels=[1, 1], kernel_sizes=5, dilations=[1, 1, 1, 1], groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
             layers.append(self.convolutionalFilters_resNetBlocks(numResNets=3, numBlocks=3, numChannels=[1, 1], kernel_sizes=3, dilations=[1, 1, 1, 1], groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
