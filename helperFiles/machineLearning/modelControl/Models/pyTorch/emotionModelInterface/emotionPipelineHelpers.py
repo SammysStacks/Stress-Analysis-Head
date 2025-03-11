@@ -37,9 +37,10 @@ class emotionPipelineHelpers:
                                       featureNames=featureNames, numSubjects=numSubjects, datasetName=datasetName, numExperiments=numExperiments)
         self.model = self.model.double()  # Convert the model to double precision.
 
-        # Speed up the model training process, if possible.
-        try: self.model = torch.compile(self.model, backend='inductor')  # ['cudagraphs', 'inductor', 'onnxrt', 'openxla', 'tvm']
-        except Exception as e: print(f"\t\tCannot use torch compilation yet: {e}")
+        if 'HPC' not in userInputParams['deviceListed']:
+            # Speed up the model training process, if possible.
+            try: self.model = torch.compile(self.model, backend='inductor')  # ['cudagraphs', 'inductor', 'onnxrt', 'openxla', 'tvm']
+            except Exception as e: print(f"\t\tCannot use torch compilation yet: {e}")
 
         # Initialize helper classes.
         self.organizeLossInfo = organizeTrainingLosses(accelerator, allEmotionClasses, self.activityLabelInd)
