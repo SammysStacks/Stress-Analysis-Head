@@ -24,7 +24,7 @@ class trainingProtocolHelpers:
         self.modelMigration = modelMigration(accelerator)
         self.modelHelpers = modelHelpers
 
-    def trainEpoch(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders):
+    def trainEpoch(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch):
         # Set random order to loop through the models.
         self.unifyAllModelWeights(allMetaModels, allModels)
         modelIndices = list(range(len(allMetaModels)))
@@ -48,10 +48,11 @@ class trainingProtocolHelpers:
 
         # Unify all the model weights.
         self.unifyAllModelWeights(allMetaModels, allModels)
-        self.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, profileOnlyTraining=False)
+        self.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch, profileOnlyTraining=False)
 
-    def datasetSpecificTraining(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, profileOnlyTraining=False):
+    def datasetSpecificTraining(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch, profileOnlyTraining=False):
         # Unify all the model weights.
+        applyMaxThresholding = modelConstants.userInputParams['numInitialEpochs'] < epoch
         self.unifyAllModelWeights(allMetaModels, allModels)
         if allMetaModels[0].model.numSpecificEncoderLayers == 0:
             print("No specific training needed.")
@@ -67,9 +68,9 @@ class trainingProtocolHelpers:
 
             # Train the updated model.
             if not profileOnlyTraining:
-                modelPipeline.model.cullAngles(applyMaxThresholding=False)
+                modelPipeline.model.cullAngles(applyMaxThresholding=applyMaxThresholding)
                 modelPipeline.trainModel(dataLoader, submodel, profileTraining=False, specificTraining=True, trainSharedLayers=False, stepScheduler=False, numEpochs=numEpochs)  # Signal-specific training.
-                # modelPipeline.model.cullAngles(applyMaxThresholding=False)  # TODO: Added
+                modelPipeline.model.cullAngles(applyMaxThresholding=applyMaxThresholding)  # TODO: Added
 
             # Health profile training.
             numProfileShots = modelPipeline.resetPhysiologicalProfile(submodel)

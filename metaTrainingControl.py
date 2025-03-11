@@ -141,7 +141,7 @@ if __name__ == "__main__":
     if plotAllEpochs: trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate, showMinimumPlots=False)
 
     # Calculate the initial loss.
-    trainingProtocols.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, profileOnlyTraining=True)
+    trainingProtocols.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch=0, profileOnlyTraining=True)
 
     # For each training epoch
     for epoch in range(1, numEpochs + 1):
@@ -150,11 +150,9 @@ if __name__ == "__main__":
 
         # Get the saving information.
         saveFullModel, showAllPlots = modelParameters.getEpochParameters(epoch, numEpoch_toSaveFull, numEpoch_toPlot, plotAllEpochs)
-        applyMaxThresholding = userInputParams['numInitialEpochs'] < epoch
 
         # Train the model for a single epoch.
-        trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders)
-        trainingProtocols.boundAngularWeights(allMetaModels, allModels, applyMaxThresholding=applyMaxThresholding)
+        trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch=epoch)
 
         # Store the initial loss information and plot.
         trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)
