@@ -48,17 +48,17 @@ class reversibleInterface(nn.Module):
 
         for signalInd in range(min(numPlots, inputData.size(1))):
             # Optionally, plot the original and reconstructed signals for visual comparison
-            plt.plot(inputData[0][signalInd].detach().numpy().astype(np.float16), 'k', linewidth=2, label='Initial Signal')
-            plt.plot(reconstructedData[0][signalInd].detach().numpy().astype(np.float16), 'tab:red', linewidth=1.5, label='Reconstructed Signal')
-            plt.plot(forwardData[0][signalInd].detach().numpy().astype(np.float16), 'o', color='tab:blue', linewidth=1, label='Latent Signal', alpha=0.5)
+            plt.plot(inputData[0][signalInd].detach().numpy(), 'k', linewidth=2, label='Initial Signal')
+            plt.plot(reconstructedData[0][signalInd].detach().numpy(), 'tab:red', linewidth=1.5, label='Reconstructed Signal')
+            plt.plot(forwardData[0][signalInd].detach().numpy(), 'o', color='tab:blue', linewidth=1, label='Latent Signal', alpha=0.5)
             plt.legend()
             plt.show()
 
-            plt.plot((inputData - reconstructedData)[0][signalInd].detach().numpy().astype(np.float16), 'ko', linewidth=2, label='Signal Error')
+            plt.plot((inputData - reconstructedData)[0][signalInd].detach().numpy(), 'ko', linewidth=2, label='Signal Error')
             plt.legend()
             plt.show()
 
-            plt.plot((inputData - forwardData)[0][signalInd].detach().numpy().astype(np.float16), 'ko', linewidth=2, label='Signal Change')
+            plt.plot((inputData - forwardData)[0][signalInd].detach().numpy(), 'ko', linewidth=2, label='Signal Change')
             plt.legend()
             plt.show()
 

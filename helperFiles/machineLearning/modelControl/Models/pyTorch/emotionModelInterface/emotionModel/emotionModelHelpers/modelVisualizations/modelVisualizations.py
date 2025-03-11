@@ -1,9 +1,8 @@
-from matplotlib import pyplot as plt
-import numpy as np
-import torch
 import os
 
-from numpy import dtype
+import numpy as np
+import torch
+from matplotlib import pyplot as plt
 
 from helperFiles.globalPlottingProtocols import globalPlottingProtocols
 from ._generalVisualizations import generalVisualizations
@@ -92,7 +91,7 @@ class modelVisualizations(globalPlottingProtocols):
         self.setModelSavingFolder(baseSavingFolder=f"trainingFigures/{submodel}/{trainingDate}/", stringID=f"{modelPipeline.model.datasetName}/", epoch=currentEpoch)
         modelPipeline.setupTrainingFlags(modelPipeline.model, trainingFlag=False)  # Set all models into evaluation mode.
         model = modelPipeline.model
-        numPlottingPoints = 3
+        numPlottingPoints = 4
 
         # Load in all the data and labels for final predictions and calculate the activity and emotion class weights.
         allLabels, allSignalData, allSignalIdentifiers, allMetadata, allTrainingLabelMask, allTrainingSignalMask, allTestingLabelMask, allTestingSignalMask = modelPipeline.prepareInformation(lossDataLoader)
@@ -120,8 +119,8 @@ class modelVisualizations(globalPlottingProtocols):
             backwardModelPassSignals = np.flip(forwardModelPassSignals, axis=0)
 
             # Detach the data from the GPU and tensor format.
-            reconstructedHealthProfile, activityProfile, basicEmotionProfile, emotionProfile = reconstructedHealthProfile.detach().cpu().numpy().astype(np.float32), activityProfile.detach().cpu().numpy().astype(np.float16), basicEmotionProfile.detach().cpu().numpy().astype(np.float16), emotionProfile.detach().cpu().numpy().astype(np.float16)
-            validDataMask, reconstructedSignalData, resampledSignalData, healthProfile = validDataMask.detach().cpu().numpy().astype(np.float16), reconstructedSignalData.detach().cpu().numpy().astype(np.float16), resampledSignalData.detach().cpu().numpy().astype(np.float16), healthProfile.detach().cpu().numpy().astype(np.float16)
+            reconstructedHealthProfile, activityProfile, basicEmotionProfile, emotionProfile = reconstructedHealthProfile.detach().cpu().numpy(), activityProfile.detach().cpu().numpy().astype(np.float16), basicEmotionProfile.detach().cpu().numpy().astype(np.float16), emotionProfile.detach().cpu().numpy().astype(np.float16)
+            validDataMask, reconstructedSignalData, resampledSignalData, healthProfile = validDataMask.detach().cpu().numpy().astype(np.float16), reconstructedSignalData.detach().cpu().numpy().astype(np.float16), resampledSignalData.detach().cpu().numpy().astype(np.float16), healthProfile.detach().cpu().numpy()
             signalData = signalData.detach().cpu().numpy().astype(np.float16)
             
             # Compile additional information for the model.getActivationParamsFullPassPath
@@ -140,19 +139,19 @@ class modelVisualizations(globalPlottingProtocols):
 
                 if submodel == modelConstants.signalEncoderModel:
                     # Plot the health profile training information.
-                    self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, healthProfile=healthProfile, retrainingProfilePath=retrainingHealthProfilePath, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Health profile generation")
+                    self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, retrainingProfilePath=retrainingHealthProfilePath[:, :, None, :], epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Health profile generation")
                     self.signalEncoderViz.plotProfileReconstructionError(resampledBiomarkerTimes, healthProfile, reconstructedHealthProfile, epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="signalEncoding/", plotTitle="Health profile reconstruction error")
                     self.signalEncoderViz.plotProfileReconstruction(resampledBiomarkerTimes, healthProfile, reconstructedHealthProfile, epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="signalEncoding/", plotTitle="Health profile reconstruction")
 
                     # Plot information collected across profile training.
-                    self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, healthProfile=healthProfile, retrainingProfilePath=generatingBiometricSignals[:, :, signalInd, :], epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Reconstructing biometric feature signal")
+                    self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, retrainingProfilePath=generatingBiometricSignals, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Reconstructing biometric feature signal")
 
                     # Plot the angular information.
                     if not showMinimumPlots:
                         # Plotting the data flow within the model.
-                        self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, healthProfile=healthProfile, retrainingProfilePath=backwardModelPassSignals[:, :, signalInd, :], epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Backwards transformations (HP to feature)")
-                        self.signalEncoderViz.plotSignalEncodingStatePath(relativeTimes=resampledBiomarkerTimes, compiledSignalEncoderLayerStates=backwardModelPassSignals, batchInd=batchInd, signalInd=signalInd, signalNames=signalNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Signal transformations by layer heatmap")
-                        self.signalEncoderViz.modelFlow(dataTimes=resampledBiomarkerTimes, dataStates=backwardModelPassSignals[:, :, signalInd, :], signalNames=signalNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Signal transformations by layer 3D", batchInd=batchInd, signalInd=signalInd)
+                        self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, retrainingProfilePath=backwardModelPassSignals, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Backwards transformations (HP to feature)")
+                        self.signalEncoderViz.plotSignalEncodingStatePath(relativeTimes=resampledBiomarkerTimes, compiledSignalEncoderLayerStates=backwardModelPassSignals, batchInd=batchInd, signalNames=signalNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Signal transformations by layer heatmap")
+                        self.signalEncoderViz.modelFlow(dataTimes=resampledBiomarkerTimes, dataStatesAll=backwardModelPassSignals, signalNames=signalNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Signal transformations by layer 3D", batchInd=batchInd)
 
                         # Plot the angle information.
                         if currentEpoch % 10 == 0: self.signalEncoderViz.plotsGivensAnglesHeatmap(givensAnglesPath, reversibleModuleNames, signalInd=signalInd, epoch=currentEpoch, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="Rotation weight matrix (S)")

@@ -40,29 +40,31 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     # --------------------- Visualize Model Parameters --------------------- #
 
-    def plotProfilePath(self, relativeTimes, healthProfile, retrainingProfilePath, epoch, saveFigureLocation="signalEncoding/", plotTitle="Health Profile State Path"):
+    def plotProfilePath(self, relativeTimes, retrainingProfilePath, epoch, saveFigureLocation="signalEncoding/", plotTitle="Health Profile State Path"):
         # retrainingProfilePath: (numProfileShots or numSpatialLayers, numExperiments, encodedDimension)
         # Extract the signal dimensions.
-        numProfileSteps, batchInd = len(retrainingProfilePath), 0
-        fig, ax = plt.subplots(figsize=(6.4, 4.8))
+        numProfileSteps, batchInd, numSignals = len(retrainingProfilePath), 0, len(retrainingProfilePath[0][0])
 
-        for profileStep in range(numProfileSteps):
-            lineStyle = 'o-' if profileStep == numProfileSteps - 1 else '-'
-            ax.plot(relativeTimes, retrainingProfilePath[profileStep, batchInd], lineStyle, c=self.lightColors[1], linewidth=1, markersize=1, alpha=0.3*(numProfileSteps - profileStep)/numProfileSteps)
-            ax.plot(relativeTimes, retrainingProfilePath[profileStep, batchInd], lineStyle, c=self.lightColors[0], linewidth=1, markersize=1, alpha=0.6*(1 - (numProfileSteps - profileStep)/numProfileSteps))
-        ax.plot(relativeTimes, healthProfile[batchInd], '-', c=self.blackColor, label=f"Health profile", linewidth=1, markersize=6, alpha=0.3)
-        ax.hlines(y=0, xmin=ax.get_xlim()[0], xmax=ax.get_xlim()[1], colors=self.blackColor, linestyles='-', linewidth=1)
+        for signalInd in range(numSignals):
+            fig, ax = plt.subplots(figsize=(6.4, 4.8))
 
-        # Plotting aesthetics.
-        ax.set_xlabel("Time (sec)")
-        ax.set_title(f"{plotTitle} epoch{epoch}")
-        ax.set_ylabel("Signal amplitude (au)")
-        if "health profile" in plotTitle.lower(): ax.set_ylim((-1, 1))
-        else: ax.set_ylim((-1.75, 1.75))
+            for profileStep in range(numProfileSteps):
+                lineStyle = 'o-' if profileStep == numProfileSteps - 1 else '-'
+                ax.plot(relativeTimes, retrainingProfilePath[profileStep, batchInd, signalInd], lineStyle, c=self.lightColors[1], linewidth=1, markersize=1, alpha=0.3*(numProfileSteps - profileStep)/numProfileSteps)
+                ax.plot(relativeTimes, retrainingProfilePath[profileStep, batchInd, signalInd], lineStyle, c=self.lightColors[0], linewidth=1, markersize=1, alpha=0.6*(1 - (numProfileSteps - profileStep)/numProfileSteps))
+            # if healthProfile is not None: ax.plot(relativeTimes, healthProfile[batchInd], '-', c=self.blackColor, label=f"Health profile", linewidth=1, markersize=6, alpha=0.3)
+            ax.hlines(y=0, xmin=ax.get_xlim()[0], xmax=ax.get_xlim()[1], colors=self.blackColor, linestyles='-', linewidth=1)
 
-        # Save the figure.
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=False)
-        else: self.clearFigure(fig=fig, legend=None, showPlot=True)
+            # Plotting aesthetics.
+            ax.set_xlabel("Time (sec)")
+            ax.set_title(f"{plotTitle} epoch{epoch}")
+            ax.set_ylabel("Signal amplitude (au)")
+            if "health profile" in plotTitle.lower(): ax.set_ylim((-1, 1))
+            else: ax.set_ylim((-1.75, 1.75))
+
+            # Save the figure.
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=False)
+            else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
     def plotProfileReconstructionError(self, relativeTimes, healthProfile, reconstructedHealthProfile, batchInd, epoch, saveFigureLocation="", plotTitle="Signal Encoding"):
         # Extract the signal dimensions.
@@ -152,41 +154,39 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             plt.close(fig)
             break
 
-    def plotSignalEncodingStatePath(self, relativeTimes, compiledSignalEncoderLayerStates, batchInd, signalInd, signalNames, epoch, saveFigureLocation, plotTitle):
+    def plotSignalEncodingStatePath(self, relativeTimes, compiledSignalEncoderLayerStates, batchInd, signalNames, epoch, saveFigureLocation, plotTitle):
         numLayers, numExperiments, numSignals, encodedDimension = compiledSignalEncoderLayerStates.shape
-        hiddenLayers = 1
-
-        # Interpolate the states.
-        compiledSignalEncoderLayerStates = compiledSignalEncoderLayerStates[:, batchInd, signalInd, :]
         numSpecificEncoderLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
         numSharedEncoderLayers = modelConstants.userInputParams['numSharedEncoderLayers']
-
-        # These should be chosen based on your data and how you want to "zoom"
         relativeTimesExtent = (relativeTimes.min(), relativeTimes.max(), 0, numLayers)
-        fig, ax = plt.subplots(figsize=(6.4, 4.8))
+        hiddenLayers = 1
 
-        # Plot the rest of the layers with the same normalization.
-        im0 = ax.imshow(compiledSignalEncoderLayerStates, cmap='viridis', interpolation=None, extent=relativeTimesExtent, aspect='auto', origin='lower', vmin=-1.1, vmax=1.1)
-        ax.set_xlim(relativeTimes.min(), relativeTimes.max())
-        fig.colorbar(im0, fraction=0.046, pad=0.04)
+        for signalInd in range(len(signalNames)):
+            # These should be chosen based on your data and how you want to "zoom"
+            fig, ax = plt.subplots(figsize=(6.4, 4.8))
 
-        # Add horizontal lines to mark layer boundaries
-        ax.hlines(y=hiddenLayers + numSpecificEncoderLayers, xmin=ax.get_xlim()[0], xmax=ax.get_xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
-        ax.hlines(y=hiddenLayers, xmin=ax.get_xlim()[0], xmax=ax.get_xlim()[1], colors=self.blackColor, linestyles='-', linewidth=2)
+            # Plot the rest of the layers with the same normalization.
+            im0 = ax.imshow( compiledSignalEncoderLayerStates[:, batchInd, signalInd, :], cmap='viridis', interpolation=None, extent=relativeTimesExtent, aspect='auto', origin='lower', vmin=-1.1, vmax=1.1)
+            ax.set_xlim(relativeTimes.min(), relativeTimes.max())
+            fig.colorbar(im0, fraction=0.046, pad=0.04)
 
-        # Ticks, labels, and formatting
-        yTicks = np.asarray([0] + list(range(1, 1 + numSpecificEncoderLayers)) + list(range(1, 1 + numSharedEncoderLayers)))
-        ax.set_yticks(np.arange(start=0.5, stop=1 + numSpecificEncoderLayers + numSharedEncoderLayers, step=1))
-        ax.set_yticklabels(yTicks, fontsize=12)
-        ax.tick_params(axis="x", labelsize=12)
-        ax.set_title(f"{plotTitle} epoch {epoch}", fontsize=16)
-        ax.set_ylabel("Module layer", fontsize=14)
-        ax.set_xlabel("Time (sec)", fontsize=14)
-        ax.grid(False)
+            # Add horizontal lines to mark layer boundaries
+            ax.hlines(y=hiddenLayers + numSpecificEncoderLayers, xmin=ax.get_xlim()[0], xmax=ax.get_xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
+            ax.hlines(y=hiddenLayers, xmin=ax.get_xlim()[0], xmax=ax.get_xlim()[1], colors=self.blackColor, linestyles='-', linewidth=2)
 
-        # Save or clear figure
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]}.pdf", fig=fig, clearFigure=True, showPlot=False)
-        else: self.clearFigure(fig=None, legend=None, showPlot=False)
+            # Ticks, labels, and formatting
+            yTicks = np.asarray([0] + list(range(1, 1 + numSpecificEncoderLayers)) + list(range(1, 1 + numSharedEncoderLayers)))
+            ax.set_yticks(np.arange(start=0.5, stop=1 + numSpecificEncoderLayers + numSharedEncoderLayers, step=1))
+            ax.set_yticklabels(yTicks, fontsize=12)
+            ax.tick_params(axis="x", labelsize=12)
+            ax.set_title(f"{plotTitle} epoch {epoch}", fontsize=16)
+            ax.set_ylabel("Module layer", fontsize=14)
+            ax.set_xlabel("Time (sec)", fontsize=14)
+            ax.grid(False)
+
+            # Save or clear figure
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]}.pdf", fig=fig, clearFigure=True, showPlot=False)
+            else: self.clearFigure(fig=None, legend=None, showPlot=False)
 
     # --------------------- Visualize Model Training --------------------- #
 
@@ -524,48 +524,48 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=False)
         else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
-    def modelFlow(self, dataTimes, dataStates, signalNames, batchInd, signalInd, epoch, saveFigureLocation, plotTitle):
-        dataStates = np.asarray(dataStates)
-        dataStates = dataStates[:, signalInd]
-        numModelLayers, encodedDimension = dataStates.shape
-        # dataStates: numModelLayers, encodedDimension
+    def modelFlow(self, dataTimes, dataStatesAll, signalNames, batchInd, epoch, saveFigureLocation, plotTitle):
+        for signalInd in range(len(signalNames)):
+            dataStates = np.asarray(dataStatesAll[:, batchInd, signalInd, :])
+            numModelLayers, encodedDimension = dataStates.shape
+            # dataStates: numModelLayers, encodedDimension
 
-        # Create a meshgrid for encodedDimension and numModelLayers
-        x_data, y_data = np.meshgrid(dataTimes, np.flip(np.arange(1, 1 + numModelLayers), axis=-1))
-        x, y, z = x_data.flatten(), np.flip(y_data.flatten()), dataStates.flatten()
+            # Create a meshgrid for encodedDimension and numModelLayers
+            x_data, y_data = np.meshgrid(dataTimes, np.flip(np.arange(1, 1 + numModelLayers), axis=-1))
+            x, y, z = x_data.flatten(), np.flip(y_data.flatten()), dataStates.flatten()
 
-        # Figure and axis settings
-        fig = plt.figure(figsize=(12, 8), facecolor="white")
-        ax = fig.add_subplot(111, projection='3d', facecolor="white")
+            # Figure and axis settings
+            fig = plt.figure(figsize=(12, 8), facecolor="white")
+            ax = fig.add_subplot(111, projection='3d', facecolor="white")
 
-        # Improved scatter points
-        ax.scatter(
-            x, y, z, c=z,
-            cmap='viridis', edgecolors=self.blackColor, linewidth=0.5,
-            alpha=0.95, s=20, vmin=-1.5, vmax=1.5)
-        for modelLayerInd in range(numModelLayers):
-            ax.plot(x[modelLayerInd*encodedDimension:(modelLayerInd + 1)*encodedDimension], y[modelLayerInd*encodedDimension:(modelLayerInd + 1)*encodedDimension], z[modelLayerInd*encodedDimension:(modelLayerInd + 1)*encodedDimension],
-                    color=self.blackColor, linestyle='-', linewidth=0.5, alpha=0.5)
+            # Improved scatter points
+            ax.scatter(
+                x, y, z, c=z,
+                cmap='viridis', edgecolors=self.blackColor, linewidth=0.5,
+                alpha=0.95, s=20, vmin=-1.5, vmax=1.5)
+            for modelLayerInd in range(numModelLayers):
+                ax.plot(x[modelLayerInd*encodedDimension:(modelLayerInd + 1)*encodedDimension], y[modelLayerInd*encodedDimension:(modelLayerInd + 1)*encodedDimension], z[modelLayerInd*encodedDimension:(modelLayerInd + 1)*encodedDimension],
+                        color=self.blackColor, linestyle='-', linewidth=0.5, alpha=0.5)
 
-        # View and perspective adjustments
-        ax.view_init(elev=25, azim=135)
-        ax.dist = 8  # Adjusts perspective depth
+            # View and perspective adjustments
+            ax.view_init(elev=25, azim=135)
+            ax.dist = 8  # Adjusts perspective depth
 
-        # Axis labels and title
-        ax.set_title(f"{plotTitle}; Epoch {epoch}", fontsize=16, weight='bold', pad=20)
-        ax.set_xlabel("Time (Sec)", fontsize=12, labelpad=10)
-        ax.set_ylabel("Model Layer", fontsize=12, labelpad=10)
-        ax.set_zlabel("Signal value (au)", fontsize=12, labelpad=10)
-        ax.set_zlim(-1.75, 1.75)
-        ax.invert_yaxis()
+            # Axis labels and title
+            ax.set_title(f"{plotTitle}; Epoch {epoch}", fontsize=16, weight='bold', pad=20)
+            ax.set_xlabel("Time (Sec)", fontsize=12, labelpad=10)
+            ax.set_ylabel("Model Layer", fontsize=12, labelpad=10)
+            ax.set_zlabel("Signal value (au)", fontsize=12, labelpad=10)
+            ax.set_zlim(-1.75, 1.75)
+            ax.invert_yaxis()
 
-        # Make the aspect ratio look nicer in 3D
-        ax.set_box_aspect([2, 1, 1])
-        fig.tight_layout()
+            # Make the aspect ratio look nicer in 3D
+            ax.set_box_aspect([2, 1, 1])
+            fig.tight_layout()
 
-        # Save the plot
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} batchInd{batchInd} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]} batchInd{batchInd}.pdf", fig=fig, clearFigure=True, showPlot=False)
-        else: self.clearFigure(fig=fig, legend=None, showPlot=True)
+            # Save the plot
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} batchInd{batchInd} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]} batchInd{batchInd}.pdf", fig=fig, clearFigure=True, showPlot=False)
+            else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
     def plotActivationCurvesCompressed(self, activationCurves, moduleNames, epoch, saveFigureLocation, plotTitle):
         axNames = ["Specific spatial", "Specific neural low frequency", "Specific neural high frequency",
