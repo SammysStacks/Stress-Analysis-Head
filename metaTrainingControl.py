@@ -41,7 +41,7 @@ if __name__ == "__main__":
     holdDatasetOut = True  # Whether to hold out the validation dataset.
     plotAllEpochs = True  # Whether to plot all epochs or not.
     testSplitRatio = 0.1  # The percentage of testing points.
-    # 11 ->  trainCull3-12CNN
+    # 11 ->  trainCull3-8CNN
 
     # ----------------------- Architecture Parameters ----------------------- #
 
