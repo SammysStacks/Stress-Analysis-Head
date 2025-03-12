@@ -39,7 +39,7 @@ if __name__ == "__main__":
     # General model parameters.
     trainingDate = "2025-03-11"  # The current date we are training the model. Unique identifier of this training set.
     holdDatasetOut = True  # Whether to hold out the validation dataset.
-    plotAllEpochs = True  # Whether to plot all epochs or not.
+    plotAllEpochs = False  # Whether to plot all epochs or not.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # ----------------------- Architecture Parameters ----------------------- #
@@ -66,7 +66,7 @@ if __name__ == "__main__":
     parser.add_argument('--numProfileShots', type=int, default=32, help='The epochs for profile training: [16, 32]')
 
     # Add arguments for observational learning.
-    parser.add_argument('--minAngularThreshold', type=float, default=0.01, help='The smaller rotational threshold in degrees.')
+    parser.add_argument('--minAngularThreshold', type=float, default=0.25, help='The smaller rotational threshold in degrees.')
     parser.add_argument('--maxAngularThreshold', type=float, default=45, help='The larger rotational threshold in degrees.')
 
     # dd arguments for the emotion and activity architecture.
