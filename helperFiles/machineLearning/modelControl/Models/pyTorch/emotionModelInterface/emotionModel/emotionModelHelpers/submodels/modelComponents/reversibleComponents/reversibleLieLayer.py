@@ -123,7 +123,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
             givensAngles = self.getGivensAngles(layerInd).abs()  # Dim: numSignals, numParams
             sortedGivensAngles, sortedIndices = torch.sort(givensAngles, dim=-1)
             # sortedGivensAngles -> [0, 0.1, 0.2, ... pi/2]
-            maxEpochThreshold = 50 if 64 <= self.sequenceLength else 200
+            maxEpochThreshold = 200
 
             # Get the threshold.
             numParamsKeeping = (maxEpochThreshold - epoch) * self.numParams / maxEpochThreshold if epoch <= maxEpochThreshold else 0
