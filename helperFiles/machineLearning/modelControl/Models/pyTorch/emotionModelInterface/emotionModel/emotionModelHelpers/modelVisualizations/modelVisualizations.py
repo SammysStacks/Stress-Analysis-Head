@@ -65,9 +65,9 @@ class modelVisualizations(globalPlottingProtocols):
                 moduleNames, maxFreeParamsPath = freeParamInformation[:, 0], freeParamInformation[:, 1].astype(int)  # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
                 numFreeModelParams = [specificModel.numFreeParams for specificModel in specificModels]  # numModels, numEpochs, numModuleLayers, numSignals, numParams=1
                 self.generalViz.plotFreeParamFlow(numFreeModelParams, maxFreeParamsPath, fullView=False, paramNames=["Free params"], moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle="Signal encoder free parameters path zoomed")
-                if showMinimumPlots: return None
-
                 self.generalViz.plotFreeParamFlow(numFreeModelParams, maxFreeParamsPath, fullView=True, paramNames=["Free params"], moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle="Signal encoder free parameters path")
+                for modelInd in range(len(numFreeModelParams)): print('numFreeModelParams:', numFreeModelParams[modelInd][-1][0].mean(),  numFreeModelParams[modelInd][-1][5].mean(),  numFreeModelParams[modelInd][-1][4].mean())
+                if showMinimumPlots: return None
 
                 # Plot the activation parameters for the signal encoder.
                 paramNames = ["Infinite Bound", "Linearity Factor", "Convergent Point"]
@@ -150,7 +150,7 @@ class modelVisualizations(globalPlottingProtocols):
 
                         # Plotting the data flow within the model.
                         self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, retrainingProfilePath=backwardModelPassSignals, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Backwards transformations (HP to feature)")
-                        self.signalEncoderViz.modelFlow(dataTimes=resampledBiomarkerTimes, dataStatesAll=backwardModelPassSignals, signalNames=signalNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Signal transformations by layer 3D",  batchInd=batchInd)
+                        self.signalEncoderViz.modelFlow(dataTimes=resampledBiomarkerTimes, dataStatesAll=backwardModelPassSignals, signalNames=signalNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Signal transformations by layer 3D", batchInd=batchInd)
                         self.signalEncoderViz.plotSignalEncodingStatePath(relativeTimes=resampledBiomarkerTimes, compiledSignalEncoderLayerStates=backwardModelPassSignals, batchInd=batchInd, signalNames=signalNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Signal transformations by layer heatmap")
 
                         # Plot the angle information.
