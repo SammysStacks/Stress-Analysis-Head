@@ -20,8 +20,6 @@ srun accelerate launch ./../../metaTrainingControl.py \
     --momentum_decay "${14}" \
     --minAngularThreshold "${15}" \
     --maxAngularThreshold "${16}" \
-    --maxNumParamsKeeping "${17}" \
-    --finalMinAngularThreshold "${18}" \
     --profileWD "${19}" \
 
 end=$(date +%s)

@@ -50,7 +50,7 @@ class compileModelDataHelpers:
         if userInputParams['encodedDimension'] < userInputParams['profileDimension']: raise Exception("The number of encoded weights must be less than the encoded dimension.")
 
         # Get the model information.
-        signalEncoderModelInfo = f"signalEncoder WD{userInputParams['profileWD']} thresh[{userInputParams['minAngularThreshold']} {userInputParams['finalMinAngularThreshold']} {userInputParams['maxAngularThreshold']} {userInputParams['maxNumParamsKeeping']}] {userInputParams['optimizerType']} {userInputParams['numSharedEncoderLayers']}-shared specific-{userInputParams['numSpecificEncoderLayers']} LR{userInputParams['profileLR']}-{userInputParams['reversibleLR']}-{userInputParams['physGenLR']} profileParams{userInputParams['profileDimension']} numShots{userInputParams['numProfileShots']} encodedDim{userInputParams['encodedDimension']} {userInputParams['neuralOperatorParameters']['wavelet']['waveletType']}"
+        signalEncoderModelInfo = f"signalEncoder WD{userInputParams['profileWD']} thresh[{userInputParams['minAngularThreshold']} {userInputParams['maxAngularThreshold']}] {userInputParams['optimizerType']} {userInputParams['numSharedEncoderLayers']}-shared specific-{userInputParams['numSpecificEncoderLayers']} LR{userInputParams['profileLR']}-{userInputParams['reversibleLR']}-{userInputParams['physGenLR']} profileParams{userInputParams['profileDimension']} numShots{userInputParams['numProfileShots']} encodedDim{userInputParams['encodedDimension']} {userInputParams['neuralOperatorParameters']['wavelet']['waveletType']}"
         emotionPredictionModelInfo = f"emotionPrediction on {userInputParams['deviceListed']} with {userInputParams['optimizerType']}"
 
         # Return the model information.

@@ -101,14 +101,13 @@ class reversibleLieLayer(reversibleLieLayerInterface):
         return inputData
     # ------------------- Observational Learning ------------------- #
 
-    def angularThresholding(self, applyMaxThresholding):
-        # Get the angular thresholds.
-        minAngularThreshold = modelConstants.userInputParams['finalMinAngularThreshold' if applyMaxThresholding else 'minAngularThreshold'] * torch.pi / 180  # Convert to radians
-        maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold'] * torch.pi / 180  # Convert to radians
-        if 64 < self.sequenceLength and applyMaxThresholding: minAngularThreshold = minAngularThreshold*2
-        maxAngularParam = self.getInverseAngleParams(torch.tensor(maxAngularThreshold))
-
+    def angularThresholding(self, epoch):
         with torch.no_grad():
+            # Get the angular thresholds.
+            minAngularThreshold = modelConstants.userInputParams['minAngularThreshold'] * torch.pi / 180  # Convert to radians
+            maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold'] * torch.pi / 180  # Convert to radians
+            maxAngularParam = self.getInverseAngleParams(torch.tensor(maxAngularThreshold))
+
             for layerInd in range(self.numLayers):
                 givensAngles = self.getGivensAngles(layerInd)  # Dim: numSignals, numParams
                 self.givensRotationParams[layerInd][givensAngles <= -maxAngularThreshold] = -maxAngularParam
@@ -116,19 +115,19 @@ class reversibleLieLayer(reversibleLieLayerInterface):
                 self.givensRotationParams[layerInd][givensAngles.abs() < minAngularThreshold] = 0
 
                 # Apply an extra thresholding if the sequence length is large.
-                if 64 < self.sequenceLength: self.percentParamThresholding(layerInd)  # Must be every epoch! Helps diminish overfitting.
+                self.percentParamThresholding(layerInd, epoch)  # Must be every epoch! Helps diminish overfitting.
 
-    def percentParamThresholding(self, layerInd):
+    def percentParamThresholding(self, layerInd, epoch):
         with torch.no_grad():
             # Sort each row by absolute value
             givensAngles = self.getGivensAngles(layerInd).abs()  # Dim: numSignals, numParams
             sortedGivensAngles, sortedIndices = torch.sort(givensAngles, dim=-1)
             # sortedGivensAngles -> [0, 0.1, 0.2, ... pi/2]
+            maxEpochThreshold = 100
 
             # Get the threshold.
-            lastIndexKeeping = min(int(modelConstants.userInputParams['maxNumParamsKeeping']), self.numParams)
-            if lastIndexKeeping == 0: self.givensRotationParams[layerInd] = 0; return None
-            if lastIndexKeeping == self.numParams: return None
+            numParamsKeeping = (maxEpochThreshold - epoch) * self.numParams / maxEpochThreshold if epoch <= maxEpochThreshold else 0
+            lastIndexKeeping = int(min(self.numParams, max(self.sequenceLength, numParamsKeeping)))
 
             # Zero out the values below the threshold
             minAngleValues = sortedGivensAngles[:,  -lastIndexKeeping].unsqueeze(-1)  # Shape (numSignals, 1)
@@ -145,7 +144,6 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 if __name__ == "__main__":
     # for i in [2, 4, 8, 16, 32, 64, 128, 256]:
     # for i in [16, 32, 64, 128, 256]:
-    modelConstants.userInputParams['finalMinAngularThreshold'] = 1
     modelConstants.userInputParams['minAngularThreshold'] = 0.1
     modelConstants.userInputParams['maxAngularThreshold'] = 4
 

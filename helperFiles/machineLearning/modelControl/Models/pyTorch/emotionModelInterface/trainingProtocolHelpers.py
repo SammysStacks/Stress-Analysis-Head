@@ -52,7 +52,6 @@ class trainingProtocolHelpers:
 
     def datasetSpecificTraining(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch, profileOnlyTraining=False):
         # Unify all the model weights.
-        applyMaxThresholding = modelConstants.userInputParams['numInitialEpochs'] < epoch
         self.unifyAllModelWeights(allMetaModels, allModels)
         if allMetaModels[0].model.numSpecificEncoderLayers == 0:
             print("No specific training needed.")
@@ -68,26 +67,14 @@ class trainingProtocolHelpers:
 
             # Train the updated model.
             if not profileOnlyTraining:
-                modelPipeline.model.cullAngles(applyMaxThresholding=applyMaxThresholding)
+                modelPipeline.model.cullAngles(epoch=epoch)
                 modelPipeline.trainModel(dataLoader, submodel, profileTraining=False, specificTraining=True, trainSharedLayers=False, stepScheduler=False, numEpochs=numEpochs)  # Signal-specific training.
-                modelPipeline.model.cullAngles(applyMaxThresholding=applyMaxThresholding)
+                modelPipeline.model.cullAngles(epoch=epoch)
 
             # Health profile training.
             numProfileShots = modelPipeline.resetPhysiologicalProfile(submodel)
             modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=numProfileShots + 1)  # Profile training.
             self.accelerator.wait_for_everyone()
-
-    def boundAngularWeights(self, allMetaModels, allModels, applyMaxThresholding):
-        # Unify all the model weights.
-        self.unifyAllModelWeights(allMetaModels, allModels)
-
-        # For each meta-training model.
-        for modelPipeline in allMetaModels + allModels:
-            modelPipeline.model.cullAngles(applyMaxThresholding=applyMaxThresholding)
-
-        # Unify all the model weights and retrain the specific models.
-        self.unifiedLayerData = self.modelMigration.copyModelWeights(allMetaModels[0], self.sharedModelWeights)
-        self.unifyAllModelWeights(allMetaModels, allModels)
 
     def calculateLossInformation(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel):
         self.unifyAllModelWeights(allMetaModels, allModels)  # Unify all the model weights.

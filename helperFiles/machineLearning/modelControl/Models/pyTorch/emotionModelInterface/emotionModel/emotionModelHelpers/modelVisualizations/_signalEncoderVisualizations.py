@@ -166,7 +166,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             fig, ax = plt.subplots(figsize=(6.4, 4.8))
 
             # Plot the rest of the layers with the same normalization.
-            im0 = ax.imshow( compiledSignalEncoderLayerStates[:, batchInd, signalInd, :], cmap='viridis', interpolation=None, extent=relativeTimesExtent, aspect='auto', origin='lower', vmin=-1.1, vmax=1.1)
+            im0 = ax.imshow(compiledSignalEncoderLayerStates[:, batchInd, signalInd, :], cmap='viridis', interpolation=None, extent=relativeTimesExtent, aspect='auto', origin='lower', vmin=-1.1, vmax=1.1)
             ax.set_xlim(relativeTimes.min(), relativeTimes.max())
             fig.colorbar(im0, fraction=0.046, pad=0.04)
 
@@ -200,8 +200,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         numSpatialLayers, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
 
         # Get the angular thresholds.
-        applyMaxThresholding =  modelConstants.userInputParams['numInitialEpochs'] < epoch
-        minAngularThreshold = modelConstants.userInputParams['finalMinAngularThreshold' if applyMaxThresholding else 'minAngularThreshold']
+        minAngularThreshold = modelConstants.userInputParams['minAngularThreshold']
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
         center = (0, 0)
 
@@ -278,8 +277,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         bins = np.arange(-degrees, degrees + 1, 1)
 
         # Get the angular thresholds.
-        applyMaxThresholding = modelConstants.userInputParams['numInitialEpochs'] < epoch
-        minAngularThreshold = modelConstants.userInputParams['finalMinAngularThreshold' if applyMaxThresholding else 'minAngularThreshold']
+        minAngularThreshold = modelConstants.userInputParams['minAngularThreshold']
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
         histogramPlots = []
 
@@ -358,8 +356,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         degrees = (180 if degreesFlag else math.pi) / 4
 
         # Get the angular thresholds.
-        applyMaxThresholding = modelConstants.userInputParams['numInitialEpochs'] < epoch
-        minAngularThreshold = modelConstants.userInputParams['finalMinAngularThreshold' if applyMaxThresholding else 'minAngularThreshold']
+        minAngularThreshold = modelConstants.userInputParams['minAngularThreshold']
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
 
         for layerInd in range(len(givensAnglesPath)):
