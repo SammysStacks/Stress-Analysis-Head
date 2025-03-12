@@ -127,7 +127,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
             # Get the threshold.
             numParamsKeeping = (maxEpochThreshold - epoch) * self.numParams / maxEpochThreshold if epoch <= maxEpochThreshold else 0
-            if 64 <= self.sequenceLength: numParamsKeeping = min(numParamsKeeping, 10000)
+            if 64 <= self.sequenceLength: numParamsKeeping = min(numParamsKeeping, 10000 - epoch*250)
 
             # Zero out the values below the threshold
             lastIndexKeeping = int(min(self.numParams, max(2*self.sequenceLength+1, numParamsKeeping)))
