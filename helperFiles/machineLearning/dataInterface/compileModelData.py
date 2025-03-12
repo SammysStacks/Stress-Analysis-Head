@@ -289,29 +289,3 @@ class compileModelData(compileModelDataHelpers):
         self.modelMigration.loadModels(allModelPipelines, loadSubmodel, loadSubmodelDate, loadSubmodelEpochs, metaTraining=True, loadModelAttributes=True, loadModelWeights=True)
 
         return allModelPipelines, allDataLoaders
-
-    def onlyPreloadModelAttributes(self, modelName, datasetNames, loadSubmodel, loadSubmodelDate, loadSubmodelEpochs, allDummyModelPipelines=()):
-        # Initialize relevant holders.
-        userInputParams = {'deviceListed': "cpu", 'submodel': 'emotionPrediction', 'encodedSamplingFreq': 2, 'numSigEncodingLayers': 4, 'numSigLiftedChannels': 4,
-                           'compressionFactor': 1.5, 'expansionFactor': 1.5, 'numInterpreterHeads': 4, 'numBasicEmotions': 8, 'finalDistributionLength': 240}
-
-        # Overwrite the location of the saved models.
-        self.modelMigration.replaceFinalModelFolder("_finalModels/storedModels/")
-
-        if len(allDummyModelPipelines) == 0:
-            print(f"\nInitializing the models for {modelName}:")
-            # For each model we want.
-            for metadataInd in range(len(datasetNames)):
-                datasetName = datasetNames[metadataInd]
-
-                # Initialize and train the model class.
-                dummyModelPipeline = emotionPipeline(accelerator=self.accelerator, datasetName=datasetName, allEmotionClasses=[], numSubjects=1, emotionNames=[], activityNames=[], featureNames=[], submodel=loadSubmodel, numExperiments=1)
-                dummyModelPipeline.acceleratorInterface()
-
-                # Store the information.
-                allDummyModelPipelines.append(dummyModelPipeline)
-
-        # Load in the model attributes.
-        self.modelMigration.loadModels(allDummyModelPipelines, loadSubmodel, loadSubmodelDate, loadSubmodelEpochs, metaTraining=True, loadModelAttributes=True, loadModelWeights=False)
-
-        return allDummyModelPipelines

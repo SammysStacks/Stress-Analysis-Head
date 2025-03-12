@@ -1,8 +1,7 @@
 import os
+
 import torch
 import torch.nn as nn
-
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
 
 class modelMigration:
@@ -253,7 +252,7 @@ class modelMigration:
             self._loadModel(modelPipeline.model, modelPipeline.datasetName, submodel, trainingDate, numEpochs, metaTraining, loadModelAttributes, loadModelWeights)
 
     def _loadModel(self, model, datasetName, submodel, trainingDate, numEpochs, metaTraining, loadModelAttributes=True, loadModelWeights=True):
-        # Construct base names for loading model and attributes
+        # Construct base names for loading the model and attributes
         modelBaseName = self._compileModelBaseName(submodel, datasetName, trainingDate, numEpochs, metaTraining)
         sharedModelBaseName = self._compileModelBaseName(submodel, self.sharedWeightsName, trainingDate, numEpochs, metaTraining)
 

@@ -2,8 +2,7 @@
 import os
 import sys
 import accelerate
-
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
+import torch
 
 # Set specific environmental parameters.
 os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
@@ -15,8 +14,11 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../../../")
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # Import plotting methods
-from helperFiles.machineLearning.dataInterface.compileModelData import compileModelData
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.trainingProtocolHelpers import trainingProtocolHelpers
+from helperFiles.machineLearning.modelControl.Models.pyTorch.modelMigration import modelMigration
+from helperFiles.machineLearning.dataInterface.compileModelData import compileModelData
 from helperMethods.signalEncoderPlots import signalEncoderPlots
 
 
@@ -26,8 +28,17 @@ if __name__ == "__main__":
     holdDatasetOut = True  # Whether to hold out the validation dataset.
     testSplitRatio = 0.1  # The percentage of testing points.
 
-    # --------------------------- User Input Parameters -------------------------- #
+    # Define the accelerator parameters.
+    accelerator = accelerate.Accelerator(
+        dataloader_config=accelerate.DataLoaderConfiguration(split_batches=True),  # Whether to split batches across devices or not.
+        cpu=torch.backends.mps.is_available(),  # Whether to use the CPU. MPS is NOT fully compatible yet.
+        step_scheduler_with_optimizer=False,  # Whether to wrap the optimizer in a scheduler.
+        gradient_accumulation_steps=1,  # The number of gradient accumulation steps.
+        mixed_precision="no",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"
+    )
 
+    # Define the model information.
+    modelFolder = os.path.dirname(os.path.abspath(__file__)) + "/../../../helperFiles/machineLearning/_finalModels/metaTrainingModels/signalEncoderModel/"
     submodel = modelConstants.signalEncoderModel
 
     # --------------------------- Model Parameters -------------------------- #
@@ -38,23 +49,15 @@ if __name__ == "__main__":
     modelParameters = modelParameters(accelerator)  # Initialize the model parameters class.
     modelMigration = modelMigration(accelerator)  # Initialize the model migration class.
 
-    # Specify training parameters
-    trainingDate = modelCompiler.embedInformation(submodel, userInputParams, trainingDate)  # Embed training information into the name.
-    numEpochs, numEpoch_toPlot, numEpoch_toSaveFull = modelParameters.getEpochInfo()  # The number of epochs to plot and save the model.
-    datasetNames, metaDatasetNames = modelParameters.compileModelNames()  # Compile the model names.
-    print("Arguments:", userInputParams)
-    print(trainingDate, "\n")
-
     # Compile the final modules.
+    datasetNames, metaDatasetNames = modelParameters.compileModelNames()  # Compile the model names.
     allModels, allDataLoaders, allMetaModels, allMetadataLoaders, _ = modelCompiler.compileModelsFull(metaDatasetNames, submodel, testSplitRatio, datasetNames)
     allDataLoaders.append(allMetadataLoaders.pop(0))  # Do not metatrain with wesad data.
     datasetNames.append(metaDatasetNames.pop(0))  # Do not metatrain with wesad data.
     allModels.append(allMetaModels.pop(0))  # Do not metatrain with wesad data.
 
-    # Do not train on the meta-datasets.
+    # Compile all the datasets together.
     if holdDatasetOut: allDataLoaders, datasetNames, allModels = [], [], []
-
-    # Compile all the dataset names.
     allDatasetNames = metaDatasetNames + datasetNames
 
     # --------------------------- Figure Plotting -------------------------- #
