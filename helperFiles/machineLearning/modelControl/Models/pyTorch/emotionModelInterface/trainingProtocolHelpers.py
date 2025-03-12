@@ -70,7 +70,7 @@ class trainingProtocolHelpers:
             if not profileOnlyTraining:
                 modelPipeline.model.cullAngles(applyMaxThresholding=applyMaxThresholding)
                 modelPipeline.trainModel(dataLoader, submodel, profileTraining=False, specificTraining=True, trainSharedLayers=False, stepScheduler=False, numEpochs=numEpochs)  # Signal-specific training.
-                modelPipeline.model.cullAngles(applyMaxThresholding=applyMaxThresholding)  # TODO: Added
+                modelPipeline.model.cullAngles(applyMaxThresholding=applyMaxThresholding)
 
             # Health profile training.
             numProfileShots = modelPipeline.resetPhysiologicalProfile(submodel)
