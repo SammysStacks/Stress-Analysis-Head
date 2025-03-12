@@ -79,7 +79,7 @@ class reversibleLieLayerInterface(reversibleInterface):
             for layerInd in range(self.numLayers):
                 angularMask = 0 != self.givensRotationParams[layerInd]
                 numSignalParameters = angularMask.sum(dim=-1, keepdim=True)  # Dim: numSignals, 1
-                allNumFreeParams.append(numSignalParameters.detach().cpu().numpy().astype(np.int16))
+                allNumFreeParams.append(numSignalParameters.detach().cpu().numpy().astype(np.int32))
                 # allNumFreeParams: numLayers, numSignals, numFreeParams=1
 
         return allNumFreeParams
