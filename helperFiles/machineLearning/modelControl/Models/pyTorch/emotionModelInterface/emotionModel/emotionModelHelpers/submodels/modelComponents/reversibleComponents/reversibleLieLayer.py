@@ -17,7 +17,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
     def __init__(self, numSignals, sequenceLength, numLayers, activationMethod):
         super(reversibleLieLayer, self).__init__(numSignals, sequenceLength, numLayers, activationMethod)
-        initialMaxGivensAngle = self.getInverseAngleParams(torch.tensor(0.1 * math.pi/180))
+        initialMaxGivensAngle = self.getInverseAngleParams(torch.tensor(0.01 * math.pi/180))
         self.identityMatrix = torch.eye(self.sequenceLength, dtype=torch.float64)
 
         # Create the neural layers.
@@ -107,6 +107,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
             minAngularThreshold = modelConstants.userInputParams['minAngularThreshold'] * torch.pi / 180  # Convert to radians
             maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold'] * torch.pi / 180  # Convert to radians
             maxAngularParam = self.getInverseAngleParams(torch.tensor(maxAngularThreshold))
+            if epoch < 10: minAngularThreshold = 0.1
 
             for layerInd in range(self.numLayers):
                 givensAngles = self.getGivensAngles(layerInd)  # Dim: numSignals, numParams
@@ -125,11 +126,11 @@ class reversibleLieLayer(reversibleLieLayerInterface):
             # sortedGivensAngles -> [0, 0.1, 0.2, ... pi/2]
 
             # Get the threshold.
-            if 64 <= self.sequenceLength: numParamsKeeping = 5000 - epoch*50
+            if 64 <= self.sequenceLength: numParamsKeeping = 5000 - epoch*25
             else: numParamsKeeping = self.numParams - epoch*2
 
             if 64 <= self.sequenceLength: lastIndexKeeping = int(min(self.numParams, max(512, numParamsKeeping)))
-            else: lastIndexKeeping = int(min(self.numParams, max(128, numParamsKeeping)))
+            else: lastIndexKeeping = int(min(self.numParams, max(256, numParamsKeeping)))
 
             # Zero out the values below the threshold
             minAngleValues = sortedGivensAngles[:,  -lastIndexKeeping].unsqueeze(-1)  # Shape (numSignals, 1)
