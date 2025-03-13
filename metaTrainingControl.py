@@ -66,7 +66,7 @@ if __name__ == "__main__":
     parser.add_argument('--numProfileShots', type=int, default=24, help='The epochs for profile training: [16, 32]')
 
     # Add arguments for observational learning.
-    parser.add_argument('--minAngularThreshold', type=float, default=0.25, help='The smaller rotational threshold in degrees.')
+    parser.add_argument('--minAngularThreshold', type=float, default=0.1, help='The smaller rotational threshold in degrees.')
     parser.add_argument('--maxAngularThreshold', type=float, default=45, help='The larger rotational threshold in degrees.')
 
     # dd arguments for the emotion and activity architecture.
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     # Signal encoder learning rates.
     parser.add_argument('--profileLR', type=float, default=0.05, help='The learning rate of the health model.')
     parser.add_argument('--physGenLR', type=float, default=1e-4, help='The learning rate of the general model.')
-    parser.add_argument('--reversibleLR', type=float, default=1e-3, help='The learning rate of the general model.')
+    parser.add_argument('--reversibleLR', type=float, default=5e-4, help='The learning rate of the general model.')
 
     # Signal encoder weight decays.
     parser.add_argument('--profileWD', type=float, default=1e-4, help='The learning rate of the general model.')
