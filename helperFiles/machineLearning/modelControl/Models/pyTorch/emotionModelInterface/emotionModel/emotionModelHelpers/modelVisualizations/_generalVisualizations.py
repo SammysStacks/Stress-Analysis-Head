@@ -338,7 +338,7 @@ class generalVisualizations(globalPlottingProtocols):
                             ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * (1 - alphas[axisLineInd]))
                     if fullView: ax.hlines(y=maxFreeParams, xmin=0, xmax=numEpochs + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
                     ax.hlines(y=sequenceLength, xmin=0, xmax=numEpochs + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
-                if fullView: ax.set_ylim((0, min(ax.get_ylim()[-1], 5000)))
+                if fullView: ax.set_ylim((0, min(ax.get_ylim()[-1], 10000)))
                 else: ax.set_ylim((0, ax.get_ylim()[-1]))
 
             # Label the plot.
