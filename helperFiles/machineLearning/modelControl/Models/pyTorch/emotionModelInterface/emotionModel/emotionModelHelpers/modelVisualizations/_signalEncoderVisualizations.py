@@ -500,7 +500,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             if not specificFlag: axInd -= numSpecificLayers
 
             # Customize plot title and axes
-            ax.set_title("Specific layer" if specificFlag else "Shared layer", fontsize=16)
+            ax.set_title(f"Specific layer: {axInd}" if specificFlag else f"Shared layer: {axInd}", fontsize=16)
             if colInd == 0: ax.set_ylabel("Scalar values")  # Y-axis: bin counts
             ax.set_ylim((0.925, 1.075))
 
