@@ -58,12 +58,12 @@ if __name__ == "__main__":
 
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model: [1, 2]')
-    parser.add_argument('--numSharedEncoderLayers', type=int, default=5, help='The number of layers in the model: [2, 10]')
+    parser.add_argument('--numSharedEncoderLayers', type=int, default=9, help='The number of layers in the model: [2, 10]')
 
     # Add arguments for the health profile.
     parser.add_argument('--initialProfileAmp', type=float, default=1e-3, help='The limits for profile initialization. Should be near zero.')
     parser.add_argument('--profileDimension', type=int, default=128, help='The number of profile weights: [32, 256]')
-    parser.add_argument('--numProfileShots', type=int, default=24, help='The epochs for profile training: [16, 32]')
+    parser.add_argument('--numProfileShots', type=int, default=16, help='The epochs for profile training: [16, 32]')
 
     # Add arguments for observational learning.
     parser.add_argument('--minAngularThreshold', type=float, default=0.1, help='The smaller rotational threshold in degrees.')
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     # ----------------------- Training Parameters ----------------------- #
 
     # Signal encoder learning rates.
-    parser.add_argument('--profileLR', type=float, default=0.01, help='The learning rate of the health model.')
+    parser.add_argument('--profileLR', type=float, default=0.05, help='The learning rate of the health model.')
     parser.add_argument('--physGenLR', type=float, default=1e-4, help='The learning rate of the general model.')
     parser.add_argument('--reversibleLR', type=float, default=5e-4, help='The learning rate of the general model.')
 
