@@ -49,7 +49,7 @@ waveletTypes_arr=(
 profileWDs=('1e-4')  # [1e-3, 1e-4]
 
 # Angular reference states.
-minAngularThresholds=(0.01 0.05 0.1 0.25)
+minAngularThresholds=(0.01 0.05 0.075 0.1 0.25)
 maxAngularThresholds=(45)
 
 # Binary reference states.
@@ -58,7 +58,7 @@ numSharedEncoderLayers_arr=(7)  # [4, 10]; Best: 5 and 7
 
 # Binary reference states.
 encodedDimensions_arr=(512)
-profileParams=(256 512 128 64)
+profileParams=(256 512 128)
 
 # Reference states.
 waveletTypes_arr=('bior3.1')
