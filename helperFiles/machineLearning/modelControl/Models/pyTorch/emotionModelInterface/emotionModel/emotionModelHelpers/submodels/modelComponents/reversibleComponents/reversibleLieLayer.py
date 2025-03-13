@@ -151,7 +151,7 @@ if __name__ == "__main__":
     # for _layerInd, sequenceLength2 in [(1, 32), (2, 32), (3, 32), (5, 32), (5, 32), (10, 32)]:
     # for _layerInd, sequenceLength2 in [(1, 64), (2, 64), (3, 64), (5, 64), (5, 64), (10, 64)]:
     # for _layerInd, sequenceLength2 in [(1, 128), (2, 128), (3, 128), (5, 128), (5, 128), (10, 128)]:
-    for _layerInd, sequenceLength2 in [(1, 32), (1, 256), (1, 512)]:
+    for _layerInd, sequenceLength2 in [(8, 8), (8, 16), (8, 32), (8, 64), (8, 128), (8, 256), (8, 512)]:
         # General parameters.
         _batchSize, _numSignals, _sequenceLength = 128, 64, sequenceLength2
         _activationMethod = 'reversibleLinearSoftSign'  # reversibleLinearSoftSign
@@ -162,13 +162,15 @@ if __name__ == "__main__":
         neuralLayerClass = neuralLayerClass.double()
 
         # Generate the health profile.
+        sequence = torch.arange(_sequenceLength, dtype=torch.float64)
         healthProfile = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float64)
+        healthProfile = healthProfile/4 + (2*sequence).sin() + sequence.cos()
         healthProfile = healthProfile - healthProfile.min(dim=-1, keepdim=True).values
         healthProfile = healthProfile / healthProfile.max(dim=-1, keepdim=True).values
         healthProfile = healthProfile * 2 - 1
 
         # Perform the convolution in the fourier and spatial domains.
-        _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(healthProfile, atol=1e-6, numLayers=1, plotResults=True)
+        _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(healthProfile, atol=1e-6, numLayers=1, plotResults=True, title=f'len{_sequenceLength}_layers={_numLayers}')
         neuralLayerClass.printParams()
 
         ratio = (_forwardData.norm(dim=-1) / healthProfile.norm(dim=-1)).view(-1).detach().numpy().astype(np.float32)
@@ -184,7 +186,6 @@ if __name__ == "__main__":
 
         # Figure settings.
         plt.title(f'Fin', fontsize=14)  # Increase title font size for readability
-        # plt.xlim(0.98, 1.02)
         plt.legend()
 
         # Save the plot.
