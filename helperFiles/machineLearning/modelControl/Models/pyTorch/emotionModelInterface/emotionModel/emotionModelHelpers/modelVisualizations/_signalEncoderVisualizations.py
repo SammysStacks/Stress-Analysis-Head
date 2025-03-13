@@ -512,6 +512,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             # Get the angles for the current layer
             if specificFlag: ax.plot(specificValues[axInd:numScalarSections*(axInd+1)], 'o', color=self.darkColors[0], alpha=0.5, linewidth=1, markersize=4)
             else: ax.plot(sharedValues[axInd::numSharedLayers], 'o', color=self.darkColors[1], alpha=0.75, linewidth=1, markersize=4)
+            fig.tight_layout(pad=2.0)
 
             # Save the plot
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=False)
