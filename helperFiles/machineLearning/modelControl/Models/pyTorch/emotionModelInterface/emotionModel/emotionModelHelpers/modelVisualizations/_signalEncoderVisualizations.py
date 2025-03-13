@@ -478,7 +478,11 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Get the layer information.
         numSpecificLayers, numSharedLayers = modelConstants.userInputParams['numSpecificEncoderLayers'], modelConstants.userInputParams['numSharedEncoderLayers']
         numScalarSections = 2 + int(math.log2(modelConstants.userInputParams['encodedDimension'] // modelConstants.userInputParams['minWaveletDim']))
-        nRows, nCols = 2, (numSpecificLayers + numSharedLayers) // 2
+        nCols = 4; nRows = (numSpecificLayers + numSharedLayers) // nCols
+
+        xTickLabels = ["Spatial layer"]
+        for decompositionInd in range(numScalarSections - 2): xTickLabels.append(f"Detailed decomposition layer {decompositionInd + 1}")
+        xTickLabels.append(f"Approximate decomposition layer {numScalarSections - 2}")
 
         for layerInd in range(numModuleLayers):
             if "shared" in reversibleModuleNames[layerInd].lower(): sharedValues.append(scalingFactorsPath[layerInd].flatten())
@@ -491,18 +495,23 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         axes = axes.flatten()
 
         for axInd, ax in enumerate(axes):
+            rowInd, colInd = axInd // nCols, axInd % nCols
             specificFlag = axInd < numSpecificLayers
             if not specificFlag: axInd -= numSpecificLayers
 
-            # Get the angles for the current layer
-            if specificFlag: ax.plot(specificValues[numScalarSections*axInd:numScalarSections*(axInd+1)], 'o', color=self.darkColors[0], alpha=0.5, linewidth=1, markersize=4)
-            else: ax.plot(sharedValues[numScalarSections*axInd:numScalarSections*(axInd+1)], 'o', color=self.darkColors[1], alpha=0.75, linewidth=1, markersize=4)
-
             # Customize plot title and axes
             ax.set_title("Specific layer" if specificFlag else "Shared layer", fontsize=16)
-            ax.set_xlabel("Module component")  # X-axis: values
-            ax.set_ylabel("Scalar values")  # Y-axis: bin counts
+            if colInd == 0: ax.set_ylabel("Scalar values")  # Y-axis: bin counts
             ax.set_ylim((0.925, 1.075))
+
+            if rowInd == nRows - 1:
+                ax.set_xlabel("Module component")  # X-axis: values
+                ax.set_xticks(range(len(xTickLabels)))  # Set x-ticks positions
+                ax.set_xticklabels(xTickLabels, rotation=45, ha='right')  # Set x-tick labels with rotation
+
+            # Get the angles for the current layer
+            if specificFlag: ax.plot(specificValues[axInd:numScalarSections*(axInd+1)], 'o', color=self.darkColors[0], alpha=0.5, linewidth=1, markersize=4)
+            else: ax.plot(sharedValues[axInd::numSharedLayers], 'o', color=self.darkColors[1], alpha=0.75, linewidth=1, markersize=4)
 
             # Save the plot
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=False)
