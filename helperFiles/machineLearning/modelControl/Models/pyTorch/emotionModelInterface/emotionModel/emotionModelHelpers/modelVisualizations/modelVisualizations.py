@@ -159,7 +159,6 @@ class modelVisualizations(globalPlottingProtocols):
                         self.signalEncoderViz.plotsGivensAnglesHist(givensAnglesPath, reversibleModuleNames, epoch=currentEpoch, signalInd=signalInd, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="Rotation angles hist")
 
                         # Plot the scale factor information.
-                        self.signalEncoderViz.plotScaleFactorHist(scalingFactorsPath, reversibleModuleNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Scale factors hist")
                         self.signalEncoderViz.plotScaleFactorLines(scalingFactorsPath, reversibleModuleNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Scale factors line")
 
                         # Plot the activation information.

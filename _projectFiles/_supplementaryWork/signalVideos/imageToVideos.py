@@ -43,7 +43,7 @@ def extract_epoch_number(filename):
     return int(match.group(1)) if match else 0
 
 
-def images_to_video(images, video_path, frame_rate=60, video_duration=5, frame_size=(3840, 2160)):
+def images_to_video(images, video_path, frame_rate=15, video_duration=16, frame_size=(3840, 2160)):
     total_frames_required = frame_rate * video_duration
     num_images = len(images)
     duplication_factor = max(1, round(total_frames_required / num_images))
@@ -85,6 +85,7 @@ if __name__ == "__main__":
     for modelFolderName in os.listdir(modelFolderDirectory):
         if not modelFolderName.startswith(initialFolderSubstring): continue
         modelFolder = os.path.join(modelFolderDirectory, modelFolderName)
+        if not os.path.isdir(modelFolder): continue
 
         for datasetFolderName in os.listdir(modelFolder):
             if datasetFolderName.lower() not in datasetNames: continue

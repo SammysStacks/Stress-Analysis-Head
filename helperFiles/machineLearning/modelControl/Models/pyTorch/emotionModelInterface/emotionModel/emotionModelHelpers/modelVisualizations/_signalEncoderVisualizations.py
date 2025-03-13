@@ -475,27 +475,38 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         numModuleLayers = len(reversibleModuleNames)
         sharedValues, specificValues = [], []
 
+        # Get the layer information.
+        numSpecificLayers, numSharedLayers = modelConstants.userInputParams['numSpecificEncoderLayers'], modelConstants.userInputParams['numSharedEncoderLayers']
+        numScalarSections = 2 + int(math.log2(modelConstants.userInputParams['encodedDimension'] // modelConstants.userInputParams['minWaveletDim']))
+        nRows, nCols = 2, (numSpecificLayers + numSharedLayers) // 2
+
         for layerInd in range(numModuleLayers):
             if "shared" in reversibleModuleNames[layerInd].lower(): sharedValues.append(scalingFactorsPath[layerInd].flatten())
             elif "specific" in reversibleModuleNames[layerInd].lower(): specificValues.append(scalingFactorsPath[layerInd].flatten())
             else: raise ValueError("Module name must contain 'specific' or 'shared'.")
         sharedValues = np.asarray(sharedValues); specificValues = np.asarray(specificValues)
         # sharedValues: numSharedLayers=5*y, numSignals=1; specificValues: numSpecificLayers=5*x, numSignals=numSignals
-        fig, ax = plt.subplots(figsize=(6.4, 4.8))
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=True, sharey=True)
+        fig.suptitle(f"{plotTitle}; Epoch {epoch}", fontsize=24)
+        axes = axes.flatten()
 
-        # Get the angles for the current layer
-        ax.plot(sharedValues, 'o', color=self.darkColors[1], alpha=0.75, linewidth=1, markersize=4, label="Shared")
-        ax.plot(specificValues, 'o', color=self.darkColors[0], alpha=0.5, linewidth=1, markersize=4, label="Specific")
+        for axInd, ax in enumerate(axes):
+            specificFlag = axInd < numSpecificLayers
+            if not specificFlag: axInd -= numSpecificLayers
 
-        # Customize plot title and axes
-        ax.set_title(f"{plotTitle}; Epoch {epoch}", fontsize=16)
-        ax.set_xlabel("Module component")  # X-axis: values
-        ax.set_ylabel("Scalar values")  # Y-axis: bin counts
-        ax.set_ylim((0.925, 1.075))
+            # Get the angles for the current layer
+            if specificFlag: ax.plot(specificValues[numScalarSections*axInd:numScalarSections*(axInd+1)], 'o', color=self.darkColors[0], alpha=0.5, linewidth=1, markersize=4)
+            else: ax.plot(sharedValues[numScalarSections*axInd:numScalarSections*(axInd+1)], 'o', color=self.darkColors[1], alpha=0.75, linewidth=1, markersize=4)
 
-        # Save the plot
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=False)
-        else: self.clearFigure(fig=fig, legend=None, showPlot=True)
+            # Customize plot title and axes
+            ax.set_title("Specific layer" if specificFlag else "Shared layer", fontsize=16)
+            ax.set_xlabel("Module component")  # X-axis: values
+            ax.set_ylabel("Scalar values")  # Y-axis: bin counts
+            ax.set_ylim((0.925, 1.075))
+
+            # Save the plot
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=False)
+            else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
     def plotScaleFactorHist(self, scalingFactorsPath, reversibleModuleNames, epoch, saveFigureLocation, plotTitle):
         # scalingFactorsPath: numModuleLayers, numSignals, numParams=1
