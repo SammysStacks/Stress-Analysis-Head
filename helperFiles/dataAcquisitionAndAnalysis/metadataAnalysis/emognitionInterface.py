@@ -244,7 +244,6 @@ class emognitionInterface(globalMetaAnalysis):
                     compiledData_eachFreq.append([timepoints, allData])
 
                     if showPlots:
-                        plt.rcdefaults()
                         for dataInd in range(len(allData)):
                             plt.plot(timepoints, allData[dataInd])
                         # plt.xlim(500, 510)

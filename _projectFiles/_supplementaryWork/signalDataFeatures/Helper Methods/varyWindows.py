@@ -98,7 +98,6 @@ class varyWindows:
                                             min(allRawFeatureTimesHolders, key=lambda x: x[biomarkerInd][-1])[biomarkerInd][-1], 0.1)
 
                 heatMap = [];
-                mpl.rcdefaults()
                 # For each feature-variation within a certain time window
                 for trialInd in range(len(allRawFeatureHolders)):
                     averageWindow = featureAverageWindows[biomarkerInd]
