@@ -478,7 +478,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Get the layer information.
         numSpecificLayers, numSharedLayers = modelConstants.userInputParams['numSpecificEncoderLayers'], modelConstants.userInputParams['numSharedEncoderLayers']
         numScalarSections = 2 + int(math.log2(modelConstants.userInputParams['encodedDimension'] // modelConstants.userInputParams['minWaveletDim']))
-        nCols = 4; nRows = (numSpecificLayers + numSharedLayers) // nCols
+        nCols = 4; nRows = (numSpecificLayers + numSharedLayers) // nCols + (1 if (numSpecificLayers + numSharedLayers) % nCols != 0 else 0)
 
         xTickLabels = ["Spatial layer"]
         for decompositionInd in range(numScalarSections - 2): xTickLabels.append(f"Detailed decomposition layer {decompositionInd + 1}")
