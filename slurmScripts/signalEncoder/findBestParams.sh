@@ -9,7 +9,7 @@ beta2s_arr=('0.8')
 # Learning parameters.
 lrs_profile=(0.025)  # 0.005 <= x <= 0.075
 lrs_profileGen=('1e-4') # x <= 1e-4;
-lrs_reversible=('3e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
+lrs_reversible=('4e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
 
 # Known interesting parameters: 63
 numSharedEncoderLayers_arr=(0 1 2 3 4 5 6 7 8 9)  # 9
@@ -51,11 +51,11 @@ maxAngularThresholds=(45)
 
 # Binary reference states.
 numSpecificEncoderLayers_arr=(1)
-numSharedEncoderLayers_arr=(15 13 11 9 7)  # [4, 10]; Best: 5 and 7
+numSharedEncoderLayers_arr=(11 9 7)  # [4, 10]; Best: 5 and 7
 
 # Binary reference states.
 encodedDimensions_arr=(512)
-profileParams=(128)
+profileParams=(128 64)
 
 # Reference states.
 waveletTypes_arr=('bior3.1')
