@@ -37,7 +37,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-03-14 16"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2025-03-14 64"  # The current date we are training the model. Unique identifier of this training set.
     holdDatasetOut = True  # Whether to hold out the validation dataset.
     plotAllEpochs = False  # Whether to plot all epochs or not.
     testSplitRatio = 0.1  # The percentage of testing points.
@@ -99,7 +99,7 @@ if __name__ == "__main__":
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
     userInputParams['numInitialEpochs'] = 100
-    userInputParams['minWaveletDim'] = 16  # max(32, userInputParams['encodedDimension'] // 8)
+    userInputParams['minWaveletDim'] = 64  # max(32, userInputParams['encodedDimension'] // 8)
 
     # Compile additional input parameters.
     userInputParams = modelParameters.getNeuralParameters(userInputParams)
