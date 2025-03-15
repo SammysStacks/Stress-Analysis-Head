@@ -51,15 +51,15 @@ maxAngularThresholds=(45)
 
 # Binary reference states.
 numSpecificEncoderLayers_arr=(1)
-numSharedEncoderLayers_arr=(11 9 7 5 3)  # [4, 10]; Best: 5 and 7
+numSharedEncoderLayers_arr=(11 9 7)  # [4, 10]; Best: 5 and 7
 
 # Binary reference states.
 encodedDimensions_arr=(512 256 128)
-profileParams=(128)
+profileParams=(512 256 128)
 
 # Reference states.
 waveletTypes_arr=('bior3.1')
-numProfileShots_arr=(32 24 16)  # (8, [16, 24], 32)
+numProfileShots_arr=(24 16 12)  # (8, [16, 24], 32)
 
 for minAngularThreshold in "${minAngularThresholds[@]}"
 do
