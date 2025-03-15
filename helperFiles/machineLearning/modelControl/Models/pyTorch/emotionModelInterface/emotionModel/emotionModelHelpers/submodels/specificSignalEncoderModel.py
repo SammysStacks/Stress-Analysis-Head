@@ -67,7 +67,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         # For the forward/harder direction.
         if reversibleInterface.forwardDirection:
             # Apply the neural operator layer with activation.
-            # signalData = self.spatialLayers[layerInd](signalData)
+            signalData = self.spatialLayers[layerInd](signalData)
             signalData = self.neuralLayers[layerInd](signalData)
         else:
             # Get the reverse layer index.
@@ -76,7 +76,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
             # Apply the neural operator layer with activation.
             signalData = self.neuralLayers[pseudoLayerInd](signalData)
-            # signalData = self.spatialLayers[pseudoLayerInd](signalData)
+            signalData = self.spatialLayers[pseudoLayerInd](signalData)
 
         # Store the signal data for plotting, if desired.
         if compilingFunction is not None: compilingFunction(signalData)
