@@ -101,7 +101,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
         return inputData
     # ------------------- Observational Learning ------------------- #
 
-    def angularThresholding(self, epoch):
+    def angularThresholding(self, epoch, sharedLayer):
         with torch.no_grad():
             # Get the angular thresholds.
             minAngularThreshold = modelConstants.userInputParams['minAngularThreshold'] * torch.pi / 180  # Convert to radians
@@ -115,7 +115,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
                 self.givensRotationParams[layerInd][givensAngles.abs() < minAngularThreshold] = 0
 
                 # Apply an extra thresholding if the sequence length is large.
-                self.percentParamThresholding(layerInd, epoch)  # Must be every epoch! Helps diminish overfitting.
+                if not sharedLayer: self.percentParamThresholding(layerInd, epoch)  # Must be every epoch! Helps diminish overfitting.
 
     def percentParamThresholding(self, layerInd, epoch):
         with torch.no_grad():

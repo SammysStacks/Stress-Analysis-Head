@@ -1,3 +1,5 @@
+import math
+
 import torch
 from torch import nn
 
@@ -19,6 +21,10 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         self.numSharedEncoderLayers = numSharedEncoderLayers  # The number of shared encoder layers.
         self.learningProtocol = learningProtocol  # The learning protocol for the model.
         self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
+
+        # Only apply a transformation to the lowest of the high frequency decompositions.
+        numScalarSections = int(math.log2(modelConstants.userInputParams['encodedDimension'] // modelConstants.userInputParams['minWaveletDim']))
+        self.neuralOperatorParameters['wavelet']['encodeHighFrequencyProtocol'] = f'highFreq-{numScalarSections - 1}'  # ['highFreq', 'numHighFreq2Learn']
 
         # Initialize the pseudo-encoded times for the fourier data.
         hyperSampledTimes = torch.linspace(start=0, end=self.encodedTimeWindow, steps=self.encodedDimension).flip(dims=[0])

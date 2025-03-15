@@ -267,9 +267,9 @@ class emotionModelHead(nn.Module):
 
     def cullAngles(self, epoch):
         for name, module in self.named_modules():
-            if 'shared' in name.lower(): continue
+            sharedLayer = 'shared' in name.lower()
             if isinstance(module, reversibleLieLayer):
-                module.angularThresholding(epoch=epoch)
+                module.angularThresholding(epoch=epoch, sharedLayer=sharedLayer)
 
     def getActivationParamsFullPassPath(self):
         activationParamsPath, moduleNames = [], []
