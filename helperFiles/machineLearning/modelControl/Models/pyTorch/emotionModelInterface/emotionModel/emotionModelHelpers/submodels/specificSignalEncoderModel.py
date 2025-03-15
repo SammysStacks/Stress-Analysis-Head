@@ -28,7 +28,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
         # Only apply a transformation to the lowest of the high frequency decompositions.
         numScalarSections = int(math.log2(modelConstants.userInputParams['encodedDimension'] // modelConstants.userInputParams['minWaveletDim']))
-        self.neuralOperatorParameters['wavelet']['encodeHighFrequencyProtocol'] = f'highFreq-{numScalarSections - 1}'  # ['highFreq', 'numHighFreq2Learn']
+        self.neuralOperatorParameters['wavelet']['encodeHighFrequencyProtocol'] = f'highFreq-{numScalarSections - 2}'  # ['highFreq', 'numHighFreq2Learn']
 
         # The neural layers for the signal encoder.
         self.profileModel = profileModel(numExperiments=numExperiments, numSignals=self.numSignals, encodedDimension=encodedDimension)
@@ -67,7 +67,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         # For the forward/harder direction.
         if reversibleInterface.forwardDirection:
             # Apply the neural operator layer with activation.
-            signalData = self.spatialLayers[layerInd](signalData)
+            # signalData = self.spatialLayers[layerInd](signalData)
             signalData = self.neuralLayers[layerInd](signalData)
         else:
             # Get the reverse layer index.
@@ -76,7 +76,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
             # Apply the neural operator layer with activation.
             signalData = self.neuralLayers[pseudoLayerInd](signalData)
-            signalData = self.spatialLayers[pseudoLayerInd](signalData)
+            # signalData = self.spatialLayers[pseudoLayerInd](signalData)
 
         # Store the signal data for plotting, if desired.
         if compilingFunction is not None: compilingFunction(signalData)
