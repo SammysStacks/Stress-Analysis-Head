@@ -37,7 +37,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-03-15 16"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2025-03-15 64 -2"  # The current date we are training the model. Unique identifier of this training set.
     holdDatasetOut = True  # Whether to hold out the validation dataset.
     plotAllEpochs = False  # Whether to plot all epochs or not.
     testSplitRatio = 0.1  # The percentage of testing points.
@@ -80,14 +80,14 @@ if __name__ == "__main__":
     # ----------------------- Training Parameters ----------------------- #
 
     # Signal encoder learning rates.
-    parser.add_argument('--profileLR', type=float, default=3e-2, help='The learning rate of the health model.')
+    parser.add_argument('--profileLR', type=float, default=0.025, help='The learning rate of the health model.')
     parser.add_argument('--physGenLR', type=float, default=1e-4, help='The learning rate of the general model.')
-    parser.add_argument('--reversibleLR', type=float, default=1e-4, help='The learning rate of the general model.')
+    parser.add_argument('--reversibleLR', type=float, default=2e-4, help='The learning rate of the general model.')
 
     # Signal encoder weight decays.
-    parser.add_argument('--profileWD', type=float, default=8e-3, help='The learning rate of the general model.')
+    parser.add_argument('--profileWD', type=float, default=1e-2, help='The learning rate of the general model.')
     parser.add_argument('--physGenWD', type=float, default=1e-5, help='The learning rate of the general model.')
-    parser.add_argument('--reversibleWD', type=float, default=1e-5, help='The learning rate of the general model.')
+    parser.add_argument('--reversibleWD', type=float, default=2e-5, help='The learning rate of the general model.')
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--momentum_decay', type=float, default=0.001, help='Momentum decay for the optimizer.')
@@ -98,7 +98,7 @@ if __name__ == "__main__":
 
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
-    userInputParams['minWaveletDim'] = 16  # max(32, userInputParams['encodedDimension'] // 8)
+    userInputParams['minWaveletDim'] = 64  # max(32, userInputParams['encodedDimension'] // 8)
 
     # Compile additional input parameters.
     userInputParams = modelParameters.getNeuralParameters(userInputParams)
