@@ -57,7 +57,7 @@ class emotionPipelineHelpers:
     def resetPhysiologicalProfile(self, submodel):
         # Get the current number of epochs for the profile model.
         numEpochs = self.getTrainingEpoch(submodel)
-        numProfileShots = min(max(4, numEpochs), self.numProfileShots)
+        numProfileShots = min(max(4, numEpochs//2), self.numProfileShots)
 
         # Reset and get the parameters that belong to the profile model
         profileParams = set(self.model.specificSignalEncoderModel.profileModel.parameters())
@@ -103,7 +103,6 @@ class emotionPipelineHelpers:
             self.setupTrainingFlags(self.model.sharedSignalEncoderModel, trainingFlag=trainSharedLayers)
             self.setupTrainingFlags(self.model.specificSignalEncoderModel, trainingFlag=specificTraining)
             self.setupTrainingFlags(self.model.specificSignalEncoderModel.profileModel, trainingFlag=profileTraining)
-            if profileTraining: assert not specificTraining and not trainSharedLayers, "We cannot train layers during profile training."
 
     @staticmethod
     def setupTrainingFlags(model, trainingFlag):

@@ -164,7 +164,7 @@ class emotionModelHead(nn.Module):
         # resampledSignalData: batchSize, numSignals, encodedDimension
 
         # Visualize the data transformations within signal encoding.
-        if submodel == modelConstants.signalEncoderModel and not onlyProfileTraining and random.random() < 0.01 and not self.hpcFlag:
+        if submodel == modelConstants.signalEncoderModel and not onlyProfileTraining and random.random() < 0.1 and not self.hpcFlag:
             with torch.no_grad(): self.visualizeSignalEncoding(embeddedProfile, healthProfile, resampledSignalData, reconstructedSignalData, signalData, validDataMask)
 
         # ------------------- Learned Emotion Mapping ------------------- #
@@ -234,7 +234,7 @@ class emotionModelHead(nn.Module):
 
             elif isinstance(module, nn.Identity) and ('spatial' in name or 'highFrequenciesWeights' in name):
                 decompositionLevel = int(name.split('highFrequenciesWeights.')[-1]) + 1 if 'highFrequenciesWeights' in name else 0
-                numLayers = modelConstants.userInputParams['numSharedEncoderLayers'] if 'shared' in name else 1
+                numLayers = modelConstants.userInputParams['numSharedEncoderLayers' if 'shared' in name else 'numSpecificEncoderLayers']
                 sequenceLength = self.encodedDimension // 2**decompositionLevel
                 numSignals = self.numSignals if 'specific' in name else 1
 
@@ -255,7 +255,7 @@ class emotionModelHead(nn.Module):
                 for _ in range(len(xs)): moduleNames.append(self.compileModuleName(name))
 
             elif isinstance(module, nn.Identity) and ('spatial' in name or 'highFrequenciesWeights' in name):
-                numLayers = modelConstants.userInputParams['numSharedEncoderLayers'] if 'shared' in name else 1
+                numLayers = modelConstants.userInputParams['numSharedEncoderLayers' if 'shared' in name else 'numSpecificEncoderLayers']
                 x = np.linspace(-1.5, stop=1.5, num=100); y = x
 
                 for _ in range(numLayers): activationCurvePath.append([x, y])
@@ -280,7 +280,7 @@ class emotionModelHead(nn.Module):
                 for _ in allActivationParams: moduleNames.append(self.compileModuleName(name))
 
             elif isinstance(module, nn.Identity) and ('spatial' in name or 'highFrequenciesWeights' in name):
-                numLayers = modelConstants.userInputParams['numSharedEncoderLayers'] if 'shared' in name else 1
+                numLayers = modelConstants.userInputParams['numSharedEncoderLayers' if 'shared' in name else 'numSpecificEncoderLayers']
                 for _ in range(numLayers): activationParamsPath.append(np.asarray([0.5, 1, 1]))
                 for _ in range(numLayers): moduleNames.append(self.compileModuleName(name))
         assert len(activationParamsPath) != 0
@@ -299,7 +299,7 @@ class emotionModelHead(nn.Module):
                 for _ in range(len(allNumFreeParams)): moduleNames.append(self.compileModuleName(name))
 
             elif isinstance(module, nn.Identity) and ('spatial' in name or 'highFrequenciesWeights' in name):
-                numLayers = modelConstants.userInputParams['numSharedEncoderLayers'] if 'shared' in name else 1
+                numLayers = modelConstants.userInputParams['numSharedEncoderLayers' if 'shared' in name else 'numSpecificEncoderLayers']
                 numSignals = self.numSignals if 'specific' in name else 1
 
                 for _ in range(numLayers): maxFreeParamsPath.append(0)  # maxFreeParamsPath: numModuleLayers

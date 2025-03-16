@@ -13,7 +13,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 class specificSignalEncoderModel(neuralOperatorInterface):
 
     def __init__(self, numExperiments, operatorType, encodedDimension, featureNames, numSpecificEncoderLayers, learningProtocol, neuralOperatorParameters):
-        super(specificSignalEncoderModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numLayers=1, numInputSignals=len(featureNames), numOutputSignals=len(featureNames), addBiasTerm=False)
+        super(specificSignalEncoderModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numLayers=numSpecificEncoderLayers, numInputSignals=len(featureNames), numOutputSignals=len(featureNames), addBiasTerm=False)
         # General model parameters.
         self.neuralOperatorParameters = copy.deepcopy(neuralOperatorParameters)  # The parameters for the neural operator.
         self.numSpecificEncoderLayers = numSpecificEncoderLayers  # The number of specific encoder layers.
@@ -24,16 +24,15 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         self.featureNames = featureNames  # The names of the signals to encode.
 
         # Only apply a transformation to the lowest of the high frequency decompositions.
-        # self.neuralOperatorParameters['wavelet']['encodeHighFrequencyProtocol'] = 'highFreq-3'  # ['highFreq', 'numHighFreq2Learn']
-
-        # Only apply a transformation to the lowest of the high frequency decompositions.
         numScalarSections = int(math.log2(modelConstants.userInputParams['encodedDimension'] // modelConstants.userInputParams['minWaveletDim']))
-        self.neuralOperatorParameters['wavelet']['encodeHighFrequencyProtocol'] = f'highFreq-{numScalarSections - 3}'  # ['highFreq', 'numHighFreq2Learn']
+        self.neuralOperatorParameters['wavelet']['encodeHighFrequencyProtocol'] = f'highFreq-{numScalarSections - 1}'  # ['highFreq', 'numHighFreq2Learn']
 
         # The neural layers for the signal encoder.
         self.profileModel = profileModel(numExperiments=numExperiments, numSignals=self.numSignals, encodedDimension=encodedDimension)
-        self.spatialLayers, self.neuralLayers = nn.ModuleList(), nn.ModuleList()
-        for _ in range(self.numSpecificEncoderLayers): self.addLayer()
+        self.spatialLayers, self.neuralLayers = nn.Identity(), nn.ModuleList()
+
+        # Add the layers.
+        self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True))
 
         # Assert the validity of the input parameters.
         assert self.encodedDimension % 2 == 0, "The encoded dimension must be divisible by 2."
@@ -58,16 +57,11 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
     def addLayer(self):
         self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True))
-        if self.learningProtocol == 'rCNN': self.spatialLayers.append(self.postSpatialLayerRCNN(numSignals=self.numSignals, sequenceLength=self.encodedDimension))
-        elif self.learningProtocol == 'FC': self.spatialLayers.append(self.postSpatialLayerFC(sequenceLength=self.encodedDimension))
-        elif self.learningProtocol == 'CNN': self.spatialLayers.append(self.postSpatialLayerCNN(numSignals=self.numSignals))
-        else: raise "The learning protocol is not yet implemented."
 
     def learningInterface(self, layerInd, signalData, compilingFunction):
         # For the forward/harder direction.
         if reversibleInterface.forwardDirection:
             # Apply the neural operator layer with activation.
-            # signalData = self.spatialLayers[layerInd](signalData)
             signalData = self.neuralLayers[layerInd](signalData)
         else:
             # Get the reverse layer index.
@@ -76,7 +70,6 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
             # Apply the neural operator layer with activation.
             signalData = self.neuralLayers[pseudoLayerInd](signalData)
-            # signalData = self.spatialLayers[pseudoLayerInd](signalData)
 
         # Store the signal data for plotting, if desired.
         if compilingFunction is not None: compilingFunction(signalData)
