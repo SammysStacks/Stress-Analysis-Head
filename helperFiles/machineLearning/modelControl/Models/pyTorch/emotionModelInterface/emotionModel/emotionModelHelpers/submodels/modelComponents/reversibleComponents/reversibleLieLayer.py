@@ -128,10 +128,8 @@ class reversibleLieLayer(reversibleLieLayerInterface):
             if 16 <= self.sequenceLength: numParamsKeeping = self.numParams - epoch*(4**math.log2(self.sequenceLength/16))
             else: numParamsKeeping = self.numParams - epoch
 
-            if 64 <= self.sequenceLength: lastIndexKeeping = int(min(self.numParams, max(512, numParamsKeeping)))
-            else: lastIndexKeeping = int(min(self.numParams, max(256, numParamsKeeping)))
-
             # Zero out the values below the threshold
+            lastIndexKeeping = int(min(self.numParams, max(2*self.sequenceLength, numParamsKeeping)))
             minAngleValues = sortedGivensAngles[:,  -lastIndexKeeping].unsqueeze(-1)  # Shape (numSignals, 1)
             self.givensRotationParams[layerInd][givensAngles <= minAngleValues] = 0
 
