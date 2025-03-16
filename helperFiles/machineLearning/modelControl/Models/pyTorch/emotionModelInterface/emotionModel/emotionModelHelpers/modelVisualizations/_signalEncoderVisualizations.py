@@ -492,14 +492,11 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         axes = axes.flatten()
 
         for axInd, ax in enumerate(axes):
-            if numSpecificLayers + numSharedLayers <= axInd: ax.remove()
-
             rowInd, colInd = axInd // nCols, axInd % nCols
             specificFlag = axInd < numSpecificLayers
             if not specificFlag: axInd -= numSpecificLayers
 
             # Customize plot title and axes
-            ax.set_title(f"Specific layer: {axInd}" if specificFlag else f"Shared layer: {axInd}", fontsize=16)
             if colInd == 0: ax.set_ylabel("Scalar values")  # Y-axis: bin counts
             ax.set_ylim((0.925, 1.075))
 
@@ -509,6 +506,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
                 ax.set_xticklabels(xTickLabels, rotation=45, ha='right')  # Set x-tick labels with rotation
 
             # Get the angles for the current layer
+            if numSpecificLayers + numSharedLayers <= axInd: continue
+            ax.set_title(f"Specific layer: {axInd}" if specificFlag else f"Shared layer: {axInd}", fontsize=16)
             if specificFlag: ax.plot(specificValues[axInd:numScalarSections*(axInd+1)], 'o', color=self.darkColors[0], alpha=0.5, linewidth=1, markersize=4)
             else: ax.plot(sharedValues[axInd::numSharedLayers], 'o', color=self.darkColors[1], alpha=0.75, linewidth=1, markersize=4)
 
