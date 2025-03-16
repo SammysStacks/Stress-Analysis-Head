@@ -67,8 +67,8 @@ class trainingProtocolHelpers:
 
             # Train the updated model.
             if not profileOnlyTraining:
-                modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=True, trainSharedLayers=False, stepScheduler=False, numEpochs=numEpochs)  # Signal-specific training.
                 modelPipeline.model.cullAngles(epoch=epoch)
+                modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=True, trainSharedLayers=False, stepScheduler=False, numEpochs=numEpochs)  # Signal-specific training.
 
             # Health profile training.
             numProfileShots = modelPipeline.resetPhysiologicalProfile(submodel)
