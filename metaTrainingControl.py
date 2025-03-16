@@ -85,7 +85,7 @@ if __name__ == "__main__":
     parser.add_argument('--reversibleLR', type=float, default=1e-4, help='The learning rate of the general model.')
 
     # Signal encoder weight decays.
-    parser.add_argument('--profileWD', type=float, default=1e-2, help='The learning rate of the general model.')
+    parser.add_argument('--profileWD', type=float, default=8e-3, help='The learning rate of the general model.')
     parser.add_argument('--physGenWD', type=float, default=1e-5, help='The learning rate of the general model.')
     parser.add_argument('--reversibleWD', type=float, default=1e-5, help='The learning rate of the general model.')
 
