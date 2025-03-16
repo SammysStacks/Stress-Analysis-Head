@@ -492,6 +492,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         axes = axes.flatten()
 
         for axInd, ax in enumerate(axes):
+            if numSpecificLayers + numSharedLayers <= axInd: ax.remove()
+
             rowInd, colInd = axInd // nCols, axInd % nCols
             specificFlag = axInd < numSpecificLayers
             if not specificFlag: axInd -= numSpecificLayers
@@ -509,11 +511,11 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             # Get the angles for the current layer
             if specificFlag: ax.plot(specificValues[axInd:numScalarSections*(axInd+1)], 'o', color=self.darkColors[0], alpha=0.5, linewidth=1, markersize=4)
             else: ax.plot(sharedValues[axInd::numSharedLayers], 'o', color=self.darkColors[1], alpha=0.75, linewidth=1, markersize=4)
-            fig.tight_layout(pad=2.0)
 
-            # Save the plot
-            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=False)
-            else: self.clearFigure(fig=fig, legend=None, showPlot=True)
+        # Save the plot
+        fig.tight_layout(pad=2.0)
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=False)
+        else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
     def plotScaleFactorHist(self, scalingFactorsPath, reversibleModuleNames, epoch, saveFigureLocation, plotTitle):
         # scalingFactorsPath: numModuleLayers, numSignals, numParams=1
