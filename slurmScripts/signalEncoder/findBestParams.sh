@@ -40,7 +40,7 @@ maxAngularThresholds=(45)
 
 # Binary reference states.
 numSpecificEncoderLayers_arr=(1)
-numSharedEncoderLayers_arr=(7)  # [4, 10]; Best: 5 and 7
+numSharedEncoderLayers_arr=(7 9)  # [4, 10]; Best: 5 and 7
 
 # Binary reference states.
 encodedDimensions_arr=(512)
