@@ -23,7 +23,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
 
         # Only apply a transformation to the lowest of the high frequency decompositions.
         numDecompositions = int(math.log2(modelConstants.userInputParams['encodedDimension'] // modelConstants.userInputParams['minWaveletDim']))
-        self.neuralOperatorParameters['wavelet']['encodeHighFrequencyProtocol'] = f'highFreq-{numDecompositions - 2}'  # ['highFreq', 'numHighFreq2Learn']
+        self.neuralOperatorParameters['wavelet']['encodeHighFrequencyProtocol'] = f'highFreq-{numDecompositions}'  # ['highFreq', 'numHighFreq2Learn']
 
         # Initialize the pseudo-encoded times for the fourier data.
         hyperSampledTimes = torch.linspace(start=0, end=self.encodedTimeWindow, steps=self.encodedDimension).flip(dims=[0])
