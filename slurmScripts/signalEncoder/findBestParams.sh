@@ -40,15 +40,16 @@ maxAngularThresholds=(45)
 
 # Binary reference states.
 numSpecificEncoderLayers_arr=(1)
-numSharedEncoderLayers_arr=(7 9)  # [4, 10]; Best: 5 and 7
+numSharedEncoderLayers_arr=(7)  # [4, 10]; Best: 5 and 7
 
-# Binary reference states.
+# Profile parameters.
+numProfileShots_arr=(24 16 12)  # (8, [16, 24], 32)
 encodedDimensions_arr=(512)
 profileParams=(512 256 128)
 
-# Reference states.
+# Wavelet states.
+minWaveletDims=(16 32 64 128)
 waveletTypes_arr=('bior3.1')
-numProfileShots_arr=(24 16 12)  # (8, [16, 24], 32)
 
 for minAngularThreshold in "${minAngularThresholds[@]}"
 do
@@ -72,33 +73,35 @@ do
                                     do
                                         for optimizer in "${optimizers_arr[@]}"
                                         do
-                                            for waveletType in "${waveletTypes_arr[@]}"
-                                            do
-                                                for encodedDimension in "${encodedDimensions_arr[@]}"
+                                            for minWaveletDim in "${minWaveletDims[@]}"
+                                                for waveletType in "${waveletTypes_arr[@]}"
                                                 do
-                                                    for numSharedEncoderLayers in "${numSharedEncoderLayers_arr[@]}"
+                                                    for encodedDimension in "${encodedDimensions_arr[@]}"
                                                     do
-                                                        for numSpecificEncoderLayers in "${numSpecificEncoderLayers_arr[@]}"
+                                                        for numSharedEncoderLayers in "${numSharedEncoderLayers_arr[@]}"
                                                         do
-                                                            if (( encodedDimension < profileDimension )); then
-                                                            echo "Encoded dimension is less than profile dimension."
-                                                                continue
-                                                            fi
+                                                            for numSpecificEncoderLayers in "${numSpecificEncoderLayers_arr[@]}"
+                                                            do
+                                                                if (( encodedDimension < profileDimension )); then
+                                                                echo "Encoded dimension is less than profile dimension."
+                                                                    continue
+                                                                fi
 
-                                                            if (( $(echo "$maxAngularThreshold <= $minAngularThreshold" | bc -l) )); then
-                                                            echo "Angular threshold max is less than or equal to angular threshold min."
-                                                                continue
-                                                            fi
+                                                                if (( $(echo "$maxAngularThreshold <= $minAngularThreshold" | bc -l) )); then
+                                                                echo "Angular threshold max is less than or equal to angular threshold min."
+                                                                    continue
+                                                                fi
 
-                                                            filename="signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_numProfileShots_${numProfileShots}_optimizer_${optimizer}_profileDim_${profileDimension}_minAngleThresh_${minAngularThreshold}_maxAngleThresh_${maxAngularThreshold}"
+                                                                filename="signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_numProfileShots_${numProfileShots}_optimizer_${optimizer}_profileDim_${profileDimension}_minAngleThresh_${minAngularThreshold}_maxAngleThresh_${maxAngularThreshold}_minWaveletDim{minWaveletDim}"
 
-                                                            if [ "$1" == "CPU" ]; then
-                                                                sbatch -J "$filename" submitSignalEncoder_CPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$numProfileShots" "$1" "$waveletType" "$optimizer" "$lr_profile" "$lr_reversible" "$lr_profileGen" "$profileDimension" "$beta1s" "$beta2s" "$momentums" "$minAngularThreshold" "$maxAngularThreshold"
-                                                            elif [ "$1" == "GPU" ]; then
-                                                                sbatch -J "$filename" submitSignalEncoder_GPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$numProfileShots" "$1" "$waveletType" "$optimizer" "$lr_profile" "$lr_reversible" "$lr_profileGen" "$profileDimension" "$beta1s" "$beta2s" "$momentums" "$minAngularThreshold" "$maxAngularThreshold"
-                                                            else
-                                                                echo "No known device listed: $1"
-                                                            fi
+                                                                if [ "$1" == "CPU" ]; then
+                                                                    sbatch -J "$filename" submitSignalEncoder_CPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$numProfileShots" "$1" "$waveletType" "$optimizer" "$lr_profile" "$lr_reversible" "$lr_profileGen" "$profileDimension" "$beta1s" "$beta2s" "$momentums" "$minAngularThreshold" "$maxAngularThreshold" "$minWaveletDim"
+                                                                elif [ "$1" == "GPU" ]; then
+                                                                    sbatch -J "$filename" submitSignalEncoder_GPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$numProfileShots" "$1" "$waveletType" "$optimizer" "$lr_profile" "$lr_reversible" "$lr_profileGen" "$profileDimension" "$beta1s" "$beta2s" "$momentums" "$minAngularThreshold" "$maxAngularThreshold" "$minWaveletDim"
+                                                                else
+                                                                    echo "No known device listed: $1"
+                                                                fi
+                                                            done
                                                         done
                                                     done
                                                 done
