@@ -110,11 +110,11 @@ class modelVisualizations(globalPlottingProtocols):
             validDataMask, reconstructedSignalData, resampledSignalData, healthProfile, activityProfile, basicEmotionProfile, emotionProfile = model.forward(submodel, signalData, signalIdentifiers, metadata, device=self.accelerator.device, onlyProfileTraining=False)
             reconstructedHealthProfile = model.reconstructHealthProfile(resampledSignalData)  # reconstructedHealthProfile: batchSize, encodedDimension
             forwardModelPassSignals = model.specificSignalEncoderModel.profileModel.compiledLayerStates
-            # forwardModelPassSignals: numSpatialLayers, batchSize, numSignals, encodedDimension
+            # forwardModelPassSignals: numModuleLayers, batchSize, numSignals, encodedDimension
 
             # Extract the model's internal variables.
             retrainingHealthProfilePath = np.asarray(model.specificSignalEncoderModel.profileModel.retrainingHealthProfilePath)  # numProfileShots, numExperiments, profileDimension
-            generatingBiometricSignals = np.asarray(model.specificSignalEncoderModel.profileModel.generatingBiometricSignals)  # numProfileShots, numSpatialLayers, numExperiments, numSignals=1***, encodedDimension
+            generatingBiometricSignals = np.asarray(model.specificSignalEncoderModel.profileModel.generatingBiometricSignals)  # numProfileShots, numModuleLayers, numExperiments, numSignals=1***, encodedDimension
             resampledBiomarkerTimes = model.sharedSignalEncoderModel.hyperSampledTimes.detach().cpu().numpy().astype(np.float16)  # numTimePoints
             backwardModelPassSignals = np.flip(forwardModelPassSignals, axis=0)
 

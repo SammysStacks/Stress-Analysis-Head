@@ -170,7 +170,7 @@ if __name__ == "__main__":
         healthProfile = healthProfile / healthProfile.max(dim=-1, keepdim=True).values
         healthProfile = healthProfile * 2 - 1
 
-        # Perform the convolution in the fourier and spatial domains.
+        # Check the reconstruction forwards and backwards.
         _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(healthProfile, atol=1e-6, numLayers=1, plotResults=True, title=f'len{_sequenceLength}_layers={_numLayers}')
         neuralLayerClass.printParams()
 

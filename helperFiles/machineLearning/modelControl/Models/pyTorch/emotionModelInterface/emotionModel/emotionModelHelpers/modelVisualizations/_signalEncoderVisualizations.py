@@ -41,7 +41,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
     # --------------------- Visualize Model Parameters --------------------- #
 
     def plotProfilePath(self, relativeTimes, retrainingProfilePath, epoch, saveFigureLocation="signalEncoding/", plotTitle="Health Profile State Path"):
-        # retrainingProfilePath: (numProfileShots or numSpatialLayers, numExperiments, encodedDimension)
+        # retrainingProfilePath: (numProfileShots or numModuleLayers, numExperiments, encodedDimension)
         # Extract the signal dimensions.
         numProfileSteps, batchInd, numSignals = len(retrainingProfilePath), 0, len(retrainingProfilePath[0][0])
 
@@ -192,12 +192,12 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     def plotAngleLocations(self, givensAnglesPath, reversibleModuleNames, signalNames, signalInd, epoch, saveFigureLocation, plotTitle):
         # givensAnglesPath: numModuleLayers, numSignals, numParams
-        nRows, nCols = self.getRowsCols(numModuleLayers=len(givensAnglesPath))
+        nRows, nCols = self.getRowsCols(combineSharedLayers=False)
         initialAngle = np.pi / 4; initX, initY = np.cos(initialAngle), np.sin(initialAngle)
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(4 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=False)  # squeeze=False ensures axes is 2D
-        numSpatialLayers, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
+        numLow, numHigh, highFreqCol, sharedColCounter = -1, -1, -1, 0
 
         # Get the angular thresholds.
         minAngularThreshold = modelConstants.userInputParams['minAngularThreshold']
@@ -207,15 +207,15 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         for layerInd in range(len(givensAnglesPath)):
             moduleName = reversibleModuleNames[layerInd].lower()
 
-            if "spatial" in moduleName and 'specific' in moduleName: numSpecific += 1
-            if "spatial" in moduleName: numSpatialLayers += 1; rowInd, colInd = numSpatialLayers, 0
-            elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
+            if "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
             elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
             else: raise ValueError("Module name must contain 'specific' or 'shared'.")
             if 'shared' in moduleName:
+                numSpecific = modelConstants.userInputParams['numSpecificEncoderLayers']
                 numShared = modelConstants.userInputParams['numSharedEncoderLayers']
                 rowInd, colInd = min(nRows - 1, numSpecific + sharedColCounter % numShared), sharedColCounter // numShared
                 sharedColCounter += 1
+            ax = axes[rowInd, colInd]
             ax = axes[rowInd, colInd]
 
             if colInd == 0: ax.set_ylabel(f"Layer {rowInd + 1}", fontsize=16)
@@ -264,14 +264,14 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     def plotsGivensAnglesHist(self, givensAnglesPath, reversibleModuleNames, signalInd, degreesFlag, epoch, saveFigureLocation, plotTitle):
         # givensAnglesPath: numModuleLayers, numSignals, numAngles
-        nRows, nCols = self.getRowsCols(numModuleLayers=len(givensAnglesPath))
+        nRows, nCols = self.getRowsCols(combineSharedLayers=False)
         if not degreesFlag: scaleFactor = 180 / math.pi; degreesFlag = True
         else: scaleFactor = 1
         yMax = 1/4
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=True, sharey='col')  # squeeze=False ensures axes is 2D
-        numSpatialLayers, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
+        numLow, numHigh, highFreqCol, sharedColCounter = -1, -1, -1, 0
         units = "degrees" if degreesFlag else "radians"
         degrees = (180 if degreesFlag else math.pi) / 4
         bins = np.arange(-degrees, degrees + 1, 1)
@@ -284,12 +284,11 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         for layerInd in range(len(givensAnglesPath)):
             moduleName = reversibleModuleNames[layerInd].lower()
 
-            if "spatial" in moduleName and 'specific' in moduleName: numSpecific += 1
-            if "spatial" in moduleName: numSpatialLayers += 1; rowInd, colInd = numSpatialLayers, 0
-            elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
+            if "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
             elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
             else: raise ValueError("Module name must contain 'specific' or 'shared'.")
             if 'shared' in moduleName:
+                numSpecific = modelConstants.userInputParams['numSpecificEncoderLayers']
                 numShared = modelConstants.userInputParams['numSharedEncoderLayers']
                 rowInd, colInd = min(nRows - 1, numSpecific + sharedColCounter % numShared), sharedColCounter // numShared
                 sharedColCounter += 1
@@ -345,13 +344,13 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     def plotsGivensAnglesLine(self, givensAnglesPath, reversibleModuleNames, signalInd, degreesFlag, epoch, saveFigureLocation, plotTitle):
         # givensAnglesPath: numModuleLayers, numSignals, numParams
-        nRows, nCols = self.getRowsCols(numModuleLayers=len(givensAnglesPath))
+        nRows, nCols = self.getRowsCols(combineSharedLayers=False)
         if not degreesFlag: scaleFactor = 180 / math.pi; degreesFlag = True
         else: scaleFactor = 1
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex='col', sharey=True)  # squeeze=False ensures axes is 2D
-        numSpatialLayers, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
+        numLow, numHigh, highFreqCol, sharedColCounter = -1, -1, -1, 0
         units = "degrees" if degreesFlag else "radians"
         degrees = (180 if degreesFlag else math.pi) / 4
 
@@ -362,12 +361,11 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         for layerInd in range(len(givensAnglesPath)):
             moduleName = reversibleModuleNames[layerInd].lower()
 
-            if "spatial" in moduleName and 'specific' in moduleName: numSpecific += 1
-            if "spatial" in moduleName: numSpatialLayers += 1; rowInd, colInd = numSpatialLayers, 0
-            elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
+            if "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
             elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
             else: raise ValueError("Module name must contain 'specific' or 'shared'.")
             if 'shared' in moduleName:
+                numSpecific = modelConstants.userInputParams['numSpecificEncoderLayers']
                 numShared = modelConstants.userInputParams['numSharedEncoderLayers']
                 rowInd, colInd = min(nRows - 1, numSpecific + sharedColCounter % numShared), sharedColCounter // numShared
                 sharedColCounter += 1
@@ -414,13 +412,13 @@ class signalEncoderVisualizations(globalPlottingProtocols):
     def plotsGivensAnglesHeatmap(self, givensAnglesPath, reversibleModuleNames, signalInd, degreesFlag, epoch, saveFigureLocation, plotTitle):
         # givensAnglesPath: numModuleLayers, numSignals, numAngles
         # maxFreeParamsPath: numModuleLayers
-        nRows, nCols = self.getRowsCols(numModuleLayers=len(givensAnglesPath))
+        nRows, nCols = self.getRowsCols(combineSharedLayers=False)
         if not degreesFlag: scaleFactor = 180 / math.pi; degreesFlag = True
         else: scaleFactor = 1
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(4 * nCols, 4 * nRows), squeeze=False, sharex='col', sharey='col')  # squeeze=False ensures axes is 2D
-        numSpatialLayers, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
+        numLow, numHigh, highFreqCol, sharedColCounter = -1, -1, -1, 0
         degrees = (180 if degreesFlag else math.pi) / 4
         colorbarAxes = []  # Store the color scale references
 
@@ -430,12 +428,11 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         for layerInd in range(len(givensAnglesPath)):
             moduleName = reversibleModuleNames[layerInd].lower()
 
-            if "spatial" in moduleName and 'specific' in moduleName: numSpecific += 1
-            if "spatial" in moduleName: numSpatialLayers += 1; rowInd, colInd = numSpatialLayers, 0
-            elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
+            if "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
             elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
             else: raise ValueError("Module name must contain 'specific' or 'shared'.")
             if 'shared' in moduleName:
+                numSpecific = modelConstants.userInputParams['numSpecificEncoderLayers']
                 numShared = modelConstants.userInputParams['numSharedEncoderLayers']
                 rowInd, colInd = min(nRows - 1, numSpecific + sharedColCounter % numShared), sharedColCounter // numShared
                 sharedColCounter += 1
@@ -477,12 +474,12 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Get the layer information.
         numSpecificLayers, numSharedLayers = modelConstants.userInputParams['numSpecificEncoderLayers'], modelConstants.userInputParams['numSharedEncoderLayers']
-        numScalarSections = 2 + int(math.log2(modelConstants.userInputParams['encodedDimension'] // modelConstants.userInputParams['minWaveletDim']))
+        numScalarSections = 1 + int(math.log2(modelConstants.userInputParams['encodedDimension'] // modelConstants.userInputParams['minWaveletDim']))
         nCols = 4; nRows = (numSpecificLayers + numSharedLayers) // nCols + (1 if (numSpecificLayers + numSharedLayers) % nCols != 0 else 0)
 
-        xTickLabels = ["Spatial layer"]
-        for decompositionInd in range(numScalarSections - 2): xTickLabels.append(f"Detailed decomposition layer {decompositionInd + 1}")
-        xTickLabels.append(f"Approximate decomposition layer {numScalarSections - 2}")
+        xTickLabels = []
+        for decompositionInd in range(numScalarSections - 1): xTickLabels.append(f"Detailed decomposition layer {decompositionInd + 1}")
+        xTickLabels.append(f"Approximate decomposition layer {numScalarSections - 1}")
 
         for layerInd in range(numModuleLayers):
             if "shared" in reversibleModuleNames[layerInd].lower(): sharedValues.append(scalingFactorsPath[layerInd].flatten())
@@ -586,10 +583,10 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
     def plotActivationCurvesCompressed(self, activationCurves, moduleNames, epoch, saveFigureLocation, plotTitle):
-        axNames = ["Specific spatial", "Specific neural low frequency", "Specific neural high frequency",
-                   "Shared spatial", "Shared neural low frequency", "Shared neural high frequency"]
+        axNames = ["Specific neural low frequency", "Specific neural high frequency",
+                   "Shared neural low frequency", "Shared neural high frequency"]
         numActivations, numPointsX, numPointsY = activationCurves.shape
-        nCols, nRows = 3, 2
+        nCols, nRows = 2, 2
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=True, sharey=True)
@@ -601,12 +598,12 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             activationName = moduleNames[activationInd].lower()
 
             if "specific" in activationName: axInd = 0; numSpecificActivations += 1; totalActivations = numSpecificActivations
-            elif "shared" in activationName: axInd = 3; numSharedActivations += 1; totalActivations = numSharedActivations
+            elif "shared" in activationName: axInd = 2; numSharedActivations += 1; totalActivations = numSharedActivations
             else: raise ValueError(f"Unknown activation module: {activationName}")
 
-            if "neural" in activationName and 'low' in activationName: axInd += 1
-            elif "neural" in activationName and 'high' in activationName: axInd += 2
-            elif "spatial" not in activationName: raise ValueError(f"Unknown activation module: {activationName}")
+            if 'low' in activationName: axInd += 0
+            elif 'high' in activationName: axInd += 1
+            else: raise ValueError(f"Unknown activation module: {activationName}")
 
             ax = axes[axInd]
             # Plot the activation curves
@@ -630,22 +627,21 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     def plotActivationCurves(self, activationCurves, moduleNames, epoch, saveFigureLocation, plotTitle):
         numModuleLayers, numPointsX, numPointsY = activationCurves.shape
-        nRows, nCols = self.getRowsCols(numModuleLayers)
+        nRows, nCols = self.getRowsCols(combineSharedLayers=False)
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=True, sharey=True)
-        numSpatialLayers, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
+        numLow, numHigh, highFreqCol, sharedColCounter = -1, -1, -1, 0
 
         for layerInd in range(numModuleLayers):
             moduleName = moduleNames[layerInd].lower()
             x, y = activationCurves[layerInd]
 
-            if "spatial" in moduleName and 'specific' in moduleName: numSpecific += 1
-            if "spatial" in moduleName: numSpatialLayers += 1; rowInd, colInd = numSpatialLayers, 0
-            elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
+            if "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
             elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
             else: raise ValueError("Module name must contain 'specific' or 'shared'.")
             if 'shared' in moduleName:
+                numSpecific = modelConstants.userInputParams['numSpecificEncoderLayers']
                 numShared = modelConstants.userInputParams['numSharedEncoderLayers']
                 rowInd, colInd = min(nRows - 1, numSpecific + sharedColCounter % numShared), sharedColCounter // numShared
                 sharedColCounter += 1

@@ -212,25 +212,24 @@ class generalVisualizations(globalPlottingProtocols):
 
         # activationParamsPaths: numModels, numEpochs, numModuleLayers, numParams
         numModels, numEpochs, numModuleLayers, numActivationParams = activationParamsPaths.shape
-        nRows, nCols = self.getRowsCols(numModuleLayers, combineSharedLayers=True)
+        nRows, nCols = self.getRowsCols(combineSharedLayers=True)
         numParams = len(paramNames)
         x = np.arange(numEpochs)
 
         for paramInd in range(numParams):
             # Create a figure and axes array
             fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=True, sharey=True)
-            numSpatialLayers, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
+            numLow, numHigh, highFreqCol, sharedColCounter = -1, -1, -1, 0
             paramName = paramNames[paramInd]
 
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
 
-                if "spatial" in moduleName and 'specific' in moduleName: numSpecific += 1
-                if "spatial" in moduleName: numSpatialLayers += 1; rowInd, colInd = numSpatialLayers, 0
-                elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
+                if "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
                 elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
                 else: raise ValueError("Module name must contain 'specific' or 'shared'.")
                 if 'shared' in moduleName:
+                    numSpecific = modelConstants.userInputParams['numSpecificEncoderLayers']
                     numShared = modelConstants.userInputParams['numSharedEncoderLayers']
                     rowInd, colInd = min(nRows - 1, numSpecific + sharedColCounter % numShared), sharedColCounter // numShared
                     sharedColCounter += 1
@@ -278,7 +277,7 @@ class generalVisualizations(globalPlottingProtocols):
         # scalingFactorsPaths: numModels, numEpochs, numModuleLayers, *numSignals*, numParams=1
         # maxFreeParamsPath: numModels, numModuleLayers
         numModels, numModuleLayers = np.asarray(maxFreeParamsPath).shape
-        nRows, nCols = self.getRowsCols(numModuleLayers, combineSharedLayers=True)
+        nRows, nCols = self.getRowsCols(combineSharedLayers=True)
         numEpochs = len(numFreeModelParams[0])
         numParams = len(paramNames)
         x = np.arange(numEpochs - (0 if fullView else 5))
@@ -287,18 +286,17 @@ class generalVisualizations(globalPlottingProtocols):
         for paramInd in range(numParams):
             # Create a figure and axes array
             fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=True, sharey='col' if fullView else False)
-            numSpatialLayers, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
+            numLow, numHigh, highFreqCol, sharedColCounter = -1, -1, -1, 0
             paramName = paramNames[paramInd].lower()
 
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
 
-                if "spatial" in moduleName and 'specific' in moduleName: numSpecific += 1
-                if "spatial" in moduleName: numSpatialLayers += 1; rowInd, colInd = numSpatialLayers, 0
-                elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
+                if "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
                 elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
                 else: raise ValueError("Module name must contain 'specific' or 'shared'.")
                 if 'shared' in moduleName:
+                    numSpecific = modelConstants.userInputParams['numSpecificEncoderLayers']
                     numShared = modelConstants.userInputParams['numSharedEncoderLayers']
                     rowInd, colInd = min(nRows - 1, numSpecific + sharedColCounter % numShared), sharedColCounter // numShared
                     sharedColCounter += 1
@@ -353,25 +351,24 @@ class generalVisualizations(globalPlottingProtocols):
         # scalingFactorsPaths: numModels, numEpochs, numModuleLayers, *numSignals*, numParams=1
         try: numModels, numEpochs, numModuleLayers = len(scalingFactorsPaths), len(scalingFactorsPaths[0]), len(scalingFactorsPaths[0][0])
         except Exception as e: print("plotAngularFeaturesFlow:", e); return None
-        nRows, nCols = self.getRowsCols(numModuleLayers, combineSharedLayers=True)
+        nRows, nCols = self.getRowsCols(combineSharedLayers=True)
         numParams = len(paramNames)
         x = np.arange(numEpochs)
 
         for paramInd in range(numParams):
             # Create a figure and axes array
             fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=True, sharey=True)
-            numSpatialLayers, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
+            numLow, numHigh, highFreqCol, sharedColCounter = -1, -1, -1, 0
             paramName = paramNames[paramInd]
 
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
 
-                if "spatial" in moduleName and 'specific' in moduleName: numSpecific += 1
-                if "spatial" in moduleName: numSpatialLayers += 1; rowInd, colInd = numSpatialLayers, 0
-                elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
+                if "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
                 elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
                 else: raise ValueError("Module name must contain 'specific' or 'shared'.")
                 if 'shared' in moduleName:
+                    numSpecific = modelConstants.userInputParams['numSpecificEncoderLayers']
                     numShared = modelConstants.userInputParams['numSharedEncoderLayers']
                     rowInd, colInd = min(nRows - 1, numSpecific + sharedColCounter % numShared), sharedColCounter // numShared
                     sharedColCounter += 1
@@ -419,26 +416,26 @@ class generalVisualizations(globalPlottingProtocols):
         # givensAnglesFeaturesPaths: numModels, numEpochs, numModuleLayers, numFeatures=5, numFeatureValues*
         try: numModels, numEpochs, numModuleLayers = len(givensAnglesFeaturesPaths), len(givensAnglesFeaturesPaths[0]), len(givensAnglesFeaturesPaths[0][0])
         except Exception as e: print("plotAngularFeaturesFlow:", e); return None
-        nRows, nCols = self.getRowsCols(numModuleLayers, combineSharedLayers=True)
+        nRows, nCols = self.getRowsCols(combineSharedLayers=True)
         numParams = len(paramNames)
         x = np.arange(numEpochs)
 
         for paramInd in range(numParams):
             # Create a figure and axes array
             fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=True, sharey='col')
-            numSpatialLayers, numLow, numHigh, highFreqCol, numSpecific, sharedColCounter = -1, -1, -1, -1, 0, 0
+            numLow, numHigh, highFreqCol, sharedColCounter = -1, -1, -1, 0
             paramName = paramNames[paramInd]
 
             fig.suptitle(f"{plotTitle}: {paramName}")
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
 
-                if "spatial" in moduleName and 'specific' in moduleName: numSpecific += 1
-                if "spatial" in moduleName: numSpatialLayers += 1; rowInd, colInd = numSpatialLayers, 0
-                elif "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
+                if "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
                 elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
-                else: raise ValueError("Module name must contain 'specific' or 'shared'.")
+                else:
+                    raise ValueError("Module name must contain 'specific' or 'shared'.")
                 if 'shared' in moduleName:
+                    numSpecific = modelConstants.userInputParams['numSpecificEncoderLayers']
                     numShared = modelConstants.userInputParams['numSharedEncoderLayers']
                     rowInd, colInd = min(nRows - 1, numSpecific + sharedColCounter % numShared), sharedColCounter // numShared
                     sharedColCounter += 1

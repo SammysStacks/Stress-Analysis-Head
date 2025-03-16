@@ -206,8 +206,7 @@ class emotionModelHead(nn.Module):
         else: raise Exception("Invalid name:", name)
 
         # Add the neural layer information.
-        if 'spatial' in name: compiledName = compiledName + ' spatial'; assert 'neural' not in name
-        elif 'high' in name: compiledName = compiledName + ' neural high frequency'; assert 'low' not in name
+        if 'high' in name: compiledName = compiledName + ' neural high frequency'; assert 'low' not in name
         elif 'low' in name: compiledName = compiledName + ' neural low frequency'; assert 'high' not in name
         else: raise Exception("Invalid name:", name)
 
@@ -232,7 +231,7 @@ class emotionModelHead(nn.Module):
                 for givensAnglesFeatures in allGivensAnglesFeatures: givensAnglesFeaturesPath.append(givensAnglesFeatures)  # givensAnglesFeaturesPath: numModuleLayers, numFeatures, numValues
                 for _ in allGivensAngles: reversibleModuleNames.append(self.compileModuleName(name))
 
-            elif isinstance(module, nn.Identity) and ('spatial' in name or 'highFrequenciesWeights' in name):
+            elif isinstance(module, nn.Identity) and 'highFrequenciesWeights' in name:
                 decompositionLevel = int(name.split('highFrequenciesWeights.')[-1]) + 1 if 'highFrequenciesWeights' in name else 0
                 numLayers = modelConstants.userInputParams['numSharedEncoderLayers' if 'shared' in name else 'numSpecificEncoderLayers']
                 sequenceLength = self.encodedDimension // 2**decompositionLevel
@@ -254,7 +253,7 @@ class emotionModelHead(nn.Module):
                 for ind in range(len(xs)): activationCurvePath.append([xs[ind], ys[ind]])
                 for _ in range(len(xs)): moduleNames.append(self.compileModuleName(name))
 
-            elif isinstance(module, nn.Identity) and ('spatial' in name or 'highFrequenciesWeights' in name):
+            elif isinstance(module, nn.Identity) and 'highFrequenciesWeights' in name:
                 numLayers = modelConstants.userInputParams['numSharedEncoderLayers' if 'shared' in name else 'numSpecificEncoderLayers']
                 x = np.linspace(-1.5, stop=1.5, num=100); y = x
 
@@ -279,10 +278,10 @@ class emotionModelHead(nn.Module):
                 activationParamsPath.extend(allActivationParams)
                 for _ in allActivationParams: moduleNames.append(self.compileModuleName(name))
 
-            elif isinstance(module, nn.Identity) and ('spatial' in name or 'highFrequenciesWeights' in name):
+            elif isinstance(module, nn.Identity) and 'highFrequenciesWeights' in name:
                 numLayers = modelConstants.userInputParams['numSharedEncoderLayers' if 'shared' in name else 'numSpecificEncoderLayers']
-                for _ in range(numLayers): activationParamsPath.append(np.asarray([0.5, 1, 1]))
                 for _ in range(numLayers): moduleNames.append(self.compileModuleName(name))
+                for _ in range(numLayers): activationParamsPath.append([0.5, 1, 1])
         assert len(activationParamsPath) != 0
         activationParamsPath = np.asarray(activationParamsPath)
         return activationParamsPath, moduleNames
@@ -294,14 +293,16 @@ class emotionModelHead(nn.Module):
             if isinstance(module, reversibleLieLayer):
                 allNumFreeParams = module.getNumFreeParams()
 
-                numFreeParamsPath.extend(allNumFreeParams)  # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
-                for _ in range(len(allNumFreeParams)): maxFreeParamsPath.append(module.numParams)  # maxFreeParamsPath: numModuleLayers
+                # Compile the free parameters.
                 for _ in range(len(allNumFreeParams)): moduleNames.append(self.compileModuleName(name))
+                for _ in range(len(allNumFreeParams)): maxFreeParamsPath.append(module.numParams)  # maxFreeParamsPath: numModuleLayers
+                numFreeParamsPath.extend(allNumFreeParams)  # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
 
-            elif isinstance(module, nn.Identity) and ('spatial' in name or 'highFrequenciesWeights' in name):
+            elif isinstance(module, nn.Identity) and 'highFrequenciesWeights' in name:
                 numLayers = modelConstants.userInputParams['numSharedEncoderLayers' if 'shared' in name else 'numSpecificEncoderLayers']
                 numSignals = self.numSignals if 'specific' in name else 1
 
+                # Compile the free parameters.
                 for _ in range(numLayers): maxFreeParamsPath.append(0)  # maxFreeParamsPath: numModuleLayers
                 for _ in range(numLayers): numFreeParamsPath.append(np.zeros((numSignals, 1)))  # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
                 for _ in range(numLayers): moduleNames.append(self.compileModuleName(name))
@@ -316,21 +317,14 @@ class emotionModelHead(nn.Module):
 
         if forwardPass:
             # Signal encoder layers.
-            metaLearningData = self.modelBlockPass(metaLearningData, self.sharedSignalEncoderModel, numLayers=self.numSharedEncoderLayers, compilingFunction=compilingFunction)
-            metaLearningData = self.modelBlockPass(metaLearningData, self.specificSignalEncoderModel, numLayers=self.numSpecificEncoderLayers, compilingFunction=compilingFunction)
+            metaLearningData = self.sharedSignalEncoderModel.learningInterface(signalData=metaLearningData, compilingFunction=compilingFunction)
+            metaLearningData = self.specificSignalEncoderModel.learningInterface(signalData=metaLearningData, compilingFunction=compilingFunction)
             # metaLearningData: batchSize, numSignals, encodedDimension
         else:
             # Signal encoder layers.
-            metaLearningData = self.modelBlockPass(metaLearningData, self.specificSignalEncoderModel, numLayers=self.numSpecificEncoderLayers, compilingFunction=compilingFunction)
-            metaLearningData = self.modelBlockPass(metaLearningData, self.sharedSignalEncoderModel, numLayers=self.numSharedEncoderLayers, compilingFunction=compilingFunction)
+            metaLearningData = self.specificSignalEncoderModel.learningInterface(signalData=metaLearningData, compilingFunction=compilingFunction)
+            metaLearningData = self.sharedSignalEncoderModel.learningInterface(signalData=metaLearningData, compilingFunction=compilingFunction)
             # metaLearningData: batchSize, numSignals, encodedDimension
-
-        return metaLearningData
-
-    @staticmethod
-    def modelBlockPass(metaLearningData, modelComponent, numLayers, compilingFunction):
-        for layerInd in range(numLayers): metaLearningData = modelComponent.learningInterface(layerInd=layerInd, signalData=metaLearningData, compilingFunction=compilingFunction)
-        # metaLearningData: batchSize, numSignals, encodedDimension
 
         return metaLearningData
 

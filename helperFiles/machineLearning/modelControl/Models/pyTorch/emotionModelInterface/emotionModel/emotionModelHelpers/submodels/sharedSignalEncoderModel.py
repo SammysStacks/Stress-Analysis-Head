@@ -1,14 +1,13 @@
+import copy
 import math
 
 import torch
-from torch import nn
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.generalMethods.generalMethods import generalMethods
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.neuralOperators.neuralOperatorInterface import neuralOperatorInterface
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
 
 
 class sharedSignalEncoderModel(neuralOperatorInterface):
@@ -16,15 +15,15 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
     def __init__(self, operatorType, encodedDimension, numSharedEncoderLayers, learningProtocol, neuralOperatorParameters):
         super(sharedSignalEncoderModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numLayers=numSharedEncoderLayers, numInputSignals=1, numOutputSignals=1, addBiasTerm=False)
         # General model parameters.
-        self.neuralOperatorParameters = neuralOperatorParameters  # The parameters for the neural operator.
+        self.neuralOperatorParameters = copy.deepcopy(neuralOperatorParameters)  # The parameters for the neural operator.
         self.encodedTimeWindow = modelConstants.modelTimeWindow  # The time window for the encoded signal.
         self.numSharedEncoderLayers = numSharedEncoderLayers  # The number of shared encoder layers.
         self.learningProtocol = learningProtocol  # The learning protocol for the model.
         self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
 
         # Only apply a transformation to the lowest of the high frequency decompositions.
-        numScalarSections = int(math.log2(modelConstants.userInputParams['encodedDimension'] // modelConstants.userInputParams['minWaveletDim']))
-        self.neuralOperatorParameters['wavelet']['encodeHighFrequencyProtocol'] = f'highFreq-{numScalarSections - 2}'  # ['highFreq', 'numHighFreq2Learn']
+        numDecompositions = int(math.log2(modelConstants.userInputParams['encodedDimension'] // modelConstants.userInputParams['minWaveletDim']))
+        self.neuralOperatorParameters['wavelet']['encodeHighFrequencyProtocol'] = f'highFreq-{numDecompositions - 2}'  # ['highFreq', 'numHighFreq2Learn']
 
         # Initialize the pseudo-encoded times for the fourier data.
         hyperSampledTimes = torch.linspace(start=0, end=self.encodedTimeWindow, steps=self.encodedDimension).flip(dims=[0])
@@ -33,11 +32,8 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         assert len(deltaTimes) == 1, f"The time gaps are not similar: {deltaTimes}"
 
         # The neural layers for the signal encoder.
+        self.neuralLayers = self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True)
         self.healthGenerationModel = self.healthGeneration(numOutputFeatures=encodedDimension)
-        self.spatialLayers, self.neuralLayers = nn.Identity(), nn.ModuleList()
-
-        # Add the layers.
-        self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True))
 
     def forward(self):
         raise "You cannot call the dataset-specific signal encoder module."
@@ -45,36 +41,22 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
     # Learned up-sampling of the health profile.
     def generateHealthProfile(self, healthProfile):
         healthProfile = self.healthGenerationModel(healthProfile.unsqueeze(1)).squeeze(1)
-
         return healthProfile
 
-    def learningInterface(self, layerInd, signalData, compilingFunction):
-        if layerInd != 0: return signalData
-
+    def learningInterface(self, signalData, compilingFunction):
         # Extract the signal data parameters.
         batchSize, numSignals, signalLength = signalData.shape
         signalData = signalData.view(batchSize*numSignals, 1, signalLength)
 
-        # For the forward/harder direction.
-        if reversibleInterface.forwardDirection:
-            # Apply the neural operator layer with activation.
-            self.neuralLayers[layerInd].compilingFunction = compilingFunction
-            signalData = self.neuralLayers[layerInd](signalData)
-            self.neuralLayers[layerInd].compilingFunction = None
-        else:
-            # Get the reverse layer index.
-            pseudoLayerInd = len(self.neuralLayers) - layerInd - 1
-            assert 0 <= pseudoLayerInd < len(self.neuralLayers), f"The pseudo layer index is out of bounds: {pseudoLayerInd}, {len(self.neuralLayers)}, {layerInd}"
-
-            # Apply the neural operator layer with activation.
-            self.neuralLayers[pseudoLayerInd].compilingFunction = compilingFunction
-            signalData = self.neuralLayers[pseudoLayerInd](signalData)
-            self.neuralLayers[pseudoLayerInd].compilingFunction = None
+        # Apply the neural operator layer with activation.
+        self.neuralLayers.compilingFunction = compilingFunction
+        signalData = self.neuralLayers(signalData)
+        self.neuralLayers.compilingFunction = None
 
         # Reshape the signal data.
         signalData = signalData.view(batchSize, numSignals, signalLength)
 
-        return signalData
+        return signalData.contiguous()
 
     def calculateOptimalLoss(self, initialSignalData, printLoss=True):
         with torch.no_grad():

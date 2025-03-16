@@ -1,13 +1,10 @@
 import copy
 import math
 
-from torch import nn
-
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.profileModel import profileModel
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.neuralOperators.neuralOperatorInterface import neuralOperatorInterface
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleInterface import reversibleInterface
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.profileModel import profileModel
 
 
 class specificSignalEncoderModel(neuralOperatorInterface):
@@ -24,15 +21,12 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         self.featureNames = featureNames  # The names of the signals to encode.
 
         # Only apply a transformation to the lowest of the high frequency decompositions.
-        numScalarSections = int(math.log2(modelConstants.userInputParams['encodedDimension'] // modelConstants.userInputParams['minWaveletDim']))
-        self.neuralOperatorParameters['wavelet']['encodeHighFrequencyProtocol'] = f'highFreq-{numScalarSections - 2}'  # ['highFreq', 'numHighFreq2Learn']
+        numDecompositions = int(math.log2(modelConstants.userInputParams['encodedDimension'] // modelConstants.userInputParams['minWaveletDim']))
+        self.neuralOperatorParameters['wavelet']['encodeHighFrequencyProtocol'] = f'highFreq-{numDecompositions - 2}'  # ['highFreq', 'numHighFreq2Learn']
 
         # The neural layers for the signal encoder.
         self.profileModel = profileModel(numExperiments=numExperiments, numSignals=self.numSignals, encodedDimension=encodedDimension)
-        self.spatialLayers, self.neuralLayers = nn.Identity(), nn.ModuleList()
-
-        # Add the layers.
-        self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True))
+        self.neuralLayers = self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True)
 
         # Assert the validity of the input parameters.
         assert self.encodedDimension % 2 == 0, "The encoded dimension must be divisible by 2."
@@ -55,24 +49,11 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         self.scalingFactorsPath = []  # List of Givens angles. Dim: numEpochs, numModuleLayers, *numSignals*
         self.numFreeParams = []  # List of the number of free parameters. Dim: numEpochs, numModuleLayers, *numSignals*
 
-    def addLayer(self):
-        self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True))
-
-    def learningInterface(self, layerInd, signalData, compilingFunction):
-        # For the forward/harder direction.
-        if reversibleInterface.forwardDirection:
-            # Apply the neural operator layer with activation.
-            signalData = self.neuralLayers[layerInd](signalData)
-        else:
-            # Get the reverse layer index.
-            pseudoLayerInd = len(self.neuralLayers) - layerInd - 1
-            assert 0 <= pseudoLayerInd < len(self.neuralLayers), f"The pseudo layer index is out of bounds: {pseudoLayerInd}, {len(self.neuralLayers)}, {layerInd}"
-
-            # Apply the neural operator layer with activation.
-            signalData = self.neuralLayers[pseudoLayerInd](signalData)
-
-        # Store the signal data for plotting, if desired.
-        if compilingFunction is not None: compilingFunction(signalData)
+    def learningInterface(self, signalData, compilingFunction):
+        # Apply the neural operator layer with activation.
+        self.neuralLayers.compilingFunction = compilingFunction
+        signalData = self.neuralLayers(signalData)
+        self.neuralLayers.compilingFunction = None
 
         return signalData.contiguous()
 

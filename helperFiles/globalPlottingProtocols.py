@@ -39,10 +39,10 @@ class globalPlottingProtocols:
             if stringID: self._createFolder(self.saveDataFolder)
 
     @staticmethod
-    def getRowsCols(numModuleLayers, combineSharedLayers=False):
+    def getRowsCols(combineSharedLayers):
         numSpecificEncoderLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
         numSharedEncoderLayers = modelConstants.userInputParams['numSharedEncoderLayers']
-        nCols = 2 + int(math.log2(modelConstants.userInputParams['encodedDimension'] // modelConstants.userInputParams['minWaveletDim']))  # TODO: Change this to a more general formula!
+        nCols = 1 + int(math.log2(modelConstants.userInputParams['encodedDimension'] // modelConstants.userInputParams['minWaveletDim']))  # TODO: Change this to a more general formula!
         nRows = numSpecificEncoderLayers + (1 if combineSharedLayers else numSharedEncoderLayers)
 
         return nRows, nCols

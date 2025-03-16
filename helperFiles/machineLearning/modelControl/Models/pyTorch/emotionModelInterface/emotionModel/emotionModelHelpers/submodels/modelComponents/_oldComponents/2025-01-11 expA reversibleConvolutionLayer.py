@@ -140,7 +140,6 @@ if __name__ == "__main__":
             healthProfile = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float64)
             healthProfile = healthProfile / 6
 
-            # Perform the convolution in the fourier and spatial domains.
             if reconstructionFlag: _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(healthProfile, atol=1e-6, numLayers=1, plotResults=False)
             else: _forwardData = neuralLayerClass.forward(healthProfile)
             neuralLayerClass.printParams()
