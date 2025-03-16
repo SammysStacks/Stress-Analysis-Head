@@ -21,7 +21,6 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         self.featureNames = featureNames  # The names of the signals to encode.
 
         # Only apply a transformation to the lowest of the high frequency decompositions.
-        # numDecompositions = int(math.log2(modelConstants.userInputParams['encodedDimension'] // modelConstants.userInputParams['minWaveletDim']))
         self.neuralOperatorParameters['wavelet']['encodeHighFrequencyProtocol'] = f'highFreq-1'  # ['highFreq', 'numHighFreq2Learn']
 
         # The neural layers for the signal encoder.

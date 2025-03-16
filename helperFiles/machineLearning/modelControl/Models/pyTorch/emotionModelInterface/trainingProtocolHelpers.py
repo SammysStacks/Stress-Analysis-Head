@@ -73,8 +73,8 @@ class trainingProtocolHelpers:
             # Health profile training.
             numProfileShots = modelPipeline.resetPhysiologicalProfile(submodel)
             modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=numProfileShots + 1)  # Profile training.
+            modelPipeline.model.cullAngles(epoch=epoch)
             self.accelerator.wait_for_everyone()
-            if not profileOnlyTraining: modelPipeline.model.cullAngles(epoch=epoch)
 
     def calculateLossInformation(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel):
         self.unifyAllModelWeights(allMetaModels, allModels)  # Unify all the model weights.

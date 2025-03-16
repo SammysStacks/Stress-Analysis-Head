@@ -107,7 +107,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
             minAngularThreshold = modelConstants.userInputParams['minAngularThreshold'] * torch.pi / 180  # Convert to radians
             maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold'] * torch.pi / 180  # Convert to radians
             maxAngularParam = self.getInverseAngleParams(torch.tensor(maxAngularThreshold))
-            if sharedLayer: return None
+            if sharedLayer: minAngularThreshold = 1e-3 * torch.pi/180
 
             for layerInd in range(self.numLayers):
                 givensAngles = self.getGivensAngles(layerInd)  # Dim: numSignals, numParams
