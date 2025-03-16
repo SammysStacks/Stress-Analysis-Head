@@ -165,7 +165,7 @@ class emotionModelHead(nn.Module):
         # resampledSignalData: batchSize, numSignals, encodedDimension
 
         # Visualize the data transformations within signal encoding.
-        if submodel == modelConstants.signalEncoderModel and not onlyProfileTraining and random.random() < 0.1 and not self.hpcFlag:
+        if submodel == modelConstants.signalEncoderModel and not onlyProfileTraining and random.random() < 0.05 and not self.hpcFlag:
             with torch.no_grad(): self.visualizeSignalEncoding(embeddedProfile, healthProfile, resampledSignalData, reconstructedSignalData, signalData, validDataMask)
 
         # ------------------- Learned Emotion Mapping ------------------- #
