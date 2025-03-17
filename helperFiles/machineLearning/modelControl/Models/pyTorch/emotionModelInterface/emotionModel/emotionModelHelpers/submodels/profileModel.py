@@ -60,8 +60,8 @@ class profileModel(emotionModelWeights):
             self.retrainingHealthProfilePath[profileEpoch][0] = healthProfile[batchInds == 0].detach().cpu().numpy().astype(np.float16)
 
     def getHealthEmbedding(self, batchInds, fourierModelReal, fourierModelImaginary):
-        imaginaryProfileCoefficients = fourierModelImaginary(self.imaginaryProfileCoefficients.to(batchInds.device)[batchInds])
-        realProfileCoefficients = fourierModelReal(self.realProfileCoefficients.to(batchInds.device)[batchInds])
+        imaginaryProfileCoefficients = fourierModelImaginary(self.imaginaryProfileCoefficients.to(batchInds.device)[batchInds].unsqueeze(1)).squeeze(1)
+        realProfileCoefficients = fourierModelReal(self.realProfileCoefficients.to(batchInds.device)[batchInds].unsqueeze(1)).squeeze(1)
         # healthEmbeddings dimension: numExperiments, fourierDimension
 
         # Return to health profile.
