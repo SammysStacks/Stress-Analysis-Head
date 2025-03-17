@@ -9,21 +9,24 @@ class profileModel(emotionModelWeights):
 
     def __init__(self, numExperiments, numSignals, encodedDimension):
         super(profileModel, self).__init__()
+        self.profileDimension = modelConstants.userInputParams['profileDimension']
         self.retrainingProfileLosses, self.generatingBiometricSignals = None, None
         self.compiledLayerStates, self.compiledLayerStateInd = None, 0
-        self.fourierDimension = self.sequenceLength // 2 + 1
+        self.fourierDimension = self.profileDimension // 2 + 1
         self.encodedDimension = encodedDimension
         self.retrainingHealthProfilePath = None
         self.numExperiments = numExperiments
         self.numSignals = numSignals
 
         # Initialize the health profile.
-        self.embeddedHealthProfiles = self.getInitialPhysiologicalProfile(numExperiments, self.fourierDimension)
+        self.imaginaryProfileCoefficients = self.getInitialPhysiologicalProfile(numExperiments, self.fourierDimension)
+        self.realProfileCoefficients = self.getInitialPhysiologicalProfile(numExperiments, self.fourierDimension)
         self.resetProfileHolders(numProfileShots=int(modelConstants.useInitialLoss))
         self.resetProfileWeights()
 
     def resetProfileWeights(self):
-        self.healthInitialization(self.embeddedHealthProfiles)
+        self.healthInitialization(self.imaginaryProfileCoefficients)
+        self.healthInitialization(self.realProfileCoefficients)
 
     def resetProfileHolders(self, numProfileShots):
         # Pre-allocate each parameter.
@@ -57,12 +60,9 @@ class profileModel(emotionModelWeights):
             self.generatingBiometricSignals[profileEpoch][0] = resampledSignalData[batchInds == 0, 0:1, :].detach().cpu().numpy().astype(np.float16)
 
     def getHealthEmbedding(self, batchInds):
-        healthEmbeddings = self.embeddedHealthProfiles.to(batchInds.device)[batchInds]
-        # healthEmbeddings dimension: numExperiments, fourierDimension - 1
-
-        # Format the fourier coefficients.
-        fourierCoefficients = torch.zeros(healthEmbeddings.shape[0], self.fourierDimension, dtype=healthEmbeddings.dtype, device=healthEmbeddings.device)
-        fourierCoefficients[:, 1:] = healthEmbeddings[:, 1:]
+        imaginaryProfileCoefficients = self.imaginaryProfileCoefficients.to(batchInds.device)[batchInds]
+        realProfileCoefficients = self.realProfileCoefficients.to(batchInds.device)[batchInds]
+        # healthEmbeddings dimension: numExperiments, fourierDimension
 
         # Return to health profile.
-        return torch.fft.irfft(fourierCoefficients, n=self.encodedDimension, dim=-1, norm='ortho')
+        return torch.fft.irfft(realProfileCoefficients + 1j * imaginaryProfileCoefficients, n=self.profileDimension, dim=-1, norm='ortho')
