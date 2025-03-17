@@ -15,7 +15,7 @@ class optimizerMethods:
             {'params': model.sharedSignalEncoderModel.healthGenerationModel.parameters(), 'weight_decay': modelConstants.userInputParams['physGenWD'], 'lr': modelConstants.userInputParams['physGenLR']},  # 1e-2 - 1e2
 
             # Specify the model parameters for the specific signal encoding.
-            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if ("givensRotationParams" not in name and "profileModel" not in name)), 'weight_decay': 1e-4, 'lr': 1e-4},  # 1e-2 - 1e2
+            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if ("givensRotationParams" not in name and "profileModel" not in name)), 'weight_decay': 1e-5, 'lr': 1e-4},  # 1e-2 - 1e2
             {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "givensRotationParams" in name), 'weight_decay': modelConstants.userInputParams['reversibleWD'], 'lr': modelConstants.userInputParams['reversibleLR']},  # 1e-2 - 1e2
             {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': modelConstants.userInputParams['profileWD'], 'lr': modelConstants.userInputParams['profileLR']},  # 0.1 - 0.01
         ]
