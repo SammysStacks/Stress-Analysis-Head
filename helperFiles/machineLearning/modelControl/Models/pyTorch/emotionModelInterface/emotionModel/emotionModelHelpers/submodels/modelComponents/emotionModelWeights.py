@@ -74,7 +74,7 @@ class emotionModelWeights(convolutionalHelpers):
             layers.append(self.convolutionalFilters_resNetBlocks(numResNets=2, numBlocks=6, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
             layers.append(self.convolutionalFilters_resNetBlocks(numResNets=1, numBlocks=1, numChannels=[1, 2], kernel_sizes=1, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
 
-        for _ in range(6):  # [4, 12]
+        for _ in range(4):  # [4, 12]
             layers.append(self.convolutionalFilters_resNetBlocks(numResNets=2, numBlocks=6, numChannels=[1, 1], kernel_sizes=5, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
             layers.append(self.convolutionalFilters_resNetBlocks(numResNets=2, numBlocks=6, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
 
@@ -82,7 +82,7 @@ class emotionModelWeights(convolutionalHelpers):
         return nn.Sequential(*layers)
 
     def fourierAdjustments(self):
-        return self.convolutionalFilters_resNetBlocks(numResNets=4, numBlocks=6, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False)
+        return self.convolutionalFilters_resNetBlocks(numResNets=2, numBlocks=6, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False)
 
     # ------------------- Emotion/Activity Encoding Architectures ------------------- #
 
