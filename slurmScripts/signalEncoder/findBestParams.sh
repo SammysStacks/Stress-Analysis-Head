@@ -74,6 +74,7 @@ do
                                         for optimizer in "${optimizers_arr[@]}"
                                         do
                                             for minWaveletDim in "${minWaveletDims[@]}"
+                                            do
                                                 for waveletType in "${waveletTypes_arr[@]}"
                                                 do
                                                     for encodedDimension in "${encodedDimensions_arr[@]}"
