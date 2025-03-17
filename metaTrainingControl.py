@@ -50,7 +50,7 @@ if __name__ == "__main__":
     parser.add_argument('--irreversibleLearningProtocol', type=str, default='FC', help='The learning protocol for the model: CNN, FC')
     parser.add_argument('--reversibleLearningProtocol', type=str, default='rCNN', help='The learning protocol for the model: rCNN')
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are using: cpu, cuda')
-    parser.add_argument('--minWaveletDim', type=int, default=64, help='The minimum dimension of the wavelet transform.')
+    parser.add_argument('--minWaveletDim', type=int, default=32, help='The minimum dimension of the wavelet transform.')
     parser.add_argument('--encodedDimension', type=int, default=512, help='The dimension of the encoded signal.')
 
     # Add arguments for the neural operator.
