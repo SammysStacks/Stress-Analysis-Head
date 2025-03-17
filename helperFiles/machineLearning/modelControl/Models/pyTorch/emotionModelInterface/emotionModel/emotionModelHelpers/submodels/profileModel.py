@@ -22,8 +22,6 @@ class profileModel(emotionModelWeights):
         self.imaginaryProfileCoefficients = self.getInitialPhysiologicalProfile(numExperiments, self.fourierDimension)
         self.realProfileCoefficients = self.getInitialPhysiologicalProfile(numExperiments, self.fourierDimension)
         self.resetProfileHolders(numProfileShots=int(modelConstants.useInitialLoss))
-        self.fourierModelImaginary = self.fourierAdjustments()
-        self.fourierModelReal = self.fourierAdjustments()
         self.resetProfileWeights()
 
     def resetProfileWeights(self):
@@ -61,9 +59,9 @@ class profileModel(emotionModelWeights):
             self.generatingBiometricSignals[profileEpoch][0] = resampledSignalData[batchInds == 0, 0:1, :].detach().cpu().numpy().astype(np.float16)
             self.retrainingHealthProfilePath[profileEpoch][0] = healthProfile[batchInds == 0].detach().cpu().numpy().astype(np.float16)
 
-    def getHealthEmbedding(self, batchInds):
-        imaginaryProfileCoefficients = self.fourierModelImaginary(self.imaginaryProfileCoefficients.to(batchInds.device)[batchInds])
-        realProfileCoefficients = self.fourierModelReal(self.realProfileCoefficients.to(batchInds.device)[batchInds])
+    def getHealthEmbedding(self, batchInds, fourierModelReal, fourierModelImaginary):
+        imaginaryProfileCoefficients = fourierModelImaginary(self.imaginaryProfileCoefficients.to(batchInds.device)[batchInds])
+        realProfileCoefficients = fourierModelReal(self.realProfileCoefficients.to(batchInds.device)[batchInds])
         # healthEmbeddings dimension: numExperiments, fourierDimension
 
         # Return to health profile.

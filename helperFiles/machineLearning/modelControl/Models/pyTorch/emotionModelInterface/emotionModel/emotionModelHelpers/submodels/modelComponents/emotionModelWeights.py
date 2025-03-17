@@ -78,6 +78,9 @@ class emotionModelWeights(convolutionalHelpers):
             layers.append(self.convolutionalFilters_resNetBlocks(numResNets=2, numBlocks=6, numChannels=[1, 1], kernel_sizes=5, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
             layers.append(self.convolutionalFilters_resNetBlocks(numResNets=2, numBlocks=6, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
 
+        # Construct the profile generation model.
+        return nn.Sequential(*layers)
+
     def fourierAdjustments(self):
         layers = []
         for _ in range(6):  # [4, 12]

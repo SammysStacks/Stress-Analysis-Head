@@ -29,6 +29,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         assert numSpecificDecompositions <= numDecompositions, "Number of specific decompositions must be less than or equal to the number of decompositions in the signal encoder."
 
         # The neural layers for the signal encoder.
+        self.fourierModelImaginary = self.fourierAdjustments(); self.fourierModelReal = self.fourierAdjustments()
         self.profileModel = profileModel(numExperiments=numExperiments, numSignals=self.numSignals, encodedDimension=encodedDimension)
         self.neuralLayers = self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True)
 
@@ -43,6 +44,9 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         self.resetModel()
 
     def forward(self): raise "You cannot call the dataset-specific signal encoder module."
+
+    def healthEmbeddingModel(self, batchInds):
+        return self.profileModel.getHealthEmbedding(batchInds, self.fourierModelReal, self.fourierModelImaginary)
 
     def resetModel(self):
         # Signal encoder reconstruction holders.
