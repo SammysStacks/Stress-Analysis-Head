@@ -1,4 +1,5 @@
 import copy
+import math
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
@@ -20,7 +21,12 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         self.featureNames = featureNames  # The names of the signals to encode.
 
         # Only apply a transformation to the lowest of the high frequency decompositions.
-        self.neuralOperatorParameters['wavelet']['encodeHighFrequencyProtocol'] = f'highFreq-2'  # ['highFreq', 'numHighFreq2Learn']
+        numSpecificDecompositions = modelConstants.userInputParams['numSpecificDecompositions']
+        self.neuralOperatorParameters['wavelet']['encodeHighFrequencyProtocol'] = f'highFreq-{numSpecificDecompositions}'  # ['highFreq', 'numHighFreq2Learn']
+
+        # Check the number of decompositions.
+        numDecompositions = int(math.log2(modelConstants.userInputParams['encodedDimension'] // modelConstants.userInputParams['minWaveletDim']))
+        assert numSpecificDecompositions <= numDecompositions, "Number of specific decompositions must be less than or equal to the number of decompositions in the signal encoder."
 
         # The neural layers for the signal encoder.
         self.profileModel = profileModel(numExperiments=numExperiments, numSignals=self.numSignals, encodedDimension=encodedDimension)
