@@ -113,7 +113,7 @@ class modelVisualizations(globalPlottingProtocols):
             # forwardModelPassSignals: numModuleLayers, batchSize, numSignals, encodedDimension
 
             # Extract the model's internal variables.
-            retrainingHealthProfilePath = np.asarray(model.specificSignalEncoderModel.profileModel.retrainingHealthProfilePath)  # numProfileShots, numExperiments, profileDimension
+            retrainingHealthProfilePath = np.asarray(model.specificSignalEncoderModel.profileModel.retrainingHealthProfilePath)  # numProfileShots, numExperiments, encodedDimension
             generatingBiometricSignals = np.asarray(model.specificSignalEncoderModel.profileModel.generatingBiometricSignals)  # numProfileShots, numModuleLayers, numExperiments, numSignals=1***, encodedDimension
             resampledBiomarkerTimes = model.sharedSignalEncoderModel.hyperSampledTimes.detach().cpu().numpy().astype(np.float16)  # numTimePoints
             backwardModelPassSignals = np.flip(forwardModelPassSignals, axis=0)

@@ -65,15 +65,8 @@ class emotionModelWeights(convolutionalHelpers):
     def postSpatialLayerFC(sequenceLength):
         return emotionModelWeights.linearModel(numInputFeatures=sequenceLength, numOutputFeatures=sequenceLength, activationMethod="SoftSign", addBias=False)
 
-    def healthGeneration(self, numOutputFeatures):
-        if numOutputFeatures < modelConstants.userInputParams['profileDimension']: raise ValueError(f"Number of outputs ({numOutputFeatures}) must be greater than inputs ({modelConstants.userInputParams['profileDimension']})")
-        numUpSamples = int(math.log2(numOutputFeatures // modelConstants.userInputParams['profileDimension']))
-
+    def healthGeneration(self):
         layers = []
-        for i in range(numUpSamples):
-            layers.append(self.convolutionalFilters_resNetBlocks(numResNets=2, numBlocks=6, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
-            layers.append(self.convolutionalFilters_resNetBlocks(numResNets=1, numBlocks=1, numChannels=[1, 2], kernel_sizes=1, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
-
         for _ in range(4):  # [4, 12]
             layers.append(self.convolutionalFilters_resNetBlocks(numResNets=2, numBlocks=6, numChannels=[1, 1], kernel_sizes=5, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
             layers.append(self.convolutionalFilters_resNetBlocks(numResNets=2, numBlocks=6, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
@@ -82,7 +75,11 @@ class emotionModelWeights(convolutionalHelpers):
         return nn.Sequential(*layers)
 
     def fourierAdjustments(self):
-        return self.convolutionalFilters_resNetBlocks(numResNets=2, numBlocks=6, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False)
+        layers = []
+        for _ in range(4):
+            layers.append(self.convolutionalFilters_resNetBlocks(numResNets=2, numBlocks=6, numChannels=[2, 2], kernel_sizes=5, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
+            layers.append(self.convolutionalFilters_resNetBlocks(numResNets=2, numBlocks=6, numChannels=[2, 2], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
+        return nn.Sequential(*layers)
 
     # ------------------- Emotion/Activity Encoding Architectures ------------------- #
 

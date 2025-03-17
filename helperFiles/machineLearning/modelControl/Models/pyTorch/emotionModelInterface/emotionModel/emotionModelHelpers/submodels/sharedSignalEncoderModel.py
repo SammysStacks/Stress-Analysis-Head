@@ -33,7 +33,8 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
 
         # The neural layers for the signal encoder.
         self.neuralLayers = self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True)
-        self.healthGenerationModel = self.healthGeneration(numOutputFeatures=encodedDimension)
+        self.healthGenerationModel = self.healthGeneration()
+        self.fourierModel = self.fourierAdjustments()
 
     def forward(self):
         raise "You cannot call the dataset-specific signal encoder module."

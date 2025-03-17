@@ -9,10 +9,9 @@ class profileModel(emotionModelWeights):
 
     def __init__(self, numExperiments, numSignals, encodedDimension):
         super(profileModel, self).__init__()
-        self.profileDimension = modelConstants.userInputParams['profileDimension']
+        self.fourierDimension = modelConstants.userInputParams['profileDimension'] // 2 + 1
         self.retrainingProfileLosses, self.generatingBiometricSignals = None, None
         self.compiledLayerStates, self.compiledLayerStateInd = None, 0
-        self.fourierDimension = self.profileDimension // 2 + 1
         self.encodedDimension = encodedDimension
         self.retrainingHealthProfilePath = None
         self.numExperiments = numExperiments
@@ -59,10 +58,14 @@ class profileModel(emotionModelWeights):
             self.generatingBiometricSignals[profileEpoch][0] = resampledSignalData[batchInds == 0, 0:1, :].detach().cpu().numpy().astype(np.float16)
             self.retrainingHealthProfilePath[profileEpoch][0] = healthProfile[batchInds == 0].detach().cpu().numpy().astype(np.float16)
 
-    def getHealthEmbedding(self, batchInds, fourierModelReal, fourierModelImaginary):
-        imaginaryProfileCoefficients = fourierModelImaginary(self.imaginaryProfileCoefficients.to(batchInds.device)[batchInds].unsqueeze(1)).squeeze(1)
-        realProfileCoefficients = fourierModelReal(self.realProfileCoefficients.to(batchInds.device)[batchInds].unsqueeze(1)).squeeze(1)
-        # healthEmbeddings dimension: numExperiments, fourierDimension
+    def getHealthEmbedding(self, batchInds, fourierModel):
+        imaginaryProfileCoefficients = self.imaginaryProfileCoefficients.to(batchInds.device)[batchInds].unsqueeze(1)
+        realProfileCoefficients = self.realProfileCoefficients.to(batchInds.device)[batchInds].unsqueeze(1)
+        # ...ProfileCoefficients dimension: numExperiments, 1, fourierDimension
+
+        # Learn the health profile.
+        coefficients = torch.cat(tensors=[realProfileCoefficients, imaginaryProfileCoefficients], dim=1)
+        coefficients = fourierModel(coefficients)
 
         # Return to health profile.
-        return torch.fft.irfft(realProfileCoefficients + 1j * imaginaryProfileCoefficients, n=self.profileDimension, dim=-1, norm='ortho')
+        return torch.fft.irfft(coefficients[:, 0, :] + 1j * coefficients[:, 1, :], n=self.encodedDimension, dim=-1, norm='ortho')
