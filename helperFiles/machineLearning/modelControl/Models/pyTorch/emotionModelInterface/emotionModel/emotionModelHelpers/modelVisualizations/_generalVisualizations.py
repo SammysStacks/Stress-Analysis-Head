@@ -216,23 +216,26 @@ class generalVisualizations(globalPlottingProtocols):
         numParams = len(paramNames)
         x = np.arange(numEpochs)
 
+        # Get the parameters.
+        numSpecific = modelConstants.userInputParams['numSpecificEncoderLayers']
+        numShared = modelConstants.userInputParams['numSharedEncoderLayers']
+
         for paramInd in range(numParams):
             # Create a figure and axes array
             fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=True, sharey=True)
-            numLow, numHigh, highFreqCol, sharedColCounter = -1, -1, -1, 0
+            numLow, numSpecificHigh, numSharedHigh = 0, 0, 0
             paramName = paramNames[paramInd]
 
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
 
-                if "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
-                elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
-                else: raise ValueError("Module name must contain 'specific' or 'shared'.")
-                if 'shared' in moduleName:
-                    numSpecific = modelConstants.userInputParams['numSpecificEncoderLayers']
-                    numShared = modelConstants.userInputParams['numSharedEncoderLayers']
-                    rowInd, colInd = min(nRows - 1, numSpecific + sharedColCounter % numShared), sharedColCounter // numShared
-                    sharedColCounter += 1
+                if "low" in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
+                elif "high" in moduleName:
+                    if 'shared' in moduleName: rowInd = numSpecific + (numSharedHigh % numShared); colInd = numSharedHigh // numShared; numSharedHigh += 1
+                    elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecific; colInd = numSpecificHigh // numSpecific; numSpecificHigh += 1
+                    else: raise ValueError("Module name must contain 'shared' or 'specific'")
+                else: raise ValueError("Module name must contain 'low' or 'high'.")
+                rowInd = min(rowInd, nRows - 1)
                 ax = axes[rowInd, colInd]
 
                 # Label the plot.
@@ -283,23 +286,26 @@ class generalVisualizations(globalPlottingProtocols):
         x = np.arange(numEpochs - (0 if fullView else 5))
         if numEpochs <= 5: return "No data to plot."
 
+        # Get the parameters.
+        numSpecific = modelConstants.userInputParams['numSpecificEncoderLayers']
+        numShared = modelConstants.userInputParams['numSharedEncoderLayers']
+
         for paramInd in range(numParams):
             # Create a figure and axes array
             fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=True, sharey='col' if fullView else False)
-            numLow, numHigh, highFreqCol, sharedColCounter = -1, -1, -1, 0
+            numLow, numSpecificHigh, numSharedHigh = 0, 0, 0
             paramName = paramNames[paramInd].lower()
 
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
 
-                if "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
-                elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
-                else: raise ValueError("Module name must contain 'specific' or 'shared'.")
-                if 'shared' in moduleName:
-                    numSpecific = modelConstants.userInputParams['numSpecificEncoderLayers']
-                    numShared = modelConstants.userInputParams['numSharedEncoderLayers']
-                    rowInd, colInd = min(nRows - 1, numSpecific + sharedColCounter % numShared), sharedColCounter // numShared
-                    sharedColCounter += 1
+                if "low" in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
+                elif "high" in moduleName:
+                    if 'shared' in moduleName: rowInd = numSpecific + (numSharedHigh % numShared); colInd = numSharedHigh // numShared; numSharedHigh += 1
+                    elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecific; colInd = numSpecificHigh // numSpecific; numSpecificHigh += 1
+                    else: raise ValueError("Module name must contain 'shared' or 'specific'")
+                else: raise ValueError("Module name must contain 'low' or 'high'.")
+                rowInd = min(rowInd, nRows - 1)
                 ax = axes[rowInd, colInd]
 
                 if colInd == 0: ax.set_ylabel("Number of rotations")
@@ -355,23 +361,26 @@ class generalVisualizations(globalPlottingProtocols):
         numParams = len(paramNames)
         x = np.arange(numEpochs)
 
+        # Get the parameters.
+        numSpecific = modelConstants.userInputParams['numSpecificEncoderLayers']
+        numShared = modelConstants.userInputParams['numSharedEncoderLayers']
+
         for paramInd in range(numParams):
             # Create a figure and axes array
             fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=True, sharey=True)
-            numLow, numHigh, highFreqCol, sharedColCounter = -1, -1, -1, 0
+            numLow, numSpecificHigh, numSharedHigh = 0, 0, 0
             paramName = paramNames[paramInd]
 
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
 
-                if "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
-                elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
-                else: raise ValueError("Module name must contain 'specific' or 'shared'.")
-                if 'shared' in moduleName:
-                    numSpecific = modelConstants.userInputParams['numSpecificEncoderLayers']
-                    numShared = modelConstants.userInputParams['numSharedEncoderLayers']
-                    rowInd, colInd = min(nRows - 1, numSpecific + sharedColCounter % numShared), sharedColCounter // numShared
-                    sharedColCounter += 1
+                if "low" in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
+                elif "high" in moduleName:
+                    if 'shared' in moduleName: rowInd = numSpecific + (numSharedHigh % numShared); colInd = numSharedHigh // numShared; numSharedHigh += 1
+                    elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecific; colInd = numSpecificHigh // numSpecific; numSpecificHigh += 1
+                    else: raise ValueError("Module name must contain 'shared' or 'specific'")
+                else: raise ValueError("Module name must contain 'low' or 'high'.")
+                rowInd = min(rowInd, nRows - 1)
                 ax = axes[rowInd, colInd]
 
                 ax.set_xlabel("Training epoch")
@@ -420,25 +429,27 @@ class generalVisualizations(globalPlottingProtocols):
         numParams = len(paramNames)
         x = np.arange(numEpochs)
 
+        # Get the parameters.
+        numSpecific = modelConstants.userInputParams['numSpecificEncoderLayers']
+        numShared = modelConstants.userInputParams['numSharedEncoderLayers']
+
         for paramInd in range(numParams):
             # Create a figure and axes array
             fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=True, sharey='col')
-            numLow, numHigh, highFreqCol, sharedColCounter = -1, -1, -1, 0
+            numLow, numSpecificHigh, numSharedHigh = 0, 0, 0
             paramName = paramNames[paramInd]
 
             fig.suptitle(f"{plotTitle}: {paramName}")
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
 
-                if "low" in moduleName: numLow += 1; rowInd, colInd = numLow, nCols - 1
-                elif "high" in moduleName: highFreqCol += 1; rowInd = highFreqCol // (nCols - 2); colInd = 1 + highFreqCol % (nCols - 2)
-                else:
-                    raise ValueError("Module name must contain 'specific' or 'shared'.")
-                if 'shared' in moduleName:
-                    numSpecific = modelConstants.userInputParams['numSpecificEncoderLayers']
-                    numShared = modelConstants.userInputParams['numSharedEncoderLayers']
-                    rowInd, colInd = min(nRows - 1, numSpecific + sharedColCounter % numShared), sharedColCounter // numShared
-                    sharedColCounter += 1
+                if "low" in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
+                elif "high" in moduleName:
+                    if 'shared' in moduleName: rowInd = numSpecific + (numSharedHigh % numShared); colInd = numSharedHigh // numShared; numSharedHigh += 1
+                    elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecific; colInd = numSpecificHigh // numSpecific; numSpecificHigh += 1
+                    else: raise ValueError("Module name must contain 'shared' or 'specific'")
+                else: raise ValueError("Module name must contain 'low' or 'high'.")
+                rowInd = min(rowInd, nRows - 1)
                 ax = axes[rowInd, colInd]
 
                 # Label the plot.
