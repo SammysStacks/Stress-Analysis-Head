@@ -65,15 +65,15 @@ class emotionModelWeights(convolutionalHelpers):
 
     def healthGeneration(self):
         layers = []
-        for _ in range(16):  # [4, 12]
-            layers.append(self.convolutionalFilters_resNetBlocks(numResNets=3, numBlocks=6, numChannels=[1, 1], kernel_sizes=5, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
-            layers.append(self.convolutionalFilters_resNetBlocks(numResNets=3, numBlocks=6, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
+        for _ in range(12):  # [4, 12]
+            layers.append(self.convolutionalFilters_resNetBlocks(numResNets=2, numBlocks=6, numChannels=[1, 1], kernel_sizes=5, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
+            layers.append(self.convolutionalFilters_resNetBlocks(numResNets=2, numBlocks=6, numChannels=[1, 1], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
 
         # Construct the profile generation model.
         return nn.Sequential(*layers)
 
     def fourierAdjustments(self):
-        return self.convolutionalFilters_resNetBlocks(numResNets=8, numBlocks=6, numChannels=[2, 2], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False)
+        return self.convolutionalFilters_resNetBlocks(numResNets=4, numBlocks=6, numChannels=[2, 2], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False)
 
     # ------------------- Emotion/Activity Encoding Architectures ------------------- #
 
