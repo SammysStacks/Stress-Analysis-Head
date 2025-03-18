@@ -1,5 +1,3 @@
-import math
-
 import torch
 from torch import nn
 
@@ -75,11 +73,7 @@ class emotionModelWeights(convolutionalHelpers):
         return nn.Sequential(*layers)
 
     def fourierAdjustments(self):
-        layers = []
-        for _ in range(4):
-            layers.append(self.convolutionalFilters_resNetBlocks(numResNets=2, numBlocks=6, numChannels=[2, 2], kernel_sizes=5, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
-            layers.append(self.convolutionalFilters_resNetBlocks(numResNets=2, numBlocks=6, numChannels=[2, 2], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
-        return nn.Sequential(*layers)
+       return self.convolutionalFilters_resNetBlocks(numResNets=2, numBlocks=6, numChannels=[2, 2], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False)
 
     # ------------------- Emotion/Activity Encoding Architectures ------------------- #
 
