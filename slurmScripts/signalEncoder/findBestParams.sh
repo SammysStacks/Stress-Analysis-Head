@@ -35,7 +35,7 @@ waveletTypes_arr=(
 )
 
 # Angular reference states.
-minAngularThresholds=(0.01)  # [0.01, 0.25]
+minAngularThresholds=(0.01 0.05)  # [0.01, 0.25]
 maxAngularThresholds=(45)
 
 # Binary reference states.
@@ -45,11 +45,11 @@ numSharedEncoderLayers_arr=(7)  # [4, 10]; Best: 5 and 7
 # Profile parameters.
 numProfileShots_arr=(24)  # (8, [16, 24], 32)
 encodedDimensions_arr=(512)
-profileParams=(512 256 128 64 32)
+profileParams=(512 256 128 64)
 
 # Wavelet states.
 numSpecificDecompositions_arr=(1 2 3)
-waveletTypes_arr=('bior3.1')
+waveletTypes_arr=('bior3.1' 'bior3.3' 'bior3.7')
 minWaveletDims=(16 32 64)
 
 for minAngularThreshold in "${minAngularThresholds[@]}"
