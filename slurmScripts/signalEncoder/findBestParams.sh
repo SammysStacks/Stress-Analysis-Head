@@ -7,9 +7,9 @@ beta1s_arr=('0.7')
 beta2s_arr=('0.8')
 
 # Learning parameters.
-lrs_profile=(0.01)  # 0.005 <= x <= 0.075
-lrs_profileGen=('1e-4' '3e-4') # x <= 1e-4;
-lrs_reversible=('5e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
+lrs_profile=(0.01 0.005)  # 0.005 <= x <= 0.075
+lrs_profileGen=('1e-4' '3e-4' '5e-4') # x <= 1e-4;
+lrs_reversible=('4e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
 
 # Neural operator parameters.
 waveletTypes_arr=(
@@ -43,14 +43,14 @@ numSpecificEncoderLayers_arr=(1)
 numSharedEncoderLayers_arr=(7)  # [4, 10]; Best: 5 and 7
 
 # Profile parameters.
-numProfileShots_arr=(24)  # (8, [16, 24], 32)
+numProfileShots_arr=(32)  # (8, [16, 24], 32)
 encodedDimensions_arr=(512)
 profileParams=(512 256 128)
 
 # Wavelet states.
-numSpecificDecompositions_arr=(1 2)
+numSpecificDecompositions_arr=(1 2 3)
 waveletTypes_arr=('bior3.1' 'bior3.3')
-minWaveletDims=(16 32 64 128)
+minWaveletDims=(32 64 128)
 
 for minAngularThreshold in "${minAngularThresholds[@]}"
 do
