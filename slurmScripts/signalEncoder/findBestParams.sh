@@ -45,11 +45,11 @@ numSharedEncoderLayers_arr=(7)  # [4, 10]; Best: 5 and 7
 # Profile parameters.
 numProfileShots_arr=(32)  # (8, [16, 24], 32)
 encodedDimensions_arr=(512)
-profileParams=(512 256 128)
+profileParams=(512 256 128 64)
 
 # Wavelet states.
-numSpecificDecompositions_arr=(2)
-waveletTypes_arr=('bior3.1' 'bior3.3' 'bior3.5')
+numSpecificDecompositions_arr=(1 2 3)
+waveletTypes_arr=('bior3.1' 'bior3.3' 'bior3.5' 'bior3.7')
 minWaveletDims=(64 128 256)
 
 for minAngularThreshold in "${minAngularThresholds[@]}"
