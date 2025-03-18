@@ -45,7 +45,7 @@ numSharedEncoderLayers_arr=(7)  # [4, 10]; Best: 5 and 7
 # Profile parameters.
 numProfileShots_arr=(24)  # (8, [16, 24], 32)
 encodedDimensions_arr=(512)
-profileParams=(256 128 64)
+profileParams=(512 256 128 64)
 
 # Wavelet states.
 numSpecificDecompositions_arr=(1 2 3)
