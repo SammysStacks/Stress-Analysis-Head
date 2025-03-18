@@ -17,7 +17,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
     def __init__(self, numSignals, sequenceLength, numLayers, activationMethod):
         super(reversibleLieLayer, self).__init__(numSignals, sequenceLength, numLayers, activationMethod)
-        initialMaxGivensAngle = self.getInverseAngleParams(torch.tensor(1 * math.pi/180 / math.sqrt(sequenceLength)))
+        initialMaxGivensAngle = self.getInverseAngleParams(torch.tensor(math.sqrt(3/sequenceLength) * math.pi/180))
         self.identityMatrix = torch.eye(self.sequenceLength, dtype=torch.float64)
 
         # Create the neural layers.
@@ -109,6 +109,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
             minAngularThreshold = modelConstants.userInputParams['minAngularThreshold'] * torch.pi / 180  # Convert to radians
             maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold'] * torch.pi / 180  # Convert to radians
             maxAngularParam = self.getInverseAngleParams(torch.tensor(maxAngularThreshold))
+            if epoch <= 16: minAngularThreshold = 0.05 * torch.pi / 180
 
             for layerInd in range(self.numLayers):
                 givensAngles = self.getGivensAngles(layerInd)  # Dim: numSignals, numParams
@@ -127,7 +128,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
             # sortedGivensAngles -> [0, 0.1, 0.2, ... pi/2]
 
             # Get the threshold.
-            if 16 <= self.sequenceLength: numParamsKeeping = min(4096, self.numParams) - epoch*((self.sequenceLength/32)**2)
+            if 16 <= self.sequenceLength: numParamsKeeping = self.numParams - epoch*((self.sequenceLength/32)**2)
             else: numParamsKeeping = self.numParams - epoch
 
             # Get the last index to keep.
