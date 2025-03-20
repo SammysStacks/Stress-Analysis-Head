@@ -121,7 +121,7 @@ class eegProtocol(globalProtocol):
         # Find the bad points associated with motion artifacts
         if removePoints and self.cutOffFreq[0] is not None:
             motionIndices = np.logical_or(data < 0.1, data > 3.15)
-            motionIndices_Broadened = scipy.signal.savgol_filter(motionIndices, max(3, int(self.samplingFreq * 10)), 1, mode='nearest', deriv=0)
+            motionIndices_Broadened = scipy.signal.savgol_filter(motionIndices, max(3, int(self.samplingFreq * 10)), polyorder=1, mode='nearest', deriv=0)
             goodIndicesMask = motionIndices_Broadened < 0.01
         else:
             goodIndicesMask = np.full_like(data, fill_value=True, dtype=bool)

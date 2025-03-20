@@ -13,7 +13,7 @@ class eogProtocol(globalProtocol):
 
     def __init__(self, numPointsPerBatch=3000, moveDataFinger=10, channelIndices=2, plottingClass=None, readData=None, voltageRange=(0, 3.3)):
         # Filter parameters.
-        self.cutOffFreq = [.5, 15]  # Optimal LPF Cutoff in Literature is 6-8 or 20 Hz (Max 35 or 50); I Found 20 Hz was the Best, but can go to 15 if noisy (small amplitude cutoff)
+        self.cutOffFreq = [0.5, 15]  # Optimal LPF Cutoff in Literature is 6-8 or 20 Hz (Max 35 or 50); I Found 20 Hz was the Best, but can go to 15 if noisy (small amplitude cutoff)
         if voltageRange[0] is None:
             print("No Voltage Range Given; Defaulting to 0-3.3 Volts")
             voltageRange = [0, 3.3]
@@ -207,15 +207,15 @@ class eogProtocol(globalProtocol):
     def filterData(self, timepoints, data, removePoints=False):
         if removePoints:
             # Find the bad points associated with motion artifacts
-            motionIndices = np.logical_or(data < 0.1, data > 3.18)
-            motionIndices_Broadened = scipy.signal.savgol_filter(motionIndices, max(3, int(self.samplingFreq * 2)), 1, mode='nearest', deriv=0)
+            motionIndices = np.logical_or(data < 0.1, data > 3.15)
+            motionIndices_Broadened = scipy.signal.savgol_filter(motionIndices, max(3, int(self.samplingFreq * 2)), polyorder=1, mode='nearest', deriv=0)
             goodIndicesMask = motionIndices_Broadened < 0.01
         else:
             goodIndicesMask = np.full_like(data, True, dtype=bool)
 
         # Filtering the whole dataset
         filteredData = self.filteringMethods.bandPassFilter.butterFilter(data, self.cutOffFreq[1], self.samplingFreq, order=5, filterType='low')
-        filteredData = scipy.signal.savgol_filter(filteredData, max(3, int(self.samplingFreq * 0.05)), 2, mode='nearest', deriv=0)
+        filteredData = scipy.signal.savgol_filter(filteredData, max(3, int(self.samplingFreq * 0.05)), polyorder=2, mode='nearest', deriv=0)
         # Remove the bad points from the filtered data
         filteredTime = timepoints[goodIndicesMask]
         filteredData = filteredData[goodIndicesMask]

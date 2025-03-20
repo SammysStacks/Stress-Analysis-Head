@@ -140,7 +140,7 @@ class tempProtocol(globalProtocol):
         filteredData = filteredData[goodIndicesMask]
 
         # Finish filtering the data
-        filteredData = scipy.signal.savgol_filter(filteredData, max(7, int(self.samplingFreq * 15)), 1, mode='nearest', deriv=0)
+        filteredData = scipy.signal.savgol_filter(filteredData, max(7, int(self.samplingFreq * 15)), polyorder=1, mode='nearest', deriv=0)
 
         return filteredTime, filteredData, goodIndicesMask
 
