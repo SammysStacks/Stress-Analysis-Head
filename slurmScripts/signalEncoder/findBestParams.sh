@@ -7,9 +7,9 @@ beta1s_arr=('0.7')
 beta2s_arr=('0.8')
 
 # Learning parameters.
-lrs_profile=(0.02)  # 0.005 <= x <= 0.075
-lrs_profileGen=('1e-3' '4e-4' '2e-4') # x <= 1e-4;
-lrs_reversible=('1e-3' '4e-4' '2e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
+lrs_profile=(0.0075)  # 0.005 <= x <= 0.075
+lrs_profileGen=('4e-4' '2e-4') # x <= 1e-4;
+lrs_reversible=('4e-4' '2e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
 
 # Neural operator parameters.
 waveletTypes_arr=(
