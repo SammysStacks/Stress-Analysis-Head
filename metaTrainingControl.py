@@ -63,7 +63,7 @@ if __name__ == "__main__":
     parser.add_argument('--numSharedEncoderLayers', type=int, default=5, help='The number of layers in the model: [2, 10]')
 
     # Add arguments for the health profile.
-    parser.add_argument('--initialProfileAmp', type=float, default=0.01, help='The limits for profile initialization. Should be near zero.')
+    parser.add_argument('--initialProfileAmp', type=float, default=0.001, help='The limits for profile initialization. Should be near zero.')
     parser.add_argument('--profileDimension', type=int, default=256, help='The number of profile weights: [32, 256]')
     parser.add_argument('--numProfileShots', type=int, default=24, help='The epochs for profile training: [16, 32]')
 
@@ -83,7 +83,7 @@ if __name__ == "__main__":
 
     # Signal encoder learning rates.
     parser.add_argument('--profileLR', type=float, default=0.01, help='The learning rate of the health model.')
-    parser.add_argument('--physGenLR', type=float, default=4e-4, help='The learning rate of the general model.')
+    parser.add_argument('--physGenLR', type=float, default=1e-3, help='The learning rate of the general model.')
     parser.add_argument('--reversibleLR', type=float, default=4e-4, help='The learning rate of the general model.')
 
     # Signal encoder weight decays.
