@@ -6,11 +6,6 @@ momentums_arr=('0.001')
 beta1s_arr=('0.7')
 beta2s_arr=('0.8')
 
-# Learning parameters.
-lrs_profile=(0.0075)  # 0.005 <= x <= 0.075
-lrs_profileGen=('4e-4' '2e-4') # x <= 1e-4;
-lrs_reversible=('4e-4' '2e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
-
 # Neural operator parameters.
 waveletTypes_arr=(
     # 15 rbio wavelets
@@ -33,6 +28,11 @@ waveletTypes_arr=(
     'coif1' 'coif2' 'coif3' 'coif4' 'coif5' 'coif6' 'coif7' 'coif8' 'coif9' 'coif10' \
     'coif11' 'coif12' 'coif13' 'coif14' 'coif15' 'coif16' 'coif17' \
 )
+
+# Learning parameters.
+lrs_profile=(0.0075)  # 0.005 <= x <= 0.075
+lrs_profileGen=('4e-4' '2e-4') # x <= 1e-4;
+lrs_reversible=('4e-4' '2e-4')  # 1e-4 <= x == 1e-3 -> [2.5e-4, 5e-4]
 
 # Angular reference states.
 minAngularThresholds=(0.01 0.05 0.1)  # [0.01, 0.25]
