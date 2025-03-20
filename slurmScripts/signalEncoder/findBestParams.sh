@@ -35,7 +35,7 @@ waveletTypes_arr=(
 )
 
 # Angular reference states.
-minAngularThresholds=(0.01 0.1)  # [0.01, 0.25]
+minAngularThresholds=(0.01 0.05 0.1)  # [0.01, 0.25]
 maxAngularThresholds=(45)
 
 # Binary reference states.
