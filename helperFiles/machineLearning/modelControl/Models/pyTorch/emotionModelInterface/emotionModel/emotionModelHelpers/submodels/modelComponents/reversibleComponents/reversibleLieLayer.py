@@ -24,7 +24,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
         for layerInd in range(self.numLayers):
             # Create the neural weights.
             parameters = torch.randn(self.numSignals, self.numParams or 1, dtype=torch.float64)
-            parameters = nn.init.uniform_(parameters, a=-initialMaxGivensAngle, b=initialMaxGivensAngle)
+            parameters = nn.init.normal_(parameters, mean=0, std=initialMaxGivensAngle)
             # parameters: numSignals, numParams
 
             # Store the parameters.
@@ -132,7 +132,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
             else: numParamsKeeping = self.numParams - epoch
 
             # Get the last index to keep.
-            lastIndexKeeping = int(min(self.numParams, max(2*self.sequenceLength, numParamsKeeping)))
+            lastIndexKeeping = int(min(self.numParams, max(4*self.sequenceLength, numParamsKeeping)))
 
             # Zero out the values below the threshold
             minAngleValues = sortedGivensAngles[:,  -lastIndexKeeping].unsqueeze(-1)  # Shape (numSignals, 1)
