@@ -9,16 +9,22 @@ class optimizerMethods:
     @staticmethod
     def getModelParams(submodel, model):
         modelParams = [
-            # Specify the model parameters for the shared signal encoding.
-            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if ("givensRotationParams" not in name and "healthGenerationModel" not in name and "fourierModel" not in name)), 'weight_decay': 1e-4, 'lr': 1e-3},  # 1e-5 - 5e-4
-            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "givensRotationParams" in name), 'weight_decay': 1e-4, 'lr': 1e-3},  # 1e-4 - 0.1
-            {'params': model.sharedSignalEncoderModel.healthGenerationModel.parameters(), 'weight_decay': modelConstants.userInputParams['physGenWD'], 'lr': modelConstants.userInputParams['physGenLR']},  # 1e-2 - 1e2
-            {'params': model.sharedSignalEncoderModel.fourierModel.parameters(), 'weight_decay': modelConstants.userInputParams['physGenWD'], 'lr': modelConstants.userInputParams['physGenLR']},  # 1e-2 - 1e2
+            # Specify the profile parameters for the signal encoding.
+            {'params': model.sharedSignalEncoderModel.healthGenerationModel.parameters(), 'weight_decay': modelConstants.userInputParams['physGenWD'], 'lr': modelConstants.userInputParams['physGenLR']},
+            {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': modelConstants.userInputParams['profileWD'], 'lr': modelConstants.userInputParams['profileLR']},
+            {'params': model.sharedSignalEncoderModel.fourierModel.parameters(), 'weight_decay': modelConstants.userInputParams['physGenWD'], 'lr': modelConstants.userInputParams['physGenLR']},
 
-            # Specify the model parameters for the specific signal encoding.
-            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if ("givensRotationParams" not in name and "profileModel" not in name)), 'weight_decay': 1e-4, 'lr': 1e-3},  # 1e-2 - 1e2
-            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "givensRotationParams" in name), 'weight_decay': modelConstants.userInputParams['reversibleWD'], 'lr': modelConstants.userInputParams['reversibleLR']},  # 1e-2 - 1e2
-            {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': modelConstants.userInputParams['profileWD'], 'lr': modelConstants.userInputParams['profileLR']},  # 0.1 - 0.01
+            # Specify the scalar parameters for the signal encoding.
+            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "jacobianParameter" in name), 'weight_decay': 1e-4, 'lr': 1e-3},
+            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "jacobianParameter" in name), 'weight_decay': 1e-4, 'lr': 1e-3},
+
+            # Specify the angular parameters for the signal encoding.
+            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "givensRotationParams" in name), 'weight_decay': modelConstants.userInputParams['reversibleWD'], 'lr': modelConstants.userInputParams['reversibleLR']},
+            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "givensRotationParams" in name), 'weight_decay': 1e-4, 'lr': 1e-3},
+
+            # Specify the activation parameters for the signal encoding.
+            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "activationFunction" in name), 'weight_decay':  1e-4, 'lr': 1e-3},
+            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "activationFunction" in name), 'weight_decay': 1e-4, 'lr': 1e-3},
         ]
 
         if submodel == modelConstants.emotionModel:
@@ -39,7 +45,7 @@ class optimizerMethods:
         modelParams = self.getModelParams(submodel, model)
 
         # Set the optimizer and scheduler.
-        optimizer = self.setOptimizer(modelParams, lr=1e-5, weight_decay=1e-6, optimizerType=modelConstants.userInputParams["optimizerType"])
+        optimizer = self.setOptimizer(modelParams, lr=1e-4, weight_decay=1e-5, optimizerType=modelConstants.userInputParams["optimizerType"])
         scheduler = self.getLearningRateScheduler(optimizer)
 
         return optimizer, scheduler
