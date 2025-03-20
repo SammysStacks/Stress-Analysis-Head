@@ -74,7 +74,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     def fourierAdjustments(self):
         layers = []
-        for _ in range(4):  # [4, 12]
+        for _ in range(8):  # [4, 12]
             layers.append(self.convolutionalFilters_resNetBlocks(numResNets=3, numBlocks=3, numChannels=[2, 2], kernel_sizes=3, dilations=[1, 2, 1], groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
             layers.append(self.convolutionalFilters_resNetBlocks(numResNets=3, numBlocks=3, numChannels=[2, 2], kernel_sizes=3, dilations=[1, 4, 1], groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
 
