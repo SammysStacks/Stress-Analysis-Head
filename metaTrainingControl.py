@@ -55,8 +55,7 @@ if __name__ == "__main__":
     # Add arguments for the neural operator.
     parser.add_argument('--waveletType', type=str, default='bior3.1', help='The wavelet type for the wavelet transform: bior3.1, bior3.3, bior2.2, bior3.5')
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
-    parser.add_argument('--numSpecificDecompositions', type=int, default=1, help='The number of decompositions to use: [1, 2]')
-    parser.add_argument('--minWaveletDim', type=int, default=256, help='The minimum dimension of the wavelet transform.')
+    parser.add_argument('--minWaveletDim', type=int, default=32, help='The minimum dimension of the wavelet transform.')
 
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model: [1, 2]')

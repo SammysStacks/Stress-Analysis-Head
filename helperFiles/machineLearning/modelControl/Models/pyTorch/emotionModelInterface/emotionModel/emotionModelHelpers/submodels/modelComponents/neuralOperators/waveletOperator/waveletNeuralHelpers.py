@@ -71,7 +71,7 @@ class waveletNeuralHelpers(emotionModelWeights):
         highFrequencyProtocolInfo = encodeHighFrequencyProtocol.split("-")  # ['highFreq', 'numHighFreq2Learn']
         self.encodeHighFrequencies = highFrequencyProtocolInfo[0] in ['highFreq']  # Whether to encode the high frequencies.
         self.encodeLowFrequency = encodeLowFrequencyProtocol in ['lowFreq']  # Whether to encode the low-frequency signal.
-        self.numFrequenciesIgnore = 0 if len(highFrequencyProtocolInfo) == 1 else self.numDecompositions - int(highFrequencyProtocolInfo[1])
+        self.culledHighFrequencyBounds = (-1, -1) if len(highFrequencyProtocolInfo) == 1 else (int(highFrequencyProtocolInfo[1]), int(highFrequencyProtocolInfo[2]))
 
         # Initialize the wavelet decomposition and reconstruction layers.
         self.dwt = DWT1DForward(J=self.numDecompositions, wave=self.waveletType, mode=self.mode)

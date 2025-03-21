@@ -40,7 +40,7 @@ class waveletNeuralOperatorWeights(waveletNeuralHelpers):
             highFrequenciesWeights = nn.ModuleList()
             numFrequencies = len(self.highFrequenciesShapes)
             for highFrequenciesInd in range(numFrequencies):
-                if highFrequenciesInd < self.numFrequenciesIgnore: highFrequencyParam = nn.Identity()
+                if self.culledHighFrequencyBounds[0] <= highFrequenciesInd < self.culledHighFrequencyBounds[1]: highFrequencyParam = nn.Identity()
                 else: highFrequencyParam = self.getNeuralWeightParameters(inChannel=self.numInputSignals, initialFrequencyDim=self.highFrequenciesShapes[highFrequenciesInd])
                 highFrequenciesWeights.append(highFrequencyParam)
 
