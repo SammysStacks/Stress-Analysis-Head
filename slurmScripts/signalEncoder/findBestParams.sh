@@ -50,7 +50,7 @@ profileParams=(128 64 32)  # [32, 512]
 # Wavelet states.
 numSpecificDecompositions_arr=(1)
 waveletTypes_arr=('bior3.1')
-minWaveletDims=(256)
+minWaveletDims=(32)
 
 for minAngularThreshold in "${minAngularThresholds[@]}"
 do

@@ -55,7 +55,7 @@ if __name__ == "__main__":
     # Add arguments for the neural operator.
     parser.add_argument('--waveletType', type=str, default='bior3.1', help='The wavelet type for the wavelet transform: bior3.1, bior3.3, bior2.2, bior3.5')
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
-    parser.add_argument('--numSpecificDecompositions', type=int, default=4, help='The number of decompositions to use: [1, 2]')
+    parser.add_argument('--numSpecificDecompositions', type=int, default=1, help='The number of decompositions to use: [1, 2]')
     parser.add_argument('--minWaveletDim', type=int, default=32, help='The minimum dimension of the wavelet transform.')
 
     # Add arguments for the signal encoder architecture.
@@ -64,7 +64,7 @@ if __name__ == "__main__":
 
     # Add arguments for the health profile.
     parser.add_argument('--initialProfileAmp', type=float, default=0.001, help='The limits for profile initialization. Should be near zero.')
-    parser.add_argument('--profileDimension', type=int, default=128, help='The number of profile weights: [32, 256]')
+    parser.add_argument('--profileDimension', type=int, default=64, help='The number of profile weights: [32, 256]')
     parser.add_argument('--numProfileShots', type=int, default=24, help='The epochs for profile training: [16, 32]')
 
     # Add arguments for observational learning.
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     # ----------------------- Training Parameters ----------------------- #
 
     # Signal encoder learning rates.
-    parser.add_argument('--profileLR', type=float, default=0.005, help='The learning rate of the health model.')
+    parser.add_argument('--profileLR', type=float, default=0.05, help='The learning rate of the health model.')
     parser.add_argument('--physGenLR', type=float, default=4e-4, help='The learning rate of the general model.')
     parser.add_argument('--reversibleLR', type=float, default=4e-4, help='The learning rate of the general model.')
 
