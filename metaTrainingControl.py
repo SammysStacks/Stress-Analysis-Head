@@ -37,7 +37,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-03-21"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2025-03-21 1-1"  # The current date we are training the model. Unique identifier of this training set.
     holdDatasetOut = True  # Whether to hold out the validation dataset.
     plotAllEpochs = False  # Whether to plot all epochs or not.
     testSplitRatio = 0.1  # The percentage of testing points.
@@ -62,9 +62,9 @@ if __name__ == "__main__":
     parser.add_argument('--numSharedEncoderLayers', type=int, default=5, help='The number of layers in the model: [2, 10]')
 
     # Add arguments for the health profile.
-    parser.add_argument('--initialProfileAmp', type=float, default=0.001, help='The limits for profile initialization. Should be near zero.')
-    parser.add_argument('--profileDimension', type=int, default=64, help='The number of profile weights: [32, 256]')
-    parser.add_argument('--numProfileShots', type=int, default=24, help='The epochs for profile training: [16, 32]')
+    parser.add_argument('--initialProfileAmp', type=float, default=1e-2, help='The limits for profile initialization. Should be near zero.')
+    parser.add_argument('--profileDimension', type=int, default=32, help='The number of profile weights: [32, 256]')
+    parser.add_argument('--numProfileShots', type=int, default=32, help='The epochs for profile training: [16, 32]')
 
     # Add arguments for observational learning.
     parser.add_argument('--minAngularThreshold', type=float, default=0.01, help='The smaller rotational threshold in degrees.')
@@ -86,7 +86,7 @@ if __name__ == "__main__":
     parser.add_argument('--reversibleLR', type=float, default=4e-4, help='The learning rate of the general model.')
 
     # Signal encoder weight decays.
-    parser.add_argument('--profileWD', type=float, default=1e-4, help='The learning rate of the general model.')
+    parser.add_argument('--profileWD', type=float, default=1e-6, help='The learning rate of the general model.')
     parser.add_argument('--physGenWD', type=float, default=1e-5, help='The learning rate of the general model.')
     parser.add_argument('--reversibleWD', type=float, default=1e-4, help='The learning rate of the general model.')
 
