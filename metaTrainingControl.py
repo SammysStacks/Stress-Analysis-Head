@@ -55,7 +55,7 @@ if __name__ == "__main__":
     # Add arguments for the neural operator.
     parser.add_argument('--waveletType', type=str, default='bior3.1', help='The wavelet type for the wavelet transform: bior3.1, bior3.3, bior2.2, bior3.5')
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
-    parser.add_argument('--minWaveletDim', type=int, default=64, help='The minimum dimension of the wavelet transform.')
+    parser.add_argument('--minWaveletDim', type=int, default=128, help='The minimum dimension of the wavelet transform.')
 
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model: [1, 2]')
@@ -86,8 +86,8 @@ if __name__ == "__main__":
     parser.add_argument('--reversibleLR', type=float, default=4e-4, help='The learning rate of the general model.')
 
     # Signal encoder weight decays.
-    parser.add_argument('--profileWD', type=float, default=1e-6, help='The learning rate of the general model.')
-    parser.add_argument('--physGenWD', type=float, default=1e-5, help='The learning rate of the general model.')
+    parser.add_argument('--profileWD', type=float, default=1e-4, help='The learning rate of the general model.')
+    parser.add_argument('--physGenWD', type=float, default=1e-4, help='The learning rate of the general model.')
     parser.add_argument('--reversibleWD', type=float, default=1e-3, help='The learning rate of the general model.')
 
     # Add arguments for the emotion and activity architecture.
