@@ -62,7 +62,7 @@ if __name__ == "__main__":
     parser.add_argument('--numSharedEncoderLayers', type=int, default=7, help='The number of layers in the model: [2, 10]')
 
     # Add arguments for the health profile.
-    parser.add_argument('--initialProfileAmp', type=float, default=1e-2, help='The limits for profile initialization. Should be near zero')
+    parser.add_argument('--initialProfileAmp', type=float, default=0.01, help='The limits for profile initialization. Should be near zero')
     parser.add_argument('--profileDimension', type=int, default=64, help='The number of profile weights: [32, 256]')
     parser.add_argument('--numProfileShots', type=int, default=36, help='The epochs for profile training: [16, 32]')
 
