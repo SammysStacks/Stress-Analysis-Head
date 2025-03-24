@@ -37,7 +37,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-03-23"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2025-03-24"  # The current date we are training the model. Unique identifier of this training set.
     holdDatasetOut = True  # Whether to hold out the validation dataset.
     plotAllEpochs = False  # Whether to plot all epochs or not.
     testSplitRatio = 0.1  # The percentage of testing points.
@@ -55,7 +55,7 @@ if __name__ == "__main__":
     # Add arguments for the neural operator.
     parser.add_argument('--waveletType', type=str, default='bior3.1', help='The wavelet type for the wavelet transform: bior3.1, bior3.3, bior2.2, bior3.5')
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
-    parser.add_argument('--minWaveletDim', type=int, default=128, help='The minimum dimension of the wavelet transform.')
+    parser.add_argument('--minWaveletDim', type=int, default=64, help='The minimum dimension of the wavelet transform.')
 
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model: [1, 2]')
@@ -63,11 +63,11 @@ if __name__ == "__main__":
 
     # Add arguments for the health profile.
     parser.add_argument('--initialProfileAmp', type=float, default=1e-2, help='The limits for profile initialization. Should be near zero.')
-    parser.add_argument('--profileDimension', type=int, default=128, help='The number of profile weights: [32, 256]')
+    parser.add_argument('--profileDimension', type=int, default=64, help='The number of profile weights: [32, 256]')
     parser.add_argument('--numProfileShots', type=int, default=32, help='The epochs for profile training: [16, 32]')
 
     # Add arguments for observational learning.
-    parser.add_argument('--minAngularThreshold', type=float, default=0.01, help='The smaller rotational threshold in degrees.')
+    parser.add_argument('--minAngularThreshold', type=float, default=0.05, help='The smaller rotational threshold in degrees.')
     parser.add_argument('--maxAngularThreshold', type=float, default=45, help='The larger rotational threshold in degrees.')
 
     # dd arguments for the emotion and activity architecture.
@@ -82,13 +82,13 @@ if __name__ == "__main__":
 
     # Signal encoder learning rates.
     parser.add_argument('--profileLR', type=float, default=0.01, help='The learning rate of the health model.')
-    parser.add_argument('--physGenLR', type=float, default=4e-4, help='The learning rate of the general model.')
-    parser.add_argument('--reversibleLR', type=float, default=5e-4, help='The learning rate of the general model.')
+    parser.add_argument('--physGenLR', type=float, default=2e-4, help='The learning rate of the general model.')
+    parser.add_argument('--reversibleLR', type=float, default=4e-4, help='The learning rate of the general model.')
 
     # Signal encoder weight decays.
     parser.add_argument('--profileWD', type=float, default=1e-6, help='The learning rate of the general model.')
-    parser.add_argument('--physGenWD', type=float, default=1e-4, help='The learning rate of the general model.')
-    parser.add_argument('--reversibleWD', type=float, default=1e-3, help='The learning rate of the general model.')
+    parser.add_argument('--physGenWD', type=float, default=1e-6, help='The learning rate of the general model.')
+    parser.add_argument('--reversibleWD', type=float, default=1e-6, help='The learning rate of the general model.')
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--momentum_decay', type=float, default=0.001, help='Momentum decay for the optimizer.')
