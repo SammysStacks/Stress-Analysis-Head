@@ -11,6 +11,7 @@ from shap.plots.colors._colors import lch2rgb
 from helperFiles.globalPlottingProtocols import globalPlottingProtocols
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleLieLayerInterface import reversibleLieLayerInterface
 
 
 class signalEncoderVisualizations(globalPlottingProtocols):
@@ -200,7 +201,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         numLow, numSpecificHigh, numSharedHigh = 0, 0, 0
 
         # Get the angular thresholds.
-        minAngularThreshold = modelConstants.userInputParams['minAngularThreshold']
+        minAngularThreshold = reversibleLieLayerInterface.getMinAngularThreshold(epoch)
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
         numSpecific = modelConstants.userInputParams['numSpecificEncoderLayers']
         numShared = modelConstants.userInputParams['numSharedEncoderLayers']
@@ -276,7 +277,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         bins = np.arange(-degrees, degrees + 1, 1)
 
         # Get the angular thresholds.
-        minAngularThreshold = modelConstants.userInputParams['minAngularThreshold']
+        minAngularThreshold = reversibleLieLayerInterface.getMinAngularThreshold(epoch)
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
         numSpecific = modelConstants.userInputParams['numSpecificEncoderLayers']
         numShared = modelConstants.userInputParams['numSharedEncoderLayers']
@@ -354,7 +355,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         degrees = (180 if degreesFlag else math.pi) / 4
 
         # Get the angular thresholds.
-        minAngularThreshold = modelConstants.userInputParams['minAngularThreshold']
+        minAngularThreshold = reversibleLieLayerInterface.getMinAngularThreshold(epoch)
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
         numSpecific = modelConstants.userInputParams['numSpecificEncoderLayers']
         numShared = modelConstants.userInputParams['numSharedEncoderLayers']

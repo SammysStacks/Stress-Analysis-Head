@@ -100,15 +100,20 @@ class reversibleLieLayer(reversibleLieLayerInterface):
         return inputData
     # ------------------- Observational Learning ------------------- #
 
+    @staticmethod
+    def getMinAngularThreshold(epoch):
+        minAngularThreshold = modelConstants.userInputParams['minAngularThreshold'] * torch.pi / 180  # Convert to radians
+        minAngularThreshold = min(minAngularThreshold, epoch * 0.025 * torch.pi / 180)
+        return minAngularThreshold
+
     def angularThresholding(self, epoch, sharedLayer):
         if sharedLayer: return None
 
         with torch.no_grad():
             # Get the angular thresholds.
-            minAngularThreshold = modelConstants.userInputParams['minAngularThreshold'] * torch.pi / 180  # Convert to radians
             maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold'] * torch.pi / 180  # Convert to radians
             maxAngularParam = self.getInverseAngleParams(torch.tensor(maxAngularThreshold))
-            if epoch <= 100: minAngularThreshold = epoch * 0.02 * torch.pi / 180
+            minAngularThreshold = self.getMinAngularThreshold(epoch)
 
             for layerInd in range(self.numLayers):
                 givensAngles = self.getGivensAngles(layerInd)  # Dim: numSignals, numParams
