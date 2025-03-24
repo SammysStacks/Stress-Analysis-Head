@@ -67,7 +67,7 @@ if __name__ == "__main__":
     parser.add_argument('--numProfileShots', type=int, default=32, help='The epochs for profile training: [16, 32]')
 
     # Add arguments for observational learning.
-    parser.add_argument('--minAngularThreshold', type=float, default=0.05, help='The smaller rotational threshold in degrees.')
+    parser.add_argument('--minAngularThreshold', type=float, default=2, help='The smaller rotational threshold in degrees.')
     parser.add_argument('--maxAngularThreshold', type=float, default=45, help='The larger rotational threshold in degrees.')
 
     # dd arguments for the emotion and activity architecture.
