@@ -102,8 +102,9 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
     @staticmethod
     def getMinAngularThreshold(epoch):
+        minThresholdStep = modelConstants.userInputParams['minThresholdStep']
         minAngularThreshold = modelConstants.userInputParams['minAngularThreshold'] * torch.pi / 180  # Convert to radians
-        minAngularThreshold = min(minAngularThreshold, epoch * 0.025 * torch.pi / 180)
+        minAngularThreshold = min(minAngularThreshold, epoch * minThresholdStep * torch.pi / 180)
         return minAngularThreshold
 
     def angularThresholding(self, epoch, sharedLayer):
@@ -112,7 +113,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
         with torch.no_grad():
             # Get the angular thresholds.
             maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold'] * torch.pi / 180  # Convert to radians
-            maxAngularParam = self.getInverseAngleParams(torch.tensor(maxAngularThreshold))
+            maxAngularParam = self.getInverseAngleParams(torch.as_tensor(maxAngularThreshold))
             minAngularThreshold = self.getMinAngularThreshold(epoch)
 
             for layerInd in range(self.numLayers):
@@ -122,7 +123,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
                 self.givensRotationParams[layerInd][givensAngles.abs() < minAngularThreshold] = 0
 
                 # Apply an extra thresholding if the sequence length is large.
-                if not sharedLayer: self.percentParamThresholding(layerInd, epoch)  # Must be every epoch! Helps diminish overfitting.
+                # if not sharedLayer: self.percentParamThresholding(layerInd, epoch)  # Must be every epoch! Helps diminish overfitting.
 
     def percentParamThresholding(self, layerInd, epoch):
         with torch.no_grad():

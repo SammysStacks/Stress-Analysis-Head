@@ -21,6 +21,7 @@ srun accelerate launch ./../../metaTrainingControl.py \
     --minAngularThreshold "${15}" \
     --maxAngularThreshold "${16}" \
     --minWaveletDim "${17}" \
+    --minThresholdStep "${18}"
 
 end=$(date +%s)
 runtime=$((end-start))
