@@ -68,8 +68,8 @@ if __name__ == "__main__":
 
     # Add arguments for observational learning.
     parser.add_argument('--maxAngularThreshold', type=float, default=45, help='The larger rotational threshold in (degrees)')
-    parser.add_argument('--minAngularThreshold', type=float, default=2, help='The smaller rotational threshold in (degrees)')
-    parser.add_argument('--minThresholdStep', type=float, default=0.05, help='The rotational threshold step (degrees)')
+    parser.add_argument('--minAngularThreshold', type=float, default=5, help='The smaller rotational threshold in (degrees)')
+    parser.add_argument('--minThresholdStep', type=float, default=0.1, help='The rotational threshold step (degrees)')
 
     # dd arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions)')
