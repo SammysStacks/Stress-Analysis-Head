@@ -127,11 +127,11 @@ class reversibleLieLayer(reversibleLieLayerInterface):
             # sortedGivensAngles -> [0, 0.1, 0.2, ... pi/2]
 
             # Get the threshold.
-            if 16 <= self.sequenceLength: numParamsKeeping = self.numParams - epoch*((self.sequenceLength/32)**2)
+            if 16 <= self.sequenceLength: numParamsKeeping = self.numParams - epoch*((self.sequenceLength/8)**2)
             else: numParamsKeeping = self.numParams - epoch
 
             # Get the last index to keep.
-            lastIndexKeeping = int(min(self.numParams, max(4*self.sequenceLength, numParamsKeeping)))
+            lastIndexKeeping = int(min(self.numParams, max(5*self.sequenceLength, numParamsKeeping)))
 
             # Zero out the values below the threshold
             minAngleValues = sortedGivensAngles[:,  -lastIndexKeeping].unsqueeze(-1)  # Shape (numSignals, 1)
