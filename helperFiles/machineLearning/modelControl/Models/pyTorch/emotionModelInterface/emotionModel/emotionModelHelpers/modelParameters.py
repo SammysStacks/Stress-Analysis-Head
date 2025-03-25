@@ -18,6 +18,7 @@ class modelParameters:
     def getNeuralParameters(userInputParams):
         userInputParams['neuralOperatorParameters'] = {
             'wavelet': {
+                'minWaveletDim': userInputParams['minWaveletDim'],  # The minimum dimension for the wavelet transform.
                 'waveletType': userInputParams['waveletType'],  # The type of wavelet to use for the wavelet transform.
                 'encodeHighFrequencyProtocol': 'highFreq',  # The protocol for encoding the high frequency signals.
                 'encodeLowFrequencyProtocol': 'lowFreq',  # The protocol for encoding the low frequency signals.
