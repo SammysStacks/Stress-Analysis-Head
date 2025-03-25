@@ -45,7 +45,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class waveletNeuralHelpers(emotionModelWeights):
 
-    def __init__(self, sequenceLength, numInputSignals, numOutputSignals, numLayers, numDecompositions, waveletType, mode, addBiasTerm, activationMethod,
+    def __init__(self, sequenceLength, numInputSignals, numOutputSignals, numLayers, minWaveletDim, waveletType, mode, addBiasTerm, activationMethod,
                  skipConnectionProtocol, encodeLowFrequencyProtocol='lowFreq', encodeHighFrequencyProtocol='highFreq', learningProtocol='CNN'):
         super(waveletNeuralHelpers, self).__init__()
         # Fourier neural operator parameters.
@@ -54,11 +54,11 @@ class waveletNeuralHelpers(emotionModelWeights):
         self.encodeLowFrequencyProtocol = encodeLowFrequencyProtocol  # The low-frequency encoding protocol to use.
         self.skipConnectionProtocol = skipConnectionProtocol  # The skip connection protocol to use.
         self.expectedSequenceLength = sequenceLength  # The expected length of the input signals.
-        self.numDecompositions = numDecompositions  # Maximum number of decompositions to apply.
         self.activationMethod = activationMethod  # The activation method to use.
         self.learningProtocol = learningProtocol  # The learning protocol to use.
         self.numOutputSignals = numOutputSignals  # Number of output signals.
         self.numInputSignals = numInputSignals  # Number of input signals.
+        self.minWaveletDim = minWaveletDim  # The minimum signal length to use for the wavelet decomposition.
         self.addBiasTerm = addBiasTerm  # Whether to add bias terms to the output.
         self.waveletType = waveletType  # The wavelet to use for the decomposition. Options: 'haar', 'db', 'sym', 'coif', 'bior', 'rbio', 'dmey', 'gaus', 'mexh', 'morl', 'cgau', 'shan', 'fbsp', 'cmor'
         self.numLayers = numLayers  # The number of layers to use for the decomposition.
@@ -74,7 +74,8 @@ class waveletNeuralHelpers(emotionModelWeights):
         self.culledHighFrequencyBounds = (-1, -1) if len(highFrequencyProtocolInfo) == 1 else (int(highFrequencyProtocolInfo[1]), int(highFrequencyProtocolInfo[2]))
 
         # Initialize the wavelet decomposition and reconstruction layers.
-        self.dwt = DWT1DForward(J=self.numDecompositions, wave=self.waveletType, mode=self.mode)
+        self.numDecompositions = self.max_decompositions(sequenceLength=self.sequenceLength, waveletType=self.waveletType, minWaveletDim=self.minWaveletDim)
+        self.dwt = DWT1DForward(J=self.numDecompositions.item(), wave=self.waveletType, mode=self.mode)
         self.idwt = DWT1DInverse(wave=self.waveletType, mode=self.mode)
 
         # Check the final output sizes.
@@ -87,12 +88,11 @@ class waveletNeuralHelpers(emotionModelWeights):
         assert self.encodeLowFrequencyProtocol in ['lowFreq', 'none'], "The low-frequency encoding protocol must be 'lowFreq', 'none'."
         assert self.numInputSignals == self.numOutputSignals, "The number of input signals must equal the output signals for now."
 
-    @staticmethod
-    def max_decompositions(signal_length, wavelet_name, minSignalLength=None):
-        wavelet = pywt.Wavelet(wavelet_name)
+    def max_decompositions(self, sequenceLength=None, waveletType=None, minWaveletDim=None):
+        wavelet = pywt.Wavelet(waveletType or self.waveletType)
         filter_length = len(wavelet.dec_lo)  # Decomposition low-pass filter length
-        filter_length = max(filter_length, minSignalLength + 1 if minSignalLength is not None else filter_length)
-        max_level = torch.floor(torch.log2(torch.tensor(signal_length / (filter_length - 1), dtype=torch.float32))).int()
+        filter_length = max(filter_length, minWaveletDim + 1 if minWaveletDim is not None else filter_length)
+        max_level = torch.floor(torch.log2(torch.tensor((sequenceLength or self.sequenceLength) / (filter_length - 1), dtype=torch.float32))).int()
         return max_level
 
     def getWaveletDimensions(self, sequenceLength):

@@ -6,9 +6,9 @@ from .waveletNeuralHelpers import waveletNeuralHelpers
 
 class waveletNeuralOperatorWeights(waveletNeuralHelpers):
 
-    def __init__(self, sequenceLength, numInputSignals, numOutputSignals, numLayers, numDecompositions, waveletType, mode, addBiasTerm, activationMethod,
+    def __init__(self, sequenceLength, numInputSignals, numOutputSignals, numLayers, minWaveletDim, waveletType, mode, addBiasTerm, activationMethod,
                  skipConnectionProtocol, encodeLowFrequencyProtocol='lowFreq', encodeHighFrequencyProtocol='highFreq', learningProtocol='CNN'):
-        super(waveletNeuralOperatorWeights, self).__init__(sequenceLength=sequenceLength, numInputSignals=numInputSignals, numOutputSignals=numOutputSignals, numLayers=numLayers, numDecompositions=numDecompositions,
+        super(waveletNeuralOperatorWeights, self).__init__(sequenceLength=sequenceLength, numInputSignals=numInputSignals, numOutputSignals=numOutputSignals, numLayers=numLayers, minWaveletDim=minWaveletDim,
                                                            waveletType=waveletType, mode=mode, addBiasTerm=addBiasTerm, activationMethod=activationMethod, skipConnectionProtocol=skipConnectionProtocol,
                                                            encodeLowFrequencyProtocol=encodeLowFrequencyProtocol, encodeHighFrequencyProtocol=encodeHighFrequencyProtocol, learningProtocol=learningProtocol)
         # Initialize wavelet neural operator parameters.

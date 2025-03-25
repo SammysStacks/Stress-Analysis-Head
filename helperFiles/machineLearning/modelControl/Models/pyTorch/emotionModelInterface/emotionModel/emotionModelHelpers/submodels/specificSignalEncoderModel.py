@@ -1,5 +1,4 @@
 import copy
-import math
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
@@ -20,9 +19,8 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         self.numSignals = len(featureNames)  # The number of signals to encode.
         self.featureNames = featureNames  # The names of the signals to encode.
 
-        # Only apply a transformation to the lowest of the high frequency decompositions.
-        numDecompositions = int(math.log2(modelConstants.userInputParams['encodedDimension'] // modelConstants.userInputParams['minWaveletDim']))
-        self.neuralOperatorParameters['wavelet']['encodeHighFrequencyProtocol'] = f'highFreq-{1}-{numDecompositions}'
+        # Set the wavelet parameters.
+        self.neuralOperatorParameters['wavelet']['minWaveletDim'] = encodedDimension // 2
 
         # The neural layers for the signal encoder.
         self.profileModel = profileModel(numExperiments=numExperiments, numSignals=self.numSignals, encodedDimension=encodedDimension)

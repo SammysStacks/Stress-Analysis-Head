@@ -1,6 +1,6 @@
 import torch
 
-from .emotionModel.emotionModelHead import emotionModelHead
+from .emotionModel.emotionModel import emotionModel
 from .emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
 from .emotionModel.emotionModelHelpers.generalMethods.dataAugmentation import dataAugmentation
 from .emotionModel.emotionModelHelpers.generalMethods.modelHelpers import modelHelpers
@@ -33,7 +33,7 @@ class emotionPipelineHelpers:
         self.datasetName = datasetName  # The name of the specific dataset being used in this model (case, wesad, etc.)
 
         # Initialize the emotion model.
-        self.model = emotionModelHead(submodel=submodel, emotionNames=emotionNames, activityNames=activityNames, featureNames=featureNames, numSubjects=numSubjects, datasetName=datasetName, numExperiments=numExperiments)
+        self.model = emotionModel(submodel=submodel, emotionNames=emotionNames, activityNames=activityNames, featureNames=featureNames, numSubjects=numSubjects, datasetName=datasetName, numExperiments=numExperiments)
         self.model = self.model.double()  # Convert the model to double precision.
 
         if 'HPC' not in modelConstants.userInputParams['deviceListed']:

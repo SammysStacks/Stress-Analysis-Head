@@ -23,8 +23,8 @@ class optimizerMethods:
             {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "givensRotationParams" in name), 'weight_decay': 1e-4, 'lr': 4e-4},
 
             # Specify the activation parameters for the signal encoding.
-            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "activationFunction" in name), 'weight_decay':  1e-4, 'lr': 4e-4},
-            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "activationFunction" in name), 'weight_decay': 1e-4, 'lr': 4e-4},
+            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "activationFunction" in name), 'weight_decay':  1e-4, 'lr': 1e-4},
+            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "activationFunction" in name), 'weight_decay': 1e-4, 'lr': 1e-4},
         ]
 
         if submodel == modelConstants.emotionModel:
