@@ -16,7 +16,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
     def __init__(self, numSignals, sequenceLength, numLayers, activationMethod):
         super(reversibleLieLayer, self).__init__(numSignals, sequenceLength, numLayers, activationMethod)
-        initialMaxGivensAngle = self.getInverseAngleParams(torch.tensor(1 / sequenceLength).sqrt())
+        initialMaxGivensAngle = self.getInverseAngleParams(torch.tensor(3 / sequenceLength).sqrt())
         self.identityMatrix = torch.eye(self.sequenceLength, dtype=torch.float64)
 
         # Create the neural layers.
