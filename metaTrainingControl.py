@@ -1,4 +1,5 @@
 """ Written by Samuel Solomon: https://scholar.google.com/citations?user=9oq12oMAAAAJ&hl=en """
+import math
 import os
 import sys
 # Set specific environmental parameters.
@@ -83,8 +84,8 @@ if __name__ == "__main__":
 
     # Signal encoder learning rates.
     parser.add_argument('--profileLR', type=float, default=0.01, help='The learning rate of the health model')
-    parser.add_argument('--physGenLR', type=float, default=1e-3, help='The learning rate of the general model')
-    parser.add_argument('--reversibleLR', type=float, default=1e-3, help='The learning rate of the general model')
+    parser.add_argument('--physGenLR', type=float, default=4e-3, help='The learning rate of the health profile CNNs')
+    parser.add_argument('--reversibleLR', type=float, default=0.1, help='The learning rate of the Lie manifold angles (degrees)')
 
     # Signal encoder weight decays.
     parser.add_argument('--profileWD', type=float, default=1e-6, help='The learning rate of the general model')
@@ -100,6 +101,7 @@ if __name__ == "__main__":
 
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
+    userInputParams['reversibleLR'] = userInputParams['reversibleLR'] * math.pi / 180
 
     # Compile additional input parameters.
     userInputParams = modelParameters.getNeuralParameters(userInputParams)
