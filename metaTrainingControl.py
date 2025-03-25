@@ -70,7 +70,7 @@ if __name__ == "__main__":
     # Add arguments for observational learning.
     parser.add_argument('--maxAngularThreshold', type=float, default=45, help='The larger rotational threshold in (degrees)')
     parser.add_argument('--minAngularThreshold', type=float, default=2.5, help='The smaller rotational threshold in (degrees)')
-    parser.add_argument('--minThresholdStep', type=float, default=0.05, help='The rotational threshold step (degrees)')
+    parser.add_argument('--minThresholdStep', type=float, default=0.25, help='The rotational threshold step (degrees)')
 
     # dd arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions)')
@@ -88,8 +88,8 @@ if __name__ == "__main__":
     parser.add_argument('--reversibleLR', type=float, default=0.05, help='The learning rate of the Lie manifold angles (degrees)')
 
     # Signal encoder weight decays.
-    parser.add_argument('--profileWD', type=float, default=1e-6, help='The learning rate of the general model')
-    parser.add_argument('--physGenWD', type=float, default=1e-5, help='The learning rate of the general model')
+    parser.add_argument('--profileWD', type=float, default=1e-4, help='The learning rate of the general model')
+    parser.add_argument('--physGenWD', type=float, default=1e-4, help='The learning rate of the general model')
     parser.add_argument('--reversibleWD', type=float, default=1e-4, help='The learning rate of the general model')
 
     # Add arguments for the emotion and activity architecture.
