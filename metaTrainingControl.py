@@ -89,8 +89,8 @@ if __name__ == "__main__":
 
     # Signal encoder weight decays.
     parser.add_argument('--profileWD', type=float, default=1e-6, help='The learning rate of the general model')
-    parser.add_argument('--physGenWD', type=float, default=1e-6, help='The learning rate of the general model')
-    parser.add_argument('--reversibleWD', type=float, default=1e-6, help='The learning rate of the general model')
+    parser.add_argument('--physGenWD', type=float, default=1e-5, help='The learning rate of the general model')
+    parser.add_argument('--reversibleWD', type=float, default=1e-4, help='The learning rate of the general model')
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--momentum_decay', type=float, default=0.001, help='Momentum decay for the optimizer')
