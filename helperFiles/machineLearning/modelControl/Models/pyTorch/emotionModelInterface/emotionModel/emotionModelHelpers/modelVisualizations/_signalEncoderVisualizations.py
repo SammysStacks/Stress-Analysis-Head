@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.patches import Arc, Wedge
+from selenium.webdriver.common.devtools.v85.fetch import continue_request
 from shap.plots.colors._colors import lch2rgb
 
 # Visualization protocols
@@ -472,7 +473,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # scalingFactorsPath: numModuleLayers, numSignals
         numModuleLayers = len(reversibleModuleNames)
         sharedValues, specificValues = [], []
-        maxCols = 4
+        maxCols = 3
 
         # Get the layer information.
         numSharedScalarSections = 1 + int(math.log2(modelConstants.userInputParams['encodedDimension'] // modelConstants.userInputParams['minWaveletDim']))
@@ -483,6 +484,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         nCols = min(max(numSpecificLayers, numSharedLayers), maxCols)
         numSpecificRows = max(1, numSpecificLayers // nCols + (1 if numSpecificLayers % nCols != 0 else 0))
         nRows = numSpecificRows + max(1, numSharedLayers // nCols + (1 if numSharedLayers % nCols != 0 else 0))
+        extraSpecificAxes = numSpecificRows*nCols - numSpecificLayers
 
         xTickLabelShared = []
         xTickLabelSpecific = ["Detailed decomposition layer 1", "Approximate decomposition layer 1"]
@@ -495,29 +497,28 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             else: raise ValueError("Module name must contain 'specific' or 'shared'.")
         sharedValues = np.asarray(sharedValues); specificValues = np.asarray(specificValues)
         # sharedValues: numSharedLayers=numSections*y, numSignals=1; specificValues: numSpecificLayers=numSections*x, numSignals=numSignals
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=False, sharey=True)
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=False, sharey=False)
         fig.suptitle(f"{plotTitle}; Epoch {epoch}", fontsize=24)
         axes = axes.flatten()
 
         for axInd, ax in enumerate(axes):
             rowInd, colInd = axInd // nCols, axInd % nCols
             specificFlag = axInd < numSpecificLayers
-            if not specificFlag: axInd -= numSpecificLayers
+            if not specificFlag: axInd -= numSpecificLayers + extraSpecificAxes
+            if not specificFlag and axInd < 0: ax.remove(); continue
 
             # Customize plot title and axes
             ax.set_ylabel(f"{"Specific" if specificFlag else "Shared"} normalization factors")  # Y-axis: bin counts
             ax.set_ylim((0.925, 1.075))
 
-            if rowInd == nRows - 1 or rowInd == numSpecificRows - 1:
-                ax.set_xlabel(f"{"Specific" if specificFlag else "Shared"} Wavelet Decompositions")  # X-axis: values
-                ax.set_xticks(range(len(xTickLabelSpecific if specificFlag else xTickLabelShared)))  # Set x-ticks positions
-                ax.set_xticklabels(xTickLabelSpecific if specificFlag else xTickLabelShared, rotation=45, ha='right')  # Set x-tick labels with rotation
-
-            if numSharedLayers <= axInd: continue
+            if numSharedLayers <= axInd: ax.remove(); continue
             # Get the angles for the current layer
             ax.set_title(f"Specific layer: {axInd+1}" if specificFlag else f"Shared layer: {axInd+1}", fontsize=16)
             if specificFlag: ax.plot(specificValues[axInd:numSpecificScalarSections*(axInd+1)], 'o', color=self.darkColors[0], alpha=0.5, linewidth=1, markersize=4)
             else: ax.plot(sharedValues[axInd::numSharedLayers], 'o', color=self.darkColors[1], alpha=0.75, linewidth=1, markersize=4)
+
+            ax.set_xticks(range(len(xTickLabelSpecific if specificFlag else xTickLabelShared)))  # Set x-ticks positions
+            ax.set_xticklabels(xTickLabelSpecific if specificFlag else xTickLabelShared, rotation=45, ha='right')  # Set x-tick labels with rotation
 
         # Save the plot
         fig.tight_layout(pad=2.0)
