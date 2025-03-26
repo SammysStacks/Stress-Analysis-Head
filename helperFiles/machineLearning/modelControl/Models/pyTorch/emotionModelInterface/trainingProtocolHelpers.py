@@ -72,6 +72,7 @@ class trainingProtocolHelpers:
                 modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=numProfileShots + 1)  # Profile training.
                 modelPipeline.model.cullAngles(epoch=epoch)
                 self.accelerator.wait_for_everyone()
+            else: modelPipeline.model.specificSignalEncoderModel.profileModel.resetProfileHolders(0)
 
     def calculateLossInformation(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel):
         self.unifyAllModelWeights(allMetaModels, allModels)  # Unify all the model weights.

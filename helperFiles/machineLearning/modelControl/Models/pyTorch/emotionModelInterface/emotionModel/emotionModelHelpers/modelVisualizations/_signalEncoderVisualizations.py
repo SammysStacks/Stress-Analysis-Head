@@ -47,6 +47,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # retrainingProfilePath: (numProfileShots or numModuleLayers, numExperiments, encodedDimension)
         # Extract the signal dimensions.
         numProfileSteps, batchInd, numSignals = len(retrainingProfilePath), 0, len(retrainingProfilePath[0][0])
+        if numProfileSteps == 0: return None
 
         for signalInd in range(numSignals):
             fig, ax = plt.subplots(figsize=(6.4, 4.8))
