@@ -205,22 +205,23 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Get the angular thresholds.
         minAngularThreshold = reversibleLieLayer.getMinAngularThreshold(epoch)
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
-        numSpecific = modelConstants.userInputParams['numSpecificEncoderLayers']
-        numShared = modelConstants.userInputParams['numSharedEncoderLayers']
+        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
+        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers']
         center = (0, 0)
 
         for layerInd in range(len(givensAnglesPath)):
             moduleName = reversibleModuleNames[layerInd].lower()
+            specificFlag = 'specific' in moduleName
 
             if "low" in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
             elif "high" in moduleName:
-                if 'shared' in moduleName: rowInd = numSpecific + (numSharedHigh % numShared); colInd = numSharedHigh // numShared; numSharedHigh += 1
-                elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecific; colInd = numSpecificHigh // numSpecific; numSpecificHigh += 1
+                if 'shared' in moduleName: rowInd = numSpecificLayers + (numSharedHigh % numSharedLayers); colInd = numSharedHigh // numSharedLayers; numSharedHigh += 1
+                elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecificLayers; colInd = numSpecificHigh // numSpecificLayers; numSpecificHigh += 1
                 else: raise ValueError("Module name must contain 'shared' or 'specific'")
             else: raise ValueError("Module name must contain 'low' or 'high'.")
             ax = axes[rowInd, colInd]
 
-            if colInd == 0: ax.set_ylabel(f"Layer {rowInd + 1}", fontsize=16)
+            if colInd == 0: ax.set_ylabel(f"{"Specific" if specificFlag else "Shared"} layer {rowInd + 1 - (0 if specificFlag else numSpecificLayers)}", fontsize=16)
             ax.set_title(moduleName.capitalize(), fontsize=16)
             ax.set_ylim((-0.05, 1.05))
             ax.set_xlim((-0.05, 1.05))
@@ -254,6 +255,11 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             upper_wedge = Wedge(center=center, r=1, theta1=min(90, initialAngle * 180 / np.pi + maxAngularThreshold), theta2=90, color=self.blackColor, alpha=1, zorder=0)
             ax.add_patch(upper_wedge); ax.add_patch(bounded_wedge); ax.add_patch(lower_wedge)
 
+        for specificLayerInd in numSpecificLayers:
+            for colInd in range(nCols):
+                if colInd == 0 or colInd == nCols - 1: continue
+                axes[specificLayerInd*nCols + colInd].remove()
+
         fig.suptitle(t=f"{plotTitle}; Epoch {epoch}", fontsize=24)
         fig.supylabel(r"Signal index: $\mathbb{\mathit{i}}$", fontsize=20)
         fig.supxlabel(r"Signal index: $\mathbb{\mathit{j}}$", fontsize=20)
@@ -281,23 +287,24 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Get the angular thresholds.
         minAngularThreshold = reversibleLieLayer.getMinAngularThreshold(epoch)
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
-        numSpecific = modelConstants.userInputParams['numSpecificEncoderLayers']
-        numShared = modelConstants.userInputParams['numSharedEncoderLayers']
+        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
+        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers']
         histogramPlots = []
 
         for layerInd in range(len(givensAnglesPath)):
             moduleName = reversibleModuleNames[layerInd].lower()
+            specificFlag = 'specific' in moduleName
 
             if "low" in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
             elif "high" in moduleName:
-                if 'shared' in moduleName: rowInd = numSpecific + (numSharedHigh % numShared); colInd = numSharedHigh // numShared; numSharedHigh += 1
-                elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecific; colInd = numSpecificHigh // numSpecific; numSpecificHigh += 1
+                if 'shared' in moduleName: rowInd = numSpecificLayers + (numSharedHigh % numSharedLayers); colInd = numSharedHigh // numSharedLayers; numSharedHigh += 1
+                elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecificLayers; colInd = numSpecificHigh // numSpecificLayers; numSpecificHigh += 1
                 else: raise ValueError("Module name must contain 'shared' or 'specific'")
             else: raise ValueError("Module name must contain 'low' or 'high'.")
             ax = axes[rowInd, colInd]
 
             # Customize subplot title and axes
-            if colInd == 0: ax.set_ylabel(f"Layer {rowInd + 1}", fontsize=16)
+            if colInd == 0: ax.set_ylabel(f"{"Specific" if specificFlag else "Shared"} layer {rowInd + 1 - (0 if specificFlag else numSpecificLayers)}", fontsize=16)
             ax.set_title(moduleName.capitalize(), fontsize=16)
             ax.set_xlim((-maxAngularThreshold, maxAngularThreshold))
             ax.set_ylim((0, yMax))
@@ -324,6 +331,11 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.fill_betweenx(y=(0, yMax), x1=-minAngularThreshold*(2 if rowInd == 0 else 1), x2=minAngularThreshold*(2 if rowInd == 0 else 1), color=self.blackColor, alpha=0.1, zorder=0)
             ax.axvspan(-degrees, -maxAngularThreshold, color=self.blackColor, alpha=1, zorder=0)
             ax.axvspan(maxAngularThreshold, degrees, color=self.blackColor, alpha=1, zorder=0)
+
+        for specificLayerInd in numSpecificLayers:
+            for colInd in range(nCols):
+                if colInd == 0 or colInd == nCols - 1: continue
+                axes[specificLayerInd*nCols + colInd].remove()
 
         # Adjust layout to prevent overlapping titles/labels
         fig.suptitle(t=f"{plotTitle}; Epoch {epoch}", fontsize=24)
@@ -359,22 +371,23 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Get the angular thresholds.
         minAngularThreshold = reversibleLieLayer.getMinAngularThreshold(epoch)
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
-        numSpecific = modelConstants.userInputParams['numSpecificEncoderLayers']
-        numShared = modelConstants.userInputParams['numSharedEncoderLayers']
+        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
+        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers']
 
         for layerInd in range(len(givensAnglesPath)):
             moduleName = reversibleModuleNames[layerInd].lower()
+            specificFlag = 'specific' in moduleName
 
             if "low" in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
             elif "high" in moduleName:
-                if 'shared' in moduleName: rowInd = numSpecific + (numSharedHigh % numShared); colInd = numSharedHigh // numShared; numSharedHigh += 1
-                elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecific; colInd = numSpecificHigh // numSpecific; numSpecificHigh += 1
+                if 'shared' in moduleName: rowInd = numSpecificLayers + (numSharedHigh % numSharedLayers); colInd = numSharedHigh // numSharedLayers; numSharedHigh += 1
+                elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecificLayers; colInd = numSpecificHigh // numSpecificLayers; numSpecificHigh += 1
                 else: raise ValueError("Module name must contain 'shared' or 'specific'")
             else: raise ValueError("Module name must contain 'low' or 'high'.")
             ax = axes[rowInd, colInd]
 
             # Customize subplot title and axes
-            if colInd == 0: ax.set_ylabel(f"Layer {rowInd + 1}", fontsize=16)
+            if colInd == 0: ax.set_ylabel(f"{"Specific" if specificFlag else "Shared"} layer {rowInd + 1 - (0 if specificFlag else numSpecificLayers)}", fontsize=16)
             ax.set_title(moduleName.capitalize(), fontsize=16)
             ax.set_ylim((-degrees, degrees))
 
@@ -399,6 +412,11 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         fig.supxlabel("Parameter index", fontsize=20)
         fig.set_constrained_layout(True)
 
+        for specificLayerInd in numSpecificLayers:
+            for colInd in range(nCols):
+                if colInd == 0 or colInd == nCols - 1: continue
+                axes[specificLayerInd*nCols + colInd].remove()
+
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", clearFigure=False, showPlot=False)
         else: self.clearFigure(fig=fig, legend=None, showPlot=True)
@@ -419,29 +437,30 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         else: scaleFactor = 1
 
         # Create a figure and axes array
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(4 * nCols, 4 * nRows), squeeze=False, sharex='col', sharey='col')  # squeeze=False ensures axes is 2D
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(4 * nCols, 4 * nRows), squeeze=False, sharex=False, sharey=False)  # squeeze=False ensures axes is 2D
         numLow, numSpecificHigh, numSharedHigh = 0, 0, 0
         degrees = (180 if degreesFlag else math.pi) / 4
         colorbarAxes = []
 
         # Get the angular thresholds.
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
-        numSpecific = modelConstants.userInputParams['numSpecificEncoderLayers']
-        numShared = modelConstants.userInputParams['numSharedEncoderLayers']
+        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
+        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers']
 
         for layerInd in range(len(givensAnglesPath)):
             moduleName = reversibleModuleNames[layerInd].lower()
+            specificFlag = 'specific' in moduleName
 
             if "low" in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
             elif "high" in moduleName:
-                if 'shared' in moduleName: rowInd = numSpecific + (numSharedHigh % numShared); colInd = numSharedHigh // numShared; numSharedHigh += 1
-                elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecific; colInd = numSpecificHigh // numSpecific; numSpecificHigh += 1
+                if 'shared' in moduleName: rowInd = numSpecificLayers + (numSharedHigh % numSharedLayers); colInd = numSharedHigh // numSharedLayers; numSharedHigh += 1
+                elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecificLayers; colInd = numSpecificHigh // numSpecificLayers; numSpecificHigh += 1
                 else: raise ValueError("Module name must contain 'shared' or 'specific'")
             else: raise ValueError("Module name must contain 'low' or 'high'.")
             ax = axes[rowInd, colInd]
 
             # Customize subplot title and axes
-            if colInd == 0: ax.set_ylabel(f"Layer {rowInd + 1}", fontsize=16)
+            if colInd == 0: ax.set_ylabel(f"{"Specific" if specificFlag else "Shared"} layer {rowInd + 1 - (0 if specificFlag else numSpecificLayers)}", fontsize=16)
             ax.set_title(moduleName.capitalize(), fontsize=16)
 
             numSignals, numAngles = givensAnglesPath[layerInd].shape
@@ -458,6 +477,12 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
             # Plot the heatmap
             colorbarAxes.append(ax.imshow(signalWeightMatrix, cmap=self.custom_cmap, interpolation=None, aspect="equal", vmin=-degrees, vmax=degrees))
+
+        for specificLayerInd in numSpecificLayers:
+            for colInd in range(nCols):
+                if colInd == 0 or colInd == nCols - 1: continue
+                axes[specificLayerInd*nCols + colInd].remove()
+
         # Adjust layout to prevent overlapping titles/labels
         fig.suptitle(t=f"{plotTitle}; Epoch {epoch}", fontsize=24)
         fig.supylabel(r"$S_{i}$", fontsize=20)
@@ -639,8 +664,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         numLow, numSpecificHigh, numSharedHigh = 0, 0, 0
 
         # Get the parameters.
-        numSpecific = modelConstants.userInputParams['numSpecificEncoderLayers']
-        numShared = modelConstants.userInputParams['numSharedEncoderLayers']
+        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
+        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers']
 
         for layerInd in range(numModuleLayers):
             moduleName = moduleNames[layerInd].lower()
@@ -648,8 +673,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
             if "low" in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
             elif "high" in moduleName:
-                if 'shared' in moduleName: rowInd = numSpecific + (numSharedHigh % numShared); colInd = numSharedHigh // numShared; numSharedHigh += 1
-                elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecific; colInd = numSpecificHigh // numSpecific; numSpecificHigh += 1
+                if 'shared' in moduleName: rowInd = numSpecificLayers + (numSharedHigh % numSharedLayers); colInd = numSharedHigh // numSharedLayers; numSharedHigh += 1
+                elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecificLayers; colInd = numSpecificHigh // numSpecificLayers; numSpecificHigh += 1
                 else: raise ValueError("Module name must contain 'shared' or 'specific'")
             else: raise ValueError("Module name must contain 'low' or 'high'.")
             ax = axes[rowInd, colInd]
