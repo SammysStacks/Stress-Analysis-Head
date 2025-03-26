@@ -1,3 +1,5 @@
+import math
+
 import torch.optim as optim
 from torch.optim import Optimizer
 
@@ -15,12 +17,12 @@ class optimizerMethods:
             {'params': model.sharedSignalEncoderModel.fourierModel.parameters(), 'weight_decay': modelConstants.userInputParams['physGenWD'], 'lr': modelConstants.userInputParams['physGenLR']},
 
             # Specify the scalar parameters for the signal encoding.
-            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "jacobianParameter" in name), 'weight_decay': 4e-5, 'lr': 4e-4},
-            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "jacobianParameter" in name), 'weight_decay': 4e-5, 'lr': 4e-4},
+            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "jacobianParameter" in name), 'weight_decay': 1e-5, 'lr': 1e-4},
+            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "jacobianParameter" in name), 'weight_decay': 1e-5, 'lr': 1e-4},
 
             # Specify the angular parameters for the signal encoding.
             {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "givensRotationParams" in name), 'weight_decay': modelConstants.userInputParams['reversibleWD'], 'lr': modelConstants.userInputParams['reversibleLR']},
-            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "givensRotationParams" in name), 'weight_decay': 1e-4, 'lr': 4e-4},
+            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "givensRotationParams" in name), 'weight_decay': 1e-4, 'lr': 0.05 * math.pi / 180},
 
             # Specify the activation parameters for the signal encoding.
             {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "activationFunction" in name), 'weight_decay':  1e-5, 'lr': 1e-4},
