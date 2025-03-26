@@ -473,18 +473,15 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # scalingFactorsPath: numModuleLayers, numSignals
         numModuleLayers = len(reversibleModuleNames)
         sharedValues, specificValues = [], []
-        maxCols = 3
 
         # Get the layer information.
-        numSharedScalarSections = 1 + int(math.log2(modelConstants.userInputParams['encodedDimension'] // modelConstants.userInputParams['minWaveletDim']))
         numSpecificLayers, numSharedLayers = modelConstants.userInputParams['numSpecificEncoderLayers'], modelConstants.userInputParams['numSharedEncoderLayers']
+        numSharedScalarSections = 1 + int(math.log2(modelConstants.userInputParams['encodedDimension'] // modelConstants.userInputParams['minWaveletDim']))
         numSpecificScalarSections = 2
 
-        # Determine the number of rows and columns for the plot.
-        nCols = min(max(numSpecificLayers, numSharedLayers), maxCols)
-        numSpecificRows = max(1, numSpecificLayers // nCols + (1 if numSpecificLayers % nCols != 0 else 0))
-        nRows = numSpecificRows + max(1, numSharedLayers // nCols + (1 if numSharedLayers % nCols != 0 else 0))
-        extraSpecificAxes = numSpecificRows*nCols - numSpecificLayers
+        # Get the layer information.
+        maxCols = 3 if (numSpecificLayers + numSharedLayers) % 3 == 0 else 4
+        nCols = min(numSpecificLayers + numSharedLayers, maxCols); nRows = (numSpecificLayers + numSharedLayers) // nCols + (1 if (numSpecificLayers + numSharedLayers) % nCols != 0 else 0)
 
         xTickLabelShared = []
         xTickLabelSpecific = ["Detailed decomposition layer 1", "Approximate decomposition layer 1"]
@@ -502,10 +499,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         axes = axes.flatten()
 
         for axInd, ax in enumerate(axes):
-            rowInd, colInd = axInd // nCols, axInd % nCols
             specificFlag = axInd < numSpecificLayers
-            if not specificFlag: axInd -= numSpecificLayers + extraSpecificAxes
-            if not specificFlag and axInd < 0: ax.remove(); continue
+            if not specificFlag: axInd -= numSpecificLayers
 
             # Customize plot title and axes
             ax.set_ylabel(f"{"Specific" if specificFlag else "Shared"} normalization factors")  # Y-axis: bin counts
