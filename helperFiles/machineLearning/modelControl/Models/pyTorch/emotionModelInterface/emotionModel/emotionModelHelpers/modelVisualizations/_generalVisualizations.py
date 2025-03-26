@@ -96,7 +96,7 @@ class generalVisualizations(globalPlottingProtocols):
                              ha='center', va='center', color='black')
 
         axes[1].invert_yaxis()  # Reverse the order of y-axis ticks
-        fig.suptitle(f"{emotionName}")
+        fig.suptitle(f"{emotionName}", fontsize=24)
         fig.tight_layout()
 
         # Save the figure is desired.
@@ -148,7 +148,7 @@ class generalVisualizations(globalPlottingProtocols):
         if logY: ax.set_yscale('log')
         ax.set_xlabel("Training epoch")
         ax.set_ylabel("Loss values")
-        ax.set_title(f"{plotTitle}")
+        ax.set_title(f"{plotTitle}", fontsize=16)
         ax.legend(loc="upper right", bbox_to_anchor=(1.35, 1), borderaxespad=0)
 
         # Save the figure if desired.
@@ -191,7 +191,7 @@ class generalVisualizations(globalPlottingProtocols):
                     # Plot the activation parameters.
                     ax.plot(activationParams, color=lineColor, linewidth=0.8, alpha=alpha, label=modelLabel)
             ax.set_xlabel("Epoch (training)")
-            ax.set_title(paramName)
+            ax.set_title(paramName, fontsize=16)
             if 'Infinite' in paramName: ax.set_ylim((0, 1.1))
             elif 'Linearity' in paramName: ax.set_ylim((0, 10.1))
             elif 'Convergent' in paramName: ax.set_ylim((0, 2.1))
@@ -199,7 +199,7 @@ class generalVisualizations(globalPlottingProtocols):
             ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5, alpha=0.8)
 
         # Label the plot.
-        fig.suptitle(f"{plotTitle}")
+        fig.suptitle(f"{plotTitle}", fontsize=24)
         fig.tight_layout()
 
         # Save the figure if desired.
@@ -217,8 +217,8 @@ class generalVisualizations(globalPlottingProtocols):
         x = np.arange(numEpochs)
 
         # Get the parameters.
-        numSpecific = modelConstants.userInputParams['numSpecificEncoderLayers']
-        numShared = modelConstants.userInputParams['numSharedEncoderLayers']
+        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
+        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers']
 
         for paramInd in range(numParams):
             # Create a figure and axes array
@@ -231,8 +231,8 @@ class generalVisualizations(globalPlottingProtocols):
 
                 if "low" in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
                 elif "high" in moduleName:
-                    if 'shared' in moduleName: rowInd = numSpecific + (numSharedHigh % numShared); colInd = numSharedHigh // numShared; numSharedHigh += 1
-                    elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecific; colInd = numSpecificHigh // numSpecific; numSpecificHigh += 1
+                    if 'shared' in moduleName: rowInd = numSpecificLayers + (numSharedHigh % numSharedLayers); colInd = numSharedHigh // numSharedLayers; numSharedHigh += 1
+                    elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecificLayers; colInd = numSpecificHigh // numSpecificLayers; numSpecificHigh += 1
                     else: raise ValueError("Module name must contain 'shared' or 'specific'")
                 else: raise ValueError("Module name must contain 'low' or 'high'.")
                 rowInd = min(rowInd, nRows - 1)
@@ -269,8 +269,13 @@ class generalVisualizations(globalPlottingProtocols):
                 ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5, alpha=0.8)
 
             # Label the plot.
-            fig.suptitle(f"{plotTitle}: {paramName}")
+            fig.suptitle(f"{plotTitle}: {paramName}", fontsize=24)
             fig.tight_layout()
+
+            for specificLayerInd in range(numSpecificLayers):
+                for colInd in range(nCols):
+                    if colInd == 0 or colInd == nCols - 1: continue
+                    axes[specificLayerInd, colInd].remove()
 
             # Save the figure if desired.
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=None, baseSaveFigureName=f"{plotTitle} {paramName}.pdf", fig=fig, clearFigure=True, showPlot=False)
@@ -287,8 +292,8 @@ class generalVisualizations(globalPlottingProtocols):
         if numEpochs <= 5: return "No data to plot."
 
         # Get the parameters.
-        numSpecific = modelConstants.userInputParams['numSpecificEncoderLayers']
-        numShared = modelConstants.userInputParams['numSharedEncoderLayers']
+        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
+        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers']
 
         for paramInd in range(numParams):
             # Create a figure and axes array
@@ -301,8 +306,8 @@ class generalVisualizations(globalPlottingProtocols):
 
                 if "low" in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
                 elif "high" in moduleName:
-                    if 'shared' in moduleName: rowInd = numSpecific + (numSharedHigh % numShared); colInd = numSharedHigh // numShared; numSharedHigh += 1
-                    elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecific; colInd = numSpecificHigh // numSpecific; numSpecificHigh += 1
+                    if 'shared' in moduleName: rowInd = numSpecificLayers + (numSharedHigh % numSharedLayers); colInd = numSharedHigh // numSharedLayers; numSharedHigh += 1
+                    elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecificLayers; colInd = numSpecificHigh // numSpecificLayers; numSpecificHigh += 1
                     else: raise ValueError("Module name must contain 'shared' or 'specific'")
                 else: raise ValueError("Module name must contain 'low' or 'high'.")
                 rowInd = min(rowInd, nRows - 1)
@@ -312,7 +317,7 @@ class generalVisualizations(globalPlottingProtocols):
                 ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5, alpha=0.8)
                 ax.set_xlabel("Training epoch")
                 ax.set_xlim((0, numEpochs))
-                ax.set_title(moduleName)
+                ax.set_title(moduleName, fontsize=16)
 
                 for modelInd in range(numModels):
                     if "shared" in moduleName and modelInd != 0: continue
@@ -345,8 +350,13 @@ class generalVisualizations(globalPlottingProtocols):
                 if not fullView: ax.set_ylim((0, min(ax.get_ylim()[-1], 10000)))
 
             # Label the plot.
-            fig.suptitle(f"{plotTitle}: {paramName}")
+            fig.suptitle(f"{plotTitle}: {paramName}", fontsize=24)
             fig.tight_layout()
+
+            for specificLayerInd in range(numSpecificLayers):
+                for colInd in range(nCols):
+                    if colInd == 0 or colInd == nCols - 1: continue
+                    axes[specificLayerInd, colInd].remove()
 
             # Save the figure if desired.
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=None, baseSaveFigureName=f"{plotTitle} {paramName}.pdf", fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
@@ -361,8 +371,8 @@ class generalVisualizations(globalPlottingProtocols):
         x = np.arange(numEpochs)
 
         # Get the parameters.
-        numSpecific = modelConstants.userInputParams['numSpecificEncoderLayers']
-        numShared = modelConstants.userInputParams['numSharedEncoderLayers']
+        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
+        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers']
 
         for paramInd in range(numParams):
             # Create a figure and axes array
@@ -375,15 +385,15 @@ class generalVisualizations(globalPlottingProtocols):
 
                 if "low" in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
                 elif "high" in moduleName:
-                    if 'shared' in moduleName: rowInd = numSpecific + (numSharedHigh % numShared); colInd = numSharedHigh // numShared; numSharedHigh += 1
-                    elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecific; colInd = numSpecificHigh // numSpecific; numSpecificHigh += 1
+                    if 'shared' in moduleName: rowInd = numSpecificLayers + (numSharedHigh % numSharedLayers); colInd = numSharedHigh // numSharedLayers; numSharedHigh += 1
+                    elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecificLayers; colInd = numSpecificHigh // numSpecificLayers; numSpecificHigh += 1
                     else: raise ValueError("Module name must contain 'shared' or 'specific'")
                 else: raise ValueError("Module name must contain 'low' or 'high'.")
                 rowInd = min(rowInd, nRows - 1)
                 ax = axes[rowInd, colInd]
 
                 ax.set_xlabel("Training epoch")
-                ax.set_title(moduleName)
+                ax.set_title(moduleName, fontsize=16)
                 ax.set_xlim((0, numEpochs))
                 ax.set_ylim((0.925, 1.075))
 
@@ -413,8 +423,13 @@ class generalVisualizations(globalPlottingProtocols):
                 ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5, alpha=0.8)
 
             # Label the plot.
-            fig.suptitle(f"{plotTitle}: {paramName}")
+            fig.suptitle(f"{plotTitle}: {paramName}", fontsize=24)
             fig.tight_layout()
+
+            for specificLayerInd in range(numSpecificLayers):
+                for colInd in range(nCols):
+                    if colInd == 0 or colInd == nCols - 1: continue
+                    axes[specificLayerInd, colInd].remove()
 
             # Save the figure if desired.
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=None, baseSaveFigureName=f"{plotTitle} {paramName}.pdf", fig=fig, clearFigure=True, showPlot=False)
@@ -429,8 +444,8 @@ class generalVisualizations(globalPlottingProtocols):
         x = np.arange(numEpochs)
 
         # Get the parameters.
-        numSpecific = modelConstants.userInputParams['numSpecificEncoderLayers']
-        numShared = modelConstants.userInputParams['numSharedEncoderLayers']
+        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
+        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers']
 
         for paramInd in range(numParams):
             # Create a figure and axes array
@@ -438,23 +453,22 @@ class generalVisualizations(globalPlottingProtocols):
             numLow, numSpecificHigh, numSharedHigh = 0, 0, 0
             paramName = paramNames[paramInd]
 
-            fig.suptitle(f"{plotTitle}: {paramName}")
+            fig.suptitle(f"{plotTitle}: {paramName}", fontsize=24)
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
 
                 if "low" in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
                 elif "high" in moduleName:
-                    if 'shared' in moduleName: rowInd = numSpecific + (numSharedHigh % numShared); colInd = numSharedHigh // numShared; numSharedHigh += 1
-                    elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecific; colInd = numSpecificHigh // numSpecific; numSpecificHigh += 1
+                    if 'shared' in moduleName: rowInd = numSpecificLayers + (numSharedHigh % numSharedLayers); colInd = numSharedHigh // numSharedLayers; numSharedHigh += 1
+                    elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecificLayers; colInd = numSpecificHigh // numSpecificLayers; numSpecificHigh += 1
                     else: raise ValueError("Module name must contain 'shared' or 'specific'")
                 else: raise ValueError("Module name must contain 'low' or 'high'.")
                 rowInd = min(rowInd, nRows - 1)
                 ax = axes[rowInd, colInd]
 
                 # Label the plot.
-                if rowInd == 0: ax.set_title(" ".join(moduleName.split(" ")[1:]).capitalize(), fontsize=12)
                 ax.set_xlabel("Training epoch")
-                ax.set_title(moduleName)
+                ax.set_title(moduleName, fontsize=16)
                 ax.set_xlim((0, numEpochs))
 
                 for modelInd in range(numModels):
@@ -484,6 +498,11 @@ class generalVisualizations(globalPlottingProtocols):
                             ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * (1 - alphas[axisLineInd]))
                 ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5, alpha=0.8)
             fig.tight_layout()
+
+            for specificLayerInd in range(numSpecificLayers):
+                for colInd in range(nCols):
+                    if colInd == 0 or colInd == nCols - 1: continue
+                    axes[specificLayerInd, colInd].remove()
 
             # Save the figure if desired.
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=None, baseSaveFigureName=f"{plotTitle} {paramName}.pdf", fig=fig, clearFigure=True, showPlot=False)

@@ -182,7 +182,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.set_yticks(np.arange(start=0.5, stop=1 + numSpecificEncoderLayers + numSharedEncoderLayers, step=1))
             ax.set_yticklabels(yTicks, fontsize=12)
             ax.tick_params(axis="x", labelsize=12)
-            ax.set_title(f"{plotTitle} epoch {epoch}", fontsize=16)
+            ax.set_title(f"{plotTitle} at epoch {epoch}", fontsize=16)
             ax.set_ylabel("Module layer", fontsize=14)
             ax.set_xlabel("Time (sec)", fontsize=14)
             ax.grid(False)
@@ -260,7 +260,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
                 if colInd == 0 or colInd == nCols - 1: continue
                 axes[specificLayerInd, colInd].remove()
 
-        fig.suptitle(t=f"{plotTitle}; Epoch {epoch}", fontsize=24)
+        fig.suptitle(t=f"{plotTitle}at epoch {epoch}", fontsize=24)
         fig.supylabel(r"Signal index: $\mathbb{\mathit{i}}$", fontsize=20)
         fig.supxlabel(r"Signal index: $\mathbb{\mathit{j}}$", fontsize=20)
 
@@ -275,7 +275,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         nRows, nCols = self.getRowsCols(combineSharedLayers=False)
         if not degreesFlag: scaleFactor = 180 / math.pi; degreesFlag = True
         else: scaleFactor = 1
-        yMax = 1/4
+        yMax = 1/5
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=True, sharey='col')  # squeeze=False ensures axes is 2D
@@ -333,7 +333,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.axvspan(maxAngularThreshold, degrees, color=self.blackColor, alpha=1, zorder=0)
 
         # Adjust layout to prevent overlapping titles/labels
-        fig.suptitle(t=f"{plotTitle}; Epoch {epoch}", fontsize=24)
+        fig.suptitle(t=f"{plotTitle}at epoch {epoch}", fontsize=24)
         fig.supxlabel(f"Angle ({units})", fontsize=20)
         fig.supylabel("Density", fontsize=20)
         fig.set_constrained_layout(True)
@@ -406,7 +406,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.axhspan(maxAngularThreshold, degrees, color=self.blackColor, alpha=1, zorder=0)
 
         # Adjust layout to prevent overlapping titles/labels
-        fig.suptitle(f"{plotTitle}; Epoch {epoch}", fontsize=24)
+        fig.suptitle(f"{plotTitle}at epoch {epoch}", fontsize=24)
         fig.supylabel(f"Angle ({units})", fontsize=20)
         # fig.supxlabel("Sorted parameter index", fontsize=20)
         fig.supxlabel("Parameter index", fontsize=20)
@@ -479,7 +479,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             colorbarAxes.append(ax.imshow(signalWeightMatrix, cmap=self.custom_cmap, interpolation=None, aspect="equal", vmin=-degrees, vmax=degrees))
 
         # Adjust layout to prevent overlapping titles/labels
-        fig.suptitle(t=f"{plotTitle}; Epoch {epoch}", fontsize=24)
+        fig.suptitle(t=f"{plotTitle}at epoch {epoch}", fontsize=24)
         fig.supylabel(r"$S_{i}$", fontsize=20)
         fig.supxlabel(r"$S_{j}$", fontsize=20)
         fig.colorbar(colorbarAxes[-1], ax=axes.ravel().tolist(), orientation='vertical', fraction=0.02, pad=0.04)
@@ -520,7 +520,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         sharedValues = np.asarray(sharedValues); specificValues = np.asarray(specificValues)
         # sharedValues: numSharedLayers=numSections*y, numSignals=1; specificValues: numSpecificLayers=numSections*x, numSignals=numSignals
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=False, sharey=False)
-        fig.suptitle(f"{plotTitle}; Epoch {epoch}", fontsize=24)
+        fig.suptitle(f"{plotTitle}at epoch {epoch}", fontsize=24)
         axes = axes.flatten()
 
         for axInd, ax in enumerate(axes):
@@ -558,7 +558,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         ax.hist(specificValues, bins=10, color=self.lightColors[0], alpha=0.7, label="Specific", density=True, align='left')
 
         # Customize plot title and axes
-        ax.set_title(f"{plotTitle}; Epoch {epoch}", fontsize=16)
+        ax.set_title(f"{plotTitle}at epoch {epoch}", fontsize=16)
         ax.set_xlabel("Scale factor")  # X-axis: values
         ax.set_ylabel("Frequency")  # Y-axis: bin counts
         ax.set_xlim((0.925, 1.075))
@@ -597,7 +597,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.dist = 8  # Adjusts perspective depth
 
             # Axis labels and title
-            ax.set_title(f"{plotTitle}; Epoch {epoch}", fontsize=16, weight='bold', pad=20)
+            ax.set_title(f"{plotTitle}at epoch {epoch}", fontsize=16, weight='bold', pad=20)
             ax.set_xlabel("Time (Sec)", fontsize=12, labelpad=10)
             ax.set_ylabel("Model Layer", fontsize=12, labelpad=10)
             ax.set_zlabel("Signal value (au)", fontsize=12, labelpad=10)
@@ -646,14 +646,10 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.set_title(f"{axNames[axInd]}")
 
         # Set the main title
-        fig.suptitle(f"{plotTitle} - Epoch {epoch}\nForward and Inverse from x ∈ [{-1.5}, {1.5}]", fontsize=24)
+        fig.suptitle(f"{plotTitle} at epoch {epoch}", fontsize=24)
         fig.supylabel("Output (Y)", fontsize=20)
         fig.supxlabel("Input (x)", fontsize=20)
         fig.set_constrained_layout(True)
-
-        for colInd in range(nCols):
-            if colInd == 0 or colInd == nCols - 1: continue
-            axes[colInd].remove()
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=False)
@@ -695,7 +691,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.plot(x, x, color=self.blackColor, linestyle='--', linewidth=0.5)  # Plot Identity Line
 
         # Set the main title
-        fig.suptitle(f"{plotTitle} - Epoch {epoch}\nForward and Inverse from x ∈ [{-1.5}, {1.5}]", fontsize=24)
+        fig.suptitle(f"{plotTitle}at epoch {epoch}", fontsize=24)
         fig.supylabel("Output (Y)", fontsize=20)
         fig.supxlabel("Input (x)", fontsize=20)
         fig.set_constrained_layout(True)
