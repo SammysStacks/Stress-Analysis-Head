@@ -27,7 +27,7 @@ class modelVisualizations(globalPlottingProtocols):
     def setModelSavingFolder(self, baseSavingFolder, stringID, epoch=None):
         # Compile and shorten the name of the model visualization folder.
         baseSavingDataFolder = os.path.normpath(os.path.dirname(__file__) + f"/../../../dataAnalysis/{baseSavingFolder}") + '/'
-        saveDataFolder = os.path.normpath(baseSavingDataFolder + stringID + '/')
+        saveDataFolder = os.path.normpath(baseSavingDataFolder + stringID + '/') if stringID else baseSavingDataFolder
 
         # Set the saving folder for the model visualizations.
         self.baseSavingDataFolder = os.path.relpath(baseSavingDataFolder, os.getcwd()) + '/'
@@ -45,7 +45,7 @@ class modelVisualizations(globalPlottingProtocols):
         self.accelerator.print(f"\nCalculating loss for model comparison")
 
         # Prepare the model/data for evaluation.
-        self.setModelSavingFolder(baseSavingFolder=f"trainingFigures/{submodel}/{trainingDate}/", stringID=f"modelComparison/", epoch=-1)  # Label the correct folder to save this analysis.
+        self.setModelSavingFolder(baseSavingFolder=f"trainingFigures/{submodel}/{trainingDate}/", stringID="", epoch=-1)  # Label the correct folder to save this analysis.
 
         with torch.no_grad():
             if self.accelerator.is_local_main_process:
