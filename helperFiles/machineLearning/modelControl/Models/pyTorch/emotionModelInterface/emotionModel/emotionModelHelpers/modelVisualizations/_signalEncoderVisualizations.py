@@ -651,6 +651,10 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         fig.supxlabel("Input (x)", fontsize=20)
         fig.set_constrained_layout(True)
 
+        for colInd in range(nCols):
+            if colInd == 0 or colInd == nCols - 1: continue
+            axes[colInd].remove()
+
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=False)
         else: self.clearFigure(fig=fig, legend=None, showPlot=True)
@@ -669,6 +673,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         for layerInd in range(numModuleLayers):
             moduleName = moduleNames[layerInd].lower()
+            specificFlag = 'specific' in moduleName
             x, y = activationCurves[layerInd]
 
             if "low" in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
@@ -680,7 +685,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax = axes[rowInd, colInd]
 
             # Customize subplot title and axes
-            if colInd == 0: ax.set_ylabel(f"Layer {rowInd + 1}", fontsize=16)
+            if colInd == 0: ax.set_ylabel(f"{"Specific" if specificFlag else "Shared"} layer {rowInd + 1 - (0 if specificFlag else numSpecificLayers)}", fontsize=16)
             ax.set_title(moduleName.capitalize(), fontsize=16)
             ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5, alpha=0.8)
 
@@ -694,6 +699,11 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         fig.supylabel("Output (Y)", fontsize=20)
         fig.supxlabel("Input (x)", fontsize=20)
         fig.set_constrained_layout(True)
+
+        for specificLayerInd in range(numSpecificLayers):
+            for colInd in range(nCols):
+                if colInd == 0 or colInd == nCols - 1: continue
+                axes[specificLayerInd, colInd].remove()
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=False)
