@@ -475,11 +475,12 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         maxCols = 4
 
         # Get the layer information.
-        numSpecificLayers, numSharedLayers = modelConstants.userInputParams['numSpecificEncoderLayers'], modelConstants.userInputParams['numSharedEncoderLayers']
         numScalarSections = 1 + int(math.log2(modelConstants.userInputParams['encodedDimension'] // modelConstants.userInputParams['minWaveletDim']))
+        numSpecificLayers, numSharedLayers = modelConstants.userInputParams['numSpecificEncoderLayers'], modelConstants.userInputParams['numSharedEncoderLayers']
         nCols = min(numSpecificLayers + numSharedLayers, maxCols); nRows = (numSpecificLayers + numSharedLayers) // nCols + (1 if (numSpecificLayers + numSharedLayers) % nCols != 0 else 0)
 
         xTickLabels = []
+        xTickLabelSpecific = ["Detailed decomposition layer 1", "Approximate decomposition layer 1"]
         for decompositionInd in range(numScalarSections - 1): xTickLabels.append(f"Detailed decomposition layer {decompositionInd + 1}")
         xTickLabels.append(f"Approximate decomposition layer {numScalarSections - 1}")
 
@@ -489,7 +490,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             else: raise ValueError("Module name must contain 'specific' or 'shared'.")
         sharedValues = np.asarray(sharedValues); specificValues = np.asarray(specificValues)
         # sharedValues: numSharedLayers=4*y, numSignals=1; specificValues: numSpecificLayers=4*x, numSignals=numSignals
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=True, sharey=True)
+        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=False, sharey=True)
         fig.suptitle(f"{plotTitle}; Epoch {epoch}", fontsize=24)
         axes = axes.flatten()
 
