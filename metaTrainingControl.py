@@ -83,14 +83,9 @@ if __name__ == "__main__":
     # ----------------------- Training Parameters ----------------------- #
 
     # Signal encoder learning rates.
-    parser.add_argument('--profileLR', type=float, default=0.01, help='The learning rate of the health model')
-    parser.add_argument('--physGenLR', type=float, default=2e-4, help='The learning rate of the health profile CNNs')
+    parser.add_argument('--profileLR', type=float, default=0.01, help='The learning rate of the profile')
+    parser.add_argument('--physGenLR', type=float, default=2e-4, help='The learning rate of the profile generation (CNNs)')
     parser.add_argument('--reversibleLR', type=float, default=0.025, help='The learning rate of the Lie manifold angles (degrees)')
-
-    # Signal encoder weight decays.
-    parser.add_argument('--profileWD', type=float, default=1e-6, help='The learning rate of the general model')
-    parser.add_argument('--physGenWD', type=float, default=2e-5, help='The learning rate of the general model')
-    parser.add_argument('--reversibleWD', type=float, default=1e-4, help='The learning rate of the general model')
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--momentum_decay', type=float, default=0.001, help='Momentum decay for the optimizer')

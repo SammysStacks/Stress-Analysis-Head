@@ -475,21 +475,26 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         maxCols = 4
 
         # Get the layer information.
-        numScalarSections = 1 + int(math.log2(modelConstants.userInputParams['encodedDimension'] // modelConstants.userInputParams['minWaveletDim']))
+        numSharedScalarSections = 1 + int(math.log2(modelConstants.userInputParams['encodedDimension'] // modelConstants.userInputParams['minWaveletDim']))
         numSpecificLayers, numSharedLayers = modelConstants.userInputParams['numSpecificEncoderLayers'], modelConstants.userInputParams['numSharedEncoderLayers']
-        nCols = min(numSpecificLayers + numSharedLayers, maxCols); nRows = (numSpecificLayers + numSharedLayers) // nCols + (1 if (numSpecificLayers + numSharedLayers) % nCols != 0 else 0)
+        numSpecificScalarSections = 2
 
-        xTickLabels = []
+        # Determine the number of rows and columns for the plot.
+        nCols = min(max(numSpecificLayers, numSharedLayers), maxCols)
+        numSpecificRows = max(1, numSpecificLayers // nCols + (1 if numSpecificLayers % nCols != 0 else 0))
+        nRows = numSpecificRows + max(1, numSharedLayers // nCols + (1 if numSharedLayers % nCols != 0 else 0))
+
+        xTickLabelShared = []
         xTickLabelSpecific = ["Detailed decomposition layer 1", "Approximate decomposition layer 1"]
-        for decompositionInd in range(numScalarSections - 1): xTickLabels.append(f"Detailed decomposition layer {decompositionInd + 1}")
-        xTickLabels.append(f"Approximate decomposition layer {numScalarSections - 1}")
+        for decompositionInd in range(numSharedScalarSections - 1): xTickLabelShared.append(f"Detailed decomposition layer {decompositionInd + 1}")
+        xTickLabelShared.append(f"Approximate decomposition layer {numSharedScalarSections - 1}")
 
         for layerInd in range(numModuleLayers):
             if "shared" in reversibleModuleNames[layerInd].lower(): sharedValues.append(scalingFactorsPath[layerInd].flatten())
             elif "specific" in reversibleModuleNames[layerInd].lower(): specificValues.append(scalingFactorsPath[layerInd].flatten())
             else: raise ValueError("Module name must contain 'specific' or 'shared'.")
         sharedValues = np.asarray(sharedValues); specificValues = np.asarray(specificValues)
-        # sharedValues: numSharedLayers=4*y, numSignals=1; specificValues: numSpecificLayers=4*x, numSignals=numSignals
+        # sharedValues: numSharedLayers=numSections*y, numSignals=1; specificValues: numSpecificLayers=numSections*x, numSignals=numSignals
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=False, sharey=True)
         fig.suptitle(f"{plotTitle}; Epoch {epoch}", fontsize=24)
         axes = axes.flatten()
@@ -500,18 +505,18 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             if not specificFlag: axInd -= numSpecificLayers
 
             # Customize plot title and axes
-            if colInd == 0: ax.set_ylabel("Scalar values")  # Y-axis: bin counts
+            ax.set_ylabel(f"{"Specific" if specificFlag else "Shared"} normalization factors")  # Y-axis: bin counts
             ax.set_ylim((0.925, 1.075))
 
-            if rowInd == nRows - 1:
-                ax.set_xlabel("Module component")  # X-axis: values
-                ax.set_xticks(range(len(xTickLabels)))  # Set x-ticks positions
-                ax.set_xticklabels(xTickLabels, rotation=45, ha='right')  # Set x-tick labels with rotation
+            if rowInd == nRows - 1 or rowInd == numSpecificRows - 1:
+                ax.set_xlabel(f"{"Specific" if specificFlag else "Shared"} Wavelet Decompositions")  # X-axis: values
+                ax.set_xticks(range(len(xTickLabelSpecific if specificFlag else xTickLabelShared)))  # Set x-ticks positions
+                ax.set_xticklabels(xTickLabelSpecific if specificFlag else xTickLabelShared, rotation=45, ha='right')  # Set x-tick labels with rotation
 
             if numSharedLayers <= axInd: continue
             # Get the angles for the current layer
             ax.set_title(f"Specific layer: {axInd+1}" if specificFlag else f"Shared layer: {axInd+1}", fontsize=16)
-            if specificFlag: ax.plot(specificValues[axInd:numScalarSections*(axInd+1)], 'o', color=self.darkColors[0], alpha=0.5, linewidth=1, markersize=4)
+            if specificFlag: ax.plot(specificValues[axInd:numSpecificScalarSections*(axInd+1)], 'o', color=self.darkColors[0], alpha=0.5, linewidth=1, markersize=4)
             else: ax.plot(sharedValues[axInd::numSharedLayers], 'o', color=self.darkColors[1], alpha=0.75, linewidth=1, markersize=4)
 
         # Save the plot
