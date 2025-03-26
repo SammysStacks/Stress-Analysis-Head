@@ -1,10 +1,10 @@
-import math
+import os
+import shutil
 
 import matplotlib.pyplot as plt
-import shutil
-import os
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.neuralOperators.waveletOperator.waveletNeuralHelpers import waveletNeuralHelpers
 
 
 class globalPlottingProtocols:
@@ -42,9 +42,8 @@ class globalPlottingProtocols:
     def getRowsCols(combineSharedLayers):
         numSpecificEncoderLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
         numSharedEncoderLayers = modelConstants.userInputParams['numSharedEncoderLayers']
-        nCols = 1 + int(math.log2(modelConstants.userInputParams['encodedDimension'] // modelConstants.userInputParams['minWaveletDim']))  # TODO: Change this to a more general formula!
+        nCols = 1 + waveletNeuralHelpers.max_decompositions(sequenceLength=modelConstants.userInputParams['encodedDimension'], waveletType=modelConstants.userInputParams['neuralOperatorParameters']['wavelet']['waveletType'], minWaveletDim=modelConstants.userInputParams['minWaveletDim'])
         nRows = numSpecificEncoderLayers + (1 if combineSharedLayers else numSharedEncoderLayers)
-
         return nRows, nCols
 
     @staticmethod

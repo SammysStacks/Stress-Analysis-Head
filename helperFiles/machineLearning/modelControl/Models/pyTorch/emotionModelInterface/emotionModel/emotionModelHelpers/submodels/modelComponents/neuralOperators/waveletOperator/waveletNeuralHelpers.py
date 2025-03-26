@@ -88,11 +88,12 @@ class waveletNeuralHelpers(emotionModelWeights):
         assert self.encodeLowFrequencyProtocol in ['lowFreq', 'none'], "The low-frequency encoding protocol must be 'lowFreq', 'none'."
         assert self.numInputSignals == self.numOutputSignals, "The number of input signals must equal the output signals for now."
 
-    def max_decompositions(self, sequenceLength=None, waveletType=None, minWaveletDim=None):
-        wavelet = pywt.Wavelet(waveletType or self.waveletType)
+    @staticmethod
+    def max_decompositions(sequenceLength, waveletType, minWaveletDim):
+        wavelet = pywt.Wavelet(waveletType)
         filter_length = len(wavelet.dec_lo)  # Decomposition low-pass filter length
         filter_length = max(filter_length, minWaveletDim + 1 if minWaveletDim is not None else filter_length)
-        max_level = torch.floor(torch.log2(torch.tensor((sequenceLength or self.sequenceLength) / (filter_length - 1), dtype=torch.float32))).int()
+        max_level = torch.floor(torch.log2(torch.tensor(sequenceLength / (filter_length - 1), dtype=torch.float32))).int()
         return max_level
 
     def getWaveletDimensions(self, sequenceLength):

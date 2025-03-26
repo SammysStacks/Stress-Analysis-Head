@@ -144,7 +144,7 @@ class modelVisualizations(globalPlottingProtocols):
                     self.signalEncoderViz.plotProfileReconstruction(resampledBiomarkerTimes, healthProfile, reconstructedHealthProfile, epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="signalEncoding/", plotTitle="Health profile reconstruction")
 
                     # Plot the scale factor information.
-                    self.signalEncoderViz.plotScaleFactorLines(scalingFactorsPath, reversibleModuleNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Scale factors line")
+                    self.signalEncoderViz.plotScaleFactorLines(scalingFactorsPath, reversibleModuleNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Normalization factors")
 
                     # Plot the angular information.
                     if not showMinimumPlots:
@@ -158,7 +158,7 @@ class modelVisualizations(globalPlottingProtocols):
 
                         # Plot the angle information.
                         if currentEpoch % 10 == 0: self.signalEncoderViz.plotsGivensAnglesHeatmap(givensAnglesPath, reversibleModuleNames, signalInd=signalInd, epoch=currentEpoch, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="Rotation weight matrix (S)")
-                        if currentEpoch % 10 == 0: self.signalEncoderViz.plotAngleLocations(givensAnglesPath, reversibleModuleNames, signalNames=signalNames, epoch=currentEpoch, signalInd=signalInd, saveFigureLocation="signalEncoding/", plotTitle="Givens transformations")
+                        if currentEpoch % 10 == 0: self.signalEncoderViz.plotAngleLocations(givensAnglesPath, reversibleModuleNames, signalNames=signalNames, epoch=currentEpoch, signalInd=signalInd, saveFigureLocation="signalEncoding/", plotTitle="Givens 2D transformations")
                         self.signalEncoderViz.plotsGivensAnglesHist(givensAnglesPath, reversibleModuleNames, epoch=currentEpoch, signalInd=signalInd, degreesFlag=False, saveFigureLocation="signalEncoding/", plotTitle="Rotation angles hist")
 
                         # Plot the activation information.
