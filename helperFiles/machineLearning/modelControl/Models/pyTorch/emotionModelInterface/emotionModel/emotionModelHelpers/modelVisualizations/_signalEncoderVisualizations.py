@@ -255,7 +255,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             upper_wedge = Wedge(center=center, r=1, theta1=min(90, initialAngle * 180 / np.pi + maxAngularThreshold), theta2=90, color=self.blackColor, alpha=1, zorder=0)
             ax.add_patch(upper_wedge); ax.add_patch(bounded_wedge); ax.add_patch(lower_wedge)
 
-        for specificLayerInd in numSpecificLayers:
+        for specificLayerInd in range(numSpecificLayers):
             for colInd in range(nCols):
                 if colInd == 0 or colInd == nCols - 1: continue
                 axes[specificLayerInd, colInd].remove()
@@ -332,7 +332,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.axvspan(-degrees, -maxAngularThreshold, color=self.blackColor, alpha=1, zorder=0)
             ax.axvspan(maxAngularThreshold, degrees, color=self.blackColor, alpha=1, zorder=0)
 
-        for specificLayerInd in numSpecificLayers:
+        for specificLayerInd in range(numSpecificLayers):
             for colInd in range(nCols):
                 if colInd == 0 or colInd == nCols - 1: continue
                 axes[specificLayerInd, colInd].remove()
@@ -412,7 +412,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         fig.supxlabel("Parameter index", fontsize=20)
         fig.set_constrained_layout(True)
 
-        for specificLayerInd in numSpecificLayers:
+        for specificLayerInd in range(numSpecificLayers):
             for colInd in range(nCols):
                 if colInd == 0 or colInd == nCols - 1: continue
                 axes[specificLayerInd, colInd].remove()
@@ -478,7 +478,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             # Plot the heatmap
             colorbarAxes.append(ax.imshow(signalWeightMatrix, cmap=self.custom_cmap, interpolation=None, aspect="equal", vmin=-degrees, vmax=degrees))
 
-        for specificLayerInd in numSpecificLayers:
+        for specificLayerInd in range(numSpecificLayers):
             for colInd in range(nCols):
                 if colInd == 0 or colInd == nCols - 1: continue
                 axes[specificLayerInd, colInd].remove()
