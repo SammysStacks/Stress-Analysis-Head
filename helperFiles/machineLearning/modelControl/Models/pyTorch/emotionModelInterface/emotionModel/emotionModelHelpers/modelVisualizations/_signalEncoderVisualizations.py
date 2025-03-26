@@ -332,11 +332,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.axvspan(-degrees, -maxAngularThreshold, color=self.blackColor, alpha=1, zorder=0)
             ax.axvspan(maxAngularThreshold, degrees, color=self.blackColor, alpha=1, zorder=0)
 
-        for specificLayerInd in range(numSpecificLayers):
-            for colInd in range(nCols):
-                if colInd == 0 or colInd == nCols - 1: continue
-                axes[specificLayerInd, colInd].remove()
-
         # Adjust layout to prevent overlapping titles/labels
         fig.suptitle(t=f"{plotTitle}; Epoch {epoch}", fontsize=24)
         fig.supxlabel(f"Angle ({units})", fontsize=20)
@@ -351,6 +346,11 @@ class signalEncoderVisualizations(globalPlottingProtocols):
                 for patch in patches:  # Access individual bars
                     patch.set_edgecolor(None)  # Remove edge color
                     patch.set_linewidth(0)  # Remove edge line width
+
+        for specificLayerInd in range(numSpecificLayers):
+            for colInd in range(nCols):
+                if colInd == 0 or colInd == nCols - 1: continue
+                axes[specificLayerInd, colInd].remove()
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=False)
@@ -478,17 +478,17 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             # Plot the heatmap
             colorbarAxes.append(ax.imshow(signalWeightMatrix, cmap=self.custom_cmap, interpolation=None, aspect="equal", vmin=-degrees, vmax=degrees))
 
-        for specificLayerInd in range(numSpecificLayers):
-            for colInd in range(nCols):
-                if colInd == 0 or colInd == nCols - 1: continue
-                axes[specificLayerInd, colInd].remove()
-
         # Adjust layout to prevent overlapping titles/labels
         fig.suptitle(t=f"{plotTitle}; Epoch {epoch}", fontsize=24)
         fig.supylabel(r"$S_{i}$", fontsize=20)
         fig.supxlabel(r"$S_{j}$", fontsize=20)
         fig.colorbar(colorbarAxes[-1], ax=axes.ravel().tolist(), orientation='vertical', fraction=0.02, pad=0.04)
         fig.set_constrained_layout(True)
+
+        for specificLayerInd in range(numSpecificLayers):
+            for colInd in range(nCols):
+                if colInd == 0 or colInd == nCols - 1: continue
+                axes[specificLayerInd, colInd].remove()
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} cutoff{str(round(maxAngularThreshold, 4)).replace('.', '-')} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} cutoff{str(round(maxAngularThreshold, 4)).replace('.', '-')}.pdf", fig=fig, clearFigure=True, showPlot=False)
