@@ -258,7 +258,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         for specificLayerInd in numSpecificLayers:
             for colInd in range(nCols):
                 if colInd == 0 or colInd == nCols - 1: continue
-                axes[specificLayerInd*nCols + colInd].remove()
+                axes[specificLayerInd, colInd].remove()
 
         fig.suptitle(t=f"{plotTitle}; Epoch {epoch}", fontsize=24)
         fig.supylabel(r"Signal index: $\mathbb{\mathit{i}}$", fontsize=20)
@@ -335,7 +335,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         for specificLayerInd in numSpecificLayers:
             for colInd in range(nCols):
                 if colInd == 0 or colInd == nCols - 1: continue
-                axes[specificLayerInd*nCols + colInd].remove()
+                axes[specificLayerInd, colInd].remove()
 
         # Adjust layout to prevent overlapping titles/labels
         fig.suptitle(t=f"{plotTitle}; Epoch {epoch}", fontsize=24)
@@ -415,7 +415,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         for specificLayerInd in numSpecificLayers:
             for colInd in range(nCols):
                 if colInd == 0 or colInd == nCols - 1: continue
-                axes[specificLayerInd*nCols + colInd].remove()
+                axes[specificLayerInd, colInd].remove()
 
         # Save the plot
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", clearFigure=False, showPlot=False)
@@ -481,7 +481,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         for specificLayerInd in numSpecificLayers:
             for colInd in range(nCols):
                 if colInd == 0 or colInd == nCols - 1: continue
-                axes[specificLayerInd*nCols + colInd].remove()
+                axes[specificLayerInd, colInd].remove()
 
         # Adjust layout to prevent overlapping titles/labels
         fig.suptitle(t=f"{plotTitle}; Epoch {epoch}", fontsize=24)
