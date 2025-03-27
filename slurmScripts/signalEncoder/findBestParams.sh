@@ -35,9 +35,17 @@ lrs_profileGen=('1e-4' '4e-4' '1e-3' '4e-3' '1e-2') # x <= 1e-4;
 lrs_reversible=(0.2 0.1 0.05 0.025 0.01)  # 4e-4 <= x == 1e-3
 
 lrs_profile=(0.01 0.05)  # 0.005 <= x <= 0.075
-
 lrs_profileGen=('1e-4' '2e-4' '4e-4' '1e-3' '4e-3') # x <= 1e-4;
 lrs_reversible=(0.1 0.075 0.05 0.025 0.02 0.01)  # 4e-4 <= x == 1e-3
+
+
+
+
+lrs_profile=(0.005 0.0075 0.01 0.025 0.05 0.075 0.1)  # 0.005 <= x <= 0.075
+lrs_profileGen=('4e-4' '1e-3') # x <= 1e-4;
+lrs_reversible=(0.1 0.075 0.05 0.025 0.02 0.01)  # 4e-4 <= x == 1e-3
+
+
 
 # Angular reference states.
 minThresholdSteps=(0.025 0.05 0.075 0.1 0.2)
@@ -98,7 +106,7 @@ do
                                                                         continue
                                                                     fi
 
-                                                                    filename="signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_numProfileShots_${numProfileShots}_optimizer_${optimizer}_profileDim_${profileDimension}_minAngleThresh_${minAngularThreshold}_maxAngleThresh_${maxAngularThreshold}_minWaveletDim_{$minWaveletDim}_minThresholdStep_${minThresholdStep}_waveletType_${waveletType}"
+                                                                    filename="signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_numProfileShots_${numProfileShots}_optimizer_${optimizer}_profileDim_${profileDimension}_minAngleThresh_${minAngularThreshold}_maxAngleThresh_${maxAngularThreshold}_minWaveletDim_$minWaveletDim_minThresholdStep_${minThresholdStep}_waveletType_${waveletType}"
 
                                                                     if [ "$1" == "CPU" ]; then
                                                                         sbatch -J "$filename" submitSignalEncoder_CPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$numProfileShots" "$1" "$waveletType" "$optimizer" "$lr_profile" "$lr_reversible" "$lr_profileGen" "$profileDimension" "$beta1s" "$beta2s" "$momentums" "$minAngularThreshold" "$maxAngularThreshold" "$minWaveletDim" "$minThresholdStep"
