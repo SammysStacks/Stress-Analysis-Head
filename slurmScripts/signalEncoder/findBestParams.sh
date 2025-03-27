@@ -63,7 +63,7 @@ profileParams=(64)  # [64, 128]
 
 # Wavelet states.
 waveletTypes_arr=('bior3.1')
-minWaveletDims=(32 64)  # [64, 128]
+minWaveletDims=(32)  # [64, 128]
 
 for minThresholdStep in "${minThresholdSteps[@]}"
 do
