@@ -64,7 +64,6 @@ class trainingProtocolHelpers:
 
             if not onlyProfileTraining:
                 # Train the updated model.
-                # modelPipeline.model.cullAngles(epoch=epoch)
                 modelPipeline.trainModel(dataLoader, submodel, profileTraining=False, specificTraining=True, trainSharedLayers=False, stepScheduler=False, numEpochs=numEpochs)  # Signal-specific training.
                 modelPipeline.model.cullAngles(epoch=epoch)
 
