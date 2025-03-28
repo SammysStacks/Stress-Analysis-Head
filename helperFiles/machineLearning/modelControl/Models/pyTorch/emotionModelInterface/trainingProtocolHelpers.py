@@ -40,7 +40,7 @@ class trainingProtocolHelpers:
             self.modelMigration.unifyModelWeights(allModels=[modelPipeline], modelWeights=self.sharedModelWeights, layerInfo=self.unifiedLayerData)
 
             # Train the updated model.
-            modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=True, trainSharedLayers=trainSharedLayers, stepScheduler=False, numEpochs=1)   # Full model training.
+            modelPipeline.trainModel(dataLoader, submodel, profileTraining=False, specificTraining=True, trainSharedLayers=trainSharedLayers, stepScheduler=False, numEpochs=1)   # Full model training.
             self.accelerator.wait_for_everyone()
 
             # Unify all the model weights and retrain the specific models.
@@ -50,7 +50,7 @@ class trainingProtocolHelpers:
         self.unifyAllModelWeights(allMetaModels, allModels)
         self.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch)
 
-    def datasetSpecificTraining(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch):
+    def datasetSpecificTraining(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch, onlyProfileTraining=False):
         # Unify all the model weights.
         self.unifyAllModelWeights(allMetaModels, allModels)
 
@@ -62,13 +62,15 @@ class trainingProtocolHelpers:
             elif modelPipeline.datasetName.lower() == 'wesad': numEpochs = 5  # 6
             else: numEpochs = 1
 
-            # Train the updated model.
-            modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=True, trainSharedLayers=False, stepScheduler=False, numEpochs=numEpochs)  # Signal-specific training.
+            if not onlyProfileTraining:
+                # Train the updated model.
+                # modelPipeline.model.cullAngles(epoch=epoch)
+                modelPipeline.trainModel(dataLoader, submodel, profileTraining=False, specificTraining=True, trainSharedLayers=False, stepScheduler=False, numEpochs=numEpochs)  # Signal-specific training.
+                modelPipeline.model.cullAngles(epoch=epoch)
 
             # Health profile training.
-            numProfileShots = modelPipeline.resetPhysiologicalProfile(submodel)
+            numProfileShots = modelPipeline.resetPhysiologicalProfile(submodel) if epoch != 0 else modelConstants.initialProfileEpochs
             modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=numProfileShots + 1)  # Profile training.
-            modelPipeline.model.cullAngles(epoch=epoch)
             self.accelerator.wait_for_everyone()
 
     def calculateLossInformation(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel):
