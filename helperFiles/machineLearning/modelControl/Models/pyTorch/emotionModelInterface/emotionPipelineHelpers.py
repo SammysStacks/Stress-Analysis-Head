@@ -60,10 +60,10 @@ class emotionPipelineHelpers:
         numProfileShots = min(max(8, numEpochs), self.numProfileShots)
 
         # Reset and get the parameters that belong to the profile model
+        # profileParams = set(self.model.specificSignalEncoderModel.profileModel.parameters())
         self.model.specificSignalEncoderModel.profileModel.resetProfileHolders(numProfileShots)
         self.model.specificSignalEncoderModel.profileModel.resetProfileWeights()
 
-        # profileParams = set(self.model.specificSignalEncoderModel.profileModel.parameters())
         # Reset the optimizer state for these parameters
         # for p in list(self.optimizer.state.keys()):
         #     if p in profileParams: self.optimizer.state[p] = {}
