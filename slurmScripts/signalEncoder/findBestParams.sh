@@ -47,15 +47,15 @@ lrs_reversible=(0.05)  # 4e-4 <= x == 1e-3
 minThresholdSteps=(0.1)
 minAngularThresholds=(2.5)  # [0.01, 0.25]
 
-#lrs_profile=(0.01)  # 0.005 <= x <= 0.075
-#lrs_profileGen=('2e-4' '4e-4' '1e-3') # x <= 1e-4;
-#lrs_reversible=(0.075 0.05 0.025)  # 4e-4 <= x == 1e-3
-#minThresholdSteps=(0.025 0.05 0.075 0.1)
-#minAngularThresholds=(2.5)  # [0.01, 0.25]
+lrs_profile=(0.01)  # 0.005 <= x <= 0.075
+lrs_profileGen=('2e-4' '4e-4' '1e-3') # x <= 1e-4;
+lrs_reversible=(0.075 0.05 0.025)  # 4e-4 <= x == 1e-3
+minThresholdSteps=(0.025 0.05 0.075 0.1)
+minAngularThresholds=(2 4)  # [0.01, 0.25]
 
 # Binary reference states.
 numSpecificEncoderLayers_arr=(1)
-numSharedEncoderLayers_arr=(3 5 7 9 11)  # [4, 10]; Best: 5 and 7
+numSharedEncoderLayers_arr=(7)  # [4, 10]; Best: 5 and 7
 
 # Profile parameters.
 numProfileShots_arr=(24)  # (8, [16, 24], 32)
