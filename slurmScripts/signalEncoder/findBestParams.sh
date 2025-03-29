@@ -36,7 +36,7 @@ lrs_reversible=(0.2 0.1 0.075 0.05 0.025 0.02 0.01)  # 4e-4 <= x == 1e-3
 
 # Angular reference states.
 minThresholdSteps=(0.01 0.025 0.05 0.075 0.1 0.2)
-minAngularThresholds=(1 2 4 6)  # [0.01, 0.25]
+minAngularThresholds=(1 2 3 4 5 6 8 10)  # [0.01, 0.25]
 maxAngularThresholds=(45)
 
 
@@ -45,8 +45,8 @@ lrs_profile=(0.01)  # 0.005 <= x <= 0.075
 lrs_profileGen=('4e-4') # x <= 1e-4;
 lrs_reversible=(0.025)  # 4e-4 <= x == 1e-3
 
-#minThresholdSteps=(0.05)
-minAngularThresholds=(2.5)  # [0.01, 0.25]
+minThresholdSteps=(0.05)
+#minAngularThresholds=(2.5)  # [0.01, 0.25]
 
 #lrs_profile=(0.01)  # 0.005 <= x <= 0.075
 #lrs_profileGen=('2e-4' '4e-4' '1e-3') # x <= 1e-4;
