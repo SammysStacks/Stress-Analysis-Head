@@ -56,7 +56,7 @@ waveletTypes_arr=('bior3.1')
 
 # Binary reference states.
 numSpecificEncoderLayers_arr=(1)
-numSharedEncoderLayers_arr=(3 5 9)  # [4, 10]; Best: 5 and 7
+numSharedEncoderLayers_arr=(7)  # [4, 10]; Best: 5 and 7
 
 # Profile parameters.
 numProfileShots_arr=(24)  # (8, [16, 24], 32)
@@ -64,7 +64,7 @@ encodedDimensions_arr=(512)
 profileParams=(128)  # [64, 128]
 
 # Wavelet states.
-#waveletTypes_arr=('bior3.1' 'bior3.3' 'bior3.5' 'bior3.7' 'bior3.9')
+waveletTypes_arr=('bior3.1' 'bior3.3' 'bior3.5' 'bior3.7' 'bior3.9')
 minWaveletDims=(32)  # [32, 64]
 
 for minThresholdStep in "${minThresholdSteps[@]}"
