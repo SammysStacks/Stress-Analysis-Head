@@ -55,10 +55,10 @@ minAngularThresholds=(2.5)  # [0.01, 0.25]
 
 # Binary reference states.
 numSpecificEncoderLayers_arr=(1)
-numSharedEncoderLayers_arr=(7)  # [4, 10]; Best: 5 and 7
+numSharedEncoderLayers_arr=(3 5 7 9)  # [4, 10]; Best: 5 and 7
 
 # Profile parameters.
-numProfileShots_arr=(8 12 16 24 32)  # (8, [16, 24], 32)
+numProfileShots_arr=(24)  # (8, [16, 24], 32)
 encodedDimensions_arr=(512)
 profileParams=(256)  # [64, 128]
 
