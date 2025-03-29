@@ -358,7 +358,7 @@ class generalVisualizations(globalPlottingProtocols):
                     axes[specificLayerInd, colInd].remove()
 
             # Save the figure if desired.
-            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=None, baseSaveFigureName=f"{plotTitle} {paramName}.pdf", fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=None, baseSaveFigureName=f"{plotTitle} {paramName}.pdf", fig=fig, clearFigure=True, showPlot=False)
             else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
             # Zoom into the plot.
