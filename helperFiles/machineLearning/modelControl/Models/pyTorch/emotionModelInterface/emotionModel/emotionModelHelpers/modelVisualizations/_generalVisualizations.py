@@ -281,14 +281,14 @@ class generalVisualizations(globalPlottingProtocols):
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=None, baseSaveFigureName=f"{plotTitle} {paramName}.pdf", fig=fig, clearFigure=True, showPlot=False)
             else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
-    def plotFreeParamFlow(self, numFreeModelParams, maxFreeParamsPath, fullView, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
+    def plotFreeParamFlow(self, numFreeModelParams, maxFreeParamsPath, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
         # scalingFactorsPaths: numModels, numEpochs, numModuleLayers, *numSignals*, numParams=1
         # maxFreeParamsPath: numModels, numModuleLayers
         numModels, numModuleLayers = np.asarray(maxFreeParamsPath).shape
         nRows, nCols = self.getRowsCols(combineSharedLayers=True)
         numEpochs = len(numFreeModelParams[0])
         numParams = len(paramNames)
-        x = np.arange(numEpochs - (0 if fullView else 5))
+        x = np.arange(numEpochs)
         if numEpochs <= 5: return "No data to plot."
 
         # Get the parameters.
@@ -297,7 +297,7 @@ class generalVisualizations(globalPlottingProtocols):
 
         for paramInd in range(numParams):
             # Create a figure and axes array
-            fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=True, sharey='col' if fullView else False)
+            fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=True, sharey=False)
             numLow, numSpecificHigh, numSharedHigh = 0, 0, 0
             paramName = paramNames[paramInd].lower()
 
@@ -326,7 +326,7 @@ class generalVisualizations(globalPlottingProtocols):
                     if sequenceLength == 1: sequenceLength = 0
 
                     plottingParams = []
-                    for epochInd in range(0 if fullView else 5, numEpochs):
+                    for epochInd in range(numEpochs):
                         plottingParams.append(numFreeModelParams[modelInd][epochInd][layerInd][:, paramInd])
                     plottingParams = np.asarray(plottingParams)
 
@@ -345,9 +345,8 @@ class generalVisualizations(globalPlottingProtocols):
                         for axisLineInd in range(numValues):
                             ax.plot(x, plottingParams, color=self.darkColors[0], linewidth=1, alpha=0.3 * alphas[axisLineInd])
                             ax.plot(x, plottingParams, color=self.darkColors[1], linewidth=1, alpha=0.6 * (1 - alphas[axisLineInd]))
-                    if fullView: ax.hlines(y=maxFreeParams, xmin=0, xmax=numEpochs + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
                     ax.hlines(y=sequenceLength, xmin=0, xmax=numEpochs + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
-                if not fullView: ax.set_ylim((0, min(ax.get_ylim()[-1], 10000)))
+                    ax.hlines(y=maxFreeParams, xmin=0, xmax=numEpochs + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
 
             # Label the plot.
             fig.suptitle(f"{plotTitle}: {paramName}", fontsize=24)
@@ -360,6 +359,13 @@ class generalVisualizations(globalPlottingProtocols):
 
             # Save the figure if desired.
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=None, baseSaveFigureName=f"{plotTitle} {paramName}.pdf", fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
+            else: self.clearFigure(fig=fig, legend=None, showPlot=True)
+
+            # Zoom into the plot.
+            for ax in fig.axes: ax.set_ylim(0, 5000)
+
+            # Save the figure if desired.
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=None, baseSaveFigureName=f"{plotTitle} {paramName} (zoomed).pdf", fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
             else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
     def plotScaleFactorFlow(self, scalingFactorsPaths, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
