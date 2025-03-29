@@ -44,7 +44,7 @@ lrs_profile=(0.01)  # 0.005 <= x <= 0.075
 lrs_profileGen=('4e-4') # x <= 1e-4;
 lrs_reversible=(0.025)  # 4e-4 <= x == 1e-3
 
-minThresholdSteps=(0.05)
+#minThresholdSteps=(0.05)
 minAngularThresholds=(2.5)  # [0.01, 0.25]
 waveletTypes_arr=('bior3.1')
 
@@ -64,7 +64,7 @@ encodedDimensions_arr=(512)
 profileParams=(128)  # [64, 128]
 
 # Wavelet states.
-waveletTypes_arr=('bior3.1' 'bior3.3' 'bior3.5' 'bior3.7' 'bior3.9')
+#waveletTypes_arr=('bior3.1' 'bior3.3' 'bior3.5' 'bior3.7' 'bior3.9')
 minWaveletDims=(32)  # [32, 64]
 
 for minThresholdStep in "${minThresholdSteps[@]}"
