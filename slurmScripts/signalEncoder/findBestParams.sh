@@ -58,13 +58,13 @@ numSpecificEncoderLayers_arr=(1)
 numSharedEncoderLayers_arr=(7)  # [4, 10]; Best: 5 and 7
 
 # Profile parameters.
-numProfileShots_arr=(24)  # (8, [16, 24], 32)
+numProfileShots_arr=(8 12 16 24 32)  # (8, [16, 24], 32)
 encodedDimensions_arr=(512)
-profileParams=(64 128 256 512)  # [64, 128]
+profileParams=(256)  # [64, 128]
 
 # Wavelet states.
 waveletTypes_arr=('bior3.1')
-minWaveletDims=(16 32 64 128)  # [64, 128]
+minWaveletDims=(32)  # [64, 128]
 
 for minThresholdStep in "${minThresholdSteps[@]}"
 do
