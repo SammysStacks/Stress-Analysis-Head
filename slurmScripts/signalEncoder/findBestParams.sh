@@ -41,8 +41,8 @@ maxAngularThresholds=(45)
 
 
 lrs_profile=(0.01)  # 0.005 <= x <= 0.075
-lrs_profileGen=('4e-4') # x <= 1e-4;
-#lrs_reversible=(0.025)  # 4e-4 <= x == 1e-3
+#lrs_profileGen=('4e-4') # x <= 1e-4;
+lrs_reversible=(0.025 0.5)  # 4e-4 <= x == 1e-3
 
 minThresholdSteps=(0.05)
 minAngularThresholds=(2.5)  # [0.01, 0.25]
