@@ -16,7 +16,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
     def __init__(self, numSignals, sequenceLength, numLayers, activationMethod):
         super(reversibleLieLayer, self).__init__(numSignals, sequenceLength, numLayers, activationMethod)
-        self.initialMaxGivensAngle = self.getInverseAngleParams((3 / sequenceLength).sqrt() * torch.pi / 180)
+        self.initialMaxGivensAngle = self.getInverseAngleParams(torch.as_tensor(3 / sequenceLength).sqrt() * torch.pi / 180)
         self.identityMatrix = torch.eye(self.sequenceLength, dtype=torch.float64)
 
         # Create the neural layers.
@@ -108,7 +108,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
         # Get the minimum angular threshold.
         minThresholdStep = modelConstants.userInputParams['minThresholdStep']
         minAngularThreshold = modelConstants.userInputParams['minAngularThreshold']
-        minAngularThreshold = min(minAngularThreshold, 1/3 + (epoch-1) * minThresholdStep) * torch.pi / 180
+        minAngularThreshold = min(minAngularThreshold, 0.5 + (epoch-1) * minThresholdStep) * torch.pi / 180
 
         return minAngularThreshold
 
