@@ -35,7 +35,7 @@ class reversibleLieLayerInterface(reversibleInterface):
 
     @staticmethod
     def getInverseAngleParams(givensAngles):
-        return torch.atanh(2 * givensAngles / torch.pi)
+        return torch.atanh(2 * torch.as_tensor(givensAngles) / torch.pi)
 
     def getJacobianScalar(self):
         return 1.0 + 0.05 * torch.tanh(self.jacobianParameter)
