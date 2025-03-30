@@ -38,7 +38,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-03-28"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2025-03-29"  # The current date we are training the model. Unique identifier of this training set.
     holdDatasetOut = True  # Whether to hold out the validation dataset.
     plotAllEpochs = False  # Whether to plot all epochs or not.
     testSplitRatio = 0.1  # The percentage of testing points.
@@ -70,7 +70,7 @@ if __name__ == "__main__":
     # Add arguments for observational learning.
     parser.add_argument('--maxAngularThreshold', type=float, default=45, help='The larger rotational threshold in (degrees)')
     parser.add_argument('--minAngularThreshold', type=float, default=4, help='The smaller rotational threshold in (degrees)')
-    parser.add_argument('--minThresholdStep', type=float, default=0.05, help='The rotational threshold step (degrees)')
+    parser.add_argument('--minThresholdStep', type=float, default=0.1, help='The rotational threshold step (degrees)')
 
     # dd arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions)')
