@@ -38,7 +38,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-03-29"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2025-03-30"  # The current date we are training the model. Unique identifier of this training set.
     holdDatasetOut = True  # Whether to hold out the validation dataset.
     plotAllEpochs = False  # Whether to plot all epochs or not.
     testSplitRatio = 0.1  # The percentage of testing points.
