@@ -32,7 +32,7 @@ waveletTypes_arr=(
 # Learning parameters.
 lrs_profile=(0.01 0.025)  # 0.005 <= x <= 0.075
 lrs_profileGen=('4e-4' '1e-3') # x <= 1e-4;
-lrs_reversible=(0.05)  # 4e-4 <= x == 1e-3
+lrs_reversible=(0.05 0.075)  # 4e-4 <= x == 1e-3
 
 # Angular reference states.
 minAngularThresholds=(1 2 3 4)  # [0.01, 0.25]
