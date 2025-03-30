@@ -540,6 +540,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
             ax.set_xticks(range(len(xTickLabelSpecific if specificFlag else xTickLabelShared)))  # Set x-ticks positions
             ax.set_xticklabels(xTickLabelSpecific if specificFlag else xTickLabelShared, rotation=45, ha='right')  # Set x-tick labels with rotation
+            ax.hlines(y=0, xmin=ax.get_xlim()[0], xmax=ax.get_xlim()[1], colors=self.blackColor, linestyles='-', linewidth=1, zorder=0)
 
         # Save the plot
         fig.tight_layout(pad=2.0)

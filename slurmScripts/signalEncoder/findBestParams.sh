@@ -30,42 +30,27 @@ waveletTypes_arr=(
 )
 
 # Learning parameters.
-lrs_profile=(0.005 0.0075 0.01 0.025)  # 0.005 <= x <= 0.075
-lrs_profileGen=('1e-4' '2e-4' '4e-4' '1e-3' '4e-3' '1e-2') # x <= 1e-4;
-lrs_reversible=(0.2 0.1 0.075 0.05 0.025 0.02)  # 4e-4 <= x == 1e-3
+lrs_profile=(0.01 0.025)  # 0.005 <= x <= 0.075
+lrs_profileGen=('4e-4' '1e-3') # x <= 1e-4;
+lrs_reversible=(0.025 0.05)  # 4e-4 <= x == 1e-3
 
 # Angular reference states.
-minThresholdSteps=(0.01 0.025 0.05 0.075 0.1 0.2)
-minAngularThresholds=(1 2 3 4 5 6 8 10)  # [0.01, 0.25]
-maxAngularThresholds=(45)
-
-
-#lrs_profile=(0.01)  # 0.005 <= x <= 0.075
-lrs_profileGen=('2e-4' '4e-4' '1e-3') # x <= 1e-4;
-lrs_reversible=(0.05)  # 4e-4 <= x == 1e-3
-
-minThresholdSteps=(0.05 0.1)  # [0.025, 0.05]
 minAngularThresholds=(2.5)  # [0.01, 0.25]
-waveletTypes_arr=('bior3.1')
-
-#lrs_profile=(0.01)  # 0.005 <= x <= 0.075
-#lrs_profileGen=('2e-4' '4e-4' '1e-3') # x <= 1e-4;
-#lrs_reversible=(0.025 0.05 0.075)  # 4e-4 <= x == 1e-3
-#minThresholdSteps=(0.025 0.05 0.075 0.1)
-#minAngularThresholds=(2 4)  # [0.01, 0.25]
+maxAngularThresholds=(45)
+minThresholdSteps=(0.05 0.1)
 
 # Binary reference states.
 numSpecificEncoderLayers_arr=(1)
 numSharedEncoderLayers_arr=(7)  # [4, 10]; Best: 5 and 7
 
 # Profile parameters.
-numProfileShots_arr=(24)  # (8, [16, 24], 32)
+numProfileShots_arr=(16)  # (8, [16, 24], 32)
 encodedDimensions_arr=(512)
-profileParams=(128)  # [64, 128, 256, 512]
+profileParams=(256)  # [64, 128, 256, 512]
 
 # Wavelet states.
-#waveletTypes_arr=('bior3.1' 'bior3.3' 'bior3.5' 'bior3.7' 'bior3.9')
-minWaveletDims=(32)  # [32, 64]
+waveletTypes_arr=('bior3.1' 'bior3.3')
+minWaveletDims=(16 32 64)  # [32, 64]
 
 for minThresholdStep in "${minThresholdSteps[@]}"
 do
