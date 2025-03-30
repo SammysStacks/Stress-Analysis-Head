@@ -534,7 +534,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             # Get the angles for the current layer
             if specificFlag: ax.plot(specificValues[axInd:numSpecificScalarSections*(axInd+1)], 'o', color=self.darkColors[0], alpha=0.5, linewidth=1, markersize=4)
             else: ax.plot(sharedValues[axInd::numSharedLayers], 'o', color=self.darkColors[1], alpha=0.75, linewidth=1, markersize=4)
-            ax.axhline(y=0, color=self.blackColor, linestyles='-', linewidth=1)
+            ax.axhline(y=0, color=self.blackColor, linewidth=1)
 
             ax.set_title(f"Specific layer: {axInd+1}" if specificFlag else f"Shared layer: {axInd+1}", fontsize=16)
             ax.set_xticks(range(len(xTickLabelSpecific if specificFlag else xTickLabelShared)))  # Set x-ticks positions
