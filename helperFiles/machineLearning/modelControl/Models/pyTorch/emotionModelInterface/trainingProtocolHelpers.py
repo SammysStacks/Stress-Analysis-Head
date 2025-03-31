@@ -56,9 +56,7 @@ class trainingProtocolHelpers:
         for modelInd in range(len(allMetaModels) + len(allModels)):
             dataLoader = allMetadataLoaders[modelInd] if modelInd < len(allMetadataLoaders) else allDataLoaders[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
             modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
-            if modelPipeline.datasetName.lower() == 'empatch': numEpochs = 2  # [2, 3]
-            elif modelPipeline.datasetName.lower() == 'wesad': numEpochs = 5  # 6
-            else: numEpochs = 1
+            numEpochs = 1
 
             # Train the updated model.
             if not onlyProfileTraining:
@@ -68,7 +66,6 @@ class trainingProtocolHelpers:
             # Health profile training.
             numProfileShots = modelPipeline.resetPhysiologicalProfile(submodel) if epoch != 0 else modelConstants.initialProfileEpochs
             modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=numProfileShots + 1)  # Profile training.
-            if not onlyProfileTraining: modelPipeline.model.cullAngles(epoch=epoch)
 
     def validationTraining(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch):
         self.unifyAllModelWeights(allMetaModels, allModels)  # Unify all the model weights.
@@ -83,11 +80,11 @@ class trainingProtocolHelpers:
 
             # Train the updated model.
             modelPipeline.trainModel(dataLoader, submodel, profileTraining=False, specificTraining=True, trainSharedLayers=False, stepScheduler=False, numEpochs=numEpochs)  # Signal-specific training.
-            modelPipeline.model.cullAngles(epoch=epoch)
 
             # Health profile training.
             numProfileShots = modelPipeline.resetPhysiologicalProfile(submodel) if epoch != 0 else modelConstants.initialProfileEpochs
             modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=numProfileShots + 1)  # Profile training.
+            modelPipeline.model.cullAngles(epoch=epoch)
 
     def calculateLossInformation(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel):
         self.unifyAllModelWeights(allMetaModels, allModels)  # Unify all the model weights.

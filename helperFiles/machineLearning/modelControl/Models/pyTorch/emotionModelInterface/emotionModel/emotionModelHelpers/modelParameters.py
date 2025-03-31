@@ -47,8 +47,8 @@ class modelParameters:
         elif submodel == modelConstants.emotionModel: effectiveMinBatchSize, effectiveMaxBatchSize = 24, 128
         else: raise Exception()
 
-        if datasetName == modelConstants.wesadDatasetName: effectiveMinBatchSize = 30
-        if datasetName == modelConstants.empatchDatasetName: effectiveMinBatchSize = 33
+        if datasetName == modelConstants.wesadDatasetName: effectiveMinBatchSize = 20
+        if datasetName == modelConstants.empatchDatasetName: effectiveMinBatchSize = 55
         # Adjust the batch size based on the number of gradient accumulations.
         gradientAccumulation = self.accelerator.gradient_accumulation_steps
         minBatchSize_perLoop = effectiveMinBatchSize / gradientAccumulation
