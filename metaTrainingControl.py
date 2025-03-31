@@ -134,7 +134,7 @@ if __name__ == "__main__":
     # Plot the initial model state.
     if modelConstants.useInitialLoss: trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)  # Calculate the initial loss.
     if plotAllEpochs: trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate, showMinimumPlots=False)
-    trainingProtocols.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch=0, onlyProfileTraining=True, validationRun=validationRun)
+    if not validationRun: trainingProtocols.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch=0, onlyProfileTraining=True, validationRun=validationRun)
 
     # For each training epoch
     for epoch in range(1, numEpochs + 1):
