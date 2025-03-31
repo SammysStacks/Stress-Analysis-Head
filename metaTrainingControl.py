@@ -126,8 +126,7 @@ if __name__ == "__main__":
 
     # Do not train on the meta-datasets.
     if not validationRun: allDataLoaders, datasetNames, allModels = [], [], []
-
-    # Compile all the dataset names.
+    else: allMetadataLoaders, metaDatasetNames, allMetaModels = [], [], []
     allDatasetNames = metaDatasetNames + datasetNames
 
     # -------------------------- Meta-model Training ------------------------- #

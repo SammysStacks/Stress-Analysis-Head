@@ -61,7 +61,7 @@ class trainingProtocolHelpers:
             else: numEpochs = 1
 
             # Train the updated model.
-            if not onlyProfileTraining and (not validationRun or modelPipeline.datasetName.lower() in ['empatch', 'wesad']):
+            if not onlyProfileTraining:
                 modelPipeline.model.cullAngles(epoch=epoch)
                 modelPipeline.trainModel(dataLoader, submodel, profileTraining=False, specificTraining=True, trainSharedLayers=False, stepScheduler=False, numEpochs=numEpochs)  # Signal-specific training.
 
