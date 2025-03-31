@@ -73,7 +73,7 @@ class modelParameters:
 
     @staticmethod
     def getEpochInfo(validationRun):
-        if validationRun: return 100, 10, 10  # numEpochs, numEpoch_toPlot, numEpoch_toSaveFull
+        if validationRun: return 100, 100, 100  # numEpochs, numEpoch_toPlot, numEpoch_toSaveFull
         else: return 1000, 50, 50  # numEpochs, numEpoch_toPlot, numEpoch_toSaveFull
 
     @staticmethod
