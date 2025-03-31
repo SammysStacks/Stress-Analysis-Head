@@ -172,7 +172,7 @@ class modelMigration:
         trainingModelName = modelParameters.embedInformation(submodel, trainingDate)
 
         # Compile the location to save/load the model.
-        modelFolderPath = self.saveModelFolder + f"{trainingModelName}/{submodel}/{trainingDate}/{datasetName}/"
+        modelFolderPath = self.saveModelFolder + f"{submodel}/{trainingModelName}/{datasetName}/"
 
         if numEpochs == -1 and os.path.exists(modelFolderPath):
             # List all folders in the model folder path.
@@ -186,7 +186,7 @@ class modelMigration:
         modelFilePath = modelFolderPath + f"Epoch {numEpochs}/"
 
         # Compile the filename to save/load the model.
-        modelBaseName = modelFilePath + f"{trainingDate} {datasetName} {submodel} at {numEpochs} Epochs"
+        modelBaseName = modelFilePath + f"{trainingModelName} {datasetName} {submodel} at {numEpochs} Epochs"
 
         return modelBaseName
 
@@ -253,7 +253,6 @@ class modelMigration:
         modelBaseName = self._compileModelBaseName(submodel, datasetName, trainingDate, numEpochs)
         sharedModelBaseName = self._compileModelBaseName(submodel, self.sharedWeightsName, trainingDate, numEpochs)
         print(sharedModelBaseName)
-        print(modelBaseName)
 
         # Load in the pytorch models.
         self._loadPyTorchModel(model, modelBaseName, loadModelAttributes, loadModelWeights, submodel)  # Load dataset-specific parameters
