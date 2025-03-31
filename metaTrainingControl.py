@@ -146,7 +146,7 @@ if __name__ == "__main__":
 
         # Train the model for a single epoch.
         if not validationRun: trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch)
-        else: trainingProtocols.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch, onlyProfileTraining=False, validationRun=validationRun)
+        else: trainingProtocols.validationTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch)
 
         # Store the initial loss information and plot.
         trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)
