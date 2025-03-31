@@ -38,7 +38,7 @@ if __name__ == "__main__":
     )
 
     # Define the model information.
-    modelFolder = os.path.dirname(os.path.abspath(__file__)) + "/../../../helperFiles/machineLearning/_finalModels/metaTrainingModels/signalEncoderModel/"
+    modelFolder = os.path.dirname(os.path.abspath(__file__)) + "/../../../helperFiles/machineLearning/_finalModels/signalEncoderModel/"
     submodel = modelConstants.signalEncoderModel
 
     # --------------------------- Model Parameters -------------------------- #

@@ -46,8 +46,9 @@ class compileModelDataHelpers:
     # ---------------------- Model Specific Parameters --------------------- #
 
     @staticmethod
-    def embedInformation(submodel, userInputParams, trainingDate):
+    def embedInformation(submodel, trainingDate):
         # Embedded information for each model.
+        userInputParams = modelConstants.userInputParams
         if userInputParams['encodedDimension'] < userInputParams['profileDimension']: raise Exception("The number of encoded weights must be less than the encoded dimension.")
 
         # Get the model information.

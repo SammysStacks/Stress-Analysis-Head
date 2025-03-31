@@ -105,6 +105,7 @@ if __name__ == "__main__":
     userInputParams = modelParameters.getNeuralParameters(userInputParams)
     modelConstants.updateModelParams(userInputParams)
     submodel = userInputParams['submodel']
+    print("Arguments:", userInputParams)
 
     # Initialize the model information classes.
     trainingProtocols = trainingProtocolHelpers(submodel=submodel, accelerator=accelerator)  # Initialize the training protocols.
@@ -114,9 +115,8 @@ if __name__ == "__main__":
 
     # Specify training parameters
     numEpochs, numEpoch_toPlot, numEpoch_toSaveFull = modelParameters.getEpochInfo(validationRun)  # The number of epochs to plot and save the model.
-    trainingDate = modelCompiler.embedInformation(submodel, userInputParams, trainingDate)  # Embed training information into the name.
+    trainingDate = modelCompiler.embedInformation(submodel, trainingDate)  # Embed training information into the name.
     datasetNames, metaDatasetNames = modelParameters.compileModelNames()  # Compile the model names.
-    print("Arguments:", userInputParams)
     print(trainingDate, "\n")
 
     # Compile the final modules.

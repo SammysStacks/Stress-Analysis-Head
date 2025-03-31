@@ -3,6 +3,8 @@ import os
 import torch
 import torch.nn as nn
 
+from helperFiles.machineLearning.dataInterface.compileModelData import compileModelData
+
 
 class modelMigration:
 
@@ -165,12 +167,12 @@ class modelMigration:
 
         return newModelAttributes
 
-    def _compileModelBaseName(self, submodel, datasetName, trainingDate, numEpochs, metaTraining=True):
+    def _compileModelBaseName(self, submodel, datasetName, trainingDate, numEpochs):
         # Organize information about the model.
-        trainingType = "metaTrainingModels" if metaTraining else "trainingModels"
+        trainingModelName = compileModelData.embedInformation(submodel, trainingDate)
 
         # Compile the location to save/load the model.
-        modelFolderPath = self.saveModelFolder + f"{trainingType}/{submodel}/{trainingDate}/{datasetName}/"
+        modelFolderPath = self.saveModelFolder + f"{trainingModelName}/{submodel}/{trainingDate}/{datasetName}/"
 
         if numEpochs == -1 and os.path.exists(modelFolderPath):
             # List all folders in the model folder path.
@@ -190,7 +192,6 @@ class modelMigration:
 
     @staticmethod
     def _createFolder(filePath):
-        # Create the folders if they do not exist.
         os.makedirs(os.path.dirname(filePath), exist_ok=True)
 
     # ------------------------ Saving Model Methods ------------------------ #
@@ -210,8 +211,8 @@ class modelMigration:
     def _saveModel(self, model, datasetName, sharedModelWeights, submodelsSaving, subAttributesSaving,
                    submodel, trainingDate, numEpochs, metaTraining, saveModelAttributes=True, datasetInd=0):
         # Create a path to where we want to save the model.
-        modelBaseName = self._compileModelBaseName(submodel, datasetName, trainingDate, numEpochs, metaTraining)
-        sharedModelBaseName = self._compileModelBaseName(submodel, self.sharedWeightsName, trainingDate, numEpochs, metaTraining)
+        modelBaseName = self._compileModelBaseName(submodel, datasetName, trainingDate, numEpochs)
+        sharedModelBaseName = self._compileModelBaseName(submodel, self.sharedWeightsName, trainingDate, numEpochs)
 
         # Filter the state_dict based on sharedModelWeights
         shared_params, specific_params = self._filterStateDict(model, sharedModelWeights, submodelsSaving)
@@ -241,7 +242,7 @@ class modelMigration:
     # ------------------------ Loading Model Methods ----------------------- #
     
     def loadModels(self, allModelPipelines, submodel, trainingDate, numEpochs, metaTraining, loadModelAttributes=True, loadModelWeights=True):
-        print("Loading in previous weights and attributes")
+        print("\nLoading in previous weights and attributes")
 
         # Iterate over each model.
         for modelPipeline in allModelPipelines:
@@ -249,8 +250,8 @@ class modelMigration:
 
     def _loadModel(self, model, datasetName, submodel, trainingDate, numEpochs, metaTraining, loadModelAttributes=True, loadModelWeights=True):
         # Construct base names for loading the model and attributes
-        modelBaseName = self._compileModelBaseName(submodel, datasetName, trainingDate, numEpochs, metaTraining)
-        sharedModelBaseName = self._compileModelBaseName(submodel, self.sharedWeightsName, trainingDate, numEpochs, metaTraining)
+        modelBaseName = self._compileModelBaseName(submodel, datasetName, trainingDate, numEpochs)
+        sharedModelBaseName = self._compileModelBaseName(submodel, self.sharedWeightsName, trainingDate, numEpochs)
         print(sharedModelBaseName)
         print(modelBaseName)
 
