@@ -153,6 +153,7 @@ class compileModelData(compileModelDataHelpers):
         # Specify model parameters
         loadSubmodelDate, loadSubmodelEpochs, loadSubmodel = self.modelParameters.getModelInfo(submodel, loadSubmodelDate)
         print(f"\nSplitting the data into {'meta-' if metaTraining else ''}models:")
+        print(loadSubmodelDate, loadSubmodelEpochs, loadSubmodel)
 
         # For each meta-information collected.
         for metadataInd in range(len(metaRawFeatureIntervalTimes)):

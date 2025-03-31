@@ -245,15 +245,16 @@ class modelMigration:
         trainingType = "metaTrainingModels" if metaTraining else "trainingModels"
         print(f"Loading in previous {trainingType} weights and attributes")
 
-        # Iterate over each model pipeline and dataset name
+        # Iterate over each models.
         for modelPipeline in allModelPipelines:
-            # Save the individual model's information.
             self._loadModel(modelPipeline.model, modelPipeline.datasetName, submodel, trainingDate, numEpochs, metaTraining, loadModelAttributes, loadModelWeights)
 
     def _loadModel(self, model, datasetName, submodel, trainingDate, numEpochs, metaTraining, loadModelAttributes=True, loadModelWeights=True):
         # Construct base names for loading the model and attributes
         modelBaseName = self._compileModelBaseName(submodel, datasetName, trainingDate, numEpochs, metaTraining)
         sharedModelBaseName = self._compileModelBaseName(submodel, self.sharedWeightsName, trainingDate, numEpochs, metaTraining)
+        print(sharedModelBaseName)
+        print(modelBaseName)
 
         # Load in the pytorch models.
         self._loadPyTorchModel(model, modelBaseName, loadModelAttributes, loadModelWeights, submodel)  # Load dataset-specific parameters

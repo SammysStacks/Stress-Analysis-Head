@@ -96,13 +96,7 @@ class modelParameters:
 
     @staticmethod
     def getModelInfo(submodel, loadSubmodelDate=None):
-        # No model information to load.
-        loadSubmodelEpochs, loadSubmodel = None, None
-
-        # General model loading.
-        if loadSubmodelDate is not None:
-            loadSubmodel = submodel  # The submodel to load.
-            loadSubmodelEpochs = -1  # The # of epochs to load from the trained model.
+        loadSubmodelEpochs, loadSubmodel = -1, submodel
 
         # Signal encoder loading information.
         if submodel == modelConstants.emotionModel:
