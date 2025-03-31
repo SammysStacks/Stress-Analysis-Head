@@ -108,7 +108,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
         # Get the minimum angular threshold.
         minThresholdStep = modelConstants.userInputParams['minThresholdStep']
         minAngularThreshold = modelConstants.userInputParams['minAngularThreshold']
-        minAngularThreshold = min(minAngularThreshold, (epoch + 4) * minThresholdStep) * torch.pi/180
+        minAngularThreshold = min(minAngularThreshold, (epoch**2) * minThresholdStep) * torch.pi/180
 
         return minAngularThreshold
 
