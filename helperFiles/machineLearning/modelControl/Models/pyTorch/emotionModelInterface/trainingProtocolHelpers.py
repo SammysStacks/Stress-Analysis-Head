@@ -95,7 +95,7 @@ class trainingProtocolHelpers:
             with torch.no_grad():
                 numEpochs = modelPipeline.getTrainingEpoch(submodel)
                 modelPipeline.modelVisualization.plotAllTrainingEvents(submodel, modelPipeline, lossDataLoader, trainingDate, numEpochs, showMinimumPlots=showMinimumPlots)
-        with torch.no_grad(): allMetaModels[0].modelVisualization.plotDatasetComparison(submodel, allMetaModels + allModels, trainingDate, showMinimumPlots=showMinimumPlots)
+        with torch.no_grad(): (allMetaModels or allModels)[0].modelVisualization.plotDatasetComparison(submodel, allMetaModels + allModels, trainingDate, showMinimumPlots=showMinimumPlots)
         t2 = time.time(); self.accelerator.print("Total plotting time:", t2 - t1)
 
     def saveModelState(self, epoch, allMetaModels, allModels, submodel, allDatasetNames, trainingDate):
@@ -109,7 +109,7 @@ class trainingProtocolHelpers:
                                        submodel=submodel, trainingDate=trainingDate, numEpochs=numEpochs, metaTraining=True, saveModelAttributes=True)
 
     def unifyAllModelWeights(self, allMetaModels=None, allModels=None):
-        if self.unifiedLayerData is None: self.unifiedLayerData = self.modelMigration.copyModelWeights(allMetaModels[0], self.sharedModelWeights)
+        if self.unifiedLayerData is None: self.unifiedLayerData = self.modelMigration.copyModelWeights((allMetaModels or allModels)[0], self.sharedModelWeights)
 
         # Unify all the model weights.
         if allMetaModels: self.modelMigration.unifyModelWeights(allModels=allMetaModels, modelWeights=self.sharedModelWeights, layerInfo=self.unifiedLayerData)
