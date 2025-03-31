@@ -57,7 +57,6 @@ if __name__ == "__main__":
     # Add arguments for the health profile.
     parser.add_argument('--initialProfileAmp', type=float, default=0.01, help='The limits for profile initialization. Should be near zero')
     parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the health profile and all signals.')
-    parser.add_argument('--profileDimension', type=int, default=256, help='The number of profile weights: [32, 256]')
     parser.add_argument('--numProfileShots', type=int, default=16, help='The epochs for profile training: [16, 32]')
     
     # Add arguments for the neural operator.
@@ -72,7 +71,6 @@ if __name__ == "__main__":
     # Add arguments for observational learning.
     parser.add_argument('--maxAngularThreshold', type=float, default=45, help='The larger rotational threshold in (degrees)')
     parser.add_argument('--minAngularThreshold', type=float, default=1, help='The smaller rotational threshold in (degrees)')
-    parser.add_argument('--minThresholdStep', type=float, default=0.05, help='The rotational threshold step (degrees)')
 
     # dd arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions)')
@@ -98,7 +96,8 @@ if __name__ == "__main__":
 
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
-    userInputParams['reversibleLR'] = userInputParams['reversibleLR'] * math.pi / 180
+    userInputParams['minThresholdStep'] = userInputParams['reversibleLR']  # Keep as degrees
+    userInputParams['reversibleLR'] = userInputParams['reversibleLR'] * math.pi / 180  # Keep as radians
     userInputParams['profileDimension'] = userInputParams['encodedDimension'] // 2
 
     # Compile additional input parameters.
@@ -116,7 +115,7 @@ if __name__ == "__main__":
     numEpochs, numEpoch_toPlot, numEpoch_toSaveFull = modelParameters.getEpochInfo(validationRun)  # The number of epochs to plot and save the model.
     trainingDate = modelParameters.embedInformation(submodel, trainingDate)  # Embed training information into the name.
     datasetNames, metaDatasetNames = modelParameters.compileModelNames()  # Compile the model names.
-    print(trainingDate, "\n")
+    print("modelName", trainingDate, "\n")
 
     # Compile the final modules.
     allModels, allDataLoaders, allMetaModels, allMetadataLoaders, _ = modelCompiler.compileModelsFull(metaDatasetNames, submodel, testSplitRatio, datasetNames, loadSubmodelDate)

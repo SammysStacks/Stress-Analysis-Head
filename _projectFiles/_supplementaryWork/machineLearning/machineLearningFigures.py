@@ -6,8 +6,6 @@ import torch
 
 # Set specific environmental parameters.
 os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
-os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Suppress TensorFlow logging (1 = INFO, 2 = WARNING and ERROR, 3 = ERROR only)
 
 # Add the directory of the current file to the Python path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../../../")

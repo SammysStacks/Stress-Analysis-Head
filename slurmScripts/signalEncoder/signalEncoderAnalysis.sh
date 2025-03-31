@@ -14,14 +14,12 @@ srun accelerate launch ./../../metaTrainingControl.py \
     --profileLR "$8" \
     --reversibleLR "$9" \
     --physGenLR "${10}" \
-    --profileDimension "${11}" \
-    --beta1 "${12}" \
-    --beta2 "${13}" \
-    --momentum_decay "${14}" \
-    --minAngularThreshold "${15}" \
-    --maxAngularThreshold "${16}" \
-    --minWaveletDim "${17}" \
-    --minThresholdStep "${18}"
+    --beta1 "${11}" \
+    --beta2 "${12}" \
+    --momentum_decay "${13}" \
+    --minAngularThreshold "${14}" \
+    --maxAngularThreshold "${15}" \
+    --minWaveletDim "${16}" \
 
 end=$(date +%s)
 runtime=$((end-start))

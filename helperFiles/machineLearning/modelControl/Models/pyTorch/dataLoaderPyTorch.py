@@ -1,4 +1,3 @@
-import keras
 import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -7,13 +6,10 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.modelMigration impo
 
 
 class CustomDataset(Dataset):
-    def __init__(self, features, labels, trainingMasks=None, testingMasks=None, variableSequence=False):
+    def __init__(self, features, labels, trainingMasks=None, testingMasks=None):
         # General
         self.trainingMasks = None
         self.testingMasks = None
-
-        # Pad and realign the data if needed.
-        if variableSequence: features = torch.tensor(keras.utils.pad_sequences(features, padding='post', dtype=float))
 
         # Read in the feature and labels.
         self.features = self.copyDataFormat(features)
@@ -84,7 +80,7 @@ class pytorchDataInterface:
             self.pinMemory = True
 
     def getDataLoader(self, allFeatures, allLabels, trainingMasks=None, testingMasks=None):
-        dataset = CustomDataset(allFeatures, allLabels, trainingMasks, testingMasks, variableSequence=False)
+        dataset = CustomDataset(allFeatures, allLabels, trainingMasks, testingMasks)
         dataloader = DataLoader(
             num_workers=self.num_workers,
             batch_size=self.batch_size,
