@@ -119,5 +119,5 @@ if __name__ == "__main__":
     _numSharedEncoderLayers = 4
 
     # Set up the parameters.
-    neuralLayerClass = sharedSignalEncoderModel(operatorType='wavelet', encodedDimension=_sequenceLength, numSharedEncoderLayers=_numSharedEncoderLayers, learningProtocol='rCNN', neuralOperatorParameters=_neuralOperatorParameters)
+    neuralLayerClass = sharedSignalEncoderModel(operatorType='wavelet', encodedDimension=_sequenceLength, numSharedEncoderLayers=_numSharedEncoderLayers, learningProtocol='reversibleLieLayer', neuralOperatorParameters=_neuralOperatorParameters)
     neuralLayerClass.printParams()

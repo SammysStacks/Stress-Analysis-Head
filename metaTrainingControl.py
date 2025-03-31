@@ -38,21 +38,28 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-03-30"  # The current date we are training the model. Unique identifier of this training set.
-    holdDatasetOut = True  # Whether to hold out the validation dataset.
-    plotAllEpochs = False  # Whether to plot all epochs or not.
+    trainingDate = "2025-03-31"  # The current date we are training the model. Unique identifier of this training set.
+    plotAllEpochs = False  # Whether to plot all data every epoch (plotting once every 50 epochs regardless).
+    validationRun = True  # Whether to train new datasets from the old model.
     testSplitRatio = 0.1  # The percentage of testing points.
+
+    # Model loading information.
+    loadSubmodelDate = "2025-03-30"  # The submodel we are loading: None, "2025-03-31"
 
     # ----------------------- Architecture Parameters ----------------------- #
 
     # Add arguments for the general model
     parser.add_argument('--submodel', type=str, default=modelConstants.signalEncoderModel, help='The component of the model we are training. Options: signalEncoderModel, emotionModel')
     parser.add_argument('--optimizerType', type=str, default='NAdam', help='The optimizerType used during training convergence: Options: RMSprop, Adam, AdamW, SGD, etc')
-    parser.add_argument('--irreversibleLearningProtocol', type=str, default='FC', help='The learning protocol for the model: CNN, FC')
-    parser.add_argument('--reversibleLearningProtocol', type=str, default='rCNN', help='The learning protocol for the model: rCNN')
+    parser.add_argument('--learningProtocol', type=str, default='reversibleLieLayer', help='The learning protocol for the model: reversibleLieLayer')
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are using: cpu, cuda')
-    parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the encoded signal')
 
+    # Add arguments for the health profile.
+    parser.add_argument('--initialProfileAmp', type=float, default=0.01, help='The limits for profile initialization. Should be near zero')
+    parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the health profile and all signals.')
+    parser.add_argument('--profileDimension', type=int, default=256, help='The number of profile weights: [32, 256]')
+    parser.add_argument('--numProfileShots', type=int, default=16, help='The epochs for profile training: [16, 32]')
+    
     # Add arguments for the neural operator.
     parser.add_argument('--waveletType', type=str, default='bior3.1', help='The wavelet type for the wavelet transform: bior3.1, bior3.3, bior2.2, bior3.5')
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
@@ -61,11 +68,6 @@ if __name__ == "__main__":
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model: [1, 2]')
     parser.add_argument('--numSharedEncoderLayers', type=int, default=7, help='The number of layers in the model: [2, 10]')
-
-    # Add arguments for the health profile.
-    parser.add_argument('--initialProfileAmp', type=float, default=0.01, help='The limits for profile initialization. Should be near zero')
-    parser.add_argument('--profileDimension', type=int, default=256, help='The number of profile weights: [32, 256]')
-    parser.add_argument('--numProfileShots', type=int, default=16, help='The epochs for profile training: [16, 32]')
 
     # Add arguments for observational learning.
     parser.add_argument('--maxAngularThreshold', type=float, default=45, help='The larger rotational threshold in (degrees)')
@@ -107,8 +109,8 @@ if __name__ == "__main__":
     # Initialize the model information classes.
     trainingProtocols = trainingProtocolHelpers(submodel=submodel, accelerator=accelerator)  # Initialize the training protocols.
     modelCompiler = compileModelData(useTherapyData=False, accelerator=accelerator)  # Initialize the model compiler.
+    modelMigrationClass = modelMigration(accelerator)  # Initialize the model migration class.
     modelParameters = modelParameters(accelerator)  # Initialize the model parameters class.
-    modelMigration = modelMigration(accelerator)  # Initialize the model migration class.
 
     # Specify training parameters
     trainingDate = modelCompiler.embedInformation(submodel, userInputParams, trainingDate)  # Embed training information into the name.
@@ -118,13 +120,13 @@ if __name__ == "__main__":
     print(trainingDate, "\n")
 
     # Compile the final modules.
-    allModels, allDataLoaders, allMetaModels, allMetadataLoaders, _ = modelCompiler.compileModelsFull(metaDatasetNames, submodel, testSplitRatio, datasetNames)
+    allModels, allDataLoaders, allMetaModels, allMetadataLoaders, _ = modelCompiler.compileModelsFull(metaDatasetNames, submodel, testSplitRatio, datasetNames, loadSubmodelDate)
     allDataLoaders.append(allMetadataLoaders.pop(0))  # Do not metatrain with wesad data.
     datasetNames.append(metaDatasetNames.pop(0))  # Do not metatrain with wesad data.
     allModels.append(allMetaModels.pop(0))  # Do not metatrain with wesad data.
 
     # Do not train on the meta-datasets.
-    if holdDatasetOut: allDataLoaders, datasetNames, allModels = [], [], []
+    if not validationRun: allDataLoaders, datasetNames, allModels = [], [], []
 
     # Compile all the dataset names.
     allDatasetNames = metaDatasetNames + datasetNames
@@ -145,7 +147,8 @@ if __name__ == "__main__":
         saveFullModel, showAllPlots = modelParameters.getEpochParameters(epoch, numEpoch_toSaveFull, numEpoch_toPlot, plotAllEpochs)
 
         # Train the model for a single epoch.
-        trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch=epoch)
+        if not validationRun: trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch)
+        else: trainingProtocols.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch, onlyProfileTraining=False)
 
         # Store the initial loss information and plot.
         trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)

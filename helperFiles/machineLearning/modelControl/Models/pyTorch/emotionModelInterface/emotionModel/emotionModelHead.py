@@ -31,18 +31,17 @@ class emotionModelHead(nn.Module):
         self.hpcFlag = 'HPC' in modelConstants.userInputParams['deviceListed']  # Flag to determine if the model is running on an HPC.
 
         # General parameters.
+        self.learningProtocol = modelConstants.userInputParams['learningProtocol']   # The learning protocol for the model.
         self.encodedDimension = modelConstants.userInputParams['encodedDimension']  # The dimension of the encoded signal.
         self.operatorType = modelConstants.userInputParams['operatorType']  # The type of operator to use for the neural operator.
         self.debugging = True
 
         # Signal encoder parameters.
-        self.reversibleLearningProtocol = modelConstants.userInputParams['reversibleLearningProtocol']   # The learning protocol for the model.
         self.neuralOperatorParameters = modelConstants.userInputParams['neuralOperatorParameters']   # The parameters for the neural operator.
         self.numSpecificEncoderLayers = modelConstants.userInputParams['numSpecificEncoderLayers']  # The number of specific layers.
         self.numSharedEncoderLayers = modelConstants.userInputParams['numSharedEncoderLayers']  # The number of shared layers.
 
         # Emotion and activity parameters.
-        self.irreversibleLearningProtocol = modelConstants.userInputParams['irreversibleLearningProtocol']  # The learning protocol for the model.
         self.numActivityModelLayers = modelConstants.userInputParams['numActivityModelLayers']  # The number of basic emotions (basis states of emotions).
         self.numEmotionModelLayers = modelConstants.userInputParams['numEmotionModelLayers']  # The number of basic emotions (basis states of emotions).
         self.numActivityChannels = modelConstants.userInputParams['numActivityChannels']  # The number of activity channels to predict.
@@ -57,7 +56,7 @@ class emotionModelHead(nn.Module):
         self.specificSignalEncoderModel = specificSignalEncoderModel(
             neuralOperatorParameters=self.neuralOperatorParameters,
             numSpecificEncoderLayers=self.numSpecificEncoderLayers,
-            learningProtocol=self.reversibleLearningProtocol,
+            learningProtocol=self.learningProtocol,
             encodedDimension=self.encodedDimension,
             featureNames=self.featureNames,
             operatorType=self.operatorType,
@@ -68,7 +67,7 @@ class emotionModelHead(nn.Module):
         self.sharedSignalEncoderModel = sharedSignalEncoderModel(
             neuralOperatorParameters=self.neuralOperatorParameters,
             numSharedEncoderLayers=self.numSharedEncoderLayers,
-            learningProtocol=self.reversibleLearningProtocol,
+            learningProtocol=self.learningProtocol,
             encodedDimension=self.encodedDimension,
             operatorType=self.operatorType,
         )
@@ -78,7 +77,7 @@ class emotionModelHead(nn.Module):
         if submodel == modelConstants.emotionModel:
             self.specificEmotionModel = specificEmotionModel(
                 neuralOperatorParameters=self.neuralOperatorParameters,
-                learningProtocol=self.irreversibleLearningProtocol,
+                learningProtocol=self.learningProtocol,
                 encodedDimension=self.encodedDimension,
                 numBasicEmotions=self.numBasicEmotions,
                 numModelLayers=self.numEmotionModelLayers,
@@ -91,7 +90,7 @@ class emotionModelHead(nn.Module):
 
             self.sharedEmotionModel = sharedEmotionModel(
                 neuralOperatorParameters=self.neuralOperatorParameters,
-                learningProtocol=self.irreversibleLearningProtocol,
+                learningProtocol=self.learningProtocol,
                 encodedDimension=self.encodedDimension,
                 numBasicEmotions=self.numBasicEmotions,
                 numModelLayers=self.numEmotionModelLayers,
@@ -101,7 +100,7 @@ class emotionModelHead(nn.Module):
 
             self.specificActivityModel = specificActivityModel(
                 neuralOperatorParameters=self.neuralOperatorParameters,
-                learningProtocol=self.irreversibleLearningProtocol,
+                learningProtocol=self.learningProtocol,
                 numActivityChannels=self.numActivityChannels,
                 encodedDimension=self.encodedDimension,
                 numModelLayers=self.numActivityModelLayers,
@@ -112,7 +111,7 @@ class emotionModelHead(nn.Module):
 
             self.sharedActivityModel = sharedActivityModel(
                 neuralOperatorParameters=self.neuralOperatorParameters,
-                learningProtocol=self.irreversibleLearningProtocol,
+                learningProtocol=self.learningProtocol,
                 numActivityChannels=self.numActivityChannels,
                 encodedDimension=self.encodedDimension,
                 numModelLayers=self.numActivityModelLayers,

@@ -130,28 +130,28 @@ class compileModelData(compileModelDataHelpers):
 
     # -------------------- Machine Learning Preparation -------------------- #
 
-    def compileModelsFull(self, metaDatasetNames, submodel, testSplitRatio, datasetNames):
+    def compileModelsFull(self, metaDatasetNames, submodel, testSplitRatio, datasetNames, loadSubmodelDate):
         # Compile the project data and metadata together
         metaRawFeatureIntervalTimes, metaRawFeatureIntervals, metaSurveyAnswerTimes, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions, metaSubjectOrder, metaFeatureNames, metaDatasetNames = self.compileMetaAnalyses(metaDatasetNames, loadCompiledData=True)
         allRawFeatureIntervalTimes, allRawFeatureIntervals, subjectOrder, featureNames, surveyQuestions, surveyAnswerTimes, surveyAnswersList, activityNames, activityLabels, numQuestionOptions = self.compileProjectAnalysis(loadCompiledData=True)
 
         # Compile the meta-learning modules.
         allMetaModels, allMetadataLoaders = self.compileModels(metaRawFeatureIntervalTimes, metaRawFeatureIntervals, metaSurveyAnswerTimes, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions,
-                                                               metaSubjectOrder, metaFeatureNames, metaDatasetNames, submodel, testSplitRatio, metaTraining=True, specificInfo=None, random_state=42)
+                                                               metaSubjectOrder, metaFeatureNames, metaDatasetNames, submodel=submodel, loadSubmodelDate=loadSubmodelDate, testSplitRatio=testSplitRatio, metaTraining=True, random_state=42)
         # Compile the final modules.
         allModels, allDataLoaders = self.compileModels(metaRawFeatureIntervalTimes=[allRawFeatureIntervalTimes], metaRawFeatureIntervals=[allRawFeatureIntervals], metaSurveyAnswerTimes=[surveyAnswerTimes], metaSurveyAnswersList=[surveyAnswersList],
                                                        metaSurveyQuestions=[surveyQuestions], metaActivityLabels=[activityLabels], metaActivityNames=[activityNames], metaNumQuestionOptions=[numQuestionOptions], metaSubjectOrder=[subjectOrder],
-                                                       metaFeatureNames=[featureNames], metaDatasetNames=datasetNames, submodel=submodel, testSplitRatio=testSplitRatio, metaTraining=False, specificInfo=None, random_state=42)
+                                                       metaFeatureNames=[featureNames], metaDatasetNames=datasetNames, submodel=submodel, loadSubmodelDate=loadSubmodelDate, testSplitRatio=testSplitRatio, metaTraining=False, random_state=42)
 
         return allModels, allDataLoaders, allMetaModels, allMetadataLoaders, metaDatasetNames
 
     def compileModels(self, metaRawFeatureIntervalTimes, metaRawFeatureIntervals, metaSurveyAnswerTimes, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions,
-                      metaSubjectOrder, metaFeatureNames, metaDatasetNames, submodel, testSplitRatio, metaTraining, specificInfo=None, random_state=42):
+                      metaSubjectOrder, metaFeatureNames, metaDatasetNames, submodel, loadSubmodelDate, testSplitRatio, metaTraining, random_state=42):
         # Initialize relevant holders.
         allModelPipelines, lossDataHolders, allDataLoaders = [], [], []
 
         # Specify model parameters
-        loadSubmodelDate, loadSubmodelEpochs, loadSubmodel = self.modelParameters.getModelInfo(submodel, specificInfo)
+        loadSubmodelDate, loadSubmodelEpochs, loadSubmodel = self.modelParameters.getModelInfo(submodel, loadSubmodelDate)
         print(f"\nSplitting the data into {'meta-' if metaTraining else ''}models:")
 
         # For each meta-information collected.

@@ -93,18 +93,18 @@ class modelParameters:
     # -------------------------- Saving/Loading Parameters ------------------------- #
 
     @staticmethod
-    def getModelInfo(submodel, specificInfo=None):
-        # Base case: information hard-coded.
-        if specificInfo is not None: return specificInfo
-
+    def getModelInfo(submodel, loadSubmodelDate=None):
         # No model information to load.
-        loadSubmodelDate, loadSubmodelEpochs, loadSubmodel = None, None, None
+        loadSubmodelEpochs, loadSubmodel = None, None
 
-        if submodel == modelConstants.emotionModel:
-            # Model loading information.
-            loadSubmodelDate = f"2025-03-11"  # The date the model was trained.
-            loadSubmodel = modelConstants.signalEncoderModel  # The submodel to load.
+        # General model loading.
+        if loadSubmodelDate is not None:
+            loadSubmodel = submodel  # The submodel to load.
             loadSubmodelEpochs = -1  # The # of epochs to load from the trained model.
+
+        # Signal encoder loading information.
+        if submodel == modelConstants.emotionModel:
+            loadSubmodel = modelConstants.signalEncoderModel  # The submodel to load.
 
         return loadSubmodelDate, loadSubmodelEpochs, loadSubmodel
 

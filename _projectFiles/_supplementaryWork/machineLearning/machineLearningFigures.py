@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
     # Compile the final modules.
     datasetNames, metaDatasetNames = modelParameters.compileModelNames()  # Compile the model names.
-    allModels, allDataLoaders, allMetaModels, allMetadataLoaders, _ = modelCompiler.compileModelsFull(metaDatasetNames, submodel, testSplitRatio, datasetNames)
+    allModels, allDataLoaders, allMetaModels, allMetadataLoaders, _ = modelCompiler.compileModelsFull(metaDatasetNames, submodel, testSplitRatio, datasetNames, loadSubmodelDate)
     allDataLoaders.append(allMetadataLoaders.pop(0))  # Do not metatrain with wesad data.
     datasetNames.append(metaDatasetNames.pop(0))  # Do not metatrain with wesad data.
     allModels.append(allMetaModels.pop(0))  # Do not metatrain with wesad data.

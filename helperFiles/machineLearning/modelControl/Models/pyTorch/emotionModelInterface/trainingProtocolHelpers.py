@@ -47,12 +47,10 @@ class trainingProtocolHelpers:
             self.unifiedLayerData = self.modelMigration.copyModelWeights(modelPipeline, self.sharedModelWeights)
 
         # Unify all the model weights.
-        self.unifyAllModelWeights(allMetaModels, allModels)
         self.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch)
 
     def datasetSpecificTraining(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch, onlyProfileTraining=False):
-        # Unify all the model weights.
-        self.unifyAllModelWeights(allMetaModels, allModels)
+        self.unifyAllModelWeights(allMetaModels, allModels)  # Unify all the model weights.
 
         # For each meta-training model.
         for modelInd in range(len(allMetaModels) + len(allModels)):

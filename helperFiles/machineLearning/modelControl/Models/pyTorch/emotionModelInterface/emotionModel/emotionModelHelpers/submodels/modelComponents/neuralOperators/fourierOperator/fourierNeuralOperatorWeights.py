@@ -38,7 +38,7 @@ class fourierNeuralOperatorWeights(emotionModelWeights):
 
     def assertValidParams(self):
         # Assert that the frequency protocol is valid.
-        assert self.learningProtocol in ['FCC', 'rCNN', 'CNN', 'FC'], "Invalid learning protocol. Must be in ['FC', 'FCC', 'rCNN']."
+        assert self.learningProtocol in ['FCC', 'reversibleLieLayer', 'CNN', 'FC'], "Invalid learning protocol. Must be in ['FC', 'FCC', 'reversibleLieLayer']."
         assert self.numInputSignals == self.numOutputSignals, "The number of input signals must equal the output signals for now."
 
     def getSkipConnectionProtocol(self, skipConnectionProtocol):
@@ -56,9 +56,9 @@ class fourierNeuralOperatorWeights(emotionModelWeights):
         return skipConnectionModel
 
     def getNeuralWeightParameters(self, inChannel, fourierDimension):
-        if self.learningProtocol == 'rCNN': return self.reversibleNeuralWeightRCNN(numSignals=inChannel, sequenceLength=fourierDimension)
+        if self.learningProtocol == 'reversibleLieLayer': return self.reversibleNeuralWeightRCNN(numSignals=inChannel, sequenceLength=fourierDimension)
         elif self.learningProtocol == 'FC': return self.neuralWeightFC(sequenceLength=fourierDimension)
-        else: raise ValueError(f"The learning protocol ({self.learningProtocol}) must be in ['FCC', 'rCNN', 'CNN'].")
+        else: raise ValueError(f"The learning protocol ({self.learningProtocol}) must be in ['FCC', 'reversibleLieLayer', 'CNN'].")
 
     def forwardFFT(self, inputData):
         # Perform the forward FFT and extract the magnitude and phase.

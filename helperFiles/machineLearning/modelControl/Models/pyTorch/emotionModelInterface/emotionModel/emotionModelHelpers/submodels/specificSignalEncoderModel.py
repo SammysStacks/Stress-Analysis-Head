@@ -78,5 +78,5 @@ if __name__ == "__main__":
 
     # Set up the parameters.
     _featureNames = [f"signal_{i}" for i in range(_numSignals)]
-    neuralLayerClass = specificSignalEncoderModel(numExperiments=_batchSize, operatorType='wavelet', encodedDimension=_sequenceLength, featureNames=_featureNames, numSpecificEncoderLayers=_numSpecificEncoderLayers, learningProtocol='rCNN', neuralOperatorParameters=_neuralOperatorParameters)
+    neuralLayerClass = specificSignalEncoderModel(numExperiments=_batchSize, operatorType='wavelet', encodedDimension=_sequenceLength, featureNames=_featureNames, numSpecificEncoderLayers=_numSpecificEncoderLayers, learningProtocol='reversibleLieLayer', neuralOperatorParameters=_neuralOperatorParameters)
     neuralLayerClass.printParams()
