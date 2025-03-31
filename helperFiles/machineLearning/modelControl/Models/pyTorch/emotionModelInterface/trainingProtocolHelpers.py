@@ -35,21 +35,22 @@ class trainingProtocolHelpers:
             dataLoader = allMetadataLoaders[modelInd] if modelInd < len(allMetadataLoaders) else allDataLoaders[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
             modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
             trainSharedLayers = modelInd < len(allMetaModels)  # Train the shared layers.
+            specificTraining = False
 
             # Copy over the shared layers.
             self.modelMigration.unifyModelWeights(allModels=[modelPipeline], modelWeights=self.sharedModelWeights, layerInfo=self.unifiedLayerData)
 
             # Train the updated model.
-            modelPipeline.trainModel(dataLoader, submodel, profileTraining=False, specificTraining=False, trainSharedLayers=trainSharedLayers, stepScheduler=False, numEpochs=1)   # Full model training.
-            modelPipeline.model.cullAngles(epoch=epoch)
+            modelPipeline.trainModel(dataLoader, submodel, profileTraining=False, specificTraining=specificTraining, trainSharedLayers=trainSharedLayers, stepScheduler=False, numEpochs=1)   # Full model training.
+            if specificTraining: modelPipeline.model.cullAngles(epoch=epoch)
 
             # Unify all the model weights and retrain the specific models.
             self.unifiedLayerData = self.modelMigration.copyModelWeights(modelPipeline, self.sharedModelWeights)
 
         # Unify all the model weights.
-        self.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch, onlyProfileTraining=False, validationRun=False)
+        self.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch, onlyProfileTraining=False)
 
-    def datasetSpecificTraining(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch, onlyProfileTraining=False, validationRun=False):
+    def datasetSpecificTraining(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch, onlyProfileTraining=False):
         self.unifyAllModelWeights(allMetaModels, allModels)  # Unify all the model weights.
 
         # For each meta-training model.

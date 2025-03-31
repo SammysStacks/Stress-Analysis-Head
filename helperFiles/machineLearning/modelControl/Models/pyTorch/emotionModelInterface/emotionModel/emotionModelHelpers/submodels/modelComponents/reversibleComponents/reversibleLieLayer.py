@@ -119,7 +119,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
             maxAngularParam = self.getInverseAngleParams(maxAngularThreshold)
 
             # Get the angular minimum thresholds.
-            if sharedLayer: minAngularThreshold = self.getInverseAngleParams(0.01 * torch.pi/180)
+            if sharedLayer: minAngularThreshold = self.getInverseAngleParams(0.001 * torch.pi/180)
             else: minAngularThreshold = self.getInverseAngleParams(self.getMinAngularThreshold(epoch))
 
             for layerInd in range(self.numLayers):
