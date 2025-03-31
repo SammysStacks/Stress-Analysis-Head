@@ -70,7 +70,7 @@ class trainingProtocolHelpers:
             modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=numProfileShots + 1)  # Profile training.
             if not onlyProfileTraining: modelPipeline.model.cullAngles(epoch=epoch)
 
-    def validationTraining(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch):
+    def validationTraining(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch, onlyProfileTraining=False):
         self.unifyAllModelWeights(allMetaModels, allModels)  # Unify all the model weights.
 
         # For each meta-training model.
