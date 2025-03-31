@@ -252,7 +252,6 @@ class modelMigration:
         # Construct base names for loading the model and attributes
         modelBaseName = self._compileModelBaseName(submodel, datasetName, trainingDate, numEpochs)
         sharedModelBaseName = self._compileModelBaseName(submodel, self.sharedWeightsName, trainingDate, numEpochs)
-        print(sharedModelBaseName)
 
         # Load in the pytorch models.
         self._loadPyTorchModel(model, modelBaseName, loadModelAttributes, loadModelWeights, submodel)  # Load dataset-specific parameters
