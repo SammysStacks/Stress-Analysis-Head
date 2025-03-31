@@ -152,7 +152,7 @@ class emotionModelHead(nn.Module):
                 if allScaleFactors.shape[0] == 0: continue
 
                 for givensAngles in allGivensAngles: givensAnglesPath.append(givensAngles)  # givensAnglesPath: numModuleLayers, numSignals, numParams
-                for scalingFactors in allScaleFactors: scalingFactorsPath.append(scalingFactors)  # scalingFactorsPath: numModuleLayers, numSignals, numParams=1
+                for normalizationFactors in allScaleFactors: scalingFactorsPath.append(normalizationFactors)  # scalingFactorsPath: numModuleLayers, numSignals, numParams=1
                 for givensAnglesFeatures in allGivensAnglesFeatures: givensAnglesFeaturesPath.append(givensAnglesFeatures)  # givensAnglesFeaturesPath: numModuleLayers, numFeatures, numValues
                 for _ in allGivensAngles: reversibleModuleNames.append(self.compileModuleName(name))
 

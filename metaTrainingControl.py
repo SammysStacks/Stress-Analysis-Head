@@ -113,8 +113,8 @@ if __name__ == "__main__":
     modelParameters = modelParameters(accelerator)  # Initialize the model parameters class.
 
     # Specify training parameters
+    numEpochs, numEpoch_toPlot, numEpoch_toSaveFull = modelParameters.getEpochInfo(validationRun)  # The number of epochs to plot and save the model.
     trainingDate = modelCompiler.embedInformation(submodel, userInputParams, trainingDate)  # Embed training information into the name.
-    numEpochs, numEpoch_toPlot, numEpoch_toSaveFull = modelParameters.getEpochInfo()  # The number of epochs to plot and save the model.
     datasetNames, metaDatasetNames = modelParameters.compileModelNames()  # Compile the model names.
     print("Arguments:", userInputParams)
     print(trainingDate, "\n")

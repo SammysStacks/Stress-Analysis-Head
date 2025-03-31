@@ -53,9 +53,9 @@ class reversibleLieLayerInterface(reversibleInterface):
 
     def getLinearParams(self, layerInd):
         givensAngles = self.getGivensAngles(layerInd)  # Dim: numSignals, numParams
-        scalingFactors = self.getJacobianScalar().flatten()  # Dim: numSignals
+        normalizationFactors = self.getJacobianScalar().flatten()  # Dim: numSignals
 
-        return givensAngles, scalingFactors
+        return givensAngles, normalizationFactors
 
     # ------------------------------------------------------------ #
 
@@ -64,8 +64,8 @@ class reversibleLieLayerInterface(reversibleInterface):
 
         with torch.no_grad():
             for layerInd in range(self.numLayers):
-                givensAngles, scalingFactors = self.getLinearParams(layerInd)
-                allScaleFactors.append(scalingFactors.unsqueeze(-1).detach().cpu().numpy().astype(np.float16))
+                givensAngles, normalizationFactors = self.getLinearParams(layerInd)
+                allScaleFactors.append(normalizationFactors.unsqueeze(-1).detach().cpu().numpy().astype(np.float16))
                 allGivensAngles.append(givensAngles.detach().cpu().numpy().astype(np.float16))
             allGivensAngles = np.asarray(allGivensAngles)
             allScaleFactors = np.asarray(allScaleFactors)
@@ -90,8 +90,8 @@ class reversibleLieLayerInterface(reversibleInterface):
 
         with torch.no_grad():
             for layerInd in range(self.numLayers):
-                givensAngles, scalingFactors = self.getLinearParams(layerInd)  # Dim: numSignals, numParams
-                scalingFactors = scalingFactors.reshape(self.numSignals, 1)  # Dim: numSignals, numParams=1
+                givensAngles, normalizationFactors = self.getLinearParams(layerInd)  # Dim: numSignals, numParams
+                normalizationFactors = normalizationFactors.reshape(self.numSignals, 1)  # Dim: numSignals, numParams=1
                 givensAngles = givensAngles * 180 / torch.pi  # Convert to degrees
 
                 # Calculate the mean, variance, and range of the Givens angles.
@@ -100,7 +100,7 @@ class reversibleLieLayerInterface(reversibleInterface):
                 givensAnglesRange = givensAnglesRange.cpu().detach().numpy().astype(np.float16)
 
                 # Calculate the mean, variance, and range of the scaling factors.
-                scalingFactorsVar = scalingFactors.var(dim=0).cpu().detach().numpy().astype(np.float16)  # Dim: numSignals
+                scalingFactorsVar = normalizationFactors.var(dim=0).cpu().detach().numpy().astype(np.float16)  # Dim: numSignals
 
                 # Combine the features. Return dimension: numFeatures, numValues
                 allGivensAnglesFeatures.append([givensAnglesVar, givensAnglesRange, scalingFactorsVar])
