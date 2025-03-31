@@ -83,7 +83,7 @@ if __name__ == "__main__":
     # ----------------------- Training Parameters ----------------------- #
 
     # Signal encoder learning rates.
-    parser.add_argument('--profileLR', type=float, default=0.025, help='The learning rate of the profile')
+    parser.add_argument('--profileLR', type=float, default=0.01, help='The learning rate of the profile')
     parser.add_argument('--physGenLR', type=float, default=1e-3, help='The learning rate of the profile generation (CNNs)')
     parser.add_argument('--reversibleLR', type=float, default=0.05, help='The learning rate of the Lie manifold angles (degrees)')
 
@@ -97,6 +97,7 @@ if __name__ == "__main__":
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
     userInputParams['reversibleLR'] = userInputParams['reversibleLR'] * math.pi / 180
+    userInputParams['profileDimension'] = userInputParams['encodedDimension'] // 2
 
     # Compile additional input parameters.
     userInputParams = modelParameters.getNeuralParameters(userInputParams)
