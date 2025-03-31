@@ -148,11 +148,11 @@ class generalVisualizations(globalPlottingProtocols):
         if logY: ax.set_yscale('log')
         ax.set_xlabel("Training epoch")
         ax.set_ylabel("Loss values")
-        ax.set_title(f"{plotTitle}", fontsize=16)
+        ax.set_title(f"{plotTitle} at epoch {numEpochs}", fontsize=16)
         ax.legend(loc="upper right", bbox_to_anchor=(1.35, 1), borderaxespad=0)
 
         # Save the figure if desired.
-        saveFigureName = f"{plotTitle}.pdf" if "profile" in plotTitle.lower() else None
+        saveFigureName = f"{plotTitle} epoch{numEpochs}.pdf" if "profile" in plotTitle.lower() else None
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=saveFigureName, baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
         else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
@@ -192,7 +192,7 @@ class generalVisualizations(globalPlottingProtocols):
                     # Plot the activation parameters.
                     ax.plot(activationParams, color=lineColor, linewidth=0.8, alpha=alpha, label=modelLabel)
             ax.set_xlabel("Epoch (training)")
-            ax.set_title(paramName, fontsize=16)
+            ax.set_title(f"{paramName} at epoch {numEpochs}", fontsize=16)
             if 'Infinite' in paramName: ax.set_ylim((0, 1.1))
             elif 'Linearity' in paramName: ax.set_ylim((0, 10.1))
             elif 'Convergent' in paramName: ax.set_ylim((0, 2.1))
@@ -204,7 +204,7 @@ class generalVisualizations(globalPlottingProtocols):
         fig.tight_layout()
 
         # Save the figure if desired.
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=False)
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epoch{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=False)
         else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
     def plotActivationFlow(self, activationParamsPaths, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
@@ -270,7 +270,7 @@ class generalVisualizations(globalPlottingProtocols):
                 ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5, alpha=0.8)
 
             # Label the plot.
-            fig.suptitle(f"{plotTitle}: {paramName}", fontsize=24)
+            fig.suptitle(f"{plotTitle}: {paramName} at epoch {numEpochs}", fontsize=24)
             fig.tight_layout()
 
             for specificLayerInd in range(numSpecificLayers):
@@ -279,7 +279,7 @@ class generalVisualizations(globalPlottingProtocols):
                     axes[specificLayerInd, colInd].remove()
 
             # Save the figure if desired.
-            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName}.pdf", baseSaveFigureName=f"{plotTitle} {paramName}.pdf", fig=fig, clearFigure=True, showPlot=False)
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epoch{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle} {paramName}.pdf", fig=fig, clearFigure=True, showPlot=False)
             else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
     def plotFreeParamFlow(self, numFreeModelParams, maxFreeParamsPath, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
@@ -350,7 +350,7 @@ class generalVisualizations(globalPlottingProtocols):
                     ax.hlines(y=maxFreeParams, xmin=0, xmax=numEpochs + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
 
             # Label the plot.
-            fig.suptitle(f"{plotTitle}: {paramName}", fontsize=24)
+            fig.suptitle(f"{plotTitle}: {paramName} at epoch {numEpochs}", fontsize=24)
             fig.tight_layout()
 
             for specificLayerInd in range(numSpecificLayers):
