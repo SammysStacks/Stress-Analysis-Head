@@ -66,6 +66,7 @@ class trainingProtocolHelpers:
             # Health profile training.
             numProfileShots = modelPipeline.resetPhysiologicalProfile(submodel) if epoch != 0 else modelConstants.initialProfileEpochs
             modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=numProfileShots + 1)  # Profile training.
+            if not onlyProfileTraining: modelPipeline.model.cullAngles(epoch=epoch)
 
     def validationTraining(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch):
         self.unifyAllModelWeights(allMetaModels, allModels)  # Unify all the model weights.
