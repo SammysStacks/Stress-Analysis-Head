@@ -35,7 +35,7 @@ lrs_profileGen=('1e-3') # x <= 1e-4;
 lrs_reversible=(0.025 0.05 0.075)  # [0.025, 0.075]
 
 # Angular reference states.
-minAngularThresholds=(1 2)
+minAngularThresholds=(1)
 maxAngularThresholds=(45)
 
 # Binary reference states.
