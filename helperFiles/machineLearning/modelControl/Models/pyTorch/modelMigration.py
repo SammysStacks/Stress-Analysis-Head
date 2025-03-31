@@ -3,7 +3,7 @@ import os
 import torch
 import torch.nn as nn
 
-from helperFiles.machineLearning.dataInterface.compileModelData import compileModelData
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
 
 
 class modelMigration:
@@ -169,7 +169,7 @@ class modelMigration:
 
     def _compileModelBaseName(self, submodel, datasetName, trainingDate, numEpochs):
         # Organize information about the model.
-        trainingModelName = compileModelData.embedInformation(submodel, trainingDate)
+        trainingModelName = modelParameters.embedInformation(submodel, trainingDate)
 
         # Compile the location to save/load the model.
         modelFolderPath = self.saveModelFolder + f"{trainingModelName}/{submodel}/{trainingDate}/{datasetName}/"

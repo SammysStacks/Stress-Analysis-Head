@@ -111,11 +111,10 @@ if __name__ == "__main__":
     trainingProtocols = trainingProtocolHelpers(submodel=submodel, accelerator=accelerator)  # Initialize the training protocols.
     modelCompiler = compileModelData(useTherapyData=False, accelerator=accelerator)  # Initialize the model compiler.
     modelMigrationClass = modelMigration(accelerator)  # Initialize the model migration class.
-    modelParameters = modelParameters(accelerator)  # Initialize the model parameters class.
 
     # Specify training parameters
     numEpochs, numEpoch_toPlot, numEpoch_toSaveFull = modelParameters.getEpochInfo(validationRun)  # The number of epochs to plot and save the model.
-    trainingDate = modelCompiler.embedInformation(submodel, trainingDate)  # Embed training information into the name.
+    trainingDate = modelParameters.embedInformation(submodel, trainingDate)  # Embed training information into the name.
     datasetNames, metaDatasetNames = modelParameters.compileModelNames()  # Compile the model names.
     print(trainingDate, "\n")
 
