@@ -137,9 +137,9 @@ class generalVisualizations(globalPlottingProtocols):
                 ax.plot(modelTestingLosses, '-', color=self.darkColors[modelInd], linewidth=1, alpha=0.025)
 
         # Plot gridlines.
-        ax.hlines(y=0.1, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=1)
-        for i in range(2, 10): ax.hlines(y=0.01*i, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=1, alpha=0.25)
-        ax.hlines(y=0.01, xmin=0, xmax=len(trainingLosses[0]), colors=self.blackColor, linestyles='dashed', linewidth=1)
+        ax.hlines(y=0.1, xmin=0, xmax=len(trainingLosses[0]) + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
+        for i in range(2, 10): ax.hlines(y=0.01*i, xmin=0, xmax=len(trainingLosses[0]) + 1, colors=self.blackColor, linestyles='dashed', linewidth=1, alpha=0.25)
+        ax.hlines(y=0.01, xmin=0, xmax=len(trainingLosses[0]) + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
         ax.set_xlim((0, max(128 if 'profile' not in plotTitle.lower() else 0, len(trainingLosses[0]) + 1)))
         ax.set_ylim((0.0025, 0.75))
         ax.grid(True)

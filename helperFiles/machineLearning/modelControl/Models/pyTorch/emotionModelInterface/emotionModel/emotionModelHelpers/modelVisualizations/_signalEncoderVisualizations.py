@@ -54,8 +54,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
                 lineStyle = 'o-' if profileStep == numProfileSteps - 1 else '-'
                 ax.plot(relativeTimes, retrainingProfilePath[profileStep, batchInd, signalInd], lineStyle, c=self.lightColors[1], linewidth=1, markersize=1, alpha=0.3*(numProfileSteps - profileStep)/numProfileSteps)
                 ax.plot(relativeTimes, retrainingProfilePath[profileStep, batchInd, signalInd], lineStyle, c=self.lightColors[0], linewidth=1, markersize=1, alpha=0.6*(1 - (numProfileSteps - profileStep)/numProfileSteps))
-            # if healthProfile is not None: ax.plot(relativeTimes, healthProfile[batchInd], '-', c=self.blackColor, label=f"Health profile", linewidth=1, markersize=6, alpha=0.3)
-            ax.hlines(y=0, xmin=ax.get_xlim()[0], xmax=ax.get_xlim()[1], colors=self.blackColor, linestyles='-', linewidth=1)
+            ax.axhline(y=0, color=self.blackColor, linewidth=1, zorder=0)
 
             # Plotting aesthetics.
             ax.set_xlabel("Time (sec)")
@@ -534,7 +533,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             # Get the angles for the current layer
             if specificFlag: ax.plot(specificValues[axInd:numSpecificScalarSections*(axInd+1)], 'o', color=self.darkColors[0], alpha=0.5, linewidth=1, markersize=5)
             else: ax.plot(sharedValues[axInd::numSharedLayers], 'o', color=self.darkColors[1], alpha=0.75, linewidth=1, markersize=5)
-            ax.axhline(y=1, color=self.blackColor, linewidth=1, zorder=0)
+            ax.axhline(y=1, color=self.blackColor, linewidth=0.5, zorder=0)
 
             ax.set_title(f"Specific layer: {axInd+1}" if specificFlag else f"Shared layer: {axInd+1}", fontsize=16)
             ax.set_xticks(range(len(xTickLabelSpecific if specificFlag else xTickLabelShared)))  # Set x-ticks positions
