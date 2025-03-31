@@ -96,6 +96,7 @@ if __name__ == "__main__":
 
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
+    userInputParams['minWaveletDim'] = userInputParams['encodedDimension'] // (2**3)
     userInputParams['minThresholdStep'] = userInputParams['reversibleLR']  # Keep as degrees
     userInputParams['reversibleLR'] = userInputParams['reversibleLR'] * math.pi / 180  # Keep as radians
     userInputParams['profileDimension'] = userInputParams['encodedDimension'] // 2
