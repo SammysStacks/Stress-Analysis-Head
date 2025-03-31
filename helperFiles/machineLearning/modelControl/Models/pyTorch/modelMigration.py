@@ -267,7 +267,7 @@ class modelMigration:
             model.eval()  # Set the model to evaluation mode
 
             # Load the model information.
-            loadedModelInfo = torch.load(loadModelPath, map_location=self.device)
+            loadedModelInfo = torch.load(loadModelPath, map_location=self.device, weights_only=False)
 
             # Check if the model is wrapped with DDP
             if isinstance(model, torch.nn.parallel.DistributedDataParallel):
