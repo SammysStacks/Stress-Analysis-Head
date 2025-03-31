@@ -47,9 +47,9 @@ class trainingProtocolHelpers:
             self.unifiedLayerData = self.modelMigration.copyModelWeights(modelPipeline, self.sharedModelWeights)
 
         # Unify all the model weights.
-        self.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch)
+        self.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch, onlyProfileTraining=False, validationRun=False)
 
-    def datasetSpecificTraining(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch, onlyProfileTraining=False):
+    def datasetSpecificTraining(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch, onlyProfileTraining=False, validationRun=False):
         self.unifyAllModelWeights(allMetaModels, allModels)  # Unify all the model weights.
 
         # For each meta-training model.
@@ -60,8 +60,8 @@ class trainingProtocolHelpers:
             elif modelPipeline.datasetName.lower() == 'wesad': numEpochs = 5  # 6
             else: numEpochs = 1
 
-            if not onlyProfileTraining:
-                # Train the updated model.
+            # Train the updated model.
+            if not onlyProfileTraining and (not validationRun or modelPipeline.datasetName.lower() in ['empatch', 'wesad']):
                 modelPipeline.model.cullAngles(epoch=epoch)
                 modelPipeline.trainModel(dataLoader, submodel, profileTraining=False, specificTraining=True, trainSharedLayers=False, stepScheduler=False, numEpochs=numEpochs)  # Signal-specific training.
 
@@ -96,8 +96,7 @@ class trainingProtocolHelpers:
                 numEpochs = modelPipeline.getTrainingEpoch(submodel)
                 modelPipeline.modelVisualization.plotAllTrainingEvents(submodel, modelPipeline, lossDataLoader, trainingDate, numEpochs, showMinimumPlots=showMinimumPlots)
         with torch.no_grad(): allMetaModels[0].modelVisualization.plotDatasetComparison(submodel, allMetaModels + allModels, trainingDate, showMinimumPlots=showMinimumPlots)
-        t2 = time.time()
-        self.accelerator.print("Total plotting time:", t2 - t1)
+        t2 = time.time(); self.accelerator.print("Total plotting time:", t2 - t1)
 
     def saveModelState(self, epoch, allMetaModels, allModels, submodel, allDatasetNames, trainingDate):
         # Prepare to save the model.
