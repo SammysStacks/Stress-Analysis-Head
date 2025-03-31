@@ -139,7 +139,7 @@ class emotionModelHead(nn.Module):
 
     def getLearnableParams(self):
         # Initialize the learnable parameters.
-        givensAnglesPath, scalingFactorsPath, givensAnglesFeaturesPath,  = [], [], []
+        givensAnglesPath, normalizationFactorsPath, givensAnglesFeaturesPath,  = [], [], []
         givensAnglesFeatureNames = reversibleLieLayer.getFeatureNames()
         numGivensFeatures = len(givensAnglesFeatureNames)
         reversibleModuleNames = []
@@ -152,7 +152,7 @@ class emotionModelHead(nn.Module):
                 if allScaleFactors.shape[0] == 0: continue
 
                 for givensAngles in allGivensAngles: givensAnglesPath.append(givensAngles)  # givensAnglesPath: numModuleLayers, numSignals, numParams
-                for normalizationFactors in allScaleFactors: scalingFactorsPath.append(normalizationFactors)  # scalingFactorsPath: numModuleLayers, numSignals, numParams=1
+                for normalizationFactors in allScaleFactors: normalizationFactorsPath.append(normalizationFactors)  # normalizationFactorsPath: numModuleLayers, numSignals, numParams=1
                 for givensAnglesFeatures in allGivensAnglesFeatures: givensAnglesFeaturesPath.append(givensAnglesFeatures)  # givensAnglesFeaturesPath: numModuleLayers, numFeatures, numValues
                 for _ in allGivensAngles: reversibleModuleNames.append(self.compileModuleName(name))
 
@@ -164,11 +164,11 @@ class emotionModelHead(nn.Module):
                 numSignals = self.numSignals if 'specific' in name else 1
 
                 for _ in range(numLayers): givensAnglesPath.append(np.zeros((numSignals, int(sequenceLength * (sequenceLength - 1) / 2))))  # givensAnglesPath: numModuleLayers, numSignals, numParams
-                for _ in range(numLayers): scalingFactorsPath.append(np.ones((numSignals, 1)))  # scalingFactorsPath: numModuleLayers, numSignals, numParams=1
+                for _ in range(numLayers): normalizationFactorsPath.append(np.ones((numSignals, 1)))  # normalizationFactorsPath: numModuleLayers, numSignals, numParams=1
                 for _ in range(numLayers): givensAnglesFeaturesPath.append(np.zeros((numGivensFeatures, numSignals)))  # givensAnglesFeaturesPath: numModuleLayers, numFeatures, numValues
                 for _ in range(numLayers): reversibleModuleNames.append(self.compileModuleName(name))
 
-        return givensAnglesPath, scalingFactorsPath, givensAnglesFeaturesPath, reversibleModuleNames, givensAnglesFeatureNames
+        return givensAnglesPath, normalizationFactorsPath, givensAnglesFeaturesPath, reversibleModuleNames, givensAnglesFeatureNames
 
     def getActivationCurvesFullPassPath(self):
         activationCurvePath, moduleNames = [], []

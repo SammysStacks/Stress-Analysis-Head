@@ -80,8 +80,8 @@ class modelVisualizations(globalPlottingProtocols):
                 self.generalViz.plotGivensFeaturesPath(givensAnglesFeaturesPaths=givensAnglesFeaturesPaths, paramNames=givensAnglesFeatureNames, moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle="Signal encoder angular features path")
 
                 # Plot the scaling factors for the signal encoder.
-                scalingFactorsPaths = [specificModel.scalingFactorsPath for specificModel in specificModels]  # numModels, numEpochs, numModuleLayers, numSignals, numParams=1
-                self.generalViz.plotNormalizationFactorFlow(scalingFactorsPaths, paramNames=["normalization factors"], moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle="Signal encoder scalar path")
+                normalizationFactorsPaths = [specificModel.normalizationFactorsPath for specificModel in specificModels]  # numModels, numEpochs, numModuleLayers, numSignals, numParams=1
+                self.generalViz.plotNormalizationFactorFlow(normalizationFactorsPaths, paramNames=["normalization factors"], moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle="Signal encoder scalar path")
 
     def plotAllTrainingEvents(self, submodel, modelPipeline, lossDataLoader, trainingDate, currentEpoch, showMinimumPlots):
         self.accelerator.print(f"\nPlotting results for the {modelPipeline.model.datasetName} model")
@@ -123,11 +123,11 @@ class modelVisualizations(globalPlottingProtocols):
             signalData = signalData.detach().cpu().numpy().astype(np.float16)
             
             # Compile additional information for the model.getActivationParamsFullPassPath
-            givensAnglesPath, scalingFactorsPath, _, reversibleModuleNames, givensAnglesFeatureNames = model.getLearnableParams()
+            givensAnglesPath, normalizationFactorsPath, _, reversibleModuleNames, givensAnglesFeatureNames = model.getLearnableParams()
             activationCurvePath, activationModuleNames = model.getActivationCurvesFullPassPath()  # numModuleLayers, 2=(x, y), numPoints=100
             _, _, maxFreeParamsPath = model.getFreeParamsFullPassPath()
             # givensAnglesPath: numModuleLayers, numSignals, numParams
-            # scalingFactorsPath: numModuleLayers, numSignals, numParam=1
+            # normalizationFactorsPath: numModuleLayers, numSignals, numParam=1
             signalNames = model.featureNames
             batchInd, signalInd = 0, 0
 
@@ -143,7 +143,7 @@ class modelVisualizations(globalPlottingProtocols):
                     self.signalEncoderViz.plotProfileReconstruction(resampledBiomarkerTimes, healthProfile, reconstructedHealthProfile, epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="signalEncoding/", plotTitle="Health profile reconstruction")
 
                     # Plot the scale factor information.
-                    self.signalEncoderViz.plotNormalizationFactors(scalingFactorsPath, reversibleModuleNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Normalization factors")
+                    self.signalEncoderViz.plotNormalizationFactors(normalizationFactorsPath, reversibleModuleNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Normalization factors")
 
                     # Plot the angular information.
                     if not showMinimumPlots:

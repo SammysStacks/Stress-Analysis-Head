@@ -283,7 +283,7 @@ class generalVisualizations(globalPlottingProtocols):
             else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
     def plotFreeParamFlow(self, numFreeModelParams, maxFreeParamsPath, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
-        # scalingFactorsPaths: numModels, numEpochs, numModuleLayers, *numSignals*, numParams=1
+        # normalizationFactorsPaths: numModels, numEpochs, numModuleLayers, *numSignals*, numParams=1
         # maxFreeParamsPath: numModels, numModuleLayers
         numModels, numModuleLayers = np.asarray(maxFreeParamsPath).shape
         nRows, nCols = self.getRowsCols(combineSharedLayers=True)
@@ -369,9 +369,9 @@ class generalVisualizations(globalPlottingProtocols):
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=None, baseSaveFigureName=f"{plotTitle} {paramName} (zoomed).pdf", fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
             else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
-    def plotNormalizationFactorFlow(self, scalingFactorsPaths, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
-        # scalingFactorsPaths: numModels, numEpochs, numModuleLayers, *numSignals*, numParams=1
-        try: numModels, numEpochs, numModuleLayers = len(scalingFactorsPaths), len(scalingFactorsPaths[0]), len(scalingFactorsPaths[0][0])
+    def plotNormalizationFactorFlow(self, normalizationFactorsPaths, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
+        # normalizationFactorsPaths: numModels, numEpochs, numModuleLayers, *numSignals*, numParams=1
+        try: numModels, numEpochs, numModuleLayers = len(normalizationFactorsPaths), len(normalizationFactorsPaths[0]), len(normalizationFactorsPaths[0][0])
         except Exception as e: print("plotAngularFeaturesFlow:", e); return None
         nRows, nCols = self.getRowsCols(combineSharedLayers=True)
         numParams = len(paramNames)
@@ -409,7 +409,7 @@ class generalVisualizations(globalPlottingProtocols):
 
                     plottingParams = []
                     for epochInd in range(numEpochs):
-                        plottingParams.append(scalingFactorsPaths[modelInd][epochInd][layerInd][:, paramInd])
+                        plottingParams.append(normalizationFactorsPaths[modelInd][epochInd][layerInd][:, paramInd])
                     plottingParams = np.asarray(plottingParams)
 
                     # Plot the training losses.

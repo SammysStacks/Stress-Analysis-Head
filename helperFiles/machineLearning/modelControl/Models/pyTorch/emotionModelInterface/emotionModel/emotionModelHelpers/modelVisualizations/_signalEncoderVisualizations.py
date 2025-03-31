@@ -492,8 +492,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} cutoff{str(round(maxAngularThreshold, 4)).replace('.', '-')} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} cutoff{str(round(maxAngularThreshold, 4)).replace('.', '-')}.pdf", fig=fig, clearFigure=True, showPlot=False)
         else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
-    def plotNormalizationFactors(self, scalingFactorsPath, reversibleModuleNames, epoch, saveFigureLocation, plotTitle):
-        # scalingFactorsPath: numModuleLayers, numSignals
+    def plotNormalizationFactors(self, normalizationFactorsPath, reversibleModuleNames, epoch, saveFigureLocation, plotTitle):
+        # normalizationFactorsPath: numModuleLayers, numSignals
         numModuleLayers = len(reversibleModuleNames)
         sharedValues, specificValues = [], []
 
@@ -512,8 +512,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         xTickLabelShared.append(f"Approximate decomposition layer {numSharedScalarSections - 1}")
 
         for layerInd in range(numModuleLayers):
-            if "shared" in reversibleModuleNames[layerInd].lower(): sharedValues.append(scalingFactorsPath[layerInd].flatten())
-            elif "specific" in reversibleModuleNames[layerInd].lower(): specificValues.append(scalingFactorsPath[layerInd].flatten())
+            if "shared" in reversibleModuleNames[layerInd].lower(): sharedValues.append(normalizationFactorsPath[layerInd].flatten())
+            elif "specific" in reversibleModuleNames[layerInd].lower(): specificValues.append(normalizationFactorsPath[layerInd].flatten())
             else: raise ValueError("Module name must contain 'specific' or 'shared'.")
         sharedValues = np.asarray(sharedValues); specificValues = np.asarray(specificValues)
         # sharedValues: numSharedLayers=numSections*y, numSignals=1; specificValues: numSpecificLayers=numSections*x, numSignals=numSignals
@@ -544,12 +544,12 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=False)
         else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
-    def plotScaleFactorHist(self, scalingFactorsPath, reversibleModuleNames, epoch, saveFigureLocation, plotTitle):
-        # scalingFactorsPath: numModuleLayers, numSignals, numParams=1
+    def plotScaleFactorHist(self, normalizationFactorsPath, reversibleModuleNames, epoch, saveFigureLocation, plotTitle):
+        # normalizationFactorsPath: numModuleLayers, numSignals, numParams=1
         sharedValues, specificValues = [], []
-        for layerInd in range(len(scalingFactorsPath)):
-            if "shared" in reversibleModuleNames[layerInd].lower(): sharedValues.extend(scalingFactorsPath[layerInd].flatten())
-            elif "specific" in reversibleModuleNames[layerInd].lower(): specificValues.extend(scalingFactorsPath[layerInd].flatten())
+        for layerInd in range(len(normalizationFactorsPath)):
+            if "shared" in reversibleModuleNames[layerInd].lower(): sharedValues.extend(normalizationFactorsPath[layerInd].flatten())
+            elif "specific" in reversibleModuleNames[layerInd].lower(): specificValues.extend(normalizationFactorsPath[layerInd].flatten())
             else: raise ValueError("Module name must contain 'specific' or 'shared'.")
 
         fig, ax = plt.subplots(figsize=(6.4, 4.8))

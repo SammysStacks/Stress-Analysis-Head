@@ -32,7 +32,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
         # Initialize loss holders.
         self.trainingLosses_signalReconstruction, self.testingLosses_signalReconstruction = None, None
-        self.givensAnglesFeaturesPath, self.scalingFactorsPath = None, None
+        self.givensAnglesFeaturesPath, self.normalizationFactorsPath = None, None
         self.activationParamsPath, self.numFreeParams = None, None
         self.resetModel()
 
@@ -47,7 +47,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
         self.testingLosses_signalReconstruction = []  # List of list of data reconstruction testing losses. Dim: numEpochs, numTestingSignals
         self.givensAnglesFeaturesPath = []  # List of Givens angles. Dim: numEpochs, numModuleLayers, *numSignals*, numParams
         self.activationParamsPath = []  # List of activation bounds. Dim: numEpochs, numActivations, numActivationParams
-        self.scalingFactorsPath = []  # List of Givens angles. Dim: numEpochs, numModuleLayers, *numSignals*
+        self.normalizationFactorsPath = []  # List of Givens angles. Dim: numEpochs, numModuleLayers, *numSignals*
         self.numFreeParams = []  # List of the number of free parameters. Dim: numEpochs, numModuleLayers, *numSignals*
 
     def learningInterface(self, signalData, compilingFunction):

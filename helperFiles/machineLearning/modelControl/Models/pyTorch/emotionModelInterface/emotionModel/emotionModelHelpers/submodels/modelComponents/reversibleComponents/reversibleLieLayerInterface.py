@@ -100,10 +100,10 @@ class reversibleLieLayerInterface(reversibleInterface):
                 givensAnglesRange = givensAnglesRange.cpu().detach().numpy().astype(np.float16)
 
                 # Calculate the mean, variance, and range of the scaling factors.
-                scalingFactorsVar = normalizationFactors.var(dim=0).cpu().detach().numpy().astype(np.float16)  # Dim: numSignals
+                normalizationFactorsVar = normalizationFactors.var(dim=0).cpu().detach().numpy().astype(np.float16)  # Dim: numSignals
 
                 # Combine the features. Return dimension: numFeatures, numValues
-                allGivensAnglesFeatures.append([givensAnglesVar, givensAnglesRange, scalingFactorsVar])
+                allGivensAnglesFeatures.append([givensAnglesVar, givensAnglesRange, normalizationFactorsVar])
 
         return givensAnglesFeatureNames, allGivensAnglesFeatures
 
