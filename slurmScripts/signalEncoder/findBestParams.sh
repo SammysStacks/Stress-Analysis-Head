@@ -43,7 +43,7 @@ numSpecificEncoderLayers_arr=(1)
 numSharedEncoderLayers_arr=(7)  # [4, 10]; Best: 5 and 7
 
 # Profile parameters.
-numProfileShots_arr=(24)  # (8, [16, 24], 32)
+numProfileShots_arr=(24 16)  # (8, [16, 24], 32)
 encodedDimensions_arr=(512 256)  # [128, 256, 512]
 
 # Wavelet states.
@@ -80,7 +80,7 @@ do
                                                     do
                                                         for numSpecificEncoderLayers in "${numSpecificEncoderLayers_arr[@]}"
                                                         do
-                                                            filename="signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_numProfileShots_${numProfileShots}_optimizer_${optimizer}_minAngleThresh_${minAngularThreshold}_maxAngleThresh_${maxAngularThreshold}_minWaveletDim_${minWaveletDim}_waveletType_${waveletType}"
+                                                            filename="signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_numProfileShots_${numProfileShots}_optimizer_${optimizer}_minAngleThresh_${minAngularThreshold}_maxAngleThresh_${maxAngularThreshold}_minWaveletDim_${minWaveletDim}_waveletType_${waveletType}_lr_reversible_${lr_reversible}"
 
                                                             if [ "$1" == "CPU" ]; then
                                                                 sbatch -J "$filename" submitSignalEncoder_CPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$numProfileShots" "$1" "$waveletType" "$optimizer" "$lr_profile" "$lr_reversible" "$lr_profileGen" "$beta1s" "$beta2s" "$momentums" "$minAngularThreshold" "$maxAngularThreshold" "$minWaveletDim"

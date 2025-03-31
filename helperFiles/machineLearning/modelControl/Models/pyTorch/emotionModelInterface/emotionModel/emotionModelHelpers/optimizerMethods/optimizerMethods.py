@@ -19,8 +19,8 @@ class optimizerMethods:
             {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "jacobianParameter" in name), 'weight_decay': 4e-5, 'lr': 4e-4},
 
             # Specify the angular parameters for the signal encoding.
-            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "givensRotationParams" in name), 'weight_decay': modelConstants.userInputParams['reversibleLR']/10, 'lr': modelConstants.userInputParams['reversibleLR']},
-            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "givensRotationParams" in name), 'weight_decay': modelConstants.userInputParams['reversibleLR']/10, 'lr': modelConstants.userInputParams['reversibleLR']},
+            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "givensRotationParams" in name), 'weight_decay': modelConstants.userInputParams['reversibleLR'], 'lr': modelConstants.userInputParams['reversibleLR']},
+            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "givensRotationParams" in name), 'weight_decay': modelConstants.userInputParams['reversibleLR'], 'lr': modelConstants.userInputParams['reversibleLR']},
 
             # Specify the activation parameters for the signal encoding.
             {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "activationFunction" in name), 'weight_decay': 4e-5, 'lr': 4e-4},
