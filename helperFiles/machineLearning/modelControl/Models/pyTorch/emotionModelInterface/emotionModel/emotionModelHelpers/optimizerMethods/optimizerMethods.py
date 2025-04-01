@@ -10,9 +10,9 @@ class optimizerMethods:
     def getModelParams(submodel, model):
         modelParams = [
             # Specify the profile parameters for the signal encoding.
-            {'params': model.sharedSignalEncoderModel.healthGenerationModel.parameters(), 'weight_decay': modelConstants.userInputParams['physGenLR']/10, 'lr': modelConstants.userInputParams['physGenLR']},
+            {'params': model.sharedSignalEncoderModel.healthGenerationModel.parameters(), 'weight_decay': modelConstants.userInputParams['physGenLR'], 'lr': modelConstants.userInputParams['physGenLR']},
             {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': modelConstants.userInputParams['profileLR']/1000, 'lr': modelConstants.userInputParams['profileLR']},
-            {'params': model.sharedSignalEncoderModel.fourierModel.parameters(), 'weight_decay': modelConstants.userInputParams['physGenLR']/10, 'lr': modelConstants.userInputParams['physGenLR']},
+            {'params': model.sharedSignalEncoderModel.fourierModel.parameters(), 'weight_decay': modelConstants.userInputParams['physGenLR'], 'lr': modelConstants.userInputParams['physGenLR']},
 
             # Specify the scalar parameters for the signal encoding.
             {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "jacobianParameter" in name), 'weight_decay': 4e-5, 'lr': 4e-4},
