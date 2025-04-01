@@ -21,8 +21,8 @@ from helperFiles.machineLearning.modelControl.modelSpecifications.compileModelIn
 
 class compileModelData(compileModelDataHelpers):
 
-    def __init__(self, useTherapyData, accelerator=None):
-        super().__init__(accelerator)
+    def __init__(self, useTherapyData, accelerator=None, validationRun=False):
+        super().__init__(accelerator, validationRun)
         # Initialize relevant information.
         self.compileModelInfo = compileModelInfo()  # Initialize the model information class.
 

@@ -43,10 +43,10 @@ class humanMachineInterface:
         self.modelTimeBuffer = 1
         self.modelTimeGap = 20
 
-        # model helpers intialization
+        # model helpers initialization
         self.compileFeatureNames = compileFeatureNames()  # Initialize the Feature Information
         self.compileModelInfo = compileModelInfo()  # Initialize the Model Information
-        self.compileModelHelpers = compileModelDataHelpers(accelerator=accelerator)
+        self.compileModelHelpers = compileModelDataHelpers(accelerator=accelerator, validationRun=True)
 
         # Compile the feature information.
         _, self.surveyQuestions, _, _ = self.compileModelInfo.compileSurveyInformation()

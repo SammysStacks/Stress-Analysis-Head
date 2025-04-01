@@ -8,7 +8,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class modelMigration:
 
-    def __init__(self, accelerator=None, debugFlag=False):
+    def __init__(self, accelerator=None, validationRun=False):
         # Create folders to save the data in.
         self.saveModelFolder = os.path.normpath(os.path.dirname(__file__) + "/../../../_finalModels/") + "/"
         self.saveModelFolder = os.path.relpath(os.path.normpath(self.saveModelFolder), os.getcwd()) + "/"
@@ -16,8 +16,8 @@ class modelMigration:
 
         # Specify the accelerator parameters.
         self.device = self.getModelDevice(accelerator)
+        self.validationRun = validationRun
         self.accelerator = accelerator
-        self.debugFlag = debugFlag
 
         # Model identifiers.
         self.classAttributeKey = "classAttributes"
@@ -169,7 +169,7 @@ class modelMigration:
 
     def _compileModelBaseName(self, submodel, datasetName, trainingDate, numEpochs):
         # Organize information about the model.
-        trainingModelName = modelParameters.embedInformation(submodel, trainingDate)
+        trainingModelName = modelParameters.embedInformation(submodel, trainingDate, self.validationRun)
 
         # Compile the location to save/load the model.
         modelFolderPath = self.saveModelFolder + f"{submodel}/{trainingModelName}/{datasetName}/"
@@ -287,7 +287,7 @@ class modelMigration:
                 self._loadModelAttributes(model, loadedModelInfo)
         else:
             modelNotLoaded = modelBaseName.split(f"/{submodel}/")[-1].split("/")[1]
-            if self.debugFlag: print(f"\tNot loading the {submodel} model for {modelNotLoaded} data")
+            print(f"\tNot loading the {submodel} model for {modelNotLoaded} data")
 
     def _loadModelAttributes(self, model, loadedModelInfo):
         modelAttributes = loadedModelInfo[self.classAttributeKey]

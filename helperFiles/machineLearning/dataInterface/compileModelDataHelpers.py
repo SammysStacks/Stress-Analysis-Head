@@ -15,7 +15,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.modelMigration impo
 
 
 class compileModelDataHelpers:
-    def __init__(self, accelerator=None):
+    def __init__(self, accelerator=None, validationRun=False):
         # General parameters
         self.compiledInfoLocation = os.path.dirname(__file__) + "/../../../_experimentalData/_compiledData/"
         self.missingLabelValue = torch.nan
@@ -27,7 +27,7 @@ class compileModelDataHelpers:
 
         # Initialize relevant classes.
         self.modelParameters = modelParameters(accelerator)
-        self.modelMigration = modelMigration(accelerator, debugFlag=False)
+        self.modelMigration = modelMigration(accelerator, validationRun=validationRun)
         self.dataAugmentation = dataAugmentation()
         self.generalMethods = generalMethods()
 
