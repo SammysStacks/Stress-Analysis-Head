@@ -152,8 +152,8 @@ if __name__ == "__main__":
         trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingModelName, showMinimumPlots=not showAllPlots)
 
         # Save the model sometimes (only on the main device).
-        # if saveFullModel and accelerator.is_local_main_process:
-        trainingProtocols.saveModelState(epoch, allMetaModels, allModels, submodel, allDatasetNames, trainingDate)
+        if saveFullModel and accelerator.is_local_main_process:
+            trainingProtocols.saveModelState(epoch, allMetaModels, allModels, submodel, allDatasetNames, trainingDate)
 
         # Finalize the epoch parameters.
         endEpochTime = time.time(); print("Total epoch time:", endEpochTime - startEpochTime)
