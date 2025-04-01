@@ -34,7 +34,7 @@ class emotionModelWeights(convolutionalHelpers):
 
     @staticmethod
     def healthInitialization(healthProfile):
-        nn.init.normal_(healthProfile, mean=0, std=modelConstants.userInputParams['initialProfileAmp'])
+        nn.init.uniform_(healthProfile, a=-modelConstants.userInputParams['initialProfileAmp'], b=modelConstants.userInputParams['initialProfileAmp'])
 
     # ------------------- Neural Operator Architectures ------------------- #
 
