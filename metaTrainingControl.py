@@ -38,7 +38,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-04-01 shared-2"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2025-04-01"  # The current date we are training the model. Unique identifier of this training set.
     plotAllEpochs = True  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
     validationRun = False  # Whether to train new datasets from the old model.
     testSplitRatio = 0.1  # The percentage of testing points.
@@ -62,6 +62,7 @@ if __name__ == "__main__":
     # Add arguments for the neural operator.
     parser.add_argument('--waveletType', type=str, default='bior3.1', help='The wavelet type for the wavelet transform: bior3.1, bior3.3, bior2.2, bior3.5')
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
+    parser.add_argument('--numIgnoredSharedHF', type=int, default=2, help='The number of ignored high frequency components: [0, 1, 2]')
 
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model: [1, 2]')

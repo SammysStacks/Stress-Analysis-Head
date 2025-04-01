@@ -19,6 +19,7 @@ srun accelerate launch ./../../metaTrainingControl.py \
     --momentum_decay "${13}" \
     --minAngularThreshold "${14}" \
     --maxAngularThreshold "${15}" \
+    --numIgnoredSharedHF "${16}" \
 
 end=$(date +%s)
 runtime=$((end-start))
