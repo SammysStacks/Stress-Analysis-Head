@@ -12,7 +12,7 @@ class optimizerMethods:
             # Specify the profile parameters for the signal encoding.
             {'params': model.sharedSignalEncoderModel.healthGenerationModel.parameters(), 'weight_decay': modelConstants.userInputParams['physGenLR'], 'lr': modelConstants.userInputParams['physGenLR']},
             {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': modelConstants.userInputParams['profileLR']/100, 'lr': modelConstants.userInputParams['profileLR']},
-            {'params': model.sharedSignalEncoderModel.fourierModel.parameters(), 'weight_decay': modelConstants.userInputParams['physGenLR']/10, 'lr': modelConstants.userInputParams['physGenLR']},
+            {'params': model.sharedSignalEncoderModel.fourierModel.parameters(), 'weight_decay': modelConstants.userInputParams['physGenLR']/100, 'lr': modelConstants.userInputParams['physGenLR']},
 
             # Specify the scalar parameters for the signal encoding.
             {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "jacobianParameter" in name), 'weight_decay': 2e-5, 'lr': 2e-4},
@@ -61,7 +61,7 @@ class optimizerMethods:
         # Reduce on plateau (need further editing of loop): optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=0.5, patience=10, threshold=1e-4, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08)
         # Defined lambda function: optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda=lambda_function); lambda_function = lambda epoch: (epoch/50) if epoch < -1 else 1
         # torch.optim.lr_scheduler.constrainedLR(optimizer, start_factor=0.3333333333333333, end_factor=1.0, total_iters=5, last_epoch=-1)
-        return CosineAnnealingLR_customized(optimizer=optimizer,  T_max=1, absolute_min_lr=1e-4, multiplicativeFactor=10, numWarmupEpochs=0, warmupFactor=2, last_epoch=-1)
+        return CosineAnnealingLR_customized(optimizer=optimizer,  T_max=1, absolute_min_lr=1e-4, multiplicativeFactor=10, numWarmupEpochs=modelConstants.numWarmupEpochs, warmupFactor=2, last_epoch=-1)
 
     @staticmethod
     def getOptimizer(optimizerType, params, lr, weight_decay, momentum=0.9):

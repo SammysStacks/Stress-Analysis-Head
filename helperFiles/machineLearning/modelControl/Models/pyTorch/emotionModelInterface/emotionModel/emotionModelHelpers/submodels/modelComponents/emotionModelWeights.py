@@ -66,8 +66,8 @@ class emotionModelWeights(convolutionalHelpers):
     def healthGeneration(self):
         layers = []
         for _ in range(16):
+            layers.append(self.convolutionalFilters_resNetBlocks(numResNets=3, numBlocks=3, numChannels=[1, 1], kernel_sizes=3, dilations=[1, 1, 1], groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
             layers.append(self.convolutionalFilters_resNetBlocks(numResNets=3, numBlocks=3, numChannels=[1, 1], kernel_sizes=3, dilations=[1, 2, 1], groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
-            layers.append(self.convolutionalFilters_resNetBlocks(numResNets=3, numBlocks=3, numChannels=[1, 1], kernel_sizes=3, dilations=[1, 4, 1], groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
 
         # Construct the profile generation model.
         return nn.Sequential(*layers)
@@ -75,8 +75,8 @@ class emotionModelWeights(convolutionalHelpers):
     def fourierAdjustments(self):
         layers = []
         for _ in range(6):
+            layers.append(self.convolutionalFilters_resNetBlocks(numResNets=3, numBlocks=3, numChannels=[2, 2], kernel_sizes=3, dilations=[1, 1, 1], groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
             layers.append(self.convolutionalFilters_resNetBlocks(numResNets=3, numBlocks=3, numChannels=[2, 2], kernel_sizes=3, dilations=[1, 2, 1], groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
-            layers.append(self.convolutionalFilters_resNetBlocks(numResNets=3, numBlocks=3, numChannels=[2, 2], kernel_sizes=3, dilations=[1, 4, 1], groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False))
 
         # Construct the profile generation model.
         return nn.Sequential(*layers)

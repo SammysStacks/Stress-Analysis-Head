@@ -35,13 +35,13 @@ class trainingProtocolHelpers:
             dataLoader = allMetadataLoaders[modelInd] if modelInd < len(allMetadataLoaders) else allDataLoaders[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
             modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
             trainSharedLayers = modelInd < len(allMetaModels)  # Train the shared layers.
-            specificTraining = False
+            specificTraining = True
 
             # Copy over the shared layers.
             self.modelMigration.unifyModelWeights(allModels=[modelPipeline], modelWeights=self.sharedModelWeights, layerInfo=self.unifiedLayerData)
 
             # Train the updated model.
-            modelPipeline.trainModel(dataLoader, submodel, profileTraining=False, specificTraining=specificTraining, trainSharedLayers=trainSharedLayers, stepScheduler=False, numEpochs=1)   # Full model training.
+            modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=specificTraining, trainSharedLayers=trainSharedLayers, stepScheduler=False, numEpochs=1)   # Full model training.
             if specificTraining: modelPipeline.model.cullAngles(epoch=epoch)
 
             # Unify all the model weights and retrain the specific models.
