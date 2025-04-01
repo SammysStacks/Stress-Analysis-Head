@@ -35,7 +35,7 @@ lrs_profileGen=('4e-4' '1e-3') # x <= 1e-4;
 lrs_reversible=(0.05 0.025 0.075)  # [0.025, 0.075]
 
 # Angular reference states.
-minAngularThresholds=(1.5 2)
+minAngularThresholds=(1.5)
 maxAngularThresholds=(45)
 
 # Binary reference states.
@@ -43,7 +43,7 @@ numSpecificEncoderLayers_arr=(1)
 numSharedEncoderLayers_arr=(7)  # [4, 10]; Best: 5 and 7
 
 # Profile parameters.
-numProfileShots_arr=(16)  # (8, [16, 24], 32)
+numProfileShots_arr=(16 24)  # (8, [16, 24], 32)
 encodedDimensions_arr=(512 256)  # [128, 256, 512]
 
 # Wavelet states.
