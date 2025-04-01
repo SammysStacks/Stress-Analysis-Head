@@ -109,6 +109,7 @@ class generalVisualizations(globalPlottingProtocols):
         if len(trainingLosses[0]) == 0: return None
         numModels, numEpochs = len(trainingLosses), len(trainingLosses[0])
         fig, ax = plt.subplots(figsize=(6.4, 4.8))
+        profileFlag = 'profile' in plotTitle.lower()
 
         # Plot the average losses.
         for modelInd in range(numModels):
@@ -123,6 +124,7 @@ class generalVisualizations(globalPlottingProtocols):
             # Plot the training losses.
             ax.errorbar(x=np.arange(len(trainingLoss)), y=trainingLoss, yerr=trainingStandardError, color=self.darkColors[modelInd], linewidth=1)
             ax.plot(modelTrainingLosses, color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
+            ax.set_xticks(range(1 if profileFlag else 0, numEpochs + (1 if profileFlag else 0)))  # Ticks from 1 to 5
 
             if testingLosses is not None:
                 modelTestingLosses = np.asarray(testingLosses[modelInd])
@@ -140,7 +142,7 @@ class generalVisualizations(globalPlottingProtocols):
         ax.hlines(y=0.1, xmin=0, xmax=len(trainingLosses[0]) + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
         for i in range(2, 10): ax.hlines(y=0.01*i, xmin=0, xmax=len(trainingLosses[0]) + 1, colors=self.blackColor, linestyles='dashed', linewidth=1, alpha=0.25)
         ax.hlines(y=0.01, xmin=0, xmax=len(trainingLosses[0]) + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
-        ax.set_xlim((0, max(128 if 'profile' not in plotTitle.lower() else 0, len(trainingLosses[0]) + 1)))
+        ax.set_xlim((0, max(128 if not profileFlag else 0, len(trainingLosses[0]) + 1)))
         ax.set_ylim((0.0025, 0.75))
         ax.grid(True)
 
