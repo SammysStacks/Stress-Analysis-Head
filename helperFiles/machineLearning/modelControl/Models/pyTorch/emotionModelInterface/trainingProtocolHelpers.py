@@ -74,8 +74,8 @@ class trainingProtocolHelpers:
         for modelInd in range(len(allMetaModels) + len(allModels)):
             dataLoader = allMetadataLoaders[modelInd] if modelInd < len(allMetadataLoaders) else allDataLoaders[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
             modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
-            if modelPipeline.datasetName.lower() == 'empatch': numEpochs = 1  # [2, 3]
-            elif modelPipeline.datasetName.lower() == 'wesad': numEpochs = 1  # 6
+            if modelPipeline.datasetName.lower() == 'empatch': numEpochs = 1
+            elif modelPipeline.datasetName.lower() == 'wesad': numEpochs = 1
             else: numEpochs = 1
 
             # Train the updated model.
