@@ -105,7 +105,6 @@ class reversibleLieLayer(reversibleLieLayerInterface):
     def getMinAngularThreshold(epoch):
         if epoch <= modelConstants.numWarmupEpochs: return 0
         relativeEpoch = epoch - modelConstants.numWarmupEpochs
-        relativeEpoch = relativeEpoch / 2
 
         # Get the minimum angular threshold.
         minThresholdStep = modelConstants.userInputParams['minThresholdStep']

@@ -44,7 +44,7 @@ if __name__ == "__main__":
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # Model loading information.
-    loadSubmodelDate = "2025-03-30"  # The submodel we are loading: None, "2025-03-31"
+    loadSubmodelDate = "2025-04-01"  # The submodel we are loading: None, "2025-03-31"
 
     # ----------------------- Architecture Parameters ----------------------- #
 
@@ -97,7 +97,7 @@ if __name__ == "__main__":
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
     userInputParams['minWaveletDim'] = userInputParams['encodedDimension'] // (2**3)
-    userInputParams['minThresholdStep'] = userInputParams['reversibleLR']  # Keep as degrees
+    userInputParams['minThresholdStep'] = userInputParams['reversibleLR'] / 2  # Keep as degrees
     userInputParams['reversibleLR'] = userInputParams['reversibleLR'] * math.pi / 180  # Keep as radians
     userInputParams['profileDimension'] = userInputParams['encodedDimension'] // 2
 
