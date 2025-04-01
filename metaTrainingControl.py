@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
     # Add arguments for the health profile.
     parser.add_argument('--initialProfileAmp', type=float, default=0.01, help='The limits for profile initialization. Should be near zero')
-    parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the health profile and all signals.')
+    parser.add_argument('--encodedDimension', type=int, default=512, help='The dimension of the health profile and all signals.')
     parser.add_argument('--numProfileShots', type=int, default=16, help='The epochs for profile training: [16, 32]')
     
     # Add arguments for the neural operator.
