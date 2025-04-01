@@ -137,7 +137,7 @@ class CosineAnnealingLR_customized(optim.lr_scheduler.LRScheduler):
 
     def get_lr(self):
         """Retrieve the learning rate of each parameter group."""
-        if self.last_epoch <= self.numWarmupEpochs: return self.updateStep(multiplicativeFactor=self.warmupFactor, base_lrs=[max(self.absolute_min_lr, base_lr / 10) for base_lr in self.base_lrs])
+        if self.last_epoch <= self.numWarmupEpochs: return self.updateStep(multiplicativeFactor=self.warmupFactor, base_lrs=[max(self.absolute_min_lr, base_lr / (self.numWarmupEpochs - self.last_epoch + 1)) for base_lr in self.base_lrs])
         return self.updateStep(multiplicativeFactor=self.multiplicativeFactor, base_lrs=self.base_lrs)
 
     def updateStep(self, multiplicativeFactor, base_lrs):
