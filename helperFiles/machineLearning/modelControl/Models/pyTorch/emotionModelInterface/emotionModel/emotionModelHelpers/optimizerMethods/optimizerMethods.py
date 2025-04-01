@@ -15,16 +15,16 @@ class optimizerMethods:
             {'params': model.sharedSignalEncoderModel.fourierModel.parameters(), 'weight_decay': modelConstants.userInputParams['physGenLR']/100, 'lr': modelConstants.userInputParams['physGenLR']},
 
             # Specify the scalar parameters for the signal encoding.
-            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "jacobianParameter" in name), 'weight_decay': 2e-5, 'lr': 2e-4},
-            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "jacobianParameter" in name), 'weight_decay': 2e-5, 'lr': 2e-4},
+            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "jacobianParameter" in name), 'weight_decay': 4e-5, 'lr': 4e-4},
+            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "jacobianParameter" in name), 'weight_decay': 4e-5, 'lr': 4e-4},
 
             # Specify the angular parameters for the signal encoding.
-            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "givensRotationParams" in name), 'weight_decay': modelConstants.userInputParams['reversibleLR'], 'lr': modelConstants.userInputParams['reversibleLR']},
-            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "givensRotationParams" in name), 'weight_decay': modelConstants.userInputParams['reversibleLR'], 'lr': modelConstants.userInputParams['reversibleLR']},
+            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "givensRotationParams" in name), 'weight_decay': modelConstants.userInputParams['reversibleLR']*2, 'lr': modelConstants.userInputParams['reversibleLR']},
+            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "givensRotationParams" in name), 'weight_decay': modelConstants.userInputParams['reversibleLR']*2, 'lr': modelConstants.userInputParams['reversibleLR']},
 
             # Specify the activation parameters for the signal encoding.
-            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "activationFunction" in name), 'weight_decay': 2e-5, 'lr': 2e-4},
-            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "activationFunction" in name), 'weight_decay': 2e-5, 'lr': 2e-4},
+            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "activationFunction" in name), 'weight_decay': 1e-4, 'lr': 1e-3},
+            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "activationFunction" in name), 'weight_decay': 1e-4, 'lr': 1e-3},
         ]
 
         if submodel == modelConstants.emotionModel:
