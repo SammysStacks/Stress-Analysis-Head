@@ -41,11 +41,11 @@ class modelVisualizations(globalPlottingProtocols):
 
     # ---------------------------------------------------------------------- #
 
-    def plotDatasetComparison(self, submodel, allModelPipelines, trainingDate, showMinimumPlots):
+    def plotDatasetComparison(self, submodel, allModelPipelines, trainingModelName, showMinimumPlots):
         self.accelerator.print(f"\nCalculating loss for model comparison")
 
         # Prepare the model/data for evaluation.
-        self.setModelSavingFolder(baseSavingFolder=f"trainingFigures/{submodel}/{trainingDate}/", stringID="", epoch=-1)  # Label the correct folder to save this analysis.
+        self.setModelSavingFolder(baseSavingFolder=f"trainingFigures/{submodel}/{trainingModelName}/", stringID="", epoch=-1)  # Label the correct folder to save this analysis.
 
         with torch.no_grad():
             if self.accelerator.is_local_main_process:
@@ -81,13 +81,13 @@ class modelVisualizations(globalPlottingProtocols):
 
                 # Plot the scaling factors for the signal encoder.
                 normalizationFactorsPaths = [specificModel.normalizationFactorsPath for specificModel in specificModels]  # numModels, numEpochs, numModuleLayers, numSignals, numParams=1
-                self.generalViz.plotNormalizationFactorFlow(normalizationFactorsPaths, paramNames=["normalization factors"], moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle="Signal encoder scalar path")
+                self.generalViz.plotNormalizationFactorFlow(normalizationFactorsPaths, paramNames=["normalization factors"], moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle="Signal encoder normalization factors path")
 
-    def plotAllTrainingEvents(self, submodel, modelPipeline, lossDataLoader, trainingDate, currentEpoch, showMinimumPlots):
+    def plotAllTrainingEvents(self, submodel, modelPipeline, lossDataLoader, trainingModelName, currentEpoch, showMinimumPlots):
         self.accelerator.print(f"\nPlotting results for the {modelPipeline.model.datasetName} model")
 
         # Prepare the model/data for evaluation.
-        self.setModelSavingFolder(baseSavingFolder=f"trainingFigures/{submodel}/{trainingDate}/", stringID=f"{modelPipeline.model.datasetName}/", epoch=currentEpoch)
+        self.setModelSavingFolder(baseSavingFolder=f"trainingFigures/{submodel}/{trainingModelName}/", stringID=f"{modelPipeline.model.datasetName}/", epoch=currentEpoch)
         modelPipeline.setupTrainingFlags(modelPipeline.model, trainingFlag=False)  # Set all models into evaluation mode.
         model = modelPipeline.model
         numPlottingPoints = 3

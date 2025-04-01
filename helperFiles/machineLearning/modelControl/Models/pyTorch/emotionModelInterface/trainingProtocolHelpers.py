@@ -99,7 +99,7 @@ class trainingProtocolHelpers:
             with torch.no_grad(): modelPipeline.organizeLossInfo.storeTrainingLosses(submodel, modelPipeline, lossDataLoader)
         t2 = time.time(); self.accelerator.print("Total loss calculation time:", t2 - t1)
 
-    def plotModelState(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingDate, showMinimumPlots):
+    def plotModelState(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingModelName, showMinimumPlots):
         self.unifyAllModelWeights(allMetaModels, allModels)  # Unify all the model weights.
 
         t1 = time.time()
@@ -110,8 +110,8 @@ class trainingProtocolHelpers:
 
             with torch.no_grad():
                 numEpochs = modelPipeline.getTrainingEpoch(submodel)
-                modelPipeline.modelVisualization.plotAllTrainingEvents(submodel, modelPipeline, lossDataLoader, trainingDate, numEpochs, showMinimumPlots=showMinimumPlots)
-        with torch.no_grad(): (allMetaModels or allModels)[0].modelVisualization.plotDatasetComparison(submodel, allMetaModels + allModels, trainingDate, showMinimumPlots=showMinimumPlots)
+                modelPipeline.modelVisualization.plotAllTrainingEvents(submodel, modelPipeline, lossDataLoader, trainingModelName, numEpochs, showMinimumPlots=showMinimumPlots)
+        with torch.no_grad(): (allMetaModels or allModels)[0].modelVisualization.plotDatasetComparison(submodel, allMetaModels + allModels, trainingModelName, showMinimumPlots=showMinimumPlots)
         t2 = time.time(); self.accelerator.print("Total plotting time:", t2 - t1)
 
     def saveModelState(self, epoch, allMetaModels, allModels, submodel, allDatasetNames, trainingDate):
@@ -122,7 +122,7 @@ class trainingProtocolHelpers:
 
         # Save the current version of the model.
         self.modelMigration.saveModels(modelPipelines=allPipelines, datasetNames=allDatasetNames, sharedModelWeights=self.sharedModelWeights, submodelsSaving=self.submodelsSaving,
-                                       submodel=submodel, trainingDate=trainingDate, numEpochs=numEpochs, metaTraining=True, saveModelAttributes=True)
+                                       submodel=submodel, trainingDate=trainingDate, numEpochs=numEpochs, saveModelAttributes=True)
 
     def unifyAllModelWeights(self, allMetaModels=None, allModels=None):
         if self.unifiedLayerData is None: self.unifiedLayerData = self.modelMigration.copyModelWeights((allMetaModels or allModels)[0], self.sharedModelWeights)

@@ -271,7 +271,7 @@ class generalVisualizations(globalPlottingProtocols):
                 ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5, alpha=0.8)
 
             # Label the plot.
-            fig.suptitle(f"{plotTitle}: {paramName} at epoch {numEpochs}", fontsize=24)
+            fig.suptitle(f"{plotTitle}: {paramName.lower()} at epoch {numEpochs}", fontsize=24)
             fig.tight_layout()
 
             for specificLayerInd in range(numSpecificLayers):
@@ -351,7 +351,7 @@ class generalVisualizations(globalPlottingProtocols):
                     ax.hlines(y=maxFreeParams, xmin=0, xmax=numEpochs + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
 
             # Label the plot.
-            fig.suptitle(f"{plotTitle}: {paramName} at epoch {numEpochs}", fontsize=24)
+            fig.suptitle(f"{plotTitle}: {paramName.lower()} at epoch {numEpochs}", fontsize=24)
             fig.tight_layout()
 
             for specificLayerInd in range(numSpecificLayers):
@@ -431,7 +431,7 @@ class generalVisualizations(globalPlottingProtocols):
                 ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5, alpha=0.8)
 
             # Label the plot.
-            fig.suptitle(f"{plotTitle}: {paramName}", fontsize=24)
+            fig.suptitle(f"{plotTitle}: {paramName.lower()}", fontsize=24)
             fig.tight_layout()
 
             for specificLayerInd in range(numSpecificLayers):
@@ -461,7 +461,7 @@ class generalVisualizations(globalPlottingProtocols):
             numLow, numSpecificHigh, numSharedHigh = 0, 0, 0
             paramName = paramNames[paramInd]
 
-            fig.suptitle(f"{plotTitle}: {paramName}", fontsize=24)
+            fig.suptitle(f"{plotTitle}: {paramName.lower()}", fontsize=24)
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
 

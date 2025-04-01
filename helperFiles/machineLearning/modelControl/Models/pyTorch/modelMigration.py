@@ -196,8 +196,7 @@ class modelMigration:
 
     # ------------------------ Saving Model Methods ------------------------ #
 
-    def saveModels(self, modelPipelines, datasetNames, sharedModelWeights, submodelsSaving,
-                   submodel, trainingDate, numEpochs, metaTraining, saveModelAttributes=True):
+    def saveModels(self, modelPipelines, datasetNames, sharedModelWeights, submodelsSaving, submodel, trainingDate, numEpochs, saveModelAttributes=True):
         # Assert the integrity of the input variables.
         assert len(modelPipelines) == len(datasetNames), f"You provided {len(modelPipelines)} models to save, but only {len(datasetNames)} datasetNames."
         assert 0 < len(modelPipelines), "No models provided to save."
@@ -205,11 +204,9 @@ class modelMigration:
 
         # For each model, save the shared and specific weights
         for datasetInd, (modelPipeline, datasetName) in enumerate(zip(modelPipelines, datasetNames)):
-            self._saveModel(modelPipeline.model, datasetName, sharedModelWeights, submodelsSaving, subAttributesSaving,
-                            submodel, trainingDate, numEpochs, metaTraining, saveModelAttributes, datasetInd)
+            self._saveModel(modelPipeline.model, datasetName, sharedModelWeights, submodelsSaving, subAttributesSaving, submodel, trainingDate, numEpochs, saveModelAttributes, datasetInd)
 
-    def _saveModel(self, model, datasetName, sharedModelWeights, submodelsSaving, subAttributesSaving,
-                   submodel, trainingDate, numEpochs, metaTraining, saveModelAttributes=True, datasetInd=0):
+    def _saveModel(self, model, datasetName, sharedModelWeights, submodelsSaving, subAttributesSaving, submodel, trainingDate, numEpochs, saveModelAttributes=True, datasetInd=0):
         # Create a path to where we want to save the model.
         modelBaseName = self._compileModelBaseName(submodel, datasetName, trainingDate, numEpochs)
         sharedModelBaseName = self._compileModelBaseName(submodel, self.sharedWeightsName, trainingDate, numEpochs)

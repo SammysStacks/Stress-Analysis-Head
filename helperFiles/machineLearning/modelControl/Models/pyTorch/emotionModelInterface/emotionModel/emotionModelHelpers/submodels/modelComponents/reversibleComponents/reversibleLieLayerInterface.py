@@ -109,7 +109,7 @@ class reversibleLieLayerInterface(reversibleInterface):
 
     @staticmethod
     def getFeatureNames():
-        return ["Angular variance", "Angular range", "Scalar variance"]
+        return ["Angular variance", "Angular range", "Normalization factor variance"]
 
     def getAllActivationParams(self):
         with torch.no_grad():
