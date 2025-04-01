@@ -3,6 +3,7 @@ import os
 import torch
 import torch.nn as nn
 
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
 
 
@@ -167,9 +168,9 @@ class modelMigration:
 
         return newModelAttributes
 
-    def _compileModelBaseName(self, submodel, datasetName, trainingDate, numEpochs):
+    def _compileModelBaseName(self, submodel, datasetName, trainingDate, numEpochs, validationRun):
         # Organize information about the model.
-        trainingModelName = modelParameters.embedInformation(submodel, trainingDate, self.validationRun)
+        trainingModelName = modelParameters.embedInformation(submodel, trainingDate, validationRun)
 
         # Compile the location to save/load the model.
         modelFolderPath = self.saveModelFolder + f"{submodel}/{trainingModelName}/{datasetName}/"
@@ -208,8 +209,8 @@ class modelMigration:
 
     def _saveModel(self, model, datasetName, sharedModelWeights, submodelsSaving, subAttributesSaving, submodel, trainingDate, numEpochs, saveModelAttributes=True, datasetInd=0):
         # Create a path to where we want to save the model.
-        modelBaseName = self._compileModelBaseName(submodel, datasetName, trainingDate, numEpochs)
-        sharedModelBaseName = self._compileModelBaseName(submodel, self.sharedWeightsName, trainingDate, numEpochs)
+        modelBaseName = self._compileModelBaseName(submodel, datasetName, trainingDate, numEpochs, self.validationRun)
+        sharedModelBaseName = self._compileModelBaseName(submodel, self.sharedWeightsName, trainingDate, numEpochs, self.validationRun)
 
         # Filter the state_dict based on sharedModelWeights
         shared_params, specific_params = self._filterStateDict(model, sharedModelWeights, submodelsSaving)
@@ -238,17 +239,22 @@ class modelMigration:
 
     # ------------------------ Loading Model Methods ----------------------- #
     
-    def loadModels(self, allModelPipelines, submodel, trainingDate, numEpochs, metaTraining, loadModelAttributes=True, loadModelWeights=True):
+    def loadModels(self, allModelPipelines, submodel, trainingDate, numEpochs, loadModelAttributes=True, loadModelWeights=True):
         print("\nLoading in previous weights and attributes")
 
         # Iterate over each model.
         for modelPipeline in allModelPipelines:
-            self._loadModel(modelPipeline.model, modelPipeline.datasetName, submodel, trainingDate, numEpochs, metaTraining, loadModelAttributes, loadModelWeights)
+            self._loadModel(modelPipeline.model, modelPipeline.datasetName, submodel, trainingDate, numEpochs, loadModelAttributes, loadModelWeights)
 
-    def _loadModel(self, model, datasetName, submodel, trainingDate, numEpochs, metaTraining, loadModelAttributes=True, loadModelWeights=True):
+    def _loadModel(self, model, datasetName, submodel, trainingDate, numEpochs, loadModelAttributes=True, loadModelWeights=True):
+        # Read in the previous signal encoder model when meta-training emotions.
+        if submodel == modelConstants.emotionModel and not self.validationRun:
+            submodel = modelConstants.signalEncoderModel; validationRun = True
+        else: validationRun = self.validationRun
+
         # Construct base names for loading the model and attributes
-        modelBaseName = self._compileModelBaseName(submodel, datasetName, trainingDate, numEpochs)
-        sharedModelBaseName = self._compileModelBaseName(submodel, self.sharedWeightsName, trainingDate, numEpochs)
+        modelBaseName = self._compileModelBaseName(submodel, datasetName, trainingDate, numEpochs, validationRun)
+        sharedModelBaseName = self._compileModelBaseName(submodel, self.sharedWeightsName, trainingDate, numEpochs, validationRun)
 
         # Load in the pytorch models.
         self._loadPyTorchModel(model, modelBaseName, loadModelAttributes, loadModelWeights, submodel)  # Load dataset-specific parameters

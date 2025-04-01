@@ -111,16 +111,6 @@ class modelParameters:
     # -------------------------- Saving/Loading Parameters ------------------------- #
 
     @staticmethod
-    def getModelInfo(submodel, loadSubmodelDate=None):
-        loadSubmodelEpochs, loadSubmodel = -1, submodel
-
-        # Signal encoder loading information.
-        if submodel == modelConstants.emotionModel:
-            loadSubmodel = modelConstants.signalEncoderModel  # The submodel to load.
-
-        return loadSubmodelDate, loadSubmodelEpochs, loadSubmodel
-
-    @staticmethod
     def getSubmodelsSaving(submodel):
         # Get the submodels to save
         if submodel == modelConstants.signalEncoderModel:

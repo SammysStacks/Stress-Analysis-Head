@@ -137,22 +137,19 @@ class compileModelData(compileModelDataHelpers):
 
         # Compile the meta-learning modules.
         allMetaModels, allMetadataLoaders = self.compileModels(metaRawFeatureIntervalTimes, metaRawFeatureIntervals, metaSurveyAnswerTimes, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions,
-                                                               metaSubjectOrder, metaFeatureNames, metaDatasetNames, submodel=submodel, loadSubmodelDate=loadSubmodelDate, testSplitRatio=testSplitRatio, metaTraining=True, random_state=42)
+                                                               metaSubjectOrder, metaFeatureNames, metaDatasetNames, submodel=submodel, loadSubmodelDate=loadSubmodelDate, testSplitRatio=testSplitRatio, random_state=42)
         # Compile the final modules.
         allModels, allDataLoaders = self.compileModels(metaRawFeatureIntervalTimes=[allRawFeatureIntervalTimes], metaRawFeatureIntervals=[allRawFeatureIntervals], metaSurveyAnswerTimes=[surveyAnswerTimes], metaSurveyAnswersList=[surveyAnswersList],
                                                        metaSurveyQuestions=[surveyQuestions], metaActivityLabels=[activityLabels], metaActivityNames=[activityNames], metaNumQuestionOptions=[numQuestionOptions], metaSubjectOrder=[subjectOrder],
-                                                       metaFeatureNames=[featureNames], metaDatasetNames=datasetNames, submodel=submodel, loadSubmodelDate=loadSubmodelDate, testSplitRatio=testSplitRatio, metaTraining=False, random_state=42)
+                                                       metaFeatureNames=[featureNames], metaDatasetNames=datasetNames, submodel=submodel, loadSubmodelDate=loadSubmodelDate, testSplitRatio=testSplitRatio, random_state=42)
 
         return allModels, allDataLoaders, allMetaModels, allMetadataLoaders, metaDatasetNames
 
     def compileModels(self, metaRawFeatureIntervalTimes, metaRawFeatureIntervals, metaSurveyAnswerTimes, metaSurveyAnswersList, metaSurveyQuestions, metaActivityLabels, metaActivityNames, metaNumQuestionOptions,
-                      metaSubjectOrder, metaFeatureNames, metaDatasetNames, submodel, loadSubmodelDate, testSplitRatio, metaTraining, random_state=42):
+                      metaSubjectOrder, metaFeatureNames, metaDatasetNames, submodel, loadSubmodelDate, testSplitRatio, random_state=42):
         # Initialize relevant holders.
+        print(f"\nSplitting the data into meta-models.")
         allModelPipelines, lossDataHolders, allDataLoaders = [], [], []
-
-        # Specify model parameters
-        loadSubmodelDate, loadSubmodelEpochs, loadSubmodel = self.modelParameters.getModelInfo(submodel, loadSubmodelDate)
-        print(f"\nSplitting the data into {'meta-' if metaTraining else ''}models:")
 
         # For each meta-information collected.
         for metadataInd in range(len(metaRawFeatureIntervalTimes)):
@@ -286,6 +283,6 @@ class compileModelData(compileModelDataHelpers):
                   f"for {numSignals} signals with {round(numExperiments/batch_size, 3)} batches of {batch_size} experiments")
 
         # Load in the previous model weights and attributes.
-        self.modelMigration.loadModels(allModelPipelines, loadSubmodel, loadSubmodelDate, loadSubmodelEpochs, metaTraining=True, loadModelAttributes=True, loadModelWeights=True)
+        self.modelMigration.loadModels(allModelPipelines, submodel, loadSubmodelDate, loadSubmodelEpochs=-1, loadModelAttributes=True, loadModelWeights=True)
 
         return allModelPipelines, allDataLoaders
