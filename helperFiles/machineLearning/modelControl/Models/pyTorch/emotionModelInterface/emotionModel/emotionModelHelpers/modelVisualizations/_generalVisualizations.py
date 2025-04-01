@@ -124,7 +124,6 @@ class generalVisualizations(globalPlottingProtocols):
             # Plot the training losses.
             ax.errorbar(x=np.arange(len(trainingLoss)), y=trainingLoss, yerr=trainingStandardError, color=self.darkColors[modelInd], linewidth=1)
             ax.plot(modelTrainingLosses, color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
-            ax.set_xticks(range(1 if profileFlag else 0, numEpochs + (1 if profileFlag else 0)))  # Ticks from 1 to 5
 
             if testingLosses is not None:
                 modelTestingLosses = np.asarray(testingLosses[modelInd])
