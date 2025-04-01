@@ -51,15 +51,16 @@ class modelVisualizations(globalPlottingProtocols):
             if self.accelerator.is_local_main_process:
                 specificModels = [modelPipeline.model.specificSignalEncoderModel for modelPipeline in allModelPipelines]  # Dim: numModels
                 datasetNames = [modelPipeline.model.datasetName for modelPipeline in allModelPipelines]  # Dim: numModels
+                numEpochs = allModelPipelines[0].getTrainingEpoch(submodel)  # Dim: numModels
 
                 # Plot reconstruction loss for the signal encoder.
                 self.generalViz.plotTrainingLosses(trainingLosses=[specificModel.trainingLosses_signalReconstruction for specificModel in specificModels],
-                                                   testingLosses=[specificModel.testingLosses_signalReconstruction for specificModel in specificModels],
+                                                   testingLosses=[specificModel.testingLosses_signalReconstruction for specificModel in specificModels], numEpochs=numEpochs,
                                                    lossLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal encoder convergence losses")
 
                 # Plot the losses during few-shot retraining the profile.
                 self.generalViz.plotTrainingLosses(trainingLosses=[np.nanmean(specificModel.profileModel.retrainingProfileLosses, axis=1) for specificModel in specificModels], testingLosses=None,
-                                                   lossLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal encoder profile convergence losses")
+                                                   numEpochs=numEpochs, lossLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal encoder profile convergence losses")
 
                 freeParamInformation = np.asarray([modelPipeline.model.getFreeParamsFullPassPath()[1:] for modelPipeline in allModelPipelines])
                 moduleNames, maxFreeParamsPath = freeParamInformation[:, 0], freeParamInformation[:, 1].astype(int)  # numFreeParamsPath: numModuleLayers, numSignals, numParams=1

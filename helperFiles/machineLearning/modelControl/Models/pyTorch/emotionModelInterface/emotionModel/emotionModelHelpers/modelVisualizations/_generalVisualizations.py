@@ -103,13 +103,13 @@ class generalVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=None, baseSaveFigureName=f"{emotionName}.pdf", fig=fig, clearFigure=True, showPlot=False)
         else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
-    def plotTrainingLosses(self, trainingLosses, testingLosses, lossLabels, saveFigureLocation="", plotTitle="Model Convergence Loss", logY=True):
+    def plotTrainingLosses(self, trainingLosses, testingLosses, lossLabels, numEpochs, saveFigureLocation="", plotTitle="Model Convergence Loss", logY=True):
         # Assert the validity of the input data.
         assert len(trainingLosses) == len(lossLabels), "Number of loss labels must match the number of loss indices."
         if len(trainingLosses[0]) == 0: return None
-        numModels, numEpochs = len(trainingLosses), len(trainingLosses[0])
-        fig, ax = plt.subplots(figsize=(6.4, 4.8))
         profileFlag = 'profile' in plotTitle.lower()
+        fig, ax = plt.subplots(figsize=(6.4, 4.8))
+        numModels = len(trainingLosses)
 
         # Plot the average losses.
         for modelInd in range(numModels):
