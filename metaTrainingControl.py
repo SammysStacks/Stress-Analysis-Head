@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
     # General model parameters.
     trainingDate = "2025-03-31 shared-2"  # The current date we are training the model. Unique identifier of this training set.
-    plotAllEpochs = True  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
+    plotAllEpochs = False  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
     validationRun = False  # Whether to train new datasets from the old model.
     testSplitRatio = 0.1  # The percentage of testing points.
 
@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
     # Add arguments for the health profile.
     parser.add_argument('--initialProfileAmp', type=float, default=0.01, help='The limits for profile initialization. Should be near zero')
-    parser.add_argument('--encodedDimension', type=int, default=512, help='The dimension of the health profile and all signals.')
+    parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the health profile and all signals.')
     parser.add_argument('--numProfileShots', type=int, default=16, help='The epochs for profile training: [16, 32]')
     
     # Add arguments for the neural operator.
@@ -82,9 +82,9 @@ if __name__ == "__main__":
     # ----------------------- Training Parameters ----------------------- #
 
     # Signal encoder learning rates.
-    parser.add_argument('--profileLR', type=float, default=0.005, help='The learning rate of the profile')
+    parser.add_argument('--profileLR', type=float, default=0.01, help='The learning rate of the profile')
     parser.add_argument('--physGenLR', type=float, default=4e-4, help='The learning rate of the profile generation (CNNs)')
-    parser.add_argument('--reversibleLR', type=float, default=0.05, help='The learning rate of the Lie manifold angles (degrees)')
+    parser.add_argument('--reversibleLR', type=float, default=0.067, help='The learning rate of the Lie manifold angles (degrees)')
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--momentum_decay', type=float, default=0.001, help='Momentum decay for the optimizer')
