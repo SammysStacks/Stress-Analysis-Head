@@ -36,8 +36,8 @@ class emotionModelHead(nn.Module):
 
         # Signal encoder parameters.
         self.neuralOperatorParameters = modelConstants.userInputParams['neuralOperatorParameters']   # The parameters for the neural operator.
-        self.numSpecificEncoderLayers = modelConstants.userInputParams['numLayers']  # The number of specific layers.
-        self.numSharedEncoderLayers = modelConstants.userInputParams['numLayers']  # The number of shared layers.
+        self.numSpecificEncoderLayers = modelConstants.userInputParams['numSpecificEncoderLayers']  # The number of specific layers.
+        self.numSharedEncoderLayers = modelConstants.userInputParams['numSharedEncoderLayers']  # The number of shared layers.
 
         # Emotion and activity parameters.
         self.numActivityModelLayers = modelConstants.userInputParams['numActivityModelLayers']  # The number of basic emotions (basis states of emotions).
@@ -145,7 +145,7 @@ class emotionModelHead(nn.Module):
             elif isinstance(module, nn.Identity) and 'FrequenciesWeights' in name:
                 numDecompositions = waveletNeuralHelpers.max_decompositions(sequenceLength=modelConstants.userInputParams['encodedDimension'], waveletType=modelConstants.userInputParams['neuralOperatorParameters']['wavelet']['waveletType'], minWaveletDim=modelConstants.userInputParams['minWaveletDim']).item()
                 decompositionLevel = int(name.split('highFrequenciesWeights.')[-1]) + 1 if 'highFrequenciesWeights' in name else numDecompositions - 1
-                numLayers = modelConstants.userInputParams['numLayers' if 'shared' in name else 'numLayers']
+                numLayers = modelConstants.userInputParams['numSharedEncoderLayers' if 'shared' in name else 'numSpecificEncoderLayers']
                 sequenceLength = self.encodedDimension // 2**decompositionLevel
                 numSignals = self.numSignals if 'specific' in name else 1
 
@@ -166,7 +166,7 @@ class emotionModelHead(nn.Module):
                 for _ in range(len(xs)): moduleNames.append(self.compileModuleName(name))
 
             elif isinstance(module, nn.Identity) and 'FrequenciesWeights' in name:
-                numLayers = modelConstants.userInputParams['numLayers' if 'shared' in name else 'numLayers']
+                numLayers = modelConstants.userInputParams['numSharedEncoderLayers' if 'shared' in name else 'numSpecificEncoderLayers']
                 x = np.linspace(-1.5, stop=1.5, num=100); y = x
 
                 for _ in range(numLayers): activationCurvePath.append([x, y])
@@ -185,7 +185,7 @@ class emotionModelHead(nn.Module):
                 for _ in allActivationParams: moduleNames.append(self.compileModuleName(name))
 
             elif isinstance(module, nn.Identity) and 'FrequenciesWeights' in name:
-                numLayers = modelConstants.userInputParams['numLayers' if 'shared' in name else 'numLayers']
+                numLayers = modelConstants.userInputParams['numSharedEncoderLayers' if 'shared' in name else 'numSpecificEncoderLayers']
                 for _ in range(numLayers): moduleNames.append(self.compileModuleName(name))
                 for _ in range(numLayers): activationParamsPath.append([0.5, 1, 1])
         assert len(activationParamsPath) != 0
@@ -205,7 +205,7 @@ class emotionModelHead(nn.Module):
                 numFreeParamsPath.extend(allNumFreeParams)  # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
 
             elif isinstance(module, nn.Identity) and 'FrequenciesWeights' in name:
-                numLayers = modelConstants.userInputParams['numLayers' if 'shared' in name else 'numLayers']
+                numLayers = modelConstants.userInputParams['numSharedEncoderLayers' if 'shared' in name else 'numSpecificEncoderLayers']
                 numSignals = self.numSignals if 'specific' in name else 1
 
                 # Compile the free parameters.

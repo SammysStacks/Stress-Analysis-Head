@@ -65,8 +65,8 @@ if __name__ == "__main__":
     parser.add_argument('--numIgnoredSharedHF', type=int, default=1, help='The number of ignored high frequency components: [0, 1, 2]')
 
     # Add arguments for the signal encoder architecture.
-    parser.add_argument('--numLayers', type=int, default=1, help='The number of layers in the model: [1, 2]')
-    parser.add_argument('--numLayers', type=int, default=7, help='The number of layers in the model: [2, 10]')
+    parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model: [1, 2]')
+    parser.add_argument('--numSharedEncoderLayers', type=int, default=7, help='The number of layers in the model: [2, 10]')
 
     # Add arguments for observational learning.
     parser.add_argument('--maxAngularThreshold', type=float, default=45, help='The larger rotational threshold in (degrees)')

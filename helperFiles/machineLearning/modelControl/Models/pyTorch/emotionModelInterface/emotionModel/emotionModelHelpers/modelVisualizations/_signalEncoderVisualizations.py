@@ -157,8 +157,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     def plotSignalEncodingStatePath(self, relativeTimes, compiledSignalEncoderLayerStates, batchInd, signalNames, epoch, saveFigureLocation, plotTitle):
         numLayers, numExperiments, numSignals, encodedDimension = compiledSignalEncoderLayerStates.shape
-        numSpecificEncoderLayers = modelConstants.userInputParams['numLayers']
-        numSharedEncoderLayers = modelConstants.userInputParams['numLayers']
+        numSpecificEncoderLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
+        numSharedEncoderLayers = modelConstants.userInputParams['numSharedEncoderLayers']
         relativeTimesExtent = (relativeTimes.min(), relativeTimes.max(), 0, numLayers)
         hiddenLayers = 1
 
@@ -203,8 +203,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Get the angular thresholds.
         minAngularThreshold = reversibleLieLayer.getMinAngularThreshold(epoch)
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
-        numSpecificLayers = modelConstants.userInputParams['numLayers']
-        numSharedLayers = modelConstants.userInputParams['numLayers']
+        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
+        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers']
         center = (0, 0)
 
         for layerInd in range(len(givensAnglesPath)):
@@ -285,8 +285,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Get the angular thresholds.
         minAngularThreshold = reversibleLieLayer.getMinAngularThreshold(epoch)
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
-        numSpecificLayers = modelConstants.userInputParams['numLayers']
-        numSharedLayers = modelConstants.userInputParams['numLayers']
+        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
+        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers']
         histogramPlots = []
 
         for layerInd in range(len(givensAnglesPath)):
@@ -369,8 +369,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Get the angular thresholds.
         minAngularThreshold = reversibleLieLayer.getMinAngularThreshold(epoch)
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
-        numSpecificLayers = modelConstants.userInputParams['numLayers']
-        numSharedLayers = modelConstants.userInputParams['numLayers']
+        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
+        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers']
 
         for layerInd in range(len(givensAnglesPath)):
             moduleName = reversibleModuleNames[layerInd].lower()
@@ -442,8 +442,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
         # Get the angular thresholds.
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
-        numSpecificLayers = modelConstants.userInputParams['numLayers']
-        numSharedLayers = modelConstants.userInputParams['numLayers']
+        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
+        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers']
 
         for layerInd in range(len(givensAnglesPath)):
             moduleName = reversibleModuleNames[layerInd].lower()
@@ -498,7 +498,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         sharedValues, specificValues = [], []
 
         # Get the layer information.
-        numSpecificLayers, numSharedLayers = modelConstants.userInputParams['numLayers'], modelConstants.userInputParams['numLayers']
+        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
+        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers']
         numSharedScalarSections = 1 + int(math.log2(modelConstants.userInputParams['encodedDimension'] // modelConstants.userInputParams['minWaveletDim']))
         numSpecificScalarSections = 2
 
@@ -663,8 +664,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         numLow, numSpecificHigh, numSharedHigh = 0, 0, 0
 
         # Get the parameters.
-        numSpecificLayers = modelConstants.userInputParams['numLayers']
-        numSharedLayers = modelConstants.userInputParams['numLayers']
+        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
+        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers']
 
         for layerInd in range(numModuleLayers):
             moduleName = moduleNames[layerInd].lower()

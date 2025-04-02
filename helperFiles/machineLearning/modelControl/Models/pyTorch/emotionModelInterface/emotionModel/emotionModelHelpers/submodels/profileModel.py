@@ -37,7 +37,7 @@ class profileModel(emotionModelWeights):
         with torch.no_grad():
             # Pre-allocate each parameter.
             numExperiments, numSignals, encodedDimension = metaLearningData.shape
-            numSpecificEncoderLayers, numSharedEncoderLayers = modelConstants.userInputParams['numLayers'], modelConstants.userInputParams['numLayers']
+            numSpecificEncoderLayers, numSharedEncoderLayers = modelConstants.userInputParams['numSpecificEncoderLayers'], modelConstants.userInputParams['numSharedEncoderLayers']
             self.compiledLayerStates = np.zeros(shape=(numSpecificEncoderLayers + numSharedEncoderLayers + 1, numExperiments, numSignals, encodedDimension), dtype=np.float16)
             self.compiledLayerStateInd = 0
 
