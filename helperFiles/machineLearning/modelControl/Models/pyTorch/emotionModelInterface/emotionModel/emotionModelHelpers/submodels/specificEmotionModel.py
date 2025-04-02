@@ -39,8 +39,8 @@ class specificEmotionModel(neuralOperatorInterface):
 
     def resetModel(self):
         # Emotion loss holders.
-        self.trainingLosses_emotionPrediction = []  # List of list of prediction training losses. Dim: numEpochs
-        self.testingLosses_emotionPrediction = []  # List of list of prediction testing losses. Dim: numEpochs
+        self.trainingLosses_emotionPrediction = []  # List of list of prediction training losses. Dim: loadSubmodelEpochs
+        self.testingLosses_emotionPrediction = []  # List of list of prediction testing losses. Dim: loadSubmodelEpochs
 
     def addLayer(self):
         # Create the layers.

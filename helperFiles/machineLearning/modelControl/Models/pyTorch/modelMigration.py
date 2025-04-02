@@ -183,7 +183,7 @@ class modelMigration:
             highestEpoch = max(epochNumbers)
             numEpochs = highestEpoch  # Use the highest epoch number.
 
-        # Update modelFilePath based on potentially updated numEpochs
+        # Update modelFilePath based on potentially updated loadSubmodelEpochs
         modelFilePath = modelFolderPath + f"Epoch {numEpochs}/"
 
         # Compile the filename to save/load the model.
@@ -239,22 +239,22 @@ class modelMigration:
 
     # ------------------------ Loading Model Methods ----------------------- #
     
-    def loadModels(self, allModelPipelines, submodel, trainingDate, numEpochs, loadModelAttributes=True, loadModelWeights=True):
+    def loadModels(self, allModelPipelines, submodel, trainingDate, loadSubmodelEpochs, loadModelAttributes=True, loadModelWeights=True):
         print("\nLoading in previous weights and attributes")
 
         # Iterate over each model.
         for modelPipeline in allModelPipelines:
-            self._loadModel(modelPipeline.model, modelPipeline.datasetName, submodel, trainingDate, numEpochs, loadModelAttributes, loadModelWeights)
+            self._loadModel(modelPipeline.model, modelPipeline.datasetName, submodel, trainingDate, loadSubmodelEpochs, loadModelAttributes, loadModelWeights)
 
-    def _loadModel(self, model, datasetName, submodel, trainingDate, numEpochs, loadModelAttributes=True, loadModelWeights=True):
+    def _loadModel(self, model, datasetName, submodel, trainingDate, loadSubmodelEpochs, loadModelAttributes=True, loadModelWeights=True):
         # Read in the previous signal encoder model when meta-training emotions.
         if submodel == modelConstants.emotionModel and not self.validationRun:
             submodel = modelConstants.signalEncoderModel; validationRun = True
         else: validationRun = self.validationRun
 
         # Construct base names for loading the model and attributes
-        modelBaseName = self._compileModelBaseName(submodel, datasetName, trainingDate, numEpochs, validationRun)
-        sharedModelBaseName = self._compileModelBaseName(submodel, self.sharedWeightsName, trainingDate, numEpochs, validationRun)
+        modelBaseName = self._compileModelBaseName(submodel, datasetName, trainingDate, loadSubmodelEpochs, validationRun)
+        sharedModelBaseName = self._compileModelBaseName(submodel, self.sharedWeightsName, trainingDate, loadSubmodelEpochs, validationRun)
 
         # Load in the pytorch models.
         self._loadPyTorchModel(model, modelBaseName, loadModelAttributes, loadModelWeights, submodel)  # Load dataset-specific parameters

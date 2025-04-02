@@ -48,7 +48,7 @@ class signalEncoderPlots(trainingPlots):
         return smoothed_losses
 
     def getSmoothedFinalLosses(self, losses, window_length=5):
-        """ Expected format: (numTimeWindows, numEpochs) """
+        """ Expected format: (numTimeWindows, loadSubmodelEpochs) """
         # Initialize an array to store the minimum loss for each time window.
         finalLosses = np.zeros(len(losses))
 

@@ -36,8 +36,8 @@ class specificActivityModel(neuralOperatorInterface):
 
     def resetModel(self):
         # Activity loss holders.
-        self.trainingLosses_activityPrediction = []  # List of list of prediction testing losses. Dim: numEpochs
-        self.testingLosses_activityPrediction = []  # List of list of prediction testing losses. Dim: numEpochs
+        self.trainingLosses_activityPrediction = []  # List of list of prediction testing losses. Dim: loadSubmodelEpochs
+        self.testingLosses_activityPrediction = []  # List of list of prediction testing losses. Dim: loadSubmodelEpochs
 
     def addLayer(self):
         # Create the layers.

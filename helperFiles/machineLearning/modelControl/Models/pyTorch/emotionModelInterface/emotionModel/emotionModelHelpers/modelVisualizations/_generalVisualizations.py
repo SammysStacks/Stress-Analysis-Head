@@ -114,7 +114,7 @@ class generalVisualizations(globalPlottingProtocols):
         # Plot the average losses.
         for modelInd in range(numModels):
             modelTrainingLosses = np.asarray(trainingLosses[modelInd])
-            # modelTrainingLosses: numEpochs, numSignals
+            # modelTrainingLosses: loadSubmodelEpochs, numSignals
 
             # Calculate the average and standard deviation of the training losses.
             N = np.count_nonzero(~np.isnan(modelTrainingLosses), axis=1)
@@ -161,7 +161,7 @@ class generalVisualizations(globalPlottingProtocols):
         activationParamsPaths = np.asarray(activationParamsPaths)
         if len(activationParamsPaths.shape) == 2: return "No data to plot."
 
-        # activationParamsPaths: numModels, numEpochs, numModuleLayers, numParams
+        # activationParamsPaths: numModels, loadSubmodelEpochs, numModuleLayers, numParams
         numModels, numEpochs, numModuleLayers, numActivationParams = activationParamsPaths.shape
         nRows, nCols = min(1, numActivationParams // 3), numActivationParams
         numParams = len(paramNames)
@@ -212,7 +212,7 @@ class generalVisualizations(globalPlottingProtocols):
         activationParamsPaths = np.asarray(activationParamsPaths)
         if len(activationParamsPaths.shape) == 2: return "No data to plot."
 
-        # activationParamsPaths: numModels, numEpochs, numModuleLayers, numParams
+        # activationParamsPaths: numModels, loadSubmodelEpochs, numModuleLayers, numParams
         numModels, numEpochs, numModuleLayers, numActivationParams = activationParamsPaths.shape
         nRows, nCols = self.getRowsCols(combineSharedLayers=True)
         numParams = len(paramNames)
@@ -284,7 +284,7 @@ class generalVisualizations(globalPlottingProtocols):
             else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
     def plotFreeParamFlow(self, numFreeModelParams, maxFreeParamsPath, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
-        # normalizationFactorsPaths: numModels, numEpochs, numModuleLayers, *numSignals*, numParams=1
+        # normalizationFactorsPaths: numModels, loadSubmodelEpochs, numModuleLayers, *numSignals*, numParams=1
         # maxFreeParamsPath: numModels, numModuleLayers
         numModels, numModuleLayers = np.asarray(maxFreeParamsPath).shape
         nRows, nCols = self.getRowsCols(combineSharedLayers=True)
@@ -371,7 +371,7 @@ class generalVisualizations(globalPlottingProtocols):
             else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
     def plotNormalizationFactorFlow(self, normalizationFactorsPaths, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
-        # normalizationFactorsPaths: numModels, numEpochs, numModuleLayers, *numSignals*, numParams=1
+        # normalizationFactorsPaths: numModels, loadSubmodelEpochs, numModuleLayers, *numSignals*, numParams=1
         try: numModels, numEpochs, numModuleLayers = len(normalizationFactorsPaths), len(normalizationFactorsPaths[0]), len(normalizationFactorsPaths[0][0])
         except Exception as e: print("plotAngularFeaturesFlow:", e); return None
         nRows, nCols = self.getRowsCols(combineSharedLayers=True)
@@ -444,7 +444,7 @@ class generalVisualizations(globalPlottingProtocols):
             else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
     def plotGivensFeaturesPath(self, givensAnglesFeaturesPaths, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
-        # givensAnglesFeaturesPaths: numModels, numEpochs, numModuleLayers, numFeatures=5, numFeatureValues*
+        # givensAnglesFeaturesPaths: numModels, loadSubmodelEpochs, numModuleLayers, numFeatures=5, numFeatureValues*
         try: numModels, numEpochs, numModuleLayers = len(givensAnglesFeaturesPaths), len(givensAnglesFeaturesPaths[0]), len(givensAnglesFeaturesPaths[0][0])
         except Exception as e: print("plotAngularFeaturesFlow:", e); return None
         nRows, nCols = self.getRowsCols(combineSharedLayers=True)
@@ -487,7 +487,7 @@ class generalVisualizations(globalPlottingProtocols):
 
                     plottingParams = np.zeros((numEpochs, len(givensAnglesFeaturesPaths[modelInd][0][layerInd][paramInd])))
                     for epochInd in range(numEpochs): plottingParams[epochInd, :] = givensAnglesFeaturesPaths[modelInd][epochInd][layerInd][paramInd]
-                    # plottingParams: numEpochs, numFeatureValues
+                    # plottingParams: loadSubmodelEpochs, numFeatureValues
 
                     # Plot the training losses.
                     if 'specific' in moduleName:

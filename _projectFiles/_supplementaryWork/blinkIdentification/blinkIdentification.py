@@ -221,7 +221,7 @@ if __name__ == "__main__":
                                                                                         standardizedFeatures)
         # Returns performance for each combination of features
         # modelScores, modelSTDs, featureNames_Combinations = performMachineLearning.analyzeFeatureCombinations(modelInd, possibleFeatures_Cull, allFinalLabels, possibleFeatures, numFeaturesCombine, subjectOrder, standardizedFeatures, saveData = True, saveExcelName = saveExcelName, printUpdateAfterTrial = 500, categorical = {0: featureLabelOptions[0], 2: featureLabelOptions[2]}, imbalancedData = True)
-        #     def analyzeFeatureCombinations(self, modelInd, featureData, featureLabels, featureNames, numFeatures_perCombination, numEpochs = 10, numModelsTrack = 500,
+        #     def analyzeFeatureCombinations(self, modelInd, featureData, featureLabels, featureNames, numFeatures_perCombination, loadSubmodelEpochs = 10, numModelsTrack = 500,
         #                           saveData = True, imbalancedData = False, saveExcelName = "Feature Combination Accuracy.xlsx", printUpdateAfterTrial = 2000):
         modelScores, modelSTDs, featureNames_Combinations = performMachineLearning.analyzeFeatureCombinations(modelInd,
                                                                                                               possibleFeatures_Cull,
