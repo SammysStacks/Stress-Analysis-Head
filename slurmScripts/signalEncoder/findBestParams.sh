@@ -35,20 +35,20 @@ lrs_profileGen=('4e-4') # x <= 1e-4;
 lrs_reversible=(0.05)  # [0.025, 0.075]
 
 # Angular reference states.
-minAngularThresholds=(2.5)
+minAngularThresholds=(2.5 5)
 maxAngularThresholds=(45)
 
 # Binary reference states.
 numSpecificEncoderLayers_arr=(1)
-numSharedEncoderLayers_arr=(7 8 9)  # [4, 10]; Best: 5 and 7
+numSharedEncoderLayers_arr=(7 8 9 4 5 6)  # [4, 10]; Best: 5 and 7
 
 # Profile parameters.
-numProfileShots_arr=(24 32)  # (8, [16, 24], 32)
+numProfileShots_arr=(32)  # (8, [16, 24], 32)
 encodedDimensions_arr=(512 256)  # [128, 256, 512]
 
 # Wavelet states.
 waveletTypes_arr=('bior3.1')
-numIgnoredSharedHFs=(1)
+numIgnoredSharedHFs=(0 1)
 
 for numIgnoredSharedHF in "${numIgnoredSharedHFs[@]}"
 do
