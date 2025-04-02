@@ -1,54 +1,40 @@
-
-from torch import nn
-
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.neuralOperators.neuralOperatorInterface import neuralOperatorInterface
 
 
 class specificActivityModel(neuralOperatorInterface):
 
-    def __init__(self, numActivities, encodedDimension, numModelLayers, numActivityChannels, numSpecificEncoderLayers, operatorType, learningProtocol, neuralOperatorParameters):
-        super(specificActivityModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numLayers=1, numInputSignals=numActivityChannels, numOutputSignals=numActivityChannels, addBiasTerm=False)
+    def __init__(self, operatorType, encodedDimension, activityNames, numLayers, neuralOperatorParameters):
+        super(specificActivityModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numLayers=numLayers, numInputSignals=1, numOutputSignals=1, addBiasTerm=False)
         # General model parameters.
         self.neuralOperatorParameters = neuralOperatorParameters  # The parameters for the neural operator.
-        self.numActivityChannels = numActivityChannels  # The number of activity channels to encode.
-        self.learningProtocol = learningProtocol  # The learning protocol for the model.
-        self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
-        self.numModelLayers = numModelLayers  # The number of model layers to use.
-        self.numActivities = numActivities  # The number of signals to encode.
-        self.numSpecificEncoderLayers = numSpecificEncoderLayers  # The golden ratio for the model.
+        self.numActivities = len(activityNames)  # The number of activities.
+        self.activityNames = activityNames  # The names of the activities.
+        self.numLayers = numLayers  # The number of layers in the model.
+
+        # Set the wavelet parameters.
+        self.neuralOperatorParameters['wavelet']['minWaveletDim'] = encodedDimension // 2
 
         # The neural layers for the signal encoder.
-        self.spatialLayers, self.neuralLayers = nn.ModuleList(), nn.ModuleList()
-        for layerInd in range(1 + self.numModelLayers // self.numSpecificEncoderLayers): self.addLayer()
-
-        # Assert the validity of the input parameters.
-        assert self.numModelLayers % self.numSpecificEncoderLayers == 0, "The number of model layers must be divisible by the golden ratio."
-        assert self.encodedDimension % 2 == 0, "The encoded dimension must be divisible by 2."
-        assert 0 < self.encodedDimension, "The encoded dimension must be greater than 0."
+        self.neuralLayers = self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True)
 
         # Initialize loss holders.
-        self.trainingLosses_activityPrediction = None
-        self.testingLosses_activityPrediction = None
+        self.trainingLosses_signalReconstruction, self.testingLosses_signalReconstruction = None, None
+        self.givensAnglesFeaturesPath, self.normalizationFactorsPath = None, None
+        self.activationParamsPath, self.numFreeParams = None, None
         self.resetModel()
 
-    def forward(self):
-        raise "You cannot call the dataset-specific signal encoder module."
+    def forward(self): raise "You cannot call the dataset-specific signal encoder module."
 
     def resetModel(self):
-        # Activity loss holders.
-        self.trainingLosses_activityPrediction = []  # List of list of prediction testing losses. Dim: loadSubmodelEpochs
-        self.testingLosses_activityPrediction = []  # List of list of prediction testing losses. Dim: loadSubmodelEpochs
+        # Signal encoder reconstruction holders.
+        self.trainingLosses_signalReconstruction = []  # List of list of data reconstruction training losses. Dim: loadSubmodelEpochs, numTrainingSignals
+        self.testingLosses_signalReconstruction = []  # List of list of data reconstruction testing losses. Dim: loadSubmodelEpochs, numTestingSignals
+        self.givensAnglesFeaturesPath = []  # List of Givens angles. Dim: loadSubmodelEpochs, numModuleLayers, *numSignals*, numParams
+        self.activationParamsPath = []  # List of activation bounds. Dim: loadSubmodelEpochs, numActivations, numActivationParams
+        self.normalizationFactorsPath = []  # List of Givens angles. Dim: loadSubmodelEpochs, numModuleLayers, *numSignals*
+        self.numFreeParams = []  # List of the number of free parameters. Dim: loadSubmodelEpochs, numModuleLayers, *numSignals*
 
-    def addLayer(self):
-        # Create the layers.
-        self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=False))
-        if self.learningProtocol == 'FC': self.spatialLayers.append(self.postSpatialLayerFC(sequenceLength=self.encodedDimension))
-        elif self.learningProtocol == 'CNN': self.spatialLayers.append(self.postSpatialLayerCNN(numSignals=self.numSignals))
-        else: raise "The learning protocol is not yet implemented."
-
-    def learningInterface(self, layerInd, signalData, compilingFunction):
+    def learningInterface(self, signalData):
         # Apply the neural operator layer with activation.
-        signalData = self.neuralLayers[layerInd](signalData)
-        signalData = self.spatialLayers[layerInd](signalData)
-
-        return signalData
+        return self.neuralLayers(signalData).contiguous()

@@ -20,21 +20,21 @@ class emotionModelHead(nn.Module):
     def __init__(self, submodel, emotionNames, activityNames, featureNames, numSubjects, datasetName, numExperiments):
         super(emotionModelHead, self).__init__()
         # General model parameters.
+        self.hpcFlag = 'HPC' in modelConstants.userInputParams['deviceListed']  # Flag to determine if the model is running on an HPC.
         self.numActivities = len(activityNames)  # The number of activities to predict.
         self.numEmotions = len(emotionNames)  # The number of emotions to predict.
+        self.numSignals = len(featureNames)  # The number of signals in the model.
         self.activityNames = activityNames  # The names of each activity we are predicting. Dim: numActivities
         self.featureNames = featureNames  # The names of each feature/signal in the model. Dim: numSignals
         self.emotionNames = emotionNames  # The names of each emotion we are predicting. Dim: numEmotions
         self.numSubjects = numSubjects  # The maximum number of subjects the model is training on.
         self.datasetName = datasetName  # The name of the dataset the model is training on.
-        self.numSignals = len(featureNames)  # The number of signals in the model.
-        self.hpcFlag = 'HPC' in modelConstants.userInputParams['deviceListed']  # Flag to determine if the model is running on an HPC.
 
         # General parameters.
         self.learningProtocol = modelConstants.userInputParams['learningProtocol']   # The learning protocol for the model.
         self.encodedDimension = modelConstants.userInputParams['encodedDimension']  # The dimension of the encoded signal.
         self.operatorType = modelConstants.userInputParams['operatorType']  # The type of operator to use for the neural operator.
-        self.debugging = True
+        self.debugging = True and self.hpcFlag
 
         # Signal encoder parameters.
         self.neuralOperatorParameters = modelConstants.userInputParams['neuralOperatorParameters']   # The parameters for the neural operator.
@@ -44,7 +44,6 @@ class emotionModelHead(nn.Module):
         # Emotion and activity parameters.
         self.numActivityModelLayers = modelConstants.userInputParams['numActivityModelLayers']  # The number of basic emotions (basis states of emotions).
         self.numEmotionModelLayers = modelConstants.userInputParams['numEmotionModelLayers']  # The number of basic emotions (basis states of emotions).
-        self.numActivityChannels = modelConstants.userInputParams['numActivityChannels']  # The number of activity channels to predict.
         self.numBasicEmotions = modelConstants.userInputParams['numBasicEmotions']  # The number of basic emotions (basis states of emotions).
 
         # Setup holder for the model's training information
@@ -56,7 +55,6 @@ class emotionModelHead(nn.Module):
         self.specificSignalEncoderModel = specificSignalEncoderModel(
             neuralOperatorParameters=self.neuralOperatorParameters,
             numSpecificEncoderLayers=self.numSpecificEncoderLayers,
-            learningProtocol=self.learningProtocol,
             encodedDimension=self.encodedDimension,
             featureNames=self.featureNames,
             operatorType=self.operatorType,
@@ -75,48 +73,38 @@ class emotionModelHead(nn.Module):
         # -------------------- Final Emotion Prediction -------------------- #
 
         if submodel == modelConstants.emotionModel:
-            self.specificEmotionModel = specificEmotionModel(
-                neuralOperatorParameters=self.neuralOperatorParameters,
-                learningProtocol=self.learningProtocol,
-                encodedDimension=self.encodedDimension,
-                numBasicEmotions=self.numBasicEmotions,
-                numModelLayers=self.numEmotionModelLayers,
-                operatorType=self.operatorType,
-                numSpecificEncoderLayers=self.numSpecificEncoderLayers,
-                numEmotions=self.numEmotions,
-                numSubjects=self.numSubjects,
-
-            )
-
-            self.sharedEmotionModel = sharedEmotionModel(
-                neuralOperatorParameters=self.neuralOperatorParameters,
-                learningProtocol=self.learningProtocol,
-                encodedDimension=self.encodedDimension,
-                numBasicEmotions=self.numBasicEmotions,
-                numModelLayers=self.numEmotionModelLayers,
-                operatorType=self.operatorType,
-                numEmotions=self.numEmotions,
-            )
-
             self.specificActivityModel = specificActivityModel(
                 neuralOperatorParameters=self.neuralOperatorParameters,
-                learningProtocol=self.learningProtocol,
-                numActivityChannels=self.numActivityChannels,
                 encodedDimension=self.encodedDimension,
-                numModelLayers=self.numActivityModelLayers,
-                numActivities=self.numActivities,
+                activityNames=self.activityNames,
                 operatorType=self.operatorType,
-                numSpecificEncoderLayers=self.numSpecificEncoderLayers,
+                numLayers=1,
             )
 
             self.sharedActivityModel = sharedActivityModel(
                 neuralOperatorParameters=self.neuralOperatorParameters,
-                learningProtocol=self.learningProtocol,
-                numActivityChannels=self.numActivityChannels,
                 encodedDimension=self.encodedDimension,
-                numModelLayers=self.numActivityModelLayers,
+                numLayers=self.numActivityModelLayers,
                 operatorType=self.operatorType,
             )
+
+            # self.specificEmotionModel = specificEmotionModel(
+            #     neuralOperatorParameters=self.neuralOperatorParameters,
+            #     encodedDimension=self.encodedDimension,
+            #     emotionNames=self.emotionNames,
+            #     operatorType=self.operatorType,
+            #     numLayers=1,
+            # )
+            #
+            # self.sharedEmotionModel = sharedEmotionModel(
+            #     neuralOperatorParameters=self.neuralOperatorParameters,
+            #     numModelLayers=self.numEmotionModelLayers,
+            #     learningProtocol=self.learningProtocol,
+            #     encodedDimension=self.encodedDimension,
+            #     numBasicEmotions=self.numBasicEmotions,
+            #     operatorType=self.operatorType,
+            #     numEmotions=self.numEmotions,
+            # )
 
     # ------------------------- Model Getters ------------------------- #
 

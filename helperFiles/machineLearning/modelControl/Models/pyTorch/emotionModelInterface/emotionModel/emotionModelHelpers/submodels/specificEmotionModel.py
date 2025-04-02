@@ -1,53 +1,43 @@
-from torch import nn
-
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.neuralOperators.neuralOperatorInterface import neuralOperatorInterface
 
 
 class specificEmotionModel(neuralOperatorInterface):
 
-    def __init__(self, numSubjects, numBasicEmotions, encodedDimension, numEmotions, numModelLayers, numSpecificEncoderLayers, operatorType, learningProtocol, neuralOperatorParameters):
-        super(specificEmotionModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numLayers=1, numInputSignals=numBasicEmotions, numOutputSignals=numBasicEmotions, addBiasTerm=False)
+    def __init__(self, operatorType, encodedDimension, emotionNames, numLayers, neuralOperatorParameters):
+        super(specificEmotionModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numLayers=numLayers, numInputSignals=1, numOutputSignals=1, addBiasTerm=False)
         # General model parameters.
         self.neuralOperatorParameters = neuralOperatorParameters  # The parameters for the neural operator.
-        self.learningProtocol = learningProtocol  # The learning protocol for the model.
         self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
-        self.numBasicEmotions = numBasicEmotions  # The number of basic emotions to encode.
-        self.numModelLayers = numModelLayers  # The number of model layers to use.
-        self.numSpecificEncoderLayers = numSpecificEncoderLayers  # The golden ratio for the model.
-        self.numEmotions = numEmotions  # The number of signals to encode.
-        self.numSubjects = numSubjects  # The number of subjects to encode.
+        self.numEmotions = len(emotionNames)  # The number of emotions.
+        self.emotionNames = emotionNames  # The emotion labels.
+        self.numLayers = numLayers  # The number of layers in the model.
+
+        # Set the wavelet parameters.
+        self.neuralOperatorParameters['wavelet']['minWaveletDim'] = encodedDimension // 2
 
         # The neural layers for the signal encoder.
-        self.spatialLayers, self.neuralLayers = nn.ModuleList(), nn.ModuleList()
-        for layerInd in range(1 + self.numModelLayers // self.numSpecificEncoderLayers): self.addLayer()
-
-        # Initialize the basic emotion weight.
-        self.basicEmotionWeights = self.getSubjectSpecificBasicEmotionWeights(numBasicEmotions=numBasicEmotions, numSubjects=numSubjects)
-        
-        # Assert the validity of the input parameters.
-        assert self.numModelLayers % self.numSpecificEncoderLayers == 0, "The number of model layers must be divisible by the golden ratio."
-        assert self.encodedDimension % 2 == 0, "The encoded dimension must be divisible by 2."
-        assert 0 < self.encodedDimension, "The encoded dimension must be greater than 0."
+        self.neuralLayers = self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True)
 
         # Initialize loss holders.
-        self.trainingLosses_emotionPrediction = None
-        self.testingLosses_emotionPrediction = None
+        self.trainingLosses_signalReconstruction, self.testingLosses_signalReconstruction = None, None
+        self.givensAnglesFeaturesPath, self.normalizationFactorsPath = None, None
+        self.activationParamsPath, self.numFreeParams = None, None
         self.resetModel()
 
-    def forward(self):
-        raise "You cannot call the dataset-specific signal encoder module."
+    def forward(self): raise "You cannot call the dataset-specific signal encoder module."
 
     def resetModel(self):
-        # Emotion loss holders.
-        self.trainingLosses_emotionPrediction = []  # List of list of prediction training losses. Dim: loadSubmodelEpochs
-        self.testingLosses_emotionPrediction = []  # List of list of prediction testing losses. Dim: loadSubmodelEpochs
+        # Signal encoder reconstruction holders.
+        self.trainingLosses_signalReconstruction = []  # List of list of data reconstruction training losses. Dim: loadSubmodelEpochs, numTrainingSignals
+        self.testingLosses_signalReconstruction = []  # List of list of data reconstruction testing losses. Dim: loadSubmodelEpochs, numTestingSignals
+        self.givensAnglesFeaturesPath = []  # List of Givens angles. Dim: loadSubmodelEpochs, numModuleLayers, *numSignals*, numParams
+        self.activationParamsPath = []  # List of activation bounds. Dim: loadSubmodelEpochs, numActivations, numActivationParams
+        self.normalizationFactorsPath = []  # List of Givens angles. Dim: loadSubmodelEpochs, numModuleLayers, *numSignals*
+        self.numFreeParams = []  # List of the number of free parameters. Dim: loadSubmodelEpochs, numModuleLayers, *numSignals*
 
-    def addLayer(self):
-        # Create the layers.
-        self.neuralLayers.append(self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=False))
-        if self.learningProtocol == 'FC': self.spatialLayers.append(self.postSpatialLayerFC(sequenceLength=self.encodedDimension))
-        elif self.learningProtocol == 'CNN': self.spatialLayers.append(self.postSpatialLayerCNN(numSignals=self.numSignals))
-        else: raise "The learning protocol is not yet implemented."
+    def learningInterface(self, signalData):
+        # Apply the neural operator layer with activation.
+        return self.neuralLayers(signalData).contiguous()
 
     def calculateEmotionProfile(self, basicEmotionProfile, subjectInds):
         batchSize, numEmotions, numBasicEmotions, encodedDimension = basicEmotionProfile.size()
@@ -66,10 +56,3 @@ class specificEmotionModel(neuralOperatorInterface):
         # emotionProfile: batchSize, numEmotions, encodedDimension
 
         return emotionProfile
-
-    def learningInterface(self, layerInd, signalData, compilingFunction):
-        # Apply the neural operator layer with activation.
-        signalData = self.neuralLayers[layerInd](signalData)
-        signalData = self.spatialLayers[layerInd](signalData)
-
-        return signalData

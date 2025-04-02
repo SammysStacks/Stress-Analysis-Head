@@ -40,7 +40,7 @@ if __name__ == "__main__":
     # General model parameters.
     trainingDate = "2025-04-01"  # The current date we are training the model. Unique identifier of this training set.
     plotAllEpochs = False  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
-    validationRun = True  # Whether to train new datasets from the old model.
+    validationRun = False  # Whether to train new datasets from the old model.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # Model loading information.
@@ -132,7 +132,7 @@ if __name__ == "__main__":
     # -------------------------- Meta-model Training ------------------------- #
 
     # Plot the initial model state.
-    if modelConstants.useInitialLoss: trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)  # Calculate the initial loss.
+    trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)  # Calculate the initial loss.
     if plotAllEpochs: trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingModelName, showMinimumPlots=False)
 
     # For each training epoch

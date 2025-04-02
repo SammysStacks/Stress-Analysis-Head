@@ -29,6 +29,8 @@ class emotionModel(emotionModelHead):
         # Initialize default output tensors.
         basicEmotionProfile = torch.zeros((batchSize, self.numBasicEmotions, self.encodedDimension), device=device)
         emotionProfile = torch.zeros((batchSize, self.numEmotions, self.encodedDimension), device=device)
+        reconstructedSignalData = torch.zeros((batchSize, numSignals, maxSequenceLength), device=device)
+        resampledSignalData = torch.zeros((batchSize, numSignals, self.encodedDimension), device=device)
         activityProfile = torch.zeros((batchSize, self.encodedDimension), device=device)
 
         # ------------------- Organize the Incoming Data ------------------- #
@@ -48,38 +50,33 @@ class emotionModel(emotionModelHead):
 
         # ------------------- Learned Signal Mapping ------------------- #
 
-        # Perform the backward pass: health profile -> signal data.
-        resampledSignalData = healthProfile.unsqueeze(1).repeat(repeats=(1, numSignals, 1))
-        resampledSignalData = self.signalEncoderPass(metaLearningData=resampledSignalData, forwardPass=False, compileLayerStates=onlyProfileTraining)
-        reconstructedSignalData = self.sharedSignalEncoderModel.interpolateOriginalSignals(signalData, resampledSignalData)
-        # reconstructedSignalData: batchSize, numSignals, maxSequenceLength
-        # resampledSignalData: batchSize, numSignals, encodedDimension
+        if submodel == modelConstants.signalEncoderModel:
+            # Perform the backward pass: health profile -> signal data.
+            resampledSignalData = healthProfile.unsqueeze(1).repeat(repeats=(1, numSignals, 1))
+            resampledSignalData = self.signalEmbedding(metaLearningData=resampledSignalData, healthProfileStart=True, compileLayerStates=onlyProfileTraining)
+            reconstructedSignalData = self.sharedSignalEncoderModel.interpolateOriginalSignals(signalData, resampledSignalData)
+            # reconstructedSignalData: batchSize, numSignals, maxSequenceLength
+            # resampledSignalData: batchSize, numSignals, encodedDimension
 
-        # Visualize the data transformations within signal encoding.
-        if submodel == modelConstants.signalEncoderModel and not onlyProfileTraining and random.random() < 0.05 and not self.hpcFlag:
-            with torch.no_grad(): self.visualizeSignalEncoding(embeddedProfile, healthProfile, resampledSignalData, reconstructedSignalData, signalData, validDataMask)
+            # Visualize the data transformations within signal encoding.
+            if submodel == modelConstants.signalEncoderModel and not onlyProfileTraining and random.random() < 0.01 and not self.hpcFlag:
+                with torch.no_grad(): self.visualizeSignalEncoding(embeddedProfile, healthProfile, resampledSignalData, reconstructedSignalData, signalData, validDataMask)
 
-        # ------------------- Learned Emotion Mapping ------------------- #
+        # ------------- Learned Emotion and Activity Mapping ------------- #
 
         if submodel == modelConstants.emotionModel:
-            # Perform the backward pass: physiologically -> emotion data.
-            reversibleInterface.changeDirections(forwardDirection=False)
-            basicEmotionProfile = healthProfile.unsqueeze(1).repeat(repeats=(1, self.numBasicEmotions, 1))
-            basicEmotionProfile = self.coreModelPass(self.numEmotionModelLayers, metaLearningData=basicEmotionProfile, specificModel=self.specificEmotionModel, sharedModel=self.sharedEmotionModel)
-            # metaLearningData: batchSize, numEmotions*numBasicEmotions, encodedDimension
+            # Perform the backward pass: health profile -> activity data.
+            activityProfile = self.humanActivityRecognition(metaLearningData=healthProfile.unsqueeze(1), healthProfileStart=True).squeeze(1)
+            # activityProfile: batchSize, encodedDimension
+
+            # Perform the backward pass: health profile -> basic emotion data.
+            basicEmotionProfile = healthProfile.unsqueeze(1).repeat(repeats=(1, self.numEmotions, 1))
+            basicEmotionProfile = self.basicEmotionProfiling(metaLearningData=basicEmotionProfile, healthProfileStart=True)
+            # basicEmotionProfile: batchSize, numEmotions, numBasicEmotions, encodedDimension
 
             # Reconstruct the emotion data.
-            basicEmotionProfile = basicEmotionProfile.repeat(repeats=(1, self.numEmotions, 1, 1))
-            subjectInds = emotionDataInterface.getMetaDataChannel(metadata, channelName=modelConstants.subjectIndexMD)  # Dim: batchSize
-            emotionProfile = self.specificEmotionModel.calculateEmotionProfile(basicEmotionProfile, subjectInds)
-
-        # ------------------- Learned Activity Mapping ------------------- #
-
-            # Perform the backward pass: physiologically -> activity data.
-            reversibleInterface.changeDirections(forwardDirection=False)
-            resampledActivityData = healthProfile.unsqueeze(1).repeat(repeats=(1, self.numActivityChannels, 1))
-            activityProfile = self.coreModelPass(self.numActivityModelLayers, metaLearningData=resampledActivityData, specificModel=self.specificActivityModel, sharedModel=self.sharedActivityModel)
-            # metaLearningData: batchSize, numEmotions*numBasicEmotions, encodedDimension
+            emotionProfile = basicEmotionProfile.unsqueeze(1).repeat(repeats=(1, self.numEmotions, 1, 1))
+            emotionProfile = self.specificEmotionModel.calculateEmotionProfile(basicEmotionProfile, subjectInds=None)
 
         # --------------------------------------------------------------- #
 
@@ -121,26 +118,52 @@ class emotionModel(emotionModelHead):
 
     # ------------------------- Model Components ------------------------- #
 
-    def signalEncoderPass(self, metaLearningData, forwardPass, compileLayerStates=False):
+    def signalEmbedding(self, metaLearningData, healthProfileStart, compileLayerStates=False):
         if compileLayerStates: self.specificSignalEncoderModel.profileModel.resetModelStates(metaLearningData)  # Add the initial state.
         compilingFunction = self.specificSignalEncoderModel.profileModel.addModelState if compileLayerStates else None
-        reversibleInterface.changeDirections(forwardDirection=forwardPass)
+        reversibleInterface.changeDirections(forwardDirection=not healthProfileStart)
 
-        if forwardPass:
-            # Signal encoder layers.
+        if not healthProfileStart:
             metaLearningData = self.sharedSignalEncoderModel.learningInterface(signalData=metaLearningData, compilingFunction=compilingFunction)
             metaLearningData = self.specificSignalEncoderModel.learningInterface(signalData=metaLearningData, compilingFunction=compilingFunction)
             # metaLearningData: batchSize, numSignals, encodedDimension
         else:
-            # Signal encoder layers.
             metaLearningData = self.specificSignalEncoderModel.learningInterface(signalData=metaLearningData, compilingFunction=compilingFunction)
             metaLearningData = self.sharedSignalEncoderModel.learningInterface(signalData=metaLearningData, compilingFunction=compilingFunction)
             # metaLearningData: batchSize, numSignals, encodedDimension
 
         return metaLearningData
 
+    def humanActivityRecognition(self, metaLearningData, healthProfileStart):
+        reversibleInterface.changeDirections(forwardDirection=not healthProfileStart)
+
+        if not healthProfileStart:
+            metaLearningData = self.sharedActivityModel.learningInterface(signalData=metaLearningData)
+            metaLearningData = self.specificActivityModel.learningInterface(signalData=metaLearningData)
+            # metaLearningData: batchSize, numSignals, encodedDimension
+        else:
+            metaLearningData = self.specificActivityModel.learningInterface(signalData=metaLearningData)
+            metaLearningData = self.sharedActivityModel.learningInterface(signalData=metaLearningData)
+            # metaLearningData: batchSize, numSignals, encodedDimension
+
+        return metaLearningData
+
+    def basicEmotionProfiling(self, metaLearningData, healthProfileStart):
+        reversibleInterface.changeDirections(forwardDirection=not healthProfileStart)
+
+        if not healthProfileStart:
+            metaLearningData = self.sharedEmotionModel.learningInterface(signalData=metaLearningData)
+            metaLearningData = self.specificEmotionModel.learningInterface(signalData=metaLearningData)
+            # metaLearningData: batchSize, numSignals, encodedDimension
+        else:
+            metaLearningData = self.specificEmotionModel.learningInterface(signalData=metaLearningData)
+            metaLearningData = self.sharedEmotionModel.learningInterface(signalData=metaLearningData)
+            # metaLearningData: batchSize, numSignals, encodedDimension
+
+        return metaLearningData
+
     def reconstructHealthProfile(self, resampledSignalData):
-        return self.signalEncoderPass(metaLearningData=resampledSignalData, forwardPass=True, compileLayerStates=True)
+        return self.signalEmbedding(metaLearningData=resampledSignalData, healthProfileStart=False, compileLayerStates=True)
 
     # ------------------------- Model Updates ------------------------- #
 

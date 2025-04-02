@@ -6,43 +6,19 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class optimizerMethods:
 
-    @staticmethod
-    def getModelParams(submodel, model):
+    def addOptimizer(self, submodel, model):
+        # Get the model parameters.
         modelParams = [
             # Specify the profile parameters for the signal encoding.
             {'params': model.sharedSignalEncoderModel.healthGenerationModel.parameters(), 'weight_decay': modelConstants.userInputParams['physGenLR']/10, 'lr': modelConstants.userInputParams['physGenLR']},
             {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': modelConstants.userInputParams['profileLR']/100, 'lr': modelConstants.userInputParams['profileLR']},
             {'params': model.sharedSignalEncoderModel.fourierModel.parameters(), 'weight_decay': modelConstants.userInputParams['physGenLR']/100, 'lr': modelConstants.userInputParams['physGenLR']},
 
-            # Specify the scalar parameters for the signal encoding.
-            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "jacobianParameter" in name), 'weight_decay': 4e-5, 'lr': 4e-4},
-            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "jacobianParameter" in name), 'weight_decay': 4e-5, 'lr': 4e-4},
-
-            # Specify the angular parameters for the signal encoding.
-            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "givensRotationParams" in name), 'weight_decay': modelConstants.userInputParams['reversibleLR']*2, 'lr': modelConstants.userInputParams['reversibleLR']},
-            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "givensRotationParams" in name), 'weight_decay': modelConstants.userInputParams['reversibleLR']*2, 'lr': modelConstants.userInputParams['reversibleLR']},
-
-            # Specify the activation parameters for the signal encoding.
-            {'params': (param for name, param in model.specificSignalEncoderModel.named_parameters() if "activationFunction" in name), 'weight_decay': 1e-4, 'lr': 1e-3},
-            {'params': (param for name, param in model.sharedSignalEncoderModel.named_parameters() if "activationFunction" in name), 'weight_decay': 1e-4, 'lr': 1e-3},
+            # Specify the Lie manifold architecture parameters.
+            {'params': (param for name, param in model.named_parameters() if "givensRotationParams" in name), 'weight_decay': modelConstants.userInputParams['reversibleLR']*2, 'lr': modelConstants.userInputParams['reversibleLR']},
+            {'params': (param for name, param in model.named_parameters() if "activationFunction" in name), 'weight_decay': 1e-4, 'lr': 1e-3},
+            {'params': (param for name, param in model.named_parameters() if "jacobianParameter" in name), 'weight_decay': 4e-5, 'lr': 4e-4},
         ]
-
-        if submodel == modelConstants.emotionModel:
-            modelParams.extend([
-                # Specify the model parameters for the emotion prediction.
-                {'params': model.specificEmotionModel.parameters(), 'weight_decay': 1e-6, 'lr': modelConstants.userInputParams["emotionLearningRate"]},
-                {'params': model.sharedEmotionModel.parameters(), 'weight_decay': 1e-6, 'lr': modelConstants.userInputParams["emotionLearningRate"]},
-
-                # Specify the model parameters for the human activity recognition.
-                {'params': model.specificActivityModel.parameters(), 'weight_decay': 1e-6, 'lr': modelConstants.userInputParams["activityLearningRate"]},
-                {'params': model.sharedActivityModel.parameters(), 'weight_decay': 1e-6, 'lr': modelConstants.userInputParams["activityLearningRate"]},
-            ])
-
-        return modelParams
-
-    def addOptimizer(self, submodel, model):
-        # Get the model parameters.
-        modelParams = self.getModelParams(submodel, model)
 
         # Set the optimizer and scheduler.
         optimizer = self.setOptimizer(modelParams, lr=1e-4, weight_decay=1e-5, optimizerType=modelConstants.userInputParams["optimizerType"])

@@ -83,13 +83,6 @@ class emotionModelWeights(convolutionalHelpers):
 
     # ------------------- Emotion/Activity Encoding Architectures ------------------- #
 
-    @staticmethod
-    def postSpatialLayerFC___(sequenceLength):
-        return emotionModelWeights.linearModel(numInputFeatures=sequenceLength, numOutputFeatures=sequenceLength, activationMethod="boundedExp", addBias=False)
-
-    def postSpatialLayerCNN___(self, numSignals):
-        return self.convolutionalFiltersBlocks(numBlocks=4, numChannels=[numSignals, numSignals], kernel_sizes=3, dilations=1, groups=numSignals, strides=1, convType='conv1D', activationMethod="boundedExp", numLayers=None, addBias=False)
-
     def skipConnectionCNN(self, numSignals):
         return self.convolutionalFiltersBlocks(numBlocks=4, numChannels=[numSignals, numSignals], kernel_sizes=3, dilations=1, groups=numSignals, strides=1, convType='conv1D', activationMethod="boundedExp", numLayers=None, addBias=False)
 
