@@ -44,11 +44,7 @@ if __name__ == "__main__":
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # Model loading information.
-<<<<<<< HEAD
     loadSubmodelDate = "2025-04-01----"  # The submodel we are loading: None, "2025-03-31"
-=======
-    loadSubmodelDate = "2025-04-02---"  # The submodel we are loading: None, "2025-03-31"
->>>>>>> 397adf9c2 (Lab)
 
     # ----------------------- Architecture Parameters ----------------------- #
 
