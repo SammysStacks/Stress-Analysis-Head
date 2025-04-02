@@ -219,8 +219,8 @@ class generalVisualizations(globalPlottingProtocols):
         x = np.arange(numEpochs)
 
         # Get the parameters.
-        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
-        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers']
+        numSpecificLayers = modelConstants.userInputParams['numLayers']
+        numSharedLayers = modelConstants.userInputParams['numLayers']
 
         for paramInd in range(numParams):
             # Create a figure and axes array
@@ -294,8 +294,8 @@ class generalVisualizations(globalPlottingProtocols):
         if numEpochs <= 5: return "No data to plot."
 
         # Get the parameters.
-        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
-        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers']
+        numSpecificLayers = modelConstants.userInputParams['numLayers']
+        numSharedLayers = modelConstants.userInputParams['numLayers']
 
         for paramInd in range(numParams):
             # Create a figure and axes array
@@ -379,8 +379,8 @@ class generalVisualizations(globalPlottingProtocols):
         x = np.arange(numEpochs)
 
         # Get the parameters.
-        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
-        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers']
+        numSpecificLayers = modelConstants.userInputParams['numLayers']
+        numSharedLayers = modelConstants.userInputParams['numLayers']
 
         for paramInd in range(numParams):
             # Create a figure and axes array
@@ -452,8 +452,8 @@ class generalVisualizations(globalPlottingProtocols):
         x = np.arange(numEpochs)
 
         # Get the parameters.
-        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
-        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers']
+        numSpecificLayers = modelConstants.userInputParams['numLayers']
+        numSharedLayers = modelConstants.userInputParams['numLayers']
 
         for paramInd in range(numParams):
             # Create a figure and axes array

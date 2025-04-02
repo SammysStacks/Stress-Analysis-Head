@@ -8,15 +8,15 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class specificSignalEncoderModel(neuralOperatorInterface):
 
-    def __init__(self, numExperiments, operatorType, encodedDimension, featureNames, numSpecificEncoderLayers, neuralOperatorParameters):
-        super(specificSignalEncoderModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numLayers=numSpecificEncoderLayers, numInputSignals=len(featureNames), numOutputSignals=len(featureNames), addBiasTerm=False)
+    def __init__(self, numExperiments, operatorType, encodedDimension, featureNames, numLayers, neuralOperatorParameters):
+        super(specificSignalEncoderModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numLayers=numLayers, numInputSignals=len(featureNames), numOutputSignals=len(featureNames), addBiasTerm=False)
         # General model parameters.
         self.neuralOperatorParameters = copy.deepcopy(neuralOperatorParameters)  # The parameters for the neural operator.
-        self.numSpecificEncoderLayers = numSpecificEncoderLayers  # The number of specific encoder layers.
         self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
         self.numExperiments = numExperiments  # The number of experiments.
         self.numSignals = len(featureNames)  # The number of signals to encode.
         self.featureNames = featureNames  # The names of the signals to encode.
+        self.numLayers = numLayers  # The number of specific encoder layers.
 
         # Set the wavelet parameters.
         self.neuralOperatorParameters['wavelet']['minWaveletDim'] = encodedDimension // 2
@@ -77,5 +77,5 @@ if __name__ == "__main__":
 
     # Set up the parameters.
     _featureNames = [f"signal_{i}" for i in range(_numSignals)]
-    neuralLayerClass = specificSignalEncoderModel(numExperiments=_batchSize, operatorType='wavelet', encodedDimension=_sequenceLength, featureNames=_featureNames, numSpecificEncoderLayers=_numSpecificEncoderLayers, neuralOperatorParameters=_neuralOperatorParameters)
+    neuralLayerClass = specificSignalEncoderModel(numExperiments=_batchSize, operatorType='wavelet', encodedDimension=_sequenceLength, featureNames=_featureNames, numLayers=_numSpecificEncoderLayers, neuralOperatorParameters=_neuralOperatorParameters)
     neuralLayerClass.printParams()

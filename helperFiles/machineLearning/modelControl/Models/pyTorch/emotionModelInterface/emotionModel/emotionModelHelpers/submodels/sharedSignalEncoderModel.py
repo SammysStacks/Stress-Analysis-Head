@@ -11,14 +11,14 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class sharedSignalEncoderModel(neuralOperatorInterface):
 
-    def __init__(self, operatorType, encodedDimension, numSharedEncoderLayers, learningProtocol, neuralOperatorParameters):
-        super(sharedSignalEncoderModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numLayers=numSharedEncoderLayers, numInputSignals=1, numOutputSignals=1, addBiasTerm=False)
+    def __init__(self, operatorType, encodedDimension, numLayers, learningProtocol, neuralOperatorParameters):
+        super(sharedSignalEncoderModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numLayers=numLayers, numInputSignals=1, numOutputSignals=1, addBiasTerm=False)
         # General model parameters.
         self.neuralOperatorParameters = copy.deepcopy(neuralOperatorParameters)  # The parameters for the neural operator.
         self.encodedTimeWindow = modelConstants.modelTimeWindow  # The time window for the encoded signal.
-        self.numSharedEncoderLayers = numSharedEncoderLayers  # The number of shared encoder layers.
         self.learningProtocol = learningProtocol  # The learning protocol for the model.
         self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
+        self.numLayers = numLayers  # The number of shared encoder layers.
 
         numIgnoredSharedHF = modelConstants.userInputParams['numIgnoredSharedHF']
         # Only apply a transformation to the lowest of the high frequency decompositions.
@@ -119,5 +119,5 @@ if __name__ == "__main__":
     _numSharedEncoderLayers = 4
 
     # Set up the parameters.
-    neuralLayerClass = sharedSignalEncoderModel(operatorType='wavelet', encodedDimension=_sequenceLength, numSharedEncoderLayers=_numSharedEncoderLayers, learningProtocol='reversibleLieLayer', neuralOperatorParameters=_neuralOperatorParameters)
+    neuralLayerClass = sharedSignalEncoderModel(operatorType='wavelet', encodedDimension=_sequenceLength, numLayers=_numSharedEncoderLayers, learningProtocol='reversibleLieLayer', neuralOperatorParameters=_neuralOperatorParameters)
     neuralLayerClass.printParams()
