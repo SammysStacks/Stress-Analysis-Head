@@ -57,7 +57,7 @@ class emotionPipelineHelpers:
         numEpochs = self.getTrainingEpoch(submodel) + 1  # +1 to account for the current epoch.
 
         # Get the current number of epochs for the profile model.
-        numProfileShots = min(max(3, numEpochs//2), modelParameters.getProfileEpochs())
+        numProfileShots = min(max(3, numEpochs), modelParameters.getProfileEpochs())
 
         # Reset and get the parameters that belong to the profile model
         self.model.specificSignalEncoderModel.profileModel.resetProfileHolders(numProfileShots)
