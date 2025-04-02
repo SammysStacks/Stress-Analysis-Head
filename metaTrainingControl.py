@@ -84,7 +84,7 @@ if __name__ == "__main__":
 
     # Signal encoder learning rates.
     parser.add_argument('--profileLR', type=float, default=0.01, help='The learning rate of the profile')
-    parser.add_argument('--physGenLR', type=float, default=1e-3, help='The learning rate of the profile generation (CNNs)')
+    parser.add_argument('--physGenLR', type=float, default=4e-4, help='The learning rate of the profile generation (CNNs)')
     parser.add_argument('--reversibleLR', type=float, default=0.05, help='The learning rate of the Lie manifold angles (degrees)')
 
     # Add arguments for the emotion and activity architecture.
