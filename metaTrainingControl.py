@@ -62,7 +62,7 @@ if __name__ == "__main__":
     # Add arguments for the neural operator.
     parser.add_argument('--waveletType', type=str, default='bior3.1', help='The wavelet type for the wavelet transform: bior3.1, bior3.3, bior2.2, bior3.5')
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
-    parser.add_argument('--numIgnoredSharedHF', type=int, default=2, help='The number of ignored high frequency components: [0, 1, 2]')
+    parser.add_argument('--numIgnoredSharedHF', type=int, default=1, help='The number of ignored high frequency components: [0, 1, 2]')
 
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model: [1, 2]')
@@ -70,7 +70,7 @@ if __name__ == "__main__":
 
     # Add arguments for observational learning.
     parser.add_argument('--maxAngularThreshold', type=float, default=45, help='The larger rotational threshold in (degrees)')
-    parser.add_argument('--minAngularThreshold', type=float, default=2, help='The smaller rotational threshold in (degrees)')
+    parser.add_argument('--minAngularThreshold', type=float, default=2.5, help='The smaller rotational threshold in (degrees)')
 
     # dd arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions)')
@@ -85,7 +85,7 @@ if __name__ == "__main__":
     # Signal encoder learning rates.
     parser.add_argument('--profileLR', type=float, default=0.01, help='The learning rate of the profile')
     parser.add_argument('--physGenLR', type=float, default=1e-3, help='The learning rate of the profile generation (CNNs)')
-    parser.add_argument('--reversibleLR', type=float, default=0.067, help='The learning rate of the Lie manifold angles (degrees)')
+    parser.add_argument('--reversibleLR', type=float, default=0.05, help='The learning rate of the Lie manifold angles (degrees)')
 
     # Add arguments for the emotion and activity architecture.
     parser.add_argument('--momentum_decay', type=float, default=0.001, help='Momentum decay for the optimizer')
