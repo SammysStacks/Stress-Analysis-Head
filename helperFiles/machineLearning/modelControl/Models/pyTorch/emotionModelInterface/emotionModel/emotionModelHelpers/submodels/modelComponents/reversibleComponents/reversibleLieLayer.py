@@ -18,6 +18,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
         super(reversibleLieLayer, self).__init__(numSignals, sequenceLength, numLayers, activationMethod)
         self.initialMaxGivensAngle = self.getInverseAngleParams(torch.as_tensor(3 / sequenceLength).sqrt() * torch.pi / 180)
         self.identityMatrix = torch.eye(self.sequenceLength, dtype=torch.float64)
+        self.minRotationAngle = 0.01 * torch.pi / 180
 
         # Create the neural layers.
         for layerInd in range(self.numLayers):
@@ -103,13 +104,13 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
     @staticmethod
     def getMinAngularThreshold(epoch):
-        if epoch <= modelConstants.numWarmupEpochs: return 0.001 * torch.pi/180
+        if epoch <= modelConstants.numWarmupEpochs: return 0.01 * torch.pi/180  # 0.01 degrees
         relativeEpoch = epoch - modelConstants.numWarmupEpochs
 
         # Get the minimum angular threshold.
         minThresholdStep = modelConstants.userInputParams['minThresholdStep']
         minAngularThreshold = modelConstants.userInputParams['minAngularThreshold']
-        minAngularThreshold = min(minAngularThreshold, (relativeEpoch**2) * minThresholdStep) * torch.pi/180
+        minAngularThreshold = min(minAngularThreshold, (relativeEpoch**1.5) * minThresholdStep) * torch.pi/180
 
         return minAngularThreshold
 
@@ -120,7 +121,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
             maxAngularParam = self.getInverseAngleParams(maxAngularThreshold)
 
             # Get the angular minimum thresholds.
-            if sharedLayer and modelConstants.numWarmupEpochs < epoch: minAngularThreshold = self.getInverseAngleParams(0.001 * torch.pi/180)
+            if sharedLayer and modelConstants.numWarmupEpochs < epoch: minAngularThreshold = self.getInverseAngleParams(self.minRotationAngle)
             else: minAngularThreshold = self.getInverseAngleParams(self.getMinAngularThreshold(epoch))
 
             for layerInd in range(self.numLayers):
