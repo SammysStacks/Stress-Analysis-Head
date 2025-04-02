@@ -250,6 +250,8 @@ class modelMigration:
         # Read in the previous signal encoder model when meta-training emotions.
         if submodel == modelConstants.emotionModel and not self.validationRun:
             submodel = modelConstants.signalEncoderModel; validationRun = True
+        elif submodel == modelConstants.signalEncoderModel and self.validationRun:
+            submodel = modelConstants.signalEncoderModel; validationRun = False
         else: validationRun = self.validationRun
 
         # Construct base names for loading the model and attributes
