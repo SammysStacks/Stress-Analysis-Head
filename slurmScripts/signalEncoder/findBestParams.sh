@@ -40,15 +40,15 @@ maxAngularThresholds=(45)
 
 # Binary reference states.
 numSpecificEncoderLayers_arr=(1)
-numSharedEncoderLayers_arr=(7 6 9)  # [4, 10]; Best: 5 and 7
+numSharedEncoderLayers_arr=(7 8 9)  # [4, 10]; Best: 5 and 7
 
 # Profile parameters.
-numProfileShots_arr=(16 24)  # (8, [16, 24], 32)
+numProfileShots_arr=(24 32)  # (8, [16, 24], 32)
 encodedDimensions_arr=(512 256)  # [128, 256, 512]
 
 # Wavelet states.
 waveletTypes_arr=('bior3.1')
-numIgnoredSharedHFs=(0 1 2)
+numIgnoredSharedHFs=(1)
 
 for numIgnoredSharedHF in "${numIgnoredSharedHFs[@]}"
 do
