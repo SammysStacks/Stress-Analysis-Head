@@ -89,88 +89,31 @@ if True:
         finalEquation_0 += ' + ' + str(fitCoeff_0_FIRST[degree]) + '*pow(adcVolts,' + str(len(fitCoeff_0_FIRST)-1-degree) + ')'
     print(finalEquation_0[3:])
     print(R)
+    print("")
+
+    R = 0; V = 1.46
+    finalEquation_1_5 = ''
+    for degree in range(len(fitCoeff_1_5_FIRST)):
+        R += fitCoeff_1_5_FIRST[degree]*V**degree
+        finalEquation_1_5 += ' + ' + str(fitCoeff_1_5_FIRST[degree]) + '*pow(adcVolts,' + str(len(fitCoeff_1_5_FIRST)-1-degree) + ')'
+    print(finalEquation_1_5[3:])
+    print(R)
 
 
 # -------------------------------------------------------------------------- #
 # -------------------------- Plot Calibration Fit -------------------------- #
 
+fig = plt.figure(figsize=(8, 6))
 plt.plot(V_1_5, R_1_5, 'k', linewidth=4)
-plt.plot(voltageInterp_1_5, interpR_1_5, 'o', c='tab:blue', markersize=2)
+plt.plot(voltageInterp_1_5, interpR_1_5, c='tab:blue', markersize=2)
 plt.plot(voltageInterp_1_5, fitV_1_5, 'tab:red', linewidth=2)
+fig.savefig("gsrCalibration_1_5.pdf", bbox_inches='tight', dpi=300)
 plt.show()
 
-plt.plot(voltageInterp_1_5, abs(fitV_1_5 - interpR_1_5)/interpR_1_5)
-# plt.ylim(0,2)
+fig = plt.figure(figsize=(8, 6))
+plt.plot(voltageInterp_1_5, (fitV_1_5 - interpR_1_5)/interpR_1_5)
+fig.savefig("gsrCalibration_1_5_error.pdf", bbox_inches='tight', dpi=300)
 plt.show()
-
-plt.plot(voltageInterp_1_5, abs(fitV_1_5 - interpR_1_5))
-plt.ylim(0,2)
-plt.show()
-
-# plt.plot(V_1_5, R_1_5, 'k', linewidth=4)
-# plt.plot(voltageInterp_1_5, interpR_1_5, 'o', c='tab:blue', markersize=2)
-# plt.plot(voltageInterp_1_5, fitV_1_5, 'tab:red', linewidth=2)
-
-# plt.xlim(1, 3)
-# plt.ylim(0, 1000)
-# plt.show()
-
-
-plt.plot(V_0, R_0, 'k', linewidth=4)
-plt.plot(voltageInterp_0, interpR_0, 'o', c='tab:blue', markersize=2)
-plt.plot(voltageInterp_0, fitV_0, 'tab:red', linewidth=2)
-plt.show()
-
-plt.plot(voltageInterp_0, abs(fitV_0-interpR_0)/interpR_0)
-# plt.ylim(0,2)
-plt.show()
-
-sys.exit()
-
-
-
-
-
-
-
-plt.plot(V_0, R_0, 'k', linewidth=4)
-plt.plot(voltageInterp_0, interpR_0, 'o', c='tab:blue', markersize=2)
-plt.plot(voltageInterp_0, fitV_0, 'tab:red', linewidth=2)
-plt.show()
-
-plt.plot(voltageInterp_0, interpR_0 - fitV_0)
-plt.show()
-
-
-plt.plot(V_1_5, R_1_5, 'k', linewidth=4)
-plt.plot(voltageInterp_1_5, interpR_1_5, 'o', c='tab:blue', markersize=1)
-plt.plot(voltageInterp_1_5, fitV_1_5, 'tab:red', linewidth=2)
-plt.show()
-
-
-plt.plot(voltageInterp_0, interpR_0, 'o', c='k', markersize=2, label="Resistance Calibration")
-plt.plot(voltageInterp_1_5, interpR_1_5, 'o', c='tab:red', markersize=2, label="Resistance Calibration with +V Bias")
-plt.title("Adding in voltage bias")
-plt.ylabel("Resistance (kOhms)")
-plt.xlabel("Analog Voltage")
-plt.legend()
-plt.show()
-
-
-
-plt.figure()
-ax = plt.gca()
-
-ax.plot(V_0, R_0, "k", linewidth=2, label="Resistance Calibration");
-ax.plot([3.2]*len(R), R, "tab:red", linewidth=2, label="Max ADC Voltage");
-# ax.fill_between(R[4:6], V[4:6], color='tab:blue', alpha = 0.15, label="Forehead Resistance");
-# ax.fill_between(R[5:9], V[5:9], color='tab:red', alpha = 0.15, label="Hand Resistance");
-plt.plot(vNew, fit, 'g--', label="Fit")
-
-plt.title("New EDA Board Readings")
-plt.xlabel("Resistance (kOhms)")
-plt.ylabel("Analog Voltage")
-plt.legend()
 
 # -------------------------------------------------------------------------- #
 
