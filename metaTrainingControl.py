@@ -39,12 +39,12 @@ if __name__ == "__main__":
 
     # General model parameters.
     trainingDate = "2025-04-02"  # The current date we are training the model. Unique identifier of this training set.
-    plotAllEpochs = False  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
+    plotAllEpochs = True  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
     validationRun = False  # Whether to train new datasets from the old model.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # Model loading information.
-    loadSubmodelDate = "2025-04-02"  # The submodel we are loading: None, "2025-03-31"
+    loadSubmodelDate = "2025-04-02---"  # The submodel we are loading: None, "2025-03-31"
 
     # ----------------------- Architecture Parameters ----------------------- #
 
@@ -55,22 +55,22 @@ if __name__ == "__main__":
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are using: cpu, cuda')
 
     # Add arguments for the health profile.
-    parser.add_argument('--initialProfileAmp', type=float, default=1e-2, help='The limits for profile initialization. Should be near zero')
-    parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the health profile and all signals.')
+    parser.add_argument('--initialProfileAmp', type=float, default=1e-3, help='The limits for profile initialization. Should be near zero')
+    parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the health profile and all signals.')  # TODO
     parser.add_argument('--numProfileShots', type=int, default=32, help='The epochs for profile training: [16, 32]')
     
     # Add arguments for the neural operator.
     parser.add_argument('--waveletType', type=str, default='bior3.1', help='The wavelet type for the wavelet transform: bior3.1, bior3.3, bior2.2, bior3.5')
     parser.add_argument('--operatorType', type=str, default='wavelet', help='The type of operator to use for the neural operator: wavelet')
-    parser.add_argument('--numIgnoredSharedHF', type=int, default=1, help='The number of ignored high frequency components: [0, 1, 2]')
+    parser.add_argument('--numIgnoredSharedHF', type=int, default=0, help='The number of ignored high frequency components: [0, 1, 2]')
 
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model: [1, 2]')
-    parser.add_argument('--numSharedEncoderLayers', type=int, default=6, help='The number of layers in the model: [2, 10]')
+    parser.add_argument('--numSharedEncoderLayers', type=int, default=6, help='The number of layers in the model: [2, 10]')  # TODO
 
     # Add arguments for observational learning.
     parser.add_argument('--maxAngularThreshold', type=float, default=45, help='The larger rotational threshold in (degrees)')
-    parser.add_argument('--minAngularThreshold', type=float, default=5, help='The smaller rotational threshold in (degrees)')
+    parser.add_argument('--minAngularThreshold', type=float, default=5, help='The smaller rotational threshold in (degrees)')  # TODO
 
     # dd arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions)')
@@ -96,7 +96,7 @@ if __name__ == "__main__":
     userInputParams['minWaveletDim'] = userInputParams['encodedDimension'] // (2**4)
     userInputParams['minThresholdStep'] = userInputParams['reversibleLR']  # Keep as degrees
     userInputParams['reversibleLR'] = userInputParams['reversibleLR'] * math.pi / 180  # Keep as radians
-    userInputParams['profileDimension'] = userInputParams['encodedDimension']
+    userInputParams['profileDimension'] = userInputParams['encodedDimension'] // 2  # The dimension of the profile.
 
     # Compile additional input parameters.
     userInputParams = modelParameters.getNeuralParameters(userInputParams)
