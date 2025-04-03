@@ -47,7 +47,12 @@ class reversibleLieLayerInterface(reversibleInterface):
         return nn.Parameter(torch.zeros((1, numSignals, 1)))
 
     def applyManifoldScale(self, inputData):
-        scalarValues = self.getJacobianScalar().expand_as(inputData)
+        # Get the scaling factor for the input data.
+        scalarValues = self.getJacobianScalar()
+        if inputData.ndim == 4: scalarValues.unsqueeze(1)
+        scalarValues = scalarValues.expand_as(inputData)
+
+        # Apply the scaling factor to the input data.
         if reversibleInterface.forwardDirection: return inputData * scalarValues
         else: return inputData / scalarValues
 

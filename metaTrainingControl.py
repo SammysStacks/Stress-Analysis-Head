@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
     # General model parameters.
     trainingDate = "2025-04-02"  # The current date we are training the model. Unique identifier of this training set.
-    plotAllEpochs = True  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
+    plotAllEpochs = False  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
     validationRun = False  # Whether to train new datasets from the old model.
     testSplitRatio = 0.1  # The percentage of testing points.
 
@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
     # Add arguments for the health profile.
     parser.add_argument('--initialProfileAmp', type=float, default=1e-2, help='The limits for profile initialization. Should be near zero')
-    parser.add_argument('--encodedDimension', type=int, default=512, help='The dimension of the health profile and all signals.')
+    parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the health profile and all signals.')
     parser.add_argument('--numProfileShots', type=int, default=32, help='The epochs for profile training: [16, 32]')
     
     # Add arguments for the neural operator.
@@ -66,7 +66,7 @@ if __name__ == "__main__":
 
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model: [1, 2]')
-    parser.add_argument('--numSharedEncoderLayers', type=int, default=4, help='The number of layers in the model: [2, 10]')
+    parser.add_argument('--numSharedEncoderLayers', type=int, default=6, help='The number of layers in the model: [2, 10]')
 
     # Add arguments for observational learning.
     parser.add_argument('--maxAngularThreshold', type=float, default=45, help='The larger rotational threshold in (degrees)')
@@ -75,10 +75,7 @@ if __name__ == "__main__":
     # dd arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=6, help='The number of basic emotions (basis states of emotions)')
     parser.add_argument('--numActivityModelLayers', type=int, default=4, help='The number of layers in the activity model')
-    parser.add_argument('--activityLearningRate', type=float, default=0.1, help='The learning rate of the activity model')
     parser.add_argument('--numEmotionModelLayers', type=int, default=4, help='The number of layers in the emotion model')
-    parser.add_argument('--emotionLearningRate', type=float, default=0.01, help='The learning rate of the emotion model')
-    parser.add_argument('--numActivityChannels', type=int, default=4, help='The number of activity  channels')
 
     # ----------------------- Training Parameters ----------------------- #
 
@@ -96,7 +93,7 @@ if __name__ == "__main__":
 
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
-    userInputParams['minWaveletDim'] = userInputParams['encodedDimension'] // (2**3)
+    userInputParams['minWaveletDim'] = userInputParams['encodedDimension'] // (2**4)
     userInputParams['minThresholdStep'] = userInputParams['reversibleLR']  # Keep as degrees
     userInputParams['reversibleLR'] = userInputParams['reversibleLR'] * math.pi / 180  # Keep as radians
     userInputParams['profileDimension'] = userInputParams['encodedDimension']

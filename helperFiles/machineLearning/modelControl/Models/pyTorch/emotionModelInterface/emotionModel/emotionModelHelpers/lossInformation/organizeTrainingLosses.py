@@ -137,25 +137,25 @@ class organizeTrainingLosses(lossCalculations):
 
     # ----------------------- Class Weighting Methods ---------------------- #
 
-    # def getClassWeights(self, allLabels, allTrainingMasks, allTestingMasks, numActivities):
-    #     # Initialize placeholder class weights for each emotion as nan.
-    #     validLabelsMask = allTrainingMasks | allTestingMasks
-    #     allEmotionClassWeights = []
-    #
-    #     # For each emotion.
-    #     for emotionInd in range(self.numEmotions):
-    #         numEmotionClasses = self.allEmotionClasses[emotionInd]  # The number of classes (intensity labels) per emotion.
-    #
-    #         # Calculate the weight/significance of each emotion class.
-    #         validEmotionLabels = self.dataInterface.getEmotionLabels(emotionInd, allLabels, validLabelsMask)
-    #         emotionClassWeight = self.assignClassWeights(validEmotionLabels, numEmotionClasses)
-    #         allEmotionClassWeights.append(emotionClassWeight)
-    #
-    #     # Assign the class weights for the activities.
-    #     activityLabels = self.dataInterface.getActivityLabels(allLabels, validLabelsMask, self.activityLabelInd)
-    #     activityClassWeights = self.assignClassWeights(activityLabels, numActivities)
-    #
-    #     return allEmotionClassWeights, activityClassWeights
+    def getClassWeights(self, allLabels, allTrainingMasks, allTestingMasks, numActivities):
+        # Initialize placeholder class weights for each emotion as nan.
+        validLabelsMask = allTrainingMasks | allTestingMasks
+        allEmotionClassWeights = []
+
+        # For each emotion.
+        for emotionInd in range(self.numEmotions):
+            numEmotionClasses = self.allEmotionClasses[emotionInd]  # The number of classes (intensity labels) per emotion.
+
+            # Calculate the weight/significance of each emotion class.
+            validEmotionLabels = self.dataInterface.getEmotionLabels(emotionInd, allLabels, validLabelsMask)
+            emotionClassWeight = self.assignClassWeights(validEmotionLabels, numEmotionClasses)
+            allEmotionClassWeights.append(emotionClassWeight)
+
+        # Assign the class weights for the activities.
+        activityLabels = self.dataInterface.getActivityLabels(allLabels, validLabelsMask, self.activityLabelInd)
+        activityClassWeights = self.assignClassWeights(activityLabels, numActivities)
+
+        return allEmotionClassWeights, activityClassWeights
 
     @staticmethod
     def assignClassWeights(class_labels, num_classes):
@@ -172,7 +172,7 @@ class organizeTrainingLosses(lossCalculations):
         lowerBoundLabels = validClassLabels.floor()
         upperBoundLabels = validClassLabels.ceil()
 
-        # Get the upper and lower class weights.
+        # Get the upper and lower-class weights.
         upperBoundWeight = validClassLabels - lowerBoundLabels
         lowerBoundWeight = 1 - upperBoundWeight
 

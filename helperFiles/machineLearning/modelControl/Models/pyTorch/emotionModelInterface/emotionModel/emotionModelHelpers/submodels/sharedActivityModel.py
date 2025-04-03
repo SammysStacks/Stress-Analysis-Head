@@ -12,9 +12,9 @@ class sharedActivityModel(neuralOperatorInterface):
         self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
         self.numLayers = numLayers  # The number of model layers.
 
-        numIgnoredSharedHF = 0
+        numIgnoredSharedHF = self.neuralOperatorParameters['wavelet']['numIgnoredSharedHF']
         # Only apply a transformation to the lowest of the high frequency decompositions.
-        self.neuralOperatorParameters['wavelet']['encodeHighFrequencyProtocol'] = f'highFreq-{0}-{numIgnoredSharedHF}'  # TODO: 1 or 2
+        self.neuralOperatorParameters['wavelet']['encodeHighFrequencyProtocol'] = f'highFreq-{0}-{numIgnoredSharedHF}'
 
         # The neural layers for the signal encoder.
         self.neuralLayers = self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True)

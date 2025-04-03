@@ -2,6 +2,7 @@ import time
 import torch
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelParameters import modelParameters
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionPipelineHelpers import emotionPipelineHelpers
 
@@ -18,8 +19,6 @@ class emotionPipeline(emotionPipelineHelpers):
 
     def trainModel(self, dataLoader, submodel, profileTraining, specificTraining, trainSharedLayers, stepScheduler, numEpochs):
         # Load in all the data and labels for final predictions and calculate the activity and emotion class weights.
-        # allData, allLabels, allTrainingMasks, allTestingMasks, allSignalData, allSignalIdentifiers, allMetadata, reconstructionIndex = self.prepareInformation(dataLoader)
-        # allEmotionClassWeights, activityClassWeights = self.organizeLossInfo.getClassWeights(allLabels, allTrainingMasks, allTestingMasks, self.numActivities)
         self.setupTraining(submodel, profileTraining=profileTraining, specificTraining=specificTraining, trainSharedLayers=trainSharedLayers)
         onlyProfileTraining = profileTraining and not specificTraining and not trainSharedLayers
         if self.model.debugging: self.accelerator.print(f"\nTraining {self.datasetName} model")
@@ -38,6 +37,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     # Extract the data, labels, and testing/training indices.
                     batchSignalInfo, batchSignalLabels, batchTrainingLabelMask, batchTestingLabelMask, batchTrainingSignalMask, batchTestingSignalMask = self.extractBatchInformation(batchData)
                     if onlyProfileTraining: batchTrainingLabelMask, batchTestingLabelMask, batchTrainingSignalMask, batchTestingSignalMask = None, None, None, None
+                    allEmotionClassWeights, activityClassWeights = self.organizeLossInfo.getClassWeights(allLabels, allTrainingMasks, allTestingMasks, self.numActivities)
 
                     # We can skip this batch, and backpropagation if necessary.
                     if batchSignalInfo.size(0) == 0: self.backpropogateModel(); continue
@@ -50,7 +50,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     # batchSignalIdentifiers dimension: batchSize, numSignals, numSignalIdentifiers
                     # metaBatchInfo dimension: batchSize, numMetadata
 
-                    if not onlyProfileTraining:
+                    if not onlyProfileTraining and submodel == modelConstants.signalEncoderModel:
                         with torch.no_grad():
                             # Augment the signals to train an arbitrary sequence length and order.
                             augmentedBatchData = self.dataAugmentation.changeNumSignals(signalBatchData, dropoutPercent=0.1)
@@ -66,7 +66,7 @@ class emotionPipeline(emotionPipelineHelpers):
                         self.model.forward(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, onlyProfileTraining=onlyProfileTraining) if not onlyProfileTraining else \
                         self.model.fullPass(submodel, augmentedBatchData, batchSignalIdentifiers, metaBatchInfo, device=self.accelerator.device, profileEpoch=epoch)
                     # reconstructedSignalData dimension: batchSize, numSignals, maxSequenceLength
-                    # basicEmotionProfile: batchSize, numBasicEmotions, encodedDimension
+                    # basicEmotionProfile: batchSize, numEmotions, numBasicEmotions, encodedDimension
                     # validDataMask dimension: batchSize, numSignals, maxSequenceLength
                     # healthProfile dimension: batchSize, encodedDimension
                     # resampledSignalData dimension: batchSize, encodedDimension
@@ -83,13 +83,20 @@ class emotionPipeline(emotionPipelineHelpers):
                     self.modelHelpers.assertVariableIntegrity(validDataMask, variableName="valid data mask", assertGradient=False)
                     self.modelHelpers.assertVariableIntegrity(healthProfile, variableName="health profile", assertGradient=False)
 
-                    # Calculate the error in signal compression (signal encoding loss).
-                    trainingSignalReconstructedLosses = self.organizeLossInfo.calculateSignalEncodingLoss(augmentedBatchData, reconstructedSignalData, validDataMask, batchTrainingSignalMask, averageBatches=True)
-                    if trainingSignalReconstructedLosses is None: self.accelerator.print("Not useful loss"); continue
-                    finalTrainingLoss = trainingSignalReconstructedLosses.nanmean()
+                    if submodel == modelConstants.signalEncoderModel:
+                        # Calculate the error in signal compression (signal encoding loss).
+                        trainingSignalReconstructedLosses = self.organizeLossInfo.calculateSignalEncodingLoss(augmentedBatchData, reconstructedSignalData, validDataMask, batchTrainingSignalMask, averageBatches=True)
+                        if trainingSignalReconstructedLosses is None: self.accelerator.print("Not useful loss"); continue
+                        finalTrainingLoss = trainingSignalReconstructedLosses.nanmean()
+                    else:
+                        # Calculate the error in emotion profiling and human activity recognition.
+                        trainingEmotionLosses = self.organizeLossInfo.calculateSignalEncodingLoss(emotionProfile, batchSignalLabels, batchTrainingLabelMask, averageBatches=True)
+                        trainingActivityLosses = self.organizeLossInfo.calculateSignalEncodingLoss(activityProfile, batchSignalLabels, batchTrainingLabelMask, averageBatches=True)
+                        if trainingEmotionLosses is None and trainingActivityLosses is None: self.accelerator.print("Not useful loss"); continue
+                        finalTrainingLoss = trainingEmotionLosses.nanmean() + trainingActivityLosses.nanmean()
 
                     # Initialize basic core loss value.
-                    if self.model.debugging: self.accelerator.print("Final encoder loss:", finalTrainingLoss.item())
+                    if self.model.debugging: self.accelerator.print("Final loss:", finalTrainingLoss.item())
 
                     # ------------------- Update the Model  -------------------- #
 
@@ -100,7 +107,7 @@ class emotionPipeline(emotionPipelineHelpers):
                     # Update the model parameters.
                     self.accelerator.backward(finalTrainingLoss)  # Calculate the gradients.
                     self.backpropogateModel()  # Backpropagation.
-                    if self.model.debugging: t2 = time.time(); self.accelerator.print(f"{'Shared' if trainSharedLayers else '\tSpecific'} layer training {self.datasetName} {numPointsAnalyzed}: {t22 - t11} {t2 - t1}\n")
+                    if self.model.debugging: t2 = time.time(); self.accelerator.print(f"{self.datasetName} training #{numPointsAnalyzed}: {t22 - t11} {t2 - t1}\n")
 
         # Update the learning rate.
         if stepScheduler: self.scheduler.step()

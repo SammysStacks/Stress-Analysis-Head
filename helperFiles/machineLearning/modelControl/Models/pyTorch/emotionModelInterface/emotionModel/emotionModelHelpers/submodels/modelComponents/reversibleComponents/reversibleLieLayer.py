@@ -84,7 +84,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
         # Apply the neural weights to the input data.
         expS = self.getExpS(layerInd)  # = exp(S)
-        outputData = torch.einsum('bns,nsi->bni', inputData, expS)  # Rotate: exp(S) @ f(x)
+        outputData = torch.einsum('...ns,nsi->...ni', inputData, expS)  # Rotate: exp(S) @ f(x)
         outputData = self.applyManifoldScale(outputData)  # Scale: by jacobian
         # The inverse would be f-1(exp(-A) @ [exp(S) @ f(x)]) = X
 

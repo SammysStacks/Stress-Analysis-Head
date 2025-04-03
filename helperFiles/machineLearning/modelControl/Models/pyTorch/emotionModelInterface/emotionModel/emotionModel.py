@@ -27,7 +27,7 @@ class emotionModel(emotionModelHead):
         # metadata: [batchSize, numMetadata]
 
         # Initialize default output tensors.
-        basicEmotionProfile = torch.zeros((batchSize, self.numBasicEmotions, self.encodedDimension), device=device)
+        basicEmotionProfile = torch.zeros((batchSize, self.numEmotions, self.numBasicEmotions, self.encodedDimension), device=device)
         emotionProfile = torch.zeros((batchSize, self.numEmotions, self.encodedDimension), device=device)
         reconstructedSignalData = torch.zeros((batchSize, numSignals, maxSequenceLength), device=device)
         resampledSignalData = torch.zeros((batchSize, numSignals, self.encodedDimension), device=device)
@@ -70,13 +70,13 @@ class emotionModel(emotionModelHead):
             # activityProfile: batchSize, encodedDimension
 
             # Perform the backward pass: health profile -> basic emotion data.
-            basicEmotionProfile = healthProfile.unsqueeze(1).repeat(repeats=(1, self.numEmotions, 1))
-            basicEmotionProfile = self.basicEmotionProfiling(metaLearningData=basicEmotionProfile, healthProfileStart=True)
+            basicEmotionProfile = self.basicEmotionProfiling(healthProfile=healthProfile)
             # basicEmotionProfile: batchSize, numEmotions, numBasicEmotions, encodedDimension
 
             # Reconstruct the emotion data.
-            emotionProfile = basicEmotionProfile.unsqueeze(1).repeat(repeats=(1, self.numEmotions, 1, 1))
-            emotionProfile = self.specificEmotionModel.calculateEmotionProfile(basicEmotionProfile, subjectInds=None)
+            subjectInds = emotionDataInterface.getMetaDataChannel(metadata, channelName=modelConstants.subjectIndexMD)  # Dim: batchSize
+            emotionProfile = self.specificEmotionModel.calculateEmotionProfile(basicEmotionProfile, subjectInds=subjectInds)
+            # emotionProfile: batchSize, numEmotions, encodedDimension
 
         # --------------------------------------------------------------- #
 
@@ -89,7 +89,7 @@ class emotionModel(emotionModelHead):
         onlyProfileTraining = profileEpoch is not None
 
         # Initialize the output tensors.
-        basicEmotionProfile = torch.zeros((numExperiments, self.numBasicEmotions, self.encodedDimension), device='cpu')
+        basicEmotionProfile = torch.zeros((numExperiments, self.numEmotions, self.numBasicEmotions, self.encodedDimension), device='cpu')
         validDataMask = torch.zeros((numExperiments, numSignals, maxSequenceLength), device='cpu', dtype=torch.bool)
         emotionProfile = torch.zeros((numExperiments, self.numEmotions, self.encodedDimension), device='cpu')
         reconstructedSignalData = torch.zeros((numExperiments, numSignals, maxSequenceLength), device='cpu')
@@ -140,27 +140,28 @@ class emotionModel(emotionModelHead):
         if not healthProfileStart:
             metaLearningData = self.sharedActivityModel.learningInterface(signalData=metaLearningData)
             metaLearningData = self.specificActivityModel.learningInterface(signalData=metaLearningData)
-            # metaLearningData: batchSize, numSignals, encodedDimension
+            # metaLearningData: batchSize, 1, encodedDimension
         else:
             metaLearningData = self.specificActivityModel.learningInterface(signalData=metaLearningData)
             metaLearningData = self.sharedActivityModel.learningInterface(signalData=metaLearningData)
-            # metaLearningData: batchSize, numSignals, encodedDimension
+            # metaLearningData: batchSize, 1, encodedDimension
 
         return metaLearningData
 
-    def basicEmotionProfiling(self, metaLearningData, healthProfileStart):
-        reversibleInterface.changeDirections(forwardDirection=not healthProfileStart)
+    def basicEmotionProfiling(self, healthProfile):
+        reversibleInterface.changeDirections(forwardDirection=False)
 
-        if not healthProfileStart:
-            metaLearningData = self.sharedEmotionModel.learningInterface(signalData=metaLearningData)
-            metaLearningData = self.specificEmotionModel.learningInterface(signalData=metaLearningData)
-            # metaLearningData: batchSize, numSignals, encodedDimension
-        else:
-            metaLearningData = self.specificEmotionModel.learningInterface(signalData=metaLearningData)
-            metaLearningData = self.sharedEmotionModel.learningInterface(signalData=metaLearningData)
-            # metaLearningData: batchSize, numSignals, encodedDimension
+        # Apply a specific emotion layer to the data.
+        emotionProfile = healthProfile.unsqueeze(1).repeat(repeats=(1, self.numEmotions, 1))
+        emotionProfile = self.specificEmotionModel.learningInterface(signalData=emotionProfile)
+        # emotionProfile: batchSize, numEmotions, encodedDimension
 
-        return metaLearningData
+        # Learn the basic emotion profile.
+        basicEmotionProfile = emotionProfile.unsqueeze(2).repeat(repeats=(1, 1, self.numBasicEmotions, 1))
+        basicEmotionProfile = self.sharedEmotionModel.learningInterface(signalData=basicEmotionProfile)
+        # basicEmotionProfile: batchSize, numEmotions, numBasicEmotions, encodedDimension
+
+        return basicEmotionProfile
 
     def reconstructHealthProfile(self, resampledSignalData):
         return self.signalEmbedding(metaLearningData=resampledSignalData, healthProfileStart=False, compileLayerStates=True)

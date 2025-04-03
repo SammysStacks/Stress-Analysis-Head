@@ -9,8 +9,10 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.neuralOperators.waveletOperator.waveletNeuralHelpers import waveletNeuralHelpers
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleLieLayer import reversibleLieLayer
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.sharedActivityModel import sharedActivityModel
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.sharedEmotionModel import sharedEmotionModel
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.sharedSignalEncoderModel import sharedSignalEncoderModel
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.specificActivityModel import specificActivityModel
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.specificEmotionModel import specificEmotionModel
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.specificSignalEncoderModel import specificSignalEncoderModel
 
 
@@ -86,23 +88,22 @@ class emotionModelHead(nn.Module):
                 operatorType=self.operatorType,
             )
 
-            # self.specificEmotionModel = specificEmotionModel(
-            #     neuralOperatorParameters=self.neuralOperatorParameters,
-            #     encodedDimension=self.encodedDimension,
-            #     emotionNames=self.emotionNames,
-            #     operatorType=self.operatorType,
-            #     numLayers=1,
-            # )
-            #
-            # self.sharedEmotionModel = sharedEmotionModel(
-            #     neuralOperatorParameters=self.neuralOperatorParameters,
-            #     numModelLayers=self.numEmotionModelLayers,
-            #     learningProtocol=self.learningProtocol,
-            #     encodedDimension=self.encodedDimension,
-            #     numBasicEmotions=self.numBasicEmotions,
-            #     operatorType=self.operatorType,
-            #     numEmotions=self.numEmotions,
-            # )
+            self.specificEmotionModel = specificEmotionModel(
+                neuralOperatorParameters=self.neuralOperatorParameters,
+                encodedDimension=self.encodedDimension,
+                numBasicEmotions=self.numBasicEmotions,
+                emotionNames=self.emotionNames,
+                operatorType=self.operatorType,
+                numSubjects=self.numSubjects,
+                numLayers=1,
+            )
+
+            self.sharedEmotionModel = sharedEmotionModel(
+                neuralOperatorParameters=self.neuralOperatorParameters,
+                encodedDimension=self.encodedDimension,
+                numLayers=self.numEmotionModelLayers,
+                operatorType=self.operatorType,
+            )
 
     # ------------------------- Model Getters ------------------------- #
 
