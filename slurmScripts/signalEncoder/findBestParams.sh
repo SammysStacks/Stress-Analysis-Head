@@ -47,7 +47,7 @@ numProfileShots_arr=(32)  # (8, [16, 24], 32)
 encodedDimensions_arr=(512 256)  # [128, 256, 512]
 
 # Wavelet states.
-waveletTypes_arr=('bior3.1')
+waveletTypes_arr=('bior3.1' 'bior3.3')
 numIgnoredSharedHFs=(0)
 
 for numIgnoredSharedHF in "${numIgnoredSharedHFs[@]}"
