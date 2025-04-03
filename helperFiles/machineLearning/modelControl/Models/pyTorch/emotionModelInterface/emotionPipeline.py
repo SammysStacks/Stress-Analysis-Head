@@ -37,7 +37,6 @@ class emotionPipeline(emotionPipelineHelpers):
                     # Extract the data, labels, and testing/training indices.
                     batchSignalInfo, batchSignalLabels, batchTrainingLabelMask, batchTestingLabelMask, batchTrainingSignalMask, batchTestingSignalMask = self.extractBatchInformation(batchData)
                     if onlyProfileTraining: batchTrainingLabelMask, batchTestingLabelMask, batchTrainingSignalMask, batchTestingSignalMask = None, None, None, None
-                    # allEmotionClassWeights, activityClassWeights = self.organizeLossInfo.getClassWeights(allLabels, allTrainingMasks, allTestingMasks, self.numActivities)
 
                     # We can skip this batch, and backpropagation if necessary.
                     if batchSignalInfo.size(0) == 0: self.backpropogateModel(); continue
@@ -90,9 +89,12 @@ class emotionPipeline(emotionPipelineHelpers):
                         finalTrainingLoss = trainingSignalReconstructedLosses.nanmean()
                     else:
                         # Calculate the error in emotion profiling and human activity recognition.
-                        trainingEmotionLosses = self.organizeLossInfo.calculateSignalEncodingLoss(emotionProfile, batchSignalLabels, batchTrainingLabelMask, averageBatches=True)
-                        trainingActivityLosses = self.organizeLossInfo.calculateSignalEncodingLoss(activityProfile, batchSignalLabels, batchTrainingLabelMask, averageBatches=True)
+                        trainingEmotionLosses = self.organizeLossInfo.calculateEmotionLoss(emotionProfile, batchSignalLabels, batchTrainingLabelMask)
+                        trainingActivityLosses = self.organizeLossInfo.calculateActivityLoss(activityProfile, batchSignalLabels, batchTrainingLabelMask)
                         if trainingEmotionLosses is None and trainingActivityLosses is None: self.accelerator.print("Not useful loss"); continue
+                        # emotionLosses dim: batchSize, numEmotions
+                        # activityLosses dim: batchSize
+
                         finalTrainingLoss = trainingEmotionLosses.nanmean() + trainingActivityLosses.nanmean()
 
                     # Initialize basic core loss value.

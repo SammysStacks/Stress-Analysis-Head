@@ -20,7 +20,7 @@ class profileModel(emotionModelWeights):
         # Initialize the health profile.
         self.imaginaryProfileCoefficients = self.getInitialPhysiologicalProfile(numExperiments, self.fourierDimension)
         self.realProfileCoefficients = self.getInitialPhysiologicalProfile(numExperiments, self.fourierDimension)
-        self.resetProfileHolders(numProfileShots=modelConstants.initialProfileEpochs)
+        self.resetProfileHolders(numProfileShots=modelConstants.userInputParams['numProfileShots'] + 1)
         self.resetProfileWeights()
 
     def resetProfileWeights(self):

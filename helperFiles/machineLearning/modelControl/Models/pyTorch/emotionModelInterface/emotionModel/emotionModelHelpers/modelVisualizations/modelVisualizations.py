@@ -49,40 +49,50 @@ class modelVisualizations(globalPlottingProtocols):
 
         with torch.no_grad():
             if self.accelerator.is_local_main_process:
-                specificModels = [modelPipeline.model.specificSignalEncoderModel for modelPipeline in allModelPipelines]  # Dim: numModels
-                datasetNames = [modelPipeline.model.datasetName for modelPipeline in allModelPipelines]  # Dim: numModels
-                numEpochs = allModelPipelines[0].getTrainingEpoch(submodel)  # Dim: numModels
+                specificSignalEncoderModels = [modelPipeline.model.specificSignalEncoderModel for modelPipeline in allModelPipelines]  # Dim: numModels
+                specificActivityModels = [modelPipeline.model.specificActivityModel for modelPipeline in allModelPipelines]  # Dim: numModels
+                specificEmotionModels = [modelPipeline.model.specificEmotionModel for modelPipeline in allModelPipelines]  # Dim: numModels
 
-                # Plot reconstruction loss for the signal encoder.
-                self.generalViz.plotTrainingLosses(trainingLosses=[specificModel.trainingLosses_signalReconstruction for specificModel in specificModels],
-                                                   testingLosses=[specificModel.testingLosses_signalReconstruction for specificModel in specificModels], numEpochs=numEpochs,
-                                                   lossLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal encoder convergence losses")
+                if submodel == modelConstants.signalEncoderModel:
+                    self.generalPlotting(submodel, allModelPipelines, specificSignalEncoderModels, showMinimumPlots, modelIdentifier="Signal encoder", submodelString="SignalEncoderModel")
+                elif submodel == modelConstants.emotionModel:
+                    self.generalPlotting(submodel, allModelPipelines, specificActivityModels, showMinimumPlots, modelIdentifier="Activity", submodelString="ActivityModel")
+                    self.generalPlotting(submodel, allModelPipelines, specificEmotionModels, showMinimumPlots, modelIdentifier="Emotion", submodelString="EmotionModel")
 
-                # Plot the losses during few-shot retraining the profile.
-                self.generalViz.plotTrainingLosses(trainingLosses=[np.nanmean(specificModel.profileModel.retrainingProfileLosses, axis=1) for specificModel in specificModels], testingLosses=None,
-                                                   numEpochs=numEpochs, lossLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle="Signal encoder profile convergence losses")
+    def generalPlotting(self, submodel, allModelPipelines, specificModels, showMinimumPlots, modelIdentifier, submodelString):
+        datasetNames = [modelPipeline.model.datasetName for modelPipeline in allModelPipelines]  # Dim: numModels
+        numEpochs = allModelPipelines[0].getTrainingEpoch(submodel)  # Dim: numModels
 
-                freeParamInformation = np.asarray([modelPipeline.model.getFreeParamsFullPassPath()[1:] for modelPipeline in allModelPipelines])
-                moduleNames, maxFreeParamsPath = freeParamInformation[:, 0], freeParamInformation[:, 1].astype(int)  # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
-                numFreeModelParams = [specificModel.numFreeParams for specificModel in specificModels]  # numModels, loadSubmodelEpochs, numModuleLayers, numSignals, numParams=1
-                self.generalViz.plotFreeParamFlow(numFreeModelParams, maxFreeParamsPath, paramNames=["Free params"], moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle="Signal encoder free parameters path zoomed")
-                for modelInd in range(len(numFreeModelParams)): print('numFreeModelParams:', numFreeModelParams[modelInd][-1][0].mean(), numFreeModelParams[modelInd][-1][1].mean(),  numFreeModelParams[modelInd][-1][2].mean(), numFreeModelParams[modelInd][-1][3].mean(), numFreeModelParams[modelInd][-1][4].mean())
-                if showMinimumPlots: return None
+        # Plot reconstruction loss for the signal encoder.
+        self.generalViz.plotTrainingLosses(trainingLosses=[specificModel.trainingLosses_signalReconstruction for specificModel in specificModels],
+                                           testingLosses=[specificModel.testingLosses_signalReconstruction for specificModel in specificModels], numEpochs=numEpochs,
+                                           lossLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle=f"{modelIdentifier}convergence losses")
 
-                # Plot the activation parameters for the signal encoder.
-                paramNames = ["Infinite Bound", "Linearity Factor", "Convergent Point"]
-                activationParamsPaths = np.asarray([specificModel.activationParamsPath for specificModel in specificModels])  # numModels, loadSubmodelEpochs, numActivations, numActivationParams=3
-                self.generalViz.plotActivationFlowCompressed(activationParamsPaths=activationParamsPaths, moduleNames=moduleNames, modelLabels=datasetNames, paramNames=paramNames, saveFigureLocation="trainingLosses/", plotTitle="Signal encoder activation parameter compressed path")
-                self.generalViz.plotActivationFlow(activationParamsPaths=activationParamsPaths, moduleNames=moduleNames, paramNames=paramNames, saveFigureLocation="trainingLosses/", plotTitle="Signal encoder activation parameter path")
+        # Plot the losses during few-shot retraining the profile.
+        self.generalViz.plotTrainingLosses(trainingLosses=[np.nanmean(specificModel.profileModel.retrainingProfileLosses, axis=1) for specificModel in specificModels], testingLosses=None,
+                                           numEpochs=numEpochs, lossLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle=f"{modelIdentifier}profile convergence losses")
 
-                # Plot the angle features for the signal encoder.
-                givensAnglesFeatureNames = reversibleLieLayer.getFeatureNames()
-                givensAnglesFeaturesPaths = [specificModel.givensAnglesFeaturesPath for specificModel in specificModels]  # numModels, loadSubmodelEpochs, numModuleLayers, numFeatures, numValues
-                self.generalViz.plotGivensFeaturesPath(givensAnglesFeaturesPaths=givensAnglesFeaturesPaths, paramNames=givensAnglesFeatureNames, moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle="Signal encoder angular features path")
+        freeParamInformation = np.asarray([modelPipeline.model.getFreeParamsFullPassPath(submodelString=submodelString)[1:] for modelPipeline in allModelPipelines])
+        moduleNames, maxFreeParamsPath = freeParamInformation[:, 0], freeParamInformation[:, 1].astype(int)  # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
+        numFreeModelParams = [specificModel.numFreeParams for specificModel in specificModels]  # numModels, loadSubmodelEpochs, numModuleLayers, numSignals, numParams=1
+        self.generalViz.plotFreeParamFlow(numFreeModelParams, maxFreeParamsPath, paramNames=["Free params"], moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle=f"{modelIdentifier}free parameters path zoomed")
+        for modelInd in range(len(numFreeModelParams)): print('numFreeModelParams:', numFreeModelParams[modelInd][-1][0].mean(), numFreeModelParams[modelInd][-1][1].mean(),  numFreeModelParams[modelInd][-1][2].mean(), numFreeModelParams[modelInd][-1][3].mean(), numFreeModelParams[modelInd][-1][4].mean())
+        if showMinimumPlots: return None
 
-                # Plot the scaling factors for the signal encoder.
-                normalizationFactorsPaths = [specificModel.normalizationFactorsPath for specificModel in specificModels]  # numModels, loadSubmodelEpochs, numModuleLayers, numSignals, numParams=1
-                self.generalViz.plotNormalizationFactorFlow(normalizationFactorsPaths, paramNames=["normalization factors"], moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle="Signal encoder normalization factors path")
+        # Plot the activation parameters for the signal encoder.
+        paramNames = ["Infinite Bound", "Linearity Factor", "Convergent Point"]
+        activationParamsPaths = np.asarray([specificModel.activationParamsPath for specificModel in specificModels])  # numModels, loadSubmodelEpochs, numActivations, numActivationParams=3
+        self.generalViz.plotActivationFlowCompressed(activationParamsPaths=activationParamsPaths, moduleNames=moduleNames, modelLabels=datasetNames, paramNames=paramNames, saveFigureLocation="trainingLosses/", plotTitle=f"{modelIdentifier}activation parameter compressed path")
+        self.generalViz.plotActivationFlow(activationParamsPaths=activationParamsPaths, moduleNames=moduleNames, paramNames=paramNames, saveFigureLocation="trainingLosses/", plotTitle=f"{modelIdentifier}activation parameter path")
+
+        # Plot the angle features for the signal encoder.
+        givensAnglesFeatureNames = reversibleLieLayer.getFeatureNames()
+        givensAnglesFeaturesPaths = [specificModel.givensAnglesFeaturesPath for specificModel in specificModels]  # numModels, loadSubmodelEpochs, numModuleLayers, numFeatures, numValues
+        self.generalViz.plotGivensFeaturesPath(givensAnglesFeaturesPaths=givensAnglesFeaturesPaths, paramNames=givensAnglesFeatureNames, moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle=f"{modelIdentifier}angular features path")
+
+        # Plot the scaling factors for the signal encoder.
+        normalizationFactorsPaths = [specificModel.normalizationFactorsPath for specificModel in specificModels]  # numModels, loadSubmodelEpochs, numModuleLayers, numSignals, numParams=1
+        self.generalViz.plotNormalizationFactorFlow(normalizationFactorsPaths, paramNames=["normalization factors"], moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle=f"{modelIdentifier}normalization factors path")
 
     def plotAllTrainingEvents(self, submodel, modelPipeline, lossDataLoader, trainingModelName, currentEpoch, showMinimumPlots):
         self.accelerator.print(f"\nPlotting results for the {modelPipeline.model.datasetName} model")
@@ -108,29 +118,13 @@ class modelVisualizations(globalPlottingProtocols):
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
             signalData, signalIdentifiers, metadata = allSignalData[validBatchMask][:numPlottingPoints], allSignalIdentifiers[validBatchMask][:numPlottingPoints], allMetadata[validBatchMask][:numPlottingPoints]
             validDataMask, reconstructedSignalData, resampledSignalData, healthProfile, activityProfile, basicEmotionProfile, emotionProfile = model.forward(submodel, signalData, signalIdentifiers, metadata, device=self.accelerator.device, onlyProfileTraining=False)
-            reconstructedHealthProfile = model.reconstructHealthProfile(resampledSignalData)  # reconstructedHealthProfile: batchSize, encodedDimension
-            forwardModelPassSignals = model.specificSignalEncoderModel.profileModel.compiledLayerStates
-            # forwardModelPassSignals: numModuleLayers, batchSize, numSignals, encodedDimension
-
-            # Extract the model's internal variables.
-            retrainingHealthProfilePath = np.asarray(model.specificSignalEncoderModel.profileModel.retrainingHealthProfilePath)  # numProfileShots, numExperiments, encodedDimension
-            generatingBiometricSignals = np.asarray(model.specificSignalEncoderModel.profileModel.generatingBiometricSignals)  # numProfileShots, numModuleLayers, numExperiments, numSignals=1***, encodedDimension
-            resampledBiomarkerTimes = model.sharedSignalEncoderModel.hyperSampledTimes.detach().cpu().numpy().astype(np.float16)  # numTimePoints
-            backwardModelPassSignals = np.flip(forwardModelPassSignals, axis=0)
 
             # Detach the data from the GPU and tensor format.
-            reconstructedHealthProfile, activityProfile, basicEmotionProfile, emotionProfile = reconstructedHealthProfile.detach().cpu().numpy(), activityProfile.detach().cpu().numpy().astype(np.float16), basicEmotionProfile.detach().cpu().numpy().astype(np.float16), emotionProfile.detach().cpu().numpy().astype(np.float16)
+            activityProfile, basicEmotionProfile, emotionProfile = activityProfile.detach().cpu().numpy().astype(np.float16), basicEmotionProfile.detach().cpu().numpy().astype(np.float16), emotionProfile.detach().cpu().numpy().astype(np.float16)
             validDataMask, reconstructedSignalData, resampledSignalData, healthProfile = validDataMask.detach().cpu().numpy().astype(np.float16), reconstructedSignalData.detach().cpu().numpy().astype(np.float16), resampledSignalData.detach().cpu().numpy().astype(np.float16), healthProfile.detach().cpu().numpy()
             signalData = signalData.detach().cpu().numpy().astype(np.float16)
-            
-            # Compile additional information for the model.getActivationParamsFullPassPath
-            givensAnglesPath, normalizationFactorsPath, _, reversibleModuleNames, givensAnglesFeatureNames = model.getLearnableParams()
-            activationCurvePath, activationModuleNames = model.getActivationCurvesFullPassPath()  # numModuleLayers, 2=(x, y), numPoints=100
-            _, _, maxFreeParamsPath = model.getFreeParamsFullPassPath()
-            # givensAnglesPath: numModuleLayers, numSignals, numParams
-            # normalizationFactorsPath: numModuleLayers, numSignals, numParam=1
-            signalNames = model.featureNames
-            batchInd, signalInd = 0, 0
+            signalNames, emotionNames = model.featureNames, model.emotionNames
+            batchInd, signalInd, emotionInd = 0, 0, 0
 
             # Plot the loss on the primary process.
             if self.accelerator.is_local_main_process:
@@ -138,6 +132,24 @@ class modelVisualizations(globalPlottingProtocols):
                 # ------------------- Signal Encoding Plots -------------------- #
 
                 if submodel == modelConstants.signalEncoderModel:
+                    # Perform the backward pass through the model to get the reconstructed health profile.
+                    reconstructedHealthProfile = model.reconstructHealthProfile(resampledSignalData).detach().cpu().numpy()  # reconstructedHealthProfile: batchSize, encodedDimension
+                    forwardModelPassSignals = model.specificSignalEncoderModel.profileModel.compiledLayerStates
+                    # forwardModelPassSignals: numModuleLayers, batchSize, numSignals, encodedDimension
+
+                    # Extract the model's internal variables.
+                    retrainingHealthProfilePath = np.asarray(model.specificSignalEncoderModel.profileModel.retrainingHealthProfilePath)  # numProfileShots, numExperiments, encodedDimension
+                    generatingBiometricSignals = np.asarray(model.specificSignalEncoderModel.profileModel.generatingBiometricSignals)  # numProfileShots, numModuleLayers, numExperiments, numSignals=1***, encodedDimension
+                    resampledBiomarkerTimes = model.sharedSignalEncoderModel.hyperSampledTimes.detach().cpu().numpy().astype(np.float16)  # numTimePoints
+                    backwardModelPassSignals = np.flip(forwardModelPassSignals, axis=0)
+
+                    # Compile additional information for the model.getActivationParamsFullPassPath
+                    givensAnglesPath, normalizationFactorsPath, _, reversibleModuleNames, givensAnglesFeatureNames = model.getLearnableParams(submodelString="SignalEncoderModel")
+                    activationCurvePath, activationModuleNames = model.getActivationCurvesFullPassPath(submodelString="SignalEncoderModel")  # numModuleLayers, 2=(x, y), numPoints=100
+                    _, _, maxFreeParamsPath = model.getFreeParamsFullPassPath(submodelString="SignalEncoderModel")
+                    # normalizationFactorsPath: numModuleLayers, numSignals, numParam=1
+                    # givensAnglesPath: numModuleLayers, numSignals, numParams
+
                     # Plot the health profile training information.
                     self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, retrainingProfilePath=retrainingHealthProfilePath[:, :, None, :], epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Health profile generation")
                     self.signalEncoderViz.plotProfileReconstructionError(resampledBiomarkerTimes, healthProfile, reconstructedHealthProfile, epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="signalEncoding/", plotTitle="Health profile reconstruction error")
@@ -171,45 +183,9 @@ class modelVisualizations(globalPlottingProtocols):
                 # Dont keep plotting untrained models.
                 if submodel == modelConstants.signalEncoderModel: return None
 
+                # ------------------ Activity Prediction Plots ------------------ #
+
                 # ------------------ Emotion Prediction Plots ------------------ #
-
-                # Organize activity information.
-                # activityTestingMask = self.dataInterface.getActivityColumn(allTestingMasks)
-                # activityTrainingMask = self.dataInterface.getActivityColumn(allTrainingMasks)
-                # activityTestingLabels = self.dataInterface.getActivityLabels(allLabels, allTestingMasks)
-                # activityTrainingLabels = self.dataInterface.getActivityLabels(allLabels, allTrainingMasks)
-
-                # Activity plotting.
-                # predictedActivityLabels = allActivityDistributions.argmax(dim=1).int()
-                # self.plotPredictedMatrix(activityTrainingLabels, activityTestingLabels, predictedActivityLabels[activityTrainingMask], predictedActivityLabels[activityTestingMask], self.numActivities, epoch=currentEpoch, "Activities")
-                # self.plotTrainingLosses(self.trainingLosses_activities, self.testingLosses_activities, plotTitle = "Activity Loss (Cross Entropy)")
-
-                # get the valid emotion indices (ones with training points).
-                # emotionTrainingMask = self.dataInterface.getEmotionMasks(allTrainingMasks)
-                # validEmotionInds = self.dataInterface.getLabelInds_withPoints(emotionTrainingMask)
-                # For each emotion we are predicting that has training data.
-                # for validEmotionInd in validEmotionInds:
-                #     testingMask = allTestingMasks[:, validEmotionInd]
-                #     trainingMask = allTrainingMasks[:, validEmotionInd]
-                #     emotionName = self.emotionNames[validEmotionInd]
-
-                #     # # Organize the emotion's training/testing information.
-                #     trainingEmotionLabels = self.dataInterface.getEmotionLabels(validEmotionInd, allLabels, allTrainingMasks)
-                #     testingEmotionLabels = self.dataInterface.getEmotionLabels(validEmotionInd, allLabels, allTestingMasks)
-
-                #     # Get the predicted and true emotion distributions.
-                #     predictedTrainingEmotions, trueTrainingEmotions = self.dataInterface.getEmotionDistributions(validEmotionInd, allFinalEmotionDistributions, allLabels, allTrainingMasks)
-                #     predictedTestingEmotions, trueTestingEmotions = self.dataInterface.getEmotionDistributions(validEmotionInd, allFinalEmotionDistributions, allLabels, allTestingMasks)
-
-                #     # Get the class information from the testing and training data.
-                #     allPredictedEmotionClasses = modelHelpers.extractClassIndex(allFinalEmotionDistributions[validEmotionInd], self.allEmotionClasses[validEmotionInd], axisDimension = 1, returnIndex = True)
-                #     predictedTrainingEmotionClasses = allPredictedEmotionClasses[trainingMask]
-                #     predictedTestingEmotionClasses = allPredictedEmotionClasses[testingMask]
-
-                #     # Scale the emotion if log-softmax was the final layer.
-                #     if model.lastEmotionLayer.lastEmotionLayer == "logSoftmax":
-                #         predictedTestingEmotions = np.exp(predictedTestingEmotions)
-                #         predictedTrainingEmotions = np.exp(predictedTrainingEmotions)
 
                 # Get all the data predictions.
                 # self.plotDistributions(trueTestingEmotions, predictedTestingEmotions, self.allEmotionClasses[validEmotionInd], plotTitle = "Testing Emotion Distributions")

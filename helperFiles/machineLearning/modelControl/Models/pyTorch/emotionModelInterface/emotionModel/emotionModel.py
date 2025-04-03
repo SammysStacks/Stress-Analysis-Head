@@ -11,8 +11,8 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 
 class emotionModel(emotionModelHead):
-    def __init__(self, submodel, emotionNames, activityNames, featureNames, numSubjects, datasetName, numExperiments):
-        super(emotionModel, self).__init__(submodel, emotionNames, activityNames, featureNames, numSubjects, datasetName, numExperiments)
+    def __init__(self, submodel, emotionNames, activityNames, featureNames, allEmotionClasses, numSubjects, datasetName, numExperiments):
+        super(emotionModel, self).__init__(submodel, emotionNames, activityNames, featureNames, allEmotionClasses, numSubjects, datasetName, numExperiments)
 
     # ------------------------- Full Forward Calls ------------------------- #
 

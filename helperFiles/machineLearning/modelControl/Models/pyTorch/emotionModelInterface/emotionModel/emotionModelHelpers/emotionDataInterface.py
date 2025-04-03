@@ -1,6 +1,5 @@
 import torch
 
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.generalMethods.classWeightHelpers import classWeightHelpers
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
 
@@ -31,29 +30,6 @@ class emotionDataInterface:
         emotionLabels = self.getEmotionColumn(allLabels, emotionInd)
 
         return emotionLabels[emotionDataMask]
-
-    def getEmotionDistributions(self, emotionInd, predictedEmotionLabels, allLabels, allLabelsMask, allEmotionClasses, emotionLength):
-        # Organize the emotion's training information.
-        emotionLabels = self.getEmotionLabels(emotionInd, allLabels, allLabelsMask)
-        emotionDataMask = self.getEmotionColumn(allLabelsMask, emotionInd)
-
-        # Get the predicted and true emotion distributions.
-        predictedTrainingEmotions = predictedEmotionLabels[emotionInd][emotionDataMask]
-        trueTrainingEmotions = classWeightHelpers.gausEncoding(emotionLabels, allEmotionClasses[emotionInd], emotionLength)
-
-        return predictedTrainingEmotions, trueTrainingEmotions
-
-    @staticmethod
-    def getLabelInds_withPoints(allTrainingMasks):
-        numExperiments, numLabels = allTrainingMasks.size()
-
-        # Find the label indices with training points.
-        numTrainingPoints = allTrainingMasks.sum(dim=0)  # Find the number of training points per label.
-        goodExperimentalInds = (numTrainingPoints.nonzero(as_tuple=True)[0][numTrainingPoints < numExperiments])
-        # If there are no good indices, return an empty list.
-        if len(goodExperimentalInds) == 0: return []
-
-        return goodExperimentalInds
 
     # ---------------------- Contextual Data Getters ---------------------- #
     
@@ -147,14 +123,3 @@ class emotionDataInterface:
         channelInd = modelConstants.metadata.index(channelName)
 
         return metaData[:, channelInd]
-    
-    def getReconstructionData(self, trainingMask, signalLabels, signalData, reconstructionIndex):
-        # Get the current training data mask.
-        trainingColumnMask = self.getEmotionColumn(trainingMask, reconstructionIndex)
-
-        # Apply the training data mask
-        trainingMaskRecon = trainingMask[trainingColumnMask]
-        signalLabelsRecon = signalLabels[trainingColumnMask]
-        signalDataRecon = signalData[trainingColumnMask]
-
-        return trainingMaskRecon, signalLabelsRecon, signalDataRecon

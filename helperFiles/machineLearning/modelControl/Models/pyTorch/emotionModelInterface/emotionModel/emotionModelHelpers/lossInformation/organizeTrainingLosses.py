@@ -5,6 +5,7 @@ import numpy as np
 import torch
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.lossInformation.lossCalculations import lossCalculations
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
 
 class organizeTrainingLosses(lossCalculations):
@@ -37,89 +38,75 @@ class organizeTrainingLosses(lossCalculations):
             validDataMask, reconstructedSignalData, resampledSignalData, healthProfile, activityProfile, basicEmotionProfile, emotionProfile = model.fullPass(submodel, allSignalData, allSignalIdentifiers, allMetadata, device=self.accelerator.device, profileEpoch=None)
             t2 = time.time(); self.accelerator.print("\tFull Pass", t2 - t1)
 
-            # Calculate the signal encoding loss.
-            signalReconstructedTrainingLosses = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, validDataMask, allTrainingSignalMask, averageBatches=True)
-            signalReconstructedTestingLosses = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, validDataMask, allTestingSignalMask, averageBatches=True)
-            # signalReconstructedTrainingLosses: numTrainingSignals
-            # signalReconstructedTestingLosses: numTestingSignals
+            if submodel == modelConstants.signalEncoderModel:
+                # Calculate the signal encoding loss.
+                signalReconstructedTrainingLosses = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, validDataMask, allTrainingSignalMask, averageBatches=True)
+                signalReconstructedTestingLosses = self.calculateSignalEncodingLoss(allSignalData, reconstructedSignalData, validDataMask, allTestingSignalMask, averageBatches=True)
+                # signalReconstructedTrainingLosses: numTrainingSignals
+                # signalReconstructedTestingLosses: numTestingSignals
 
-            # Get the encoder information.
-            givensAnglesPath, normalizationFactorsPath, givensAnglesFeaturesPath, reversibleModuleNames, givensAnglesFeatureNames = model.getLearnableParams()
-            activationParamsPath, moduleNames = model.getActivationParamsFullPassPath()
-            numFreeParamsPath, _, _ = model.getFreeParamsFullPassPath()
-            # givensAnglesFeaturesPath: numModuleLayers, numFeatures=5, numValues*
-            # normalizationFactorsPath: numModuleLayers, numSignals, numParams=1
-            # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
-            # givensAnglesPath: numModuleLayers, numSignals, numParams
-            # activationParamsPath: numActivations, numParams=3
+                # Get the encoder information.
+                givensAnglesPath, normalizationFactorsPath, givensAnglesFeaturesPath, reversibleModuleNames, givensAnglesFeatureNames = model.getLearnableParams(submodelString="SignalEncoderModel")
+                activationParamsPath, moduleNames = model.getActivationParamsFullPassPath(submodelString="SignalEncoderModel")
+                numFreeParamsPath, _, _ = model.getFreeParamsFullPassPath(submodelString="SignalEncoderModel")
+                # givensAnglesFeaturesPath: numModuleLayers, numFeatures=5, numValues*
+                # normalizationFactorsPath: numModuleLayers, numSignals, numParams=1
+                # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
+                # givensAnglesPath: numModuleLayers, numSignals, numParams
+                # activationParamsPath: numActivations, numParams=3
 
-            # Store the signal encoder loss information.
-            self.storeLossInformation(trainingLoss=signalReconstructedTrainingLosses, testingLoss=signalReconstructedTestingLosses, trainingHolder=model.specificSignalEncoderModel.trainingLosses_signalReconstruction, testingHolder=model.specificSignalEncoderModel.testingLosses_signalReconstruction)
-            self.storeLossInformation(trainingLoss=activationParamsPath, testingLoss=None, trainingHolder=model.specificSignalEncoderModel.activationParamsPath, testingHolder=None)
-            self.storeLossInformation(trainingLoss=normalizationFactorsPath, testingLoss=None, trainingHolder=model.specificSignalEncoderModel.normalizationFactorsPath, testingHolder=None)
-            self.storeLossInformation(trainingLoss=givensAnglesFeaturesPath, testingLoss=None, trainingHolder=model.specificSignalEncoderModel.givensAnglesFeaturesPath, testingHolder=None)
-            self.storeLossInformation(trainingLoss=numFreeParamsPath, testingLoss=None, trainingHolder=model.specificSignalEncoderModel.numFreeParams, testingHolder=None)
-            self.accelerator.print("Reconstruction loss values:", signalReconstructedTrainingLosses.nanmean().item(), signalReconstructedTestingLosses.nanmean().item())
+                # Store the signal encoder loss information.
+                self.storeLossInformation(trainingLoss=signalReconstructedTrainingLosses, testingLoss=signalReconstructedTestingLosses, trainingHolder=model.specificSignalEncoderModel.trainingLosses_signalReconstruction, testingHolder=model.specificSignalEncoderModel.testingLosses_signalReconstruction)
+                self.storeLossInformation(trainingLoss=activationParamsPath, testingLoss=None, trainingHolder=model.specificSignalEncoderModel.activationParamsPath, testingHolder=None)
+                self.storeLossInformation(trainingLoss=normalizationFactorsPath, testingLoss=None, trainingHolder=model.specificSignalEncoderModel.normalizationFactorsPath, testingHolder=None)
+                self.storeLossInformation(trainingLoss=givensAnglesFeaturesPath, testingLoss=None, trainingHolder=model.specificSignalEncoderModel.givensAnglesFeaturesPath, testingHolder=None)
+                self.storeLossInformation(trainingLoss=numFreeParamsPath, testingLoss=None, trainingHolder=model.specificSignalEncoderModel.numFreeParams, testingHolder=None)
+                self.accelerator.print("Reconstruction loss values:", signalReconstructedTrainingLosses.nanmean().item(), signalReconstructedTestingLosses.nanmean().item())
 
-            # Calculate the activity classification accuracy/loss and assert the integrity of the loss.
-            # activityTestingLoss = self.calculateActivityLoss(allActivityDistributions, allLabels, allTestingMasks, activityClassWeights)
-            # activityTrainingLoss = self.calculateActivityLoss(allActivityDistributions, allLabels, allTrainingMasks, activityClassWeights)
-            # # Store the activity loss information.
-            # self.testingLosses_activities.append(activityTestingLoss)
-            # self.trainingLosses_activities.append(activityTrainingLoss)
+            elif submodel == modelConstants.emotionModel:
+                # Calculate the activity classification accuracy/loss and assert the integrity of the loss.
+                activityTestingLoss = self.calculateActivityLoss(activityProfile, allLabels, allTestingLabelMask)
+                activityTrainingLoss = self.calculateActivityLoss(activityProfile, allLabels, allTrainingLabelMask)
 
-            # # For each emotion we are predicting.
-            # for emotionInd in range(self.numEmotions):
-            #     if allEmotionClassWeights[emotionInd] is torch.nan: continue
-            #     # Calculate and add the loss due to misclassifying an emotion.
-            #     emotionTestingLoss = self.calculateEmotionLoss(emotionInd, allFinalEmotionDistributions, allLabels, allTestingMasks, allEmotionClassWeights) # Calculate the error in the emotion predictions
-            #     emotionTrainingLoss = self.calculateEmotionLoss(emotionInd, allFinalEmotionDistributions, allLabels, allTrainingMasks, allEmotionClassWeights) # Calculate the error in the emotion predictions
-            #     # Store the loss information.
-            #     self.testingLosses_emotions[emotionInd].append(emotionTestingLoss)
-            #     self.trainingLosses_emotions[emotionInd].append(emotionTrainingLoss)
-            # return None
+                # Get the encoder information.
+                givensAnglesPath, normalizationFactorsPath, givensAnglesFeaturesPath, reversibleModuleNames, givensAnglesFeatureNames = model.getLearnableParams(submodelString="ActivityModel")
+                activationParamsPath, moduleNames = model.getActivationParamsFullPassPath(submodelString="ActivityModel")
+                numFreeParamsPath, _, _ = model.getFreeParamsFullPassPath(submodelString="ActivityModel")
+                # givensAnglesFeaturesPath: numModuleLayers, numFeatures=5, numValues*
+                # normalizationFactorsPath: numModuleLayers, numSignals, numParams=1
+                # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
+                # givensAnglesPath: numModuleLayers, numSignals, numParams
+                # activationParamsPath: numActivations, numParams=3
 
-            # # For each time window analysis.
-            # for timeWindowInd in range(len(modelConstants.modelTimeWindow)):
-            #     timeWindow = modelConstants.modelTimeWindow
-            #     # If we are debugging and do not need to store all the loss values.
-            #     if fastPass and timeWindow != self.generalTimeWindow: continue
-            #
-            #     # Segment the data into its time window.
-            #     segmentedSignalData = dataAugmentation.getRecentSignalPoints(allSignalData, timeWindow)
-            #
-            #     t1 = time.time()
-            #     # Pass all the data through the model and store the emotions, activity, and intermediate variables.
-            #     signalEncodingOutputs, autoencodingOutputs, emotionModelOutputs = model.fullDataPass(submodel, lossDataLoader, timeWindow=timeWindow, reconstructSignals=True, compileVariables=False, trainingFlag=False)
-            #     t2 = time.time(); self.accelerator.print("Full Pass", t2 - t1),
-            #
-            #     # Unpack all the data.
-            #     segmentedCompressedData, segmentedReconstructedEncodedData, segmentedDenoisedDoubleReconstructedData, segmentedAutoencoderLayerLoss = autoencodingOutputs
-            #     segmentedEncodedData, segmentedReconstructedData, segmentedPredictedIndexProbabilities, segmentedDecodedPredictedIndexProbabilities, segmentedSignalEncodingLayerLoss = signalEncodingOutputs
-            #     segmentedMappedSignalData, segmentedReconstructedCompressedData, segmentedFeatureData, segmentedActivityDistributions, segmentedBasicEmotionDistributions, segmentedFinalEmotionDistributions = emotionModelOutputs
-            #
-            #     if submodel == modelConstants.signalEncoderModel:
-            #         # Calculate the signal encoding loss.
-            #         signalReconstructedTestingLoss, encodedMeanTestingLoss, encodedMinMaxTestingLoss, positionalEncodingTestingLoss, decodedPositionalEncodingTestingLoss, signalEncodingTestingLayerLoss = \
-            #             self.calculateSignalEncodingLoss(segmentedSignalData, segmentedEncodedData, segmentedReconstructedData, segmentedPredictedIndexProbabilities, segmentedDecodedPredictedIndexProbabilities, segmentedSignalEncodingLayerLoss, allTestingMasks, reconstructionIndex)
-            #         signalReconstructedTrainingLoss, encodedMeanTrainingLoss, encodedMinMaxTrainingLoss, positionalEncodingTrainingLoss, decodedPositionalEncodingTrainingLoss, signalEncodingTrainingLayerLoss = \
-            #             self.calculateSignalEncodingLoss(segmentedSignalData, segmentedEncodedData, segmentedReconstructedData, segmentedPredictedIndexProbabilities, segmentedDecodedPredictedIndexProbabilities, segmentedSignalEncodingLayerLoss, allTrainingMasks, reconstructionIndex)
-            #
-            #         # Store the signal encoder loss information.
-            #         self.storeLossInformation(decodedPositionalEncodingTrainingLoss, decodedPositionalEncodingTestingLoss, model.specificSignalEncoderModel.trainingLosses_timeDecodedPosEncAnalysis[timeWindowInd], model.specificSignalEncoderModel.testingLosses_timeDecodedPosEncAnalysis[timeWindowInd])
-            #         self.storeLossInformation(signalReconstructedTrainingLoss, signalReconstructedTestingLoss, model.specificSignalEncoderModel.trainingLosses_timeReconstructionAnalysis[timeWindowInd], model.specificSignalEncoderModel.testingLosses_timeReconstructionAnalysis[timeWindowInd])
-            #         self.storeLossInformation(encodedMinMaxTrainingLoss, encodedMinMaxTestingLoss, model.specificSignalEncoderModel.trainingLosses_timeMinMaxAnalysis[timeWindowInd], model.specificSignalEncoderModel.testingLosses_timeMinMaxAnalysis[timeWindowInd])
-            #         self.storeLossInformation(positionalEncodingTrainingLoss, positionalEncodingTestingLoss, model.specificSignalEncoderModel.trainingLosses_timePosEncAnalysis[timeWindowInd], model.specificSignalEncoderModel.testingLosses_timePosEncAnalysis[timeWindowInd])
-            #         self.storeLossInformation(encodedMeanTrainingLoss, encodedMeanTestingLoss, model.specificSignalEncoderModel.trainingLosses_timeMeanAnalysis[timeWindowInd], model.specificSignalEncoderModel.testingLosses_timeMeanAnalysis[timeWindowInd])
-            #         # Calculate and Store the optimal loss only once.
-            #         if len(model.specificSignalEncoderModel.trainingLosses_timeReconstructionOptimalAnalysis[timeWindowInd]) == 0:
-            #             optimalTrainingLoss = self.getOptimalLoss(model.specificSignalEncoderModel.calculateOptimalLoss, segmentedSignalData, allTrainingMasks, reconstructionIndex)
-            #             optimalTestingLoss = self.getOptimalLoss(model.specificSignalEncoderModel.calculateOptimalLoss, segmentedSignalData, allTestingMasks, reconstructionIndex)
-            #
-            #             # Store the signal encoder loss information.
-            #             self.storeLossInformation(optimalTrainingLoss, optimalTestingLoss, model.specificSignalEncoderModel.trainingLosses_timeReconstructionOptimalAnalysis[timeWindowInd], model.specificSignalEncoderModel.testingLosses_timeReconstructionOptimalAnalysis[timeWindowInd])
-            #         # Inform the user about the final loss.
-            #         print(f"\tSignal encoder {timeWindow} second losses:", signalReconstructedTrainingLoss.item(), signalReconstructedTestingLoss.item())
+                # Store the signal encoder loss information.
+                self.storeLossInformation(trainingLoss=activityTrainingLoss, testingLoss=activityTestingLoss, trainingHolder=model.specificActivityModel.trainingLosses_signalReconstruction, testingHolder=model.specificActivityModel.testingLosses_signalReconstruction)
+                self.storeLossInformation(trainingLoss=activationParamsPath, testingLoss=None, trainingHolder=model.specificActivityModel.activationParamsPath, testingHolder=None)
+                self.storeLossInformation(trainingLoss=normalizationFactorsPath, testingLoss=None, trainingHolder=model.specificActivityModel.normalizationFactorsPath, testingHolder=None)
+                self.storeLossInformation(trainingLoss=givensAnglesFeaturesPath, testingLoss=None, trainingHolder=model.specificActivityModel.givensAnglesFeaturesPath, testingHolder=None)
+                self.storeLossInformation(trainingLoss=numFreeParamsPath, testingLoss=None, trainingHolder=model.specificActivityModel.numFreeParams, testingHolder=None)
+                self.accelerator.print("Reconstruction loss values:", activityTrainingLoss.nanmean().item(), activityTestingLoss.nanmean().item())
+
+                # Calculate the activity classification accuracy/loss and assert the integrity of the loss.
+                emotionTestingLoss = self.calculateEmotionLoss(emotionProfile, allLabels, allTestingLabelMask)
+                emotionTrainingLoss = self.calculateEmotionLoss(emotionProfile, allLabels, allTrainingLabelMask)
+
+                # Get the encoder information.
+                givensAnglesPath, normalizationFactorsPath, givensAnglesFeaturesPath, reversibleModuleNames, givensAnglesFeatureNames = model.getLearnableParams(submodelString="EmotionModel")
+                activationParamsPath, moduleNames = model.getActivationParamsFullPassPath(submodelString="EmotionModel")
+                numFreeParamsPath, _, _ = model.getFreeParamsFullPassPath(submodelString="EmotionModel")
+                # givensAnglesFeaturesPath: numModuleLayers, numFeatures=5, numValues*
+                # normalizationFactorsPath: numModuleLayers, numSignals, numParams=1
+                # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
+                # givensAnglesPath: numModuleLayers, numSignals, numParams
+                # activationParamsPath: numActivations, numParams=3
+
+                # Store the signal encoder loss information.
+                self.storeLossInformation(trainingLoss=emotionTrainingLoss, testingLoss=emotionTestingLoss, trainingHolder=model.specificEmotionModel.trainingLosses_signalReconstruction, testingHolder=model.specificEmotionModel.testingLosses_signalReconstruction)
+                self.storeLossInformation(trainingLoss=activationParamsPath, testingLoss=None, trainingHolder=model.specificEmotionModel.activationParamsPath, testingHolder=None)
+                self.storeLossInformation(trainingLoss=normalizationFactorsPath, testingLoss=None, trainingHolder=model.specificEmotionModel.normalizationFactorsPath, testingHolder=None)
+                self.storeLossInformation(trainingLoss=givensAnglesFeaturesPath, testingLoss=None, trainingHolder=model.specificEmotionModel.givensAnglesFeaturesPath, testingHolder=None)
+                self.storeLossInformation(trainingLoss=numFreeParamsPath, testingLoss=None, trainingHolder=model.specificEmotionModel.numFreeParams, testingHolder=None)
+                self.accelerator.print("Reconstruction loss values:", activityTrainingLoss.nanmean().item(), activityTestingLoss.nanmean().item())
 
     # --------------------------- Helper Methods --------------------------- #
 
@@ -155,6 +142,9 @@ class organizeTrainingLosses(lossCalculations):
         activityLabels = self.dataInterface.getActivityLabels(allLabels, validLabelsMask, self.activityLabelInd)
         activityClassWeights = self.assignClassWeights(activityLabels, numActivities)
 
+        # Set the loss function for the activity and emotion classes.
+        self.setEmotionActivityLossFunctions(activityClassWeights=activityClassWeights, emotionClassWeights=allEmotionClassWeights)
+
         return allEmotionClassWeights, activityClassWeights
 
     @staticmethod
@@ -173,11 +163,11 @@ class organizeTrainingLosses(lossCalculations):
         upperBoundLabels = validClassLabels.ceil()
 
         # Get the upper and lower-class weights.
-        upperBoundWeight = validClassLabels - lowerBoundLabels
-        lowerBoundWeight = 1 - upperBoundWeight
+        upperBoundWeight = validClassLabels - lowerBoundLabels  # [0, 1]
+        lowerBoundWeight = 1 - upperBoundWeight  # [0, 1]
 
         # Remove invalid lower and upper bounds.
-        upperBoundLabels[num_classes <= upperBoundLabels] = num_classes - 1
+        upperBoundLabels[num_classes - 1 <= upperBoundLabels] = num_classes - 1
         lowerBoundLabels[lowerBoundLabels < 0] = 0
 
         # Count the number of points in each class.

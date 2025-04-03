@@ -17,7 +17,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 
 class emotionModelHead(nn.Module):
-    def __init__(self, submodel, emotionNames, activityNames, featureNames, numSubjects, datasetName, numExperiments):
+    def __init__(self, submodel, emotionNames, activityNames, featureNames, allEmotionClasses, numSubjects, datasetName, numExperiments):
         super(emotionModelHead, self).__init__()
         # General model parameters.
         self.hpcFlag = 'HPC' in modelConstants.userInputParams['deviceListed']  # Flag to determine if the model is running on an HPC.
@@ -47,7 +47,7 @@ class emotionModelHead(nn.Module):
         self.numBasicEmotions = modelConstants.userInputParams['numBasicEmotions']  # The number of basic emotions (basis states of emotions).
 
         # Setup holder for the model's training information
-        self.calculateModelLosses = lossCalculations(accelerator=None, allEmotionClasses=None, activityLabelInd=None)
+        self.calculateModelLosses = lossCalculations(accelerator=None, allEmotionClasses=allEmotionClasses, activityLabelInd=self.numEmotions)
 
         # ------------------------ Data Compression ------------------------ #
 
@@ -124,7 +124,7 @@ class emotionModelHead(nn.Module):
 
         return compiledName
 
-    def getLearnableParams(self):
+    def getLearnableParams(self, submodelString):
         # Initialize the learnable parameters.
         givensAnglesPath, normalizationFactorsPath, givensAnglesFeaturesPath,  = [], [], []
         givensAnglesFeatureNames = reversibleLieLayer.getFeatureNames()
@@ -133,6 +133,8 @@ class emotionModelHead(nn.Module):
 
         # For each module.
         for name, module in self.named_modules():
+            if submodelString not in name: continue
+
             if isinstance(module, reversibleLieLayer):
                 _, allGivensAnglesFeatures = module.getFeatureParams()
                 allGivensAngles, allScaleFactors = module.getAllLinearParams()
@@ -157,10 +159,12 @@ class emotionModelHead(nn.Module):
 
         return givensAnglesPath, normalizationFactorsPath, givensAnglesFeaturesPath, reversibleModuleNames, givensAnglesFeatureNames
 
-    def getActivationCurvesFullPassPath(self):
+    def getActivationCurvesFullPassPath(self, submodelString):
         activationCurvePath, moduleNames = [], []
 
         for name, module in self.named_modules():
+            if submodelString not in name: continue
+
             if isinstance(module, reversibleLieLayer):
                 xs, ys = module.geAllActivationCurves(x_min=-1.5, x_max=1.5, num_points=100)
                 for ind in range(len(xs)): activationCurvePath.append([xs[ind], ys[ind]])
@@ -177,9 +181,11 @@ class emotionModelHead(nn.Module):
 
         return activationCurvePath, moduleNames
 
-    def getActivationParamsFullPassPath(self):
+    def getActivationParamsFullPassPath(self, submodelString):
         activationParamsPath, moduleNames = [], []
         for name, module in self.named_modules():
+            if submodelString not in name: continue
+
             if isinstance(module, reversibleLieLayer):
                 allActivationParams = module.getAllActivationParams()
                 activationParamsPath.extend(allActivationParams)
@@ -193,10 +199,12 @@ class emotionModelHead(nn.Module):
         activationParamsPath = np.asarray(activationParamsPath)
         return activationParamsPath, moduleNames
 
-    def getFreeParamsFullPassPath(self):
+    def getFreeParamsFullPassPath(self, submodelString):
         numFreeParamsPath, moduleNames, maxFreeParamsPath = [], [], []
 
         for name, module in self.named_modules():
+            if submodelString not in name: continue
+
             if isinstance(module, reversibleLieLayer):
                 allNumFreeParams = module.getNumFreeParams()
 

@@ -41,6 +41,7 @@ class trainingProtocolHelpers:
             self.modelMigration.unifyModelWeights(allModels=[modelPipeline], modelWeights=self.sharedModelWeights, layerInfo=self.unifiedLayerData)
 
             # Train the updated model.
+            if submodel == modelConstants.emotionModel and epoch == 0: modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=modelConstants.userInputParams['numProfileShots'] + 1)
             modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=specificTraining, trainSharedLayers=trainSharedLayers, stepScheduler=False, numEpochs=1)   # Full model training.
             if specificTraining: modelPipeline.model.cullAngles(epoch=epoch)
 
@@ -74,9 +75,6 @@ class trainingProtocolHelpers:
         for modelInd in range(len(allMetaModels) + len(allModels)):
             dataLoader = allMetadataLoaders[modelInd] if modelInd < len(allMetadataLoaders) else allDataLoaders[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
             modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
-            if modelPipeline.datasetName.lower() == 'empatch': numEpochs = 4
-            elif modelPipeline.datasetName.lower() == 'wesad': numEpochs = 4
-            else: numEpochs = 4
             numEpochs = 12 if epoch < 6 else 2
 
             # Train the updated model.

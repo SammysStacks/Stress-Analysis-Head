@@ -16,6 +16,8 @@ class emotionPipelineHelpers:
     def __init__(self, accelerator, datasetName, allEmotionClasses, numSubjects,
                  emotionNames, activityNames, featureNames, submodel, numExperiments):
         # General parameters.
+        self.allEmotionClassWeights = None  # The class weights for the emotion classes.
+        self.activityClassWeights = None  # The class weights for the activity classes.
         self.accelerator = accelerator  # Hugging face interface to speed up the training process.
         self.optimizer = None  # The optimizer for the model.
         self.scheduler = None  # The learning rate scheduler for the model.
@@ -32,7 +34,7 @@ class emotionPipelineHelpers:
         self.datasetName = datasetName  # The name of the specific dataset being used in this model (case, wesad, etc.)
 
         # Initialize the emotion model.
-        self.model = emotionModel(submodel=submodel, emotionNames=emotionNames, activityNames=activityNames, featureNames=featureNames, numSubjects=numSubjects, datasetName=datasetName, numExperiments=numExperiments)
+        self.model = emotionModel(submodel=submodel, emotionNames=emotionNames, activityNames=activityNames, featureNames=featureNames, allEmotionClasses=allEmotionClasses, numSubjects=numSubjects, datasetName=datasetName, numExperiments=numExperiments)
         self.model = self.model.double()  # Convert the model to double precision.
 
         if 'HPC' not in modelConstants.userInputParams['deviceListed']:
@@ -50,6 +52,9 @@ class emotionPipelineHelpers:
         # Assert data integrity of the inputs.
         assert len(self.emotionNames) == len(self.allEmotionClasses), f"Found {len(self.emotionNames)} emotions with {len(self.allEmotionClasses)} classes specified."
         assert len(self.activityNames) == self.numActivities, f"Found {len(self.activityNames)} activities with {self.numActivities} classes specified."
+
+    def assignClassWeights(self, signalLabels, trainingLabelMask, testingLabelMask):
+        self.allEmotionClassWeights, self.activityClassWeights = self.organizeLossInfo.getClassWeights(signalLabels, trainingLabelMask, testingLabelMask, self.numActivities)
 
     # ------------------------------------------------------------------ #
 

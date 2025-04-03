@@ -273,6 +273,9 @@ class compileModelData(compileModelDataHelpers):
                                             emotionNames=surveyQuestions, activityNames=activityNames, featureNames=featureNames, submodel=submodel, numExperiments=len(allSignalData))
             modelDataLoader = modelPipeline.acceleratorInterface(modelDataLoader)  # Hugging face integration.
 
+            # Set the emotion class weights.
+            modelPipeline.assignClassWeights(allFeatureLabels, currentTrainingMask, currentTestingMask)
+
             # Store the information.
             allModelPipelines.append(modelPipeline)
             allDataLoaders.append(modelDataLoader)
