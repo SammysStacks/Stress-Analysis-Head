@@ -50,12 +50,13 @@ class modelVisualizations(globalPlottingProtocols):
         with torch.no_grad():
             if self.accelerator.is_local_main_process:
                 specificSignalEncoderModels = [modelPipeline.model.specificSignalEncoderModel for modelPipeline in allModelPipelines]  # Dim: numModels
-                specificActivityModels = [modelPipeline.model.specificActivityModel for modelPipeline in allModelPipelines]  # Dim: numModels
-                specificEmotionModels = [modelPipeline.model.specificEmotionModel for modelPipeline in allModelPipelines]  # Dim: numModels
 
                 if submodel == modelConstants.signalEncoderModel:
                     self.generalPlotting(submodel, allModelPipelines, specificSignalEncoderModels, showMinimumPlots, modelIdentifier="Signal encoder", submodelString="SignalEncoderModel")
                 elif submodel == modelConstants.emotionModel:
+                    specificActivityModels = [modelPipeline.model.specificActivityModel for modelPipeline in allModelPipelines]  # Dim: numModels
+                    specificEmotionModels = [modelPipeline.model.specificEmotionModel for modelPipeline in allModelPipelines]  # Dim: numModels
+
                     self.generalPlotting(submodel, allModelPipelines, specificActivityModels, showMinimumPlots, modelIdentifier="Activity", submodelString="ActivityModel")
                     self.generalPlotting(submodel, allModelPipelines, specificEmotionModels, showMinimumPlots, modelIdentifier="Emotion", submodelString="EmotionModel")
 
@@ -118,6 +119,7 @@ class modelVisualizations(globalPlottingProtocols):
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
             signalData, signalIdentifiers, metadata = allSignalData[validBatchMask][:numPlottingPoints], allSignalIdentifiers[validBatchMask][:numPlottingPoints], allMetadata[validBatchMask][:numPlottingPoints]
             validDataMask, reconstructedSignalData, resampledSignalData, healthProfile, activityProfile, basicEmotionProfile, emotionProfile = model.forward(submodel, signalData, signalIdentifiers, metadata, device=self.accelerator.device, onlyProfileTraining=False)
+            reconstructedHealthProfile = model.reconstructHealthProfile(resampledSignalData).detach().cpu().numpy()  # reconstructedHealthProfile: batchSize, encodedDimension
 
             # Detach the data from the GPU and tensor format.
             activityProfile, basicEmotionProfile, emotionProfile = activityProfile.detach().cpu().numpy().astype(np.float16), basicEmotionProfile.detach().cpu().numpy().astype(np.float16), emotionProfile.detach().cpu().numpy().astype(np.float16)
@@ -133,7 +135,6 @@ class modelVisualizations(globalPlottingProtocols):
 
                 if submodel == modelConstants.signalEncoderModel:
                     # Perform the backward pass through the model to get the reconstructed health profile.
-                    reconstructedHealthProfile = model.reconstructHealthProfile(resampledSignalData).detach().cpu().numpy()  # reconstructedHealthProfile: batchSize, encodedDimension
                     forwardModelPassSignals = model.specificSignalEncoderModel.profileModel.compiledLayerStates
                     # forwardModelPassSignals: numModuleLayers, batchSize, numSignals, encodedDimension
 
