@@ -40,7 +40,7 @@ maxAngularThresholds=(45)
 
 # Binary reference states.
 numSpecificEncoderLayers_arr=(1)
-numSharedEncoderLayers_arr=(7 9 5)  # [4, 10]; Best: 5 and 7
+numSharedEncoderLayers_arr=(5 7 9)  # [4, 10]; Best: 5 and 7
 
 # Profile parameters.
 numProfileShots_arr=(32)  # (8, [16, 24], 32)
