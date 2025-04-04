@@ -77,6 +77,10 @@ class lossCalculations:
         activityDataMask = self.dataInterface.getActivityColumn(allLabelsMask, self.activityLabelInd)  # Dim: numExperiments
         trueActivityLabels = self.dataInterface.getActivityLabels(allLabels, allLabelsMask, self.activityLabelInd)
         # predictedActivityLabels: numExperiments, encodedDimension
+        print(f"Activity labels: {trueActivityLabels.shape}, {trueActivityLabels}")
+        print(f"Activity data mask: {activityDataMask.shape}, {activityDataMask}")
+        print(f"Predicted activity profile: {predictedActivityProfile.shape}, {predictedActivityProfile}")
+        print(allLabels.shape, allLabelsMask.shape, predictedActivityProfile[activityDataMask].shape)
 
         # Assert that the predicted activity profile is valid.
         assert predictedActivityProfile.ndim == 2, f"Check the predicted activity profile. Found {predictedActivityProfile.shape} shape"

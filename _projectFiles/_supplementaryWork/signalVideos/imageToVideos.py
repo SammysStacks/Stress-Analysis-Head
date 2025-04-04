@@ -2,6 +2,8 @@ from collections import defaultdict
 import cv2
 import os
 import re
+
+import fitz
 from pdf2image import convert_from_path
 import numpy as np
 from PIL import Image
@@ -78,7 +80,7 @@ if __name__ == "__main__":
     currentDirectory = os.path.dirname(os.path.abspath(__file__))
     modelFolderDirectory = os.path.join(currentDirectory, "modelInstances")
     datasetNames = ["wesad", "amigos", "case", "empatch", "dapper", "emognition"]
-    initialFolderSubstring = "2025-03-10"
+    initialFolderSubstring = "2025-04-02"
 
     pattern = re.compile(r"^(.*?)[ _-]?epochs(\d+)\.pdf$", re.IGNORECASE)
 
@@ -96,6 +98,7 @@ if __name__ == "__main__":
 
             for pdfFolder in [signalEncodingFolder, signalReconstruction]:
                 if not os.path.exists(pdfFolder): continue
+                print(pdfFolder)
 
                 pdf_files = [f for f in os.listdir(pdfFolder) if f.endswith(".pdf")]
                 pdf_groups = defaultdict(list)
@@ -113,7 +116,19 @@ if __name__ == "__main__":
                     for _, pdf_file in files:
                         pdf_path = os.path.join(pdfFolder, pdf_file)
                         try:
-                            img = convert_from_path(pdf_path, dpi=300, first_page=1, last_page=1)[0]
+                            # Open the PDF using PyMuPDF
+                            doc = fitz.open(pdf_path)
+
+                            # Select the first page (page indices are 0-based)
+                            page = doc.load_page(0)  # 0 is the first page
+
+                            # Render the page to a pixmap (image) with 300 DPI
+                            pix = page.get_pixmap(dpi=300)
+
+                            # Convert the pixmap to a PIL image
+                            img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+
+                            # Append the image to the images list
                             images.append(img)
                         except Exception as e:
                             print(f"Error processing {pdf_file}: {e}")
@@ -121,6 +136,7 @@ if __name__ == "__main__":
                     if images:
                         video_path = os.path.join(pdfFolder, f"{prefix}.mp4")
                         images_to_video(images, video_path)
+                        print("\tVideo saved\n")
 
                         # gif_path = os.path.join(pdfFolder, f"{prefix}.gif")
                         # images_to_gif(images, gif_path)

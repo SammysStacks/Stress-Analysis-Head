@@ -22,7 +22,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
 
         numIgnoredSharedHF = modelConstants.userInputParams['numIgnoredSharedHF']
         # Only apply a transformation to the lowest of the high frequency decompositions.
-        self.neuralOperatorParameters['wavelet']['encodeHighFrequencyProtocol'] = f'highFreq-{0}-{numIgnoredSharedHF}'  # TODO: 1 or 2
+        self.neuralOperatorParameters['wavelet']['encodeHighFrequencyProtocol'] = f'highFreq-{0}-{numIgnoredSharedHF}'
 
         # Initialize the pseudo-encoded times for the fourier data.
         hyperSampledTimes = torch.linspace(start=0, end=self.encodedTimeWindow, steps=self.encodedDimension).flip(dims=[0])

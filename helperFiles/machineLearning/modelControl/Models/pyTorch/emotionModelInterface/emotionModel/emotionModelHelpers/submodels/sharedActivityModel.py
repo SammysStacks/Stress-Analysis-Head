@@ -1,5 +1,6 @@
 import copy
 
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.neuralOperators.neuralOperatorInterface import neuralOperatorInterface
 
 
@@ -12,7 +13,7 @@ class sharedActivityModel(neuralOperatorInterface):
         self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
         self.numLayers = numLayers  # The number of model layers.
 
-        numIgnoredSharedHF = self.neuralOperatorParameters['wavelet']['numIgnoredSharedHF']
+        numIgnoredSharedHF = modelConstants.userInputParams['numIgnoredSharedHF']
         # Only apply a transformation to the lowest of the high frequency decompositions.
         self.neuralOperatorParameters['wavelet']['encodeHighFrequencyProtocol'] = f'highFreq-{0}-{numIgnoredSharedHF}'
 

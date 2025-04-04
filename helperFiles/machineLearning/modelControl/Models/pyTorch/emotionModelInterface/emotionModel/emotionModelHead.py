@@ -101,6 +101,7 @@ class emotionModelHead(nn.Module):
             self.sharedEmotionModel = sharedEmotionModel(
                 neuralOperatorParameters=self.neuralOperatorParameters,
                 encodedDimension=self.encodedDimension,
+                numBasicEmotions=self.numBasicEmotions,
                 numLayers=self.numEmotionModelLayers,
                 operatorType=self.operatorType,
             )

@@ -158,7 +158,9 @@ class emotionModel(emotionModelHead):
 
         # Learn the basic emotion profile.
         basicEmotionProfile = emotionProfile.unsqueeze(2).repeat(repeats=(1, 1, self.numBasicEmotions, 1))
+        basicEmotionProfile = basicEmotionProfile.view(-1, self.numBasicEmotions, self.encodedDimension)
         basicEmotionProfile = self.sharedEmotionModel.learningInterface(signalData=basicEmotionProfile)
+        basicEmotionProfile = basicEmotionProfile.view(-1, self.numEmotions, self.numBasicEmotions, self.encodedDimension)
         # basicEmotionProfile: batchSize, numEmotions, numBasicEmotions, encodedDimension
 
         return basicEmotionProfile

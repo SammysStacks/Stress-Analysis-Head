@@ -39,8 +39,8 @@ if __name__ == "__main__":
 
     # General model parameters.
     trainingDate = "2025-04-03"  # The current date we are training the model. Unique identifier of this training set.
-    plotAllEpochs = True  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
-    validationRun = False  # Whether to train new datasets from the old model.
+    plotAllEpochs = False  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
+    validationRun = True  # Whether to train new datasets from the old model.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # Model loading information.
@@ -80,7 +80,7 @@ if __name__ == "__main__":
     # ----------------------- Training Parameters ----------------------- #
 
     # Signal encoder learning rates.
-    parser.add_argument('--profileLR', type=float, default=0.025, help='The learning rate of the profile')
+    parser.add_argument('--profileLR', type=float, default=0.01, help='The learning rate of the profile')
     parser.add_argument('--physGenLR', type=float, default=4e-4, help='The learning rate of the profile generation (CNNs)')
     parser.add_argument('--reversibleLR', type=float, default=0.05, help='The learning rate of the Lie manifold angles (degrees)')
 
