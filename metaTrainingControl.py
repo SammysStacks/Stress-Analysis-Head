@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
     # General model parameters.
     trainingDate = "2025-04-05"  # The current date we are training the model. Unique identifier of this training set.
-    plotAllEpochs = True  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
+    plotAllEpochs = False  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
     validationRun = False  # Whether to train new datasets from the old model.
     testSplitRatio = 0.1  # The percentage of testing points.
 
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     # ----------------------- Architecture Parameters ----------------------- #
 
     # Add arguments for the general model
-    parser.add_argument('--submodel', type=str, default=modelConstants.emotionModel, help='The component of the model we are training. Options: signalEncoderModel, emotionModel')
+    parser.add_argument('--submodel', type=str, default=modelConstants.signalEncoderModel, help='The component of the model we are training. Options: signalEncoderModel, emotionModel')
     parser.add_argument('--optimizerType', type=str, default='NAdam', help='The optimizerType used during training convergence: Options: RMSprop, Adam, AdamW, SGD, etc')
     parser.add_argument('--learningProtocol', type=str, default='reversibleLieLayer', help='The learning protocol for the model: reversibleLieLayer')
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are using: cpu, cuda')
