@@ -15,9 +15,9 @@ class optimizerMethods:
             {'params': model.sharedSignalEncoderModel.fourierModel.parameters(), 'weight_decay': modelConstants.userInputParams['physGenLR']/100, 'lr': modelConstants.userInputParams['physGenLR']},
 
             # Specify the Lie manifold architecture parameters.
-            {'params': (param for name, param in model.named_parameters() if "givensRotationParams" in name), 'weight_decay': modelConstants.userInputParams['reversibleLR'], 'lr': modelConstants.userInputParams['reversibleLR']},
+            {'params': (param for name, param in model.named_parameters() if "givensRotationParams" in name), 'weight_decay': modelConstants.userInputParams['reversibleLR']/10, 'lr': modelConstants.userInputParams['reversibleLR']},
             {'params': (param for name, param in model.named_parameters() if "activationFunction" in name), 'weight_decay': 1e-4, 'lr': 1e-3},
-            {'params': (param for name, param in model.named_parameters() if "jacobianParameter" in name), 'weight_decay': 4e-4, 'lr': 1e-3},
+            {'params': (param for name, param in model.named_parameters() if "jacobianParameter" in name), 'weight_decay': 4e-4, 'lr': 4e-4},
         ]
 
         # Set the optimizer and scheduler.
