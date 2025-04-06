@@ -586,7 +586,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.scatter(
                 x, y, z, c=z,
                 cmap='viridis', edgecolors=self.blackColor, linewidth=0.5,
-                alpha=0.95, s=20, vmin=-1.5, vmax=1.5)
+                alpha=0.95, s=20, vmin=-1.1, vmax=1.1)
             for modelLayerInd in range(numModelLayers):
                 ax.plot(x[modelLayerInd*encodedDimension:(modelLayerInd + 1)*encodedDimension], y[modelLayerInd*encodedDimension:(modelLayerInd + 1)*encodedDimension], z[modelLayerInd*encodedDimension:(modelLayerInd + 1)*encodedDimension],
                         color=self.blackColor, linestyle='-', linewidth=0.5, alpha=0.5)
