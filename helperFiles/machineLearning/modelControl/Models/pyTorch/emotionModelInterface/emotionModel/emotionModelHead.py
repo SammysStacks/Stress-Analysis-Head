@@ -34,7 +34,7 @@ class emotionModelHead(nn.Module):
         self.learningProtocol = modelConstants.userInputParams['learningProtocol']   # The learning protocol for the model.
         self.encodedDimension = modelConstants.userInputParams['encodedDimension']  # The dimension of the encoded signal.
         self.operatorType = modelConstants.userInputParams['operatorType']  # The type of operator to use for the neural operator.
-        self.debugging = True and self.hpcFlag
+        self.debugging = False
 
         # Signal encoder parameters.
         self.neuralOperatorParameters = modelConstants.userInputParams['neuralOperatorParameters']   # The parameters for the neural operator.
