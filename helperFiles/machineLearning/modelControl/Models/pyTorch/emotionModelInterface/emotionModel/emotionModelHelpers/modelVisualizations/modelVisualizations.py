@@ -118,7 +118,7 @@ class modelVisualizations(globalPlottingProtocols):
         with torch.no_grad():
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
             signalData, signalIdentifiers, metadata = allSignalData[validBatchMask][:numPlottingPoints], allSignalIdentifiers[validBatchMask][:numPlottingPoints], allMetadata[validBatchMask][:numPlottingPoints]
-            validDataMask, reconstructedSignalData, resampledSignalData, healthProfile, activityProfile, basicEmotionProfile, emotionProfile = model.forward(submodel, signalData, signalIdentifiers, metadata, device=self.accelerator.device, onlyProfileTraining=False)
+            validDataMask, reconstructedSignalData, resampledSignalData, healthProfile, activityProfile, basicEmotionProfile, emotionProfile = model.forward(submodel, signalData, signalIdentifiers, metadata, device=self.accelerator.device, compiledLayerStates=True)
             reconstructedHealthProfile = model.reconstructHealthProfile(resampledSignalData).detach().cpu().numpy()  # reconstructedHealthProfile: batchSize, encodedDimension
 
             # Detach the data from the GPU and tensor format.
@@ -142,7 +142,7 @@ class modelVisualizations(globalPlottingProtocols):
                     retrainingHealthProfilePath = np.asarray(model.specificSignalEncoderModel.profileModel.retrainingHealthProfilePath)  # numProfileShots, numExperiments, encodedDimension
                     generatingBiometricSignals = np.asarray(model.specificSignalEncoderModel.profileModel.generatingBiometricSignals)  # numProfileShots, numModuleLayers, numExperiments, numSignals=1***, encodedDimension
                     resampledBiomarkerTimes = model.sharedSignalEncoderModel.hyperSampledTimes.detach().cpu().numpy().astype(np.float16)  # numTimePoints
-                    backwardModelPassSignals = np.flip(forwardModelPassSignals, axis=0)
+                    backwardModelPassSignals = np.flip(forwardModelPassSignals, axis=0)  # numModuleLayers, batchSize, numSignals, encodedDimension
 
                     # Compile additional information for the model.getActivationParamsFullPassPath
                     givensAnglesPath, normalizationFactorsPath, _, reversibleModuleNames, givensAnglesFeatureNames = model.getLearnableParams(submodelString="SignalEncoderModel")
@@ -152,7 +152,7 @@ class modelVisualizations(globalPlottingProtocols):
                     # givensAnglesPath: numModuleLayers, numSignals, numParams
 
                     # Plot the health profile training information.
-                    self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, retrainingProfilePath=retrainingHealthProfilePath[:, :, None, :], signalNames=signalNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Health profile generation")
+                    self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, retrainingProfilePath=retrainingHealthProfilePath[:, :, None, :], batchInd=batchInd, signalNames=signalNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Health profile generation")
                     self.signalEncoderViz.plotProfileReconstructionError(resampledBiomarkerTimes, healthProfile, reconstructedHealthProfile, epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="signalEncoding/", plotTitle="Health profile reconstruction error")
                     self.signalEncoderViz.plotProfileReconstruction(resampledBiomarkerTimes, healthProfile, reconstructedHealthProfile, epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="signalEncoding/", plotTitle="Health profile reconstruction")
 
@@ -162,11 +162,11 @@ class modelVisualizations(globalPlottingProtocols):
                     # Plot the angular information.
                     if not showMinimumPlots:
                         # Plot information collected across profile training.
-                        self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, retrainingProfilePath=generatingBiometricSignals, signalNames=signalNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Reconstructing biometric feature signal")
+                        self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, retrainingProfilePath=generatingBiometricSignals, batchInd=batchInd, signalNames=signalNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Reconstructing biometric feature signal")
 
                         # Plotting the data flow within the model.
-                        self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, retrainingProfilePath=backwardModelPassSignals, signalNames=signalNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Backwards transformations (HP to feature)")
-                        self.signalEncoderViz.modelFlow(dataTimes=resampledBiomarkerTimes, dataStatesAll=backwardModelPassSignals, signalNames=signalNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Signal transformations by layer 3D", batchInd=batchInd)
+                        self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, retrainingProfilePath=backwardModelPassSignals, batchInd=batchInd, signalNames=signalNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Backwards transformations (HP to feature)")
+                        self.signalEncoderViz.modelFlow(dataTimes=resampledBiomarkerTimes, dataStatesAll=backwardModelPassSignals, batchInd=batchInd, signalNames=signalNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Signal transformations by layer 3D")
                         self.signalEncoderViz.plotSignalEncodingStatePath(relativeTimes=resampledBiomarkerTimes, compiledSignalEncoderLayerStates=backwardModelPassSignals, batchInd=batchInd, signalNames=signalNames, epoch=currentEpoch, saveFigureLocation="signalEncoding/", plotTitle="Signal transformations by layer heatmap")
 
                         # Plot the angle information.

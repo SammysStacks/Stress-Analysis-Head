@@ -16,7 +16,7 @@ class emotionModel(emotionModelHead):
 
     # ------------------------- Full Forward Calls ------------------------- #
 
-    def forward(self, submodel, signalData, signalIdentifiers, metadata, device, onlyProfileTraining=False):
+    def forward(self, submodel, signalData, signalIdentifiers, metadata, device, compiledLayerStates=False):
         signalData, signalIdentifiers, metadata = (tensor.to(device) for tensor in (signalData, signalIdentifiers, metadata))
         signalIdentifiers, signalData, metadata = signalIdentifiers.int(), signalData.double(), metadata.int()
         batchSize, numSignals, maxSequenceLength, numChannels = signalData.size()
@@ -53,13 +53,13 @@ class emotionModel(emotionModelHead):
         if submodel == modelConstants.signalEncoderModel:
             # Perform the backward pass: health profile -> signal data.
             resampledSignalData = healthProfile.unsqueeze(1).repeat(repeats=(1, numSignals, 1))
-            resampledSignalData = self.signalEmbedding(metaLearningData=resampledSignalData, healthProfileStart=True, compileLayerStates=onlyProfileTraining)
+            resampledSignalData = self.signalEmbedding(metaLearningData=resampledSignalData, healthProfileStart=True, compileLayerStates=compiledLayerStates)
             reconstructedSignalData = self.sharedSignalEncoderModel.interpolateOriginalSignals(signalData, resampledSignalData)
             # reconstructedSignalData: batchSize, numSignals, maxSequenceLength
             # resampledSignalData: batchSize, numSignals, encodedDimension
 
-            # Visualize the data transformations within signal encoding.
-            if submodel == modelConstants.signalEncoderModel and not onlyProfileTraining and random.random() < 0.01 and not self.hpcFlag:
+            if random.random() < 0.01 and not self.hpcFlag:
+                # Visualize the data transformations within signal encoding.
                 with torch.no_grad(): self.visualizeSignalEncoding(embeddedProfile, healthProfile, resampledSignalData, reconstructedSignalData, signalData, validDataMask)
 
         # ------------- Learned Emotion and Activity Mapping ------------- #
@@ -105,7 +105,7 @@ class emotionModel(emotionModelHead):
             validDataMask[startBatchInd:endBatchInd], reconstructedSignalData[startBatchInd:endBatchInd], resampledSignalData[startBatchInd:endBatchInd], \
                 healthProfile[startBatchInd:endBatchInd], activityProfile[startBatchInd:endBatchInd], basicEmotionProfile[startBatchInd:endBatchInd], emotionProfile[startBatchInd:endBatchInd] \
                 = (element.cpu() if isinstance(element, torch.Tensor) else element for element in self.forward(submodel=submodel, signalData=signalData[startBatchInd:endBatchInd], signalIdentifiers=signalIdentifiers[startBatchInd:endBatchInd],
-                                                                                                               metadata=metadata[startBatchInd:endBatchInd], device=device, onlyProfileTraining=onlyProfileTraining))
+                                                                                                               metadata=metadata[startBatchInd:endBatchInd], device=device, compiledLayerStates=False))
             startBatchInd = endBatchInd  # Update the batch index.
 
         if onlyProfileTraining:

@@ -41,10 +41,10 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     # --------------------- Visualize Model Parameters --------------------- #
 
-    def plotProfilePath(self, relativeTimes, retrainingProfilePath, signalNames, epoch, saveFigureLocation="signalEncoding/", plotTitle="Health Profile State Path"):
+    def plotProfilePath(self, relativeTimes, retrainingProfilePath, batchInd, signalNames, epoch, saveFigureLocation="signalEncoding/", plotTitle="Health Profile State Path"):
         # retrainingProfilePath: (numProfileShots or numModuleLayers, numExperiments, encodedDimension)
         # Extract the signal dimensions.
-        numProfileSteps, batchInd, numSignals = len(retrainingProfilePath), 0, len(retrainingProfilePath[0][0])
+        numProfileSteps, numSignals = len(retrainingProfilePath), len(retrainingProfilePath[0][0])
         if numProfileSteps == 0: return None
 
         for signalInd in range(numSignals):
@@ -58,13 +58,13 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
             # Plotting aesthetics.
             ax.set_xlabel("Time (sec)")
-            ax.set_title(f"{plotTitle} {signalNames[signalInd]} epoch{epoch}")
+            ax.set_title(f"{plotTitle} {(signalNames[signalInd] + " ") if "health profile" not in plotTitle.lower() else ""}epoch{epoch}")
             ax.set_ylabel("Signal amplitude (au)")
             if "health profile" in plotTitle.lower(): ax.set_ylim((-1, 1))
             else: ax.set_ylim((-1.75, 1.75))
 
             # Save the figure.
-            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]}.pdf", fig=fig, clearFigure=True, showPlot=False)
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {(signalNames[signalInd] + " ") if "health profile" not in plotTitle.lower() else ""} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {(signalNames[signalInd] + " ") if "health profile" not in plotTitle.lower() else ""}.pdf", fig=fig, clearFigure=True, showPlot=False)
             else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
     def plotProfileReconstructionError(self, relativeTimes, healthProfile, reconstructedHealthProfile, batchInd, epoch, saveFigureLocation="", plotTitle="Signal Encoding"):
