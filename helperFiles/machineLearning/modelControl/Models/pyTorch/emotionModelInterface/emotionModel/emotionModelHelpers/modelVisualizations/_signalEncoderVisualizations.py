@@ -42,7 +42,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
     # --------------------- Visualize Model Parameters --------------------- #
 
     def plotProfilePath(self, relativeTimes, retrainingProfilePath, batchInd, signalNames, epoch, saveFigureLocation="signalEncoding/", plotTitle="Health Profile State Path"):
-        # retrainingProfilePath: (numProfileShots or numModuleLayers, numExperiments, encodedDimension)
+        # retrainingProfilePath: (numProfileShots or numModuleLayers, numExperiments, numSignals, encodedDimension)
         # Extract the signal dimensions.
         numProfileSteps, numSignals = len(retrainingProfilePath), len(retrainingProfilePath[0][0])
         if numProfileSteps == 0: return None

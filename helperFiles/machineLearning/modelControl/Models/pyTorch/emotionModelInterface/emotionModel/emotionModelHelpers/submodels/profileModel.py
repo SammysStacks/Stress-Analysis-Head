@@ -29,8 +29,8 @@ class profileModel(emotionModelWeights):
 
     def resetProfileHolders(self, numProfileShots):
         # Pre-allocate each parameter.
-        self.generatingBiometricSignals = np.zeros(shape=(numProfileShots + 1, 1, 1, self.encodedDimension), dtype=np.float16)  # Dim: numProfileShots, numLayers, numExperiments, numSignals, encodedDimension
-        self.retrainingHealthProfilePath = np.zeros(shape=(numProfileShots + 1, 1, self.encodedDimension), dtype=np.float16)  # Dim: numProfileShots, numExperiments, numSignals, encodedDimension
+        self.generatingBiometricSignals = np.zeros(shape=(numProfileShots + 1, 1, self.numSignals, self.encodedDimension), dtype=np.float16)  # Dim: numProfileShots, numExperiments, numSignals, encodedDimension
+        self.retrainingHealthProfilePath = np.zeros(shape=(numProfileShots + 1, 1, self.encodedDimension), dtype=np.float16)  # Dim: numProfileShots, numExperiments, encodedDimension
         self.retrainingProfileLosses = np.zeros(shape=(numProfileShots + 1, self.numExperiments, self.numSignals), dtype=np.float16)
 
     def resetModelStates(self, metaLearningData):
@@ -55,7 +55,7 @@ class profileModel(emotionModelWeights):
 
             if 0 not in batchInds: return None
             # For space efficiency, only store the first batch and signal.
-            self.generatingBiometricSignals[profileEpoch][0] = resampledSignalData[batchInds == 0, 0:1, :].detach().cpu().numpy().astype(np.float16)
+            self.generatingBiometricSignals[profileEpoch][0] = resampledSignalData[batchInds == 0, :].detach().cpu().numpy().astype(np.float16)
             self.retrainingHealthProfilePath[profileEpoch][0] = healthProfile[batchInds == 0].detach().cpu().numpy().astype(np.float16)
 
     def getHealthEmbedding(self, batchInds, fourierModel):

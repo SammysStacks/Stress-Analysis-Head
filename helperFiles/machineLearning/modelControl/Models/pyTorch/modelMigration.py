@@ -54,6 +54,7 @@ class modelMigration:
         return layerInfo
 
     def unifyModelWeights(self, allModels, modelWeights, layerInfo):
+        if not modelConstants.userInputParams['unifyModelWeights']: return None
         if layerInfo is None: return None
 
         # For each model provided.

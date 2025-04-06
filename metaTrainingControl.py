@@ -39,12 +39,13 @@ if __name__ == "__main__":
 
     # General model parameters.
     trainingDate = "2025-04-05"  # The current date we are training the model. Unique identifier of this training set.
+    unifyModelWeights = True  # Whether to unify the model weights across all models.
     plotAllEpochs = True  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
     validationRun = False  # Whether to train new datasets from the old model.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # Model loading information.
-    loadSubmodelDate = "2025-04-02---"  # The submodel we are loading: None, "2025-03-31"
+    loadSubmodelDate = "2025-04-03----"  # The submodel we are loading: None, "2025-03-31"
 
     # ----------------------- Architecture Parameters ----------------------- #
 
@@ -56,7 +57,7 @@ if __name__ == "__main__":
 
     # Add arguments for the health profile.
     parser.add_argument('--initialProfileAmp', type=float, default=1e-3, help='The limits for profile initialization. Should be near zero')
-    parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the health profile and all signals.')  # TODO
+    parser.add_argument('--encodedDimension', type=int, default=512, help='The dimension of the health profile and all signals.')  # TODO
     parser.add_argument('--numProfileShots', type=int, default=32, help='The epochs for profile training: [16, 32]')
     
     # Add arguments for the neural operator.
@@ -66,7 +67,7 @@ if __name__ == "__main__":
 
     # Add arguments for the signal encoder architecture.
     parser.add_argument('--numSpecificEncoderLayers', type=int, default=1, help='The number of layers in the model: [1, 2]')
-    parser.add_argument('--numSharedEncoderLayers', type=int, default=7, help='The number of layers in the model: [2, 10]')
+    parser.add_argument('--numSharedEncoderLayers', type=int, default=9, help='The number of layers in the model: [2, 10]')
 
     # Add arguments for observational learning.
     parser.add_argument('--maxAngularThreshold', type=float, default=45, help='The larger rotational threshold in (degrees)')
@@ -97,6 +98,7 @@ if __name__ == "__main__":
     userInputParams['minThresholdStep'] = userInputParams['reversibleLR']  # Keep as degrees
     userInputParams['reversibleLR'] = userInputParams['reversibleLR'] * math.pi / 180  # Keep as radians
     userInputParams['profileDimension'] = userInputParams['encodedDimension'] // 2  # The dimension of the profile.
+    userInputParams['unifyModelWeights'] = unifyModelWeights
 
     # Compile additional input parameters.
     userInputParams = modelParameters.getNeuralParameters(userInputParams)
