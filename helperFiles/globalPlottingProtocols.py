@@ -16,9 +16,6 @@ class globalPlottingProtocols:
         if interactivePlots: plt.ion()
         plt.rcdefaults()
 
-        # Set the font properties.
-        plt.rcParams["font.family"] = "Arial"
-
         # Specify the color order.
         self.lightColors = ["#F17FB1", "#5DCBF2", "#B497C9", "#90D6AD", "#FFC162", '#6f4a1f', "#231F20"]  # Red, Blue, Purple, Green, Orange, Brown, Grey
         self.darkColors = ["#F3757A", "#489AD4", "#7E71B4", "#50BC84", "#F9A770", '#4c3007', "#4A4546"]  # Red, Blue, Purple, Green, Orange, Brown, Grey
