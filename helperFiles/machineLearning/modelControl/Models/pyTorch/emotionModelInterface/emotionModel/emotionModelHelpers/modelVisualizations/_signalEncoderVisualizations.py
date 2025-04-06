@@ -153,7 +153,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} Error epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]} Error.pdf", fig=fig, clearFigure=True, showPlot=False)
             else: self.clearFigure(fig=fig, legend=None, showPlot=True)
             plt.close(fig)
-            break
 
     def plotSignalEncodingStatePath(self, relativeTimes, compiledSignalEncoderLayerStates, batchInd, signalNames, epoch, saveFigureLocation, plotTitle):
         numLayers, numExperiments, numSignals, encodedDimension = compiledSignalEncoderLayerStates.shape
