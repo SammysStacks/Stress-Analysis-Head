@@ -58,13 +58,13 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
             # Plotting aesthetics.
             ax.set_xlabel("Time (sec)")
-            ax.set_title(f"{plotTitle} {(signalNames[signalInd] + " ") if "health profile" not in plotTitle.lower() else ""}epoch{epoch}")
+            ax.set_title(f"{plotTitle}{(" " + signalNames[signalInd]) if "health profile" not in plotTitle.lower() else ""} epoch{epoch}")
             ax.set_ylabel("Signal amplitude (au)")
             if "health profile" in plotTitle.lower(): ax.set_ylim((-1, 1))
             else: ax.set_ylim((-1.75, 1.75))
 
             # Save the figure.
-            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {(signalNames[signalInd] + " ") if "health profile" not in plotTitle.lower() else ""} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {(signalNames[signalInd] + " ") if "health profile" not in plotTitle.lower() else ""}.pdf", fig=fig, clearFigure=True, showPlot=False)
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle}{(" " + signalNames[signalInd]) if "health profile" not in plotTitle.lower() else ""} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}{(" " + signalNames[signalInd]) if "health profile" not in plotTitle.lower() else ""}.pdf", fig=fig, clearFigure=True, showPlot=False)
             else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
     def plotProfileReconstructionError(self, relativeTimes, healthProfile, reconstructedHealthProfile, batchInd, epoch, saveFigureLocation="", plotTitle="Signal Encoding"):
