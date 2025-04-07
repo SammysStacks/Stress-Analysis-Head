@@ -600,7 +600,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.set_xlabel("Time (Sec)", fontsize=12, labelpad=10)
             ax.set_ylabel("Model Layer", fontsize=12, labelpad=10)
             ax.set_zlabel("Signal value (au)", fontsize=12, labelpad=10)
-            ax.set_zlim(-1.75, 1.75)
+            ax.set_zlim(-1.5, 1.5)
             ax.invert_yaxis()
 
             # Make the aspect ratio look nicer in 3D

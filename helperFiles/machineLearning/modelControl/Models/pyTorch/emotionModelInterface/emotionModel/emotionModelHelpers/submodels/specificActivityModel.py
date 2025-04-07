@@ -1,3 +1,5 @@
+import copy
+
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.neuralOperators.neuralOperatorInterface import neuralOperatorInterface
 
 
@@ -6,7 +8,7 @@ class specificActivityModel(neuralOperatorInterface):
     def __init__(self, operatorType, encodedDimension, activityNames, numLayers, neuralOperatorParameters):
         super(specificActivityModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numLayers=numLayers, numInputSignals=1, numOutputSignals=1, addBiasTerm=False)
         # General model parameters.
-        self.neuralOperatorParameters = neuralOperatorParameters  # The parameters for the neural operator.
+        self.neuralOperatorParameters = copy.deepcopy(neuralOperatorParameters)  # The parameters for the neural operator.
         self.numActivities = len(activityNames)  # The number of activities.
         self.activityNames = activityNames  # The names of the activities.
         self.numLayers = numLayers  # The number of layers in the model.

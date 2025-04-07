@@ -35,15 +35,16 @@ class trainingProtocolHelpers:
             dataLoader = allMetadataLoaders[modelInd] if modelInd < len(allMetadataLoaders) else allDataLoaders[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
             modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
             trainSharedLayers = modelInd < len(allMetaModels)  # Train the shared layers.
-            specificTraining = True
+
+            # Set up the flags.
+            profileTraining = submodel == modelConstants.signalEncoderModel
 
             # Copy over the shared layers.
             self.modelMigration.unifyModelWeights(allModels=[modelPipeline], modelWeights=self.sharedModelWeights, layerInfo=self.unifiedLayerData)
 
             # Train the updated model.
-            if submodel == modelConstants.emotionModel and epoch == 0: modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=modelConstants.userInputParams['numProfileShots'] + 1)
-            modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=specificTraining, trainSharedLayers=trainSharedLayers, stepScheduler=False, numEpochs=1)   # Full model training.
-            if specificTraining: modelPipeline.model.cullAngles(epoch=epoch)
+            modelPipeline.trainModel(dataLoader, submodel, profileTraining=profileTraining, specificTraining=True, trainSharedLayers=trainSharedLayers, stepScheduler=False, numEpochs=1)   # Full model training.
+            # modelPipeline.model.cullAngles(epoch=epoch)
 
             # Unify all the model weights and retrain the specific models.
             self.unifiedLayerData = self.modelMigration.copyModelWeights(modelPipeline, self.sharedModelWeights)
@@ -64,9 +65,10 @@ class trainingProtocolHelpers:
             if not onlyProfileTraining: modelPipeline.trainModel(dataLoader, submodel, profileTraining=False, specificTraining=True, trainSharedLayers=False, stepScheduler=False, numEpochs=numEpochs)  # Signal-specific training.
 
             # Health profile training.
-            numProfileShots = modelPipeline.resetPhysiologicalProfile(submodel) if epoch != 0 else modelConstants.initialProfileEpochs
-            modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=numProfileShots + 1)  # Profile training.
-            if not onlyProfileTraining: modelPipeline.model.cullAngles(epoch=epoch)
+            if submodel == modelConstants.signalEncoderModel:
+                numProfileShots = modelPipeline.resetPhysiologicalProfile(submodel)
+                modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=numProfileShots + 1)  # Profile training.
+            # if not onlyProfileTraining: modelPipeline.model.cullAngles(epoch=epoch)
 
     def validationTraining(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch):
         self.unifyAllModelWeights(allMetaModels, allModels)  # Unify all the model weights.
@@ -81,7 +83,7 @@ class trainingProtocolHelpers:
             modelPipeline.trainModel(dataLoader, submodel, profileTraining=epoch < 4, specificTraining=True, trainSharedLayers=False, stepScheduler=False, numEpochs=numEpochs)  # Signal-specific training.
 
             # Health profile training.
-            numProfileShots = modelPipeline.resetPhysiologicalProfile(submodel) if epoch != 0 else modelConstants.initialProfileEpochs
+            numProfileShots = modelPipeline.resetPhysiologicalProfile(submodel)
             modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=numProfileShots + 1)  # Profile training.
             modelPipeline.model.cullAngles(epoch=epoch)
 

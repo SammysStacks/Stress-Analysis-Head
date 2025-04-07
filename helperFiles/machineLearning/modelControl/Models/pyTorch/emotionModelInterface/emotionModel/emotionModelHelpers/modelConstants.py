@@ -43,7 +43,6 @@ class modelConstants:
     metadata = [datasetIndexMD, subjectIndexMD]
 
     # Specify the model parameters.
-    initialProfileEpochs = 3  # The number of epochs to use for the initial profile.
     modelTimeWindow = 120  # The time window for the model.
     numWarmupEpochs = 10  # The number of warmup epochs to use.
     minMaxScale = 1  # The maximum value for the min-max scaling.

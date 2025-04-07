@@ -10,8 +10,8 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class organizeTrainingLosses(lossCalculations):
 
-    def __init__(self, accelerator, allEmotionClasses, activityLabelInd):
-        super(organizeTrainingLosses, self).__init__(accelerator, allEmotionClasses, activityLabelInd)
+    def __init__(self, accelerator, allEmotionClasses, numActivities, activityLabelInd):
+        super(organizeTrainingLosses, self).__init__(accelerator, allEmotionClasses, numActivities, activityLabelInd)
 
     # ---------------------------------------------------------------------- #
     # -------------------------- Loss Calculations ------------------------- #
@@ -84,11 +84,11 @@ class organizeTrainingLosses(lossCalculations):
                 self.storeLossInformation(trainingLoss=normalizationFactorsPath, testingLoss=None, trainingHolder=model.specificActivityModel.normalizationFactorsPath, testingHolder=None)
                 self.storeLossInformation(trainingLoss=givensAnglesFeaturesPath, testingLoss=None, trainingHolder=model.specificActivityModel.givensAnglesFeaturesPath, testingHolder=None)
                 self.storeLossInformation(trainingLoss=numFreeParamsPath, testingLoss=None, trainingHolder=model.specificActivityModel.numFreeParams, testingHolder=None)
-                self.accelerator.print("Reconstruction loss values:", activityTrainingLoss.nanmean().item(), activityTestingLoss.nanmean().item())
+                self.accelerator.print("Activity loss values:", activityTrainingLoss.nanmean().item(), activityTestingLoss.nanmean().item())
 
                 # Calculate the activity classification accuracy/loss and assert the integrity of the loss.
-                emotionTestingLoss = self.calculateEmotionLoss(emotionProfile, allLabels, allTestingLabelMask)
-                emotionTrainingLoss = self.calculateEmotionLoss(emotionProfile, allLabels, allTrainingLabelMask)
+                emotionTestingLoss = self.calculateEmotionLoss(emotionProfile, allLabels, allTestingLabelMask)  # Dim: numEmotions
+                emotionTrainingLoss = self.calculateEmotionLoss(emotionProfile, allLabels, allTrainingLabelMask)  # Dim: numEmotions
 
                 # Get the encoder information.
                 givensAnglesPath, normalizationFactorsPath, givensAnglesFeaturesPath, reversibleModuleNames, givensAnglesFeatureNames = model.getLearnableParams(submodelString="EmotionModel")
@@ -106,7 +106,7 @@ class organizeTrainingLosses(lossCalculations):
                 self.storeLossInformation(trainingLoss=normalizationFactorsPath, testingLoss=None, trainingHolder=model.specificEmotionModel.normalizationFactorsPath, testingHolder=None)
                 self.storeLossInformation(trainingLoss=givensAnglesFeaturesPath, testingLoss=None, trainingHolder=model.specificEmotionModel.givensAnglesFeaturesPath, testingHolder=None)
                 self.storeLossInformation(trainingLoss=numFreeParamsPath, testingLoss=None, trainingHolder=model.specificEmotionModel.numFreeParams, testingHolder=None)
-                self.accelerator.print("Reconstruction loss values:", activityTrainingLoss.nanmean().item(), activityTestingLoss.nanmean().item())
+                self.accelerator.print("Emotion loss values:", emotionTrainingLoss.nanmean().item(), emotionTestingLoss.nanmean().item())
 
     # --------------------------- Helper Methods --------------------------- #
 

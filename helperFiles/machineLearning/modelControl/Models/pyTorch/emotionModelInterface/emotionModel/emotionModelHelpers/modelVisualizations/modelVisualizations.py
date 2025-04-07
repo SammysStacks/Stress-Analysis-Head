@@ -49,9 +49,9 @@ class modelVisualizations(globalPlottingProtocols):
 
         with torch.no_grad():
             if self.accelerator.is_local_main_process:
-                specificSignalEncoderModels = [modelPipeline.model.specificSignalEncoderModel for modelPipeline in allModelPipelines]  # Dim: numModels
 
                 if submodel == modelConstants.signalEncoderModel:
+                    specificSignalEncoderModels = [modelPipeline.model.specificSignalEncoderModel for modelPipeline in allModelPipelines]  # Dim: numModels
                     self.generalPlotting(submodel, allModelPipelines, specificSignalEncoderModels, showMinimumPlots, modelIdentifier="Signal encoder", submodelString="SignalEncoderModel")
                 elif submodel == modelConstants.emotionModel:
                     specificActivityModels = [modelPipeline.model.specificActivityModel for modelPipeline in allModelPipelines]  # Dim: numModels
@@ -69,9 +69,10 @@ class modelVisualizations(globalPlottingProtocols):
                                            testingLosses=[specificModel.testingLosses_signalReconstruction for specificModel in specificModels], numEpochs=numEpochs,
                                            lossLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle=f"{modelIdentifier}convergence losses")
 
-        # Plot the losses during few-shot retraining the profile.
-        self.generalViz.plotTrainingLosses(trainingLosses=[np.nanmean(specificModel.profileModel.retrainingProfileLosses, axis=1) for specificModel in specificModels], testingLosses=None,
-                                           numEpochs=numEpochs, lossLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle=f"{modelIdentifier}profile convergence losses")
+        if submodel == modelConstants.signalEncoderModel:
+            # Plot the losses during few-shot retraining the profile.
+            self.generalViz.plotTrainingLosses(trainingLosses=[np.nanmean(specificModel.profileModel.retrainingProfileLosses, axis=1) for specificModel in specificModels], testingLosses=None,
+                                               numEpochs=numEpochs, lossLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle=f"{modelIdentifier}profile convergence losses")
 
         freeParamInformation = np.asarray([modelPipeline.model.getFreeParamsFullPassPath(submodelString=submodelString)[1:] for modelPipeline in allModelPipelines])
         moduleNames, maxFreeParamsPath = freeParamInformation[:, 0], freeParamInformation[:, 1].astype(int)  # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
@@ -119,11 +120,10 @@ class modelVisualizations(globalPlottingProtocols):
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
             signalData, signalIdentifiers, metadata = allSignalData[validBatchMask][:numPlottingPoints], allSignalIdentifiers[validBatchMask][:numPlottingPoints], allMetadata[validBatchMask][:numPlottingPoints]
             validDataMask, reconstructedSignalData, resampledSignalData, healthProfile, activityProfile, basicEmotionProfile, emotionProfile = model.forward(submodel, signalData, signalIdentifiers, metadata, device=self.accelerator.device, compiledLayerStates=True)
-            reconstructedHealthProfile = model.reconstructHealthProfile(resampledSignalData).detach().cpu().numpy()  # reconstructedHealthProfile: batchSize, encodedDimension
 
             # Detach the data from the GPU and tensor format.
             activityProfile, basicEmotionProfile, emotionProfile = activityProfile.detach().cpu().numpy().astype(np.float16), basicEmotionProfile.detach().cpu().numpy().astype(np.float16), emotionProfile.detach().cpu().numpy().astype(np.float16)
-            validDataMask, reconstructedSignalData, resampledSignalData, healthProfile = validDataMask.detach().cpu().numpy().astype(np.float16), reconstructedSignalData.detach().cpu().numpy().astype(np.float16), resampledSignalData.detach().cpu().numpy().astype(np.float16), healthProfile.detach().cpu().numpy()
+            validDataMask, reconstructedSignalData, healthProfile = validDataMask.detach().cpu().numpy().astype(np.float16), reconstructedSignalData.detach().cpu().numpy().astype(np.float16), healthProfile.detach().cpu().numpy()
             signalData = signalData.detach().cpu().numpy().astype(np.float16)
             signalNames, emotionNames = model.featureNames, model.emotionNames
             batchInd, signalInd, emotionInd = 0, 0, 0
@@ -135,8 +135,10 @@ class modelVisualizations(globalPlottingProtocols):
 
                 if submodel == modelConstants.signalEncoderModel:
                     # Perform the backward pass through the model to get the reconstructed health profile.
+                    reconstructedHealthProfile = model.reconstructHealthProfile(resampledSignalData).detach().cpu().numpy()  # reconstructedHealthProfile: batchSize, encodedDimension
                     forwardModelPassSignals = model.specificSignalEncoderModel.profileModel.compiledLayerStates
                     # forwardModelPassSignals: numModuleLayers, batchSize, numSignals, encodedDimension
+                    resampledSignalData = resampledSignalData.detach().cpu().numpy()  # resampledSignalData: batchSize, encodedDimension
 
                     # Extract the model's internal variables.
                     retrainingHealthProfilePath = np.asarray(model.specificSignalEncoderModel.profileModel.retrainingHealthProfilePath)  # numProfileShots, numExperiments, encodedDimension

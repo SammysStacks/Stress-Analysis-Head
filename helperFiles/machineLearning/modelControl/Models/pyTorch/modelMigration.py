@@ -250,7 +250,7 @@ class modelMigration:
     def _loadModel(self, model, datasetName, submodel, trainingDate, loadSubmodelEpochs, loadModelAttributes=True, loadModelWeights=True):
         # Read in the previous signal encoder model when meta-training emotions.
         if submodel == modelConstants.emotionModel and not self.validationRun:
-            submodel = modelConstants.signalEncoderModel; validationRun = True
+            submodel = modelConstants.signalEncoderModel; validationRun = False
         elif submodel == modelConstants.signalEncoderModel and self.validationRun:
             submodel = modelConstants.signalEncoderModel; validationRun = False
         else: validationRun = self.validationRun

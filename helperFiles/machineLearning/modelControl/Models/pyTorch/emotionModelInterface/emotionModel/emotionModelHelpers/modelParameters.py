@@ -101,11 +101,12 @@ class modelParameters:
         # Get the model information.
         signalEncoderModelInfo = (f"signalEncoder{' validation' if validationRun else ''} shared-{userInputParams['numIgnoredSharedHF']} thresh{round(float(userInputParams['minAngularThreshold']), 1)}-{userInputParams['minThresholdStep']}-{round(float(userInputParams['maxAngularThreshold']), 1)} {userInputParams['optimizerType']} {userInputParams['numSharedEncoderLayers']}-shared specific-{userInputParams['numSpecificEncoderLayers']} " +
                                   f"LR{userInputParams['profileLR']}-{userInputParams['physGenLR']}-{round(userInputParams['reversibleLR']*180/math.pi, 3)} profileParams{userInputParams['profileDimension']} numShots{userInputParams['numProfileShots']} encodedDim{userInputParams['encodedDimension']} {userInputParams['neuralOperatorParameters']['wavelet']['waveletType']}-{userInputParams['minWaveletDim']}")
-        emotionPredictionModelInfo = f"emotionPrediction on {userInputParams['deviceListed']} with {userInputParams['optimizerType']}"
+        emotionModelInfo = (f"emotionPrediction{' validation' if validationRun else ''} shared-{userInputParams['numIgnoredSharedHF']} thresh{round(float(userInputParams['minAngularThreshold']), 1)}-{userInputParams['minThresholdStep']}-{round(float(userInputParams['maxAngularThreshold']), 1)} {userInputParams['optimizerType']} {userInputParams['numSharedEncoderLayers']}-shared specific-{userInputParams['numSpecificEncoderLayers']} " +
+                            f"LR{userInputParams['profileLR']}-{userInputParams['physGenLR']}-{round(userInputParams['reversibleLR']*180/math.pi, 3)} profileParams{userInputParams['profileDimension']} numShots{userInputParams['numProfileShots']} encodedDim{userInputParams['encodedDimension']} {userInputParams['neuralOperatorParameters']['wavelet']['waveletType']}-{userInputParams['minWaveletDim']}")
 
         # Return the model information.
         if submodel == modelConstants.signalEncoderModel: return f"{trainingDate} {signalEncoderModelInfo.replace('.', '-')}"
-        elif submodel == modelConstants.emotionModel: return f"{trainingDate} {emotionPredictionModelInfo.replace('.', '-')}"
+        elif submodel == modelConstants.emotionModel: return f"{trainingDate} {emotionModelInfo.replace('.', '-')}"
         else: raise Exception()
 
     # -------------------------- Saving/Loading Parameters ------------------------- #

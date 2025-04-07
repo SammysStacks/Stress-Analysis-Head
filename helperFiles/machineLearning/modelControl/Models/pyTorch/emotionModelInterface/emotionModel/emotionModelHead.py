@@ -47,7 +47,7 @@ class emotionModelHead(nn.Module):
         self.numBasicEmotions = modelConstants.userInputParams['numBasicEmotions']  # The number of basic emotions (basis states of emotions).
 
         # Setup holder for the model's training information
-        self.calculateModelLosses = lossCalculations(accelerator=None, allEmotionClasses=allEmotionClasses, activityLabelInd=self.numEmotions)
+        self.calculateModelLosses = lossCalculations(accelerator=None, allEmotionClasses=allEmotionClasses, numActivities=self.numActivities, activityLabelInd=self.numEmotions)
 
         # ------------------------ Data Compression ------------------------ #
 
