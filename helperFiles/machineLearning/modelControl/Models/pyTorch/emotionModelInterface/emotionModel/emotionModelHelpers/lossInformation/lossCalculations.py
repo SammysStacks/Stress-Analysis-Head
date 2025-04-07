@@ -144,7 +144,7 @@ class lossCalculations:
         classDimension = encodedDimension // numClasses
 
         # Generate the Gaussian weights for the predicted activity profile.
-        gaussianWeight = self.gaussian_1d_kernel(encodedDimension, classDimension + classDimension / 2, classDimension / 6, device=device)
+        gaussianWeight = self.gaussian_1d_kernel(classDimension, classDimension / 2, classDimension / 6, device=device)
         return classDimension, gaussianWeight
 
     @staticmethod
