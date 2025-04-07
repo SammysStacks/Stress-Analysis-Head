@@ -72,8 +72,6 @@ class compileModelDataHelpers:
         # Get the corresponding unique activity names
         uniqueActivityNames = np.asarray(activityNames)[uniqueActivityClasses.to(torch.int)]
         allFeatureLabels[:, activityLabelInd][goodActivityMask] = validActivityClasses.to(allFeatureLabels.dtype)
-        print(uniqueActivityClasses)
-        print(validActivityClasses)
 
         return uniqueActivityNames, allFeatureLabels
 

@@ -55,7 +55,7 @@ class emotionPipelineHelpers:
 
     def assignClassWeights(self, signalLabels, trainingLabelMask, testingLabelMask):
         self.allEmotionClassWeights, self.activityClassWeights = self.organizeLossInfo.getClassWeights(signalLabels, trainingLabelMask, testingLabelMask, self.numActivities)
-        print(self.allEmotionClassWeights, self.activityClassWeights)
+        # print(self.allEmotionClassWeights, self.activityClassWeights)
 
     # ------------------------------------------------------------------ #
 
