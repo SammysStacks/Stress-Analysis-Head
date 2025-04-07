@@ -100,7 +100,7 @@ class lossCalculations:
         # Calculate the activity classification accuracy/loss and assert the integrity of the loss.
         activityLosses = self.activityCrossEntropyLoss.to(device)(predictedActivityClasses[activityDataMask], trueActivityLabels.long())
 
-        return activityLosses
+        return activityLosses.nanmean()
 
     def calculateEmotionLoss(self, predictedEmotionProfile, allLabels, allLabelsMask):
         # Assert that the predicted activity profile is valid.
@@ -135,7 +135,7 @@ class lossCalculations:
                 emotionClasses[:, classInd] = (emotionProfile[:, classInd * classDimension:(classInd + 1) * classDimension]*gaussianWeight).sum(dim=-1)
 
             # Calculate the emotion classification accuracy.
-            emotionLosses[emotionInd] = self.emotionCrossEntropyLoss[emotionInd].to(device)(emotionClasses[emotionMask], trueEmotionLabels.long()).nanmean(dim=-1)
+            emotionLosses[emotionInd] = self.emotionCrossEntropyLoss[emotionInd].to(device)(emotionClasses[emotionMask], trueEmotionLabels.long()).nanmean()
 
         return emotionLosses
 

@@ -65,8 +65,8 @@ class organizeTrainingLosses(lossCalculations):
 
             elif submodel == modelConstants.emotionModel:
                 # Calculate the activity classification accuracy/loss and assert the integrity of the loss.
-                activityTestingLoss = self.calculateActivityLoss(activityProfile, allLabels, allTestingLabelMask)
-                activityTrainingLoss = self.calculateActivityLoss(activityProfile, allLabels, allTrainingLabelMask)
+                activityTestingLoss = self.calculateActivityLoss(activityProfile, allLabels, allTestingLabelMask)  # Dim: 1
+                activityTrainingLoss = self.calculateActivityLoss(activityProfile, allLabels, allTrainingLabelMask)  # Dim: 1
 
                 # Get the encoder information.
                 givensAnglesPath, normalizationFactorsPath, givensAnglesFeaturesPath, reversibleModuleNames, givensAnglesFeatureNames = model.getLearnableParams(submodelString="ActivityModel")

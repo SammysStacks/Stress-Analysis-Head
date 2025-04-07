@@ -67,12 +67,12 @@ class modelVisualizations(globalPlottingProtocols):
         # Plot reconstruction loss for the signal encoder.
         self.generalViz.plotTrainingLosses(trainingLosses=[specificModel.trainingLosses_signalReconstruction for specificModel in specificModels],
                                            testingLosses=[specificModel.testingLosses_signalReconstruction for specificModel in specificModels], numEpochs=numEpochs,
-                                           lossLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle=f"{modelIdentifier} convergence losses")
+                                           saveFigureLocation="trainingLosses/", plotTitle=f"{modelIdentifier} convergence losses")
 
         if submodel == modelConstants.signalEncoderModel:
             # Plot the losses during few-shot retraining the profile.
             self.generalViz.plotTrainingLosses(trainingLosses=[np.nanmean(specificModel.profileModel.retrainingProfileLosses, axis=1) for specificModel in specificModels], testingLosses=None,
-                                               numEpochs=numEpochs, lossLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle=f"{modelIdentifier} profile convergence losses")
+                                               numEpochs=numEpochs, saveFigureLocation="trainingLosses/", plotTitle=f"{modelIdentifier} profile convergence losses")
 
         freeParamInformation = np.asarray([modelPipeline.model.getFreeParamsFullPassPath(submodelString=submodelString)[1:] for modelPipeline in allModelPipelines])
         moduleNames, maxFreeParamsPath = freeParamInformation[:, 0], freeParamInformation[:, 1].astype(int)  # numFreeParamsPath: numModuleLayers, numSignals, numParams=1

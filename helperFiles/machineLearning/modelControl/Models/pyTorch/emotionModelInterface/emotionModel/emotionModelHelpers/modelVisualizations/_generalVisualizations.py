@@ -103,19 +103,19 @@ class generalVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=None, baseSaveFigureName=f"{emotionName}.pdf", fig=fig, clearFigure=True, showPlot=False)
         else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
-    def plotTrainingLosses(self, trainingLosses, testingLosses, lossLabels, numEpochs, saveFigureLocation="", plotTitle="Model Convergence Loss", logY=True):
+    def plotTrainingLosses(self, trainingLosses, testingLosses, numEpochs, saveFigureLocation="", plotTitle="Model Convergence Loss", logY=True):
         # Assert the validity of the input data.
-        assert len(trainingLosses) == len(lossLabels), "Number of loss labels must match the number of loss indices."
         if len(trainingLosses[0]) == 0: return None
         profileFlag = 'profile' in plotTitle.lower()
         fig, ax = plt.subplots(figsize=(6.4, 4.8))
         numModels = len(trainingLosses)
-        emotionLosses = 'emotion' in plotTitle.lower()
+        emotionModel = 'emotion' in plotTitle.lower() or 'activity' in plotTitle.lower()
 
         # Plot the average losses.
         for modelInd in range(numModels):
             modelTrainingLosses = np.asarray(trainingLosses[modelInd])
-            # modelTrainingLosses: loadSubmodelEpochs, numSignals
+            # modelTrainingLosses: numEpochs, numSignals or emotions or 1
+            print("modelTrainingLosses:", modelTrainingLosses.shape)
 
             # Calculate the average and standard deviation of the training losses.
             N = np.count_nonzero(~np.isnan(modelTrainingLosses), axis=1)
@@ -123,8 +123,8 @@ class generalVisualizations(globalPlottingProtocols):
             trainingLoss = np.nanmean(modelTrainingLosses, axis=-1)
 
             # Plot the training losses.
-            if not emotionLosses: ax.errorbar(x=np.arange(len(trainingLoss)), y=trainingLoss, yerr=trainingStandardError, color=self.darkColors[modelInd], linewidth=1)
-            ax.plot(modelTrainingLosses, color=self.darkColors[modelInd], linewidth=1, alpha=0.05 if not emotionLosses else 1)
+            if not emotionModel: ax.errorbar(x=np.arange(len(trainingLoss)), y=trainingLoss, yerr=trainingStandardError, color=self.darkColors[modelInd], linewidth=1)
+            ax.plot(modelTrainingLosses, color=self.darkColors[modelInd], linewidth=1, alpha=0.05 if not emotionModel else 1)
 
             if testingLosses is not None:
                 modelTestingLosses = np.asarray(testingLosses[modelInd])
@@ -135,15 +135,15 @@ class generalVisualizations(globalPlottingProtocols):
                 modelTestingLosses[np.isnan(modelTestingLosses)] = None
 
                 # Plot the testing losses.
-                if not emotionLosses: ax.errorbar(x=np.arange(len(testingLoss)), y=testingLoss, yerr=testingStd, color=self.darkColors[modelInd], linewidth=1)
-                ax.plot(modelTestingLosses, '-', color=self.darkColors[modelInd], linewidth=1, alpha=0.025 if not emotionLosses else 0.75)
+                if not emotionModel: ax.errorbar(x=np.arange(len(testingLoss)), y=testingLoss, yerr=testingStd, color=self.darkColors[modelInd], linewidth=1)
+                ax.plot(modelTestingLosses, '-', color=self.darkColors[modelInd], linewidth=1, alpha=0.025 if not emotionModel else 0.75)
 
         # Plot gridlines.
         ax.hlines(y=0.1, xmin=0, xmax=len(trainingLosses[0]) + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
         for i in range(2, 10): ax.hlines(y=0.01*i, xmin=0, xmax=len(trainingLosses[0]) + 1, colors=self.blackColor, linestyles='dashed', linewidth=1, alpha=0.25)
         ax.hlines(y=0.01, xmin=0, xmax=len(trainingLosses[0]) + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
         ax.set_xlim((0, max(128 if not profileFlag else 0, len(trainingLosses[0]) + 1)))
-        ax.set_ylim((0.0025, 0.75 if 'encoder' in plotTitle.lower() else 4))
+        ax.set_ylim((0.0025, 0.75))
         ax.grid(True)
 
         # Label the plot.
@@ -162,7 +162,7 @@ class generalVisualizations(globalPlottingProtocols):
         activationParamsPaths = np.asarray(activationParamsPaths)
         if len(activationParamsPaths.shape) == 2: return "No data to plot."
 
-        # activationParamsPaths: numModels, loadSubmodelEpochs, numModuleLayers, numParams
+        # activationParamsPaths: numModels, numEpochs, numModuleLayers, numParams
         numModels, numEpochs, numModuleLayers, numActivationParams = activationParamsPaths.shape
         nRows, nCols = min(1, numActivationParams // 3), numActivationParams
         numParams = len(paramNames)
@@ -213,7 +213,7 @@ class generalVisualizations(globalPlottingProtocols):
         activationParamsPaths = np.asarray(activationParamsPaths)
         if len(activationParamsPaths.shape) == 2: return "No data to plot."
 
-        # activationParamsPaths: numModels, loadSubmodelEpochs, numModuleLayers, numParams
+        # activationParamsPaths: numModels, numEpochs, numModuleLayers, numParams
         numModels, numEpochs, numModuleLayers, numActivationParams = activationParamsPaths.shape
         nRows, nCols = self.getRowsCols(combineSharedLayers=True)
         numParams = len(paramNames)
@@ -285,7 +285,7 @@ class generalVisualizations(globalPlottingProtocols):
             else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
     def plotFreeParamFlow(self, numFreeModelParams, maxFreeParamsPath, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
-        # normalizationFactorsPaths: numModels, loadSubmodelEpochs, numModuleLayers, *numSignals*, numParams=1
+        # normalizationFactorsPaths: numModels, numEpochs, numModuleLayers, *numSignals*, numParams=1
         # maxFreeParamsPath: numModels, numModuleLayers
         numModels, numModuleLayers = np.asarray(maxFreeParamsPath).shape
         nRows, nCols = self.getRowsCols(combineSharedLayers=True)
@@ -372,7 +372,7 @@ class generalVisualizations(globalPlottingProtocols):
             else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
     def plotNormalizationFactorFlow(self, normalizationFactorsPaths, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
-        # normalizationFactorsPaths: numModels, loadSubmodelEpochs, numModuleLayers, *numSignals*, numParams=1
+        # normalizationFactorsPaths: numModels, numEpochs, numModuleLayers, *numSignals*, numParams=1
         try: numModels, numEpochs, numModuleLayers = len(normalizationFactorsPaths), len(normalizationFactorsPaths[0]), len(normalizationFactorsPaths[0][0])
         except Exception as e: print("plotAngularFeaturesFlow:", e); return None
         nRows, nCols = self.getRowsCols(combineSharedLayers=True)
@@ -445,7 +445,7 @@ class generalVisualizations(globalPlottingProtocols):
             else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
     def plotGivensFeaturesPath(self, givensAnglesFeaturesPaths, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
-        # givensAnglesFeaturesPaths: numModels, loadSubmodelEpochs, numModuleLayers, numFeatures=5, numFeatureValues*
+        # givensAnglesFeaturesPaths: numModels, numEpochs, numModuleLayers, numFeatures=5, numFeatureValues*
         try: numModels, numEpochs, numModuleLayers = len(givensAnglesFeaturesPaths), len(givensAnglesFeaturesPaths[0]), len(givensAnglesFeaturesPaths[0][0])
         except Exception as e: print("plotAngularFeaturesFlow:", e); return None
         nRows, nCols = self.getRowsCols(combineSharedLayers=True)
@@ -488,7 +488,7 @@ class generalVisualizations(globalPlottingProtocols):
 
                     plottingParams = np.zeros((numEpochs, len(givensAnglesFeaturesPaths[modelInd][0][layerInd][paramInd])))
                     for epochInd in range(numEpochs): plottingParams[epochInd, :] = givensAnglesFeaturesPaths[modelInd][epochInd][layerInd][paramInd]
-                    # plottingParams: loadSubmodelEpochs, numFeatureValues
+                    # plottingParams: numEpochs, numFeatureValues
 
                     # Plot the training losses.
                     if 'specific' in moduleName:
