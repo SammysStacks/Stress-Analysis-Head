@@ -143,7 +143,7 @@ class generalVisualizations(globalPlottingProtocols):
         for i in range(2, 10): ax.hlines(y=0.01*i, xmin=0, xmax=len(trainingLosses[0]) + 1, colors=self.blackColor, linestyles='dashed', linewidth=1, alpha=0.25)
         ax.hlines(y=0.01, xmin=0, xmax=len(trainingLosses[0]) + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
         ax.set_xlim((0, max(128 if not profileFlag else 0, len(trainingLosses[0]) + 1)))
-        ax.set_ylim((0.0025, 0.75))
+        ax.set_ylim((0.0025, 0.75 if 'encoder' in plotTitle.lower() else 4))
         ax.grid(True)
 
         # Label the plot.

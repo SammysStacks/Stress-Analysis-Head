@@ -137,13 +137,13 @@ class organizeTrainingLosses(lossCalculations):
             validEmotionLabels = self.dataInterface.getEmotionLabels(emotionInd, allLabels, validLabelsMask)
             emotionClassWeight = self.assignClassWeights(validEmotionLabels, numEmotionClasses)
 
-            emotionClassWeight = torch.ones_like(emotionClassWeight)  # TODO
+            # emotionClassWeight = torch.ones_like(emotionClassWeight)  # TODO
             allEmotionClassWeights.append(emotionClassWeight)
 
         # Assign the class weights for the activities.
         activityLabels = self.dataInterface.getActivityLabels(allLabels, validLabelsMask, self.activityLabelInd)
         activityClassWeights = self.assignClassWeights(activityLabels, numActivities)
-        activityClassWeights = torch.ones_like(activityClassWeights)  # TODO
+        # activityClassWeights = torch.ones_like(activityClassWeights)  # TODO
 
         # Set the loss function for the activity and emotion classes.
         self.setEmotionActivityLossFunctions(activityClassWeights=activityClassWeights, emotionClassWeights=allEmotionClassWeights)
