@@ -115,27 +115,29 @@ class generalVisualizations(globalPlottingProtocols):
         for modelInd in range(numModels):
             modelTrainingLosses = np.asarray(trainingLosses[modelInd])
             # modelTrainingLosses: numEpochs, numSignals or emotions or 1
-            print("modelTrainingLosses:", modelTrainingLosses.shape)
-
-            # Calculate the average and standard deviation of the training losses.
-            N = np.count_nonzero(~np.isnan(modelTrainingLosses), axis=1)
-            trainingStandardError = np.nanstd(modelTrainingLosses, ddof=1, axis=-1) / np.sqrt(N)
-            trainingLoss = np.nanmean(modelTrainingLosses, axis=-1)
 
             # Plot the training losses.
-            if not emotionModel: ax.errorbar(x=np.arange(len(trainingLoss)), y=trainingLoss, yerr=trainingStandardError, color=self.darkColors[modelInd], linewidth=1)
+            if not emotionModel:
+                # Calculate the average and standard deviation of the training losses.
+                N = np.count_nonzero(~np.isnan(modelTrainingLosses), axis=1)
+                trainingStandardError = np.nanstd(modelTrainingLosses, ddof=1, axis=-1) / np.sqrt(N)
+                trainingLoss = np.nanmean(modelTrainingLosses, axis=-1)
+
+                ax.errorbar(x=np.arange(len(trainingLoss)), y=trainingLoss, yerr=trainingStandardError, color=self.darkColors[modelInd], linewidth=1)
             ax.plot(modelTrainingLosses, color=self.darkColors[modelInd], linewidth=1, alpha=0.05 if not emotionModel else 1)
 
             if testingLosses is not None:
                 modelTestingLosses = np.asarray(testingLosses[modelInd])
-                # Calculate the average and standard deviation of the testing losses.
-                N = np.count_nonzero(~np.isnan(modelTestingLosses), axis=-1)
-                testingStd = np.nanstd(modelTestingLosses, ddof=1, axis=-1) / np.sqrt(N)
-                testingLoss = np.nanmean(modelTestingLosses, axis=-1)
                 modelTestingLosses[np.isnan(modelTestingLosses)] = None
 
                 # Plot the testing losses.
-                if not emotionModel: ax.errorbar(x=np.arange(len(testingLoss)), y=testingLoss, yerr=testingStd, color=self.darkColors[modelInd], linewidth=1)
+                if not emotionModel:
+                    # Calculate the average and standard deviation of the testing losses.
+                    N = np.count_nonzero(~np.isnan(modelTestingLosses), axis=-1)
+                    testingStd = np.nanstd(modelTestingLosses, ddof=1, axis=-1) / np.sqrt(N)
+                    testingLoss = np.nanmean(modelTestingLosses, axis=-1)
+
+                    ax.errorbar(x=np.arange(len(testingLoss)), y=testingLoss, yerr=testingStd, color=self.darkColors[modelInd], linewidth=1)
                 ax.plot(modelTestingLosses, '-', color=self.darkColors[modelInd], linewidth=1, alpha=0.025 if not emotionModel else 0.75)
 
         # Plot gridlines.

@@ -5,6 +5,7 @@ import torch
 from matplotlib import pyplot as plt
 
 from helperFiles.globalPlottingProtocols import globalPlottingProtocols
+from ._emotionModelVisualizations import emotionModelVisualizations
 from ._generalVisualizations import generalVisualizations
 from ._signalEncoderVisualizations import signalEncoderVisualizations
 from ..emotionDataInterface import emotionDataInterface
@@ -22,6 +23,7 @@ class modelVisualizations(globalPlottingProtocols):
 
         # Initialize helper classes.
         self.signalEncoderViz = signalEncoderVisualizations(baseSavingFolder="", stringID="", datasetName=datasetName)
+        self.emotionModelViz = emotionModelVisualizations(baseSavingFolder="", stringID="", datasetName=datasetName)
         self.generalViz = generalVisualizations(baseSavingFolder="", stringID="", datasetName="_comparison")
 
     def setModelSavingFolder(self, baseSavingFolder, stringID, epoch=None):
@@ -186,8 +188,12 @@ class modelVisualizations(globalPlottingProtocols):
                 if submodel == modelConstants.signalEncoderModel: return None
 
                 # ------------------ Activity Prediction Plots ------------------ #
+                # activityProfile: batchSize, encodedDimension
+
 
                 # ------------------ Emotion Prediction Plots ------------------ #
+                # basicEmotionProfile: batchSize, numEmotions, numBasicEmotions, encodedDimension
+                # emotionProfile: batchSize, numEmotions, encodedDimension
 
                 # Get all the data predictions.
                 # self.plotDistributions(trueTestingEmotions, predictedTestingEmotions, self.allEmotionClasses[validEmotionInd], plotTitle = "Testing Emotion Distributions")
