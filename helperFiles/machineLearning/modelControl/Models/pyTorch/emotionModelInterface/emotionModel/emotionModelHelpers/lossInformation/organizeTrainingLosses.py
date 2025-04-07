@@ -141,6 +141,7 @@ class organizeTrainingLosses(lossCalculations):
         # Assign the class weights for the activities.
         activityLabels = self.dataInterface.getActivityLabels(allLabels, validLabelsMask, self.activityLabelInd)
         activityClassWeights = self.assignClassWeights(activityLabels, numActivities)
+        print(activityLabels)
 
         # Set the loss function for the activity and emotion classes.
         self.setEmotionActivityLossFunctions(activityClassWeights=activityClassWeights, emotionClassWeights=allEmotionClassWeights)
@@ -155,6 +156,7 @@ class organizeTrainingLosses(lossCalculations):
 
         # Assert that the class labels are valid.
         if len(validClassLabels) == 0: return torch.nan
+        assert validClassLabels.max() < num_classes, "The class labels must be less than the number of classes."
         assert 0 <= validClassLabels.min(), "The class labels must be non-negative."
         assert class_labels.ndim == 1, "The class labels must be 1D."
 
