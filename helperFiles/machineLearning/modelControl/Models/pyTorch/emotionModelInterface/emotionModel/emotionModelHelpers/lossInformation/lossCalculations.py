@@ -90,7 +90,7 @@ class lossCalculations:
         assert trueActivityLabels.ndim == 1, f"Check the true activity labels. Found {trueActivityLabels.shape} shape"
 
         # Apply the Gaussian weights to the predicted activity profile.
-        classDimension, gaussianWeights = self.getGaussianWeight(encodedDimension, device=device, numClasses=self.numActivities)
+        classDimension, gaussianWeights = self.getGaussianWeights(encodedDimension, device=device, numClasses=self.numActivities)
         predictedActivityClasses = torch.zeros(batchSize, self.numActivities, device=device)
         predictedActivityProfile = predictedActivityProfile * gaussianWeights
 
@@ -128,7 +128,7 @@ class lossCalculations:
             assert (trueEmotionLabels < numEmotionClasses).all(), f"Check the true emotion labels. Found {trueEmotionLabels} with {self.allEmotionClasses[emotionInd]} classes"
 
             # Apply the Gaussian weights to the predicted activity profile.
-            classDimension, gaussianWeights = self.getGaussianWeight(encodedDimension, device=device, numClasses=numEmotionClasses)
+            classDimension, gaussianWeights = self.getGaussianWeights(encodedDimension, device=device, numClasses=numEmotionClasses)
             emotionClasses = torch.zeros(batchSize, numEmotionClasses, device=device)
             weightedEmotionProfile = emotionProfile * gaussianWeights
 
@@ -141,11 +141,12 @@ class lossCalculations:
 
         return emotionLosses
 
-    def getGaussianWeight(self, encodedDimension, device, numClasses):
+    def getGaussianWeights(self, encodedDimension, device, numClasses):
         classDimension = encodedDimension // numClasses
 
         # Generate the Gaussian weights for the predicted activity profile.
-        gaussianWeights = self.gaussian_1d_kernel(classDimension,  classDimension + classDimension / 2, classDimension / 6, device=device)
+        gaussianWeights = torch.zeros(encodedDimension, device=device)
+        for classInd in range(numClasses): gaussianWeights += self.gaussian_1d_kernel(encodedDimension, classInd * classDimension + classDimension / 2, classDimension / 6, device=device)
         gaussianWeights = gaussianWeights / gaussianWeights.sum()  # Normalize the weights.
 
         return classDimension, gaussianWeights
