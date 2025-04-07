@@ -34,7 +34,7 @@ class trainingProtocols(extractData):
         self.featureNames = [item for sublist in self.biomarkerFeatureNames for item in sublist]
 
         # Initialize important classes
-        self.analyzeFeatures = featurePlotting(self.trainingFolder + "dataAnalysis/", overwrite=True)
+        self.analyzeFeatures = featurePlotting(self.trainingFolder + "dataAnalysis/", overwrite=False)
         self.modelParameters = modelParameters(accelerator=None)
         self.compileModelInfo = compileModelInfo()
         self.saveInputs = saveExcelData()

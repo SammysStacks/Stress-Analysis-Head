@@ -255,7 +255,7 @@ class featurePlotting(globalPlottingProtocols):
             # Add Figure Legend
             legend = ax.legend(legendAxes[0:10], legendLabels[0:10], loc=9, bbox_to_anchor=(1.35, 1.02))
             # Save and clear the figure
-            fig.savefig(saveDataFolder + featureNames[featureInd] + ".png", dpi=300, bbox_extra_artists=(legend,), bbox_inches='tight')
+            fig.savefig(saveDataFolder + featureNames[featureInd] + ".pdf", format='pdf', dpi=300, bbox_extra_artists=(legend,), bbox_inches='tight')
             self.clearFigure(fig, legend=legend, showPlot=not self.hpcFlag)
 
     def plotEmotionCorrelation(self, allFinalFeatures, currentSurveyAnswersList, surveyQuestions, featureNames, folderName, subjectOrder=()):
