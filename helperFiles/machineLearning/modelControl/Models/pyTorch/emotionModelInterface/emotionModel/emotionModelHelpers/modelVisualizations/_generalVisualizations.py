@@ -110,6 +110,7 @@ class generalVisualizations(globalPlottingProtocols):
         profileFlag = 'profile' in plotTitle.lower()
         fig, ax = plt.subplots(figsize=(6.4, 4.8))
         numModels = len(trainingLosses)
+        emotionLosses = 'emotion' in plotTitle.lower()
 
         # Plot the average losses.
         for modelInd in range(numModels):
@@ -122,8 +123,8 @@ class generalVisualizations(globalPlottingProtocols):
             trainingLoss = np.nanmean(modelTrainingLosses, axis=-1)
 
             # Plot the training losses.
-            ax.errorbar(x=np.arange(len(trainingLoss)), y=trainingLoss, yerr=trainingStandardError, color=self.darkColors[modelInd], linewidth=1)
-            ax.plot(modelTrainingLosses, color=self.darkColors[modelInd], linewidth=1, alpha=0.05)
+            if not emotionLosses: ax.errorbar(x=np.arange(len(trainingLoss)), y=trainingLoss, yerr=trainingStandardError, color=self.darkColors[modelInd], linewidth=1)
+            ax.plot(modelTrainingLosses, color=self.darkColors[modelInd], linewidth=1, alpha=0.05 if not emotionLosses else 1)
 
             if testingLosses is not None:
                 modelTestingLosses = np.asarray(testingLosses[modelInd])
@@ -134,8 +135,8 @@ class generalVisualizations(globalPlottingProtocols):
                 modelTestingLosses[np.isnan(modelTestingLosses)] = None
 
                 # Plot the testing losses.
-                ax.errorbar(x=np.arange(len(testingLoss)), y=testingLoss, yerr=testingStd, color=self.darkColors[modelInd], linewidth=1)
-                ax.plot(modelTestingLosses, '-', color=self.darkColors[modelInd], linewidth=1, alpha=0.025)
+                if not emotionLosses: ax.errorbar(x=np.arange(len(testingLoss)), y=testingLoss, yerr=testingStd, color=self.darkColors[modelInd], linewidth=1)
+                ax.plot(modelTestingLosses, '-', color=self.darkColors[modelInd], linewidth=1, alpha=0.025 if not emotionLosses else 0.75)
 
         # Plot gridlines.
         ax.hlines(y=0.1, xmin=0, xmax=len(trainingLosses[0]) + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)

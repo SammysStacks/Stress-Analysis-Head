@@ -118,6 +118,7 @@ class lossCalculations:
             # Get the true emotion labels.
             emotionMask = self.dataInterface.getEmotionColumn(emotionDataMask, emotionInd)
             trueEmotionLabels = self.dataInterface.getEmotionLabels(emotionInd, allLabels, allLabelsMask)
+            print(emotionMask.sum(), emotionMask)
 
             # Get the true emotion labels.
             emotionProfile = predictedEmotionProfile[:, emotionInd]

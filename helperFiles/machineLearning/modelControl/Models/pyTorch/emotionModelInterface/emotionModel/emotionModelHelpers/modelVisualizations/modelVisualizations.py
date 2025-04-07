@@ -67,34 +67,34 @@ class modelVisualizations(globalPlottingProtocols):
         # Plot reconstruction loss for the signal encoder.
         self.generalViz.plotTrainingLosses(trainingLosses=[specificModel.trainingLosses_signalReconstruction for specificModel in specificModels],
                                            testingLosses=[specificModel.testingLosses_signalReconstruction for specificModel in specificModels], numEpochs=numEpochs,
-                                           lossLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle=f"{modelIdentifier}convergence losses")
+                                           lossLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle=f"{modelIdentifier} convergence losses")
 
         if submodel == modelConstants.signalEncoderModel:
             # Plot the losses during few-shot retraining the profile.
             self.generalViz.plotTrainingLosses(trainingLosses=[np.nanmean(specificModel.profileModel.retrainingProfileLosses, axis=1) for specificModel in specificModels], testingLosses=None,
-                                               numEpochs=numEpochs, lossLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle=f"{modelIdentifier}profile convergence losses")
+                                               numEpochs=numEpochs, lossLabels=datasetNames, saveFigureLocation="trainingLosses/", plotTitle=f"{modelIdentifier} profile convergence losses")
 
         freeParamInformation = np.asarray([modelPipeline.model.getFreeParamsFullPassPath(submodelString=submodelString)[1:] for modelPipeline in allModelPipelines])
         moduleNames, maxFreeParamsPath = freeParamInformation[:, 0], freeParamInformation[:, 1].astype(int)  # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
         numFreeModelParams = [specificModel.numFreeParams for specificModel in specificModels]  # numModels, loadSubmodelEpochs, numModuleLayers, numSignals, numParams=1
-        self.generalViz.plotFreeParamFlow(numFreeModelParams, maxFreeParamsPath, paramNames=["Free params"], moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle=f"{modelIdentifier}free parameters path zoomed")
+        self.generalViz.plotFreeParamFlow(numFreeModelParams, maxFreeParamsPath, paramNames=["Free params"], moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle=f"{modelIdentifier} free parameters path zoomed")
         for modelInd in range(len(numFreeModelParams)): print('numFreeModelParams:', numFreeModelParams[modelInd][-1][0].mean(), numFreeModelParams[modelInd][-1][1].mean(),  numFreeModelParams[modelInd][-1][2].mean(), numFreeModelParams[modelInd][-1][3].mean(), numFreeModelParams[modelInd][-1][4].mean())
         if showMinimumPlots: return None
 
         # Plot the activation parameters for the signal encoder.
         paramNames = ["Infinite Bound", "Linearity Factor", "Convergent Point"]
         activationParamsPaths = np.asarray([specificModel.activationParamsPath for specificModel in specificModels])  # numModels, loadSubmodelEpochs, numActivations, numActivationParams=3
-        self.generalViz.plotActivationFlowCompressed(activationParamsPaths=activationParamsPaths, moduleNames=moduleNames, modelLabels=datasetNames, paramNames=paramNames, saveFigureLocation="trainingLosses/", plotTitle=f"{modelIdentifier}activation parameter compressed path")
-        self.generalViz.plotActivationFlow(activationParamsPaths=activationParamsPaths, moduleNames=moduleNames, paramNames=paramNames, saveFigureLocation="trainingLosses/", plotTitle=f"{modelIdentifier}activation parameter path")
+        self.generalViz.plotActivationFlowCompressed(activationParamsPaths=activationParamsPaths, moduleNames=moduleNames, modelLabels=datasetNames, paramNames=paramNames, saveFigureLocation="trainingLosses/", plotTitle=f"{modelIdentifier} activation parameter compressed path")
+        self.generalViz.plotActivationFlow(activationParamsPaths=activationParamsPaths, moduleNames=moduleNames, paramNames=paramNames, saveFigureLocation="trainingLosses/", plotTitle=f"{modelIdentifier} activation parameter path")
 
         # Plot the angle features for the signal encoder.
         givensAnglesFeatureNames = reversibleLieLayer.getFeatureNames()
         givensAnglesFeaturesPaths = [specificModel.givensAnglesFeaturesPath for specificModel in specificModels]  # numModels, loadSubmodelEpochs, numModuleLayers, numFeatures, numValues
-        self.generalViz.plotGivensFeaturesPath(givensAnglesFeaturesPaths=givensAnglesFeaturesPaths, paramNames=givensAnglesFeatureNames, moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle=f"{modelIdentifier}angular features path")
+        self.generalViz.plotGivensFeaturesPath(givensAnglesFeaturesPaths=givensAnglesFeaturesPaths, paramNames=givensAnglesFeatureNames, moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle=f"{modelIdentifier} angular features path")
 
         # Plot the scaling factors for the signal encoder.
         normalizationFactorsPaths = [specificModel.normalizationFactorsPath for specificModel in specificModels]  # numModels, loadSubmodelEpochs, numModuleLayers, numSignals, numParams=1
-        self.generalViz.plotNormalizationFactorFlow(normalizationFactorsPaths, paramNames=["normalization factors"], moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle=f"{modelIdentifier}normalization factors path")
+        self.generalViz.plotNormalizationFactorFlow(normalizationFactorsPaths, paramNames=["normalization factors"], moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle=f"{modelIdentifier} normalization factors path")
 
     def plotAllTrainingEvents(self, submodel, modelPipeline, lossDataLoader, trainingModelName, currentEpoch, showMinimumPlots):
         self.accelerator.print(f"\nPlotting results for the {modelPipeline.model.datasetName} model")
