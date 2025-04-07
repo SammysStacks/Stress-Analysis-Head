@@ -256,6 +256,9 @@ class compileModelData(compileModelDataHelpers):
 
             # ---------------------- Data Adjustments ---------------------- #
 
+            print(currentTrainingMask.sum(dim=0))
+            print(currentTestingMask.sum(dim=0))
+
             # Remove any unused activity labels/names and add the contextual information.
             activityNames, allFeatureLabels = self.organizeActivityLabels(activityNames, allFeatureLabels, activityLabelInd)  # Expects inputs/outputs from 0 to n-1
             allSignalData = self.addContextualInfo(allSignalData, allSubjectInds, metadataInd)
