@@ -33,7 +33,7 @@ class lossCalculations:
     def setEmotionActivityLossFunctions(self, activityClassWeights, emotionClassWeights):
         self.activityCrossEntropyLoss = torch.nn.CrossEntropyLoss(weight=activityClassWeights, reduction='none', label_smoothing=0)
         self.emotionCrossEntropyLoss = torch.nn.ModuleList([
-            torch.nn.CrossEntropyLoss(weight=emotionClassWeight, reduction='none', label_smoothing=0)
+            torch.nn.CrossEntropyLoss(weight=emotionClassWeight, reduction='none', label_smoothing=0.1)
             for emotionClassWeight in emotionClassWeights
         ])
 
