@@ -1,5 +1,5 @@
 class TextFeedback:
-    def __init__(self, client, model, userName = "Sam"):
+    def __init__(self, client, model, userName="Subject XYZ"):
         self.client = client
         self.textEngine = model
         self.noMoreSentencesBuffer = None

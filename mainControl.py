@@ -42,9 +42,9 @@ if __name__ == "__main__":
     reverseOrder = False  # Reverse the order of the data for training.
 
     # Specify the user parameters.
-    userName = "Josh".replace(" ", "")
-    trialName = "VR"  # Experiment Type: Music ....
-    date = "2025-01-15-2"
+    userName = "Subject XYZ".replace(" ", "")
+    trialName = "Trial Type"  # Experiment Type: Music ....
+    date = "yyyy-mm-dd"
 
     # Specify experimental parameters.
     deviceAddress = '12ba4cb61c85ec11bc01fc2b19c2d21c'  # Board's Serial Number (port.serial_number). Only used if streaming data, else it gets reset to None.

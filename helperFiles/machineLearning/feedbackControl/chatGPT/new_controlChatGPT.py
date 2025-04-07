@@ -146,7 +146,7 @@ class chatGPTController:
 
 if __name__ == "__main__":
     # Instantiate class.
-    gptController = chatGPTController(userName="Squirtle")
+    gptController = chatGPTController(userName="Subject XYZ")
     while True:
         # to be implemented: get STAI score and emotion profile
         stai_score, currentEmotionProfile = simulatedEmotion.generate_random_emotion_profile()

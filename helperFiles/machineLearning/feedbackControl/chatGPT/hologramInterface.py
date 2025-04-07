@@ -34,7 +34,7 @@ if __name__ == "__main__":
     # Specify the folder to watch
     current_dir = os.path.dirname(os.path.abspath(__file__))
     folder_to_watch = os.path.join(current_dir, 'therapyHelperFiles', '_savedImages')
-    dropbox_folder = 'Users/liuruixiao/Dropbox'
+    dropbox_folder = 'DropBox Folder Path'
 
     if not os.path.exists(folder_to_watch):
         os.makedirs(folder_to_watch)

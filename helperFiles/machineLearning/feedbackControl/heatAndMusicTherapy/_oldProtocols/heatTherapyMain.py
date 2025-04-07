@@ -67,7 +67,7 @@ if __name__ == "__main__":
     therapySelection = "Heat"
     # User parameters.
     userTherapyMethod = "aStarTherapyProtocol"  # The therapy algorithm to run. Options: "aStarTherapyProtocol", "basicTherapyProtocol", "nnTherapyProtocol", "hmmTherapyProtocol"
-    testingUserName = "Squirtle"  # The username for the therapy.
+    testingUserName = "Subject XYZ"  # The username for the therapy.
     temperatureBounds = (30, 50)  # The temperature bounds for the therapy.
     temperatureBinWidth = 1.5  # The temperature bounds for the therapy.
     plotTherapyResults = True  # Whether to plot the results.

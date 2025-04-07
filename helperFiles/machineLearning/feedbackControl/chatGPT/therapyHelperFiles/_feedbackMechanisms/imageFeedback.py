@@ -12,7 +12,7 @@ class ImageFeedback:
 
     image_counter = itertools.count()
 
-    def __init__(self, client, model, thread, txtFilePath, userName = "Sam"):
+    def __init__(self, client, model, thread, txtFilePath, userName="Subject XYZ"):
         # General parameters.
         self.imageGenerationEvent = thread
         self.txtFilePath = txtFilePath

@@ -5,7 +5,7 @@ import numpy as np
 import subprocess
 
 class AudioFeedback:
-    def __init__(self, client, threads, userName="Sam"):
+    def __init__(self, client, threads, userName="Subject XYZ"):
         # General parameters.
         self.playAudioEvent, self.userRecordingEvent = threads
         self.userName = userName  # A unique username for the client. Not used for personalization.
@@ -48,11 +48,11 @@ class AudioFeedback:
     
     def getAudioResponse(self, textPrompt, save_path = ""):        
         with self.client.audio.speech.with_streaming_response.create(
-            response_format = 'mp3',  # The format to audio in. Supported formats are mp3, opus, aac, and flac.
-            input = textPrompt,  # The text to generate audio for. The maximum length is 4096 characters.
-            model = "tts-1",     # One of the available TTS models: tts-1 or tts-1-hd
-            voice = "echo",     # The voice to use when generating the audio. Supported voices are alloy, echo, fable, onyx, nova, and shimmer.
-            speed = 1,           # The speed of the generated audio. Select a value from 0.25 to 4.0. 1.0 is the default.
+            response_format='mp3',  # The format to audio in. Supported formats are mp3, opus, aac, and flac.
+            input=textPrompt,  # The text to generate audio for. The maximum length is 4096 characters.
+            model="tts-1",     # One of the available TTS models: tts-1 or tts-1-hd
+            voice="echo",     # The voice to use when generating the audio. Supported voices are alloy, echo, fable, onyx, nova, and shimmer.
+            speed=1,           # The speed of the generated audio. Select a value from 0.25 to 4.0. 1.0 is the default.
         ) as response:
             if response.status_code == 200:
                 for chunk in response.iter_bytes(chunk_size=2048):
