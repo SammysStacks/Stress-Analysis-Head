@@ -21,6 +21,7 @@ class emotionModelHead(nn.Module):
         super(emotionModelHead, self).__init__()
         # General model parameters.
         self.hpcFlag = 'HPC' in modelConstants.userInputParams['deviceListed']  # Flag to determine if the model is running on an HPC.
+        self.allEmotionClasses = allEmotionClasses  # The number of classes (intensity levels) within each emotion to predict. Dim: numEmotions
         self.numActivities = len(activityNames)  # The number of activities to predict.
         self.numEmotions = len(emotionNames)  # The number of emotions to predict.
         self.numSignals = len(featureNames)  # The number of signals in the model.

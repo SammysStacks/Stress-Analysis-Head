@@ -198,9 +198,13 @@ class modelVisualizations(globalPlottingProtocols):
                 activityClasses = activityClassDistribution.argmax(dim=-1)  # activityClasses: batchSize
                 # activityClassDistribution: batchSize, numActivities
 
+                # Get the training and testing masks.
+                activityTrainingMask = emotionDataInterface.getActivityColumn(allTrainingLabelMask, self.activityLabelInd)
+                activityTestingMask = emotionDataInterface.getActivityColumn(allTestingLabelMask, self.activityLabelInd)
+
                 # Separate the training and testing data.
-                predictedActivityTrainingClasses = emotionDataInterface.getActivityLabels(activityClasses, allTrainingLabelMask, self.activityLabelInd)
-                predictedActivityTestingClasses = emotionDataInterface.getActivityLabels(activityClasses, allTestingLabelMask, self.activityLabelInd)
+                predictedActivityTrainingClasses = activityClasses[activityTrainingMask]
+                predictedActivityTestingClasses = activityClasses[activityTestingMask]
 
                 # Separate the training and testing data.
                 trueActivityTrainingClasses = emotionDataInterface.getActivityLabels(allLabels, allTrainingLabelMask, self.activityLabelInd)  # trueActivityClasses: batchSize
@@ -221,6 +225,29 @@ class modelVisualizations(globalPlottingProtocols):
                 numBasicEmotions = model.numBasicEmotions
                 emotionNames = model.emotionNames
 
+                # Get the emotion classes.
+                emotionPredictions = emotionDataInterface.getEmotionClassPredictions(emotionProfile, model.allEmotionClasses, emotionProfile.device)
+                # emotionPredictions: batchSize, numEmotions
+
                 # Plot the activity profile.
                 self.emotionModelViz.plotDistributions(emotionProfile, distributionNames=emotionNames, epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="emotionModel/", plotTitle="Emotion profile")
                 self.emotionModelViz.plotDistributions(basicEmotionProfile[:, 0], distributionNames=[f"Basic{i}" for i in range(numBasicEmotions)], epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="emotionModel/", plotTitle="Basic emotion profile")
+
+                for emotionInd in range(model.numEmotions):
+                    complexEmotionPrediction = emotionPredictions[:, emotionInd]
+                    numClasses = model.allEmotionClasses[emotionInd]
+                    emotionName = model.emotionNames[emotionInd]
+                    
+                    # Get the training and testing data.
+                    trueEmotionTrainingClasses = emotionDataInterface.getEmotionLabels(emotionInd, allLabels, allTrainingLabelMask)
+                    trueEmotionTestingClasses = emotionDataInterface.getEmotionLabels(emotionInd, allLabels, allTestingLabelMask)
+
+                    # Get the training and testing masks.
+                    emotionTrainingMask = emotionDataInterface.getEmotionColumn(allTrainingLabelMask, emotionInd)
+                    emotionTestingMask = emotionDataInterface.getEmotionColumn(allTestingLabelMask, emotionInd)
+
+                    # Separate the training and testing predictions.
+                    predictedEmotionTrainingClasses = complexEmotionPrediction[emotionTrainingMask]
+                    predictedEmotionTestingClasses = complexEmotionPrediction[emotionTestingMask]
+
+                    self.emotionModelViz.plotPredictedMatrix(trueEmotionTrainingClasses, trueEmotionTestingClasses, predictedEmotionTrainingClasses, predictedEmotionTestingClasses, numClasses=numClasses, epoch=currentEpoch, saveFigureLocation="emotionModel/", plotTitle=f"{emotionName} confusion matrix")

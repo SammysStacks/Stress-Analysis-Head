@@ -87,7 +87,7 @@ class lossCalculations:
         assert predictedActivityProfile.ndim == 2, f"Check the predicted activity profile. Found {predictedActivityProfile.shape} shape"
         assert trueActivityLabels.ndim == 1, f"Check the true activity labels. Found {trueActivityLabels.shape} shape"
 
-        # Get the full Gaussian profile for the activity classes.
+        # Get the activity class distributions.
         predictedActivityClasses = self.dataInterface.getActivityClassProfile(predictedActivityProfile, self.numActivities)
 
         # Calculate the activity classification accuracy/loss and assert the integrity of the loss.
@@ -106,25 +106,16 @@ class lossCalculations:
         emotionDataMask = self.dataInterface.getEmotionMasks(allLabelsMask, numEmotions=numEmotions)  # Dim: batchSize, numEmotions
         emotionLosses = torch.zeros(numEmotions, device=device)  # Dim: numEmotions
 
+        # Get the emotion class predictions.
+        emotionPredictions = self.dataInterface.getEmotionClassPredictions(predictedEmotionProfile, self.allEmotionClasses, device=device)
+        # emotionPredictions: batchSize, numEmotions
+
         for emotionInd in range(numEmotions):
             # Get the relevant batches for the current emotion.
             trueEmotionLabels = self.dataInterface.getEmotionLabels(emotionInd, allLabels, allLabelsMask)
             emotionMask = self.dataInterface.getEmotionColumn(emotionDataMask, emotionInd)
-            emotionProfile = predictedEmotionProfile[:, emotionInd].clone()  # Dim: batchSize, encodedDimension
-            numEmotionClasses = self.allEmotionClasses[emotionInd]
-
-            # Assert that the predicted profile is valid.
-            assert (trueEmotionLabels < numEmotionClasses).all(), f"Check the true emotion labels. Found {trueEmotionLabels} with {self.allEmotionClasses[emotionInd]} classes"
-
-            # Get the full Gaussian weight profile for the emotion classes.
-            gaussianWeightProfile = self.dataInterface.getFullGaussianProfile(encodedDimension, device=device, numClasses=numEmotionClasses)
-            classArray = torch.linspace(start=-0.5, end=numEmotionClasses - 0.5, steps=encodedDimension, device=device)
-
-            # Predict the emotion classes.
-            predictedEmotionClasses = (emotionProfile*gaussianWeightProfile*classArray).sum(dim=-1)  # TODO: normalization needed
-            # Dim: batchSize
 
             # Calculate the emotion classification accuracy.
-            emotionLosses[emotionInd] = self.smoothL1Loss(predictedEmotionClasses[emotionMask], trueEmotionLabels).nanmean()
+            emotionLosses[emotionInd] = self.smoothL1Loss(emotionPredictions[:, emotionInd][emotionMask], trueEmotionLabels).nanmean()
 
         return emotionLosses
