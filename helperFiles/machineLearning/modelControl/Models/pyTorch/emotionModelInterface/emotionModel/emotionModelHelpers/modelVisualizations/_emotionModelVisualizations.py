@@ -43,6 +43,9 @@ class emotionModelVisualizations(globalPlottingProtocols):
     # --------------------- Visualize Model Parameters --------------------- #
 
     def plotPredictedMatrix(self, allTrainingLabels, allTestingLabels, allPredictedTrainingLabels, allPredictedTestingLabels, numClasses, epoch, saveFigureLocation, plotTitle):
+        allPredictedTrainingLabels, allPredictedTestingLabels = int(allPredictedTrainingLabels), int(allPredictedTestingLabels)
+        allTrainingLabels, allTestingLabels = int(allTrainingLabels), int(allTestingLabels)
+
         # Calculate confusion matrices
         training_confusion_matrix = confusion_matrix(allTrainingLabels, allPredictedTrainingLabels, labels=np.arange(numClasses), normalize='true')
         testing_confusion_matrix = confusion_matrix(allTestingLabels, allPredictedTestingLabels, labels=np.arange(numClasses), normalize='true')
@@ -62,7 +65,7 @@ class emotionModelVisualizations(globalPlottingProtocols):
 
         for i in range(numClasses):
             for j in range(numClasses):
-                axes[0].text(j, i, f'{training_confusion_matrix[i, j] * 100:.2f}%', ha='center', va='center', color='black')
+                axes[0].text(j, i, f'{training_confusion_matrix[i, j] * 100:.2f}', ha='center', va='center', color='black', fontsize=10)
 
         im1 = axes[1].imshow(testing_confusion_matrix, cmap='BuGn', vmin=0, vmax=1, aspect='auto')
         axes[1].set_title('Testing Confusion Matrix')
@@ -73,7 +76,7 @@ class emotionModelVisualizations(globalPlottingProtocols):
 
         for i in range(numClasses):
             for j in range(numClasses):
-                axes[1].text(j, i, f'{testing_confusion_matrix[i, j] * 100:.2f}%', ha='center', va='center', color='black')
+                axes[1].text(j, i, f'{testing_confusion_matrix[i, j] * 100:.2f}', ha='center', va='center', color='black', fontsize=10)
         axes[1].invert_yaxis()  # Reverse the order of y-axis ticks
         fig.suptitle(f"{plotTitle} at epoch{epoch}", fontsize=24)
         fig.tight_layout()
