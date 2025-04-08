@@ -190,10 +190,18 @@ class modelVisualizations(globalPlottingProtocols):
                 # ------------------ Activity Prediction Plots ------------------ #
                 # activityProfile: batchSize, encodedDimension
 
+                # Plot the activity profile.
+                self.emotionModelViz.plotDistributions(activityProfile[:, None, :], distributionNames=['Activity'], epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="activityModel/", plotTitle="Activity profile")
 
                 # ------------------ Emotion Prediction Plots ------------------ #
                 # basicEmotionProfile: batchSize, numEmotions, numBasicEmotions, encodedDimension
                 # emotionProfile: batchSize, numEmotions, encodedDimension
+                numBasicEmotions = model.numBasicEmotions
+                emotionNames = model.emotionNames
+
+                # Plot the activity profile.
+                self.emotionModelViz.plotDistributions(emotionProfile, distributionNames=emotionNames, epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="activityModel/", plotTitle="Activity profile")
+                self.emotionModelViz.plotDistributions(basicEmotionProfile[:, 0], distributionNames=[f"Basic{i}" for i in range(numBasicEmotions)], epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="activityModel/", plotTitle="Activity profile")
 
                 # Get all the data predictions.
                 # self.plotDistributions(trueTestingEmotions, predictedTestingEmotions, self.allEmotionClasses[validEmotionInd], plotTitle = "Testing Emotion Distributions")
