@@ -96,6 +96,7 @@ class lossCalculations:
         # Apply the Gaussian weights to the predicted activity profile.
         for classInd in range(self.numActivities):
             predictedActivityClasses[:, classInd] = (predictedActivityProfile[:, classInd * classDimension:(classInd + 1) * classDimension]*gaussianWeight).sum(dim=-1)
+        print(predictedActivityClasses[activityDataMask][0].round(decimals=4), trueActivityLabels[0])
 
         # Calculate the activity classification accuracy/loss and assert the integrity of the loss.
         activityLosses = self.activityCrossEntropyLoss.to(device)(predictedActivityClasses[activityDataMask], trueActivityLabels.long())

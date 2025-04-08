@@ -35,7 +35,6 @@ class trainingProtocolHelpers:
             dataLoader = allMetadataLoaders[modelInd] if modelInd < len(allMetadataLoaders) else allDataLoaders[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
             modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
             trainSharedLayers = modelInd < len(allMetaModels)  # Train the shared layers.
-            print("trainSharedLayers:", trainSharedLayers)
 
             # Set up the flags.
             profileTraining = submodel == modelConstants.signalEncoderModel
