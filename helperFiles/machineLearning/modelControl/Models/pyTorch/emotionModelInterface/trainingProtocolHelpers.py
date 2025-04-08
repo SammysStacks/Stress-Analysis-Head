@@ -35,6 +35,7 @@ class trainingProtocolHelpers:
             dataLoader = allMetadataLoaders[modelInd] if modelInd < len(allMetadataLoaders) else allDataLoaders[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
             modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
             trainSharedLayers = modelInd < len(allMetaModels)  # Train the shared layers.
+            print("trainSharedLayers:", trainSharedLayers)
 
             # Set up the flags.
             profileTraining = submodel == modelConstants.signalEncoderModel
@@ -44,7 +45,7 @@ class trainingProtocolHelpers:
 
             # Train the updated model.
             modelPipeline.trainModel(dataLoader, submodel, profileTraining=profileTraining, specificTraining=True, trainSharedLayers=trainSharedLayers, stepScheduler=False, numEpochs=1)   # Full model training.
-            modelPipeline.model.cullAngles(epoch=epoch); print("Culling2")
+            modelPipeline.model.cullAngles(epoch=epoch)
 
             # Unify all the model weights and retrain the specific models.
             self.unifiedLayerData = self.modelMigration.copyModelWeights(modelPipeline, self.sharedModelWeights)
@@ -68,7 +69,7 @@ class trainingProtocolHelpers:
             if submodel == modelConstants.signalEncoderModel:
                 numProfileShots = modelPipeline.resetPhysiologicalProfile(submodel)
                 modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=numProfileShots + 1)  # Profile training.
-            if not onlyProfileTraining: modelPipeline.model.cullAngles(epoch=epoch); print("Culling1")
+            if not onlyProfileTraining: modelPipeline.model.cullAngles(epoch=epoch)
 
     def validationTraining(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch):
         self.unifyAllModelWeights(allMetaModels, allModels)  # Unify all the model weights.

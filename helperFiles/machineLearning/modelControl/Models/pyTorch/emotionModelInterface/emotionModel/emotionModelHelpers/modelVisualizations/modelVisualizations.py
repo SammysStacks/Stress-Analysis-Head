@@ -38,6 +38,7 @@ class modelVisualizations(globalPlottingProtocols):
         self._createFolder(self.saveDataFolder)
 
         # Initialize visualization protocols.
+        self.emotionModelViz.setSavingFolder(self.baseSavingDataFolder, stringID, self.datasetName)
         self.signalEncoderViz.setSavingFolder(self.baseSavingDataFolder, stringID, self.datasetName)
         self.generalViz.setSavingFolder(self.baseSavingDataFolder, stringID, datasetName="_comparison")
 
@@ -200,8 +201,8 @@ class modelVisualizations(globalPlottingProtocols):
                 emotionNames = model.emotionNames
 
                 # Plot the activity profile.
-                self.emotionModelViz.plotDistributions(emotionProfile, distributionNames=emotionNames, epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="activityModel/", plotTitle="Activity profile")
-                self.emotionModelViz.plotDistributions(basicEmotionProfile[:, 0], distributionNames=[f"Basic{i}" for i in range(numBasicEmotions)], epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="activityModel/", plotTitle="Activity profile")
+                self.emotionModelViz.plotDistributions(emotionProfile, distributionNames=emotionNames, epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="emotionModel/", plotTitle="Emotion profile")
+                self.emotionModelViz.plotDistributions(basicEmotionProfile[:, 0], distributionNames=[f"Basic{i}" for i in range(numBasicEmotions)], epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="emotionModel/", plotTitle="Basic emotion profile")
 
                 # Get all the data predictions.
                 # self.plotDistributions(trueTestingEmotions, predictedTestingEmotions, self.allEmotionClasses[validEmotionInd], plotTitle = "Testing Emotion Distributions")
