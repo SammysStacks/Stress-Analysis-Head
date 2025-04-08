@@ -90,8 +90,6 @@ class lossCalculations:
         # Get the activity class distributions.
         predictedActivityClasses = self.dataInterface.getActivityClassProfile(predictedActivityProfile, self.numActivities)
         # predictedActivityClasses: batchSize, numActivities
-        print("trueActivityLabels", trueActivityLabels[0].detach().cpu().numpy())
-        print("trueActivityLabels unique", trueActivityLabels.detach().cpu().numpy().unique())
 
         # Calculate the activity classification accuracy/loss and assert the integrity of the loss.
         self.activityCrossEntropyLoss = self.activityCrossEntropyLoss.to(device=predictedActivityProfile.device, dtype=predictedActivityClasses.dtype)
@@ -123,8 +121,5 @@ class lossCalculations:
 
             # Calculate the emotion classification accuracy.
             emotionLosses[emotionInd] = self.smoothL1Loss(emotionPredictions[:, emotionInd][emotionMask], trueEmotionLabels).nanmean()
-
-            print(f"trueEmotionLabels {emotionInd}", trueEmotionLabels[0].detach().cpu().numpy())
-            print("trueEmotionLabels unique", trueEmotionLabels.detach().cpu().numpy().unique())
 
         return emotionLosses
