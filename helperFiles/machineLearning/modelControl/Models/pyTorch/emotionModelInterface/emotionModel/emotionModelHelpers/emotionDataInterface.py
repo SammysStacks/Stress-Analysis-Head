@@ -100,7 +100,8 @@ class emotionDataInterface:
         classDimension = encodedDimension // numActivities
 
         # Set up the predicted activity classes.
-        weightActivityProfile = predictedActivityProfile * gaussianWeightProfile  # TODO: normalization needed
+        weightActivityProfile = predictedActivityProfile - predictedActivityProfile.min(dim=-1, keepdim=True).values
+        weightActivityProfile = weightActivityProfile * gaussianWeightProfile  # TODO: normalization needed?
         predictedActivityClasses = torch.zeros(batchSize, numActivities, device=device)
 
         # For each activity class.
@@ -124,7 +125,8 @@ class emotionDataInterface:
             classArray = torch.linspace(start=-0.5, end=numEmotionClasses - 0.5, steps=encodedDimension, device=device)
 
             # Predict the emotion classes.
-            emotionPredictions[:, emotionInd] = (emotionProfile*gaussianWeightProfile*classArray).sum(dim=-1)  # TODO: normalization needed
+            weightedProfile = emotionProfile - emotionProfile.min(dim=-1, keepdim=True).values
+            emotionPredictions[:, emotionInd] = (weightedProfile*gaussianWeightProfile*classArray).sum(dim=-1)  # TODO: normalization needed
 
         return emotionPredictions
 
