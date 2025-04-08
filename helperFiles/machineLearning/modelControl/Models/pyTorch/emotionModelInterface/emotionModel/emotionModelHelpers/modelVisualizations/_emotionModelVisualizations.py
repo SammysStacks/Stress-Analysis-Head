@@ -42,13 +42,7 @@ class emotionModelVisualizations(globalPlottingProtocols):
 
     # --------------------- Visualize Model Parameters --------------------- #
 
-    def plotPredictedMatrix(self, allTrainingLabels, allTestingLabels, allPredictedTrainingLabels, allPredictedTestingLabels, numClasses, classNames, epoch, saveFigureLocation, plotTitle):
-        # Assert the correct data format
-        allTestingLabels = np.asarray(allTestingLabels)
-        allTrainingLabels = np.asarray(allTrainingLabels)
-        allPredictedTestingLabels = np.asarray(allPredictedTestingLabels)
-        allPredictedTrainingLabels = np.asarray(allPredictedTrainingLabels)
-
+    def plotPredictedMatrix(self, allTrainingLabels, allTestingLabels, allPredictedTrainingLabels, allPredictedTestingLabels, numClasses, epoch, saveFigureLocation, plotTitle):
         # Calculate confusion matrices
         training_confusion_matrix = confusion_matrix(allTrainingLabels, allPredictedTrainingLabels, labels=np.arange(numClasses), normalize='true')
         testing_confusion_matrix = confusion_matrix(allTestingLabels, allPredictedTestingLabels, labels=np.arange(numClasses), normalize='true')
@@ -83,11 +77,11 @@ class emotionModelVisualizations(globalPlottingProtocols):
                              ha='center', va='center', color='black')
 
         axes[1].invert_yaxis()  # Reverse the order of y-axis ticks
-        fig.suptitle(f"{emotionName}", fontsize=24)
+        fig.suptitle(f"{plotTitle} at epoch{epoch}", fontsize=24)
         fig.tight_layout()
 
         # Save the figure is desired.
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=None, baseSaveFigureName=f"{emotionName}.pdf", fig=fig, clearFigure=True, showPlot=False)
+        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} at epoch{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
         else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
     def plotDistributions(self, allProfiles, distributionNames, batchInd, epoch, saveFigureLocation="", plotTitle="profile distribution"):
@@ -111,6 +105,6 @@ class emotionModelVisualizations(globalPlottingProtocols):
             ax.set_ylim((-1.75, 1.75))
 
             # Save the figure.
-            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {distributionNames[distributionInd]} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {distributionNames[distributionInd]}.pdf", fig=fig, clearFigure=False, showPlot=True)
+            if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {distributionNames[distributionInd]} epoch{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {distributionNames[distributionInd]}.pdf", fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
             else: self.clearFigure(fig=fig, legend=None, showPlot=True)
             plt.close(fig)

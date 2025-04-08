@@ -125,10 +125,9 @@ class modelVisualizations(globalPlottingProtocols):
         with torch.no_grad():
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
             signalData, signalIdentifiers, metadata = allSignalData[validBatchMask][:numPlottingPoints], allSignalIdentifiers[validBatchMask][:numPlottingPoints], allMetadata[validBatchMask][:numPlottingPoints]
-            validDataMask, reconstructedSignalData, resampledSignalData, healthProfile, activityProfile, basicEmotionProfile, emotionProfile = model.forward(submodel, signalData, signalIdentifiers, metadata, device=self.accelerator.device, compiledLayerStates=True)
+            validDataMask, reconstructedSignalData, resampledSignalData, healthProfile, activityProfile, basicEmotionProfile, emotionProfile = model.forward(submodel, signalData, signalIdentifiers, metadata, device=self.accelerator.device, compiledLayerStates=submodel == modelConstants.signalEncoderModel)
 
             # Detach the data from the GPU and tensor format.
-            activityProfile, basicEmotionProfile, emotionProfile = activityProfile.detach().cpu().numpy().astype(np.float16), basicEmotionProfile.detach().cpu().numpy().astype(np.float16), emotionProfile.detach().cpu().numpy().astype(np.float16)
             validDataMask, reconstructedSignalData, healthProfile = validDataMask.detach().cpu().numpy().astype(np.float16), reconstructedSignalData.detach().cpu().numpy().astype(np.float16), healthProfile.detach().cpu().numpy()
             signalData = signalData.detach().cpu().numpy().astype(np.float16)
             signalNames, emotionNames = model.featureNames, model.emotionNames
@@ -207,9 +206,14 @@ class modelVisualizations(globalPlottingProtocols):
                 trueActivityTrainingClasses = emotionDataInterface.getActivityLabels(allLabels, allTrainingLabelMask, self.activityLabelInd)  # trueActivityClasses: batchSize
                 trueActivityTestingClasses = emotionDataInterface.getActivityLabels(allLabels, allTestingLabelMask, self.activityLabelInd)  # trueActivityClasses: batchSize
 
+                # Detach the tensors.
+                activityProfile, basicEmotionProfile, emotionProfile = activityProfile.detach().cpu().numpy().astype(np.float16), basicEmotionProfile.detach().cpu().numpy().astype(np.float16), emotionProfile.detach().cpu().numpy().astype(np.float16)
+                predictedActivityTrainingClasses, predictedActivityTestingClasses = predictedActivityTrainingClasses.detach().cpu().numpy(), predictedActivityTestingClasses.detach().cpu().numpy()
+                trueActivityTrainingClasses, trueActivityTestingClasses = trueActivityTrainingClasses.detach().cpu().numpy(), trueActivityTestingClasses.detach().cpu().numpy()
+
                 # Plot the activity profile.
                 self.emotionModelViz.plotDistributions(activityProfile[:, None, :], distributionNames=['Activity'], epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="activityModel/", plotTitle="Activity profile")
-                self.emotionModelViz.plotPredictedMatrix()
+                self.emotionModelViz.plotPredictedMatrix(trueActivityTrainingClasses, trueActivityTestingClasses, predictedActivityTrainingClasses, predictedActivityTestingClasses, numClasses=model.numActivities, epoch=currentEpoch, saveFigureLocation="activityModel/", plotTitle="Activity confusion matrix")
 
                 # ------------------ Emotion Prediction Plots ------------------ #
                 # basicEmotionProfile: batchSize, numEmotions, numBasicEmotions, encodedDimension
@@ -220,12 +224,3 @@ class modelVisualizations(globalPlottingProtocols):
                 # Plot the activity profile.
                 self.emotionModelViz.plotDistributions(emotionProfile, distributionNames=emotionNames, epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="emotionModel/", plotTitle="Emotion profile")
                 self.emotionModelViz.plotDistributions(basicEmotionProfile[:, 0], distributionNames=[f"Basic{i}" for i in range(numBasicEmotions)], epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="emotionModel/", plotTitle="Basic emotion profile")
-
-                # Get all the data predictions.
-                # self.plotDistributions(trueTestingEmotions, predictedTestingEmotions, self.allEmotionClasses[validEmotionInd], plotTitle = "Testing Emotion Distributions")
-                # self.plotDistributions(trueTrainingEmotions, predictedTrainingEmotions, self.allEmotionClasses[validEmotionInd], plotTitle = "Training Emotion Distributions")
-                # # self.plotPredictions(trainingEmotionLabels, testingEmotionLabels, predictedTrainingEmotionClasses,
-                # #                       predictedTestingEmotionClasses, self.allEmotionClasses[validEmotionInd], emotionName)
-                # self.plotPredictedMatrix(trainingEmotionLabels, testingEmotionLabels, predictedTrainingEmotionClasses, predictedTestingEmotionClasses, self.allEmotionClasses[validEmotionInd], epoch=currentEpoch, emotionName)
-                # # Plot model convergence curves.
-                # self.plotTrainingLosses(self.trainingLosses_emotions[validEmotionInd], self.testingLosses_emotions[validEmotionInd], plotTitle = "Emotion Convergence Loss (KL)")
