@@ -1,18 +1,13 @@
 # General
-import math
 
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
-from matplotlib.patches import Arc, Wedge
 from shap.plots.colors._colors import lch2rgb
 from sklearn.metrics import confusion_matrix
 
 # Visualization protocols
 from helperFiles.globalPlottingProtocols import globalPlottingProtocols
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.reversibleComponents.reversibleLieLayer import reversibleLieLayer
 
 
 class emotionModelVisualizations(globalPlottingProtocols):

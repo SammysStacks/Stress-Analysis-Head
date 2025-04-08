@@ -89,16 +89,16 @@ class emotionPipeline(emotionPipelineHelpers):
                         finalTrainingLoss = trainingSignalReconstructedLosses.nanmean()
                     else:
                         # Add noise to the predictions.
-                        activityProfile = self.dataAugmentation.addNoise(activityProfile, noiseSTD=1e-3)
-                        emotionProfile = self.dataAugmentation.addNoise(emotionProfile, noiseSTD=1e-3)
+                        activityProfile = self.dataAugmentation.addNoise(activityProfile, noiseSTD=1e-2)
+                        emotionProfile = self.dataAugmentation.addNoise(emotionProfile, noiseSTD=1e-2)
 
                         # Calculate the error in emotion profiling and human activity recognition.
                         trainingEmotionLosses = self.organizeLossInfo.calculateEmotionLoss(emotionProfile, batchSignalLabels, batchTrainingLabelMask)
                         trainingActivityLosses = self.organizeLossInfo.calculateActivityLoss(activityProfile, batchSignalLabels, batchTrainingLabelMask)
                         if trainingEmotionLosses is None and trainingActivityLosses is None: self.accelerator.print("Not useful loss"); continue
                         finalTrainingLoss = trainingEmotionLosses.nanmean() + trainingActivityLosses.nanmean()
-                        # emotionLosses dim: numEmotions
-                        # activityLosses dim: batchSize
+                        # trainingEmotionLosses dim: numEmotions
+                        # trainingActivityLosses dim: batchSize
 
                     # Initialize basic core loss value.
                     if self.model.debugging: self.accelerator.print("Final loss:", finalTrainingLoss.item())

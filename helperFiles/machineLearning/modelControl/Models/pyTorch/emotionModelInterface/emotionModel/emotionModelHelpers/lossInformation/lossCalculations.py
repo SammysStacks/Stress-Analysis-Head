@@ -81,7 +81,7 @@ class lossCalculations:
         activityDataMask = self.dataInterface.getActivityColumn(allLabelsMask, self.activityLabelInd)  # Dim: batchSize
         trueActivityLabels = self.dataInterface.getActivityLabels(allLabels, allLabelsMask, self.activityLabelInd)
         # predictedActivityLabels: batchSize, encodedDimension
-        device = predictedActivityProfile.device
+        # trueActivityLabels: batchSize
 
         # Assert that the predicted activity profile is valid.
         assert predictedActivityProfile.ndim == 2, f"Check the predicted activity profile. Found {predictedActivityProfile.shape} shape"
@@ -89,9 +89,14 @@ class lossCalculations:
 
         # Get the activity class distributions.
         predictedActivityClasses = self.dataInterface.getActivityClassProfile(predictedActivityProfile, self.numActivities)
+        # predictedActivityClasses: batchSize, numActivities
+        print("trueActivityLabels", trueActivityLabels[0].detach().cpu().numpy())
+        print("trueActivityLabels unique", trueActivityLabels.detach().cpu().numpy().unique())
 
         # Calculate the activity classification accuracy/loss and assert the integrity of the loss.
-        activityLosses = self.activityCrossEntropyLoss.to(device=device, dtype=predictedActivityClasses.dtype)(predictedActivityClasses[activityDataMask], trueActivityLabels.long())
+        self.activityCrossEntropyLoss = self.activityCrossEntropyLoss.to(device=predictedActivityProfile.device, dtype=predictedActivityClasses.dtype)
+        activityLosses = self.activityCrossEntropyLoss(predictedActivityClasses[activityDataMask], trueActivityLabels.long())
+        # activityLosses: batchSize
 
         return activityLosses.nanmean()
 
@@ -114,8 +119,12 @@ class lossCalculations:
             # Get the relevant batches for the current emotion.
             trueEmotionLabels = self.dataInterface.getEmotionLabels(emotionInd, allLabels, allLabelsMask)
             emotionMask = self.dataInterface.getEmotionColumn(emotionDataMask, emotionInd)
+            # trueEmotionLabels: batchSize
 
             # Calculate the emotion classification accuracy.
             emotionLosses[emotionInd] = self.smoothL1Loss(emotionPredictions[:, emotionInd][emotionMask], trueEmotionLabels).nanmean()
+
+            print(f"trueEmotionLabels {emotionInd}", trueEmotionLabels[0].detach().cpu().numpy())
+            print("trueEmotionLabels unique", trueEmotionLabels.detach().cpu().numpy().unique())
 
         return emotionLosses

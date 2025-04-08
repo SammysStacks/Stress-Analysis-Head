@@ -99,7 +99,7 @@ class emotionDataInterface:
         gaussianWeightProfile = emotionDataInterface.getFullGaussianProfile(encodedDimension, device=device, numClasses=numActivities)
         classDimension = encodedDimension // numActivities
 
-        # Setup the predicted activity classes.
+        # Set up the predicted activity classes.
         weightActivityProfile = predictedActivityProfile * gaussianWeightProfile  # TODO: normalization needed
         predictedActivityClasses = torch.zeros(batchSize, numActivities, device=device)
 
