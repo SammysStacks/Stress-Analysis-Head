@@ -235,6 +235,7 @@ class modelVisualizations(globalPlottingProtocols):
                 # Detach the tensors.
                 allLabels, allTrainingLabelMask, allTestingLabelMask = allLabels.detach().cpu().numpy(), allTrainingLabelMask.detach().cpu().numpy(), allTestingLabelMask.detach().cpu().numpy()
                 basicEmotionProfile, emotionProfile = basicEmotionProfile.detach().cpu().numpy().astype(np.float16), emotionProfile.detach().cpu().numpy().astype(np.float16)
+                emotionPredictions = emotionPredictions.detach().cpu().numpy().astype(np.float16)
 
                 # Plot the activity profile.
                 self.emotionModelViz.plotDistributions(emotionProfile, distributionNames=emotionNames, epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="emotionModel/", plotTitle="Emotion profile")

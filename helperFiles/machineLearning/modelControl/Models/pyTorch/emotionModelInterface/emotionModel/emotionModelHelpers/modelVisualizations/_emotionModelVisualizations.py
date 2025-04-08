@@ -50,7 +50,7 @@ class emotionModelVisualizations(globalPlottingProtocols):
         testing_confusion_matrix = np.round(testing_confusion_matrix, decimals=2)
 
         # Define a gridspec with width ratios for subplots
-        fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(6, 10), gridspec_kw={'width_ratios': [1, 1], 'height_ratios': [1]})
+        fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(20, 8), gridspec_kw={'width_ratios': [1, 1], 'height_ratios': [1]})
 
         # Plot the confusion matrices as heatmaps
         im0 = axes[0].imshow(training_confusion_matrix, cmap='BuGn', vmin=0, vmax=1, aspect='auto')
