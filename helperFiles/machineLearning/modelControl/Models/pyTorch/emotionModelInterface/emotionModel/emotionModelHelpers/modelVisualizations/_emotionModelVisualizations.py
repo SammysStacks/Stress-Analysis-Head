@@ -43,8 +43,8 @@ class emotionModelVisualizations(globalPlottingProtocols):
     # --------------------- Visualize Model Parameters --------------------- #
 
     def plotPredictedMatrix(self, allTrainingLabels, allTestingLabels, allPredictedTrainingLabels, allPredictedTestingLabels, numClasses, epoch, saveFigureLocation, plotTitle):
-        allPredictedTrainingLabels, allPredictedTestingLabels = int(allPredictedTrainingLabels), int(allPredictedTestingLabels)
-        allTrainingLabels, allTestingLabels = int(allTrainingLabels), int(allTestingLabels)
+        allPredictedTrainingLabels, allPredictedTestingLabels = allPredictedTrainingLabels.astype(int), allPredictedTestingLabels.astype(int)
+        allTrainingLabels, allTestingLabels = allTrainingLabels.astype(int), allTestingLabels.astype(int)
 
         # Calculate confusion matrices
         training_confusion_matrix = confusion_matrix(allTrainingLabels, allPredictedTrainingLabels, labels=np.arange(numClasses), normalize='true')
