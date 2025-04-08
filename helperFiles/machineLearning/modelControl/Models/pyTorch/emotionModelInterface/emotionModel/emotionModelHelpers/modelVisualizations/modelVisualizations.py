@@ -214,9 +214,9 @@ class modelVisualizations(globalPlottingProtocols):
                 trueActivityTestingClasses = emotionDataInterface.getActivityLabels(allLabels, allTestingLabelMask, self.activityLabelInd)  # trueActivityClasses: batchSize
 
                 # Detach the tensors.
-                activityProfile, basicEmotionProfile, emotionProfile = activityProfile.detach().cpu().numpy().astype(np.float16), basicEmotionProfile.detach().cpu().numpy().astype(np.float16), emotionProfile.detach().cpu().numpy().astype(np.float16)
                 predictedActivityTrainingClasses, predictedActivityTestingClasses = predictedActivityTrainingClasses.detach().cpu().numpy(), predictedActivityTestingClasses.detach().cpu().numpy()
                 trueActivityTrainingClasses, trueActivityTestingClasses = trueActivityTrainingClasses.detach().cpu().numpy(), trueActivityTestingClasses.detach().cpu().numpy()
+                activityProfile = activityProfile.detach().cpu().numpy().astype(np.float16)
 
                 # Plot the activity profile.
                 self.emotionModelViz.plotDistributions(activityProfile[:, None, :], distributionNames=['Activity'], epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="activityModel/", plotTitle="Activity profile")
@@ -231,6 +231,10 @@ class modelVisualizations(globalPlottingProtocols):
                 # Get the emotion classes.
                 emotionPredictions = emotionDataInterface.getEmotionClassPredictions(emotionProfile, model.allEmotionClasses, emotionProfile.device)
                 # emotionPredictions: batchSize, numEmotions
+
+                # Detach the tensors.
+                allLabels, allTrainingLabelMask, allTestingLabelMask = allLabels.detach().cpu().numpy(), allTrainingLabelMask.detach().cpu().numpy(), allTestingLabelMask.detach().cpu().numpy()
+                basicEmotionProfile, emotionProfile = basicEmotionProfile.detach().cpu().numpy().astype(np.float16), emotionProfile.detach().cpu().numpy().astype(np.float16)
 
                 # Plot the activity profile.
                 self.emotionModelViz.plotDistributions(emotionProfile, distributionNames=emotionNames, epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="emotionModel/", plotTitle="Emotion profile")
