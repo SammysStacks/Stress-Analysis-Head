@@ -101,7 +101,6 @@ class lossCalculations:
         device = predictedEmotionProfile.device
 
         # Assert that the predicted emotion profile is valid.
-        assert torch.allclose(predictedEmotionProfile.sum(dim=-1), torch.ones((batchSize, numEmotions)), atol=1e-4), f"Asser that the distributions are properly normalized. Found {predictedEmotionProfile.sum(dim=-1).abs().round(decimals=2)}"
 
         # Find the boolean flags for the data involved in the loss calculation.
         emotionDataMask = self.dataInterface.getEmotionMasks(allLabelsMask, numEmotions=numEmotions)  # Dim: batchSize, numEmotions

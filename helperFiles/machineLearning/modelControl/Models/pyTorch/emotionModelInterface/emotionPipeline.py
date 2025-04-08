@@ -89,8 +89,8 @@ class emotionPipeline(emotionPipelineHelpers):
                         finalTrainingLoss = trainingSignalReconstructedLosses.nanmean()
                     else:
                         # Add noise to the predictions.
-                        activityProfile = self.model.addNoise(activityProfile, noiseSTD=0.01)
-                        emotionProfile = self.model.addNoise(emotionProfile, noiseSTD=0.01)
+                        activityProfile = self.dataAugmentation.addNoise(activityProfile, noiseSTD=1e-4)
+                        emotionProfile = self.dataAugmentation.addNoise(emotionProfile, noiseSTD=1e-4)
 
                         # Calculate the error in emotion profiling and human activity recognition.
                         trainingEmotionLosses = self.organizeLossInfo.calculateEmotionLoss(emotionProfile, batchSignalLabels, batchTrainingLabelMask)
