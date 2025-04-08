@@ -38,7 +38,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-04-05"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2025-04-05 None"  # The current date we are training the model. Unique identifier of this training set.
     unifyModelWeights = True  # Whether to unify the model weights across all models.
     plotAllEpochs = False  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
     validationRun = False  # Whether to train new datasets from the old model.
@@ -75,8 +75,8 @@ if __name__ == "__main__":
 
     # dd arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=4, help='The number of basic emotions (basis states of emotions)')
-    parser.add_argument('--numActivityModelLayers', type=int, default=5, help='The number of layers in the activity model')
-    parser.add_argument('--numEmotionModelLayers', type=int, default=5, help='The number of layers in the emotion model')
+    parser.add_argument('--numActivityModelLayers', type=int, default=9, help='The number of layers in the activity model')
+    parser.add_argument('--numEmotionModelLayers', type=int, default=9, help='The number of layers in the emotion model')
 
     # ----------------------- Training Parameters ----------------------- #
 
@@ -94,6 +94,7 @@ if __name__ == "__main__":
 
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
+    if userInputParams['submodel'] == modelConstants.emotionModel: modelConstants.numWarmupEpochs = 3
     userInputParams['minWaveletDim'] = max(32, userInputParams['encodedDimension'] // (2**4))
     userInputParams['minThresholdStep'] = userInputParams['reversibleLR']  # Keep as degrees
     userInputParams['reversibleLR'] = userInputParams['reversibleLR'] * math.pi / 180  # Keep as radians
@@ -132,10 +133,9 @@ if __name__ == "__main__":
 
     # The emotion model needs to start with a health profile.
     if submodel == modelConstants.emotionModel:
-        for modelPipeline in (allMetaModels + allModels): modelPipeline.scheduler.scheduler.warmupFlag = False; modelPipeline.scheduler.scheduler.step()
         trainingProtocols.datasetSpecificTraining(modelConstants.signalEncoderModel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch=0, onlyProfileTraining=True)
         trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, modelConstants.signalEncoderModel, trainingModelName, showMinimumPlots=True)
-        for modelPipeline in (allMetaModels + allModels): modelPipeline.scheduler.scheduler.warmupFlag = True; modelPipeline.scheduler.scheduler.step()
+        # for modelPipeline in (allMetaModels + allModels): modelPipeline.scheduler.scheduler.warmupFlag = True; modelPipeline.scheduler.scheduler.step()
 
     # Plot the initial model state.
     trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)  # Calculate the initial loss.

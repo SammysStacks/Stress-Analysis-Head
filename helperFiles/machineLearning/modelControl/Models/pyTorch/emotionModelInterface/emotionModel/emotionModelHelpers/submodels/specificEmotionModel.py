@@ -59,7 +59,7 @@ class specificEmotionModel(neuralOperatorInterface):
         # subjectInds: batchSize
 
         # Calculate the emotion profile.
-        emotionProfile = (basicEmotionProfile * subjectSpecificWeights).sum(dim=2)
+        emotionProfile = (basicEmotionProfile * subjectSpecificWeights).sum(dim=2) / numBasicEmotions  # batchSize, numEmotions, encodedDimension
         # emotionProfile: batchSize, numEmotions, encodedDimension
 
         return emotionProfile

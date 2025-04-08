@@ -23,7 +23,7 @@ class optimizerMethods:
 
         # Set the optimizer and scheduler.
         optimizer = self.setOptimizer(modelParams, lr=1e-4, weight_decay=1e-5, optimizerType=modelConstants.userInputParams["optimizerType"])
-        scheduler = self.getLearningRateScheduler(optimizer)
+        scheduler = self.getLearningRateScheduler(optimizer, submodel)
 
         return optimizer, scheduler
 
@@ -31,14 +31,14 @@ class optimizerMethods:
         return self.getOptimizer(optimizerType=optimizerType, params=params, lr=lr, weight_decay=weight_decay, momentum=0.5)
 
     @staticmethod
-    def getLearningRateScheduler(optimizer):
+    def getLearningRateScheduler(optimizer, submodel):
         # Options:
         # Slow ramp up: transformers.get_constant_schedule_with_warmup(optimizer=self.optimizer, num_warmup_steps=30)
         # Cosine waveform: optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=20, eta_min=1e-8, last_epoch=-1)
         # Reduce on plateau (need further editing of loop): optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, mode='min', factor=0.5, patience=10, threshold=1e-4, threshold_mode='rel', cooldown=0, min_lr=0, eps=1e-08)
         # Defined lambda function: optim.lr_scheduler.LambdaLR(self.optimizer, lr_lambda=lambda_function); lambda_function = lambda epoch: (epoch/50) if epoch < -1 else 1
         # torch.optim.lr_scheduler.constrainedLR(optimizer, start_factor=0.3333333333333333, end_factor=1.0, total_iters=5, last_epoch=-1)
-        return CosineAnnealingLR_customized(optimizer=optimizer,  T_max=1, absolute_min_lr=1e-5, multiplicativeFactor=2, numWarmupEpochs=modelConstants.numWarmupEpochs, warmupFactor=2, last_epoch=-1)
+        return CosineAnnealingLR_customized(submodel=submodel, optimizer=optimizer,  T_max=1, absolute_min_lr=1e-5, multiplicativeFactor=2, numWarmupEpochs=modelConstants.numWarmupEpochs, warmupFactor=2, last_epoch=-1)
 
     @staticmethod
     def getOptimizer(optimizerType, params, lr, weight_decay, momentum=0.9):
@@ -101,13 +101,13 @@ class optimizerMethods:
 
 
 class CosineAnnealingLR_customized(optim.lr_scheduler.LRScheduler):
-    def __init__(self, optimizer: Optimizer, T_max: int, absolute_min_lr: float, multiplicativeFactor: float, numWarmupEpochs: int, warmupFactor: float,  last_epoch: int = -1):
+    def __init__(self, submodel: str, optimizer: Optimizer, T_max: int, absolute_min_lr: float, multiplicativeFactor: float, numWarmupEpochs: int, warmupFactor: float,  last_epoch: int = -1):
         self.multiplicativeFactor = multiplicativeFactor  # The multiplicative factor for the learning rate decay.
         self.absolute_min_lr = absolute_min_lr  # The absolute minimum learning rate to use.
         self.numWarmupEpochs = numWarmupEpochs  # The number of epochs to warm up the learning rate.
         self.warmupFactor = warmupFactor  # The factor to increase the learning rate during warmup.
         self.T_max = T_max  # The number of iterations before resetting the learning rate.
-        self.warmupFlag = True  # Flag to indicate if the warmup phase is active.
+        self.warmupFlag = submodel == modelConstants.signalEncoderModel  # Flag to indicate if the warmup phase is active.
 
         # Call the parent class constructor
         super().__init__(optimizer, last_epoch)
