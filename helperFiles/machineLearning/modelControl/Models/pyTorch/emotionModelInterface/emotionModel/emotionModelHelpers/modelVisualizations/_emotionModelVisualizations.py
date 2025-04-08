@@ -42,20 +42,7 @@ class emotionModelVisualizations(globalPlottingProtocols):
 
     # --------------------- Visualize Model Parameters --------------------- #
 
-    @staticmethod
-    def plotPredictions(allTrainingLabels, allTestingLabels, allPredictedTrainingLabels, allPredictedTestingLabels, numClasses, plotTitle="Emotion Prediction"):
-        # Plot the data correlation.
-        plt.plot(allPredictedTrainingLabels, allTrainingLabels, 'ko', markersize=6, alpha=0.3, label="Training Points")
-        plt.plot(allPredictedTestingLabels, allTestingLabels, '*', color='tab:blue', markersize=6, alpha=0.6, label="Testing Points")
-        plt.xlabel("Predicted Emotion Rating")
-        plt.xlim((-0.1, numClasses-0.9))
-        plt.ylim((-0.1, numClasses-0.9))
-        plt.ylabel("Emotion Rating")
-        plt.title(f"{plotTitle}")
-        plt.legend(loc="best")
-        plt.show()
-
-    def plotPredictedMatrix(self, allTrainingLabels, allTestingLabels, allPredictedTrainingLabels, allPredictedTestingLabels, numClasses, epoch, emotionName, saveFigureLocation):
+    def plotPredictedMatrix(self, allTrainingLabels, allTestingLabels, allPredictedTrainingLabels, allPredictedTestingLabels, numClasses, classNames, epoch, saveFigureLocation, plotTitle):
         # Assert the correct data format
         allTestingLabels = np.asarray(allTestingLabels)
         allTrainingLabels = np.asarray(allTrainingLabels)
@@ -63,10 +50,8 @@ class emotionModelVisualizations(globalPlottingProtocols):
         allPredictedTrainingLabels = np.asarray(allPredictedTrainingLabels)
 
         # Calculate confusion matrices
-        training_confusion_matrix = confusion_matrix(
-            allTrainingLabels, allPredictedTrainingLabels, labels=np.arange(numClasses), normalize='true')
-        testing_confusion_matrix = confusion_matrix(
-            allTestingLabels, allPredictedTestingLabels, labels=np.arange(numClasses), normalize='true')
+        training_confusion_matrix = confusion_matrix(allTrainingLabels, allPredictedTrainingLabels, labels=np.arange(numClasses), normalize='true')
+        testing_confusion_matrix = confusion_matrix(allTestingLabels, allPredictedTestingLabels, labels=np.arange(numClasses), normalize='true')
 
         # Define a gridspec with width ratios for subplots
         fig, axes = plt.subplots(nRows=1, nCols=2, figsize=np.asarray([15, 5]), gridspec_kw={'width_ratios': [1, 1], 'height_ratios': [1]})

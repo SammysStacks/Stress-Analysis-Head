@@ -66,7 +66,7 @@ class emotionModel(emotionModelHead):
 
         if submodel == modelConstants.emotionModel:
             # Perform the backward pass: health profile -> activity data.
-            activityProfile = self.humanActivityRecognition(metaLearningData=healthProfile.unsqueeze(1), healthProfileStart=True).squeeze(1)
+            activityProfile = self.humanActivityRecognition(healthProfile=healthProfile.unsqueeze(1)).squeeze(1)
             # activityProfile: batchSize, encodedDimension
 
             # Perform the backward pass: health profile -> basic emotion data.
@@ -134,17 +134,16 @@ class emotionModel(emotionModelHead):
 
         return metaLearningData
 
-    def humanActivityRecognition(self, metaLearningData, healthProfileStart):
-        reversibleInterface.changeDirections(forwardDirection=not healthProfileStart)
+    def humanActivityRecognition(self, healthProfile):
+        reversibleInterface.changeDirections(forwardDirection=False)
 
-        if not healthProfileStart:
-            metaLearningData = self.sharedActivityModel.learningInterface(signalData=metaLearningData)
-            metaLearningData = self.specificActivityModel.learningInterface(signalData=metaLearningData)
-            # metaLearningData: batchSize, 1, encodedDimension
-        else:
-            metaLearningData = self.specificActivityModel.learningInterface(signalData=metaLearningData)
-            metaLearningData = self.sharedActivityModel.learningInterface(signalData=metaLearningData)
-            # metaLearningData: batchSize, 1, encodedDimension
+        # Learn the activity profile.
+        metaLearningData = self.specificActivityModel.learningInterface(signalData=healthProfile)
+        metaLearningData = self.sharedActivityModel.learningInterface(signalData=metaLearningData)
+        # metaLearningData: batchSize, 1, encodedDimension
+
+        # Apply the softmax function to the activity profile.
+        metaLearningData = self.sharedActivityModel.activitySoftmax(metaLearningData)
 
         return metaLearningData
 
@@ -161,6 +160,10 @@ class emotionModel(emotionModelHead):
         basicEmotionProfile = basicEmotionProfile.view(-1, self.numBasicEmotions, self.encodedDimension)
         basicEmotionProfile = self.sharedEmotionModel.learningInterface(signalData=basicEmotionProfile)
         basicEmotionProfile = basicEmotionProfile.view(-1, self.numEmotions, self.numBasicEmotions, self.encodedDimension)
+        # basicEmotionProfile: batchSize, numEmotions, numBasicEmotions, encodedDimension
+
+        # Apply the softmax function to the activity profile.
+        basicEmotionProfile = self.sharedEmotionModel.emotionSoftmax(basicEmotionProfile)
         # basicEmotionProfile: batchSize, numEmotions, numBasicEmotions, encodedDimension
 
         return basicEmotionProfile

@@ -15,8 +15,9 @@ from ..submodels.modelComponents.reversibleComponents.reversibleLieLayer import 
 
 class modelVisualizations(globalPlottingProtocols):
 
-    def __init__(self, accelerator, datasetName):
+    def __init__(self, accelerator, datasetName, activityLabelInd):
         super(modelVisualizations, self).__init__(interactivePlots=False)
+        self.activityLabelInd = activityLabelInd
         self.accelerator = accelerator
         self.datasetName = datasetName
         plt.ioff()  # Turn off interactive mode
@@ -105,8 +106,6 @@ class modelVisualizations(globalPlottingProtocols):
         # Prepare the model/data for evaluation.
         self.setModelSavingFolder(baseSavingFolder=f"trainingFigures/{submodel}/{trainingModelName}/", stringID=f"{modelPipeline.model.datasetName}/", epoch=currentEpoch)
         modelPipeline.setupTrainingFlags(modelPipeline.model, trainingFlag=False)  # Set all models into evaluation mode.
-        model = modelPipeline.model
-        numPlottingPoints = 3
 
         # Load in all the data and labels for final predictions and calculate the activity and emotion class weights.
         allLabels, allSignalData, allSignalIdentifiers, allMetadata, allTrainingLabelMask, allTrainingSignalMask, allTestingLabelMask, allTestingSignalMask = modelPipeline.prepareInformation(lossDataLoader)
@@ -118,6 +117,10 @@ class modelVisualizations(globalPlottingProtocols):
         # allSignalIdentifiers: batchSize, numSignals, numSignalIdentifiers
         # allLabels: batchSize, numEmotions + 1 (activity) + numSignals
         # allMetadata: batchSize, numMetadata
+
+        # Prepare the model/data for evaluation.
+        numPlottingPoints = 3 if submodel == modelConstants.signalEncoderModel else validBatchMask.sum()
+        model = modelPipeline.model
 
         with torch.no_grad():
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
@@ -191,8 +194,22 @@ class modelVisualizations(globalPlottingProtocols):
                 # ------------------ Activity Prediction Plots ------------------ #
                 # activityProfile: batchSize, encodedDimension
 
+                # Get the activity classes.
+                activityClassDistribution = emotionDataInterface.getActivityClassProfile(activityProfile, model.numActivities)
+                activityClasses = activityClassDistribution.argmax(dim=-1)  # activityClasses: batchSize
+                # activityClassDistribution: batchSize, numActivities
+
+                # Separate the training and testing data.
+                predictedActivityTrainingClasses = emotionDataInterface.getActivityLabels(activityClasses, allTrainingLabelMask, self.activityLabelInd)
+                predictedActivityTestingClasses = emotionDataInterface.getActivityLabels(activityClasses, allTestingLabelMask, self.activityLabelInd)
+
+                # Separate the training and testing data.
+                trueActivityTrainingClasses = emotionDataInterface.getActivityLabels(allLabels, allTrainingLabelMask, self.activityLabelInd)  # trueActivityClasses: batchSize
+                trueActivityTestingClasses = emotionDataInterface.getActivityLabels(allLabels, allTestingLabelMask, self.activityLabelInd)  # trueActivityClasses: batchSize
+
                 # Plot the activity profile.
                 self.emotionModelViz.plotDistributions(activityProfile[:, None, :], distributionNames=['Activity'], epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="activityModel/", plotTitle="Activity profile")
+                self.emotionModelViz.plotPredictedMatrix()
 
                 # ------------------ Emotion Prediction Plots ------------------ #
                 # basicEmotionProfile: batchSize, numEmotions, numBasicEmotions, encodedDimension

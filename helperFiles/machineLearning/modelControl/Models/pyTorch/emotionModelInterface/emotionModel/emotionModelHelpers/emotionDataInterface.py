@@ -19,15 +19,17 @@ class emotionDataInterface:
     def getEmotionColumn(allLabels, emotionInd):
         return allLabels[:, emotionInd]
 
-    def getActivityLabels(self, allLabels, allLabelsMask, activityLabelInd):
-        activityMask = self.getActivityColumn(allLabelsMask, activityLabelInd)
-        allActivityLabels = self.getActivityColumn(allLabels, activityLabelInd)
+    @staticmethod
+    def getActivityLabels(allLabels, allLabelsMask, activityLabelInd):
+        activityMask = emotionDataInterface.getActivityColumn(allLabelsMask, activityLabelInd)
+        allActivityLabels = emotionDataInterface.getActivityColumn(allLabels, activityLabelInd)
 
         return allActivityLabels[activityMask]
 
-    def getEmotionLabels(self, emotionInd, allLabels, allLabelsMask):
-        emotionDataMask = self.getEmotionColumn(allLabelsMask, emotionInd)
-        emotionLabels = self.getEmotionColumn(allLabels, emotionInd)
+    @staticmethod
+    def getEmotionLabels(emotionInd, allLabels, allLabelsMask):
+        emotionDataMask = emotionDataInterface.getEmotionColumn(allLabelsMask, emotionInd)
+        emotionLabels = emotionDataInterface.getEmotionColumn(allLabels, emotionInd)
 
         return emotionLabels[emotionDataMask]
 
@@ -54,6 +56,58 @@ class emotionDataInterface:
         signalIdentifierInd = emotionDataInterface.getSignalIdentifierIndex(identifierName)
 
         return signalIdentifiers[:, :, signalIdentifierInd]
+
+    # ---------------------- Emotion and Activity Model ---------------------- #
+
+    @staticmethod
+    def getFullGaussianProfile(encodedDimension, device, numClasses):
+        gaussianWeight = torch.zeros(encodedDimension, device=device)
+
+        # For each class.
+        for classInd in range(numClasses):
+            # Add the Gaussian weights for the predicted class profile.
+            gaussianWeight += emotionDataInterface.getGaussianWeights(encodedDimension, device, numClasses, classInd)[1]
+        gaussianWeight = gaussianWeight / gaussianWeight.sum()  # Normalize the distribution.
+
+        return gaussianWeight
+
+    @staticmethod
+    def getGaussianWeights(encodedDimension, device, numClasses, classInd):
+        classDimension = encodedDimension // numClasses
+
+        # Generate the Gaussian weights for the predicted activity profile.
+        gaussianWeight = emotionDataInterface.gaussian_1d_kernel(encodedDimension, classInd*classDimension + classDimension / 2, classDimension / 6, device=device)
+        return classDimension, gaussianWeight
+
+    @staticmethod
+    def gaussian_1d_kernel(size, mu, std, device):
+        # Create an array of indices and shift them so that the mean is at mu.
+        x = torch.arange(0, size, dtype=torch.float32, device=device) - mu
+        # Calculate the Gaussian function for each index.
+        kernel = torch.exp(-(x ** 2) / (2 * std ** 2))
+        # Normalize the kernel so that the sum of all values is 1.
+        kernel = kernel / kernel.sum()
+
+        return kernel
+
+    @staticmethod
+    def getActivityClassProfile(predictedActivityProfile, numActivities):
+        batchSize, encodedDimension = predictedActivityProfile.shape
+        device = predictedActivityProfile.device
+
+        # Get the full Gaussian profile for the activity classes.
+        gaussianWeightProfile = emotionDataInterface.getFullGaussianProfile(encodedDimension, device=device, numClasses=numActivities)
+        classDimension = encodedDimension // numActivities
+
+        # Setup the predicted activity classes.
+        weightActivityProfile = predictedActivityProfile * gaussianWeightProfile  # TODO: normalization needed
+        predictedActivityClasses = torch.zeros(batchSize, numActivities, device=device)
+
+        # For each activity class.
+        for classInd in range(numActivities):
+            predictedActivityClasses[:, classInd] = weightActivityProfile[:, classInd*classDimension:(classInd+1)*classDimension].sum(dim=-1)
+
+        return predictedActivityClasses
 
     # ---------------------- Signal Info Getters ---------------------- #
 

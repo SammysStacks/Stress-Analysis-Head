@@ -1,5 +1,4 @@
 import torch
-from matplotlib import pyplot as plt
 from torch import nn
 
 # Helper classes
@@ -81,7 +80,6 @@ class lossCalculations:
         # Find the boolean flags for the data involved in the loss calculation.
         activityDataMask = self.dataInterface.getActivityColumn(allLabelsMask, self.activityLabelInd)  # Dim: batchSize
         trueActivityLabels = self.dataInterface.getActivityLabels(allLabels, allLabelsMask, self.activityLabelInd)
-        batchSize, encodedDimension = predictedActivityProfile.shape
         # predictedActivityLabels: batchSize, encodedDimension
         device = predictedActivityProfile.device
 
@@ -89,26 +87,8 @@ class lossCalculations:
         assert predictedActivityProfile.ndim == 2, f"Check the predicted activity profile. Found {predictedActivityProfile.shape} shape"
         assert trueActivityLabels.ndim == 1, f"Check the true activity labels. Found {trueActivityLabels.shape} shape"
 
-        # Apply the Gaussian weights to the predicted activity profile.
-        # classDimension, gaussianWeight = self.getGaussianWeights(encodedDimension, device=device, numClasses=self.numActivities)
-        # predictedActivityClasses = torch.zeros(batchSize, self.numActivities, device=device)
-        scaledActivityProfile = predictedActivityProfile - predictedActivityProfile.min(dim=-1, keepdim=True).values
-
-        # # Apply the Gaussian weights to the predicted activity profile.
-        # for classInd in range(self.numActivities):
-        #     classDimension, gaussianWeight = self.getGaussianWeights(encodedDimension, device=device, numClasses=self.numActivities, classInd=classInd)
-        #     # currentProfile = scaledActivityProfile[:, classInd * classDimension:(classInd + 1) * classDimension]
-        #     currentProfile = scaledActivityProfile
-        #
-        #     predictedActivityClasses[:, classInd] = (currentProfile*gaussianWeight).sum(dim=-1)
-
-        class_scores = []
-        for classInd in range(self.numActivities):
-            classDimension, gaussianWeight = self.getGaussianWeights(encodedDimension, device=device, numClasses=self.numActivities, classInd=classInd)
-            currentProfile = scaledActivityProfile
-            score = (currentProfile * gaussianWeight).sum(dim=-1)  # Shape: [batchSize]
-            class_scores.append(score)
-        predictedActivityClasses = torch.stack(class_scores, dim=1)  # Shape: [batchSize, numActivities]
+        # Get the full Gaussian profile for the activity classes.
+        predictedActivityClasses = self.dataInterface.getActivityClassProfile(predictedActivityProfile, self.numActivities)
 
         # Calculate the activity classification accuracy/loss and assert the integrity of the loss.
         activityLosses = self.activityCrossEntropyLoss.to(device=device, dtype=predictedActivityClasses.dtype)(predictedActivityClasses[activityDataMask], trueActivityLabels.long())
@@ -116,72 +96,36 @@ class lossCalculations:
         return activityLosses.nanmean()
 
     def calculateEmotionLoss(self, predictedEmotionProfile, allLabels, allLabelsMask):
-        # Assert that the predicted activity profile is valid.
-        assert predictedEmotionProfile.ndim == 3, f"Check the predicted activity profile. Found {predictedEmotionProfile.shape} shape"
+        # Get the relevant dimensions and device.
         batchSize, numEmotions, encodedDimension = predictedEmotionProfile.shape
-        assert self.emotionCrossEntropyLoss is not None
         device = predictedEmotionProfile.device
+
+        # Assert that the predicted emotion profile is valid.
+        assert torch.allclose(predictedEmotionProfile.sum(dim=-1), torch.ones((batchSize, numEmotions)), atol=1e-4), f"Asser that the distributions are properly normalized. Found {predictedEmotionProfile.sum(dim=-1).abs().round(decimals=2)}"
 
         # Find the boolean flags for the data involved in the loss calculation.
         emotionDataMask = self.dataInterface.getEmotionMasks(allLabelsMask, numEmotions=numEmotions)  # Dim: batchSize, numEmotions
         emotionLosses = torch.zeros(numEmotions, device=device)  # Dim: numEmotions
-        # predictedEmotionProfile: batchSize, numEmotions, encodedDimension
-        # scaledEmotionProfile = predictedEmotionProfile - predictedEmotionProfile.min(dim=-1, keepdim=True).values
 
         for emotionInd in range(numEmotions):
-            # Get the true emotion labels.
-            emotionMask = self.dataInterface.getEmotionColumn(emotionDataMask, emotionInd)
+            # Get the relevant batches for the current emotion.
             trueEmotionLabels = self.dataInterface.getEmotionLabels(emotionInd, allLabels, allLabelsMask)
-
-            # Get the true emotion labels.
-            emotionProfile = predictedEmotionProfile[:, emotionInd]
+            emotionMask = self.dataInterface.getEmotionColumn(emotionDataMask, emotionInd)
+            emotionProfile = predictedEmotionProfile[:, emotionInd].clone()  # Dim: batchSize, encodedDimension
             numEmotionClasses = self.allEmotionClasses[emotionInd]
 
             # Assert that the predicted profile is valid.
             assert (trueEmotionLabels < numEmotionClasses).all(), f"Check the true emotion labels. Found {trueEmotionLabels} with {self.allEmotionClasses[emotionInd]} classes"
 
-            # Apply the Gaussian weights to the predicted activity profile.
-            # classDimension, gaussianWeight = self.getGaussianWeights(encodedDimension, device=device, numClasses=numEmotionClasses)
-            # emotionClasses = torch.zeros(batchSize, numEmotionClasses, device=device)
+            # Get the full Gaussian weight profile for the emotion classes.
+            gaussianWeightProfile = self.dataInterface.getFullGaussianProfile(encodedDimension, device=device, numClasses=numEmotionClasses)
             classArray = torch.linspace(start=-0.5, end=numEmotionClasses - 0.5, steps=encodedDimension, device=device)
-            # emotionClasses = (torch.nn.functional.softmax(emotionProfile, dim=-1) * classArray).sum(dim=-1)
-            emotionClasses = (emotionProfile * classArray).sum(dim=-1)
 
-            # # Apply the Gaussian weights to the predicted activity profile.
-            # for classInd in range(numEmotionClasses):
-            #     classDimension, gaussianWeight = self.getGaussianWeights(encodedDimension, device=device, numClasses=numEmotionClasses, classInd=classInd)
-            #     # currentProfile = emotionProfile[:, classInd * classDimension:(classInd + 1) * classDimension]
-            #     currentProfile = emotionProfile
-            #
-            #     emotionClasses[:, classInd] = (currentProfile*gaussianWeight).sum(dim=-1) * (classInd + 1)
+            # Predict the emotion classes.
+            predictedEmotionClasses = (emotionProfile*gaussianWeightProfile*classArray).sum(dim=-1)  # TODO: normalization needed
+            # Dim: batchSize
 
             # Calculate the emotion classification accuracy.
-            emotionLosses[emotionInd] = self.smoothL1Loss(emotionClasses[emotionMask], trueEmotionLabels).nanmean()
-            # emotionLosses[emotionInd] = self.emotionCrossEntropyLoss[emotionInd].to(device=device, dtype=emotionClasses.dtype)(emotionClasses[emotionMask], trueEmotionLabels.long()).nanmean()
+            emotionLosses[emotionInd] = self.smoothL1Loss(predictedEmotionClasses[emotionMask], trueEmotionLabels).nanmean()
 
         return emotionLosses
-
-    def getGaussianWeights2(self, encodedDimension, device, numClasses):
-        classDimension = encodedDimension // numClasses
-
-        # Generate the Gaussian weights for the predicted activity profile.
-        gaussianWeight = self.gaussian_1d_kernel(classDimension, classDimension / 2, classDimension / 6, device=device)
-        return classDimension, gaussianWeight
-
-    def getGaussianWeights(self, encodedDimension, device, numClasses, classInd):
-        classDimension = encodedDimension // numClasses
-
-        # Generate the Gaussian weights for the predicted activity profile.
-        gaussianWeight = self.gaussian_1d_kernel(encodedDimension, classInd*classDimension + classDimension / 2, classDimension / 6, device=device)
-        return classDimension, gaussianWeight
-
-    @staticmethod
-    def gaussian_1d_kernel(size, mu, std, device):
-        # Create an array of indices and shift them so that the mean is at mu.
-        x = torch.arange(0, size, dtype=torch.float32, device=device) - mu
-        # Calculate the Gaussian function for each index.
-        kernel = torch.exp(-(x ** 2) / (2 * std ** 2))
-        # Normalize the kernel so that the sum of all values is 1.
-        kernel /= kernel.sum()
-
-        return kernel

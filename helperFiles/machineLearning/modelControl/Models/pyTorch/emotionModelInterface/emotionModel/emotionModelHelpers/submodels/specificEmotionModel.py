@@ -49,17 +49,16 @@ class specificEmotionModel(neuralOperatorInterface):
 
     def calculateEmotionProfile(self, basicEmotionProfile, subjectInds):
         batchSize, numEmotions, numBasicEmotions, encodedDimension = basicEmotionProfile.size()
+        # basicEmotionWeights: numSubjects, numBasicEmotions
+        # subjectInds: batchSize
 
         # Calculate the subject-specific weights.
         subjectSpecificWeights = self.sigmoid(self.basicEmotionWeights[subjectInds])  # batchSize, numBasicEmotions
         subjectSpecificWeights = subjectSpecificWeights.view(batchSize, 1, numBasicEmotions, 1)
-        # basicEmotionProfile: batchSize, numEmotions, numBasicEmotions, encodedDimension
         # subjectSpecificWeights: batchSize, 1, numBasicEmotions, 1
-        # basicEmotionWeights: numSubjects, numBasicEmotions
-        # subjectInds: batchSize
 
         # Calculate the emotion profile.
-        emotionProfile = (basicEmotionProfile * subjectSpecificWeights).sum(dim=2) / numBasicEmotions  # batchSize, numEmotions, encodedDimension
+        emotionProfile = (basicEmotionProfile * subjectSpecificWeights).sum(dim=2) / subjectSpecificWeights.sum(dim=2)  # batchSize, numEmotions, encodedDimension
         # emotionProfile: batchSize, numEmotions, encodedDimension
 
         return emotionProfile

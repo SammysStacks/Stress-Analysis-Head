@@ -1,5 +1,7 @@
 import copy
 
+import torch
+
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.neuralOperators.neuralOperatorInterface import neuralOperatorInterface
 
@@ -20,6 +22,7 @@ class sharedEmotionModel(neuralOperatorInterface):
 
         # The neural layers for the signal encoder.
         self.neuralLayers = self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True)
+        self.emotionSoftmax = torch.nn.Softmax(dim=-1)  # The softmax layer.
 
     def forward(self):
         raise "You cannot call the dataset-specific signal encoder module."

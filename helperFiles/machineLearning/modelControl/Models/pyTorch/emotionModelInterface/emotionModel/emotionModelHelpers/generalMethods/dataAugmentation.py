@@ -10,9 +10,9 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 class dataAugmentation:
 
     @staticmethod
-    def addNoise(data, trainingFlag, noiseSTD=0.01):
+    def addNoise(data, noiseSTD=0.01):
         # If we are training, add noise to the final state to ensure continuity of the latent space.
-        return data + torch.randn_like(data, device=data.device) * noiseSTD if trainingFlag or noiseSTD == 0 else data
+        return data + torch.randn_like(data, device=data.device) * noiseSTD
 
     @staticmethod
     def shuffleDimension(signalData, shuffle_indices=None):
