@@ -48,18 +48,16 @@ class emotionModelVisualizations(globalPlottingProtocols):
         testing_confusion_matrix = confusion_matrix(allTestingLabels, allPredictedTestingLabels, labels=np.arange(numClasses), normalize='true')
 
         # Define a gridspec with width ratios for subplots
-        fig, axes = plt.subplots(nRows=1, nCols=2, figsize=np.asarray([15, 5]), gridspec_kw={'width_ratios': [1, 1], 'height_ratios': [1]})
+        fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(15, 5), gridspec_kw={'width_ratios': [1, 1], 'height_ratios': [1]})
 
         # Plot the confusion matrices as heatmaps
-        im0 = axes[0].imshow(training_confusion_matrix,
-                             cmap='BuGn', vmin=0, vmax=1, aspect='auto')
+        im0 = axes[0].imshow(training_confusion_matrix, cmap='BuGn', vmin=0, vmax=1, aspect='auto')
         axes[0].set_title('Training Confusion Matrix')
         axes[0].set_xlabel('Predicted Labels')
         axes[0].set_ylabel('True Labels')
-        axes[0].invert_yaxis()  # Reverse the order of y-axis ticks
+        axes[0].invert_yaxis()
         fig.colorbar(im0, ax=axes[0], format='%.2f')
 
-        # Display percentages in the boxes
         for i in range(numClasses):
             for j in range(numClasses):
                 axes[0].text(j, i, f'{training_confusion_matrix[i, j] * 100:.2f}%', ha='center', va='center', color='black')
@@ -68,14 +66,12 @@ class emotionModelVisualizations(globalPlottingProtocols):
         axes[1].set_title('Testing Confusion Matrix')
         axes[1].set_xlabel('Predicted Labels')
         axes[1].set_ylabel('True Labels')
+        axes[1].invert_yaxis()
         fig.colorbar(im1, ax=axes[1], format='%.2f')
 
-        # Display percentages in the boxes
         for i in range(numClasses):
             for j in range(numClasses):
-                axes[1].text(j, i, f'{testing_confusion_matrix[i, j] * 100:.2f}%',
-                             ha='center', va='center', color='black')
-
+                axes[1].text(j, i, f'{testing_confusion_matrix[i, j] * 100:.2f}%', ha='center', va='center', color='black')
         axes[1].invert_yaxis()  # Reverse the order of y-axis ticks
         fig.suptitle(f"{plotTitle} at epoch{epoch}", fontsize=24)
         fig.tight_layout()

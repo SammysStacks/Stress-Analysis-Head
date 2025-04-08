@@ -124,7 +124,10 @@ class modelVisualizations(globalPlottingProtocols):
 
         with torch.no_grad():
             # Pass all the data through the model and store the emotions, activity, and intermediate variables.
+            allLabels, allTrainingLabelMask, allTestingLabelMask, allTrainingSignalMask, allTestingSignalMask = allLabels[validBatchMask], allTrainingLabelMask[validBatchMask], allTestingLabelMask[validBatchMask], allTrainingSignalMask[validBatchMask], allTestingSignalMask[validBatchMask]
             signalData, signalIdentifiers, metadata = allSignalData[validBatchMask][:numPlottingPoints], allSignalIdentifiers[validBatchMask][:numPlottingPoints], allMetadata[validBatchMask][:numPlottingPoints]
+
+            # Pass all the data through the model and store the emotions, activity, and intermediate variables.
             validDataMask, reconstructedSignalData, resampledSignalData, healthProfile, activityProfile, basicEmotionProfile, emotionProfile = model.forward(submodel, signalData, signalIdentifiers, metadata, device=self.accelerator.device, compiledLayerStates=submodel == modelConstants.signalEncoderModel)
 
             # Detach the data from the GPU and tensor format.
@@ -237,7 +240,7 @@ class modelVisualizations(globalPlottingProtocols):
                     complexEmotionPrediction = emotionPredictions[:, emotionInd]
                     numClasses = model.allEmotionClasses[emotionInd]
                     emotionName = model.emotionNames[emotionInd]
-                    
+
                     # Get the training and testing data.
                     trueEmotionTrainingClasses = emotionDataInterface.getEmotionLabels(emotionInd, allLabels, allTrainingLabelMask)
                     trueEmotionTestingClasses = emotionDataInterface.getEmotionLabels(emotionInd, allLabels, allTestingLabelMask)
