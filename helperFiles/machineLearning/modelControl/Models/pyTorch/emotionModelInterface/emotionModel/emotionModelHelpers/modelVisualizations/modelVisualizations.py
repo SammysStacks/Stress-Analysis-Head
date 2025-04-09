@@ -61,7 +61,7 @@ class modelVisualizations(globalPlottingProtocols):
                     specificActivityModels = [modelPipeline.model.specificActivityModel for modelPipeline in allModelPipelines]  # Dim: numModels
                     specificEmotionModels = [modelPipeline.model.specificEmotionModel for modelPipeline in allModelPipelines]  # Dim: numModels
 
-                    self.generalPlotting(submodel, allModelPipelines, specificActivityModels, showMinimumPlots, modelIdentifier="Activity", submodelString="ActivityModel")
+                    self.generalPlotting(submodel, allModelPipelines, specificActivityModels, True, modelIdentifier="Activity", submodelString="ActivityModel")
                     self.generalPlotting(submodel, allModelPipelines, specificEmotionModels, showMinimumPlots, modelIdentifier="Emotion", submodelString="EmotionModel")
 
     def generalPlotting(self, submodel, allModelPipelines, specificModels, showMinimumPlots, modelIdentifier, submodelString):
