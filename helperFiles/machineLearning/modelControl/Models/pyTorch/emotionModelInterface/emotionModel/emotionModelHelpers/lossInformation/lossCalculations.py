@@ -30,9 +30,9 @@ class lossCalculations:
         self.activityCrossEntropyLoss, self.emotionCrossEntropyLoss = None, None  # The cross-entropy loss functions for the activity and emotion labels.
 
     def setEmotionActivityLossFunctions(self, activityClassWeights, emotionClassWeights):
-        self.activityCrossEntropyLoss = torch.nn.CrossEntropyLoss(weight=activityClassWeights, reduction='none', label_smoothing=0.1)
+        self.activityCrossEntropyLoss = torch.nn.NLLLoss(weight=activityClassWeights, reduction='none')
         self.emotionCrossEntropyLoss = [
-            torch.nn.CrossEntropyLoss(weight=emotionClassWeight, reduction='none', label_smoothing=0.1) for emotionClassWeight in emotionClassWeights
+            torch.nn.NLLLoss(weight=emotionClassWeight, reduction='none') for emotionClassWeight in emotionClassWeights
         ]
 
     # -------------------------- Signal Encoder Loss Calculations ------------------------- #
@@ -92,7 +92,7 @@ class lossCalculations:
 
         # Calculate the activity classification accuracy/loss and assert the integrity of the loss.
         self.activityCrossEntropyLoss = self.activityCrossEntropyLoss.to(device=predictedActivityProfile.device, dtype=predictedActivityClasses.dtype)
-        activityLosses = self.activityCrossEntropyLoss(predictedActivityClasses[activityDataMask], trueActivityLabels.long())
+        activityLosses = self.activityCrossEntropyLoss(predictedActivityClasses[activityDataMask].log(), trueActivityLabels.long())
         # activityLosses: batchSize
 
         return activityLosses.nanmean()
@@ -120,6 +120,6 @@ class lossCalculations:
 
             # Calculate the emotion classification accuracy.
             self.emotionCrossEntropyLoss[emotionInd] = self.emotionCrossEntropyLoss[emotionInd].to(device=device, dtype=predictedEmotionProfile.dtype)
-            emotionLosses[emotionInd] = self.emotionCrossEntropyLoss[emotionInd](emotionClassPredictions[emotionMask], trueEmotionLabels.long()).nanmean()
+            emotionLosses[emotionInd] = self.emotionCrossEntropyLoss[emotionInd](emotionClassPredictions[emotionMask].log(), trueEmotionLabels.long()).nanmean()
 
         return emotionLosses

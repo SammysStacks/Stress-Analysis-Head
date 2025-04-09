@@ -143,7 +143,7 @@ class emotionModel(emotionModelHead):
         # metaLearningData: batchSize, 1, encodedDimension
 
         # Apply the softmax function to the activity profile.
-        # metaLearningData = self.sharedActivityModel.activitySoftmax(metaLearningData)
+        metaLearningData = self.sharedActivityModel.activitySoftmax(metaLearningData)
 
         return metaLearningData
 
@@ -163,7 +163,7 @@ class emotionModel(emotionModelHead):
         # basicEmotionProfile: batchSize, numEmotions, numBasicEmotions, encodedDimension
 
         # Apply the softmax function to the activity profile.
-        # basicEmotionProfile = self.sharedEmotionModel.emotionSoftmax(basicEmotionProfile)
+        basicEmotionProfile = self.sharedEmotionModel.emotionSoftmax(basicEmotionProfile)
         # basicEmotionProfile: batchSize, numEmotions, numBasicEmotions, encodedDimension
 
         return basicEmotionProfile
