@@ -56,13 +56,13 @@ class modelVisualizations(globalPlottingProtocols):
 
                 if submodel == modelConstants.signalEncoderModel:
                     specificSignalEncoderModels = [modelPipeline.model.specificSignalEncoderModel for modelPipeline in allModelPipelines]  # Dim: numModels
-                    self.generalPlotting(submodel, allModelPipelines, specificSignalEncoderModels, showMinimumPlots, modelIdentifier="Signal encoder", submodelString="SignalEncoderModel")
+                    self.generalPlotting(submodel, allModelPipelines, specificSignalEncoderModels, showMinimumPlots=showMinimumPlots, modelIdentifier="Signal encoder", submodelString="SignalEncoderModel")
                 elif submodel == modelConstants.emotionModel:
                     specificActivityModels = [modelPipeline.model.specificActivityModel for modelPipeline in allModelPipelines]  # Dim: numModels
                     specificEmotionModels = [modelPipeline.model.specificEmotionModel for modelPipeline in allModelPipelines]  # Dim: numModels
 
-                    self.generalPlotting(submodel, allModelPipelines, specificActivityModels, showMinimumPlots=False, modelIdentifier="Activity", submodelString="ActivityModel")
-                    self.generalPlotting(submodel, allModelPipelines, specificEmotionModels, showMinimumPlots, modelIdentifier="Emotion", submodelString="EmotionModel")
+                    self.generalPlotting(submodel, allModelPipelines, specificActivityModels, showMinimumPlots=showMinimumPlots, modelIdentifier="Activity", submodelString="ActivityModel")
+                    self.generalPlotting(submodel, allModelPipelines, specificEmotionModels, showMinimumPlots=showMinimumPlots, modelIdentifier="Emotion", submodelString="EmotionModel")
 
     def generalPlotting(self, submodel, allModelPipelines, specificModels, showMinimumPlots, modelIdentifier, submodelString):
         datasetNames = [modelPipeline.model.datasetName for modelPipeline in allModelPipelines]  # Dim: numModels
