@@ -1,12 +1,16 @@
 import torch.optim as optim
 from torch.optim import Optimizer
 
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHead import emotionModelHead
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
 
 class optimizerMethods:
 
     def addOptimizer(self, submodel, model):
+        angularWD, angularLR = modelConstants.userInputParams['reversibleLR']/10, modelConstants.userInputParams['reversibleLR']
+        if submodel == modelConstants.emotionModel: angularLR, angularWD = angularLR*10, angularWD*10
+
         # Get the model parameters.
         modelParams = [
             # Specify the profile parameters for the signal encoding.
@@ -15,8 +19,7 @@ class optimizerMethods:
             {'params': model.sharedSignalEncoderModel.fourierModel.parameters(), 'weight_decay': modelConstants.userInputParams['physGenLR']/100, 'lr': modelConstants.userInputParams['physGenLR']},
 
             # Specify the Lie manifold architecture parameters.
-            # {'params': (param for name, param in model.named_parameters() if "givensRotationParams" in name), 'weight_decay': modelConstants.userInputParams['reversibleLR']/10, 'lr': modelConstants.userInputParams['reversibleLR']},
-            {'params': (param for name, param in model.named_parameters() if "givensRotationParams" in name), 'weight_decay': modelConstants.userInputParams['reversibleLR'], 'lr': modelConstants.userInputParams['reversibleLR']*10},
+            {'params': (param for name, param in model.named_parameters() if "givensRotationParams" in name), 'weight_decay': angularWD, 'lr': angularLR},
             {'params': (param for name, param in model.named_parameters() if "basicEmotionWeights" in name), 'weight_decay': 5e-5, 'lr': 1e-4},
             {'params': (param for name, param in model.named_parameters() if "activationFunction" in name), 'weight_decay': 5e-5, 'lr': 1e-4},
             {'params': (param for name, param in model.named_parameters() if "jacobianParameter" in name), 'weight_decay': 5e-5, 'lr': 1e-4},
