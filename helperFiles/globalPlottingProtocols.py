@@ -37,8 +37,8 @@ class globalPlottingProtocols:
 
     @staticmethod
     def getRowsCols(combineSharedLayers):
-        numSpecificEncoderLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
-        numSharedEncoderLayers = modelConstants.userInputParams['numSharedEncoderLayers']
+        numSpecificEncoderLayers = modelConstants.userInputParams['numSpecificEncoderLayers'] if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 1
+        numSharedEncoderLayers = modelConstants.userInputParams['numSharedEncoderLayers' if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 'numActivityModelLayers']
         nCols = 1 + waveletNeuralHelpers.max_decompositions(sequenceLength=modelConstants.userInputParams['encodedDimension'], waveletType=modelConstants.userInputParams['neuralOperatorParameters']['wavelet']['waveletType'], minWaveletDim=modelConstants.userInputParams['minWaveletDim']).item()
         nRows = numSpecificEncoderLayers + (1 if combineSharedLayers else numSharedEncoderLayers)
         return nRows, nCols
