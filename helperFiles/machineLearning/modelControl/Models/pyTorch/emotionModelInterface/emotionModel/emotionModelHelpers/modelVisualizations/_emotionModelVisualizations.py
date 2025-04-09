@@ -91,14 +91,14 @@ class emotionModelVisualizations(globalPlottingProtocols):
 
             # Plot the signal reconstruction.
             ax.plot(profile, 'o-', color=self.blackColor, markersize=2, alpha=0.75, label="Initial Signal")
-            ax.axhline(y=0, color=self.blackColor, linewidth=0.5, alpha=0.25)
+            # ax.axhline(y=0, color=self.blackColor, linewidth=0.5, alpha=0.25)
 
             # Plotting aesthetics.
             ax.set_title(f"{plotTitle} {distributionNames[distributionInd]} epoch{epoch}")
             ax.set_ylabel("Signal amplitude (au)")
             ax.legend(loc="best")
             ax.set_xlabel("Time (sec)")
-            ax.set_ylim((-1.75, 1.75))
+            # ax.set_ylim((-1.75, 1.75))
 
             # Save the figure.
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {distributionNames[distributionInd]} epoch{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {distributionNames[distributionInd]}.pdf", fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
