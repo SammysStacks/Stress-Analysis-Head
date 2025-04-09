@@ -126,4 +126,3 @@ class emotionPipeline(emotionPipelineHelpers):
             self.optimizer.step()  # Adjust the weights.
             self.optimizer.zero_grad()  # Zero your gradients to restart the gradient tracking.
             if self.model.debugging: self.accelerator.print(f"Backprop with LR: {self.scheduler.get_last_lr()}")
-            self.accelerator.print(f"Backprop with LR: {self.scheduler.get_last_lr()}")

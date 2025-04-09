@@ -120,18 +120,20 @@ class emotionDataInterface:
             emotionProfile = predictedEmotionProfile[:, emotionInd]  # Dim: batchSize, encodedDimension
             numEmotionClasses = allEmotionClasses[emotionInd]
 
-            # Get the full Gaussian weight profile for the emotion classes.
-            gaussianWeightProfile = emotionDataInterface.getFullGaussianProfile(encodedDimension, device=device, numClasses=numEmotionClasses)
+            # Set up the predicted emotion classes.
             emotionClassPredictions = torch.zeros(batchSize, numEmotionClasses, device=device, dtype=predictedEmotionProfile.dtype)
             classDimension = encodedDimension // numEmotionClasses
 
-            # Predict the emotion classes.
-            weightedProfile = emotionProfile - emotionProfile.min(dim=-1, keepdim=True).values
-            weightedProfile = weightedProfile * gaussianWeightProfile  # TODO: normalization needed?
+            # Get the full Gaussian weight profile for the emotion classes.
+            gaussianWeightProfile = emotionDataInterface.getFullGaussianProfile(encodedDimension, device=device, numClasses=numEmotionClasses)
+            weightedProfile = emotionProfile * gaussianWeightProfile
 
-            # For each activity class.
+            # For each emotion class.
             for classInd in range(numEmotionClasses):
                 emotionClassPredictions[:, classInd] = weightedProfile[:, classInd*classDimension:(classInd + 1)*classDimension].sum(dim=-1)
+            emotionClassPredictions = emotionClassPredictions / emotionClassPredictions.sum(dim=-1, keepdim=True)  # Normalize the distribution.
+
+            # Store the predicted emotion classes.
             allEmotionClassPredictions.append(emotionClassPredictions)
 
         return allEmotionClassPredictions
