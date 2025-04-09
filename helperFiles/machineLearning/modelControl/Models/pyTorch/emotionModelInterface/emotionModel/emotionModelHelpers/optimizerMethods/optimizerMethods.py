@@ -108,6 +108,7 @@ class CosineAnnealingLR_customized(optim.lr_scheduler.LRScheduler):
         self.warmupFactor = warmupFactor  # The factor to increase the learning rate during warmup.
         self.T_max = T_max  # The number of iterations before resetting the learning rate.
         self.warmupFlag = submodel == modelConstants.signalEncoderModel  # Flag to indicate if the warmup phase is active.
+        self.numWarmupEpochs += 3 if submodel == modelConstants.emotionModel else 0
 
         # Call the parent class constructor
         super().__init__(optimizer, last_epoch)
