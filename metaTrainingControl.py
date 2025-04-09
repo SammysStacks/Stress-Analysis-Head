@@ -94,7 +94,7 @@ if __name__ == "__main__":
 
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
-    # if userInputParams['submodel'] == modelConstants.emotionModel: modelConstants.numWarmupEpochs = 12
+    if userInputParams['submodel'] == modelConstants.emotionModel: modelConstants.userInputParams['minAngularThreshold'] = 1  # The smaller rotational threshold in (degrees)
     userInputParams['minWaveletDim'] = max(32, userInputParams['encodedDimension'] // (2**4))
     userInputParams['minThresholdStep'] = userInputParams['reversibleLR']  # Keep as degrees
     userInputParams['reversibleLR'] = userInputParams['reversibleLR'] * math.pi / 180  # Keep as radians
