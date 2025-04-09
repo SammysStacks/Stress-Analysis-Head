@@ -143,7 +143,7 @@ class emotionModel(emotionModelHead):
         # metaLearningData: batchSize, 1, encodedDimension
 
         # Apply the softmax function to the activity profile.
-        metaLearningData = torch.nn.functional.softmax(metaLearningData, dim=-1)
+        # metaLearningData = torch.nn.functional.softmax(metaLearningData, dim=-1)
         # metaLearningData: batchSize, 1, encodedDimension
 
         return metaLearningData
@@ -164,7 +164,7 @@ class emotionModel(emotionModelHead):
         # basicEmotionProfile: batchSize, numEmotions, numBasicEmotions, encodedDimension
 
         # Apply the softmax function to the activity profile.
-        basicEmotionProfile = torch.nn.functional.softmax(basicEmotionProfile, dim=-1)
+        # basicEmotionProfile = torch.nn.functional.softmax(basicEmotionProfile, dim=-1)
         # basicEmotionProfile: batchSize, numEmotions, numBasicEmotions, encodedDimension
 
         return basicEmotionProfile

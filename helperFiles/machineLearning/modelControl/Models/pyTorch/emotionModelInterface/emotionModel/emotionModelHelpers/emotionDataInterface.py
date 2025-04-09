@@ -96,18 +96,17 @@ class emotionDataInterface:
         device = predictedActivityProfile.device
 
         # Get the full Gaussian profile for the activity classes.
-        gaussianWeightProfile = emotionDataInterface.getFullGaussianProfile(encodedDimension, device=device, numClasses=numActivities)
         predictedActivityClasses = torch.zeros(batchSize, numActivities, device=device)
         classDimension = encodedDimension // numActivities
 
         # Set up the predicted activity classes.
-        weightActivityProfile = predictedActivityProfile - predictedActivityProfile.min(dim=-1, keepdim=True).values
-        weightActivityProfile = weightActivityProfile * gaussianWeightProfile
+        gaussianWeightProfile = emotionDataInterface.getFullGaussianProfile(encodedDimension, device=device, numClasses=numActivities)
+        weightActivityProfile = predictedActivityProfile * gaussianWeightProfile
 
         # For each activity class.
         for classInd in range(numActivities):
             predictedActivityClasses[:, classInd] = weightActivityProfile[:, classInd*classDimension:(classInd+1)*classDimension].sum(dim=-1)
-        predictedActivityClasses = predictedActivityClasses / predictedActivityClasses.sum(dim=-1, keepdim=True)
+        # predictedActivityClasses = predictedActivityClasses / predictedActivityClasses.sum(dim=-1, keepdim=True)
 
         return predictedActivityClasses
 
@@ -132,7 +131,7 @@ class emotionDataInterface:
             # For each emotion class.
             for classInd in range(numEmotionClasses):
                 emotionClassPredictions[:, classInd] = weightedProfile[:, classInd*classDimension:(classInd + 1)*classDimension].sum(dim=-1)
-            emotionClassPredictions = emotionClassPredictions / emotionClassPredictions.sum(dim=-1, keepdim=True)  # Normalize the distribution.
+            # emotionClassPredictions = emotionClassPredictions / emotionClassPredictions.sum(dim=-1, keepdim=True)  # Normalize the distribution.
 
             # Store the predicted emotion classes.
             allEmotionClassPredictions.append(emotionClassPredictions)
