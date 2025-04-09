@@ -105,12 +105,13 @@ class reversibleLieLayer(reversibleLieLayerInterface):
     @staticmethod
     def getMinAngularThreshold(epoch):
         if epoch <= modelConstants.numWarmupEpochs: return 0.01 * torch.pi/180  # 0.01 degrees
+        exponent = 1.15 if modelConstants.userInputParams['submodel'] == modelConstants.emotionModel else 1.5
         relativeEpoch = epoch - modelConstants.numWarmupEpochs
 
         # Get the minimum angular threshold.
         minThresholdStep = modelConstants.userInputParams['minThresholdStep']
         minAngularThreshold = modelConstants.userInputParams['minAngularThreshold']
-        minAngularThreshold = min(minAngularThreshold, (relativeEpoch**1.15) * minThresholdStep) * torch.pi/180
+        minAngularThreshold = min(minAngularThreshold, (relativeEpoch**exponent) * minThresholdStep) * torch.pi/180
 
         return minAngularThreshold
 

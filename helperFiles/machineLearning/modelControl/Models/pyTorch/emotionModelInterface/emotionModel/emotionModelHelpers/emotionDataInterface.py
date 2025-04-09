@@ -67,7 +67,7 @@ class emotionDataInterface:
         for classInd in range(numClasses):
             # Add the Gaussian weights for the predicted class profile.
             gaussianWeight += emotionDataInterface.getGaussianWeights(encodedDimension, device, numClasses, classInd)[1]
-        gaussianWeight = gaussianWeight / gaussianWeight.sum()  # Normalize the distribution.
+        gaussianWeight = gaussianWeight / gaussianWeight.max()  # Normalize the distribution.
 
         return gaussianWeight
 
