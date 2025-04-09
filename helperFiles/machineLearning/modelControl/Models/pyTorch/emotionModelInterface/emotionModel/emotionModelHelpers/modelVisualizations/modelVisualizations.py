@@ -216,7 +216,7 @@ class modelVisualizations(globalPlottingProtocols):
                 # Detach the tensors.
                 predictedActivityTrainingClasses, predictedActivityTestingClasses = predictedActivityTrainingClasses.detach().cpu().numpy(), predictedActivityTestingClasses.detach().cpu().numpy()
                 trueActivityTrainingClasses, trueActivityTestingClasses = trueActivityTrainingClasses.detach().cpu().numpy(), trueActivityTestingClasses.detach().cpu().numpy()
-                activityProfile = activityProfile.detach().cpu().numpy().astype(np.float16)
+                activityProfile = activityProfile.detach().cpu().numpy()
 
                 # Plot the activity profile.
                 self.emotionModelViz.plotDistributions(activityProfile[:, None, :], distributionNames=['Activity'], epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="activityModel/", plotTitle="Activity profile")
@@ -229,20 +229,20 @@ class modelVisualizations(globalPlottingProtocols):
                 emotionNames = model.emotionNames
 
                 # Get the emotion classes.
-                emotionPredictions = emotionDataInterface.getEmotionClassPredictions(emotionProfile, model.allEmotionClasses, emotionProfile.device)
-                # emotionPredictions: batchSize, numEmotions
+                allEmotionClassPredictions = emotionDataInterface.getEmotionClassPredictions(emotionProfile, model.allEmotionClasses, emotionProfile.device)
+                # allEmotionClassPredictions: numEmotions, batchSize, numEmotionClasses
 
                 # Detach the tensors.
                 allLabels, allTrainingLabelMask, allTestingLabelMask = allLabels.detach().cpu().numpy(), allTrainingLabelMask.detach().cpu().numpy(), allTestingLabelMask.detach().cpu().numpy()
-                basicEmotionProfile, emotionProfile = basicEmotionProfile.detach().cpu().numpy().astype(np.float16), emotionProfile.detach().cpu().numpy().astype(np.float16)
-                emotionPredictions = emotionPredictions.detach().cpu().numpy().astype(np.float16)
+                basicEmotionProfile, emotionProfile = basicEmotionProfile.detach().cpu().numpy(), emotionProfile.detach().cpu().numpy()
 
                 # Plot the activity profile.
                 self.emotionModelViz.plotDistributions(emotionProfile, distributionNames=emotionNames, epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="emotionModel/", plotTitle="Emotion profile")
                 self.emotionModelViz.plotDistributions(basicEmotionProfile[:, 0], distributionNames=[f"Basic{i}" for i in range(numBasicEmotions)], epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="emotionModel/", plotTitle="Basic emotion profile")
 
                 for emotionInd in range(model.numEmotions):
-                    complexEmotionPrediction = emotionPredictions[:, emotionInd]
+                    emotionClassDistributions = allEmotionClassPredictions[emotionInd].detach().cpu().numpy()  # batchSize, numEmotionClasses
+                    emotionClasses = emotionClassDistributions.argmax(axis=-1)  # batchSize
                     numClasses = model.allEmotionClasses[emotionInd]
                     emotionName = model.emotionNames[emotionInd]
 
@@ -255,7 +255,8 @@ class modelVisualizations(globalPlottingProtocols):
                     emotionTestingMask = emotionDataInterface.getEmotionColumn(allTestingLabelMask, emotionInd)
 
                     # Separate the training and testing predictions.
-                    predictedEmotionTrainingClasses = complexEmotionPrediction[emotionTrainingMask]
-                    predictedEmotionTestingClasses = complexEmotionPrediction[emotionTestingMask]
+                    predictedEmotionTrainingClasses = emotionClasses[emotionTrainingMask]
+                    predictedEmotionTestingClasses = emotionClasses[emotionTestingMask]
 
                     self.emotionModelViz.plotPredictedMatrix(trueEmotionTrainingClasses, trueEmotionTestingClasses, predictedEmotionTrainingClasses, predictedEmotionTestingClasses, numClasses=numClasses, epoch=currentEpoch, saveFigureLocation="emotionModel/", plotTitle=f"{emotionName} confusion matrix")
+                    break

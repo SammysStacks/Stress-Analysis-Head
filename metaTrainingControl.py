@@ -74,7 +74,7 @@ if __name__ == "__main__":
     parser.add_argument('--minAngularThreshold', type=float, default=5, help='The smaller rotational threshold in (degrees)')
 
     # dd arguments for the emotion and activity architecture.
-    parser.add_argument('--numBasicEmotions', type=int, default=1, help='The number of basic emotions (basis states of emotions)')
+    parser.add_argument('--numBasicEmotions', type=int, default=4, help='The number of basic emotions (basis states of emotions)')
     parser.add_argument('--numActivityModelLayers', type=int, default=5, help='The number of layers in the activity model')
     parser.add_argument('--numEmotionModelLayers', type=int, default=5, help='The number of layers in the emotion model')
 
@@ -94,7 +94,6 @@ if __name__ == "__main__":
 
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
-    if userInputParams['submodel'] == modelConstants.emotionModel: modelConstants.numWarmupEpochs = 0
     userInputParams['minWaveletDim'] = max(32, userInputParams['encodedDimension'] // (2**4))
     userInputParams['minThresholdStep'] = userInputParams['reversibleLR']  # Keep as degrees
     userInputParams['reversibleLR'] = userInputParams['reversibleLR'] * math.pi / 180  # Keep as radians
@@ -133,9 +132,10 @@ if __name__ == "__main__":
 
     # The emotion model needs to start with a health profile.
     if submodel == modelConstants.emotionModel:
+        for modelPipeline in (allMetaModels + allModels): modelPipeline.scheduler.scheduler.warmupFlag = False; modelPipeline.scheduler.scheduler.step()
         trainingProtocols.datasetSpecificTraining(modelConstants.signalEncoderModel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch=0, onlyProfileTraining=True)
         trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, modelConstants.signalEncoderModel, trainingModelName, showMinimumPlots=True)
-        # for modelPipeline in (allMetaModels + allModels): modelPipeline.scheduler.scheduler.warmupFlag = True; modelPipeline.scheduler.scheduler.step()
+        for modelPipeline in (allMetaModels + allModels): modelPipeline.scheduler.scheduler.warmupFlag = True; modelPipeline.scheduler.scheduler.step()
 
     # Plot the initial model state.
     trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)  # Calculate the initial loss.

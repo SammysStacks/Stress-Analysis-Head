@@ -30,11 +30,10 @@ class lossCalculations:
         self.activityCrossEntropyLoss, self.emotionCrossEntropyLoss = None, None  # The cross-entropy loss functions for the activity and emotion labels.
 
     def setEmotionActivityLossFunctions(self, activityClassWeights, emotionClassWeights):
-        self.activityCrossEntropyLoss = torch.nn.CrossEntropyLoss(weight=activityClassWeights, reduction='none', label_smoothing=0)
-        self.emotionCrossEntropyLoss = torch.nn.ModuleList([
-            torch.nn.CrossEntropyLoss(weight=emotionClassWeight, reduction='none', label_smoothing=0.1)
-            for emotionClassWeight in emotionClassWeights
-        ])
+        self.activityCrossEntropyLoss = torch.nn.CrossEntropyLoss(weight=activityClassWeights, reduction='none', label_smoothing=0.1)
+        self.emotionCrossEntropyLoss = [
+            torch.nn.CrossEntropyLoss(weight=emotionClassWeight, reduction='none', label_smoothing=0.1) for emotionClassWeight in emotionClassWeights
+        ]
 
     # -------------------------- Signal Encoder Loss Calculations ------------------------- #
 
@@ -103,23 +102,24 @@ class lossCalculations:
         batchSize, numEmotions, encodedDimension = predictedEmotionProfile.shape
         device = predictedEmotionProfile.device
 
-        # Assert that the predicted emotion profile is valid.
-
         # Find the boolean flags for the data involved in the loss calculation.
         emotionDataMask = self.dataInterface.getEmotionMasks(allLabelsMask, numEmotions=numEmotions)  # Dim: batchSize, numEmotions
-        emotionLosses = torch.zeros(numEmotions, device=device)  # Dim: numEmotions
+        emotionLosses = torch.zeros(numEmotions, device=device, dtype=predictedEmotionProfile.dtype)  # Dim: numEmotions
 
         # Get the emotion class predictions.
-        emotionPredictions = self.dataInterface.getEmotionClassPredictions(predictedEmotionProfile, self.allEmotionClasses, device=device)
-        # emotionPredictions: batchSize, numEmotions
+        allEmotionClassPredictions = self.dataInterface.getEmotionClassPredictions(predictedEmotionProfile, self.allEmotionClasses, device=device)
+        # allEmotionClassPredictions: numEmotions, batchSize, numEmotionClasses* -> list of tensors
 
         for emotionInd in range(numEmotions):
             # Get the relevant batches for the current emotion.
             trueEmotionLabels = self.dataInterface.getEmotionLabels(emotionInd, allLabels, allLabelsMask)
             emotionMask = self.dataInterface.getEmotionColumn(emotionDataMask, emotionInd)
+            emotionClassPredictions = allEmotionClassPredictions[emotionInd]
+            # emotionClassPredictions: batchSize, numEmotionClasses
             # trueEmotionLabels: batchSize
 
             # Calculate the emotion classification accuracy.
-            emotionLosses[emotionInd] = self.smoothL1Loss(emotionPredictions[:, emotionInd][emotionMask], trueEmotionLabels).nanmean()
+            self.emotionCrossEntropyLoss[emotionInd] = self.emotionCrossEntropyLoss[emotionInd].to(device=device, dtype=predictedEmotionProfile.dtype)
+            emotionLosses[emotionInd] = self.emotionCrossEntropyLoss[emotionInd](emotionClassPredictions[emotionMask], trueEmotionLabels.long()).nanmean()
 
         return emotionLosses

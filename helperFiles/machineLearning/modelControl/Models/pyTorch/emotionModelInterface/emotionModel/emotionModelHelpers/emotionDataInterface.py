@@ -113,7 +113,7 @@ class emotionDataInterface:
     @staticmethod
     def getEmotionClassPredictions(predictedEmotionProfile, allEmotionClasses, device):
         batchSize, numEmotions, encodedDimension = predictedEmotionProfile.shape
-        emotionPredictions = torch.zeros(batchSize, numEmotions, device=device)
+        allEmotionClassPredictions = []
 
         for emotionInd in range(numEmotions):
             # Get the relevant batches for the current emotion.
@@ -122,13 +122,19 @@ class emotionDataInterface:
 
             # Get the full Gaussian weight profile for the emotion classes.
             gaussianWeightProfile = emotionDataInterface.getFullGaussianProfile(encodedDimension, device=device, numClasses=numEmotionClasses)
-            classArray = torch.linspace(start=-0.5, end=numEmotionClasses - 0.5, steps=encodedDimension, device=device)
+            emotionClassPredictions = torch.zeros(batchSize, numEmotionClasses, device=device, dtype=predictedEmotionProfile.dtype)
+            classDimension = encodedDimension // numEmotionClasses
 
             # Predict the emotion classes.
             weightedProfile = emotionProfile - emotionProfile.min(dim=-1, keepdim=True).values
-            emotionPredictions[:, emotionInd] = (weightedProfile*gaussianWeightProfile*classArray).sum(dim=-1)  # TODO: normalization needed
+            weightedProfile = weightedProfile * gaussianWeightProfile  # TODO: normalization needed?
 
-        return emotionPredictions
+            # For each activity class.
+            for classInd in range(numEmotionClasses):
+                emotionClassPredictions[:, classInd] = weightedProfile[:, classInd*classDimension:(classInd + 1)*classDimension].sum(dim=-1)
+            allEmotionClassPredictions.append(emotionClassPredictions)
+
+        return allEmotionClassPredictions
 
     # ---------------------- Signal Info Getters ---------------------- #
 
