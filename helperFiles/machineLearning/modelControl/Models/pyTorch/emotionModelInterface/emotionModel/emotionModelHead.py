@@ -202,7 +202,8 @@ class emotionModelHead(nn.Module):
         return activationParamsPath, moduleNames
 
     def getFreeParamsFullPassPath(self, submodelString):
-        numFreeParamsPath, moduleNames, maxFreeParamsPath = [], [], []
+        moduleNames, maxFreeParamsPath = [], []
+        numFreeParamsPath = []
 
         for name, module in self.named_modules():
             if submodelString not in name: continue
