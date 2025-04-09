@@ -75,8 +75,8 @@ if __name__ == "__main__":
 
     # dd arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=4, help='The number of basic emotions (basis states of emotions)')
-    parser.add_argument('--numActivityModelLayers', type=int, default=7, help='The number of layers in the activity model')
-    parser.add_argument('--numEmotionModelLayers', type=int, default=7, help='The number of layers in the emotion model')
+    parser.add_argument('--numActivityModelLayers', type=int, default=5, help='The number of layers in the activity model')
+    parser.add_argument('--numEmotionModelLayers', type=int, default=5, help='The number of layers in the emotion model')
 
     # ----------------------- Training Parameters ----------------------- #
 
@@ -94,7 +94,6 @@ if __name__ == "__main__":
 
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
-    if userInputParams['submodel'] == modelConstants.emotionModel: modelConstants.userInputParams['minAngularThreshold'] = 1  # The smaller rotational threshold in (degrees)
     userInputParams['minWaveletDim'] = max(32, userInputParams['encodedDimension'] // (2**4))
     userInputParams['minThresholdStep'] = userInputParams['reversibleLR']  # Keep as degrees
     userInputParams['reversibleLR'] = userInputParams['reversibleLR'] * math.pi / 180  # Keep as radians
@@ -123,6 +122,10 @@ if __name__ == "__main__":
     allDataLoaders.append(allMetadataLoaders.pop(0))  # Do not metatrain with wesad data.
     datasetNames.append(metaDatasetNames.pop(0))  # Do not metatrain with wesad data.
     allModels.append(allMetaModels.pop(0))  # Do not metatrain with wesad data.
+
+    if userInputParams['submodel'] == modelConstants.emotionModel:
+        modelConstants.userInputParams['minAngularThreshold'] = 0.5  # TODO
+        modelConstants.numWarmupEpochs = 20
 
     if submodel == modelConstants.signalEncoderModel or True:
         # Do not train on the meta-datasets.
