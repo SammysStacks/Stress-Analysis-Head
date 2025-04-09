@@ -61,7 +61,7 @@ class modelVisualizations(globalPlottingProtocols):
                     specificActivityModels = [modelPipeline.model.specificActivityModel for modelPipeline in allModelPipelines]  # Dim: numModels
                     specificEmotionModels = [modelPipeline.model.specificEmotionModel for modelPipeline in allModelPipelines]  # Dim: numModels
 
-                    self.generalPlotting(submodel, allModelPipelines, specificActivityModels, True, modelIdentifier="Activity", submodelString="ActivityModel")
+                    self.generalPlotting(submodel, allModelPipelines, specificActivityModels, showMinimumPlots=False, modelIdentifier="Activity", submodelString="ActivityModel")
                     self.generalPlotting(submodel, allModelPipelines, specificEmotionModels, showMinimumPlots, modelIdentifier="Emotion", submodelString="EmotionModel")
 
     def generalPlotting(self, submodel, allModelPipelines, specificModels, showMinimumPlots, modelIdentifier, submodelString):
@@ -196,6 +196,13 @@ class modelVisualizations(globalPlottingProtocols):
                 # ------------------ Activity Prediction Plots ------------------ #
                 # activityProfile: batchSize, encodedDimension
 
+                # Compile additional information for the model.getActivationParamsFullPassPath
+                activityGivensAnglesPath, activityNormalizationFactorsPath, _, reversibleModuleNames, givensAnglesFeatureNames = model.getLearnableParams(submodelString="ActivityModel")
+                # activationCurvePath, activationModuleNames = model.getActivationCurvesFullPassPath(submodelString="ActivityModel")  # numModuleLayers, 2=(x, y), numPoints=100
+                # _, _, maxFreeParamsPath = model.getFreeParamsFullPassPath(submodelString="ActivityModel")
+                # normalizationFactorsPath: numModuleLayers, numSignals, numParam=1
+                # givensAnglesPath: numModuleLayers, numSignals, numParams
+
                 # Get the activity classes.
                 activityClassDistribution = emotionDataInterface.getActivityClassProfile(activityProfile, model.numActivities)
                 activityClasses = activityClassDistribution.argmax(dim=-1)  # activityClasses: batchSize
@@ -221,6 +228,7 @@ class modelVisualizations(globalPlottingProtocols):
                 # Plot the activity profile.
                 self.emotionModelViz.plotDistributions(activityProfile[:, None, :], distributionNames=['Activity'], epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="activityModel/", plotTitle="Activity profile")
                 self.emotionModelViz.plotPredictedMatrix(trueActivityTrainingClasses, trueActivityTestingClasses, predictedActivityTrainingClasses, predictedActivityTestingClasses, numClasses=model.numActivities, epoch=currentEpoch, saveFigureLocation="activityModel/", plotTitle="Activity confusion matrix")
+                # if currentEpoch % 10 == 0: self.signalEncoderViz.plotsGivensAnglesHeatmap(activityGivensAnglesPath, reversibleModuleNames, signalInd=signalInd, epoch=currentEpoch, degreesFlag=False, saveFigureLocation="activityModel/", plotTitle="Rotation weight matrix (S)")
 
                 # ------------------ Emotion Prediction Plots ------------------ #
                 # basicEmotionProfile: batchSize, numEmotions, numBasicEmotions, encodedDimension

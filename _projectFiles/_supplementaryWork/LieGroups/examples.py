@@ -27,6 +27,19 @@ for i in range(n - 1):
 R2 = expm(S2)
 y2 = R2 @ x
 
+### Example 2: Partial Adjacent Band (Only Half the Upper Values are Positive)
+S2 = np.zeros((n, n))
+half = n // 2
+# Only fill the first half of the adjacent band with nonzero values
+for i in range(n - 1):
+    for j in range(i+1, n - 1):
+        if j == 5 or i == 5:
+            S2[i, j] = theta * 2
+            S2[j, i] = -theta * 2
+# The remaining entries (i >= half) stay zero
+R2 = expm(S2)
+y2 = R2 @ x
+
 ### Example 3: Anti-Diagonal Band (Band from Lower Left to Upper Right)
 S3 = np.zeros((n, n))
 # For each row, place a nonzero entry in the column such that i + j = n - 1.

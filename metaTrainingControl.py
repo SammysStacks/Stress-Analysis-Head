@@ -75,8 +75,8 @@ if __name__ == "__main__":
 
     # dd arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=4, help='The number of basic emotions (basis states of emotions)')
-    parser.add_argument('--numActivityModelLayers', type=int, default=7, help='The number of layers in the activity model')
-    parser.add_argument('--numEmotionModelLayers', type=int, default=7, help='The number of layers in the emotion model')
+    parser.add_argument('--numActivityModelLayers', type=int, default=9, help='The number of layers in the activity model')
+    parser.add_argument('--numEmotionModelLayers', type=int, default=9, help='The number of layers in the emotion model')
 
     # ----------------------- Training Parameters ----------------------- #
 
@@ -94,13 +94,14 @@ if __name__ == "__main__":
 
     # Parse the arguments.
     userInputParams = vars(parser.parse_args())
+    # if userInputParams['submodel'] == modelConstants.emotionModel: modelConstants.numWarmupEpochs = 12
     userInputParams['minWaveletDim'] = max(32, userInputParams['encodedDimension'] // (2**4))
     userInputParams['minThresholdStep'] = userInputParams['reversibleLR']  # Keep as degrees
     userInputParams['reversibleLR'] = userInputParams['reversibleLR'] * math.pi / 180  # Keep as radians
     userInputParams['profileDimension'] = userInputParams['encodedDimension'] // 2  # The dimension of the profile.
     userInputParams['unifyModelWeights'] = unifyModelWeights
 
-    # Compile additional input parameters.
+    # Compie additional input parameters.
     userInputParams = modelParameters.getNeuralParameters(userInputParams)
     modelConstants.updateModelParams(userInputParams)
     submodel = userInputParams['submodel']
@@ -123,9 +124,10 @@ if __name__ == "__main__":
     datasetNames.append(metaDatasetNames.pop(0))  # Do not metatrain with wesad data.
     allModels.append(allMetaModels.pop(0))  # Do not metatrain with wesad data.
 
-    # Do not train on the meta-datasets.
-    if not validationRun: allDataLoaders, datasetNames, allModels = [], [], []
-    elif submodel == modelConstants.signalEncoderModel: allMetadataLoaders, metaDatasetNames, allMetaModels = [], [], []
+    if submodel == modelConstants.signalEncoderModel or True:
+        # Do not train on the meta-datasets.
+        if not validationRun: allDataLoaders, datasetNames, allModels = [], [], []
+        else: allMetadataLoaders, metaDatasetNames, allMetaModels = [], [], []
     allDatasetNames = metaDatasetNames + datasetNames
 
     # -------------------------- Meta-model Training ------------------------- #
@@ -136,6 +138,8 @@ if __name__ == "__main__":
         trainingProtocols.datasetSpecificTraining(modelConstants.signalEncoderModel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch=0, onlyProfileTraining=True)
         trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, modelConstants.signalEncoderModel, trainingModelName, showMinimumPlots=True)
         for modelPipeline in (allMetaModels + allModels): modelPipeline.scheduler.scheduler.warmupFlag = True; modelPipeline.scheduler.scheduler.step()
+
+    # if submodel == modelConstants.emotionModel: modelConstants.userInputParams['maxAngularThreshold'] = 20
 
     # Plot the initial model state.
     trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)  # Calculate the initial loss.

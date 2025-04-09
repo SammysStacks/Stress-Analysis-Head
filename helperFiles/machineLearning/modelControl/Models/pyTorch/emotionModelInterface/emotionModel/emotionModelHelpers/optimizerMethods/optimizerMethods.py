@@ -1,7 +1,6 @@
 import torch.optim as optim
 from torch.optim import Optimizer
 
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHead import emotionModelHead
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
 
@@ -9,7 +8,7 @@ class optimizerMethods:
 
     def addOptimizer(self, submodel, model):
         angularWD, angularLR = modelConstants.userInputParams['reversibleLR']/10, modelConstants.userInputParams['reversibleLR']
-        if submodel == modelConstants.emotionModel: angularLR, angularWD = angularLR*10, angularWD*10
+        if submodel == modelConstants.emotionModel: angularLR, angularWD = angularLR/5, angularWD/5
 
         # Get the model parameters.
         modelParams = [
