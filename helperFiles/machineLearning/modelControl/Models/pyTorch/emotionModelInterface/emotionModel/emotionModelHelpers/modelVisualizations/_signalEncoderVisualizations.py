@@ -440,9 +440,9 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         colorbarAxes = []
 
         # Get the angular thresholds.
+        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers'] if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 1
+        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers' if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 'numActivityModelLayers']
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
-        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
-        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers']
 
         for layerInd in range(len(givensAnglesPath)):
             moduleName = reversibleModuleNames[layerInd].lower()
