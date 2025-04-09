@@ -21,7 +21,6 @@ class sharedActivityModel(neuralOperatorInterface):
 
         # The neural layers for the signal encoder.
         self.neuralLayers = self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True)
-        self.activitySoftmax = torch.nn.Softmax(dim=-1)  # The softmax layer.
 
     def forward(self):
         raise "You cannot call the dataset-specific signal encoder module."
