@@ -124,7 +124,7 @@ if __name__ == "__main__":
     datasetNames.append(metaDatasetNames.pop(0))  # Do not metatrain with wesad data.
     allModels.append(allMetaModels.pop(0))  # Do not metatrain with wesad data.
 
-    if submodel == modelConstants.signalEncoderModel or True:
+    if submodel == modelConstants.signalEncoderModel:
         # Do not train on the meta-datasets.
         if not validationRun: allDataLoaders, datasetNames, allModels = [], [], []
         else: allMetadataLoaders, metaDatasetNames, allMetaModels = [], [], []

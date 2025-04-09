@@ -49,8 +49,8 @@ class trainingProtocolHelpers:
             # Unify all the model weights and retrain the specific models.
             self.unifiedLayerData = self.modelMigration.copyModelWeights(modelPipeline, self.sharedModelWeights)
 
-        # Unify all the model weights.
-        self.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch, onlyProfileTraining=False)
+        if submodel == modelConstants.signalEncoderModel:
+            self.datasetSpecificTraining(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch, onlyProfileTraining=False)
 
     def datasetSpecificTraining(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch, onlyProfileTraining=False):
         self.unifyAllModelWeights(allMetaModels, allModels)  # Unify all the model weights.
@@ -59,6 +59,8 @@ class trainingProtocolHelpers:
         for modelInd in range(len(allMetaModels) + len(allModels)):
             dataLoader = allMetadataLoaders[modelInd] if modelInd < len(allMetadataLoaders) else allDataLoaders[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
             modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
+            # if modelPipeline.datasetName.lower() == 'empatch' and epoch <= modelConstants.numWarmupEpochs: continue
+            # elif modelPipeline.datasetName.lower() == 'wesad' and epoch <= modelConstants.numWarmupEpochs: continue
             stepScheduler = submodel == modelConstants.emotionModel
             numEpochs = 1
 
