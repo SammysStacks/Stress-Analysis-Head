@@ -83,4 +83,5 @@ class emotionModelVisualizations(globalPlottingProtocols):
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {distributionNames[distributionInd]} epoch{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {distributionNames[distributionInd]}.pdf", fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
             else: self.clearFigure(fig=fig, legend=None, showPlot=True)
             plt.close(fig)
-            break
+
+            if 3 <= distributionInd: break
