@@ -133,8 +133,8 @@ class generalVisualizations(globalPlottingProtocols):
         x = np.arange(numEpochs)
 
         # Get the parameters.
-        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
-        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers']
+        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers'] if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 1
+        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers' if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 'numActivityModelLayers']
 
         for paramInd in range(numParams):
             # Create a figure and axes array
@@ -208,8 +208,8 @@ class generalVisualizations(globalPlottingProtocols):
         if numEpochs <= 5: return "No data to plot."
 
         # Get the parameters.
-        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
-        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers']
+        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers'] if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 1
+        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers' if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 'numActivityModelLayers']
 
         for paramInd in range(numParams):
             # Create a figure and axes array
@@ -293,8 +293,8 @@ class generalVisualizations(globalPlottingProtocols):
         x = np.arange(numEpochs)
 
         # Get the parameters.
-        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
-        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers']
+        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers'] if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 1
+        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers' if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 'numActivityModelLayers']
 
         for paramInd in range(numParams):
             # Create a figure and axes array
@@ -366,8 +366,8 @@ class generalVisualizations(globalPlottingProtocols):
         x = np.arange(numEpochs)
 
         # Get the parameters.
-        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
-        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers']
+        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers'] if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 1
+        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers' if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 'numActivityModelLayers']
 
         for paramInd in range(numParams):
             # Create a figure and axes array
