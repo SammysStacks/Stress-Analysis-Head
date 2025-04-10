@@ -1,14 +1,15 @@
-from torch import nn
-import torch
 import math
 
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.emotionModelWeights import emotionModelWeights
+import torch
+from torch import nn
+
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.submodels.modelComponents.emotionModelWeights import emotionModelWeights
 
 
 class fourierNeuralOperatorWeights(emotionModelWeights):
 
-    def __init__(self, sequenceLength, numInputSignals, numOutputSignals, addBiasTerm, activationMethod, skipConnectionProtocol, encodeRealFrequencies, encodeImaginaryFrequencies, learningProtocol):
+    def __init__(self, sequenceLength, numInputSignals, numOutputSignals, numLayers, addBiasTerm, activationMethod, skipConnectionProtocol, encodeRealFrequencies, encodeImaginaryFrequencies, learningProtocol):
         super(fourierNeuralOperatorWeights, self).__init__()
         # Fourier neural operator parameters.
         self.encodeImaginaryFrequencies = encodeImaginaryFrequencies  # Whether to encode the imaginary frequencies.
@@ -20,6 +21,7 @@ class fourierNeuralOperatorWeights(emotionModelWeights):
         self.numOutputSignals = numOutputSignals  # The number of output signals.
         self.numInputSignals = numInputSignals  # The number of input signals.
         self.addBiasTerm = addBiasTerm  # Whether to add bias terms to the output.
+        self.numLayers = numLayers  # The number of layers in the neural operator.
 
         # Set the sequence length to the next power of 2.
         self.sequenceLength = 2 ** int(torch.tensor(sequenceLength).log2().ceil())  # The length of the input signals.
@@ -56,7 +58,7 @@ class fourierNeuralOperatorWeights(emotionModelWeights):
         return skipConnectionModel
 
     def getNeuralWeightParameters(self, inChannel, fourierDimension):
-        if self.learningProtocol == 'reversibleLieLayer': return self.reversibleNeuralWeightRCNN(numSignals=inChannel, sequenceLength=fourierDimension)
+        if self.learningProtocol == 'reversibleLieLayer': return self.reversibleNeuralWeightRCNN(numSignals=inChannel, sequenceLength=fourierDimension, numLayers=self.numLayers)
         elif self.learningProtocol == 'FC': return self.neuralWeightFC(sequenceLength=fourierDimension)
         else: raise ValueError(f"The learning protocol ({self.learningProtocol}) must be in ['FCC', 'reversibleLieLayer', 'CNN'].")
 

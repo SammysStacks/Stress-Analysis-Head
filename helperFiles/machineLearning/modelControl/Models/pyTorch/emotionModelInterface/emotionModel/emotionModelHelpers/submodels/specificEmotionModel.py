@@ -22,7 +22,7 @@ class specificEmotionModel(neuralOperatorInterface):
         self.neuralOperatorParameters['wavelet']['minWaveletDim'] = encodedDimension // 2
 
         # The neural layers for the signal encoder.
-        self.neuralLayers = self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True)
+        self.neuralLayers = self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters)
         self.basicEmotionWeights = self.getSubjectSpecificBasicEmotionWeights(numBasicEmotions=numBasicEmotions, numSubjects=numSubjects)  # numSubjects, numBasicEmotions
         self.sigmoid = nn.Sigmoid()
 
@@ -48,13 +48,13 @@ class specificEmotionModel(neuralOperatorInterface):
         return self.neuralLayers(signalData).contiguous()
 
     def calculateEmotionProfile(self, basicEmotionProfile, subjectInds):
-        batchSize, numEmotions, numBasicEmotions, encodedDimension = basicEmotionProfile.size()
+        # basicEmotionProfile: batchSize, numEmotions, numBasicEmotions, encodedDimension
         # basicEmotionWeights: numSubjects, numBasicEmotions
         # subjectInds: batchSize
 
         # Calculate the subject-specific weights.
         subjectSpecificWeights = self.sigmoid(self.basicEmotionWeights[subjectInds])  # batchSize, numBasicEmotions
-        subjectSpecificWeights = subjectSpecificWeights.view(batchSize, 1, numBasicEmotions, 1)
+        subjectSpecificWeights = subjectSpecificWeights.unsqueeze(1).unsqueeze(3)  # batchSize, 1, numBasicEmotions, 1
         # subjectSpecificWeights: batchSize, 1, numBasicEmotions, 1
 
         # Calculate the emotion profile.

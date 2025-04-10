@@ -52,17 +52,6 @@ class emotionModelWeights(convolutionalHelpers):
     def reversibleNeuralWeightRCNN(numSignals, sequenceLength, numLayers):
         return reversibleLieLayer(numSignals=numSignals, sequenceLength=sequenceLength, numLayers=numLayers, activationMethod=f"{emotionModelWeights.getReversibleActivation()}")
 
-    @staticmethod
-    def postSpatialLayerRCNN(numSignals, sequenceLength, numLayers=1):
-        return reversibleLieLayer(numSignals=numSignals, sequenceLength=sequenceLength, numLayers=numLayers, activationMethod=f"{emotionModelWeights.getReversibleActivation()}")
-
-    def postSpatialLayerCNN(self, numSignals):
-        return self.convolutionalFilters_resNetBlocks(numResNets=1, numBlocks=4, numChannels=[numSignals, numSignals], kernel_sizes=3, dilations=1, groups=1, strides=1, convType='conv1D', activationMethod="SoftSign", numLayers=None, addBias=False)
-
-    @staticmethod
-    def postSpatialLayerFC(sequenceLength):
-        return emotionModelWeights.linearModel(numInputFeatures=sequenceLength, numOutputFeatures=sequenceLength, activationMethod="SoftSign", addBias=False)
-
     def healthGeneration(self):
         layers = []
         for _ in range(4):

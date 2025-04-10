@@ -17,7 +17,7 @@ class specificActivityModel(neuralOperatorInterface):
         self.neuralOperatorParameters['wavelet']['minWaveletDim'] = encodedDimension // 2
 
         # The neural layers for the signal encoder.
-        self.neuralLayers = self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True)
+        self.neuralLayers = self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters)
 
         # Initialize loss holders.
         self.trainingLosses_signalReconstruction, self.testingLosses_signalReconstruction = None, None

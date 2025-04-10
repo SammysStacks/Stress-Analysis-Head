@@ -23,7 +23,7 @@ class specificSignalEncoderModel(neuralOperatorInterface):
 
         # The neural layers for the signal encoder.
         self.profileModel = profileModel(numExperiments=numExperiments, numSignals=self.numSignals, encodedDimension=encodedDimension)
-        self.neuralLayers = self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True)
+        self.neuralLayers = self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters)
 
         # Assert the validity of the input parameters.
         assert self.encodedDimension % 2 == 0, "The encoded dimension must be divisible by 2."

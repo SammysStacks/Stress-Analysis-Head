@@ -20,7 +20,7 @@ class sharedActivityModel(neuralOperatorInterface):
         self.neuralOperatorParameters['wavelet']['encodeHighFrequencyProtocol'] = f'highFreq-{0}-{numIgnoredSharedHF}'
 
         # The neural layers for the signal encoder.
-        self.neuralLayers = self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True)
+        self.neuralLayers = self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters)
 
     def forward(self):
         raise "You cannot call the dataset-specific signal encoder module."

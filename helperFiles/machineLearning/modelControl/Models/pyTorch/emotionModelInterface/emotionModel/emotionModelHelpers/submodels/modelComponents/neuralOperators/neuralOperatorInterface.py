@@ -15,13 +15,13 @@ class neuralOperatorInterface(emotionModelWeights):
         self.addBiasTerm = addBiasTerm  # Whether to add a bias term to the neural operator.
         self.numLayers = numLayers  # The number of layers in the neural operator.
 
-    def getNeuralOperatorLayer(self, neuralOperatorParameters, reversibleFlag):
+    def getNeuralOperatorLayer(self, neuralOperatorParameters):
         # Decide on the neural operator layer.
-        if self.operatorType == 'wavelet': return self.initializeWaveletLayer(self.sequenceLength, neuralOperatorParameters, reversibleFlag)
-        elif self.operatorType == 'fourier': return self.initializeFourierLayer(self.sequenceLength, neuralOperatorParameters, reversibleFlag)
+        if self.operatorType == 'wavelet': return self.initializeWaveletLayer(self.sequenceLength, neuralOperatorParameters)
+        elif self.operatorType == 'fourier': return self.initializeFourierLayer(self.sequenceLength, neuralOperatorParameters)
         else: raise ValueError(f"The operator type ({self.operatorType}) must be in {'wavelet'}.")
 
-    def initializeWaveletLayer(self, sequenceLength, neuralOperatorParameters, reversibleFlag):
+    def initializeWaveletLayer(self, sequenceLength, neuralOperatorParameters):
         # Unpack the neural operator parameters.
         encodeHighFrequencyProtocol = neuralOperatorParameters['wavelet'].get('encodeHighFrequencyProtocol', 'highFreq')  # The protocol for encoding the high frequency signals.
         encodeLowFrequencyProtocol = neuralOperatorParameters['wavelet'].get('encodeLowFrequencyProtocol', 'lowFreq')  # The protocol for encoding the low frequency signals.
@@ -38,15 +38,18 @@ class neuralOperatorInterface(emotionModelWeights):
                                           waveletType=waveletType, mode=mode, addBiasTerm=self.addBiasTerm, activationMethod=activationMethod, skipConnectionProtocol=skipConnectionProtocol,
                                           encodeLowFrequencyProtocol=encodeLowFrequencyProtocol, encodeHighFrequencyProtocol=encodeHighFrequencyProtocol, learningProtocol=learningProtocol)
 
-    def initializeFourierLayer(self, sequenceLength, neuralOperatorParameters, reversibleFlag):
+    def initializeFourierLayer(self, sequenceLength, neuralOperatorParameters):
         # Unpack the neural operator parameters.
         encodeImaginaryFrequencies = neuralOperatorParameters.get('encodeImaginaryFrequencies', True)
         encodeRealFrequencies = neuralOperatorParameters.get('encodeRealFrequencies', True)
+
+        # Assert that the encoding protocols are valid.
+        assert encodeImaginaryFrequencies and encodeRealFrequencies, "Sanity check: both real and imaginary frequencies should be encoded."
 
         # Hardcoded parameters.
         learningProtocol = 'reversibleLieLayer'
         skipConnectionProtocol = 'none'
         activationMethod = 'none'
 
-        return fourierNeuralOperatorLayer(sequenceLength=sequenceLength, numInputSignals=self.numInputSignals, numOutputSignals=self.numOutputSignals, addBiasTerm=self.addBiasTerm, activationMethod=activationMethod,
+        return fourierNeuralOperatorLayer(sequenceLength=sequenceLength, numInputSignals=self.numInputSignals, numOutputSignals=self.numOutputSignals, numLayers=self.numLayers, addBiasTerm=self.addBiasTerm, activationMethod=activationMethod,
                                           skipConnectionProtocol=skipConnectionProtocol, encodeRealFrequencies=encodeRealFrequencies, encodeImaginaryFrequencies=encodeImaginaryFrequencies, learningProtocol=learningProtocol)

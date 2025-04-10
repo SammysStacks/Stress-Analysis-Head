@@ -31,7 +31,7 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         assert len(deltaTimes) == 1, f"The time gaps are not similar: {deltaTimes}"
 
         # The neural layers for the signal encoder.
-        self.neuralLayers = self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters, reversibleFlag=True)
+        self.neuralLayers = self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters)
         self.healthGenerationModel = self.healthGeneration()
         self.fourierModel = self.fourierAdjustments()
 
