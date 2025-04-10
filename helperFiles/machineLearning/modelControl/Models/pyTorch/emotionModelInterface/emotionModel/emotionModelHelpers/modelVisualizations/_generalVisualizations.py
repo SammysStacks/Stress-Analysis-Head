@@ -128,12 +128,12 @@ class generalVisualizations(globalPlottingProtocols):
 
         # activationParamsPaths: numModels, numEpochs, numModuleLayers, numParams
         numModels, numEpochs, numModuleLayers, numActivationParams = activationParamsPaths.shape
-        nRows, nCols = self.getRowsCols(combineSharedLayers=True, plotTitle=plotTitle)
+        nRows, nCols = self.getRowsCols(combineSharedLayers=True, saveFigureLocation=saveFigureLocation)
         numParams = len(paramNames)
         x = np.arange(numEpochs)
 
         # Get the parameters.
-        prefix = "numSharedEncoder" if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else ("numActivityModel" if "activity" in plotTitle.lower() else "numEmotionModel")
+        prefix = "numSharedEncoder" if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else ("numActivityModel" if "activity" in saveFigureLocation.lower() else "numEmotionModel")
         numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers'] if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 1
         numSharedLayers = modelConstants.userInputParams[f'{prefix}Layers']
 
@@ -202,14 +202,14 @@ class generalVisualizations(globalPlottingProtocols):
         # normalizationFactorsPaths: numModels, numEpochs, numModuleLayers, *numSignals*, numParams=1
         # maxFreeParamsPath: numModels, numModuleLayers
         numModels, numModuleLayers = np.asarray(maxFreeParamsPath).shape
-        nRows, nCols = self.getRowsCols(combineSharedLayers=True, plotTitle=plotTitle)
+        nRows, nCols = self.getRowsCols(combineSharedLayers=True, saveFigureLocation=saveFigureLocation)
         numEpochs = len(numFreeModelParams[0])
         numParams = len(paramNames)
         x = np.arange(numEpochs)
         if numEpochs <= 5: return "No data to plot."
 
         # Get the parameters.
-        prefix = "numSharedEncoder" if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else ("numActivityModel" if "activity" in plotTitle.lower() else "numEmotionModel")
+        prefix = "numSharedEncoder" if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else ("numActivityModel" if "activity" in saveFigureLocation.lower() else "numEmotionModel")
         numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers'] if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 1
         numSharedLayers = modelConstants.userInputParams[f'{prefix}Layers']
 
@@ -290,12 +290,12 @@ class generalVisualizations(globalPlottingProtocols):
         # normalizationFactorsPaths: numModels, numEpochs, numModuleLayers, *numSignals*, numParams=1
         try: numModels, numEpochs, numModuleLayers = len(normalizationFactorsPaths), len(normalizationFactorsPaths[0]), len(normalizationFactorsPaths[0][0])
         except Exception as e: print("plotAngularFeaturesFlow:", e); return None
-        nRows, nCols = self.getRowsCols(combineSharedLayers=True, plotTitle=plotTitle)
+        nRows, nCols = self.getRowsCols(combineSharedLayers=True, saveFigureLocation=saveFigureLocation)
         numParams = len(paramNames)
         x = np.arange(numEpochs)
 
         # Get the parameters.
-        prefix = "numSharedEncoder" if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else ("numActivityModel" if "activity" in plotTitle.lower() else "numEmotionModel")
+        prefix = "numSharedEncoder" if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else ("numActivityModel" if "activity" in saveFigureLocation.lower() else "numEmotionModel")
         numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers'] if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 1
         numSharedLayers = modelConstants.userInputParams[f'{prefix}Layers']
 
@@ -364,12 +364,12 @@ class generalVisualizations(globalPlottingProtocols):
         # givensAnglesFeaturesPaths: numModels, numEpochs, numModuleLayers, numFeatures=5, numFeatureValues*
         try: numModels, numEpochs, numModuleLayers = len(givensAnglesFeaturesPaths), len(givensAnglesFeaturesPaths[0]), len(givensAnglesFeaturesPaths[0][0])
         except Exception as e: print("plotAngularFeaturesFlow:", e); return None
-        nRows, nCols = self.getRowsCols(combineSharedLayers=True, plotTitle=plotTitle)
+        nRows, nCols = self.getRowsCols(combineSharedLayers=True, saveFigureLocation=saveFigureLocation)
         numParams = len(paramNames)
         x = np.arange(numEpochs)
 
         # Get the parameters.
-        prefix = "numSharedEncoder" if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else ("numActivityModel" if "activity" in plotTitle.lower() else "numEmotionModel")
+        prefix = "numSharedEncoder" if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else ("numActivityModel" if "activity" in saveFigureLocation.lower() else "numEmotionModel")
         numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers'] if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 1
         numSharedLayers = modelConstants.userInputParams[f'{prefix}Layers']
 
