@@ -37,11 +37,16 @@ class globalPlottingProtocols:
 
     @staticmethod
     def getRowsCols(combineSharedLayers, saveFigureLocation=None):
+        # Determine the number of layers based on the model parameters.
         prefix = "numSharedEncoder" if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else ("numActivityModel" if "activity" in saveFigureLocation.lower() else "numEmotionModel")
         numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers'] if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 1
         numSharedLayers = modelConstants.userInputParams[f'{prefix}Layers']
-        nCols = 1 + waveletNeuralHelpers.max_decompositions(sequenceLength=modelConstants.userInputParams['encodedDimension'], waveletType=modelConstants.userInputParams['neuralOperatorParameters']['wavelet']['waveletType'], minWaveletDim=modelConstants.userInputParams['minWaveletDim']).item()
+
+        nCols = 2
+        # Determine the number of rows and columns for the figure based on the model parameters.
+        if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel: nCols = 1 + waveletNeuralHelpers.max_decompositions(sequenceLength=modelConstants.userInputParams['encodedDimension'], waveletType=modelConstants.userInputParams['neuralOperatorParameters']['wavelet']['waveletType'], minWaveletDim=modelConstants.userInputParams['minWaveletDim']).item()
         nRows = numSpecificLayers + (1 if combineSharedLayers else numSharedLayers)
+
         return nRows, nCols
 
     @staticmethod

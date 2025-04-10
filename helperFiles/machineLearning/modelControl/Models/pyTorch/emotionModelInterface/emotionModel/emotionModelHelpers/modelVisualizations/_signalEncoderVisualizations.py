@@ -498,9 +498,14 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         sharedValues, specificValues = [], []
 
         # Get the layer information.
-        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
-        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers']
-        numSharedScalarSections = 1 + int(math.log2(modelConstants.userInputParams['encodedDimension'] // modelConstants.userInputParams['minWaveletDim']))
+        prefix = "numSharedEncoder" if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else ("numActivityModel" if "activity" in saveFigureLocation.lower() else "numEmotionModel")
+        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers'] if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 1
+        numSharedLayers = modelConstants.userInputParams[f'{prefix}Layers']
+
+        # Get the number of sections.
+        if modelConstants.userInputParams['submodel'] in modelConstants.signalEncoderModel:
+            numSharedScalarSections = 1 + int(math.log2(modelConstants.userInputParams['encodedDimension'] // modelConstants.userInputParams['minWaveletDim']))
+        else: numSharedScalarSections = 2
         numSpecificScalarSections = 2
 
         # Get the layer information.
@@ -508,9 +513,13 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         nCols = min(numSpecificLayers + numSharedLayers, maxCols); nRows = (numSpecificLayers + numSharedLayers) // nCols + (1 if (numSpecificLayers + numSharedLayers) % nCols != 0 else 0)
 
         xTickLabelShared = []
-        xTickLabelSpecific = ["Detailed decomposition layer 1", "Approximate decomposition layer 1"]
-        for decompositionInd in range(numSharedScalarSections - 1): xTickLabelShared.append(f"Detailed decomposition layer {decompositionInd + 1}")
-        xTickLabelShared.append(f"Approximate decomposition layer {numSharedScalarSections - 1}")
+        if modelConstants.userInputParams['submodel'] in modelConstants.signalEncoderModel:
+            xTickLabelSpecific = ["Detailed decomposition layer 1", "Approximate decomposition layer 1"]
+            for decompositionInd in range(numSharedScalarSections - 1): xTickLabelShared.append(f"Detailed decomposition layer {decompositionInd + 1}")
+            xTickLabelShared.append(f"Approximate decomposition layer {numSharedScalarSections - 1}")
+        else:
+            xTickLabelSpecific = ["Imaginary fourier domain", "Real fourier domain"]
+            xTickLabelShared = ["Imaginary fourier domain", "Real fourier domain"]
 
         for layerInd in range(numModuleLayers):
             if 'shared' in reversibleModuleNames[layerInd].lower(): sharedValues.append(normalizationFactorsPath[layerInd].flatten())
