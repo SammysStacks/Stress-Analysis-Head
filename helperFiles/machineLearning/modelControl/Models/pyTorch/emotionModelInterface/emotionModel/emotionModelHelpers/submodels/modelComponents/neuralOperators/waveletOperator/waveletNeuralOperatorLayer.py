@@ -2,8 +2,8 @@ import torch
 from torch import nn
 
 from .waveletNeuralOperatorWeights import waveletNeuralOperatorWeights
-from ...reversibleComponents.reversibleLieLayer import reversibleLieLayer
 from ...reversibleComponents.reversibleInterface import reversibleInterface
+from ...reversibleComponents.reversibleLieLayer import reversibleLieLayer
 
 
 class waveletNeuralOperatorLayer(waveletNeuralOperatorWeights):

@@ -2,20 +2,15 @@ import os
 import itertools
 import concurrent.futures
 
-# Import interface for extracting feature names
-from ...machineLearning.featureAnalysis.compiledFeatureNames.compileFeatureNames import compileFeatureNames  # Import Files for extracting feature names
-
-# Import files for machine learning
-from ...machineLearning.featureAnalysis.featurePlotting import featurePlotting
-from ...machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
-from ...machineLearning.trainingProtocols import trainingProtocols
-
-# Import files for data analysis
-from ..biolectricProtocols.helperMethods.filteringProtocols import filteringMethods
-from ..biolectricProtocols.helperMethods.universalProtocols import universalMethods
-from ..excelProcessing.excelFormatting import handlingExcelFormat
-from ..excelProcessing.saveDataProtocols import saveExcelData
-from ..streamingProtocols import streamingProtocols
+from helperFiles.dataAcquisitionAndAnalysis.biolectricProtocols.helperMethods.filteringProtocols import filteringMethods
+from helperFiles.dataAcquisitionAndAnalysis.biolectricProtocols.helperMethods.universalProtocols import universalMethods
+from helperFiles.dataAcquisitionAndAnalysis.excelProcessing.excelFormatting import handlingExcelFormat
+from helperFiles.dataAcquisitionAndAnalysis.excelProcessing.saveDataProtocols import saveExcelData
+from helperFiles.dataAcquisitionAndAnalysis.streamingProtocols import streamingProtocols
+from helperFiles.machineLearning.featureAnalysis.compiledFeatureNames.compileFeatureNames import compileFeatureNames
+from helperFiles.machineLearning.featureAnalysis.featurePlotting import featurePlotting
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
+from helperFiles.machineLearning.trainingProtocols import trainingProtocols
 
 
 class globalMetaAnalysis(handlingExcelFormat):
