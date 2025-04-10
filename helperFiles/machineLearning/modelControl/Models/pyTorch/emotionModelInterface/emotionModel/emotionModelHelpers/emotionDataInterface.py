@@ -66,7 +66,7 @@ class emotionDataInterface:
         # For each class.
         for classInd in range(numClasses):
             # Add the Gaussian weights for the predicted class profile.
-            gaussianWeight += emotionDataInterface.getGaussianWeights(encodedDimension, device, numClasses, classInd)[1]
+            gaussianWeight += emotionDataInterface.getGaussianWeights(encodedDimension, device, numClasses, classInd)
         gaussianWeight = gaussianWeight / gaussianWeight.norm()  # Normalize the distribution. DO NOT MAKE .MAX()
 
         return gaussianWeight
@@ -77,7 +77,7 @@ class emotionDataInterface:
 
         # Generate the Gaussian weights for the predicted activity profile.
         gaussianWeight = emotionDataInterface.gaussian_1d_kernel(encodedDimension, classInd*classDimension + classDimension / 2, classDimension / 6, device=device)  # TODO
-        return classDimension, gaussianWeight
+        return gaussianWeight
 
     @staticmethod
     def gaussian_1d_kernel(size, mu, std, device):
@@ -104,7 +104,7 @@ class emotionDataInterface:
         for classInd in range(numActivities):
             # classProfiles.append(weightActivityProfile[:, classInd * classDimension:(classInd + 1) * classDimension].sum(dim=-1))
             gaussianWeightProfile = emotionDataInterface.getGaussianWeights(encodedDimension, device=device, numClasses=numActivities, classInd=classInd)
-            classProfiles.append((predictedActivityProfile*gaussianWeightProfile).sum(dim=-1))
+            classProfiles.append((predictedActivityProfile * gaussianWeightProfile).sum(dim=-1))
         predictedActivityClasses = torch.stack(classProfiles, dim=-1)
 
         # Normalize the class predictions.
