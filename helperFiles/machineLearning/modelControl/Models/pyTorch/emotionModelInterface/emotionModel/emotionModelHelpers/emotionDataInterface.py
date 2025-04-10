@@ -76,7 +76,7 @@ class emotionDataInterface:
         classDimension = encodedDimension // numClasses
 
         # Generate the Gaussian weights for the predicted activity profile.
-        gaussianWeight = emotionDataInterface.gaussian_1d_kernel(encodedDimension, classInd*classDimension + classDimension / 2, classDimension / 4, device=device)  # TODO
+        gaussianWeight = emotionDataInterface.gaussian_1d_kernel(encodedDimension, classInd*classDimension + classDimension / 2, classDimension / 6, device=device)  # TODO
         return classDimension, gaussianWeight
 
     @staticmethod
