@@ -192,7 +192,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     def plotAngleLocations(self, givensAnglesPath, reversibleModuleNames, signalNames, signalInd, epoch, saveFigureLocation, plotTitle):
         # givensAnglesPath: numModuleLayers, numSignals, numParams
-        nRows, nCols = self.getRowsCols(combineSharedLayers=False)
+        nRows, nCols = self.getRowsCols(combineSharedLayers=True, plotTitle=plotTitle)
         initialAngle = np.pi / 4; initX, initY = np.cos(initialAngle), np.sin(initialAngle)
 
         # Create a figure and axes array
@@ -269,7 +269,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     def plotsGivensAnglesHist(self, givensAnglesPath, reversibleModuleNames, signalInd, degreesFlag, epoch, saveFigureLocation, plotTitle):
         # givensAnglesPath: numModuleLayers, numSignals, numAngles
-        nRows, nCols = self.getRowsCols(combineSharedLayers=False)
+        nRows, nCols = self.getRowsCols(combineSharedLayers=True, plotTitle=plotTitle)
         if not degreesFlag: scaleFactor = 180 / math.pi; degreesFlag = True
         else: scaleFactor = 1
         yMax = 1/5
@@ -355,7 +355,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     def plotsGivensAnglesLine(self, givensAnglesPath, reversibleModuleNames, signalInd, degreesFlag, epoch, saveFigureLocation, plotTitle):
         # givensAnglesPath: numModuleLayers, numSignals, numParams
-        nRows, nCols = self.getRowsCols(combineSharedLayers=False)
+        nRows, nCols = self.getRowsCols(combineSharedLayers=True, plotTitle=plotTitle)
         if not degreesFlag: scaleFactor = 180 / math.pi; degreesFlag = True
         else: scaleFactor = 1
 
@@ -429,7 +429,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
     def plotsGivensAnglesHeatmap(self, givensAnglesPath, reversibleModuleNames, signalInd, degreesFlag, epoch, saveFigureLocation, plotTitle):
         # givensAnglesPath: numModuleLayers, numSignals, numAngles
         # maxFreeParamsPath: numModuleLayers
-        nRows, nCols = self.getRowsCols(combineSharedLayers=False)
+        nRows, nCols = self.getRowsCols(combineSharedLayers=True, plotTitle=plotTitle)
         if not degreesFlag: scaleFactor = 180 / math.pi; degreesFlag = True
         else: scaleFactor = 1
 
@@ -440,8 +440,9 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         colorbarAxes = []
 
         # Get the angular thresholds.
+        prefix = "numSharedEncoder" if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else ("numActivityModel" if "activity" in plotTitle.lower() else "numEmotionModel")
         numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers'] if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 1
-        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers' if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 'numActivityModelLayers']
+        numSharedLayers = modelConstants.userInputParams[f'{prefix}Layers']
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
 
         for layerInd in range(len(givensAnglesPath)):
@@ -656,7 +657,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     def plotActivationCurves(self, activationCurves, moduleNames, epoch, saveFigureLocation, plotTitle):
         numModuleLayers, numPointsX, numPointsY = activationCurves.shape
-        nRows, nCols = self.getRowsCols(combineSharedLayers=False)
+        nRows, nCols = self.getRowsCols(combineSharedLayers=True, plotTitle=plotTitle)
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=True, sharey=True)

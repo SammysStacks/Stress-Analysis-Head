@@ -56,7 +56,7 @@ class generalVisualizations(globalPlottingProtocols):
         for i in range(2, 10): ax.hlines(y=0.01*i, xmin=0, xmax=len(trainingLosses[0]) + 1, colors=self.blackColor, linestyles='dashed', linewidth=1, alpha=0.25)
         ax.hlines(y=0.01, xmin=0, xmax=len(trainingLosses[0]) + 1, colors=self.blackColor, linestyles='dashed', linewidth=1)
         ax.set_xlim((0, max(128 if not profileFlag else 0, len(trainingLosses[0]) + 1)))
-        ax.set_ylim((0.0025, 0.75 if not emotionModel else 5))
+        ax.set_ylim((0.0025, 0.75 if not emotionModel else 10))
         ax.grid(True)
 
         # Label the plot.
@@ -128,13 +128,14 @@ class generalVisualizations(globalPlottingProtocols):
 
         # activationParamsPaths: numModels, numEpochs, numModuleLayers, numParams
         numModels, numEpochs, numModuleLayers, numActivationParams = activationParamsPaths.shape
-        nRows, nCols = self.getRowsCols(combineSharedLayers=True)
+        nRows, nCols = self.getRowsCols(combineSharedLayers=True, plotTitle=plotTitle)
         numParams = len(paramNames)
         x = np.arange(numEpochs)
 
         # Get the parameters.
+        prefix = "numSharedEncoder" if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else ("numActivityModel" if "activity" in plotTitle.lower() else "numEmotionModel")
         numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers'] if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 1
-        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers' if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 'numActivityModelLayers']
+        numSharedLayers = modelConstants.userInputParams[f'{prefix}Layers']
 
         for paramInd in range(numParams):
             # Create a figure and axes array
@@ -201,15 +202,16 @@ class generalVisualizations(globalPlottingProtocols):
         # normalizationFactorsPaths: numModels, numEpochs, numModuleLayers, *numSignals*, numParams=1
         # maxFreeParamsPath: numModels, numModuleLayers
         numModels, numModuleLayers = np.asarray(maxFreeParamsPath).shape
-        nRows, nCols = self.getRowsCols(combineSharedLayers=True)
+        nRows, nCols = self.getRowsCols(combineSharedLayers=True, plotTitle=plotTitle)
         numEpochs = len(numFreeModelParams[0])
         numParams = len(paramNames)
         x = np.arange(numEpochs)
         if numEpochs <= 5: return "No data to plot."
 
         # Get the parameters.
+        prefix = "numSharedEncoder" if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else ("numActivityModel" if "activity" in plotTitle.lower() else "numEmotionModel")
         numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers'] if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 1
-        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers' if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 'numActivityModelLayers']
+        numSharedLayers = modelConstants.userInputParams[f'{prefix}Layers']
 
         for paramInd in range(numParams):
             # Create a figure and axes array
@@ -288,13 +290,14 @@ class generalVisualizations(globalPlottingProtocols):
         # normalizationFactorsPaths: numModels, numEpochs, numModuleLayers, *numSignals*, numParams=1
         try: numModels, numEpochs, numModuleLayers = len(normalizationFactorsPaths), len(normalizationFactorsPaths[0]), len(normalizationFactorsPaths[0][0])
         except Exception as e: print("plotAngularFeaturesFlow:", e); return None
-        nRows, nCols = self.getRowsCols(combineSharedLayers=True)
+        nRows, nCols = self.getRowsCols(combineSharedLayers=True, plotTitle=plotTitle)
         numParams = len(paramNames)
         x = np.arange(numEpochs)
 
         # Get the parameters.
+        prefix = "numSharedEncoder" if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else ("numActivityModel" if "activity" in plotTitle.lower() else "numEmotionModel")
         numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers'] if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 1
-        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers' if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 'numActivityModelLayers']
+        numSharedLayers = modelConstants.userInputParams[f'{prefix}Layers']
 
         for paramInd in range(numParams):
             # Create a figure and axes array
@@ -361,13 +364,14 @@ class generalVisualizations(globalPlottingProtocols):
         # givensAnglesFeaturesPaths: numModels, numEpochs, numModuleLayers, numFeatures=5, numFeatureValues*
         try: numModels, numEpochs, numModuleLayers = len(givensAnglesFeaturesPaths), len(givensAnglesFeaturesPaths[0]), len(givensAnglesFeaturesPaths[0][0])
         except Exception as e: print("plotAngularFeaturesFlow:", e); return None
-        nRows, nCols = self.getRowsCols(combineSharedLayers=True)
+        nRows, nCols = self.getRowsCols(combineSharedLayers=True, plotTitle=plotTitle)
         numParams = len(paramNames)
         x = np.arange(numEpochs)
 
         # Get the parameters.
+        prefix = "numSharedEncoder" if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else ("numActivityModel" if "activity" in plotTitle.lower() else "numEmotionModel")
         numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers'] if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 1
-        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers' if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 'numActivityModelLayers']
+        numSharedLayers = modelConstants.userInputParams[f'{prefix}Layers']
 
         for paramInd in range(numParams):
             # Create a figure and axes array

@@ -36,11 +36,12 @@ class globalPlottingProtocols:
             if stringID: self._createFolder(self.saveDataFolder)
 
     @staticmethod
-    def getRowsCols(combineSharedLayers):
-        numSpecificEncoderLayers = modelConstants.userInputParams['numSpecificEncoderLayers'] if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 1
-        numSharedEncoderLayers = modelConstants.userInputParams['numSharedEncoderLayers' if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 'numActivityModelLayers']
+    def getRowsCols(combineSharedLayers, plotTitle=None):
+        prefix = "numSharedEncoder" if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else ("numActivityModel" if "activity" in plotTitle.lower() else "numEmotionModel")
+        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers'] if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 1
+        numSharedLayers = modelConstants.userInputParams[f'{prefix}Layers']
         nCols = 1 + waveletNeuralHelpers.max_decompositions(sequenceLength=modelConstants.userInputParams['encodedDimension'], waveletType=modelConstants.userInputParams['neuralOperatorParameters']['wavelet']['waveletType'], minWaveletDim=modelConstants.userInputParams['minWaveletDim']).item()
-        nRows = numSpecificEncoderLayers + (1 if combineSharedLayers else numSharedEncoderLayers)
+        nRows = numSpecificLayers + (1 if combineSharedLayers else numSharedLayers)
         return nRows, nCols
 
     @staticmethod
