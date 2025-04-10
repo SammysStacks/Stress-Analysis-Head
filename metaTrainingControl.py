@@ -74,9 +74,9 @@ if __name__ == "__main__":
     parser.add_argument('--minAngularThreshold', type=float, default=5, help='The smaller rotational threshold in (degrees)')
 
     # dd arguments for the emotion and activity architecture.
-    parser.add_argument('--numBasicEmotions', type=int, default=4, help='The number of basic emotions (basis states of emotions)')
-    parser.add_argument('--numActivityModelLayers', type=int, default=9, help='The number of layers in the activity model')
-    parser.add_argument('--numEmotionModelLayers', type=int, default=9, help='The number of layers in the emotion model')
+    parser.add_argument('--numBasicEmotions', type=int, default=1, help='The number of basic emotions (basis states of emotions)')
+    parser.add_argument('--numActivityModelLayers', type=int, default=3, help='The number of layers in the activity model')
+    parser.add_argument('--numEmotionModelLayers', type=int, default=3, help='The number of layers in the emotion model')
 
     # ----------------------- Training Parameters ----------------------- #
 
@@ -124,7 +124,7 @@ if __name__ == "__main__":
     allModels.append(allMetaModels.pop(0))  # Do not metatrain with wesad data.
 
     if userInputParams['submodel'] == modelConstants.emotionModel:
-        modelConstants.userInputParams['minAngularThreshold'] = 1  # TODO
+        modelConstants.userInputParams['minAngularThreshold'] = 2.5  # TODO
         modelConstants.numWarmupEpochs = 10
 
     if submodel == modelConstants.signalEncoderModel or True:

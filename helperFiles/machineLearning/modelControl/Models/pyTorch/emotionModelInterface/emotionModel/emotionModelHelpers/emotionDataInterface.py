@@ -67,7 +67,7 @@ class emotionDataInterface:
         for classInd in range(numClasses):
             # Add the Gaussian weights for the predicted class profile.
             gaussianWeight += emotionDataInterface.getGaussianWeights(encodedDimension, device, numClasses, classInd)[1]
-        gaussianWeight = gaussianWeight / gaussianWeight.max()  # Normalize the distribution.
+        gaussianWeight = gaussianWeight / gaussianWeight.norm()  # Normalize the distribution. DO NOT MAKE .MAX()
 
         return gaussianWeight
 
@@ -76,7 +76,7 @@ class emotionDataInterface:
         classDimension = encodedDimension // numClasses
 
         # Generate the Gaussian weights for the predicted activity profile.
-        gaussianWeight = emotionDataInterface.gaussian_1d_kernel(encodedDimension, classInd*classDimension + classDimension / 2, classDimension / 6, device=device)  # TODO
+        gaussianWeight = emotionDataInterface.gaussian_1d_kernel(encodedDimension, classInd*classDimension + classDimension / 2, classDimension / 4, device=device)  # TODO
         return classDimension, gaussianWeight
 
     @staticmethod
@@ -98,7 +98,6 @@ class emotionDataInterface:
 
         # Set up the predicted activity classes.
         gaussianWeightProfile = emotionDataInterface.getFullGaussianProfile(encodedDimension, device=device, numClasses=numActivities)
-        weightActivityProfile = (predictedActivityProfile - predictedActivityProfile.min(dim=-1, keepdim=True).values) * gaussianWeightProfile  # Normalize the profile.
         weightActivityProfile = predictedActivityProfile * gaussianWeightProfile  # Normalize the profile.
 
         classProfiles = []
@@ -119,9 +118,8 @@ class emotionDataInterface:
 
             # Get the full Gaussian weight profile for the emotion classes.
             gaussianWeightProfile = emotionDataInterface.getFullGaussianProfile(encodedDimension, device=device, numClasses=numEmotionClasses)
-            weightedProfile = (emotionProfile - emotionProfile.min(dim=-1, keepdim=True).values)*gaussianWeightProfile  # Normalize the profile.
-            classDimension = encodedDimension // numEmotionClasses
             weightedProfile = emotionProfile * gaussianWeightProfile  # Normalize the profile.
+            classDimension = encodedDimension // numEmotionClasses
 
             classPredictions = []
             for classInd in range(numEmotionClasses):
