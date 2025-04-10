@@ -94,11 +94,11 @@ class generalVisualizations(globalPlottingProtocols):
                     moduleName = moduleNames[modelInd, layerInd].lower()
 
                     # Remove shared layers
-                    if "shared" in moduleName and modelInd != 0: continue
+                    if 'shared' in moduleName and modelInd != 0: continue
 
                     # Set the line color and alpha
-                    if "specific" in moduleName: lineColor = self.darkColors[modelInd]; alpha = 0.8
-                    elif "shared" in moduleName: lineColor = self.blackColor; alpha = 0.75
+                    if 'specific' in moduleName: lineColor = self.darkColors[modelInd]; alpha = 0.8
+                    elif 'shared' in moduleName: lineColor = self.blackColor; alpha = 0.75
                     else: raise ValueError("Module name must contain 'specific' or 'shared'.")
 
                     if modelInd == 0: modelLabel = modelLabels[modelInd]
@@ -146,8 +146,8 @@ class generalVisualizations(globalPlottingProtocols):
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
 
-                if "low" in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
-                elif "high" in moduleName:
+                if 'low' in moduleName or 'real' in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
+                elif 'high' in moduleName or 'imaginary' in moduleName:
                     if 'shared' in moduleName: rowInd = numSpecificLayers + (numSharedHigh % numSharedLayers); colInd = numSharedHigh // numSharedLayers; numSharedHigh += 1
                     elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecificLayers; colInd = numSpecificHigh // numSpecificLayers; numSpecificHigh += 1
                     else: raise ValueError("Module name must contain 'shared' or 'specific'")
@@ -168,10 +168,10 @@ class generalVisualizations(globalPlottingProtocols):
                 ax.set_xlim((0, numEpochs))
 
                 for modelInd in range(numModels):
-                    if "shared" in moduleName and modelInd != 0: continue
+                    if 'shared' in moduleName and modelInd != 0: continue
 
-                    if "specific" in moduleName: lineColor = self.darkColors[modelInd]
-                    elif "shared" in moduleName: lineColor = self.blackColor
+                    if 'specific' in moduleName: lineColor = self.darkColors[modelInd]
+                    elif 'shared' in moduleName: lineColor = self.blackColor
                     else: raise ValueError("Module name must contain 'specific' or 'shared'.")
 
                     # Plot the training losses.
@@ -222,8 +222,8 @@ class generalVisualizations(globalPlottingProtocols):
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
 
-                if "low" in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
-                elif "high" in moduleName:
+                if 'low' in moduleName or 'real' in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
+                elif 'high' in moduleName or 'imaginary' in moduleName:
                     if 'shared' in moduleName: rowInd = numSpecificLayers + (numSharedHigh % numSharedLayers); colInd = numSharedHigh // numSharedLayers; numSharedHigh += 1
                     elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecificLayers; colInd = numSpecificHigh // numSpecificLayers; numSpecificHigh += 1
                     else: raise ValueError("Module name must contain 'shared' or 'specific'")
@@ -238,7 +238,7 @@ class generalVisualizations(globalPlottingProtocols):
                 ax.set_title(moduleName, fontsize=16)
 
                 for modelInd in range(numModels):
-                    if "shared" in moduleName and modelInd != 0: continue
+                    if 'shared' in moduleName and modelInd != 0: continue
                     maxFreeParams = maxFreeParamsPath[modelInd][layerInd]
                     sequenceLength = int((1 + (1 + 8 * maxFreeParams) ** 0.5) // 2)
                     if sequenceLength == 1: sequenceLength = 0
@@ -308,8 +308,8 @@ class generalVisualizations(globalPlottingProtocols):
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
 
-                if "low" in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
-                elif "high" in moduleName:
+                if 'low' in moduleName or 'real' in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
+                elif 'high' in moduleName or 'imaginary' in moduleName:
                     if 'shared' in moduleName: rowInd = numSpecificLayers + (numSharedHigh % numSharedLayers); colInd = numSharedHigh // numSharedLayers; numSharedHigh += 1
                     elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecificLayers; colInd = numSpecificHigh // numSpecificLayers; numSpecificHigh += 1
                     else: raise ValueError("Module name must contain 'shared' or 'specific'")
@@ -323,7 +323,7 @@ class generalVisualizations(globalPlottingProtocols):
                 ax.set_ylim((0.925, 1.075))
 
                 for modelInd in range(numModels):
-                    if "shared" in moduleName and modelInd != 0: continue
+                    if 'shared' in moduleName and modelInd != 0: continue
 
                     plottingParams = []
                     for epochInd in range(numEpochs):
@@ -383,8 +383,8 @@ class generalVisualizations(globalPlottingProtocols):
             for layerInd in range(numModuleLayers):
                 moduleName = moduleNames[0][layerInd].lower()
 
-                if "low" in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
-                elif "high" in moduleName:
+                if 'low' in moduleName or 'real' in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
+                elif 'high' in moduleName or 'imaginary' in moduleName:
                     if 'shared' in moduleName: rowInd = numSpecificLayers + (numSharedHigh % numSharedLayers); colInd = numSharedHigh // numSharedLayers; numSharedHigh += 1
                     elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecificLayers; colInd = numSpecificHigh // numSpecificLayers; numSpecificHigh += 1
                     else: raise ValueError("Module name must contain 'shared' or 'specific'")
@@ -398,9 +398,9 @@ class generalVisualizations(globalPlottingProtocols):
                 ax.set_xlim((0, numEpochs))
 
                 for modelInd in range(numModels):
-                    if "shared" in moduleName and modelInd != 0: continue
-                    if "specific" in moduleName: lineColor = self.darkColors[modelInd]
-                    elif "shared" in moduleName: lineColor = self.blackColor
+                    if 'shared' in moduleName and modelInd != 0: continue
+                    if 'specific' in moduleName: lineColor = self.darkColors[modelInd]
+                    elif 'shared' in moduleName: lineColor = self.blackColor
                     else: raise ValueError("Module name must contain 'specific' or 'shared'.")
 
                     plottingParams = np.zeros((numEpochs, len(givensAnglesFeaturesPaths[modelInd][0][layerInd][paramInd])))

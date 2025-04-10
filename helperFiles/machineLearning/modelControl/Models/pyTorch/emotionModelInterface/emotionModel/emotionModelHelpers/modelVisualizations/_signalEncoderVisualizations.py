@@ -210,8 +210,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             moduleName = reversibleModuleNames[layerInd].lower()
             specificFlag = 'specific' in moduleName
 
-            if "low" in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
-            elif "high" in moduleName:
+            if 'low' in moduleName or 'real' in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
+            elif 'high' in moduleName or 'imaginary' in moduleName:
                 if 'shared' in moduleName: rowInd = numSpecificLayers + (numSharedHigh % numSharedLayers); colInd = numSharedHigh // numSharedLayers; numSharedHigh += 1
                 elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecificLayers; colInd = numSpecificHigh // numSpecificLayers; numSpecificHigh += 1
                 else: raise ValueError("Module name must contain 'shared' or 'specific'")
@@ -224,8 +224,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.set_xlim((-0.05, 1.05))
 
             # Get the plot colors.
-            if "specific" in moduleName: lineColor = self.lightColors[0]; alpha = 0.75; centerColor = self.darkColors[0]
-            elif "shared" in moduleName: lineColor = self.lightColors[1]; alpha = 0.33; centerColor = self.darkColors[1]
+            if 'specific' in moduleName: lineColor = self.lightColors[0]; alpha = 0.75; centerColor = self.darkColors[0]
+            elif 'shared' in moduleName: lineColor = self.lightColors[1]; alpha = 0.33; centerColor = self.darkColors[1]
             else: raise ValueError("Module name must contain 'specific' or 'shared'.")
 
             # Draw unit circle for reference
@@ -292,8 +292,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             moduleName = reversibleModuleNames[layerInd].lower()
             specificFlag = 'specific' in moduleName
 
-            if "low" in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
-            elif "high" in moduleName:
+            if 'low' in moduleName or 'real' in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
+            elif 'high' in moduleName or 'imaginary' in moduleName:
                 if 'shared' in moduleName: rowInd = numSpecificLayers + (numSharedHigh % numSharedLayers); colInd = numSharedHigh // numSharedLayers; numSharedHigh += 1
                 elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecificLayers; colInd = numSpecificHigh // numSpecificLayers; numSpecificHigh += 1
                 else: raise ValueError("Module name must contain 'shared' or 'specific'")
@@ -375,8 +375,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             moduleName = reversibleModuleNames[layerInd].lower()
             specificFlag = 'specific' in moduleName
 
-            if "low" in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
-            elif "high" in moduleName:
+            if 'low' in moduleName or 'real' in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
+            elif 'high' in moduleName or 'imaginary' in moduleName:
                 if 'shared' in moduleName: rowInd = numSpecificLayers + (numSharedHigh % numSharedLayers); colInd = numSharedHigh // numSharedLayers; numSharedHigh += 1
                 elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecificLayers; colInd = numSpecificHigh // numSpecificLayers; numSpecificHigh += 1
                 else: raise ValueError("Module name must contain 'shared' or 'specific'")
@@ -449,8 +449,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             moduleName = reversibleModuleNames[layerInd].lower()
             specificFlag = 'specific' in moduleName
 
-            if "low" in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
-            elif "high" in moduleName:
+            if 'low' in moduleName or 'real' in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
+            elif 'high' in moduleName or 'imaginary' in moduleName:
                 if 'shared' in moduleName: rowInd = numSpecificLayers + (numSharedHigh % numSharedLayers); colInd = numSharedHigh // numSharedLayers; numSharedHigh += 1
                 elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecificLayers; colInd = numSpecificHigh // numSpecificLayers; numSpecificHigh += 1
                 else: raise ValueError("Module name must contain 'shared' or 'specific'")
@@ -513,8 +513,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         xTickLabelShared.append(f"Approximate decomposition layer {numSharedScalarSections - 1}")
 
         for layerInd in range(numModuleLayers):
-            if "shared" in reversibleModuleNames[layerInd].lower(): sharedValues.append(normalizationFactorsPath[layerInd].flatten())
-            elif "specific" in reversibleModuleNames[layerInd].lower(): specificValues.append(normalizationFactorsPath[layerInd].flatten())
+            if 'shared' in reversibleModuleNames[layerInd].lower(): sharedValues.append(normalizationFactorsPath[layerInd].flatten())
+            elif 'specific' in reversibleModuleNames[layerInd].lower(): specificValues.append(normalizationFactorsPath[layerInd].flatten())
             else: raise ValueError("Module name must contain 'specific' or 'shared'.")
         sharedValues = np.asarray(sharedValues); specificValues = np.asarray(specificValues)
         # sharedValues: numSharedLayers=numSections*y, numSignals=1; specificValues: numSpecificLayers=numSections*x, numSignals=numSignals
@@ -549,8 +549,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # normalizationFactorsPath: numModuleLayers, numSignals, numParams=1
         sharedValues, specificValues = [], []
         for layerInd in range(len(normalizationFactorsPath)):
-            if "shared" in reversibleModuleNames[layerInd].lower(): sharedValues.extend(normalizationFactorsPath[layerInd].flatten())
-            elif "specific" in reversibleModuleNames[layerInd].lower(): specificValues.extend(normalizationFactorsPath[layerInd].flatten())
+            if 'shared' in reversibleModuleNames[layerInd].lower(): sharedValues.extend(normalizationFactorsPath[layerInd].flatten())
+            elif 'specific' in reversibleModuleNames[layerInd].lower(): specificValues.extend(normalizationFactorsPath[layerInd].flatten())
             else: raise ValueError("Module name must contain 'specific' or 'shared'.")
 
         fig, ax = plt.subplots(figsize=(6.4, 4.8))
@@ -627,12 +627,12 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             x, y = activationCurves[activationInd]
             activationName = moduleNames[activationInd].lower()
 
-            if "specific" in activationName: axInd = 0; numSpecificActivations += 1; totalActivations = numSpecificActivations
-            elif "shared" in activationName: axInd = 2; numSharedActivations += 1; totalActivations = numSharedActivations
+            if 'specific' in activationName: axInd = 0; numSpecificActivations += 1; totalActivations = numSpecificActivations
+            elif 'shared' in activationName: axInd = 2; numSharedActivations += 1; totalActivations = numSharedActivations
             else: raise ValueError(f"Unknown activation module: {activationName}")
 
-            if 'low' in activationName: axInd += 0
-            elif 'high' in activationName: axInd += 1
+            if 'low' in activationName or 'real' in activationName: axInd += 0
+            elif 'high' in activationName or 'imaginary' in activationName: axInd += 1
             else: raise ValueError(f"Unknown activation module: {activationName}")
 
             ax = axes[axInd]
@@ -672,8 +672,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             specificFlag = 'specific' in moduleName
             x, y = activationCurves[layerInd]
 
-            if "low" in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
-            elif "high" in moduleName:
+            if 'low' in moduleName or 'real' in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
+            elif 'high' in moduleName or 'imaginary' in moduleName:
                 if 'shared' in moduleName: rowInd = numSpecificLayers + (numSharedHigh % numSharedLayers); colInd = numSharedHigh // numSharedLayers; numSharedHigh += 1
                 elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecificLayers; colInd = numSpecificHigh // numSpecificLayers; numSpecificHigh += 1
                 else: raise ValueError("Module name must contain 'shared' or 'specific'")
