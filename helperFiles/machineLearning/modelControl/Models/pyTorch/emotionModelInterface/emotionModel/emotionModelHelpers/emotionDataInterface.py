@@ -105,6 +105,8 @@ class emotionDataInterface:
             classProfiles.append(weightActivityProfile[:, classInd * classDimension:(classInd + 1) * classDimension].sum(dim=-1))
         predictedActivityClasses = torch.stack(classProfiles, dim=1)
 
+        # Normalize the class predictions.
+        predictedActivityClasses = predictedActivityClasses / predictedActivityClasses.sum(dim=-1, keepdim=True)
         return predictedActivityClasses
 
     @staticmethod
@@ -125,6 +127,9 @@ class emotionDataInterface:
             for classInd in range(numEmotionClasses):
                 classPredictions.append(weightedProfile[:, classInd * classDimension:(classInd + 1) * classDimension].sum(dim=-1))
             emotionClassPredictions = torch.stack(classPredictions, dim=1)  # Shape: (batchSize, numEmotionClasses)
+
+            # Normalize the class predictions.
+            emotionClassPredictions = emotionClassPredictions / emotionClassPredictions.sum(dim=-1, keepdim=True)
             allEmotionClassPredictions.append(emotionClassPredictions)
 
         return allEmotionClassPredictions
