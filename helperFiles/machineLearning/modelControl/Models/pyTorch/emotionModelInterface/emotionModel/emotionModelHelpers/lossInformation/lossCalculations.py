@@ -29,9 +29,9 @@ class lossCalculations:
         self.activityCrossEntropyLoss, self.emotionCrossEntropyLoss = None, None  # The cross-entropy loss functions for the activity and emotion labels.
 
     def setEmotionActivityLossFunctions(self, activityClassWeights, emotionClassWeights):
-        self.activityCrossEntropyLoss = torch.nn.CrossEntropyLoss(weight=activityClassWeights, reduction='none', label_smoothing=0.1)
+        self.activityCrossEntropyLoss = torch.nn.CrossEntropyLoss(weight=None, reduction='none', label_smoothing=0)
         self.emotionCrossEntropyLoss = [
-            torch.nn.CrossEntropyLoss(weight=emotionClassWeight, reduction='none', label_smoothing=0.2) for emotionClassWeight in emotionClassWeights
+            torch.nn.CrossEntropyLoss(weight=None, reduction='none', label_smoothing=0) for emotionClassWeight in emotionClassWeights
         ]
 
     # -------------------------- Signal Encoder Loss Calculations ------------------------- #
