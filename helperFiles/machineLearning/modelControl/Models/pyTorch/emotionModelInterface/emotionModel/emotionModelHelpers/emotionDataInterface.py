@@ -99,6 +99,7 @@ class emotionDataInterface:
         # Set up the predicted activity classes.
         gaussianWeightProfile = emotionDataInterface.getFullGaussianProfile(encodedDimension, device=device, numClasses=numActivities)
         weightActivityProfile = (predictedActivityProfile - predictedActivityProfile.min(dim=-1, keepdim=True).values) * gaussianWeightProfile  # Normalize the profile.
+        weightActivityProfile = predictedActivityProfile * gaussianWeightProfile  # Normalize the profile.
 
         classProfiles = []
         for classInd in range(numActivities):
@@ -120,6 +121,7 @@ class emotionDataInterface:
             gaussianWeightProfile = emotionDataInterface.getFullGaussianProfile(encodedDimension, device=device, numClasses=numEmotionClasses)
             weightedProfile = (emotionProfile - emotionProfile.min(dim=-1, keepdim=True).values)*gaussianWeightProfile  # Normalize the profile.
             classDimension = encodedDimension // numEmotionClasses
+            weightedProfile = emotionProfile * gaussianWeightProfile  # Normalize the profile.
 
             classPredictions = []
             for classInd in range(numEmotionClasses):
