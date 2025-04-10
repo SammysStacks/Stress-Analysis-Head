@@ -29,9 +29,9 @@ class neuralOperatorInterface(emotionModelWeights):
 
         # Hardcoded parameters.
         minWaveletDim = neuralOperatorParameters['wavelet']['minWaveletDim']
-        activationMethod = 'none' if reversibleFlag else emotionModelWeights.getIrreversibleActivation()  # The activation method to use.
-        skipConnectionProtocol = 'none' if reversibleFlag else 'CNN'  # The protocol for the skip connections.
-        learningProtocol = 'reversibleLieLayer' if reversibleFlag else 'FC'  # The protocol for learning the wavelet data.
+        learningProtocol = 'reversibleLieLayer'
+        skipConnectionProtocol = 'none'
+        activationMethod = 'none'
         mode = 'periodization'  # Mode: 'zero' (lossy), 'symmetric' (lossy), 'reflect' (lossy), or 'periodization' (lossless).
 
         return waveletNeuralOperatorLayer(sequenceLength=sequenceLength, numInputSignals=self.numInputSignals, numOutputSignals=self.numOutputSignals, numLayers=self.numLayers, minWaveletDim=minWaveletDim,
@@ -44,9 +44,9 @@ class neuralOperatorInterface(emotionModelWeights):
         encodeRealFrequencies = neuralOperatorParameters.get('encodeRealFrequencies', True)
 
         # Hardcoded parameters.
-        activationMethod = 'none' if reversibleFlag else emotionModelWeights.getIrreversibleActivation()  # The activation method to use.
-        skipConnectionProtocol = 'none' if reversibleFlag else 'CNN'  # The protocol for the skip connections.
-        learningProtocol = 'reversibleLieLayer' if reversibleFlag else 'FC'  # The protocol for learning the wavelet data.
+        learningProtocol = 'reversibleLieLayer'
+        skipConnectionProtocol = 'none'
+        activationMethod = 'none'
 
         return fourierNeuralOperatorLayer(sequenceLength=sequenceLength, numInputSignals=self.numInputSignals, numOutputSignals=self.numOutputSignals, addBiasTerm=self.addBiasTerm, activationMethod=activationMethod,
                                           skipConnectionProtocol=skipConnectionProtocol, encodeRealFrequencies=encodeRealFrequencies, encodeImaginaryFrequencies=encodeImaginaryFrequencies, learningProtocol=learningProtocol)

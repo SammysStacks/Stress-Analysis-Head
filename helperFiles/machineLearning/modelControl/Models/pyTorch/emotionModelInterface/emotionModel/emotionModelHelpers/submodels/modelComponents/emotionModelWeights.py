@@ -103,4 +103,4 @@ class emotionModelWeights(convolutionalHelpers):
     def getReversibleActivation(): return 'reversibleLinearSoftSign'  # reversibleLinearSoftSign
 
     @staticmethod
-    def getIrreversibleActivation(): return 'boundedExp'
+    def getIrreversibleActivation(): return 'none'

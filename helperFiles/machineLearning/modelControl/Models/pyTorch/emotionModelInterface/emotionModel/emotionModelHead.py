@@ -78,7 +78,6 @@ class emotionModelHead(nn.Module):
                 neuralOperatorParameters=self.neuralOperatorParameters,
                 encodedDimension=self.encodedDimension,
                 activityNames=self.activityNames,
-                operatorType=self.operatorType,
                 numLayers=1,
             )
 
@@ -86,7 +85,6 @@ class emotionModelHead(nn.Module):
                 neuralOperatorParameters=self.neuralOperatorParameters,
                 encodedDimension=self.encodedDimension,
                 numLayers=self.numActivityModelLayers,
-                operatorType=self.operatorType,
             )
 
             self.specificEmotionModel = specificEmotionModel(
@@ -94,7 +92,6 @@ class emotionModelHead(nn.Module):
                 encodedDimension=self.encodedDimension,
                 numBasicEmotions=self.numBasicEmotions,
                 emotionNames=self.emotionNames,
-                operatorType=self.operatorType,
                 numSubjects=self.numSubjects,
                 numLayers=1,
             )
@@ -104,7 +101,6 @@ class emotionModelHead(nn.Module):
                 encodedDimension=self.encodedDimension,
                 numBasicEmotions=self.numBasicEmotions,
                 numLayers=self.numEmotionModelLayers,
-                operatorType=self.operatorType,
             )
 
     # ------------------------- Model Getters ------------------------- #

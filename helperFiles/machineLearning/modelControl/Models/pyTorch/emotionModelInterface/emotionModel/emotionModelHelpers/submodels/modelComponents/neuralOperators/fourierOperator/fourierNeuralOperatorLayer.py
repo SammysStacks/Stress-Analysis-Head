@@ -20,10 +20,6 @@ class fourierNeuralOperatorLayer(fourierNeuralOperatorWeights):
 
         return neuralOperatorData
 
-    def reversibleInterface(self, neuralOperatorData):
-        assert self.skipConnectionModel is None, "The skip connection model must be None for the reversible interface."
-        return self.forward(neuralOperatorData, realFrequencyTerms=None, imaginaryFrequencyTerms=None)
-
     def fourierNeuralOperator(self, inputData, realFrequencyTerms=None, imaginaryFrequencyTerms=None):
         # Extract the input data parameters.
         batchSize, numInputSignals, sequenceLength = inputData.size()
