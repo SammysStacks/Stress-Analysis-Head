@@ -179,6 +179,6 @@ class organizeTrainingLosses(lossCalculations):
         # Convert to class weights.
         class_weights = 1 / classCounts
         class_weights[torch.isnan(class_weights)] = 0
-        class_weights = class_weights / class_weights.sum()  # TODO: Mean or sum is for cross entropy weights.
+        class_weights = class_weights / class_weights.sum()
 
         return class_weights
