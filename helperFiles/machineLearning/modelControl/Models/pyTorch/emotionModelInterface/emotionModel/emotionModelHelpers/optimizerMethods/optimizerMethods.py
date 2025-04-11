@@ -8,7 +8,7 @@ class optimizerMethods:
 
     def addOptimizer(self, submodel, model):
         angularWD, angularLR = modelConstants.userInputParams['reversibleLR']/10, modelConstants.userInputParams['reversibleLR']
-        if submodel == modelConstants.emotionModel: angularWD, angularLR = angularWD*5, angularLR*5
+        if submodel == modelConstants.emotionModel: angularWD, angularLR = angularWD/100, angularLR/10
 
         # Get the model parameters.
         modelParams = [
