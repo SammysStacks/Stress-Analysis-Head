@@ -31,7 +31,7 @@ class lossCalculations:
     def setEmotionActivityLossFunctions(self, activityClassWeights, emotionClassWeights):
         self.activityCrossEntropyLoss = torch.nn.CrossEntropyLoss(weight=activityClassWeights, reduction='none', label_smoothing=0)
         self.emotionCrossEntropyLoss = [
-            torch.nn.CrossEntropyLoss(weight=emotionClassWeight, reduction='none', label_smoothing=0.1) for emotionClassWeight in emotionClassWeights
+            torch.nn.CrossEntropyLoss(weight=emotionClassWeight, reduction='mean', label_smoothing=0.1) for emotionClassWeight in emotionClassWeights
         ]
 
     # -------------------------- Signal Encoder Loss Calculations ------------------------- #
@@ -119,6 +119,6 @@ class lossCalculations:
 
             # Calculate the emotion classification accuracy.
             self.emotionCrossEntropyLoss[emotionInd] = self.emotionCrossEntropyLoss[emotionInd].to(device=device, dtype=predictedEmotionProfile.dtype)
-            emotionLosses[emotionInd] = self.emotionCrossEntropyLoss[emotionInd](emotionClassPredictions[emotionMask], trueEmotionLabels.long()).nanmean()
+            emotionLosses[emotionInd] = self.emotionCrossEntropyLoss[emotionInd](emotionClassPredictions[emotionMask], trueEmotionLabels.long())
 
         return emotionLosses
