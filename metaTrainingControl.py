@@ -124,7 +124,7 @@ if __name__ == "__main__":
     allModels.append(allMetaModels.pop(0))  # Do not metatrain with wesad data.
 
     if userInputParams['submodel'] == modelConstants.emotionModel:
-        modelConstants.userInputParams['minAngularThreshold'] = 2.5  # TODO
+        modelConstants.userInputParams['minAngularThreshold'] = 5  # TODO
         modelConstants.numWarmupEpochs = 10
 
     if submodel == modelConstants.signalEncoderModel or True:
