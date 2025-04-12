@@ -82,7 +82,7 @@ class emotionModelWeights(convolutionalHelpers):
     @staticmethod
     def getSubjectSpecificBasicEmotionWeights(numBasicEmotions, numSubjects):
         basicEmotionWeights = torch.randn(numSubjects, numBasicEmotions)
-        basicEmotionWeights = nn.init.uniform_(basicEmotionWeights, a=-0.001, b=0.001)
+        basicEmotionWeights = nn.init.uniform_(basicEmotionWeights, a=-0.001, b=0.001)  # TODO
 
         return nn.Parameter(basicEmotionWeights)
 
