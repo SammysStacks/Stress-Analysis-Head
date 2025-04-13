@@ -5,8 +5,8 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class specificActivityModel(neuralOperatorInterface):
 
-    def __init__(self, encodedDimension, activityNames, numLayers, neuralOperatorParameters):
-        super(specificActivityModel, self).__init__(operatorType='fourier', sequenceLength=encodedDimension, numLayers=numLayers, numInputSignals=1, numOutputSignals=1, addBiasTerm=False)
+    def __init__(self, operatorType, encodedDimension, activityNames, numLayers, neuralOperatorParameters):
+        super(specificActivityModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numLayers=numLayers, numInputSignals=1, numOutputSignals=1, addBiasTerm=False)
         # General model parameters.
         self.neuralOperatorParameters = copy.deepcopy(neuralOperatorParameters)  # The parameters for the neural operator.
         self.numActivities = len(activityNames)  # The number of activities.

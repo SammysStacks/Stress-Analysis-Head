@@ -44,7 +44,7 @@ class globalPlottingProtocols:
 
         nCols = 2
         # Determine the number of rows and columns for the figure based on the model parameters.
-        if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel: nCols = 1 + waveletNeuralHelpers.max_decompositions(sequenceLength=modelConstants.userInputParams['encodedDimension'], waveletType=modelConstants.userInputParams['neuralOperatorParameters']['wavelet']['waveletType'], minWaveletDim=modelConstants.userInputParams['minWaveletDim']).item()
+        if modelConstants.userInputParams['operatorType'] == 'wavelet': nCols = 1 + waveletNeuralHelpers.max_decompositions(sequenceLength=modelConstants.userInputParams['encodedDimension'], waveletType=modelConstants.userInputParams['neuralOperatorParameters']['wavelet']['waveletType'], minWaveletDim=modelConstants.userInputParams['minWaveletDim']).item()
         nRows = numSpecificLayers + (1 if combineSharedLayers else numSharedLayers)
 
         return nRows, nCols

@@ -67,7 +67,7 @@ class emotionDataInterface:
         for classInd in range(numClasses):
             # Add the Gaussian weights for the predicted class profile.
             gaussianWeight += emotionDataInterface.getGaussianWeights(encodedDimension, device, numClasses, classInd)
-        gaussianWeight = gaussianWeight / gaussianWeight.sum()  # Normalize the distribution. DO NOT MAKE .MAX()
+        gaussianWeight = gaussianWeight / gaussianWeight.sum()  # Normalize the distribution.
 
         return gaussianWeight
 
@@ -86,7 +86,7 @@ class emotionDataInterface:
         # Calculate the Gaussian function for each index.
         kernel = torch.exp(-(x ** 2) / (2 * std ** 2))
         # Normalize the kernel so that the sum of all values is 1.
-        kernel = kernel / kernel.sum()  # TODO: max, norm, or sum
+        kernel = kernel / kernel.sum()  # Max, norm, or sum
 
         return kernel
 
@@ -102,7 +102,7 @@ class emotionDataInterface:
         predictedActivityClasses = torch.stack(classProfiles, dim=-1)
 
         # Normalize the class predictions.
-        predictedActivityClasses = predictedActivityClasses / predictedActivityClasses.norm(dim=-1, keepdim=True)  # Shape: (batchSize, numActivities)  # TODO
+        # predictedActivityClasses = predictedActivityClasses / predictedActivityClasses.norm(dim=-1, keepdim=True)  # Shape: (batchSize, numActivities)  # TODO
 
         # Normalize the class predictions.
         return predictedActivityClasses
@@ -123,7 +123,7 @@ class emotionDataInterface:
             emotionClassPredictions = torch.stack(classPredictions, dim=-1)  # Shape: (batchSize, numEmotionClasses)
 
             # Normalize the class predictions.
-            emotionClassPredictions = emotionClassPredictions / emotionClassPredictions.norm(dim=-1, keepdim=True)  # Shape: (batchSize, numActivities)  # TODO
+            # emotionClassPredictions = emotionClassPredictions / emotionClassPredictions.norm(dim=-1, keepdim=True)  # Shape: (batchSize, numActivities)  # TODO
             # emotionClassPredictions contains negative AND positive values.
 
             # Normalize the class predictions.

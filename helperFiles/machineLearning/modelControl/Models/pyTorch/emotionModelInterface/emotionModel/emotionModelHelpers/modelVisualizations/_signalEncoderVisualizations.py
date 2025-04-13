@@ -537,7 +537,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
             # Customize plot title and axes
             ax.set_ylabel(f"{"Specific" if specificFlag else "Shared"} normalization factors")  # Y-axis: bin counts
-            ax.set_ylim((0.925, 1.075))
+            ax.set_ylim((0.95, 1.05))
 
             if numSharedLayers <= axInd: ax.remove(); continue
             # Get the angles for the current layer

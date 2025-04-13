@@ -7,8 +7,8 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class specificEmotionModel(neuralOperatorInterface):
 
-    def __init__(self, numSubjects, numBasicEmotions, encodedDimension, emotionNames, numLayers, neuralOperatorParameters):
-        super(specificEmotionModel, self).__init__(operatorType='fourier', sequenceLength=encodedDimension, numLayers=numLayers, numInputSignals=len(emotionNames), numOutputSignals=len(emotionNames), addBiasTerm=False)
+    def __init__(self, operatorType, numSubjects, numBasicEmotions, encodedDimension, emotionNames, numLayers, neuralOperatorParameters):
+        super(specificEmotionModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numLayers=numLayers, numInputSignals=len(emotionNames), numOutputSignals=len(emotionNames), addBiasTerm=False)
         # General model parameters.
         self.neuralOperatorParameters = copy.deepcopy(neuralOperatorParameters)  # The parameters for the neural operator.
         self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
@@ -23,7 +23,7 @@ class specificEmotionModel(neuralOperatorInterface):
 
         # The neural layers for the signal encoder.
         self.neuralLayers = self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters)
-        # self.basicEmotionWeights = self.getSubjectSpecificBasicEmotionWeights(numBasicEmotions=numBasicEmotions, numSubjects=numSubjects)  # numSubjects, numBasicEmotions  # TODO
+        self.basicEmotionWeights = self.getSubjectSpecificBasicEmotionWeights(numBasicEmotions=numBasicEmotions, numSubjects=numSubjects)  # numSubjects, numBasicEmotions  # TODO
         self.basicEmotionWeights = self.getSubjectSpecificBasicEmotionWeights(numBasicEmotions=numBasicEmotions, numSubjects=self.numEmotions)  # numEmotions, numBasicEmotions  # TODO
         self.sigmoid = nn.Sigmoid()
 
@@ -54,11 +54,9 @@ class specificEmotionModel(neuralOperatorInterface):
         # subjectInds: batchSize
 
         # Calculate the subject-specific weights.
-        # subjectSpecificWeights = self.sigmoid(self.basicEmotionWeights[subjectInds])  # batchSize, numBasicEmotions  # TODO
-        # subjectSpecificWeights = subjectSpecificWeights.unsqueeze(1).unsqueeze(3)  # batchSize, 1, numBasicEmotions, 1  # TODO
+        # subjectSpecificWeights = self.sigmoid(self.basicEmotionWeights[subjectInds]).unsqueeze(1).unsqueeze(3)  # TODO
+        subjectSpecificWeights = self.sigmoid(self.basicEmotionWeights.unsqueeze(0).unsqueeze(3))  # TODO
         # subjectSpecificWeights: batchSize, 1, numBasicEmotions, 1
-
-        subjectSpecificWeights = self.basicEmotionWeights.unsqueeze(0).unsqueeze(3)  # TODO
 
         # Calculate the emotion profile.
         emotionProfile = (basicEmotionProfile * subjectSpecificWeights).sum(dim=2) / subjectSpecificWeights.sum(dim=2)  # batchSize, numEmotions, encodedDimension
