@@ -74,8 +74,7 @@ class emotionModel(emotionModelHead):
             # basicEmotionProfile: batchSize, numEmotions, numBasicEmotions, encodedDimension
 
             # Reconstruct the emotion data.
-            subjectInds = emotionDataInterface.getMetaDataChannel(metadata, channelName=modelConstants.subjectIndexMD)  # Dim: batchSize
-            emotionProfile = self.specificEmotionModel.calculateEmotionProfile(basicEmotionProfile, subjectInds=subjectInds)
+            emotionProfile = self.specificEmotionModel.calculateEmotionProfile(basicEmotionProfile)
             # emotionProfile: batchSize, numEmotions, encodedDimension
 
         # --------------------------------------------------------------- #

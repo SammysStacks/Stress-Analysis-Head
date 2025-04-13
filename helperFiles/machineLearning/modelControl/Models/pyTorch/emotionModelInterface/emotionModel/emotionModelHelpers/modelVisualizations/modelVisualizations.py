@@ -55,13 +55,16 @@ class modelVisualizations(globalPlottingProtocols):
             if self.accelerator.is_local_main_process:
 
                 if submodel == modelConstants.signalEncoderModel:
+                    # Compile and plot the signal encoder model.
                     specificSignalEncoderModels = [modelPipeline.model.specificSignalEncoderModel for modelPipeline in allModelPipelines]  # Dim: numModels
                     self.generalPlotting(submodel, allModelPipelines, specificSignalEncoderModels, showMinimumPlots=showMinimumPlots, modelIdentifier="Signal encoder", submodelString="SignalEncoderModel")
                 elif submodel == modelConstants.emotionModel:
+                    # Compile and plot the activity model.
                     specificActivityModels = [modelPipeline.model.specificActivityModel for modelPipeline in allModelPipelines]  # Dim: numModels
-                    specificEmotionModels = [modelPipeline.model.specificEmotionModel for modelPipeline in allModelPipelines]  # Dim: numModels
-
                     self.generalPlotting(submodel, allModelPipelines, specificActivityModels, showMinimumPlots=showMinimumPlots, modelIdentifier="Activity", submodelString="ActivityModel")
+
+                    # Compile and plot the emotion model.
+                    specificEmotionModels = [modelPipeline.model.specificEmotionModel for modelPipeline in allModelPipelines]  # Dim: numModels
                     self.generalPlotting(submodel, allModelPipelines, specificEmotionModels, showMinimumPlots=showMinimumPlots, modelIdentifier="Emotion", submodelString="EmotionModel")
 
     def generalPlotting(self, submodel, allModelPipelines, specificModels, showMinimumPlots, modelIdentifier, submodelString):
@@ -81,10 +84,9 @@ class modelVisualizations(globalPlottingProtocols):
         freeParamInformation = np.asarray([modelPipeline.model.getFreeParamsFullPassPath(submodelString=submodelString)[1:] for modelPipeline in allModelPipelines])
         moduleNames, maxFreeParamsPath = freeParamInformation[:, 0], freeParamInformation[:, 1].astype(int)  # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
         numFreeModelParams = [specificModel.numFreeParams for specificModel in specificModels]  # numModels, loadSubmodelEpochs, numModuleLayers, numSignals, numParams=1
-        # self.generalViz.plotFreeParamFlow(numFreeModelParams, maxFreeParamsPath, paramNames=["Free params"], moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle=f"{modelIdentifier} free parameters path zoomed")
+        self.generalViz.plotFreeParamFlow(numFreeModelParams, maxFreeParamsPath, paramNames=["Free params"], moduleNames=moduleNames, saveFigureLocation="trainingLosses/", plotTitle=f"{modelIdentifier} free parameters path zoomed")
         for modelInd in range(len(numFreeModelParams)): print('numFreeModelParams:', numFreeModelParams[modelInd][-1][0].mean(), numFreeModelParams[modelInd][-1][1].mean())
         if showMinimumPlots: return None
-        return None
 
         # Plot the activation parameters for the signal encoder.
         paramNames = ["Infinite Bound", "Linearity Factor", "Convergent Point"]
@@ -145,8 +147,7 @@ class modelVisualizations(globalPlottingProtocols):
                 if submodel == modelConstants.signalEncoderModel:
                     # Perform the backward pass through the model to get the reconstructed health profile.
                     reconstructedHealthProfile = model.reconstructHealthProfile(resampledSignalData).detach().cpu().numpy()  # reconstructedHealthProfile: batchSize, encodedDimension
-                    forwardModelPassSignals = model.specificSignalEncoderModel.profileModel.compiledLayerStates
-                    # forwardModelPassSignals: numModuleLayers, batchSize, numSignals, encodedDimension
+                    forwardModelPassSignals = model.specificSignalEncoderModel.profileModel.compiledLayerStates  # numModuleLayers, batchSize, numSignals, encodedDimension
                     resampledSignalData = resampledSignalData.detach().cpu().numpy()  # resampledSignalData: batchSize, encodedDimension
 
                     # Extract the model's internal variables.
@@ -229,7 +230,7 @@ class modelVisualizations(globalPlottingProtocols):
                 # Plot the activity profile.
                 self.emotionModelViz.plotDistributions(activityProfile[:, None, :], distributionNames=['Activity'], epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="activityModel/", plotTitle="Activity profile")
                 self.emotionModelViz.plotPredictedMatrix(trueActivityTrainingClasses, trueActivityTestingClasses, predictedActivityTrainingClasses, predictedActivityTestingClasses, numClasses=model.numActivities, epoch=currentEpoch, saveFigureLocation="activityModel/", plotTitle="Activity confusion matrix")
-                # if currentEpoch % 10 == 0: self.signalEncoderViz.plotsGivensAnglesHeatmap(activityGivensAnglesPath, reversibleModuleNames, signalInd=signalInd, epoch=currentEpoch, degreesFlag=False, saveFigureLocation="activityModel/", plotTitle="Rotation weight matrix (S)")
+                if currentEpoch % 10 == 0: self.signalEncoderViz.plotsGivensAnglesHeatmap(activityGivensAnglesPath, reversibleModuleNames, signalInd=signalInd, epoch=currentEpoch, degreesFlag=False, saveFigureLocation="activityModel/", plotTitle="Rotation weight matrix (S)")
 
                 # ------------------ Emotion Prediction Plots ------------------ #
                 # basicEmotionProfile: batchSize, numEmotions, numBasicEmotions, encodedDimension
