@@ -61,9 +61,10 @@ class trainingProtocolHelpers:
         for modelInd in range(len(allMetaModels) + len(allModels)):
             dataLoader = allMetadataLoaders[modelInd] if modelInd < len(allMetadataLoaders) else allDataLoaders[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
             modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
-            # if modelPipeline.datasetName.lower() == 'empatch' and epoch <= modelConstants.numWarmupEpochs: continue
-            # elif modelPipeline.datasetName.lower() == 'wesad' and epoch <= modelConstants.numWarmupEpochs: continue
-            numEpochs = 1
+            if submodel == modelConstants.signalEncoderModel:
+                if modelPipeline.datasetName.lower() == 'empatch': numEpochs = 4
+                elif modelPipeline.datasetName.lower() == 'wesad': numEpochs = 4
+            else: numEpochs = 1
 
             # Train the updated model.
             if not onlyProfileTraining: modelPipeline.trainModel(dataLoader, submodel, profileTraining=False, specificTraining=True, trainSharedLayers=False, stepScheduler=submodel == modelConstants.emotionModel, numEpochs=numEpochs)  # Signal-specific training.

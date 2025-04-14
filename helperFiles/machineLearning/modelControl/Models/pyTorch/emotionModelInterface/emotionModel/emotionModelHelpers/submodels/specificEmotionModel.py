@@ -8,7 +8,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 class specificEmotionModel(neuralOperatorInterface):
 
     def __init__(self, operatorType, numSubjects, numBasicEmotions, encodedDimension, emotionNames, numLayers, neuralOperatorParameters):
-        super(specificEmotionModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numLayers=numLayers, numInputSignals=len(emotionNames), numOutputSignals=len(emotionNames), addBiasTerm=False)
+        super(specificEmotionModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numLayers=numLayers, numInputSignals=len(emotionNames)*numBasicEmotions, numOutputSignals=len(emotionNames)*numBasicEmotions, addBiasTerm=False)
         # General model parameters.
         self.neuralOperatorParameters = copy.deepcopy(neuralOperatorParameters)  # The parameters for the neural operator.
         self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
@@ -23,8 +23,8 @@ class specificEmotionModel(neuralOperatorInterface):
 
         # The neural layers for the signal encoder.
         self.neuralLayers = self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters)
-        self.basicEmotionWeights = self.getSubjectSpecificBasicEmotionWeights(numEmotions=self.numEmotions, numBasicEmotions=numBasicEmotions)  # numEmotions, numBasicEmotions
-        self.basicEmotionWeights = self.basicEmotionWeights.view(1, self.numEmotions, self.numBasicEmotions, 1)  # 1, numEmotions, numBasicEmotions, 1
+        self.basicEmotionWeights = self.getEmotionSpecificBasicEmotionWeights(numEmotions=self.numEmotions, numBasicEmotions=numBasicEmotions) # 1, numEmotions, numBasicEmotions, 1
+        # self.subjectSpecificWeights = self.getSubjectSpecificBasicEmotionWeights(numSubjects=numSubjects, numBasicEmotions=self.numBasicEmotions)  # numSubjects, 1, numBasicEmotions, 1
         self.sigmoid = nn.Sigmoid()
 
         # Initialize loss holders.
@@ -48,12 +48,17 @@ class specificEmotionModel(neuralOperatorInterface):
         # Apply the neural operator layer with activation.
         return self.neuralLayers(signalData).contiguous()
 
-    def calculateEmotionProfile(self, basicEmotionProfile):
+    def calculateEmotionProfile(self, basicEmotionProfile, subjectInds):
         # basicEmotionProfile: batchSize, numEmotions, numBasicEmotions, encodedDimension
 
         # Calculate the emotion profile.
-        basicEmotionWeights = self.sigmoid(self.basicEmotionWeights)
+        basicEmotionWeights = self.sigmoid(self.basicEmotionWeights)  # 1, numEmotions, numBasicEmotions, 1
         emotionProfile = (basicEmotionProfile * basicEmotionWeights).sum(dim=2) / basicEmotionWeights.sum(dim=2)  # batchSize, numEmotions, encodedDimension
+        # emotionProfile: batchSize, numEmotions, encodedDimension
+
+        # Calculate the emotion profile.
+        # subjectSpecificWeights = self.sigmoid(self.subjectSpecificWeights[subjectInds])  # batchSize, 1, numBasicEmotions, 1
+        # emotionProfile = (basicEmotionProfile * subjectSpecificWeights).sum(dim=2) / subjectSpecificWeights.sum(dim=2)  # batchSize, numEmotions, encodedDimension
         # emotionProfile: batchSize, numEmotions, encodedDimension
 
         return emotionProfile

@@ -74,7 +74,8 @@ class emotionModel(emotionModelHead):
             # basicEmotionProfile: batchSize, numEmotions, numBasicEmotions, encodedDimension
 
             # Reconstruct the emotion data.
-            emotionProfile = self.specificEmotionModel.calculateEmotionProfile(basicEmotionProfile)
+            subjectInds = emotionDataInterface.getMetaDataChannel(metadata, channelName=modelConstants.subjectIndexMD)  # Dim: batchSize
+            emotionProfile = self.specificEmotionModel.calculateEmotionProfile(basicEmotionProfile, subjectInds)
             # emotionProfile: batchSize, numEmotions, encodedDimension
 
         # --------------------------------------------------------------- #
@@ -145,17 +146,23 @@ class emotionModel(emotionModelHead):
 
     def basicEmotionProfiling(self, healthProfile):
         reversibleInterface.changeDirections(forwardDirection=False)
+        batchSize, encodedDimension = healthProfile.size()
+
+        # Create a basic emotion profile.
+        basicEmotionProfile = healthProfile.unsqueeze(1).unsqueeze(1)
+        basicEmotionProfile = basicEmotionProfile.repeat(repeats=(1, self.numEmotions, self.numBasicEmotions, 1))
+        # basicEmotionProfile: batchSize, numEmotions, numBasicEmotions, encodedDimension
 
         # Apply a specific emotion layer to the data.
-        emotionProfile = healthProfile.unsqueeze(1).repeat(repeats=(1, self.numEmotions, 1))
-        emotionProfile = self.specificEmotionModel.learningInterface(signalData=emotionProfile)
-        # emotionProfile: batchSize, numEmotions, encodedDimension
+        basicEmotionProfile = basicEmotionProfile.view(batchSize, self.numEmotions*self.numBasicEmotions, self.encodedDimension)
+        basicEmotionProfile = self.specificEmotionModel.learningInterface(signalData=basicEmotionProfile)
+        basicEmotionProfile = basicEmotionProfile.view(batchSize, self.numEmotions, self.numBasicEmotions, self.encodedDimension)
+        # basicEmotionProfile: batchSize, numEmotions, numBasicEmotions, encodedDimension
 
         # Learn the basic emotion profile.
-        basicEmotionProfile = emotionProfile.unsqueeze(2).repeat(repeats=(1, 1, self.numBasicEmotions, 1))
-        basicEmotionProfile = basicEmotionProfile.view(-1, self.numBasicEmotions, self.encodedDimension)
+        basicEmotionProfile = basicEmotionProfile.view(batchSize*self.numEmotions, self.numBasicEmotions, self.encodedDimension)
         basicEmotionProfile = self.sharedEmotionModel.learningInterface(signalData=basicEmotionProfile)
-        basicEmotionProfile = basicEmotionProfile.view(-1, self.numEmotions, self.numBasicEmotions, self.encodedDimension)
+        basicEmotionProfile = basicEmotionProfile.view(batchSize, self.numEmotions, self.numBasicEmotions, self.encodedDimension)
         # basicEmotionProfile: batchSize, numEmotions, numBasicEmotions, encodedDimension
 
         return basicEmotionProfile

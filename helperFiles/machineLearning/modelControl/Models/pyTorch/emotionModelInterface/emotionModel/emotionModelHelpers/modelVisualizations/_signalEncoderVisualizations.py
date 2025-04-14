@@ -41,7 +41,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     # --------------------- Visualize Model Parameters --------------------- #
 
-    def plotProfilePath(self, relativeTimes, retrainingProfilePath, batchInd, signalNames, epoch, saveFigureLocation="signalEncoding/", plotTitle="Health Profile State Path"):
+    def plotProfilePath(self, relativeTimes, retrainingProfilePath, batchInd, signalNames, epoch, saveFigureLocation="SignalEncoderModel/", plotTitle="Health Profile State Path"):
         # retrainingProfilePath: (numProfileShots or numModuleLayers, numExperiments, numSignals, encodedDimension)
         # Extract the signal dimensions.
         numProfileSteps, numSignals = len(retrainingProfilePath), len(retrainingProfilePath[0][0])
@@ -440,7 +440,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         colorbarAxes = []
 
         # Get the angular thresholds.
-        prefix = "numSharedEncoder" if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else ("numActivityModel" if "activity" in saveFigureLocation.lower() else "numEmotionModel")
+        prefix = "numSharedEncoder" if 'encoder' in saveFigureLocation.lower() else ("numActivityModel" if "activity" in saveFigureLocation.lower() else "numEmotionModel")
         numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers'] if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 1
         numSharedLayers = modelConstants.userInputParams[f'{prefix}Layers']
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
@@ -498,7 +498,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         sharedValues, specificValues = [], []
 
         # Get the layer information.
-        prefix = "numSharedEncoder" if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else ("numActivityModel" if "activity" in saveFigureLocation.lower() else "numEmotionModel")
+        prefix = "numSharedEncoder" if 'encoder' in saveFigureLocation.lower() else ("numActivityModel" if "activity" in saveFigureLocation.lower() else "numEmotionModel")
         numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers'] if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 1
         numSharedLayers = modelConstants.userInputParams[f'{prefix}Layers']
 

@@ -98,7 +98,7 @@ class emotionDataInterface:
         classProfiles = []
         for classInd in range(numActivities):
             gaussianWeightProfile = emotionDataInterface.getGaussianWeights(encodedDimension, device=device, numClasses=numActivities, classInd=classInd)
-            classProfiles.append((predictedActivityProfile * gaussianWeightProfile).sum(dim=-1))
+            classProfiles.append((predictedActivityProfile * gaussianWeightProfile).sum(dim=-1) / gaussianWeightProfile.sum())
         predictedActivityClasses = torch.stack(classProfiles, dim=-1)
 
         # Normalize the class predictions.
@@ -119,7 +119,7 @@ class emotionDataInterface:
             classPredictions = []
             for classInd in range(numEmotionClasses):
                 gaussianWeightProfile = emotionDataInterface.getGaussianWeights(encodedDimension, device=device, numClasses=numEmotionClasses, classInd=classInd)
-                classPredictions.append((emotionProfile * gaussianWeightProfile).sum(dim=-1))
+                classPredictions.append((emotionProfile * gaussianWeightProfile).sum(dim=-1) / gaussianWeightProfile.sum())
             emotionClassPredictions = torch.stack(classPredictions, dim=-1)  # Shape: (batchSize, numEmotionClasses)
 
             # Normalize the class predictions.

@@ -80,9 +80,14 @@ class emotionModelWeights(convolutionalHelpers):
         return emotionModelWeights.linearModel(numOutputFeatures=sequenceLength, activationMethod="boundedExp", addBias=False)
 
     @staticmethod
-    def getSubjectSpecificBasicEmotionWeights(numEmotions, numBasicEmotions):
-        basicEmotionWeights = torch.zeros(numEmotions, numBasicEmotions)
+    def getEmotionSpecificBasicEmotionWeights(numEmotions, numBasicEmotions):
+        basicEmotionWeights = torch.zeros(1, numEmotions, numBasicEmotions, 1)
         return nn.Parameter(basicEmotionWeights)
+
+    @staticmethod
+    def getSubjectSpecificBasicEmotionWeights(numSubjects, numBasicEmotions):
+        subjectSpecificWeights = torch.zeros(numSubjects, 1, numBasicEmotions, 1)
+        return nn.Parameter(subjectSpecificWeights)
 
     # ------------------- Universal Architectures ------------------- #
 

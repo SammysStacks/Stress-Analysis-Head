@@ -38,7 +38,7 @@ class globalPlottingProtocols:
     @staticmethod
     def getRowsCols(combineSharedLayers, saveFigureLocation=None):
         # Determine the number of layers based on the model parameters.
-        prefix = "numSharedEncoder" if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else ("numActivityModel" if "activity" in saveFigureLocation.lower() else "numEmotionModel")
+        prefix = "numSharedEncoder" if 'encoder' in saveFigureLocation.lower() else ("numActivityModel" if "activity" in saveFigureLocation.lower() else "numEmotionModel")
         numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers'] if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 1
         numSharedLayers = modelConstants.userInputParams[f'{prefix}Layers']
 

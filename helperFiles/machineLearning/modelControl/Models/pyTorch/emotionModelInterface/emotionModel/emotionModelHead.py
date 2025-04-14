@@ -120,8 +120,8 @@ class emotionModelHead(nn.Module):
         else: raise Exception("Invalid name:", name)
 
         # Add the neural layer information.
-        if 'high' in name: compiledName = compiledName + ' neural high frequency'; assert 'low' not in name
-        elif 'low' in name: compiledName = compiledName + ' neural low frequency'; assert 'high' not in name
+        if 'highfrequenciesweights' in name: compiledName = compiledName + ' neural high frequency'; assert 'lowfrequencyweights' not in name
+        elif 'lowfrequencyweights' in name: compiledName = compiledName + ' neural low frequency'; assert 'highfrequenciesweights' not in name
         elif 'imaginary' in name: compiledName = compiledName + ' imaginary fourier domain'; assert 'real' not in name
         elif 'real' in name: compiledName = compiledName + ' real fourier domain'; assert 'imaginary' not in name
         else: raise Exception("Invalid name:", name)
