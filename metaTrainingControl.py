@@ -45,7 +45,7 @@ if __name__ == "__main__":
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # Model loading information.
-    loadSubmodelDate = "2025-04-03-----"  # The submodel we are loading: None, "2025-03-31"
+    loadSubmodelDate = "2025-04-03"  # The submodel we are loading: None, "2025-03-31"
 
     # ----------------------- Architecture Parameters ----------------------- #
 
@@ -123,7 +123,7 @@ if __name__ == "__main__":
     datasetNames.append(metaDatasetNames.pop(0))  # Do not metatrain with wesad data.
     allModels.append(allMetaModels.pop(0))  # Do not metatrain with wesad data.
 
-    if submodel == modelConstants.signalEncoderModel or True:
+    if submodel == modelConstants.emotionModel:
         # Do not train on the meta-datasets.
         if not validationRun: allDataLoaders, datasetNames, allModels = [], [], []
         else: allMetadataLoaders, metaDatasetNames, allMetaModels = [], [], []
