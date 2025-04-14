@@ -62,8 +62,8 @@ class trainingProtocolHelpers:
             dataLoader = allMetadataLoaders[modelInd] if modelInd < len(allMetadataLoaders) else allDataLoaders[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
             modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
             if submodel == modelConstants.signalEncoderModel:
-                if modelPipeline.datasetName.lower() == 'empatch': numEpochs = 4
-                elif modelPipeline.datasetName.lower() == 'wesad': numEpochs = 4
+                if modelPipeline.datasetName.lower() == 'empatch': numEpochs = 3
+                elif modelPipeline.datasetName.lower() == 'wesad': numEpochs = 3
                 else: numEpochs = 1
             else: numEpochs = 1
 
