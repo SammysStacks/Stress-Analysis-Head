@@ -42,7 +42,7 @@ if __name__ == "__main__":
     unifyModelWeights = True  # Whether to unify the model weights across all models.
     plotAllEpochs = True  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
     validationRun = False  # Whether to train new datasets from the old model.
-    testSplitRatio = 0.2  # The percentage of testing points.
+    testSplitRatio = 0.1  # The percentage of testing points.
 
     # Model loading information.
     loadSubmodelDate = "2025-04-03-----"  # The submodel we are loading: None, "2025-03-31"

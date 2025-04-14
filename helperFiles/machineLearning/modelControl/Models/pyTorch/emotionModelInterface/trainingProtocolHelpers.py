@@ -64,6 +64,7 @@ class trainingProtocolHelpers:
             if submodel == modelConstants.signalEncoderModel:
                 if modelPipeline.datasetName.lower() == 'empatch': numEpochs = 4
                 elif modelPipeline.datasetName.lower() == 'wesad': numEpochs = 4
+                else: numEpochs = 1
             else: numEpochs = 1
 
             # Train the updated model.
