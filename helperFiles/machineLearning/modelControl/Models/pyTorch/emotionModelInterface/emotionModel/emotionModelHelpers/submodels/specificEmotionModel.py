@@ -23,7 +23,7 @@ class specificEmotionModel(neuralOperatorInterface):
 
         # The neural layers for the signal encoder.
         self.neuralLayers = self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters)
-        self.basicEmotionWeights = self.getEmotionSpecificBasicEmotionWeights(numEmotions=self.numEmotions, numBasicEmotions=numBasicEmotions) # 1, numEmotions, numBasicEmotions, 1
+        self.basicEmotionWeights = self.getEmotionSpecificBasicEmotionWeights(numEmotions=self.numEmotions, numBasicEmotions=numBasicEmotions)  # 1, numEmotions, numBasicEmotions, 1
         self.subjectSpecificWeights = self.getSubjectSpecificBasicEmotionWeights(numSubjects=numSubjects, numBasicEmotions=self.numBasicEmotions)  # numSubjects, 1, numBasicEmotions, 1
         self.sigmoid = nn.Sigmoid()
 
@@ -55,10 +55,16 @@ class specificEmotionModel(neuralOperatorInterface):
         # basicEmotionWeights = self.sigmoid(self.basicEmotionWeights)  # 1, numEmotions, numBasicEmotions, 1
         # emotionProfile = (basicEmotionProfile * basicEmotionWeights).sum(dim=2) / basicEmotionWeights.sum(dim=2)  # batchSize, numEmotions, encodedDimension
         # emotionProfile: batchSize, numEmotions, encodedDimension
+        # print(basicEmotionWeights[0, 0, :, 0].detach().cpu().numpy())
+        # print(self.basicEmotionWeights[0, 0, :, 0].detach().cpu().numpy())
+        # print("")
 
         # Calculate the emotion profile.
         subjectSpecificWeights = self.sigmoid(self.subjectSpecificWeights[subjectInds])  # batchSize, 1, numBasicEmotions, 1
         emotionProfile = (basicEmotionProfile * subjectSpecificWeights).sum(dim=2) / subjectSpecificWeights.sum(dim=2)  # batchSize, numEmotions, encodedDimension
         # emotionProfile: batchSize, numEmotions, encodedDimension
+        print(subjectSpecificWeights[0, 0, :, 0].detach().cpu().numpy())
+        print(self.subjectSpecificWeights[0, 0, :, 0].detach().cpu().numpy())
+        print("")
 
         return emotionProfile

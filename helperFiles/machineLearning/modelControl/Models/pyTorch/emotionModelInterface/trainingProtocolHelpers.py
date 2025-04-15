@@ -38,7 +38,7 @@ class trainingProtocolHelpers:
             # Set the training parameters.
             profileTraining = submodel == modelConstants.signalEncoderModel
             trainSharedLayers = modelInd < len(allMetaModels)
-            specificTraining = submodel == modelConstants.signalEncoderModel  # TODO
+            specificTraining = True  # submodel == modelConstants.signalEncoderModel  # TODO
 
             # Copy over the shared layers.
             self.modelMigration.unifyModelWeights(allModels=[modelPipeline], modelWeights=self.sharedModelWeights, layerInfo=self.unifiedLayerData)
@@ -61,11 +61,13 @@ class trainingProtocolHelpers:
         for modelInd in range(len(allMetaModels) + len(allModels)):
             dataLoader = allMetadataLoaders[modelInd] if modelInd < len(allMetadataLoaders) else allDataLoaders[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
             modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
-            if submodel == modelConstants.signalEncoderModel:
-                if modelPipeline.datasetName.lower() == 'empatch': numEpochs = 3
-                elif modelPipeline.datasetName.lower() == 'wesad': numEpochs = 3
-                else: numEpochs = 1
+            if submodel == modelConstants.emotionModel and epoch <= modelConstants.numWarmupEpochs:
+                if modelPipeline.datasetName.lower() == 'empatch': continue
+                elif modelPipeline.datasetName.lower() == 'wesad': continue
+            if modelPipeline.datasetName.lower() == 'empatch': numEpochs = 3
+            elif modelPipeline.datasetName.lower() == 'wesad': numEpochs = 3
             else: numEpochs = 1
+            # else: numEpochs = 1
 
             # Train the updated model.
             if not onlyProfileTraining: modelPipeline.trainModel(dataLoader, submodel, profileTraining=False, specificTraining=True, trainSharedLayers=False, stepScheduler=submodel == modelConstants.emotionModel, numEpochs=numEpochs)  # Signal-specific training.

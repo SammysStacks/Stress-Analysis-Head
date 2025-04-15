@@ -25,7 +25,8 @@ class optimizerMethods:
 
         if submodel == modelConstants.emotionModel:
             modelParams.extend([
-                {'params': (param for name, param in model.named_parameters() if "basicEmotionWeights" in name), 'weight_decay': 5e-5, 'lr': 1e-4},
+                {'params': model.specificEmotionModel.subjectSpecificWeights, 'weight_decay': 1e-4, 'lr': 1e-3},
+                {'params': model.specificEmotionModel.basicEmotionWeights, 'weight_decay': 1e-4, 'lr': 1e-3},
             ])
 
         # Set the optimizer and scheduler.
