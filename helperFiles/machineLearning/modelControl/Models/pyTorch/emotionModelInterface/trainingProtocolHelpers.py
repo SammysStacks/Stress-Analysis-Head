@@ -61,13 +61,12 @@ class trainingProtocolHelpers:
         for modelInd in range(len(allMetaModels) + len(allModels)):
             dataLoader = allMetadataLoaders[modelInd] if modelInd < len(allMetadataLoaders) else allDataLoaders[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
             modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
-            if submodel == modelConstants.emotionModel and epoch <= modelConstants.numWarmupEpochs:
+            if submodel == modelConstants.emotionModel and epoch <= 2*modelConstants.numWarmupEpochs:
                 if modelPipeline.datasetName.lower() == 'empatch': continue
                 elif modelPipeline.datasetName.lower() == 'wesad': continue
             if modelPipeline.datasetName.lower() == 'empatch': numEpochs = 3
             elif modelPipeline.datasetName.lower() == 'wesad': numEpochs = 3
             else: numEpochs = 1
-            # else: numEpochs = 1
 
             # Train the updated model.
             if not onlyProfileTraining: modelPipeline.trainModel(dataLoader, submodel, profileTraining=False, specificTraining=True, trainSharedLayers=False, stepScheduler=submodel == modelConstants.emotionModel, numEpochs=numEpochs)  # Signal-specific training.
@@ -91,8 +90,9 @@ class trainingProtocolHelpers:
             modelPipeline.trainModel(dataLoader, submodel, profileTraining=epoch < 4, specificTraining=True, trainSharedLayers=False, stepScheduler=False, numEpochs=numEpochs)  # Signal-specific training.
 
             # Health profile training.
-            numProfileShots = modelPipeline.resetPhysiologicalProfile(submodel)
-            modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=numProfileShots + 1)  # Profile training.
+            if submodel == modelConstants.signalEncoderModel:
+                numProfileShots = modelPipeline.resetPhysiologicalProfile(submodel)
+                modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=numProfileShots + 1)  # Profile training.
             modelPipeline.model.cullAngles(epoch=epoch)
 
     def calculateLossInformation(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel):

@@ -76,12 +76,10 @@ class emotionModelVisualizations(globalPlottingProtocols):
             ax.set_title(f"{plotTitle} {distributionNames[distributionInd]} epoch{epoch}")
             ax.set_ylabel("Signal amplitude (au)")
             ax.legend(loc="best")
-            ax.set_xlabel("Time (sec)")
+            ax.set_xlabel("Time (s)")
             # ax.set_ylim((-1.75, 1.75))
 
             # Save the figure.
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {distributionNames[distributionInd]} epoch{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {distributionNames[distributionInd]}.pdf", fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
             else: self.clearFigure(fig=fig, legend=None, showPlot=True)
             plt.close(fig)
-
-            if 3 <= distributionInd: break

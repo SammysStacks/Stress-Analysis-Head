@@ -200,8 +200,7 @@ class modelVisualizations(globalPlottingProtocols):
 
                 # Compile additional information for the model.getActivationParamsFullPassPath
                 activityGivensAnglesPath, activityNormalizationFactorsPath, _, reversibleModuleNames, givensAnglesFeatureNames = model.getLearnableParams(submodelString="ActivityModel")
-                # activationCurvePath, activationModuleNames = model.getActivationCurvesFullPassPath(submodelString="ActivityModel")  # numModuleLayers, 2=(x, y), numPoints=100
-                # _, _, maxFreeParamsPath = model.getFreeParamsFullPassPath(submodelString="ActivityModel")
+                activityActivationCurvePath, activityActivationModuleNames = model.getActivationCurvesFullPassPath(submodelString="ActivityModel")  # numModuleLayers, 2=(x, y), numPoints=100
                 # normalizationFactorsPath: numModuleLayers, numSignals, numParam=1
                 # givensAnglesPath: numModuleLayers, numSignals, numParams
 
@@ -230,7 +229,18 @@ class modelVisualizations(globalPlottingProtocols):
                 # Plot the activity profile.
                 self.emotionModelViz.plotDistributions(activityProfile[:, None, :], distributionNames=['Activity'], epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="ActivityModel/", plotTitle="Activity profile")
                 self.emotionModelViz.plotPredictedMatrix(trueActivityTrainingClasses, trueActivityTestingClasses, predictedActivityTrainingClasses, predictedActivityTestingClasses, numClasses=model.numActivities, epoch=currentEpoch, saveFigureLocation="ActivityModel/", plotTitle="Activity confusion matrix")
-                if currentEpoch % 10 == 0: self.signalEncoderViz.plotsGivensAnglesHeatmap(activityGivensAnglesPath, reversibleModuleNames, signalInd=signalInd, epoch=currentEpoch, degreesFlag=False, saveFigureLocation="ActivityModel/", plotTitle="Rotation weight matrix (S)")
+
+                # Plot the scale factor information.
+                self.signalEncoderViz.plotNormalizationFactors(normalizationFactorsPath, reversibleModuleNames, epoch=currentEpoch, saveFigureLocation="SignalEncoderModel/", plotTitle="Normalization factors")
+
+                if not showMinimumPlots:
+                    # Plot the angle information.
+                    self.signalEncoderViz.plotsGivensAnglesHeatmap(activityGivensAnglesPath, reversibleModuleNames, signalInd=signalInd, epoch=currentEpoch, degreesFlag=False, saveFigureLocation="ActivityModel/", plotTitle="Rotation weight matrix (S)")
+                    self.signalEncoderViz.plotsGivensAnglesHist(activityGivensAnglesPath, reversibleModuleNames, epoch=currentEpoch, signalInd=signalInd, degreesFlag=False, saveFigureLocation="ActivityModel/", plotTitle="Rotation angles hist")
+
+                    # Plot the activation information.
+                    self.signalEncoderViz.plotActivationCurvesCompressed(activityActivationCurvePath, activityActivationModuleNames, epoch=currentEpoch, saveFigureLocation="ActivityModel/", plotTitle="Activation forward and inverse curves (compressed)")
+                    self.signalEncoderViz.plotActivationCurves(activityActivationCurvePath, activityActivationModuleNames, epoch=currentEpoch, saveFigureLocation="ActivityModel/", plotTitle="Activation forward and inverse curves")
 
                 # ------------------ Emotion Prediction Plots ------------------ #
                 # basicEmotionProfile: batchSize, numEmotions, numBasicEmotions, encodedDimension
@@ -269,4 +279,4 @@ class modelVisualizations(globalPlottingProtocols):
                     predictedEmotionTestingClasses = emotionClasses[emotionTestingMask]
 
                     self.emotionModelViz.plotPredictedMatrix(trueEmotionTrainingClasses, trueEmotionTestingClasses, predictedEmotionTrainingClasses, predictedEmotionTestingClasses, numClasses=numClasses, epoch=currentEpoch, saveFigureLocation="EmotionModel/", plotTitle=f"{emotionName} confusion matrix")
-                    break
+                    if showMinimumPlots: break

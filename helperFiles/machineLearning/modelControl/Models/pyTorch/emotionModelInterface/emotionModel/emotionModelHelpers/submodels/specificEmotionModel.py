@@ -63,8 +63,8 @@ class specificEmotionModel(neuralOperatorInterface):
         subjectSpecificWeights = self.sigmoid(self.subjectSpecificWeights[subjectInds])  # batchSize, 1, numBasicEmotions, 1
         emotionProfile = (basicEmotionProfile * subjectSpecificWeights).sum(dim=2) / subjectSpecificWeights.sum(dim=2)  # batchSize, numEmotions, encodedDimension
         # emotionProfile: batchSize, numEmotions, encodedDimension
-        print(subjectSpecificWeights[0, 0, :, 0].detach().cpu().numpy())
-        print(self.subjectSpecificWeights[0, 0, :, 0].detach().cpu().numpy())
-        print("")
+        # print(subjectSpecificWeights[0, 0, :, 0].detach().cpu().numpy())
+        # print(self.subjectSpecificWeights[subjectInds][0, 0, :, 0].detach().cpu().numpy())
+        # print("")
 
         return emotionProfile

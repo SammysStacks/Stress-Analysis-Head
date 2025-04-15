@@ -57,7 +57,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.axhline(y=0, color=self.blackColor, linewidth=1, zorder=0)
 
             # Plotting aesthetics.
-            ax.set_xlabel("Time (sec)")
+            ax.set_xlabel("Time (s)")
             ax.set_title(f"{plotTitle}{(" " + signalNames[signalInd]) if "health profile" not in plotTitle.lower() else ""} epoch{epoch}")
             ax.set_ylabel("Signal amplitude (au)")
             if "health profile" in plotTitle.lower(): ax.set_ylim((-1, 1))
@@ -77,7 +77,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         ax.plot(relativeTimes, healthError.T, c=self.lightColors[0], linewidth=1, alpha=0.1)
 
         # Plotting aesthetics.
-        ax.set_xlabel("Time (sec)")
+        ax.set_xlabel("Time (s)")
         ax.set_title(f"{plotTitle} epoch{epoch}")
         ax.set_ylabel("Signal error (au)")
 
@@ -95,7 +95,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         ax.axhline(y=0, color=self.blackColor, linewidth=0.5, alpha=0.25)
 
         # Plotting aesthetics.
-        ax.set_xlabel("Time (sec)")
+        ax.set_xlabel("Time (s)")
         ax.set_title(f"{plotTitle} epoch{epoch}")
         ax.set_ylabel("Signal amplitude (au)")
         ax.set_ylim((-1, 1))
@@ -129,7 +129,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.set_title(f"{plotTitle} {signalNames[signalInd]} epoch{epoch}")
             ax.set_ylabel("Signal amplitude (au)")
             ax.legend(loc="best")
-            ax.set_xlabel("Time (sec)")
+            ax.set_xlabel("Time (s)")
             ax.set_ylim((-1.75, 1.75))
 
             # Save the figure.
@@ -146,7 +146,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.set_title(f"{plotTitle} {signalNames[signalInd]} Error epoch{epoch}")
             ax.set_ylabel("Signal amplitude (au)")
             ax.legend(loc="best")
-            ax.set_xlabel("Time (sec)")
+            ax.set_xlabel("Time (s)")
             ax.set_ylim((-1.75, 1.75))
 
             # Save the figure.
@@ -181,7 +181,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.tick_params(axis="x", labelsize=12)
             ax.set_title(f"{plotTitle} at epoch {epoch}", fontsize=16)
             ax.set_ylabel("Module layer", fontsize=14)
-            ax.set_xlabel("Time (sec)", fontsize=14)
+            ax.set_xlabel("Time (s)", fontsize=14)
             ax.grid(False)
 
             # Save or clear figure
@@ -607,7 +607,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
             # Axis labels and title
             ax.set_title(f"{plotTitle} at epoch {epoch}", fontsize=16, weight='bold', pad=20)
-            ax.set_xlabel("Time (Sec)", fontsize=12, labelpad=10)
+            ax.set_xlabel("Time (s)", fontsize=12, labelpad=10)
             ax.set_ylabel("Model Layer", fontsize=12, labelpad=10)
             ax.set_zlabel("Signal value (au)", fontsize=12, labelpad=10)
             ax.set_zlim(-1.5, 1.5)
