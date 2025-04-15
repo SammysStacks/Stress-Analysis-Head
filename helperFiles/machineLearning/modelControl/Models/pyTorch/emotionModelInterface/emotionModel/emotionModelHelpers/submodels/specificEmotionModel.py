@@ -23,7 +23,7 @@ class specificEmotionModel(neuralOperatorInterface):
 
         # The neural layers for the signal encoder.
         self.neuralLayers = self.getNeuralOperatorLayer(neuralOperatorParameters=self.neuralOperatorParameters)
-        # self.basicEmotionWeights = self.getEmotionSpecificBasicEmotionWeights(numEmotions=self.numEmotions, numBasicEmotions=numBasicEmotions) # 1, numEmotions, numBasicEmotions, 1
+        self.basicEmotionWeights = self.getEmotionSpecificBasicEmotionWeights(numEmotions=self.numEmotions, numBasicEmotions=numBasicEmotions) # 1, numEmotions, numBasicEmotions, 1
         self.subjectSpecificWeights = self.getSubjectSpecificBasicEmotionWeights(numSubjects=numSubjects, numBasicEmotions=self.numBasicEmotions)  # numSubjects, 1, numBasicEmotions, 1
         self.sigmoid = nn.Sigmoid()
 

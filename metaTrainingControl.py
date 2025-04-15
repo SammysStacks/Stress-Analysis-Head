@@ -40,12 +40,12 @@ if __name__ == "__main__":
     # General model parameters.
     trainingDate = "2025-04-12"  # The current date we are training the model. Unique identifier of this training set.
     unifyModelWeights = True  # Whether to unify the model weights across all models.
-    plotAllEpochs = True  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
+    plotAllEpochs = False  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
     validationRun = False  # Whether to train new datasets from the old model.
     testSplitRatio = 0.1  # The percentage of testing points.
 
     # Model loading information.
-    loadSubmodelDate = "2025-04-03-----"  # The submodel we are loading: None, "2025-03-31"
+    loadSubmodelDate = "2025-04-03"  # The submodel we are loading: None, "2025-03-31"
 
     # ----------------------- Architecture Parameters ----------------------- #
 
@@ -75,8 +75,8 @@ if __name__ == "__main__":
 
     # dd arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=4, help='The number of basic emotions (basis states of emotions)')
-    parser.add_argument('--numActivityModelLayers', type=int, default=7, help='The number of layers in the activity model')
-    parser.add_argument('--numEmotionModelLayers', type=int, default=7, help='The number of layers in the emotion model')
+    parser.add_argument('--numActivityModelLayers', type=int, default=9, help='The number of layers in the activity model')
+    parser.add_argument('--numEmotionModelLayers', type=int, default=9, help='The number of layers in the emotion model')
 
     # ----------------------- Training Parameters ----------------------- #
 
@@ -123,6 +123,9 @@ if __name__ == "__main__":
     datasetNames.append(metaDatasetNames.pop(0))  # Do not metatrain with wesad data.
     allModels.append(allMetaModels.pop(0))  # Do not metatrain with wesad data.
 
+    if userInputParams['submodel'] == modelConstants.emotionModel:
+        modelConstants.userInputParams['minAngularThreshold'] = 1  # TODO
+
     if submodel == modelConstants.emotionModel:
         # Do not train on the meta-datasets.
         if not validationRun: allDataLoaders, datasetNames, allModels = [], [], []
@@ -137,8 +140,6 @@ if __name__ == "__main__":
         trainingProtocols.datasetSpecificTraining(modelConstants.signalEncoderModel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch=0, onlyProfileTraining=True)
         trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, modelConstants.signalEncoderModel, trainingModelName, showMinimumPlots=True)
         for modelPipeline in (allMetaModels + allModels): modelPipeline.scheduler.scheduler.warmupFlag = True; modelPipeline.scheduler.scheduler.step()
-
-    # if submodel == modelConstants.emotionModel: modelConstants.userInputParams['maxAngularThreshold'] = 20
 
     # Plot the initial model state.
     trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)  # Calculate the initial loss.

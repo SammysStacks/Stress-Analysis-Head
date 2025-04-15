@@ -38,7 +38,7 @@ class trainingProtocolHelpers:
             # Set the training parameters.
             profileTraining = submodel == modelConstants.signalEncoderModel
             trainSharedLayers = modelInd < len(allMetaModels)
-            specificTraining = True
+            specificTraining = submodel == modelConstants.signalEncoderModel  # TODO
 
             # Copy over the shared layers.
             self.modelMigration.unifyModelWeights(allModels=[modelPipeline], modelWeights=self.sharedModelWeights, layerInfo=self.unifiedLayerData)
