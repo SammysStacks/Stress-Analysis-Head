@@ -71,8 +71,8 @@ if __name__ == "__main__":
     userTherapyMethod = "aStarTherapyProtocol"
     testingUserName = "Subject XYZ"  # The username for the therapy.
     if therapyChoices == "BinauralBeats":
-        baseFrequency = 400  # Select different base frequency to stimulate; 400Hz claims to be the best carrier frequency for Binaural Beats
-        parameterBounds = ((baseFrequency+8, baseFrequency+15), (baseFrequency+8, baseFrequency+15))  # The temperature bounds for the therapy.
+        baseFrequency = 424  # Select different base frequency to stimulate;
+        parameterBounds = ((baseFrequency+8, baseFrequency+15), (baseFrequency+8, baseFrequency+15))  # The parameter bounds for the therapy.
         parameterBinWidth = 1  # The parameter bounds for the therapy.
     elif therapyChoices == "Heat":
         parameterBounds = (30, 50)  # The temperature bounds for the therapy.

@@ -145,6 +145,6 @@ if __name__ == "__main__":
 
     # Create combined binaural beats
     binaural_beat = generator.create_binaural_beats(base_freq_name, brain_wave_state_harmonics, duration_ms, volume)
-    
+
     # sound_overlay = generator.sound_overlay_stereo_beats(binaural_beat, white_noise_volume=10)
     binaural_beat.export("binaural_beats_sacral_gamma_normal.wav", format="wav")
