@@ -134,8 +134,8 @@ if __name__ == "__main__":
 
     # -------------------------- Meta-model Training ------------------------- #
 
-    # The emotion model needs to start with a health profile.
     if submodel == modelConstants.emotionModel:
+        # The emotion model needs to start with a health profile.
         for modelPipeline in (allMetaModels + allModels): modelPipeline.scheduler.scheduler.warmupFlag = False; modelPipeline.scheduler.scheduler.step()
         trainingProtocols.datasetSpecificTraining(modelConstants.signalEncoderModel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch=0, onlyProfileTraining=True)
         trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, modelConstants.signalEncoderModel, trainingModelName, showMinimumPlots=True)
