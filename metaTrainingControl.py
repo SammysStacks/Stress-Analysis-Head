@@ -38,9 +38,9 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-04-12"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2025-04-15"  # The current date we are training the model. Unique identifier of this training set.
     unifyModelWeights = True  # Whether to unify the model weights across all models.
-    plotAllEpochs = False  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
+    plotAllEpochs = True  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
     validationRun = False  # Whether to train new datasets from the old model.
     testSplitRatio = 0.1  # The percentage of testing points.
 
