@@ -74,8 +74,8 @@ if __name__ == "__main__":
 
     # dd arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=4, help='The number of basic emotions (basis states of emotions)')
-    parser.add_argument('--numActivityModelLayers', type=int, default=1, help='The number of layers in the activity model')
-    parser.add_argument('--numEmotionModelLayers', type=int, default=1, help='The number of layers in the emotion model')
+    parser.add_argument('--numActivityModelLayers', type=int, default=2, help='The number of layers in the activity model')
+    parser.add_argument('--numEmotionModelLayers', type=int, default=2, help='The number of layers in the emotion model')
 
     # ----------------------- Training Parameters ----------------------- #
 
@@ -107,7 +107,7 @@ if __name__ == "__main__":
 
     # Specify emotion and signal encoder differences.
     if submodel == modelConstants.signalEncoderModel: testSplitRatio = 0.1
-    else: testSplitRatio = 0.2  # The test split ratio for the emotion model is higher to allow more examples per class.
+    else: testSplitRatio = 0.125  # The test split ratio for the emotion model is higher to allow more examples per class.
 
     # Initialize the model information classes.
     modelCompiler = compileModelData(useTherapyData=False, accelerator=accelerator, validationRun=validationRun)  # Initialize the model compiler.
