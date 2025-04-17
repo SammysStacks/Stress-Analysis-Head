@@ -1,17 +1,11 @@
-# General Modules
+from openpyxl import load_workbook
+import numpy as np
+import csv
+import sys
 import os
 import re
-import sys
-import numpy as np
 
-
-# Data interface modules
-from openpyxl import load_workbook
-import csv
-
-# Import file for handling excel format
-from .excelFormatting import handlingExcelFormat
-
+from helperFiles.dataAcquisitionAndAnalysis.excelProcessing.excelFormatting import handlingExcelFormat
 
 
 class extractData(handlingExcelFormat):
@@ -60,7 +54,6 @@ class extractData(handlingExcelFormat):
 
         # If Header Exists, Skip Until You Find the Data
         for row in excelSheet.rows:
-            print(row[0].value, row[0].row)
             if type(row[0].value) in [int, float]:
                 dataStartRow = row[0].row
                 break
@@ -72,10 +65,6 @@ class extractData(handlingExcelFormat):
                             assert streamingOrder[len(dataColumns)] in row[cellInd].value.lower(), f"streamingOrder: {streamingOrder}; dataColumns: {dataColumns}; row[cellInd].value: {row[cellInd].value}"
                         dataColumns.append(cellInd)
                     else: break
-
-        # Assert the data columns are correct.
-        # this is only for empatica
-        #assert endDataCol - startDataCol == dataColumns[-1], f"Data columns: {dataColumns}; timeColumns: {timeColumns}; startDataCol: {startDataCol}; endDataCol: {endDataCol}"
         numFreqs = len(timeColumns)
 
         # Create the data

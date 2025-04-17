@@ -1,18 +1,10 @@
 """ Written by Samuel Solomon: https://scholar.google.com/citations?user=9oq12oMAAAAJ&hl=en """
-
-import os
-import sys
-import threading
-
-# General
 import numpy as np
+import threading
+import sys
+import os
 
 from helperFiles.machineLearning.featureAnalysis.featurePlotting import featurePlotting
-
-# Compiler flags.
-os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
-
-# Import helper files.
 from helperFiles.dataAcquisitionAndAnalysis.excelProcessing import extractDataProtocols, saveDataProtocols  # Import interfaces for reading/writing data
 from helperFiles.surveyInformation.questionaireGUI import stressQuestionnaireGUI  # Import file for GUI control
 from helperFiles.dataAcquisitionAndAnalysis import streamingProtocols  # Import interfaces for reading/writing data
@@ -21,6 +13,7 @@ from adjustInputParameters import adjustInputParameters  # Import the class to a
 
 # Add the directory of the current file to the Python path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
 if __name__ == "__main__":
     # ---------------------------------------------------------------------- #
@@ -29,13 +22,13 @@ if __name__ == "__main__":
 
     # Protocol switches: only the first true variably executes.
     readDataFromExcel = False  # For SINGLE FILE analysis. Analyze Data from Excel File called 'currentFilename' on Sheet Number 'testSheetNum'
-    trainModel = False  # Train Model with ALL Data in 'collectedDataFolder'.
-    streamData = True  # Stream in Data from the Board and Analyze.
+    trainModel = True  # Train Model with ALL Data in 'collectedDataFolder'.
+    streamData = False  # Stream in Data from the Board and Analyze.
 
     # User options during the run: any number can be true.
     useModelPredictions = False or trainModel  # Apply the learning algorithm to decode the signals.
-    plotStreamedData = True  # Graph the data to show incoming signals.
-    useTherapyData = True  # Use the Therapy Data folder for any files.
+    plotStreamedData = False  # Graph the data to show incoming signals.
+    useTherapyData = False  # Use the Therapy Data folder for any files.
 
     # General program flags.
     reanalyzeData = False  # Reanalyze training files: don't use saved features

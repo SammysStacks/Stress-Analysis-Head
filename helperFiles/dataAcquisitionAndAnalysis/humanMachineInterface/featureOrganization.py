@@ -40,7 +40,6 @@ class featureOrganization(humanMachineInterface):
         assert len(featureAverageWindows) == len(self.biomarkerFeatureOrder), f"Found {featureAverageWindows} windows for {self.biomarkerFeatureOrder} biomarkers. These must to be the same length."
 
         # Loop through each analysis requiring collecting features.
-        print('self.featureAnalysisOrder', self.featureAnalysisOrder)
         for biomarkerInd in range(len(self.featureAnalysisOrder)):
             biomarkerType = self.featureAnalysisOrder[biomarkerInd]
 
