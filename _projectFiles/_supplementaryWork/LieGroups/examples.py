@@ -1,85 +1,129 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
 from scipy.linalg import expm
 
-# Define parameters
-n = 100          # length of the time series (dimension of the space)
-theta = 0.5      # rotation strength between coupled samples
-t = np.linspace(0, 4 * np.pi, n)  # time variable
-x = np.sin(t) * np.cos(3*t)    # original 1D sine wave signal
+# If you have shap, import lch2rgb from shap; otherwise define your own LCH to RGB conversion
+from shap.plots.colors._colors import lch2rgb
 
-### Example 1: Full Adjacent Band (All Upper Values Positive)
+# --- CREATE CUSTOM COLORMAP ---
+blue_lch = [54., 70., 4.6588]
+red_lch  = [54., 90., 0.35470565 + 2 * np.pi]
+blue_rgb = lch2rgb(blue_lch)
+red_rgb  = lch2rgb(red_lch)
+white_rgb = np.array([1., 1., 1.])
+
+colors = []
+num_steps = 200
+# Gradient from blue -> white
+for alpha in np.linspace(1, 0, num_steps):
+    c = blue_rgb * alpha + (1 - alpha) * white_rgb
+    colors.append(c)
+# Gradient from white -> red
+for alpha in np.linspace(0, 1, num_steps):
+    c = red_rgb * alpha + (1 - alpha) * white_rgb
+    colors.append(c)
+
+custom_cmap = LinearSegmentedColormap.from_list("red_transparent_blue", colors)
+
+# --- PARAMETERS ---
+n = 100
+theta = 0.5
+t = np.linspace(0, 4*np.pi, n)
+x = np.sin(t) * np.cos(3*t)  # original 1D signal
+
+# --- S1 (basic adjacent skew-symmetric) ---
 S1 = np.zeros((n, n))
-for i in range(n - 1):
-    S1[i, i+1] = theta      # all upper adjacent entries positive
-    S1[i+1, i] = -theta     # skew-symmetry: lower entries negative
-R1 = expm(S1)               # rotation matrix via the matrix exponential
-y1 = R1 @ x                 # rotated signal
+for i in range(n-1):
+    S1[i, i+1]   =  theta
+    S1[i+1, i]   = -theta
+R1 = expm(S1)
+y1 = R1 @ x
 
-### Example 2: Partial Adjacent Band (Only Half the Upper Values are Positive)
+# --- S2 (every other adjacent entry in top half) ---
 S2 = np.zeros((n, n))
-half = n // 2
-# Only fill the first half of the adjacent band with nonzero values
-for i in range(n - 1):
-    S2[i, i+1] = theta * ((i % 2 == 0)*2 - 1) / 2
-    S2[i+1, i] = -theta * ((i % 2 == 0)*2 - 1) / 2
-# The remaining entries (i >= half) stay zero
+for i in range(n-1):
+    # ((i % 2 == 0)*2 - 1) is +1 for even i, -1 for odd i
+    val = theta * ((i % 2 == 0)*2 - 1) / 1.5
+    S2[i, i+1]   =  val
+    S2[i+1, i]   = -val
 R2 = expm(S2)
 y2 = R2 @ x
 
-# ### Example 2: Partial Adjacent Band (Only Half the Upper Values are Positive)
-# S2 = np.zeros((n, n))
-# half = n // 2
-# # Only fill the first half of the adjacent band with nonzero values
-# for i in range(n - 1):
-#     for j in range(i+1, n - 1):
-#         if j == 5 or i == 5:
-#             S2[i, j] = theta * 2
-#             S2[j, i] = -theta * 2
-# # The remaining entries (i >= half) stay zero
-# R2 = expm(S2)
-# y2 = R2 @ x
-
-### Example 3: Anti-Diagonal Band (Band from Lower Left to Upper Right)
+# --- S3 (skew-symmetric with i+j = n-1, for i < j) ---
 S3 = np.zeros((n, n))
-# For each row, place a nonzero entry in the column such that i + j = n - 1.
-# We only fill entries for i < j so that we have a consistent skew-symmetric pattern.
 for i in range(n):
     j = n - 1 - i
     if i < j:
-        try:
-            S3[i, j] = theta * ((25 < i < 75)*2 - 1)
-            # S3[i+1, j+1] = theta
-            S3[j, i] = -theta * ((25 < i < 75)*2 - 1)
-            # S3[j+1, i+1] = -theta
-        except: continue
+        # ((25 < i < 75)*2 - 1) is +1 for i in (25,75), else -1
+        val = theta * ((25 < i < 75)*2 - 1)
+        S3[i, j] =  val
+        S3[j, i] = -val
 R3 = expm(S3)
 y3 = R3 @ x
 
-# Plotting all three examples
-fig, axs = plt.subplots(3, 1, figsize=(10, 15))
+# Convert theta from radians to degrees for the colorbar range
+theta_deg = 1 + theta * 180 / np.pi
 
-# Example 1 Plot
-axs[0].plot(t, x, label="Original Signal", linewidth=2)
-axs[0].plot(t, y1, label="Rotated Signal", linestyle="--", linewidth=2)
-axs[0].set_title("Example 1: Full Adjacent Band (All Upper Values Positive)")
-axs[0].legend()
-axs[0].grid(True)
+# --- PLOTTING ---
+fig, axs = plt.subplots(3, 2,
+                        figsize=(6.4*2, 4.8*3),
+                        sharex='col', sharey='col', squeeze=True)
 
-# Example 2 Plot
-axs[1].plot(t, x, label="Original Signal", linewidth=2)
-axs[1].plot(t, y2, label="Rotated Signal", linestyle="--", linewidth=2)
-axs[1].set_title("Example 2: Partial Adjacent Band (First Half Coupled)")
-axs[1].legend()
-axs[1].grid(True)
+# --- LEFT COLUMN: TIME-SERIES PLOTS ---
+axs[0,0].plot(t, x, linewidth=2, color='#231F20', label='Original signal')
+axs[0,0].plot(t, y1, '--', linewidth=2, color='#F3757A', label='Transformed signal')
+axs[0,0].legend(loc='upper left')
 
-# Example 3 Plot
-axs[2].plot(t, x, label="Original Signal", linewidth=2)
-axs[2].plot(t, y3, label="Rotated Signal", linestyle="--", linewidth=2)
-axs[2].set_title("Example 3: Anti-Diagonal Band")
-axs[2].legend()
-axs[2].grid(True)
+axs[1,0].plot(t, x, linewidth=2, color='#231F20', label='Original signal')
+axs[1,0].plot(t, y2, '--', linewidth=2, color='#F3757A', label='Transformed signal')
+axs[1,0].legend(loc='upper left')
 
-plt.tight_layout()
-fig.savefig("LieTransformations.png", dpi=300)
+axs[2,0].plot(t, x, linewidth=2, color='#231F20', label='Original signal')
+axs[2,0].plot(t, y3, '--', linewidth=2, color='#F3757A', label='Transformed signal')
+axs[2,0].legend(loc='upper left')
+
+axs[2,0].set_xlabel('Time')
+axs[0,0].set_ylabel('Amplitude')
+axs[1,0].set_ylabel('Amplitude')
+axs[2,0].set_ylabel('Amplitude')
+
+axs[0, 0].set_title('Signal transformations')
+axs[0, 1].set_title('Rotational generators')
+
+# --- RIGHT COLUMN: HEATMAPS ---
+im1 = axs[0,1].imshow(S1 * 180/np.pi,
+                      cmap=custom_cmap,
+                      interpolation='none',
+                      aspect='auto',
+                      vmin=-theta_deg,
+                      vmax= theta_deg)
+
+im2 = axs[1,1].imshow(S2 * 180/np.pi,
+                      cmap=custom_cmap,
+                      interpolation='none',
+                      aspect='auto',
+                      vmin=-theta_deg,
+                      vmax= theta_deg)
+
+im3 = axs[2,1].imshow(S3 * 180/np.pi,
+                      cmap=custom_cmap,
+                      interpolation='none',
+                      aspect='auto',
+                      vmin=-theta_deg,
+                      vmax= theta_deg)
+
+axs[0,1].set_ylabel('Signal index (i)')
+axs[1,1].set_ylabel('Signal index (i)')
+axs[2,1].set_ylabel('Signal index (i)')
+axs[2,1].set_xlabel('Signal index (j)')
+
+# Attach a single colorbar to the entire right column
+fig.colorbar(im3, ax=axs[:,1], orientation='vertical')
+fig.subplots_adjust(wspace=0.1, hspace=0.3)
+
+
+# Make sure layout doesn’t overlap
+fig.set_constrained_layout(True)
+fig.savefig("LieTransformations.png", transparent=True, dpi=600, format='png')
 plt.show()

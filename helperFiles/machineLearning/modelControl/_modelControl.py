@@ -24,7 +24,7 @@ class modelControl:
         assert len(self.modelTypes) == len(modelTypes), "Please re-instantiate the model controller if you wish to change the model number. This is mostly for user-awareness."
         # Reset the model parameters
         self.modelTypes = modelTypes
-        self.modelPaths = self.getModelPaths(self.modelFile, modelTypes) # List of all paths for saving models.
+        self.modelPaths = self.getModelPaths(self.modelFile, modelTypes)  # List of all paths for saving models.
 
         modelClasses = []
         # For each incoming model

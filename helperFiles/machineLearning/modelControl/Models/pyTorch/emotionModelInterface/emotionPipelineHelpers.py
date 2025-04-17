@@ -1,5 +1,3 @@
-import torch
-
 from .emotionModel.emotionModel import emotionModel
 from .emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
 from .emotionModel.emotionModelHelpers.generalMethods.dataAugmentation import dataAugmentation
@@ -37,10 +35,10 @@ class emotionPipelineHelpers:
         self.model = emotionModel(submodel=submodel, emotionNames=emotionNames, activityNames=activityNames, featureNames=featureNames, allEmotionClasses=allEmotionClasses, numSubjects=numSubjects, datasetName=datasetName, numExperiments=numExperiments)
         self.model = self.model.double()  # Convert the model to double precision.
 
-        if 'HPC' not in modelConstants.userInputParams['deviceListed']:
-            # Speed up the model training process, if possible.
-            try: self.model = torch.compile(self.model, backend='inductor')  # ['cudagraphs', 'inductor', 'onnxrt', 'openxla', 'tvm']
-            except Exception as e: print(f"\t\tCannot use torch compilation yet: {e}")
+        # if 'HPC' not in modelConstants.userInputParams['deviceListed']:
+        #     # Speed up the model training process, if possible.
+        #     try: self.model = torch.compile(self.model, backend='inductor')  # ['cudagraphs', 'inductor', 'onnxrt', 'openxla', 'tvm']
+        #     except Exception as e: print(f"\t\tCannot use torch compilation yet: {e}")
 
         # Initialize helper classes.
         self.organizeLossInfo = organizeTrainingLosses(accelerator, allEmotionClasses, numActivities=self.numActivities, activityLabelInd=self.activityLabelInd)

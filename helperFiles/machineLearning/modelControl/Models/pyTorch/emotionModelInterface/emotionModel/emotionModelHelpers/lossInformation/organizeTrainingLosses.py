@@ -163,22 +163,26 @@ class organizeTrainingLosses(lossCalculations):
         lowerBoundLabels = validClassLabels.floor()
         upperBoundLabels = validClassLabels.ceil()
 
-        # Get the upper and lower-class weights.
-        upperBoundWeight = validClassLabels - lowerBoundLabels  # [0, 1]
-        lowerBoundWeight = 1 - upperBoundWeight  # [0, 1]
-
         # Remove invalid lower and upper bounds.
         upperBoundLabels[num_classes - 1 <= upperBoundLabels] = num_classes - 1
         lowerBoundLabels[lowerBoundLabels < 0] = 0
 
+        # Get the upper and lower-class weights.
+        upperBoundWeight = validClassLabels - lowerBoundLabels  # [0, 1]
+        lowerBoundWeight = 1 - upperBoundWeight  # [0, 1]
+
         # Count the number of points in each class.
         classCounts = torch.zeros(num_classes, device=class_labels.device, dtype=torch.float32)
-        classCounts[lowerBoundLabels.long()] += lowerBoundWeight
-        classCounts[upperBoundLabels.long()] += upperBoundWeight
+        for classInd in range(num_classes):
+            classCounts[classInd] += (upperBoundWeight[upperBoundLabels == classInd]).sum()
+            classCounts[classInd] += (lowerBoundWeight[lowerBoundLabels == classInd]).sum()
+
+        # Find missing classes.
+        invalidClasses = classCounts == 0
 
         # Convert to class weights.
         class_weights = 1 / classCounts
-        class_weights[torch.isnan(class_weights)] = 0
+        class_weights[invalidClasses] = 0
         class_weights = class_weights / class_weights.sum()
 
         return class_weights

@@ -92,6 +92,7 @@ class lossCalculations:
         # Calculate the activity classification accuracy/loss and assert the integrity of the loss.
         self.activityCrossEntropyLoss = self.activityCrossEntropyLoss.to(device=predictedActivityProfile.device, dtype=predictedActivityClasses.dtype)
         activityLosses = self.activityCrossEntropyLoss(predictedActivityClasses[activityDataMask], trueActivityLabels.long())
+        self.modelHelpers.assertVariableIntegrity(activityLosses, variableName="activity loss", assertGradient=False)
         return activityLosses
 
     def calculateEmotionLoss(self, predictedEmotionProfile, allLabels, allLabelsMask):
@@ -117,6 +118,8 @@ class lossCalculations:
 
             # Calculate the emotion classification accuracy.
             self.emotionCrossEntropyLoss[emotionInd] = self.emotionCrossEntropyLoss[emotionInd].to(device=device, dtype=predictedEmotionProfile.dtype)
-            emotionLosses[emotionInd] = self.emotionCrossEntropyLoss[emotionInd](emotionClassPredictions[emotionMask], trueEmotionLabels.long())
+            currentEmotionLosses = self.emotionCrossEntropyLoss[emotionInd](emotionClassPredictions[emotionMask], trueEmotionLabels.long()).nanmean()
+            self.modelHelpers.assertVariableIntegrity(currentEmotionLosses, variableName=f"emotion {emotionInd} loss", assertGradient=False)
+            emotionLosses[emotionInd] = currentEmotionLosses  # Store the losses.
 
         return emotionLosses

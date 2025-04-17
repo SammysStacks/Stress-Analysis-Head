@@ -160,6 +160,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 if __name__ == "__main__":
     # for i in [2, 4, 8, 16, 32, 64, 128, 256]:
     # for i in [16, 32, 64, 128, 256]:
+    modelConstants.userInputParams['submodel'] = modelConstants.signalEncoderModel
     modelConstants.userInputParams['minAngularThreshold'] = 0.1
     modelConstants.userInputParams['maxAngularThreshold'] = 4
 
@@ -167,9 +168,10 @@ if __name__ == "__main__":
     # for _layerInd, sequenceLength2 in [(1, 32), (2, 32), (3, 32), (5, 32), (5, 32), (10, 32)]:
     # for _layerInd, sequenceLength2 in [(1, 64), (2, 64), (3, 64), (5, 64), (5, 64), (10, 64)]:
     # for _layerInd, sequenceLength2 in [(1, 128), (2, 128), (3, 128), (5, 128), (5, 128), (10, 128)]:
-    for _layerInd, sequenceLength2 in [(1, 8), (1, 16), (1, 32), (1, 64), (1, 128), (1, 256), (1, 512)]:
+    # for _layerInd, sequenceLength2 in [(1, 8), (1, 16), (1, 32), (1, 64), (1, 128), (1, 256), (1, 512)]:
+    for _layerInd, sequenceLength2 in [(1, 256)]:
         # General parameters.
-        _batchSize, _numSignals, _sequenceLength = 128, 64, sequenceLength2
+        _batchSize, _numSignals, _sequenceLength = 256, 128, sequenceLength2
         _activationMethod = 'reversibleLinearSoftSign'  # reversibleLinearSoftSign
         _numLayers = _layerInd
 
@@ -180,13 +182,13 @@ if __name__ == "__main__":
         # Generate the health profile.
         sequence = torch.arange(_sequenceLength, dtype=torch.float64)
         healthProfile = torch.randn(_batchSize, _numSignals, _sequenceLength, dtype=torch.float64)
-        healthProfile = healthProfile/4 + (2*sequence).sin() + sequence.cos()
+        # healthProfile = healthProfile/4 + (2*sequence).sin() + sequence.cos()
         healthProfile = healthProfile - healthProfile.min(dim=-1, keepdim=True).values
         healthProfile = healthProfile / healthProfile.max(dim=-1, keepdim=True).values
         healthProfile = healthProfile * 2 - 1
 
         # Check the reconstruction forwards and backwards.
-        _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(healthProfile, atol=1e-6, numLayers=1, plotResults=True, title=f'len{_sequenceLength}_layers={_numLayers}')
+        _forwardData, _reconstructedData = neuralLayerClass.checkReconstruction(healthProfile, atol=1e-6, numLayers=1, plotResults=False, title=f'len{_sequenceLength}_layers={_numLayers}')
         neuralLayerClass.printParams()
 
         ratio = (_forwardData.norm(dim=-1) / healthProfile.norm(dim=-1)).view(-1).detach().numpy().astype(np.float32)
@@ -206,5 +208,5 @@ if __name__ == "__main__":
 
         # Save the plot.
         os.makedirs('_lipshitz/', exist_ok=True)
-        plt.savefig(f'_lipshitz/len{sequenceLength2}_layers={_numLayers}')
+        plt.savefig(f'_lipshitz/len{sequenceLength2}_layers={_numLayers}.pdf', bbox_inches='tight', dpi=300)
         plt.show()

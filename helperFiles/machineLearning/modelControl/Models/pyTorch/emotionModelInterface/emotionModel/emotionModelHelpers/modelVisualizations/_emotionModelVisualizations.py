@@ -59,7 +59,7 @@ class emotionModelVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} at epoch{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
         else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
-    def plotDistributions(self, allProfiles, distributionNames, batchInd, epoch, saveFigureLocation="", plotTitle="profile distribution"):
+    def plotDistributions(self, allProfiles, distributionNames, batchInd, epoch, showMinimumPlots, saveFigureLocation="", plotTitle="profile distribution"):
         # Assert the integrity of the incoming data
         batchSize, numDistributions, encodedDimension = allProfiles.shape
         if batchSize == 0: return None
@@ -77,9 +77,11 @@ class emotionModelVisualizations(globalPlottingProtocols):
             ax.set_ylabel("Signal amplitude (au)")
             ax.legend(loc="best")
             ax.set_xlabel("Time (s)")
-            # ax.set_ylim((-1.75, 1.75))
 
             # Save the figure.
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {distributionNames[distributionInd]} epoch{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {distributionNames[distributionInd]}.pdf", fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
             else: self.clearFigure(fig=fig, legend=None, showPlot=True)
             plt.close(fig)
+
+            # Only plot all when needed.
+            if showMinimumPlots: break

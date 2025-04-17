@@ -94,11 +94,12 @@ class compileModelDataHelpers:
 
             # Count the number of times the emotion label has a unique value.
             unique_classes, class_counts = torch.unique(featureLabels[goodLabels], return_counts=True)
-            smallClassMask = class_counts <= 2
+            smallClassMask = class_counts <= 1
 
             # Remove labels belonging to small classes.
             smallClassLabelMask = torch.isin(featureLabels, unique_classes[smallClassMask])
             allSingleClassMasks.append(smallClassLabelMask)
+        assert ((~allFeatureLabels.isnan()).sum(dim=0) != 0).all(), f"NaN values in labels: {(~allFeatureLabels.isnan()).sum(dim=0)}"
 
         return allFeatureLabels, allSingleClassMasks
 

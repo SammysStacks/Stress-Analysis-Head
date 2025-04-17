@@ -65,6 +65,7 @@ class specificEmotionModel(neuralOperatorInterface):
         # emotionProfile: batchSize, numEmotions, encodedDimension
         # print(subjectSpecificWeights[0, 0, :, 0].detach().cpu().numpy())
         # print(self.subjectSpecificWeights[subjectInds][0, 0, :, 0].detach().cpu().numpy())
+        # print(subjectSpecificWeights.sum(dim=2)[0][0][0].detach().cpu().numpy())
         # print("")
 
         return emotionProfile

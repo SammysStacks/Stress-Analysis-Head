@@ -38,9 +38,7 @@ class globalPlottingProtocols:
     @staticmethod
     def getRowsCols(combineSharedLayers, saveFigureLocation=None):
         # Determine the number of layers based on the model parameters.
-        prefix = "numSharedEncoder" if 'encoder' in saveFigureLocation.lower() else ("numActivityModel" if "activity" in saveFigureLocation.lower() else "numEmotionModel")
-        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers'] if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 1
-        numSharedLayers = modelConstants.userInputParams[f'{prefix}Layers']
+        numSpecificLayers, numSharedLayers = globalPlottingProtocols.getLayerInformation(saveFigureLocation)
 
         nCols = 2
         # Determine the number of rows and columns for the figure based on the model parameters.
@@ -48,6 +46,15 @@ class globalPlottingProtocols:
         nRows = numSpecificLayers + (1 if combineSharedLayers else numSharedLayers)
 
         return nRows, nCols
+
+    @staticmethod
+    def getLayerInformation(saveFigureLocation):
+        # Get the layer information.
+        prefix = "numSharedEncoder" if 'encoder' in saveFigureLocation.lower() else ("numActivityModel" if "activity" in saveFigureLocation.lower() else "numEmotionModel")
+        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers'] if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 1
+        numSharedLayers = modelConstants.userInputParams[f'{prefix}Layers']
+
+        return numSpecificLayers, numSharedLayers
 
     @staticmethod
     def _createFolder(filePath):

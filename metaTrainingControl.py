@@ -40,12 +40,11 @@ if __name__ == "__main__":
     # General model parameters.
     trainingDate = "2025-04-15"  # The current date we are training the model. Unique identifier of this training set.
     unifyModelWeights = True  # Whether to unify the model weights across all models.
-    plotAllEpochs = True  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
+    plotAllEpochs = False  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
     validationRun = False  # Whether to train new datasets from the old model.
-    testSplitRatio = 0.1  # The percentage of testing points.
 
     # Model loading information.
-    loadSubmodelDate = "2025-04-12----"  # The submodel we are loading: None, "2025-03-31"
+    loadSubmodelDate = "2025-04-12"  # The submodel we are loading: None, "2025-03-31"
 
     # ----------------------- Architecture Parameters ----------------------- #
 
@@ -57,7 +56,7 @@ if __name__ == "__main__":
 
     # Add arguments for the health profile.
     parser.add_argument('--initialProfileAmp', type=float, default=1e-3, help='The limits for profile initialization. Should be near zero')
-    parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the health profile and all signals.')  # TODO
+    parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the health profile and all signals.')
     parser.add_argument('--numProfileShots', type=int, default=24, help='The epochs for profile training: [16, 32]')
     
     # Add arguments for the neural operator.
@@ -71,12 +70,12 @@ if __name__ == "__main__":
 
     # Add arguments for observational learning.
     parser.add_argument('--maxAngularThreshold', type=float, default=45, help='The larger rotational threshold in (degrees)')
-    parser.add_argument('--minAngularThreshold', type=float, default=1, help='The smaller rotational threshold in (degrees)')
+    parser.add_argument('--minAngularThreshold', type=float, default=5, help='The smaller rotational threshold in (degrees)')
 
     # dd arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=4, help='The number of basic emotions (basis states of emotions)')
-    parser.add_argument('--numActivityModelLayers', type=int, default=5, help='The number of layers in the activity model')
-    parser.add_argument('--numEmotionModelLayers', type=int, default=5, help='The number of layers in the emotion model')
+    parser.add_argument('--numActivityModelLayers', type=int, default=9, help='The number of layers in the activity model')
+    parser.add_argument('--numEmotionModelLayers', type=int, default=9, help='The number of layers in the emotion model')
 
     # ----------------------- Training Parameters ----------------------- #
 
@@ -106,6 +105,10 @@ if __name__ == "__main__":
     submodel = userInputParams['submodel']
     print("Arguments:", userInputParams)
 
+    # Specify emotion and signal encoder differences.
+    if submodel == modelConstants.signalEncoderModel: testSplitRatio = 0.1
+    else: testSplitRatio = 0.2  # The test split ratio for the emotion model is higher to allow more examples per class.
+
     # Initialize the model information classes.
     modelCompiler = compileModelData(useTherapyData=False, accelerator=accelerator, validationRun=validationRun)  # Initialize the model compiler.
     trainingProtocols = trainingProtocolHelpers(submodel=submodel, accelerator=accelerator)  # Initialize the training protocols.
@@ -122,14 +125,6 @@ if __name__ == "__main__":
     allDataLoaders.append(allMetadataLoaders.pop(0))  # Do not metatrain with wesad data.
     datasetNames.append(metaDatasetNames.pop(0))  # Do not metatrain with wesad data.
     allModels.append(allMetaModels.pop(0))  # Do not metatrain with wesad data.
-
-    if userInputParams['submodel'] == modelConstants.emotionModel:
-        modelConstants.userInputParams['minAngularThreshold'] = 1  # TODO
-
-    if submodel == modelConstants.emotionModel:
-        # Do not train on the meta-datasets.
-        if not validationRun: allDataLoaders, datasetNames, allModels = [], [], []
-        else: allMetadataLoaders, metaDatasetNames, allMetaModels = [], [], []
     allDatasetNames = metaDatasetNames + datasetNames
 
     # -------------------------- Meta-model Training ------------------------- #

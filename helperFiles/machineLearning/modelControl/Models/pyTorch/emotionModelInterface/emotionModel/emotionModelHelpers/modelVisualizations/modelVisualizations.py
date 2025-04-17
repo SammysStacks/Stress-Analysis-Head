@@ -227,13 +227,13 @@ class modelVisualizations(globalPlottingProtocols):
                 activityProfile = activityProfile.detach().cpu().numpy()
 
                 # Plot the activity profile.
-                self.emotionModelViz.plotDistributions(activityProfile[:, None, :], distributionNames=['Activity'], epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="ActivityModel/", plotTitle="Activity profile")
+                self.emotionModelViz.plotDistributions(activityProfile[:, None, :], distributionNames=['Activity'], epoch=currentEpoch, batchInd=batchInd, showMinimumPlots=showMinimumPlots, saveFigureLocation="ActivityModel/", plotTitle="Activity profile")
                 self.emotionModelViz.plotPredictedMatrix(trueActivityTrainingClasses, trueActivityTestingClasses, predictedActivityTrainingClasses, predictedActivityTestingClasses, numClasses=model.numActivities, epoch=currentEpoch, saveFigureLocation="ActivityModel/", plotTitle="Activity confusion matrix")
 
-                # Plot the scale factor information.
-                self.signalEncoderViz.plotNormalizationFactors(normalizationFactorsPath, reversibleModuleNames, epoch=currentEpoch, saveFigureLocation="SignalEncoderModel/", plotTitle="Normalization factors")
-
                 if not showMinimumPlots:
+                    # Plot the scale factor information.
+                    self.signalEncoderViz.plotNormalizationFactors(activityNormalizationFactorsPath, reversibleModuleNames, epoch=currentEpoch, saveFigureLocation="ActivityModel/", plotTitle="Normalization factors")
+
                     # Plot the angle information.
                     self.signalEncoderViz.plotsGivensAnglesHeatmap(activityGivensAnglesPath, reversibleModuleNames, signalInd=signalInd, epoch=currentEpoch, degreesFlag=False, saveFigureLocation="ActivityModel/", plotTitle="Rotation weight matrix (S)")
                     self.signalEncoderViz.plotsGivensAnglesHist(activityGivensAnglesPath, reversibleModuleNames, epoch=currentEpoch, signalInd=signalInd, degreesFlag=False, saveFigureLocation="ActivityModel/", plotTitle="Rotation angles hist")
@@ -257,8 +257,8 @@ class modelVisualizations(globalPlottingProtocols):
                 basicEmotionProfile, emotionProfile = basicEmotionProfile.detach().cpu().numpy(), emotionProfile.detach().cpu().numpy()
 
                 # Plot the activity profile.
-                self.emotionModelViz.plotDistributions(emotionProfile, distributionNames=emotionNames, epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="EmotionModel/", plotTitle="Emotion profile")
-                self.emotionModelViz.plotDistributions(basicEmotionProfile[:, 0], distributionNames=[f"Basic{i}" for i in range(numBasicEmotions)], epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="EmotionModel/", plotTitle="Basic emotion profile")
+                self.emotionModelViz.plotDistributions(emotionProfile, distributionNames=emotionNames, epoch=currentEpoch, batchInd=batchInd, showMinimumPlots=showMinimumPlots, saveFigureLocation="EmotionModel/", plotTitle="Emotion profile")
+                self.emotionModelViz.plotDistributions(basicEmotionProfile[:, 0], distributionNames=[f"Basic{i}" for i in range(numBasicEmotions)], epoch=currentEpoch, batchInd=batchInd, showMinimumPlots=showMinimumPlots, saveFigureLocation="EmotionModel/", plotTitle="Basic emotion profile")
 
                 for emotionInd in range(model.numEmotions):
                     emotionClassDistributions = allEmotionClassPredictions[emotionInd].detach().cpu().numpy()  # batchSize, numEmotionClasses

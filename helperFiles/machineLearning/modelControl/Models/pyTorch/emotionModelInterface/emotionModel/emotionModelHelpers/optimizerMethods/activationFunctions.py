@@ -43,9 +43,9 @@ class reversibleLinearSoftSign(reversibleInterface):
         self.tolerance = 1e-25  # Tolerance for numerical stability
 
     def getActivationParams(self):
-        infiniteBound = 0.1 + 0.8*torch.sigmoid(self.infiniteBoundParam)  # Convert the infinite bound to a sigmoid value.
-        convergentPoint = 2*torch.sigmoid(self.convergencePointParam)  # Convert the infinite bound to a sigmoid value.
-        linearity = 1 / (1 + convergentPoint) / (1 - infiniteBound + 1e-10)
+        infiniteBound = 0.5 + 0.4*torch.tanh(self.infiniteBoundParam)  # Convert the infinite bound to a sigmoid value. L_h
+        convergentPoint = 1 + torch.tanh(self.convergencePointParam)  # Convert the infinite bound to a sigmoid value.
+        linearity = 1 / (1 + convergentPoint) / (1 - infiniteBound + 1e-10)  # R_h
 
         return infiniteBound, linearity, convergentPoint
 

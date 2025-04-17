@@ -3,7 +3,6 @@ import numpy as np
 
 # Visualization protocols
 from helperFiles.globalPlottingProtocols import globalPlottingProtocols
-from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
 
 
 class generalVisualizations(globalPlottingProtocols):
@@ -132,10 +131,8 @@ class generalVisualizations(globalPlottingProtocols):
         numParams = len(paramNames)
         x = np.arange(numEpochs)
 
-        # Get the parameters.
-        prefix = "numSharedEncoder" if 'encoder' in saveFigureLocation.lower() else ("numActivityModel" if "activity" in saveFigureLocation.lower() else "numEmotionModel")
-        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers'] if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 1
-        numSharedLayers = modelConstants.userInputParams[f'{prefix}Layers']
+        # Determine the number of layers based on the model parameters.
+        numSpecificLayers, numSharedLayers = self.getLayerInformation(saveFigureLocation)
 
         for paramInd in range(numParams):
             # Create a figure and axes array
@@ -208,10 +205,8 @@ class generalVisualizations(globalPlottingProtocols):
         x = np.arange(numEpochs)
         if numEpochs <= 5: return "No data to plot."
 
-        # Get the parameters.
-        prefix = "numSharedEncoder" if 'encoder' in saveFigureLocation.lower() else ("numActivityModel" if "activity" in saveFigureLocation.lower() else "numEmotionModel")
-        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers'] if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 1
-        numSharedLayers = modelConstants.userInputParams[f'{prefix}Layers']
+        # Determine the number of layers based on the model parameters.
+        numSpecificLayers, numSharedLayers = self.getLayerInformation(saveFigureLocation)
 
         for paramInd in range(numParams):
             # Create a figure and axes array
@@ -294,10 +289,8 @@ class generalVisualizations(globalPlottingProtocols):
         numParams = len(paramNames)
         x = np.arange(numEpochs)
 
-        # Get the parameters.
-        prefix = "numSharedEncoder" if 'encoder' in saveFigureLocation.lower() else ("numActivityModel" if "activity" in saveFigureLocation.lower() else "numEmotionModel")
-        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers'] if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 1
-        numSharedLayers = modelConstants.userInputParams[f'{prefix}Layers']
+        # Determine the number of layers based on the model parameters.
+        numSpecificLayers, numSharedLayers = self.getLayerInformation(saveFigureLocation)
 
         for paramInd in range(numParams):
             # Create a figure and axes array
@@ -368,14 +361,12 @@ class generalVisualizations(globalPlottingProtocols):
         numParams = len(paramNames)
         x = np.arange(numEpochs)
 
-        # Get the parameters.
-        prefix = "numSharedEncoder" if 'encoder' in saveFigureLocation.lower() else ("numActivityModel" if "activity" in saveFigureLocation.lower() else "numEmotionModel")
-        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers'] if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 1
-        numSharedLayers = modelConstants.userInputParams[f'{prefix}Layers']
+        # Determine the number of layers based on the model parameters.
+        numSpecificLayers, numSharedLayers = self.getLayerInformation(saveFigureLocation)
 
         for paramInd in range(numParams):
             # Create a figure and axes array
-            fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=True, sharey='col')
+            fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=True, sharey=True)
             numLow, numSpecificHigh, numSharedHigh = 0, 0, 0
             paramName = paramNames[paramInd]
 

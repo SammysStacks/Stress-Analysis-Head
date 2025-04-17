@@ -4,7 +4,6 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
-from matplotlib.patches import Arc, Wedge
 from shap.plots.colors._colors import lch2rgb
 
 # Visualization protocols
@@ -61,7 +60,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.set_title(f"{plotTitle}{(" " + signalNames[signalInd]) if "health profile" not in plotTitle.lower() else ""} epoch{epoch}")
             ax.set_ylabel("Signal amplitude (au)")
             if "health profile" in plotTitle.lower(): ax.set_ylim((-1, 1))
-            else: ax.set_ylim((-1.75, 1.75))
+            else: ax.set_ylim((-1.5, 1.5))
 
             # Save the figure.
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle}{(" " + signalNames[signalInd]) if "health profile" not in plotTitle.lower() else ""} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}{(" " + signalNames[signalInd]) if "health profile" not in plotTitle.lower() else ""}.pdf", fig=fig, clearFigure=True, showPlot=False)
@@ -130,7 +129,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.set_ylabel("Signal amplitude (au)")
             ax.legend(loc="best")
             ax.set_xlabel("Time (s)")
-            ax.set_ylim((-1.75, 1.75))
+            ax.set_ylim((-1.5, 1.5))
 
             # Save the figure.
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]}.pdf", fig=fig, clearFigure=False, showPlot=False)
@@ -147,7 +146,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.set_ylabel("Signal amplitude (au)")
             ax.legend(loc="best")
             ax.set_xlabel("Time (s)")
-            ax.set_ylim((-1.75, 1.75))
+            ax.set_ylim((-1.5, 1.5))
 
             # Save the figure.
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} Error epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]} Error.pdf", fig=fig, clearFigure=True, showPlot=False)
@@ -156,8 +155,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     def plotSignalEncodingStatePath(self, relativeTimes, compiledSignalEncoderLayerStates, batchInd, signalNames, epoch, saveFigureLocation, plotTitle):
         numLayers, numExperiments, numSignals, encodedDimension = compiledSignalEncoderLayerStates.shape
-        numSpecificEncoderLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
-        numSharedEncoderLayers = modelConstants.userInputParams['numSharedEncoderLayers']
+        numSpecificLayers, numSharedLayers = self.getLayerInformation(saveFigureLocation)
         relativeTimesExtent = (relativeTimes.min(), relativeTimes.max(), 0, numLayers)
         hiddenLayers = 1
 
@@ -171,12 +169,12 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             fig.colorbar(im0, fraction=0.046, pad=0.04)
 
             # Add horizontal lines to mark layer boundaries
-            ax.hlines(y=hiddenLayers + numSpecificEncoderLayers, xmin=ax.get_xlim()[0], xmax=ax.get_xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
+            ax.hlines(y=hiddenLayers + numSpecificLayers, xmin=ax.get_xlim()[0], xmax=ax.get_xlim()[1], colors=self.blackColor, linestyles='dashed', linewidth=2)
             ax.hlines(y=hiddenLayers, xmin=ax.get_xlim()[0], xmax=ax.get_xlim()[1], colors=self.blackColor, linestyles='-', linewidth=2)
 
             # Ticks, labels, and formatting
-            yTicks = np.asarray([0] + list(range(1, 1 + numSpecificEncoderLayers)) + list(range(1, 1 + numSharedEncoderLayers)))
-            ax.set_yticks(np.arange(start=0.5, stop=1 + numSpecificEncoderLayers + numSharedEncoderLayers, step=1))
+            yTicks = np.asarray([0] + list(range(1, 1 + numSpecificLayers)) + list(range(1, 1 + numSharedLayers)))
+            ax.set_yticks(np.arange(start=0.5, stop=1 + numSpecificLayers + numSharedLayers, step=1))
             ax.set_yticklabels(yTicks, fontsize=12)
             ax.tick_params(axis="x", labelsize=12)
             ax.set_title(f"{plotTitle} at epoch {epoch}", fontsize=16)
@@ -189,83 +187,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             else: self.clearFigure(fig=None, legend=None, showPlot=False)
 
     # --------------------- Visualize Model Training --------------------- #
-
-    def plotAngleLocations(self, givensAnglesPath, reversibleModuleNames, signalNames, signalInd, epoch, saveFigureLocation, plotTitle):
-        # givensAnglesPath: numModuleLayers, numSignals, numParams
-        nRows, nCols = self.getRowsCols(combineSharedLayers=False, saveFigureLocation=saveFigureLocation)
-        initialAngle = np.pi / 4; initX, initY = np.cos(initialAngle), np.sin(initialAngle)
-
-        # Create a figure and axes array
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(4 * nCols, 4 * nRows), squeeze=False, sharex=True, sharey=False)  # squeeze=False ensures axes is 2D
-        numLow, numSpecificHigh, numSharedHigh = 0, 0, 0
-
-        # Get the angular thresholds.
-        minAngularThreshold = reversibleLieLayer.getMinAngularThreshold(epoch)
-        maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
-        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
-        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers']
-        center = (0, 0)
-
-        for layerInd in range(len(givensAnglesPath)):
-            moduleName = reversibleModuleNames[layerInd].lower()
-            specificFlag = 'specific' in moduleName
-
-            if 'low' in moduleName or 'real' in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
-            elif 'high' in moduleName or 'imaginary' in moduleName:
-                if 'shared' in moduleName: rowInd = numSpecificLayers + (numSharedHigh % numSharedLayers); colInd = numSharedHigh // numSharedLayers; numSharedHigh += 1
-                elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecificLayers; colInd = numSpecificHigh // numSpecificLayers; numSpecificHigh += 1
-                else: raise ValueError("Module name must contain 'shared' or 'specific'")
-            else: raise ValueError("Module name must contain 'low' or 'high'.")
-            ax = axes[rowInd, colInd]
-
-            if colInd == 0: ax.set_ylabel(f"{"Specific" if specificFlag else "Shared"} layer {rowInd + 1 - (0 if specificFlag else numSpecificLayers)}", fontsize=16)
-            ax.set_title(moduleName.capitalize(), fontsize=16)
-            ax.set_ylim((-0.05, 1.05))
-            ax.set_xlim((-0.05, 1.05))
-
-            # Get the plot colors.
-            if 'specific' in moduleName: lineColor = self.lightColors[0]; alpha = 0.75; centerColor = self.darkColors[0]
-            elif 'shared' in moduleName: lineColor = self.lightColors[1]; alpha = 0.33; centerColor = self.darkColors[1]
-            else: raise ValueError("Module name must contain 'specific' or 'shared'.")
-
-            # Draw unit circle for reference
-            arc = Arc(xy=(0, 0), width=2, height=2, theta1=0, theta2=90, edgecolor=self.darkColors[-1], facecolor='none', linewidth=0.5, alpha=0.25, zorder=1)
-            ax.scatter(0, 0, color=centerColor, linewidth=0.5, s=10)  # Highlight the origin
-            ax.add_patch(arc)
-
-            # Draw arrow from (0,0) to (arrow_x, arrow_y)
-            ax.quiver(0, 0, initX, initY, scale=1, angles='xy', scale_units='xy', color=self.blackColor, width=0.0075, headwidth=4.5, headlength=6, zorder=10)
-
-            # Axis arrows
-            ax.quiver(0, 0, 0, 1, scale=1, angles='xy', scale_units='xy', color=self.darkColors[-1], width=0.01, headwidth=6, headlength=8, zorder=9)  # +Y direction
-            ax.quiver(0, 0, 1, 0, scale=1, angles='xy', scale_units='xy', color=self.darkColors[-1], width=0.01, headwidth=6, headlength=8, zorder=9)  # +X direction
-
-            # Plot the potential output vectors.
-            if np.all(givensAnglesPath[layerInd][signalInd] == 0): continue
-            angles = givensAnglesPath[layerInd][signalInd]; angles = initialAngle + angles[angles != 0]; centerPoint = np.zeros_like(angles)
-            ax.quiver(centerPoint, centerPoint, np.cos(angles), np.sin(angles), scale=1, angles='xy', scale_units='xy', color=lineColor, width=0.001, zorder=8, alpha=alpha, linewidth=0.1)
-
-            if 'shared' in moduleName or epoch == 0: continue
-            # Define the shaded region in the bounded range [-minAngle, minAngle]
-            bounded_wedge = Wedge(center=center, r=1, theta1=initialAngle * 180 / np.pi - minAngularThreshold*(2 if rowInd == 0 else 1), theta2=initialAngle * 180 / np.pi + minAngularThreshold*(2 if rowInd == 0 else 1), color=self.blackColor, alpha=0.1, zorder=0)
-            lower_wedge = Wedge(center=center, r=1, theta1=0, theta2=max(0, initialAngle * 180 / np.pi - maxAngularThreshold), color=self.blackColor, alpha=1, zorder=0)
-            upper_wedge = Wedge(center=center, r=1, theta1=min(90, initialAngle * 180 / np.pi + maxAngularThreshold), theta2=90, color=self.blackColor, alpha=1, zorder=0)
-            ax.add_patch(upper_wedge); ax.add_patch(bounded_wedge); ax.add_patch(lower_wedge)
-
-        for specificLayerInd in range(numSpecificLayers):
-            for colInd in range(nCols):
-                if colInd == 0 or colInd == nCols - 1: continue
-                axes[specificLayerInd, colInd].remove()
-
-        fig.suptitle(t=f"{plotTitle} at epoch {epoch}", fontsize=24)
-        fig.supylabel(r"Signal index: $\mathbb{\mathit{i}}$", fontsize=20)
-        fig.supxlabel(r"Signal index: $\mathbb{\mathit{j}}$", fontsize=20)
-
-        # Save the plot
-        # fig.tight_layout()
-        fig.set_constrained_layout(True)
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} cutoff{maxAngularThreshold} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]} cutoff{maxAngularThreshold}.pdf", fig=fig, clearFigure=True, showPlot=False)
-        else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
     def plotsGivensAnglesHist(self, givensAnglesPath, reversibleModuleNames, signalInd, degreesFlag, epoch, saveFigureLocation, plotTitle):
         # givensAnglesPath: numModuleLayers, numSignals, numAngles
@@ -284,9 +205,10 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Get the angular thresholds.
         minAngularThreshold = reversibleLieLayer.getMinAngularThreshold(epoch)
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
-        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
-        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers']
         histogramPlots = []
+
+        # Determine the number of layers based on the model parameters.
+        numSpecificLayers, numSharedLayers = self.getLayerInformation(saveFigureLocation)
 
         for layerInd in range(len(givensAnglesPath)):
             moduleName = reversibleModuleNames[layerInd].lower()
@@ -368,8 +290,9 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         # Get the angular thresholds.
         minAngularThreshold = reversibleLieLayer.getMinAngularThreshold(epoch)
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
-        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
-        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers']
+
+        # Determine the number of layers based on the model parameters.
+        numSpecificLayers, numSharedLayers = self.getLayerInformation(saveFigureLocation)
 
         for layerInd in range(len(givensAnglesPath)):
             moduleName = reversibleModuleNames[layerInd].lower()
@@ -439,10 +362,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         degrees = (180 if degreesFlag else math.pi) / 4
         colorbarAxes = []
 
-        # Get the angular thresholds.
-        prefix = "numSharedEncoder" if 'encoder' in saveFigureLocation.lower() else ("numActivityModel" if "activity" in saveFigureLocation.lower() else "numEmotionModel")
-        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers'] if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 1
-        numSharedLayers = modelConstants.userInputParams[f'{prefix}Layers']
+        # Determine the number of layers based on the model parameters.
+        numSpecificLayers, numSharedLayers = self.getLayerInformation(saveFigureLocation)
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
 
         for layerInd in range(len(givensAnglesPath)):
@@ -497,13 +418,11 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         numModuleLayers = len(reversibleModuleNames)
         sharedValues, specificValues = [], []
 
-        # Get the layer information.
-        prefix = "numSharedEncoder" if 'encoder' in saveFigureLocation.lower() else ("numActivityModel" if "activity" in saveFigureLocation.lower() else "numEmotionModel")
-        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers'] if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 1
-        numSharedLayers = modelConstants.userInputParams[f'{prefix}Layers']
+        # Determine the number of layers based on the model parameters.
+        numSpecificLayers, numSharedLayers = self.getLayerInformation(saveFigureLocation)
 
         # Get the number of sections.
-        if modelConstants.userInputParams['submodel'] in modelConstants.signalEncoderModel:
+        if 'wavelet' in modelConstants.userInputParams['optimizerType'].lower():
             numSharedScalarSections = 1 + int(math.log2(modelConstants.userInputParams['encodedDimension'] // modelConstants.userInputParams['minWaveletDim']))
         else: numSharedScalarSections = 2
         numSpecificScalarSections = 2
@@ -513,7 +432,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         nCols = min(numSpecificLayers + numSharedLayers, maxCols); nRows = (numSpecificLayers + numSharedLayers) // nCols + (1 if (numSpecificLayers + numSharedLayers) % nCols != 0 else 0)
 
         xTickLabelShared = []
-        if modelConstants.userInputParams['submodel'] in modelConstants.signalEncoderModel:
+        if 'wavelet' in modelConstants.userInputParams['optimizerType'].lower():
             xTickLabelSpecific = ["Detailed decomposition layer 1", "Approximate decomposition layer 1"]
             for decompositionInd in range(numSharedScalarSections - 1): xTickLabelShared.append(f"Detailed decomposition layer {decompositionInd + 1}")
             xTickLabelShared.append(f"Approximate decomposition layer {numSharedScalarSections - 1}")
@@ -672,9 +591,8 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=True, sharey=True)
         numLow, numSpecificHigh, numSharedHigh = 0, 0, 0
 
-        # Get the parameters.
-        numSpecificLayers = modelConstants.userInputParams['numSpecificEncoderLayers']
-        numSharedLayers = modelConstants.userInputParams['numSharedEncoderLayers']
+        # Determine the number of layers based on the model parameters.
+        numSpecificLayers, numSharedLayers = self.getLayerInformation(saveFigureLocation)
 
         for layerInd in range(numModuleLayers):
             moduleName = moduleNames[layerInd].lower()
