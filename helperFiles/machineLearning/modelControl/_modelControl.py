@@ -1,9 +1,8 @@
 # General
 import numpy as np
 
-# Import Files for extracting model information
-from .modelSpecifications.compileModelInfo import compileModelInfo
-from .Models.generalModels.generalModels import generalModel
+from helperFiles.machineLearning.modelControl.Models.generalModels.generalModels import generalModel
+from helperFiles.machineLearning.modelControl.modelSpecifications.compileModelInfo import compileModelInfo
 
 
 class modelControl:

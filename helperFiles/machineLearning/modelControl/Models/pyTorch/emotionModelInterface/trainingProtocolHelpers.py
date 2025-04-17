@@ -36,9 +36,9 @@ class trainingProtocolHelpers:
             modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
 
             # Set the training parameters.
-            specificTraining = submodel == modelConstants.signalEncoderModel  # TODO
             profileTraining = submodel == modelConstants.signalEncoderModel
             trainSharedLayers = modelInd < len(allMetaModels)
+            specificTraining = True
 
             # Copy over the shared layers.
             self.modelMigration.unifyModelWeights(allModels=[modelPipeline], modelWeights=self.sharedModelWeights, layerInfo=self.unifiedLayerData)

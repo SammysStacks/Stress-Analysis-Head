@@ -7,9 +7,8 @@ import bisect
 import time
 import os
 
-# Import helper files.
-from ..dataAcquisitionAndAnalysis.excelProcessing.saveDataProtocols import saveExcelData  # Import interfaces for reading/writing data
-from .modelControl._modelControl import modelControl  # Import Files for extracting models
+from helperFiles.dataAcquisitionAndAnalysis.excelProcessing.saveDataProtocols import saveExcelData
+from helperFiles.machineLearning.modelControl._modelControl import modelControl
 
 
 class machineLearningInterface:
