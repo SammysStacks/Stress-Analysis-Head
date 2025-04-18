@@ -16,7 +16,6 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
     def __init__(self, numSignals, sequenceLength, numLayers, activationMethod):
         super(reversibleLieLayer, self).__init__(numSignals, sequenceLength, numLayers, activationMethod)
-        self.minRotationAngle = (0.01 if modelConstants.userInputParams['submodel'] == modelConstants.signalEncoderModel else 0.01) * torch.pi / 180
         self.initialMaxGivensAngle = self.getInverseAngleParams(torch.as_tensor(3 / sequenceLength).sqrt() * torch.pi / 180)
         self.identityMatrix = torch.eye(self.sequenceLength, dtype=torch.float64)
 
@@ -103,14 +102,18 @@ class reversibleLieLayer(reversibleLieLayerInterface):
     # ------------------- Observational Learning ------------------- #
 
     @staticmethod
-    def getMinAngularThreshold(epoch):
-        if epoch <= modelConstants.numWarmupEpochs: return 0.01 * torch.pi/180  # 0.01 degrees
+    def getWarmupThreshold():
+        return 0.01 * torch.pi / 180
+
+    @staticmethod
+    def getMinAngularThreshold(epoch, sharedLayer=False):
+        if epoch <= modelConstants.numWarmupEpochs: return reversibleLieLayer.getWarmupThreshold()
         exponent = 1.5 if modelConstants.userInputParams['submodel'] == modelConstants.emotionModel else 1.5
         relativeEpoch = epoch - modelConstants.numWarmupEpochs
 
         # Get the minimum angular threshold.
         minThresholdStep = modelConstants.userInputParams['minThresholdStep']
-        minAngularThreshold = modelConstants.userInputParams['minAngularThreshold']
+        minAngularThreshold = modelConstants.userInputParams['minAngularThreshold'] if not sharedLayer else 0.1
         minAngularThreshold = min(minAngularThreshold, (relativeEpoch**exponent) * minThresholdStep) * torch.pi/180
 
         return minAngularThreshold
@@ -122,8 +125,8 @@ class reversibleLieLayer(reversibleLieLayerInterface):
             maxAngularParam = self.getInverseAngleParams(maxAngularThreshold)
 
             # Get the angular minimum thresholds.
-            if sharedLayer and modelConstants.numWarmupEpochs < epoch: minAngularThreshold = self.getInverseAngleParams(self.minRotationAngle)
-            else: minAngularThreshold = self.getInverseAngleParams(self.getMinAngularThreshold(epoch))
+            if epoch <= modelConstants.numWarmupEpochs: minAngularThreshold = self.getInverseAngleParams(self.getWarmupThreshold())
+            else: minAngularThreshold = self.getInverseAngleParams(self.getMinAngularThreshold(epoch, sharedLayer))
 
             for layerInd in range(self.numLayers):
                 givensAngles = self.getGivensAngles(layerInd)  # Dim: numSignals, numParams

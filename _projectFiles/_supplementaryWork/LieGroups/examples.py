@@ -62,12 +62,19 @@ for i in range(n):
 R3 = expm(S3)
 y3 = R3 @ x
 
+# --- S4 (skew-symmetric with i+j = n-1, for i < j) ---
+S4 = np.random.uniform(size=(n, n), low=-1*np.pi/180, high=1*np.pi/180)
+S4[np.tril_indices_from(S4, k=-1)] = 0
+S4 = S4 - S4.T  # Make it skew-symmetric
+R4 = expm(S4)
+y4 = R4 @ x
+
 # Convert theta from radians to degrees for the colorbar range
 theta_deg = 1 + theta * 180 / np.pi
 
 # --- PLOTTING ---
-fig, axs = plt.subplots(3, 2,
-                        figsize=(6.4*2, 4.8*3),
+fig, axs = plt.subplots(4, 2,
+                        figsize=(6.4*2, 4.8*4),
                         sharex='col', sharey='col', squeeze=True)
 
 # --- LEFT COLUMN: TIME-SERIES PLOTS ---
@@ -83,47 +90,43 @@ axs[2,0].plot(t, x, linewidth=2, color='#231F20', label='Original signal')
 axs[2,0].plot(t, y3, '--', linewidth=2, color='#F3757A', label='Transformed signal')
 axs[2,0].legend(loc='upper left')
 
-axs[2,0].set_xlabel('Time')
+axs[3,0].plot(t, x, linewidth=2, color='#231F20', label='Original signal')
+axs[3,0].plot(t, y4, '--', linewidth=2, color='#F3757A', label='Transformed signal')
+axs[3,0].legend(loc='upper left')
+
+axs[3,0].set_xlabel('Time')
 axs[0,0].set_ylabel('Amplitude')
 axs[1,0].set_ylabel('Amplitude')
 axs[2,0].set_ylabel('Amplitude')
+axs[3,0].set_ylabel('Amplitude')
 
 axs[0, 0].set_title('Signal transformations')
 axs[0, 1].set_title('Rotational generators')
 
-# --- RIGHT COLUMN: HEATMAPS ---
-im1 = axs[0,1].imshow(S1 * 180/np.pi,
-                      cmap=custom_cmap,
-                      interpolation='none',
-                      aspect='auto',
-                      vmin=-theta_deg,
-                      vmax= theta_deg)
+# Make sure your S1, S2, S3 are 2D NumPy arrays
+im1 = axs[0,1].pcolormesh(np.flip(S1, axis=0) * 180/np.pi, cmap=custom_cmap,
+                          vmin=-theta_deg, vmax=theta_deg, shading='auto')
 
-im2 = axs[1,1].imshow(S2 * 180/np.pi,
-                      cmap=custom_cmap,
-                      interpolation='none',
-                      aspect='auto',
-                      vmin=-theta_deg,
-                      vmax= theta_deg)
+im2 = axs[1,1].pcolormesh(np.flip(S2, axis=0) * 180/np.pi, cmap=custom_cmap,
+                          vmin=-theta_deg, vmax=theta_deg, shading='auto')
 
-im3 = axs[2,1].imshow(S3 * 180/np.pi,
-                      cmap=custom_cmap,
-                      interpolation='none',
-                      aspect='auto',
-                      vmin=-theta_deg,
-                      vmax= theta_deg)
+im3 = axs[2,1].pcolormesh(np.flip(S3, axis=0) * 180/np.pi, cmap=custom_cmap,
+                          vmin=-theta_deg, vmax=theta_deg, shading='auto')
+
+im4 = axs[3,1].pcolormesh(np.flip(S4, axis=0) * 180/np.pi, cmap=custom_cmap,
+                          vmin=-theta_deg, vmax=theta_deg, shading='auto')
 
 axs[0,1].set_ylabel('Signal index (i)')
 axs[1,1].set_ylabel('Signal index (i)')
 axs[2,1].set_ylabel('Signal index (i)')
-axs[2,1].set_xlabel('Signal index (j)')
+axs[3,1].set_xlabel('Signal index (j)')
 
 # Attach a single colorbar to the entire right column
-fig.colorbar(im3, ax=axs[:,1], orientation='vertical')
+fig.colorbar(im4, ax=axs[:,1], orientation='vertical')
 fig.subplots_adjust(wspace=0.1, hspace=0.3)
 
 
 # Make sure layout doesn’t overlap
 fig.set_constrained_layout(True)
-fig.savefig("LieTransformations.png", transparent=True, dpi=600, format='png')
+fig.savefig("LieTransformations.pdf", transparent=True, dpi=600, format='pdf')
 plt.show()
