@@ -258,7 +258,6 @@ class modelVisualizations(globalPlottingProtocols):
 
                 # Plot the activity profile.
                 self.emotionModelViz.plotDistributions(emotionProfile, distributionNames=emotionNames, epoch=currentEpoch, batchInd=batchInd, showMinimumPlots=showMinimumPlots, saveFigureLocation="EmotionModel/", plotTitle="Emotion profile")
-                self.emotionModelViz.plotDistributions(basicEmotionProfile[:, 0], distributionNames=[f"Basic{i}" for i in range(numBasicEmotions)], epoch=currentEpoch, batchInd=batchInd, showMinimumPlots=False, saveFigureLocation="EmotionModel/", plotTitle="Basic emotion profile")
 
                 for emotionInd in range(model.numEmotions):
                     emotionClassDistributions = allEmotionClassPredictions[emotionInd].detach().cpu().numpy()  # batchSize, numEmotionClasses
@@ -278,5 +277,7 @@ class modelVisualizations(globalPlottingProtocols):
                     predictedEmotionTrainingClasses = emotionClasses[emotionTrainingMask]
                     predictedEmotionTestingClasses = emotionClasses[emotionTestingMask]
 
+                    self.emotionModelViz.plotDistributions(basicEmotionProfile[:, emotionInd], distributionNames=[f"Basic{i}" for i in range(numBasicEmotions)], epoch=currentEpoch, batchInd=batchInd, showMinimumPlots=False, saveFigureLocation="EmotionModel/",
+                                                           plotTitle=f"Basic emotion profile {emotionName}")
                     self.emotionModelViz.plotPredictedMatrix(trueEmotionTrainingClasses, trueEmotionTestingClasses, predictedEmotionTrainingClasses, predictedEmotionTestingClasses, numClasses=numClasses, epoch=currentEpoch, saveFigureLocation="EmotionModel/", plotTitle=f"{emotionName} confusion matrix")
                     if showMinimumPlots: break

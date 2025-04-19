@@ -42,9 +42,10 @@ if __name__ == "__main__":
     unifyModelWeights = True  # Whether to unify the model weights across all models.
     plotAllEpochs = True  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
     validationRun = False  # Whether to train new datasets from the old model.
+    testSplitRatio = 0.125  # The test split ratio for the emotion model is higher to allow more examples per class.
 
     # Model loading information.
-    loadSubmodelDate = "2025-04-15-------"  # The submodel we are loading: None, "2025-03-31"
+    loadSubmodelDate = "2025-04-15----"  # The submodel we are loading: None, "2025-04-18"
 
     # ----------------------- Architecture Parameters ----------------------- #
 
@@ -104,10 +105,6 @@ if __name__ == "__main__":
     modelConstants.updateModelParams(userInputParams)
     submodel = userInputParams['submodel']
     print("Arguments:", userInputParams)
-
-    # Specify emotion and signal encoder differences.
-    if submodel == modelConstants.signalEncoderModel: testSplitRatio = 0.1
-    else: testSplitRatio = 0.125  # The test split ratio for the emotion model is higher to allow more examples per class.
 
     # Initialize the model information classes.
     modelCompiler = compileModelData(useTherapyData=False, accelerator=accelerator, validationRun=validationRun)  # Initialize the model compiler.
