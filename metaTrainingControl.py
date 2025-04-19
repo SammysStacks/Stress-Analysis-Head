@@ -40,11 +40,11 @@ if __name__ == "__main__":
     # General model parameters.
     trainingDate = "2025-04-18"  # The current date we are training the model. Unique identifier of this training set.
     unifyModelWeights = True  # Whether to unify the model weights across all models.
-    plotAllEpochs = False  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
+    plotAllEpochs = True  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
     validationRun = False  # Whether to train new datasets from the old model.
 
     # Model loading information.
-    loadSubmodelDate = "2025-04-15"  # The submodel we are loading: None, "2025-03-31"
+    loadSubmodelDate = "2025-04-15-------"  # The submodel we are loading: None, "2025-03-31"
 
     # ----------------------- Architecture Parameters ----------------------- #
 

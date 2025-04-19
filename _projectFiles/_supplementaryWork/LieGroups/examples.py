@@ -62,8 +62,9 @@ for i in range(n):
 R3 = expm(S3)
 y3 = R3 @ x
 
+maxTheta = 4
 # --- S4 (skew-symmetric with i+j = n-1, for i < j) ---
-S4 = np.random.uniform(size=(n, n), low=-1*np.pi/180, high=1*np.pi/180)
+S4 = np.random.uniform(size=(n, n), low=-maxTheta*np.pi/180, high=maxTheta*np.pi/180)
 S4[np.tril_indices_from(S4, k=-1)] = 0
 S4 = S4 - S4.T  # Make it skew-symmetric
 R4 = expm(S4)
