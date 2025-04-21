@@ -198,7 +198,7 @@ class trainingProtocols(extractData):
                     startBiomarkerFeatureIndex = endBiomarkerFeatureIndex
 
                     # Plot each biomarker's features from the training file.
-                    self.analyzeFeatures.singleFeatureAnalysis(self.readData, rawFeatureTimes, rawFeatures, self.biomarkerFeatureNames[biomarkerInd], preAveragingSeconds=0, averageIntervalList=[30],
+                    self.analyzeFeatures.singleFeatureAnalysis(self.readData, rawFeatureTimes, rawFeatures, self.biomarkerFeatureNames[biomarkerInd], preAveragingSeconds=0, averageIntervalList=[30, 60],
                                                                surveyCollectionTimes=finalSurveyAnswerTimes, experimentTimes=experimentTimes, experimentNames=experimentNames,
                                                                folderName=excelFileName + "/Feature Analysis/singleFeatureAnalysis - " + self.biomarkerFeatureOrder[biomarkerInd].upper() + "/")
 
