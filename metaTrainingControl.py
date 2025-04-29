@@ -38,14 +38,14 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-04-18"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2025-04-18 10-layer"  # The current date we are training the model. Unique identifier of this training set.
     unifyModelWeights = True  # Whether to unify the model weights across all models.
-    plotAllEpochs = True  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
+    plotAllEpochs = False  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
     validationRun = False  # Whether to train new datasets from the old model.
-    testSplitRatio = 0.125  # The test split ratio for the emotion model is higher to allow more examples per class.
+    testSplitRatio = 0.33  # The test split ratio for the emotion model is higher to allow more examples per class.
 
     # Model loading information.
-    loadSubmodelDate = "2025-04-15----"  # The submodel we are loading: None, "2025-04-18"
+    loadSubmodelDate = "2025-04-15"  # The submodel we are loading: None, "2025-04-18"
 
     # ----------------------- Architecture Parameters ----------------------- #
 
@@ -74,9 +74,9 @@ if __name__ == "__main__":
     parser.add_argument('--minAngularThreshold', type=float, default=5, help='The smaller rotational threshold in (degrees)')
 
     # dd arguments for the emotion and activity architecture.
-    parser.add_argument('--numBasicEmotions', type=int, default=4, help='The number of basic emotions (basis states of emotions)')
-    parser.add_argument('--numActivityModelLayers', type=int, default=2, help='The number of layers in the activity model')
-    parser.add_argument('--numEmotionModelLayers', type=int, default=2, help='The number of layers in the emotion model')
+    parser.add_argument('--numBasicEmotions', type=int, default=1, help='The number of basic emotions (basis states of emotions)')
+    parser.add_argument('--numActivityModelLayers', type=int, default=10, help='The number of layers in the activity model')
+    parser.add_argument('--numEmotionModelLayers', type=int, default=10, help='The number of layers in the emotion model')
 
     # ----------------------- Training Parameters ----------------------- #
 

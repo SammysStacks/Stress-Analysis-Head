@@ -2,6 +2,7 @@
 import random
 import time
 
+import numpy as np
 import torch
 
 # Helper classes.
@@ -69,9 +70,9 @@ class trainingProtocolHelpers:
             if not onlyProfileTraining: modelPipeline.trainModel(dataLoader, submodel, profileTraining=False, specificTraining=True, trainSharedLayers=False, stepScheduler=submodel == modelConstants.emotionModel, numEpochs=numEpochs)  # Signal-specific training.
 
             # Health profile training.
-            if submodel == modelConstants.signalEncoderModel:
-                numProfileShots = modelPipeline.resetPhysiologicalProfile(submodel)
-                modelPipeline.trainModel(dataLoader, submodel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=numProfileShots + 1)  # Profile training.
+            numProfileShots = modelPipeline.resetPhysiologicalProfile(modelConstants.signalEncoderModel)
+            if submodel == modelConstants.emotionModel: numProfileShots = np.random.randint(low=numProfileShots//2, high=numProfileShots)
+            modelPipeline.trainModel(dataLoader, modelConstants.signalEncoderModel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=numProfileShots + 1)  # Profile training.
             if not onlyProfileTraining: modelPipeline.model.cullAngles(epoch=epoch)
 
     def validationTraining(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch):

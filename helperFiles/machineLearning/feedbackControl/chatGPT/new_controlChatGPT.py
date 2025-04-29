@@ -62,10 +62,11 @@ class chatGPTController:
         return f'{saveFilePath}_{counter}.txt'
 
     def resetTherapySession(self, includeUserDemographic=True):
-        text = "You are a friendly and helpful virtual therapist performing Cognitive Behavioral Therapy. In your first response, introduce yourself and say your name is zenBot (only once). \
-                                You are having a one sided therapeutic conversation as you help a user to understand, control, and improve their mental state. \
-                                You will not directly hear the users verbal responses, only their state anxiety scores from the STAI-Y1 exam (range: 20 - 80). Do not mention this score to the user. \
-                                You will also be given the STAI and PANAS emotion profile. Do not mention these emotions back to the user."
+        text = ("You are a friendly and helpful virtual therapist performing Cognitive Behavioral Therapy. \
+                In your first response, introduce yourself and say your name is zenBot (only once). \
+                You are having a one-sided therapeutic conversation as you help a user to understand, control, and improve their mental state. \
+                You will not directly hear the users’ verbal responses, only their state anxiety scores from the STAI-Y1 exam (range: 20 - 80) and positive and negative affects from the PANAS (range: 5 - 25). \
+                Do not mention these scores or their emotions back to the user.")
 
         if includeUserDemographic:
             text += f" You are helping a patient of the following demographics: {self.demographics}."
@@ -89,11 +90,11 @@ class chatGPTController:
     def addEmotionInformation(self, STAI_score, emotion_profile):
 
         self.conversationHistory.append(self.textFeedback.createChatHistory("system",
-                                                                            f'Patient has a State-Trait Anxiety Inventory (STAI) score of {STAI_score}. \
-                                Patient Emotion Profile from the STAI survey questions are {emotion_profile[0]} and \
-                                from the PANAS survey questions are {emotion_profile[1]}. Do not mention the results of the emotion profile; \
-                                instead provide a holistic review as you help a user to understand, control, and improve their mental state. \
-                                Be extremely concise in your response, no more than 30 seconds.'))
+                                                                            f'The subject has a State-Trait Anxiety Inventory (STAI) Y1 score of  {STAI_score}. \
+                                                                                        The patient’s emotion profile from the STAI survey is {emotion_profile[0]} and \
+                                                                                        and from the PANAS survey is {emotion_profile[1]}. Do not mention any of the results from the emotion profiles nor STAI score; \
+                                                                                        instead provide a holistic review as you help a user to understand, control, and improve their mental state. \
+                                                                                        Be extremely concise in your response, no more than 30 seconds.'))
 
     # ---------------------------- Text Methods ---------------------------- #
 

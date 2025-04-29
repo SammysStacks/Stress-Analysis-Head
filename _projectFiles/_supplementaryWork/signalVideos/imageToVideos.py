@@ -1,142 +1,125 @@
+# fast_pdf_to_video_preserve_res_fallback.py
+import os, gc, re, cv2, fitz, numpy as np
+from math import ceil
+from pathlib import Path
 from collections import defaultdict
-import cv2
-import os
-import re
-
-import fitz
-from pdf2image import convert_from_path
-import numpy as np
-from PIL import Image
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from natsort import natsorted
 
-# Max allowed pixels
-Image.MAX_IMAGE_PIXELS = 100000000
+# ───── user settings ──────────────────────────────────────────────────
+DPI          = 300
+FPS          = 15
+CLIP_SEC     = 16
+RUN_PREFIX   = "2025-04-03"
+DATASETS     = {"wesad","amigos","case","empatch","dapper","emognition"}
+ROOT_DIR     = Path(__file__).resolve().parent / "modelInstances"
+PREFERRED_CODECS = [             # (fourcc, extension)
+    ("MJPG", ".avi"),  # always works, any resolution
+    ("FFV1", ".mkv"),  # loss‑less, if ffv1 is compiled in
+    ("avc1", ".mp4"),            # H.264/AVC
+    ("H264", ".mp4"),            # some FFmpeg builds use this tag
+    ("HEVC", ".mp4"),            # H.265/HEVC (if compiled in)
+    ("FFV1", ".mkv"),            # lossless, unlimited size
+]
+GC_EVERY     = 25
+PDF_RE       = re.compile(r"^(.*?)[ _-]?epochs(\d+)\.pdf$", re.I)
+# ──────────────────────────────────────────────────────────────────────
 
 
-def resize_with_letterbox(img, frame_size):
-    frame_width, frame_height = frame_size
-    original_height, original_width = img.shape[:2]
+# ---------- helpers ----------
+def even(v: int) -> int:
+    """Return the next even integer (FFmpeg requires even dims)."""
+    return v + (v & 1)
 
-    # Get scale factor to maintain aspect ratio
-    scale_factor = min(frame_width / original_width, frame_height / original_height)
+def page_px_size(pdf: Path, dpi=DPI):
+    with fitz.open(pdf) as d:
+        r = d[0].rect
+        scale = dpi / 72.0
+        return int(r.width*scale+0.5), int(r.height*scale+0.5)
 
-    # Calculate new dimensions
-    new_width = int(original_width * scale_factor)
-    new_height = int(original_height * scale_factor)
+def render_page(pdf: Path, frame_size, dpi=DPI):
+    with fitz.open(pdf) as d:
+        pix = d[0].get_pixmap(dpi=dpi, colorspace=fitz.csRGB, alpha=False)
+    img = np.frombuffer(pix.samples, np.uint8).reshape(pix.height, pix.width, 3)
+    if (pix.width, pix.height) != frame_size:
+        canvas = np.zeros((frame_size[1], frame_size[0], 3), np.uint8)
+        x0 = (frame_size[0] - pix.width)//2
+        y0 = (frame_size[1] - pix.height)//2
+        canvas[y0:y0+pix.height, x0:x0+pix.width] = img
+        img = canvas
+    return cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
 
-    # Resize image
-    resized_img = cv2.resize(img, (new_width, new_height), interpolation=cv2.INTER_AREA)
-
-    # Create blank canvas with target size
-    canvas = np.zeros((frame_height, frame_width, 3), dtype=np.uint8)
-
-    # Get top-left coordinates to center the image
-    x_offset = (frame_width - new_width) // 2
-    y_offset = (frame_height - new_height) // 2
-
-    # Place the resized image onto the canvas
-    canvas[y_offset:y_offset + new_height, x_offset:x_offset + new_width] = resized_img
-
-    return canvas
-
-
-def extract_epoch_number(filename):
-    match = re.search(r"epochs(\d+)", filename)
-    return int(match.group(1)) if match else 0
-
-
-def images_to_video(images, video_path, frame_rate=15, video_duration=16, frame_size=(3840, 2160)):
-    total_frames_required = frame_rate * video_duration
-    num_images = len(images)
-    duplication_factor = max(1, round(total_frames_required / num_images))
-
-    print(f"Creating video: {video_path}")
-    print(f"Total images: {num_images}, duplicating each frame {duplication_factor} times.")
-
-    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-    video = cv2.VideoWriter(video_path, fourcc, frame_rate, frame_size)
-    frame_count = 0
-
-    for img in images:
-        img_np = np.array(img)
-        img_bgr = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
-        final_frame = resize_with_letterbox(img_bgr, frame_size)
-
-        for _ in range(duplication_factor):
-            video.write(final_frame)
-            frame_count += 1
-
-    video.release()
-    print(f"Video saved: {video_path}, Total frames: {frame_count}")
+def open_writer(path_base: Path, frame_size):
+    for fourcc_str, ext in PREFERRED_CODECS:
+        out_path = path_base.with_suffix(ext)
+        fourcc   = cv2.VideoWriter_fourcc(*fourcc_str)
+        vw = cv2.VideoWriter(str(out_path), fourcc, FPS, frame_size)
+        if vw.isOpened():
+            return vw, out_path
+        vw.release()                # <‑‑ add this
+    raise RuntimeError("No available codec …")
 
 
-def images_to_gif(images, gif_path, duration=100):
-    print(f"Creating GIF: {gif_path}")
-    images[0].save(gif_path, save_all=True, append_images=images[1:], duration=duration, loop=0)
-    print(f"GIF saved: {gif_path}")
+# ---------- worker ----------
+def build_video(job):
+    pdf_folder, prefix, pdf_list = job
+    # 1. determine constant frame size (max w/h, then even)
+    max_w = max_h = 0
+    for pdf in pdf_list:
+        w, h = page_px_size(pdf)
+        max_w, max_h = max(max_w, w), max(max_h, h)
+    frame_size = (even(max_w), even(max_h))
 
+    # 2. open a writer with the first available large‑frame codec
+    out_base = pdf_folder / prefix
+    vw, out_path = open_writer(out_base, frame_size)
+
+    dup = max(1, ceil((FPS*CLIP_SEC)/len(pdf_list)))
+    for i, pdf in enumerate(pdf_list, 1):
+        frame = render_page(pdf, frame_size)
+        for _ in range(dup):
+            vw.write(frame)
+        if i % GC_EVERY == 0:
+            gc.collect()
+    vw.release()
+    return prefix, len(pdf_list), out_path.name
+
+# ---------- job gathering ----------
+def gather_jobs():
+    for model_dir in ROOT_DIR.iterdir():
+        if not (model_dir.is_dir() and model_dir.name.startswith(RUN_PREFIX)):
+            continue
+        for ds_dir in model_dir.iterdir():
+            if ds_dir.name.lower() not in DATASETS or not ds_dir.is_dir():
+                continue
+            for sub in ("signalEncoding", "signalReconstruction"):
+                folder = ds_dir / sub
+                if not folder.is_dir(): continue
+                groups = defaultdict(list)
+                for pdf in folder.glob("*.pdf"):
+                    m = PDF_RE.match(pdf.name)
+                    if m:
+                        prefix, epoch = m.groups()
+                        groups[prefix].append((int(epoch), pdf))
+                for p, lst in groups.items():
+                    lst = natsorted(lst, key=lambda t: t[0])
+                    yield (folder, p, [pdf for _, pdf in lst])
+
+# ---------- main ----------
+def main():
+    jobs = list(gather_jobs())
+    if not jobs:
+        print("Nothing to convert."); return
+
+    os.environ.setdefault("OMP_NUM_THREADS", "4")
+    print(f"Processing {len(jobs)} video groups with "
+          f"{os.cpu_count()} CPU cores …\n")
+
+    with ProcessPoolExecutor() as pool:
+        futs = {pool.submit(build_video, j): j[1] for j in jobs}
+        for f in as_completed(futs):
+            prefix, n, fname = f.result()
+            print(f"{prefix:<40} {n:>4} pages  → {fname}")
 
 if __name__ == "__main__":
-    currentDirectory = os.path.dirname(os.path.abspath(__file__))
-    modelFolderDirectory = os.path.join(currentDirectory, "modelInstances")
-    datasetNames = ["wesad", "amigos", "case", "empatch", "dapper", "emognition"]
-    initialFolderSubstring = "2025-04-02"
-
-    pattern = re.compile(r"^(.*?)[ _-]?epochs(\d+)\.pdf$", re.IGNORECASE)
-
-    for modelFolderName in os.listdir(modelFolderDirectory):
-        if not modelFolderName.startswith(initialFolderSubstring): continue
-        modelFolder = os.path.join(modelFolderDirectory, modelFolderName)
-        if not os.path.isdir(modelFolder): continue
-
-        for datasetFolderName in os.listdir(modelFolder):
-            if datasetFolderName.lower() not in datasetNames: continue
-            datasetFolder = os.path.join(modelFolder, datasetFolderName)
-
-            signalEncodingFolder = os.path.join(datasetFolder, "signalEncoding")
-            signalReconstruction = os.path.join(datasetFolder, "signalReconstruction")
-
-            for pdfFolder in [signalEncodingFolder, signalReconstruction]:
-                if not os.path.exists(pdfFolder): continue
-                print(pdfFolder)
-
-                pdf_files = [f for f in os.listdir(pdfFolder) if f.endswith(".pdf")]
-                pdf_groups = defaultdict(list)
-
-                for pdf_file in pdf_files:
-                    match = pattern.match(pdf_file)
-                    if match:
-                        prefix, epoch = match.groups()
-                        pdf_groups[prefix].append((int(epoch), pdf_file))
-
-                for prefix, files in pdf_groups.items():
-                    files = natsorted(files, key=lambda x: x[0])  # Sort by epoch
-                    images = []
-
-                    for _, pdf_file in files:
-                        pdf_path = os.path.join(pdfFolder, pdf_file)
-                        try:
-                            # Open the PDF using PyMuPDF
-                            doc = fitz.open(pdf_path)
-
-                            # Select the first page (page indices are 0-based)
-                            page = doc.load_page(0)  # 0 is the first page
-
-                            # Render the page to a pixmap (image) with 300 DPI
-                            pix = page.get_pixmap(dpi=300)
-
-                            # Convert the pixmap to a PIL image
-                            img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-
-                            # Append the image to the images list
-                            images.append(img)
-                        except Exception as e:
-                            print(f"Error processing {pdf_file}: {e}")
-
-                    if images:
-                        video_path = os.path.join(pdfFolder, f"{prefix}.mp4")
-                        images_to_video(images, video_path)
-                        print("\tVideo saved\n")
-
-                        # gif_path = os.path.join(pdfFolder, f"{prefix}.gif")
-                        # images_to_gif(images, gif_path)
+    main()

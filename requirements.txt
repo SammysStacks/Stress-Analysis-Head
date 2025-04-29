@@ -1,6 +1,5 @@
 accelerate
 antropy
-dill
 hmmlearn
 joblib
 matplotlib
@@ -10,14 +9,12 @@ oculus
 openai
 openpyxl
 pandas
-playsound
 plotapi
 pyexcel
 pyFirmata2
 pygame
 PyQt5
 pyserial
-pysr
 PyWavelets
 Requests
 scikit-learn
@@ -25,24 +22,19 @@ scipy
 seaborn
 selenium
 shap
-snntorch
 sounddevice
 soundfile
 SpeechRecognition
-sympy
-tensorly
 torchsummary
-torchviz
 transformers
 webdriver-manager
 xgboost
 lightgbm
 pillow
-mpmath
-ipython
-torch --index-url https://download.pytorch.org/whl/cu124 
-torchvision --index-url https://download.pytorch.org/whl/cu124 
-torchaudio --index-url https://download.pytorch.org/whl/cu124 
 BaselineRemoval
-ptyprocess
 pexpect
+torch
+tensorflow
+watchdog
+opencv-python
+pdf2image

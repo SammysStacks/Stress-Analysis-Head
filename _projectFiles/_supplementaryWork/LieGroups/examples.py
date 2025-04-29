@@ -62,6 +62,16 @@ for i in range(n):
 R3 = expm(S3)
 y3 = R3 @ x
 
+# --- S3 (skew-symmetric with i+j = n-1, for i < j) ---
+S3 = np.zeros((n, n))
+for i in range(n):
+    for j in range(i+1, n):
+        # ((25 < i < 75)*2 - 1) is +1 for i in (25,75), else -1
+        S3[i, j] =  theta
+        S3[j, i] = -theta
+R3 = expm(S3)
+y3 = R3 @ x
+
 maxTheta = 4
 # --- S4 (skew-symmetric with i+j = n-1, for i < j) ---
 S4 = np.random.uniform(size=(n, n), low=-maxTheta*np.pi/180, high=maxTheta*np.pi/180)

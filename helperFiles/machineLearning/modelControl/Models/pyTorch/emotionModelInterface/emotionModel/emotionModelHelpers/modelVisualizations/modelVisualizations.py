@@ -1,8 +1,7 @@
-import os
-
+from matplotlib import pyplot as plt
 import numpy as np
 import torch
-from matplotlib import pyplot as plt
+import os
 
 from helperFiles.globalPlottingProtocols import globalPlottingProtocols
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
@@ -277,7 +276,6 @@ class modelVisualizations(globalPlottingProtocols):
                     predictedEmotionTrainingClasses = emotionClasses[emotionTrainingMask]
                     predictedEmotionTestingClasses = emotionClasses[emotionTestingMask]
 
-                    self.emotionModelViz.plotDistributions(basicEmotionProfile[:, emotionInd], distributionNames=[f"Basic{i}" for i in range(numBasicEmotions)], epoch=currentEpoch, batchInd=batchInd, showMinimumPlots=False, saveFigureLocation="EmotionModel/",
-                                                           plotTitle=f"Basic emotion profile {emotionName}")
+                    self.emotionModelViz.plotDistributions(basicEmotionProfile[:, emotionInd], distributionNames=[f"Basic{i}" for i in range(numBasicEmotions)], epoch=currentEpoch, batchInd=batchInd, showMinimumPlots=False, saveFigureLocation="EmotionModel/", plotTitle=f"Basic emotion profile {emotionName}")
                     self.emotionModelViz.plotPredictedMatrix(trueEmotionTrainingClasses, trueEmotionTestingClasses, predictedEmotionTrainingClasses, predictedEmotionTestingClasses, numClasses=numClasses, epoch=currentEpoch, saveFigureLocation="EmotionModel/", plotTitle=f"{emotionName} confusion matrix")
                     if showMinimumPlots: break

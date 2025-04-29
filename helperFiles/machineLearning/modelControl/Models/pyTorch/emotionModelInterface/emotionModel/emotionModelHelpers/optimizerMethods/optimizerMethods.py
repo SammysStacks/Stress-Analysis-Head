@@ -8,14 +8,18 @@ class optimizerMethods:
 
     def addOptimizer(self, submodel, model):
         angularWD, angularLR = modelConstants.userInputParams['reversibleLR']/10, modelConstants.userInputParams['reversibleLR']
-        if submodel == modelConstants.emotionModel: angularWD, angularLR = angularWD, angularLR
+        profileLR = modelConstants.userInputParams['profileLR']
+
+        # Emotion model parameters adjustments.
+        if submodel != modelConstants.signalEncoderModel:
+            profileLR = modelConstants.userInputParams['profileLR'] * 2
 
         # Get the model parameters.
         modelParams = [
             # Specify the profile parameters for the signal encoding.
             {'params': model.sharedSignalEncoderModel.healthGenerationModel.parameters(), 'weight_decay': modelConstants.userInputParams['physGenLR']/100, 'lr': modelConstants.userInputParams['physGenLR']},
-            {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': modelConstants.userInputParams['profileLR']/1000, 'lr': modelConstants.userInputParams['profileLR']},
             {'params': model.sharedSignalEncoderModel.fourierModel.parameters(), 'weight_decay': modelConstants.userInputParams['physGenLR']/100, 'lr': modelConstants.userInputParams['physGenLR']},
+            {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': profileLR / 1000, 'lr': profileLR},
 
             # Specify the Lie manifold architecture parameters.
             {'params': (param for name, param in model.named_parameters() if "givensRotationParams" in name), 'weight_decay': angularWD, 'lr': angularLR},

@@ -504,7 +504,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             # dataStates: numModelLayers, encodedDimension
 
             # Create a meshgrid for encodedDimension and numModelLayers
-            x_data, y_data = np.meshgrid(dataTimes, np.flip(np.arange(1, 1 + numModelLayers), axis=-1))
+            x_data, y_data = np.meshgrid(np.flip(dataTimes), np.flip(np.arange(1, 1 + numModelLayers), axis=-1))
             x, y, z = x_data.flatten(), np.flip(y_data.flatten()), dataStates.flatten()
 
             # Figure and axis settings

@@ -49,12 +49,11 @@ class ImageFeedback:
             i -= 1
         if textPrompt != '':
             textPromptForImage = f"Previously, you said: {mostRecentAssistantContent[0]['content'][0]['text']} and {mostRecentAssistantContent[1]['content'][0]['text']}. Now, \
-                the user said: {textPrompt}. As a friendly and helpful virtual therapist, generate a relevant \
-                image to show the patient. You are trying to help them feel good."
+                the user said: {textPrompt}. As a friendly and helpful virtual therapist, please think about the subject and generate a relevant image to help them feel better."
             return textPrompt, textPromptForImage
         else:
             textPromptForImage = f"Previously, you said: {mostRecentAssistantContent[0]['content'][0]['text']} and {mostRecentAssistantContent[1]['content'][0]['text']}. \
-                As a friendly and helpful virtual therapist, generate a relevant image to show the patient. You are trying to help them feel good."
+                As a friendly and helpful virtual therapist, please think about the subject and generate a relevant image to help them feel better."
             return mostRecentAssistantContent[1]['content'][0]['text'][:20], textPromptForImage
 
     def getImageResponse(self, textPrompt):
