@@ -116,9 +116,10 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         for signalInd in range(numSignals):
             times, data = timepoints[batchInd, signalInd, :], datapoints[batchInd, signalInd, :]
             reconstructedData = reconstructedSignals[batchInd, signalInd, :]
-            fig, ax = plt.subplots(figsize=(6.4, 4.8))
+            if np.all(data == 0): continue
 
             # Plot the signal reconstruction.
+            fig, ax = plt.subplots(figsize=(6.4, 4.8))
             ax.plot(times, data, 'o', color=self.blackColor, markersize=2, alpha=0.75, label="Initial Signal")
             ax.plot(times, reconstructedData, 'o', color=self.lightColors[0], markersize=2, alpha=1, label="Reconstructed Signal")
             ax.plot(comparisonTimes, comparisonSignal[batchInd, signalInd, :], self.lightColors[1], linewidth=2, alpha=1, label="Resampled Signal")

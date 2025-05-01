@@ -103,18 +103,17 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
     @staticmethod
     def getWarmupThreshold():
-        return 0.01 * torch.pi / 180
+        return 0.001 * torch.pi / 180
 
     @staticmethod
     def getMinAngularThreshold(epoch, sharedLayer=False):
         if epoch <= modelConstants.numWarmupEpochs: return reversibleLieLayer.getWarmupThreshold()
-        exponent = 1.5 if modelConstants.userInputParams['submodel'] == modelConstants.emotionModel else 1.5
         relativeEpoch = epoch - modelConstants.numWarmupEpochs
 
         # Get the minimum angular threshold.
         minThresholdStep = modelConstants.userInputParams['minThresholdStep']
-        minAngularThreshold = modelConstants.userInputParams['minAngularThreshold'] if not sharedLayer else 0.05
-        minAngularThreshold = min(minAngularThreshold, (relativeEpoch**exponent) * minThresholdStep) * torch.pi/180
+        minAngularThreshold = modelConstants.userInputParams['minAngularThreshold'] if not sharedLayer else 0.01
+        minAngularThreshold = min(minAngularThreshold, (relativeEpoch**1.5) * minThresholdStep) * torch.pi/180
 
         return minAngularThreshold
 
@@ -133,24 +132,6 @@ class reversibleLieLayer(reversibleLieLayerInterface):
                 self.givensRotationParams[layerInd][givensAngles <= -maxAngularThreshold] = -maxAngularParam
                 self.givensRotationParams[layerInd][maxAngularThreshold <= givensAngles] = maxAngularParam
                 self.givensRotationParams[layerInd][givensAngles.abs() < minAngularThreshold] = 0
-
-    def percentParamThresholding(self, layerInd, epoch):
-        with torch.no_grad():
-            # Sort each row by absolute value
-            givensAngles = self.getGivensAngles(layerInd).abs()  # Dim: numSignals, numParams
-            sortedGivensAngles, sortedIndices = torch.sort(givensAngles, dim=-1)
-            # sortedGivensAngles -> [0, 0.1, 0.2, ... pi/2]
-
-            # Get the threshold.
-            if 16 <= self.sequenceLength: numParamsKeeping = self.numParams - epoch*((self.sequenceLength/16)**2)
-            else: numParamsKeeping = self.numParams - epoch
-
-            # Get the last index to keep.
-            lastIndexKeeping = int(min(self.numParams, max(5*self.sequenceLength, numParamsKeeping)))
-
-            # Zero out the values below the threshold
-            minAngleValues = sortedGivensAngles[:,  -lastIndexKeeping].unsqueeze(-1)  # Shape (numSignals, 1)
-            self.givensRotationParams[layerInd][givensAngles <= minAngleValues] = 0
 
     # ------------------------------------------------------------ #
 
