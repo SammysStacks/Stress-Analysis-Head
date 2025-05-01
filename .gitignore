@@ -42,6 +42,7 @@ _projectFiles/_finalDocuments/
 _projectFiles/_figurePlans/
 
 # Compiled Dataset
+_experimentalData/_empatchDataset/_finalDataset/dataAnalysis/
 _experimentalData/_compiledData/_*
 
 # Unused Metadatasets
