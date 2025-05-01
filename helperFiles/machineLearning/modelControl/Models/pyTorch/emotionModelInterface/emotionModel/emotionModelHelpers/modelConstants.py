@@ -44,7 +44,7 @@ class modelConstants:
 
     # Specify the model parameters.
     modelTimeWindow = 120  # The time window for the model.
-    numWarmupEpochs = 10  # The number of warmup epochs to use.
+    numWarmupEpochs = 5  # The number of warmup epochs to use.
     minMaxScale = 1  # The maximum value for the min-max scaling.
     numBatches = 12  # The number of batches to use in the model.
 

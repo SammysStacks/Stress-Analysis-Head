@@ -7,7 +7,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 class optimizerMethods:
 
     def addOptimizer(self, submodel, model):
-        angularWD, angularLR = modelConstants.userInputParams['reversibleLR']/10, modelConstants.userInputParams['reversibleLR']
+        angularWD, angularLR = modelConstants.userInputParams['reversibleLR'], modelConstants.userInputParams['reversibleLR']
         profileLR = modelConstants.userInputParams['profileLR']
 
         # Emotion model parameters adjustments.
@@ -19,7 +19,7 @@ class optimizerMethods:
             # Specify the profile parameters for the signal encoding.
             {'params': model.sharedSignalEncoderModel.healthGenerationModel.parameters(), 'weight_decay': modelConstants.userInputParams['physGenLR']/100, 'lr': modelConstants.userInputParams['physGenLR']},
             {'params': model.sharedSignalEncoderModel.fourierModel.parameters(), 'weight_decay': modelConstants.userInputParams['physGenLR']/100, 'lr': modelConstants.userInputParams['physGenLR']},
-            {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': profileLR / 1000, 'lr': profileLR},
+            {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': profileLR / 100, 'lr': profileLR},
 
             # Specify the Lie manifold architecture parameters.
             {'params': (param for name, param in model.named_parameters() if "givensRotationParams" in name), 'weight_decay': angularWD, 'lr': angularLR},
