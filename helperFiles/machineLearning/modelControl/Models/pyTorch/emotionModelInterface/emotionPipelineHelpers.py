@@ -53,7 +53,6 @@ class emotionPipelineHelpers:
 
     def assignClassWeights(self, signalLabels, trainingLabelMask, testingLabelMask):
         self.allEmotionClassWeights, self.activityClassWeights = self.organizeLossInfo.getClassWeights(signalLabels, trainingLabelMask, testingLabelMask, self.numActivities)
-        # print(self.allEmotionClassWeights, self.activityClassWeights)
 
     # ------------------------------------------------------------------ #
 
@@ -66,7 +65,7 @@ class emotionPipelineHelpers:
 
         # Reset and get the parameters that belong to the profile model
         self.model.specificSignalEncoderModel.profileModel.resetProfileHolders(numProfileShots)
-        self.model.specificSignalEncoderModel.profileModel.resetProfileWeights()
+        if 4 < modelParameters.getProfileEpochs(): self.model.specificSignalEncoderModel.profileModel.resetProfileWeights()
 
         return numProfileShots
 
