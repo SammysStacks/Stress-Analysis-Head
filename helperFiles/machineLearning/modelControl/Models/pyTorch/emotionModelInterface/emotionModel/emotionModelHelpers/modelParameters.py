@@ -73,8 +73,8 @@ class modelParameters:
 
     @staticmethod
     def getEpochInfo(validationRun):
-        if validationRun: return 1001, 50, 50  # loadSubmodelEpochs, numEpoch_toPlot, numEpoch_toSaveFull
-        else: return 1001, 50, 50  # loadSubmodelEpochs, numEpoch_toPlot, numEpoch_toSaveFull
+        if validationRun: return 2001, 50, 50  # loadSubmodelEpochs, numEpoch_toPlot, numEpoch_toSaveFull
+        else: return 2001, 50, 50  # loadSubmodelEpochs, numEpoch_toPlot, numEpoch_toSaveFull
 
     @staticmethod
     def getProfileEpochs(): return modelConstants.userInputParams['numProfileShots']  # loadSubmodelEpochs
