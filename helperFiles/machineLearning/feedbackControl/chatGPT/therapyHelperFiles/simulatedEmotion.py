@@ -22,7 +22,7 @@ class simulatedEmotion:
                 inch = random.randint(0, 11)
                 responses["Height (ft)"] = ft
                 responses["Height (in)"] = inch
-        print(responses)
+        # print(responses)
         return responses
 
     @staticmethod

@@ -4,6 +4,7 @@ import sounddevice as sd
 import numpy as np
 import subprocess
 
+
 class AudioFeedback:
     def __init__(self, client, threads, userName="Subject XYZ"):
         # General parameters.
@@ -15,6 +16,7 @@ class AudioFeedback:
         self.noMoreSentencesBuffer = None
         self.microphone = None
         self.recognizer = None
+        self.userPrompt = None
         self.process = None
 
         # Initialize the audio stream.
