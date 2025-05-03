@@ -101,6 +101,7 @@ class modelVisualizations(globalPlottingProtocols):
         # Plot the scaling factors for the signal encoder.
         normalizationFactorsPaths = [specificModel.normalizationFactorsPath for specificModel in specificModels]  # numModels, loadSubmodelEpochs, numModuleLayers, numSignals, numParams=1
         self.generalViz.plotNormalizationFactorFlow(normalizationFactorsPaths, paramNames=["normalization factors"], moduleNames=moduleNames, saveFigureLocation=f"trainingLosses{modelIdentifier}/", plotTitle=f"{modelIdentifier} normalization factors path")
+        return None
 
     def plotAllTrainingEvents(self, submodel, modelPipeline, lossDataLoader, trainingModelName, currentEpoch, showMinimumPlots):
         self.accelerator.print(f"\nPlotting results for the {modelPipeline.model.datasetName} model")
@@ -279,3 +280,5 @@ class modelVisualizations(globalPlottingProtocols):
                     self.emotionModelViz.plotDistributions(basicEmotionProfile[:, emotionInd], distributionNames=[f"Basic{i}" for i in range(numBasicEmotions)], epoch=currentEpoch, batchInd=batchInd, showMinimumPlots=False, saveFigureLocation="EmotionModel/", plotTitle=f"Basic emotion profile {emotionName}")
                     self.emotionModelViz.plotPredictedMatrix(trueEmotionTrainingClasses, trueEmotionTestingClasses, predictedEmotionTrainingClasses, predictedEmotionTestingClasses, numClasses=numClasses, epoch=currentEpoch, saveFigureLocation="EmotionModel/", plotTitle=f"{emotionName} confusion matrix")
                     if showMinimumPlots: break
+
+        return None
