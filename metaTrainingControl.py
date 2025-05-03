@@ -40,7 +40,7 @@ if __name__ == "__main__":
     # General model parameters.
     trainingDate = "2025-04-30"  # The current date we are training the model. Unique identifier of this training set.
     unifyModelWeights = True  # Whether to unify the model weights across all models.
-    plotAllEpochs = True  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
+    plotAllEpochs = False  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
     validationRun = False  # Whether to train new datasets from the old model.
     testSplitRatio = 0.125  # The test split ratio for the emotion model is higher to allow more examples per class.
 
@@ -58,7 +58,7 @@ if __name__ == "__main__":
     # Add arguments for the health profile.
     parser.add_argument('--initialProfileAmp', type=float, default=1e-3, help='The limits for profile initialization. Should be near zero')
     parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the health profile and all signals.')
-    parser.add_argument('--numProfileShots', type=int, default=32, help='The epochs for profile training: [16, 32]')
+    parser.add_argument('--numProfileShots', type=int, default=50, help='The epochs for profile training: [16, 32]')
     
     # Add arguments for the neural operator.
     parser.add_argument('--waveletType', type=str, default='bior3.1', help='The wavelet type for the wavelet transform: bior3.1, bior3.3, bior2.2, bior3.5')
