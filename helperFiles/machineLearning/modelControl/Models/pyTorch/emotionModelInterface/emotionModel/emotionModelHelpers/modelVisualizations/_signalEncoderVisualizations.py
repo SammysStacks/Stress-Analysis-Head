@@ -1,12 +1,9 @@
-# General
-import math
-
-import matplotlib.pyplot as plt
-import numpy as np
 from matplotlib.colors import LinearSegmentedColormap
 from shap.plots.colors._colors import lch2rgb
+import matplotlib.pyplot as plt
+import numpy as np
+import math
 
-# Visualization protocols
 from helperFiles.globalPlottingProtocols import globalPlottingProtocols
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.emotionDataInterface import emotionDataInterface
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.modelConstants import modelConstants
@@ -189,23 +186,19 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     # --------------------- Visualize Model Training --------------------- #
 
-    def plotsGivensAnglesHist(self, givensAnglesPath, reversibleModuleNames, signalInd, degreesFlag, epoch, saveFigureLocation, plotTitle):
+    def plotsGivensAnglesHist(self, givensAnglesPath, reversibleModuleNames, signalInd, epoch, saveFigureLocation, plotTitle):
         # givensAnglesPath: numModuleLayers, numSignals, numAngles
         nRows, nCols = self.getRowsCols(combineSharedLayers=False, saveFigureLocation=saveFigureLocation)
-        if not degreesFlag: scaleFactor = 180 / math.pi; degreesFlag = True
-        else: scaleFactor = 1
         yMax = 1/5
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex=True, sharey='col')  # squeeze=False ensures axes is 2D
         numLow, numSpecificHigh, numSharedHigh = 0, 0, 0
-        units = "degrees" if degreesFlag else "radians"
-        degrees = (180 if degreesFlag else math.pi) / 4
-        bins = np.arange(-degrees, degrees + 1, 1)
 
         # Get the angular thresholds.
         minAngularThreshold = reversibleLieLayer.getMinAngularThreshold(epoch)
         maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
+        bins = np.arange(-maxAngularThreshold, maxAngularThreshold + 1, 1)
         histogramPlots = []
 
         # Determine the number of layers based on the model parameters.
@@ -230,7 +223,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax.set_ylim((0, yMax))
 
             # Plot training eigenvalue angles
-            histograms = scaleFactor * givensAnglesPath[layerInd][signalInd:signalInd + len(self.darkColors) - 1].T  # histograms: numAngles, numSignals=6
+            histograms = givensAnglesPath[layerInd][signalInd:signalInd + len(self.darkColors) - 1].T * 180 / math.pi  # histograms: numAngles, numSignals=6
             histogramsABS = np.abs(histograms); numSignals = histograms.shape[1]
             smallAngles = []
 
@@ -249,16 +242,16 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             if len(smallAngles) == 0: continue
             if 'shared' in moduleName or epoch == 0: continue
             ax.fill_betweenx(y=(0, yMax), x1=-minAngularThreshold*(2 if rowInd == 0 else 1), x2=minAngularThreshold*(2 if rowInd == 0 else 1), color=self.blackColor, alpha=0.1, zorder=0)
-            ax.axvspan(-degrees, -maxAngularThreshold, color=self.blackColor, alpha=1, zorder=0)
-            ax.axvspan(maxAngularThreshold, degrees, color=self.blackColor, alpha=1, zorder=0)
+            ax.axvspan(-maxAngularThreshold, -maxAngularThreshold, color=self.blackColor, alpha=1, zorder=0)
+            ax.axvspan(maxAngularThreshold, maxAngularThreshold, color=self.blackColor, alpha=1, zorder=0)
 
         # Adjust layout to prevent overlapping titles/labels
         fig.suptitle(t=f"{plotTitle} at epoch {epoch}", fontsize=24)
-        fig.supxlabel(f"Angle ({units})", fontsize=20)
+        fig.supxlabel(f"Angle (degrees)", fontsize=20)
         fig.supylabel("Density", fontsize=20)
         fig.set_constrained_layout(True)
 
-        for ax in axes.flatten(): ax.set_xlim((-degrees, degrees))
+        for ax in axes.flatten(): ax.set_xlim((-maxAngularThreshold, maxAngularThreshold))
         # Access and modify patches correctly
         for histogramPlot in histogramPlots:  # Access histograms
             for bar_container in histogramPlot[2]:  # Access BarContainer objects
@@ -276,91 +269,14 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=False)
         else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
-    def plotsGivensAnglesLine(self, givensAnglesPath, reversibleModuleNames, signalInd, degreesFlag, epoch, saveFigureLocation, plotTitle):
-        # givensAnglesPath: numModuleLayers, numSignals, numParams
-        nRows, nCols = self.getRowsCols(combineSharedLayers=False, saveFigureLocation=saveFigureLocation)
-        if not degreesFlag: scaleFactor = 180 / math.pi; degreesFlag = True
-        else: scaleFactor = 1
-
-        # Create a figure and axes array
-        fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(6.4 * nCols, 4.8 * nRows), squeeze=False, sharex='col', sharey=True)  # squeeze=False ensures axes is 2D
-        numLow, numSpecificHigh, numSharedHigh = 0, 0, 0
-        units = "degrees" if degreesFlag else "radians"
-        degrees = (180 if degreesFlag else math.pi) / 4
-
-        # Get the angular thresholds.
-        minAngularThreshold = reversibleLieLayer.getMinAngularThreshold(epoch)
-        maxAngularThreshold = modelConstants.userInputParams['maxAngularThreshold']
-
-        # Determine the number of layers based on the model parameters.
-        numSpecificLayers, numSharedLayers = self.getLayerInformation(saveFigureLocation)
-
-        for layerInd in range(len(givensAnglesPath)):
-            moduleName = reversibleModuleNames[layerInd].lower()
-            specificFlag = 'specific' in moduleName
-
-            if 'low' in moduleName or 'real' in moduleName: rowInd, colInd = numLow, nCols - 1; numLow += 1
-            elif 'high' in moduleName or 'imaginary' in moduleName:
-                if 'shared' in moduleName: rowInd = numSpecificLayers + (numSharedHigh % numSharedLayers); colInd = numSharedHigh // numSharedLayers; numSharedHigh += 1
-                elif 'specific' in moduleName: rowInd = numSpecificHigh % numSpecificLayers; colInd = numSpecificHigh // numSpecificLayers; numSpecificHigh += 1
-                else: raise ValueError("Module name must contain 'shared' or 'specific'")
-            else: raise ValueError("Module name must contain 'low' or 'high'.")
-            ax = axes[rowInd, colInd]
-
-            # Customize subplot title and axes
-            if colInd == 0: ax.set_ylabel(f"{"Specific" if specificFlag else "Shared"} layer {rowInd + 1 - (0 if specificFlag else numSpecificLayers)}", fontsize=16)
-            ax.set_title(moduleName.capitalize(), fontsize=16)
-            ax.set_ylim((-degrees, degrees))
-
-            # Get the angles for the current layer
-            lines = scaleFactor * givensAnglesPath[layerInd][signalInd:signalInd + len(self.darkColors) - 1]  # Dimensions: numSignals, numParams
-            # for lineInd in range(len(lines)): ax.plot(sorted(lines[lineInd], reverse=True), 'o', color=self.darkColors[lineInd], alpha=0.75, markersize=2, linewidth=1)
-            # for lineInd in range(len(lines)): ax.plot(lines[lineInd][lines[lineInd] != 0], 'o', color=self.darkColors[lineInd], alpha=0.75, markersize=2, linewidth=1)
-            for lineInd in range(len(lines)): ax.plot(lines[lineInd], 'o', color=self.darkColors[lineInd], alpha=0.75, markersize=2, linewidth=1)
-            # Customize subplot title and axes
-
-            # Shade the angular thresholds
-            if np.all(lines == 0): continue
-            if 'shared' in moduleName or epoch == 0: continue
-            ax.fill_between(x=(0, lines.shape[1]), y1=-minAngularThreshold, y2=minAngularThreshold, color=self.blackColor, alpha=0.1, zorder=0)
-            ax.axhspan(-degrees, -maxAngularThreshold, color=self.blackColor, alpha=1, zorder=0)
-            ax.axhspan(maxAngularThreshold, degrees, color=self.blackColor, alpha=1, zorder=0)
-
-        # Adjust layout to prevent overlapping titles/labels
-        fig.suptitle(f"{plotTitle} at epoch {epoch}", fontsize=24)
-        fig.supylabel(f"Angle ({units})", fontsize=20)
-        # fig.supxlabel("Sorted parameter index", fontsize=20)
-        fig.supxlabel("Parameter index", fontsize=20)
-        fig.set_constrained_layout(True)
-
-        for specificLayerInd in range(numSpecificLayers):
-            for colInd in range(nCols):
-                if colInd == 0 or colInd == nCols - 1: continue
-                axes[specificLayerInd, colInd].remove()
-
-        # Save the plot
-        if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", clearFigure=False, showPlot=False)
-        else: self.clearFigure(fig=fig, legend=None, showPlot=True)
-
-        # Apply the angular threshold if needed.
-        if maxAngularThreshold == degrees: self.clearFigure(fig=None, legend=None, showPlot=False); return None
-        for ax in axes.flatten(): ax.set_ylim((-maxAngularThreshold, maxAngularThreshold))
-
-        # Save the plot
-        if self.saveDataFolder:  self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} cutoff{str(round(maxAngularThreshold, 4)).replace('.', '-')} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} cutoff{str(round(maxAngularThreshold, 4)).replace('.', '-')}.pdf", fig=fig, clearFigure=True, showPlot=False)
-        else: self.clearFigure(fig=fig, legend=None, showPlot=True)
-
-    def plotsGivensAnglesHeatmap(self, givensAnglesPath, reversibleModuleNames, signalInd, degreesFlag, epoch, saveFigureLocation, plotTitle):
+    def plotsGivensAnglesHeatmap(self, givensAnglesPath, reversibleModuleNames, signalInd, epoch, saveFigureLocation, plotTitle):
         # givensAnglesPath: numModuleLayers, numSignals, numAngles
         # maxFreeParamsPath: numModuleLayers
         nRows, nCols = self.getRowsCols(combineSharedLayers=False, saveFigureLocation=saveFigureLocation)
-        if not degreesFlag: scaleFactor = 180 / math.pi; degreesFlag = True
-        else: scaleFactor = 1
 
         # Create a figure and axes array
         fig, axes = plt.subplots(nrows=nRows, ncols=nCols, figsize=(4 * nCols, 4 * nRows), squeeze=False, sharex=False, sharey=False)  # squeeze=False ensures axes is 2D
         numLow, numSpecificHigh, numSharedHigh = 0, 0, 0
-        degrees = (180 if degreesFlag else math.pi) / 4
         colorbarAxes = []
 
         # Determine the number of layers based on the model parameters.
@@ -388,7 +304,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             sequenceLength = int((1 + (1 + 8 * numAngles) ** 0.5) // 2)
             signalWeightMatrix = np.zeros((sequenceLength, sequenceLength))
 
-            weightMatrix = scaleFactor * givensAnglesPath[layerInd][0:numSignalsPlotting]  # histograms: numSignalsPlotting, numAngles
+            weightMatrix = givensAnglesPath[layerInd][0:numSignalsPlotting] * 180 / math.pi  # histograms: numSignalsPlotting, numAngles
             rowInds, colInds = np.triu_indices(sequenceLength, k=1)
 
             # Create the signal weight matrix
@@ -396,7 +312,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             signalWeightMatrix[colInds, rowInds] = weightMatrix[signalInd]
 
             # Plot the heatmap
-            colorbarAxes.append(ax.imshow(signalWeightMatrix, cmap=self.custom_cmap, interpolation=None, aspect="equal", vmin=-degrees, vmax=degrees))
+            colorbarAxes.append(ax.imshow(signalWeightMatrix, cmap=self.custom_cmap, interpolation=None, aspect="equal", vmin=-maxAngularThreshold, vmax=maxAngularThreshold))
 
         # Adjust layout to prevent overlapping titles/labels
         fig.suptitle(t=f"{plotTitle} at epoch {epoch}", fontsize=24)

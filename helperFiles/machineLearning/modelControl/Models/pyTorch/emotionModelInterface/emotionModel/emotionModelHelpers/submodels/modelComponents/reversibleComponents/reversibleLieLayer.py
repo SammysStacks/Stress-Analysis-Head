@@ -146,7 +146,7 @@ if __name__ == "__main__":
     # for i in [16, 32, 64, 128, 256]:
     modelConstants.userInputParams['submodel'] = modelConstants.signalEncoderModel
     modelConstants.userInputParams['minAngularThreshold'] = 0.1
-    modelConstants.userInputParams['maxAngularThreshold'] = 4
+    modelConstants.userInputParams['maxAngularThreshold'] = 45
 
     # for layers, sequenceLength2 in [(2, 256), (2, 128), (2, 64), (2, 32), (2, 16), (2, 8), (2, 4), (2, 2)]:
     # for _layerInd, sequenceLength2 in [(1, 32), (2, 32), (3, 32), (5, 32), (5, 32), (10, 32)]:

@@ -181,8 +181,8 @@ class modelVisualizations(globalPlottingProtocols):
                         self.signalEncoderViz.plotSignalEncodingStatePath(relativeTimes=resampledBiomarkerTimes, compiledSignalEncoderLayerStates=backwardModelPassSignals, batchInd=batchInd, signalNames=signalNames, epoch=currentEpoch, saveFigureLocation="SignalEncoderModel/", plotTitle="Signal transformations by layer heatmap")
 
                         # Plot the angle information.
-                        self.signalEncoderViz.plotsGivensAnglesHeatmap(givensAnglesPath, reversibleModuleNames, signalInd=signalInd, epoch=currentEpoch, degreesFlag=False, saveFigureLocation="SignalEncoderModel/", plotTitle="Rotation weight matrix (S)")
-                        self.signalEncoderViz.plotsGivensAnglesHist(givensAnglesPath, reversibleModuleNames, epoch=currentEpoch, signalInd=signalInd, degreesFlag=False, saveFigureLocation="SignalEncoderModel/", plotTitle="Rotation angles hist")
+                        self.signalEncoderViz.plotsGivensAnglesHeatmap(givensAnglesPath, reversibleModuleNames, signalInd=signalInd, epoch=currentEpoch, saveFigureLocation="SignalEncoderModel/", plotTitle="Rotation weight matrix (S)")
+                        self.signalEncoderViz.plotsGivensAnglesHist(givensAnglesPath, reversibleModuleNames, epoch=currentEpoch, signalInd=signalInd, saveFigureLocation="SignalEncoderModel/", plotTitle="Rotation angles hist")
 
                         # Plot the activation information.
                         self.signalEncoderViz.plotActivationCurvesCompressed(activationCurvePath, activationModuleNames, epoch=currentEpoch, saveFigureLocation="SignalEncoderModel/", plotTitle="Activation forward and inverse curves (compressed)")
@@ -234,8 +234,8 @@ class modelVisualizations(globalPlottingProtocols):
                     self.signalEncoderViz.plotNormalizationFactors(activityNormalizationFactorsPath, reversibleModuleNames, epoch=currentEpoch, saveFigureLocation="ActivityModel/", plotTitle="Normalization factors")
 
                     # Plot the angle information.
-                    self.signalEncoderViz.plotsGivensAnglesHeatmap(activityGivensAnglesPath, reversibleModuleNames, signalInd=signalInd, epoch=currentEpoch, degreesFlag=False, saveFigureLocation="ActivityModel/", plotTitle="Rotation weight matrix (S)")
-                    self.signalEncoderViz.plotsGivensAnglesHist(activityGivensAnglesPath, reversibleModuleNames, epoch=currentEpoch, signalInd=signalInd, degreesFlag=False, saveFigureLocation="ActivityModel/", plotTitle="Rotation angles hist")
+                    self.signalEncoderViz.plotsGivensAnglesHeatmap(activityGivensAnglesPath, reversibleModuleNames, signalInd=signalInd, epoch=currentEpoch, saveFigureLocation="ActivityModel/", plotTitle="Rotation weight matrix (S)")
+                    self.signalEncoderViz.plotsGivensAnglesHist(activityGivensAnglesPath, reversibleModuleNames, epoch=currentEpoch, signalInd=signalInd, saveFigureLocation="ActivityModel/", plotTitle="Rotation angles hist")
 
                     # Plot the activation information.
                     self.signalEncoderViz.plotActivationCurvesCompressed(activityActivationCurvePath, activityActivationModuleNames, epoch=currentEpoch, saveFigureLocation="ActivityModel/", plotTitle="Activation forward and inverse curves (compressed)")
