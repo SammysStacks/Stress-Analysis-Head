@@ -63,7 +63,7 @@ pip install -r requirements.txt
 
 ### `mainControl.py`
 
-Control script for data preprocessing, single-session analysis, model training, and real-time inference.
+Control script for the EMPATCH platform (must be connected via the serial port), including data preprocessing and analysis.
 
 Set only one of the following flags to `True`:
 
@@ -72,11 +72,6 @@ readDataFromExcel = False  # Analyze a specific .xlsx session file
 trainModel = True          # Train on all files in collectedDataFolder
 streamData = False         # Stream from connected wearable sensor
 ```
-
-- For single-session evaluation, specify:
-<pre><code>currentFilename = "yourfile.xlsx"
-testSheetNum = 0
-</code></pre>
 
 ### `metaTrainingControl.py`
 
