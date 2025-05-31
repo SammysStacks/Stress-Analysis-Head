@@ -38,9 +38,9 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-04-30"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2025-05-26 div4"  # The current date we are training the model. Unique identifier of this training set.
     unifyModelWeights = True  # Whether to unify the model weights across all models.
-    plotAllEpochs = True  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
+    plotAllEpochs = False  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
     validationRun = False  # Whether to train new datasets from the old model.
     testSplitRatio = 0.125  # The test split ratio for the emotion model is higher to allow more examples per class.
 
@@ -57,7 +57,7 @@ if __name__ == "__main__":
 
     # Add arguments for the health profile.
     parser.add_argument('--initialProfileAmp', type=float, default=1e-3, help='The limits for profile initialization. Should be near zero')
-    parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the health profile and all signals.')
+    parser.add_argument('--encodedDimension', type=int, default=512, help='The dimension of the health profile and all signals.')
     parser.add_argument('--numProfileShots', type=int, default=3, help='The epochs for profile training: [16, 32]')
     
     # Add arguments for the neural operator.
@@ -71,7 +71,7 @@ if __name__ == "__main__":
 
     # Add arguments for observational learning.
     parser.add_argument('--maxAngularThreshold', type=float, default=90, help='The larger rotational threshold in (degrees)')
-    parser.add_argument('--minAngularThreshold', type=float, default=2, help='The smaller rotational threshold in (degrees)')
+    parser.add_argument('--minAngularThreshold', type=float, default=2.5, help='The smaller rotational threshold in (degrees)')
 
     # dd arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=4, help='The number of basic emotions (basis states of emotions)')
@@ -97,7 +97,7 @@ if __name__ == "__main__":
     userInputParams['minWaveletDim'] = max(32, userInputParams['encodedDimension'] // (2**4))
     userInputParams['minThresholdStep'] = userInputParams['reversibleLR']  # Keep as degrees
     userInputParams['reversibleLR'] = userInputParams['reversibleLR'] * math.pi / 180  # Keep as radians
-    userInputParams['profileDimension'] = userInputParams['encodedDimension'] // 2  # The dimension of the profile.
+    userInputParams['profileDimension'] = userInputParams['encodedDimension'] // 4  # The dimension of the profile.
     userInputParams['unifyModelWeights'] = unifyModelWeights
 
     # Compie additional input parameters.
