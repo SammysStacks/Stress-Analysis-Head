@@ -148,7 +148,7 @@ class globalMetaAnalysis(handlingExcelFormat):
             readData = streamingProtocols(deviceType="serial", mainSerialNum=None, modelClasses=[], actionControl=None, numPointsPerBatch=2048576, moveDataFinger=1048100, streamingOrder=currentStreamingOrder,
                                           extractFeaturesFrom=currentFeaturesExtracting, featureAverageWindows=currentFeatureAverageWindows, voltageRange=(None, None), plotStreamedData=False)
             readData.resetGlobalVariables()
-            # Change filter of the analyses.
+            # Change the filter of the analyses.
             for analysisTypeInd in range(len(currentBiomarkerFeatureOrder)):
                 analysisType = currentBiomarkerFeatureOrder[analysisTypeInd]
                 cutOffFreqs = currentFilteringOrders[analysisTypeInd]
@@ -166,7 +166,7 @@ class globalMetaAnalysis(handlingExcelFormat):
                 self.analyzeFeatures.overwrite = True
                 self.analyzeFeatures.plotRawData(readData, compiledRawData, currentSurveyAnswerTimes, experimentTimes, experimentNames, currentStreamingOrder, folderName=interfaceType + " " + subjectName + "/rawSignals/")
 
-        # Assert the integrity of data combination
+        # Assert the integrity of the data combination
         assert len(rawFeatureHolder) == len(biomarkerFeatureOrderFull)
         assert len(rawFeatureTimesHolder) == len(biomarkerFeatureOrderFull)
 

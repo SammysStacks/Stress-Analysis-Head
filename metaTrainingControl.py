@@ -159,31 +159,3 @@ if __name__ == "__main__":
 
         # Finalize the epoch parameters.
         endEpochTime = time.time(); print("Total epoch time:", endEpochTime - startEpochTime)
-
-    # -------------------------- SHAP Analysis ------------------------- #
-
-    # # SHAP analysis on the metalearning models.
-    # featureAnalysis = _featureImportance.featureImportance(modelCompiler.saveTrainingData)
-    #
-    # # For each metatraining model.
-    # for modelInd in metaModelIndices:
-    #     dataLoader = allMetadataLoaders[modelInd]
-    #     modelPipeline = allMetaModels[modelInd]
-    #     # Place model in eval mode.
-    #     modelPipeline.model.eval()
-    #
-    #     # Extract all the data.
-    #     allData, allLabels, allTrainingMasks, allTestingMasks = dataLoader.dataset.getAll()
-    #
-    #     # Stop gradient tracking.
-    #     with torch.no_grad():
-    #         # Convert time-series to features.
-    #         compressedData, encodedData, transformedData, signalFeatures, subjectInds = modelPipeline.model.compileSignalFeatures(
-    #             allData, fullDataPass=False)
-    #
-    #     # Reshape the signal features to match the SHAP format
-    #     reshapedSignalFeatures = signalFeatures.view(len(signalFeatures), -1)
-    #     # reshapedSignalFeatures.view(signalFeatures.shape)
-    #
-    #     featureAnalysis.shapAnalysis(modelPipeline.model, reshapedSignalFeatures, allLabels,
-    #                                  featureNames=modelPipeline.featureNames, modelType="", shapSubfolder="")

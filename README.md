@@ -1,4 +1,6 @@
-# Wearable Affective General Intelligence
+<h1 align="center">
+  Wearable Affective General Intelligence
+</h1>
 
 
 <p align="center">
@@ -6,11 +8,14 @@
   <a href="https://github.com/SammysStacks/Stress-Analysis-Head/commits/main"><img src="https://img.shields.io/github/last-commit/SammysStacks/Stress-Analysis-Head.svg" alt="Last Commit"></a>
   <a href="https://github.com/SammysStacks/Stress-Analysis-Head/issues"><img src="https://img.shields.io/github/issues/SammysStacks/Stress-Analysis-Head.svg" alt="GitHub Issues"></a>
 </p>
+<hr>
 
 
-# Overview
+## 🧠 Overview
 
-Supervised learning techniques designed for the situation when the dimensionality exceeds the sample size have a tendency to overfit as the dimensionality of the data increases. To remedy this high dimensionality; low sample size (HDLSS) situation, we attempt to learn a lower-dimensional representation of the data before learning a classifier. That is, we project the data to a situation where the dimensionality is more manageable, and then we are able to better apply standard classification or clustering techniques since we will have fewer dimensions to overfit. A number of previous works have focused on how to strategically reduce dimensionality in the unsupervised case, yet in the supervised HDLSS regime, few works have attempted to devise dimensionality reduction techniques that leverage the labels associated with the data. In this package, we provide several methods for feature extraction, some utilizing labels and some not, along with easily extensible utilities to simplify cross-validative efforts to identify the best feature extraction method. Additionally, we include a series of adaptable benchmark simulations to serve as a standard for future investigative efforts into supervised HDLSS. Finally, we produce a comprehensive comparison of the included algorithms across a range of benchmark simulations and real data applications.
+Wearable Affective General Intelligence is a modular framework for modeling human emotion using biosensor data. Designed with generalization in mind, the system integrates signal encoding, Lie manifold representations, and meta-learning to predict affective states across diverse physiological datasets—without requiring population-specific tuning or exhaustive emotion labeling.
+
+This repository includes tools for preprocessing, training, and evaluating emotion recognition models using wearable signals such as heart rate, EDA, and skin temperature. The architecture is compatible with both real-time deployment and offline analysis, enabling researchers to build interpretable, adaptive systems for affective computing, mental health monitoring, and personalized interventions.
 
 
 ## Contents
