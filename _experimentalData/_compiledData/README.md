@@ -64,7 +64,7 @@ Each file is a serialized dictionary with one key per dataset:
 
 ### 📁 File Structure: `compiledMetaTrainingInfo_{datasetName}.pkl.gzl`
 
-This version contains a compressed subset of the full file, including:
+This version contains a compressed subset of the full file, which is used when training the model, including:
 
 ```python
 [
