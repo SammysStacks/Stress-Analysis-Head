@@ -1,6 +1,7 @@
 **/*__pycache__/
 **/*__oldFiles/
 **/*_oldFiles/
+**/*_badData/
 **/*.DS_Store
 **/~$*.docx
 **/*.cache
@@ -43,6 +44,9 @@ _projectFiles/_figurePlans/
 
 # Compiled Dataset
 _experimentalData/_empatchDataset/_finalDataset/dataAnalysis/
+_experimentalData/_empatchDataset/_finalTherapyData/BB testing/
+_experimentalData/_empatchDataset/_finalTherapyData/_badData/
+_experimentalData/_empatchDataset/_finalTherapyData/_musicTesting/
 _experimentalData/_compiledData/_*
 
 # Unused Metadatasets
