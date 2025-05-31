@@ -18,8 +18,6 @@ A compressed and preprocessed version of all datasets, designed for direct use i
 - Reduce file size for easy sharing
 - Package aligned sensor, label, and metadata information
 
-See the [compiledMetaTrainingInfo README](../helperFiles/machineLearning/dataInterface/README.md) for detailed schema.
-
 ---
 
 ### `./_empatchDataset/`
