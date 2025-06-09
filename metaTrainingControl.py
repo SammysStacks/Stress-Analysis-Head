@@ -38,9 +38,9 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-05-31"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2025-06-09"  # The current date we are training the model. Unique identifier of this training set.
     unifyModelWeights = True  # Whether to unify the model weights across all models.
-    plotAllEpochs = True  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
+    plotAllEpochs = False  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
     validationRun = False  # Whether to train new datasets from the old model.
     testSplitRatio = 0.125  # The test split ratio for the emotion model is higher to allow more examples per class.
 
