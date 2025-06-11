@@ -38,7 +38,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-06-09"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2025-06-09 WD100"  # The current date we are training the model. Unique identifier of this training set.
     unifyModelWeights = True  # Whether to unify the model weights across all models.
     plotAllEpochs = False  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
     validationRun = False  # Whether to train new datasets from the old model.
@@ -71,7 +71,7 @@ if __name__ == "__main__":
 
     # Add arguments for observational learning.
     parser.add_argument('--maxAngularThreshold', type=float, default=90, help='The larger rotational threshold in (degrees)')
-    parser.add_argument('--minAngularThreshold', type=float, default=2.5, help='The smaller rotational threshold in (degrees)')
+    parser.add_argument('--minAngularThreshold', type=float, default=1, help='The smaller rotational threshold in (degrees)')
 
     # dd arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=4, help='The number of basic emotions (basis states of emotions)')
