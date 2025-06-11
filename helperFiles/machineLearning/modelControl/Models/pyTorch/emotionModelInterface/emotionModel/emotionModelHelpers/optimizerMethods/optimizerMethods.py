@@ -7,7 +7,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 class optimizerMethods:
 
     def addOptimizer(self, submodel, model):
-        angularWD, angularLR = modelConstants.userInputParams['reversibleLR']*100, modelConstants.userInputParams['reversibleLR']
+        angularWD, angularLR = modelConstants.userInputParams['reversibleLR']*10, modelConstants.userInputParams['reversibleLR']
         profileLR = modelConstants.userInputParams['profileLR']
 
         # Emotion model parameters adjustments.
