@@ -17,9 +17,9 @@ class optimizerMethods:
         # Get the model parameters.
         modelParams = [
             # Specify the profile parameters for the signal encoding.
-            {'params': model.sharedSignalEncoderModel.healthGenerationModel.parameters(), 'weight_decay': modelConstants.userInputParams['physGenLR']/10, 'lr': modelConstants.userInputParams['physGenLR']},
-            {'params': model.sharedSignalEncoderModel.fourierModel.parameters(), 'weight_decay': modelConstants.userInputParams['physGenLR']/10, 'lr': modelConstants.userInputParams['physGenLR']},
-            {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': profileLR/10, 'lr': profileLR},
+            {'params': model.sharedSignalEncoderModel.healthGenerationModel.parameters(), 'weight_decay': modelConstants.userInputParams['physGenLR']/1000, 'lr': modelConstants.userInputParams['physGenLR']},
+            {'params': model.sharedSignalEncoderModel.fourierModel.parameters(), 'weight_decay': modelConstants.userInputParams['physGenLR']/1000, 'lr': modelConstants.userInputParams['physGenLR']},
+            {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': profileLR/1000, 'lr': profileLR},
 
             # Specify the Lie manifold architecture parameters.
             {'params': (param for name, param in model.named_parameters() if "givensRotationParams" in name), 'weight_decay': angularWD, 'lr': angularLR},
