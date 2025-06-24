@@ -32,10 +32,9 @@ waveletTypes_arr=(
 # Learning parameters.
 lrs_profile=(0.01)  # 0.005 <= x <= 0.05
 lrs_profileGen=('4e-4') # x <= 1e-4;
-lrs_reversible=(0.05 0.025 0.01)  # [0.025, 0.075]
+lrs_reversible=(0.05 0.025 0.01 0.075 0.1)  # [0.025, 0.075]
 
 # Angular reference states.
-minAngularThresholds=(0.1 0.5 1)
 maxAngularThresholds=(90)
 
 # Binary reference states.
@@ -52,44 +51,41 @@ numIgnoredSharedHFs=(0)
 
 for numIgnoredSharedHF in "${numIgnoredSharedHFs[@]}"
 do
-    for minAngularThreshold in "${minAngularThresholds[@]}"
+    for maxAngularThreshold in "${maxAngularThresholds[@]}"
     do
-        for maxAngularThreshold in "${maxAngularThresholds[@]}"
+        for beta1s in "${beta1s_arr[@]}"
         do
-            for beta1s in "${beta1s_arr[@]}"
+            for beta2s in "${beta2s_arr[@]}"
             do
-                for beta2s in "${beta2s_arr[@]}"
+                for momentums in "${momentums_arr[@]}"
                 do
-                    for momentums in "${momentums_arr[@]}"
+                    for numProfileShots in "${numProfileShots_arr[@]}"
                     do
-                        for numProfileShots in "${numProfileShots_arr[@]}"
+                        for lr_profile in "${lrs_profile[@]}"
                         do
-                            for lr_profile in "${lrs_profile[@]}"
+                            for lr_reversible in "${lrs_reversible[@]}"
                             do
-                                for lr_reversible in "${lrs_reversible[@]}"
+                                for lr_profileGen in "${lrs_profileGen[@]}"
                                 do
-                                    for lr_profileGen in "${lrs_profileGen[@]}"
+                                    for optimizer in "${optimizers_arr[@]}"
                                     do
-                                        for optimizer in "${optimizers_arr[@]}"
+                                        for waveletType in "${waveletTypes_arr[@]}"
                                         do
-                                            for waveletType in "${waveletTypes_arr[@]}"
+                                            for encodedDimension in "${encodedDimensions_arr[@]}"
                                             do
-                                                for encodedDimension in "${encodedDimensions_arr[@]}"
+                                                for numSharedEncoderLayers in "${numSharedEncoderLayers_arr[@]}"
                                                 do
-                                                    for numSharedEncoderLayers in "${numSharedEncoderLayers_arr[@]}"
+                                                    for numSpecificEncoderLayers in "${numSpecificEncoderLayers_arr[@]}"
                                                     do
-                                                        for numSpecificEncoderLayers in "${numSpecificEncoderLayers_arr[@]}"
-                                                        do
-                                                            filename="signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_numProfileShots_${numProfileShots}_optimizer_${optimizer}_minAngleThresh_${minAngularThreshold}_maxAngleThresh_${maxAngularThreshold}_waveletType_${waveletType}_lr_reversible_${lr_reversible}_numIgnoredSharedHF_${numIgnoredSharedHF}_lr_profileGen_${lr_profileGen}"
+                                                        filename="signalEncoder_numSharedEncoderLayers_${numSharedEncoderLayers}_numSpecificEncoderLayers_${numSpecificEncoderLayers}_encodedDimension_${encodedDimension}_numProfileShots_${numProfileShots}_optimizer_${optimizer}_maxAngleThresh_${maxAngularThreshold}_waveletType_${waveletType}_lr_reversible_${lr_reversible}_numIgnoredSharedHF_${numIgnoredSharedHF}_lr_profileGen_${lr_profileGen}"
 
-                                                            if [ "$1" == "CPU" ]; then
-                                                                sbatch -J "$filename" submitSignalEncoder_CPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$numProfileShots" "$1" "$waveletType" "$optimizer" "$lr_profile" "$lr_reversible" "$lr_profileGen" "$beta1s" "$beta2s" "$momentums" "$minAngularThreshold" "$maxAngularThreshold" "$numIgnoredSharedHF"
-                                                            elif [ "$1" == "GPU" ]; then
-                                                                sbatch -J "$filename" submitSignalEncoder_GPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$numProfileShots" "$1" "$waveletType" "$optimizer" "$lr_profile" "$lr_reversible" "$lr_profileGen" "$beta1s" "$beta2s" "$momentums" "$minAngularThreshold" "$maxAngularThreshold" "$numIgnoredSharedHF"
-                                                            else
-                                                                echo "No known device listed: $1"
-                                                            fi
-                                                        done
+                                                        if [ "$1" == "CPU" ]; then
+                                                            sbatch -J "$filename" submitSignalEncoder_CPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$numProfileShots" "$1" "$waveletType" "$optimizer" "$lr_profile" "$lr_reversible" "$lr_profileGen" "$beta1s" "$beta2s" "$momentums" "$maxAngularThreshold" "$numIgnoredSharedHF"
+                                                        elif [ "$1" == "GPU" ]; then
+                                                            sbatch -J "$filename" submitSignalEncoder_GPU.sh "$numSharedEncoderLayers" "$numSpecificEncoderLayers" "$encodedDimension" "$numProfileShots" "$1" "$waveletType" "$optimizer" "$lr_profile" "$lr_reversible" "$lr_profileGen" "$beta1s" "$beta2s" "$momentums" "$maxAngularThreshold" "$numIgnoredSharedHF"
+                                                        else
+                                                            echo "No known device listed: $1"
+                                                        fi
                                                     done
                                                 done
                                             done

@@ -36,12 +36,12 @@ class modelParameters:
 
     def getTrainingBatchSize(self, submodel, numExperiments, datasetName):
         """
-            Wesad: Found 32 (out of 32) emotions across 60 experiments for 28 signals with 2.0 batches of 30 experiments
+            Wesad: Found 32 (out of 32) emotions across 60 experiments for 28 signals with 3.0 batches of 20 experiments
             Amigos: Found 12 (out of 12) emotions across 673 experiments for 60 signals with 11.807 batches of 57 experiments
             Dapper: Found 12 (out of 12) emotions across 364 experiments for 15 signals with 11.742 batches of 31 experiments
             Case: Found 2 (out of 2) emotions across 1442 experiments for 35 signals with 11.917 batches of 121 experiments
             Emognition: Found 12 (out of 12) emotions across 407 experiments for 39 signals with 11.971 batches of 34 experiments
-            Empatch: Found 30 (out of 30) emotions across 165 experiments for 28 signals with 5.0 batches of 33 experiments
+            Empatch: Found 30 (out of 30) emotions across 165 experiments for 28 signals with 3.0 batches of 55 experiments
         """
         if submodel == modelConstants.signalEncoderModel: effectiveMinBatchSize, effectiveMaxBatchSize = 24, 128
         elif submodel == modelConstants.emotionModel: effectiveMinBatchSize, effectiveMaxBatchSize = 24, 128
@@ -53,7 +53,7 @@ class modelParameters:
         gradientAccumulation = self.accelerator.gradient_accumulation_steps
         minBatchSize_perLoop = effectiveMinBatchSize / gradientAccumulation
         maxBatchSize_perLoop = effectiveMaxBatchSize / gradientAccumulation
-        metaBatchSize = numExperiments / modelConstants.numBatches / gradientAccumulation
+        metaBatchSize = numExperiments / modelConstants.numMetaBatches / gradientAccumulation
         # Assert that the batch size is divisible by the gradient accumulation steps.
         assert effectiveMinBatchSize % gradientAccumulation == 0, "The total batch size must be divisible by the gradient accumulation steps."
         assert gradientAccumulation <= effectiveMinBatchSize, "The gradient accumulation steps must be less than the total batch size."
@@ -99,9 +99,9 @@ class modelParameters:
         if userInputParams['encodedDimension'] < userInputParams['profileDimension']: raise Exception("The number of encoded weights must be less than the encoded dimension.")
 
         # Get the model information.
-        signalEncoderModelInfo = (f"signalEncoder{' validation' if validationRun else ''} shared-{userInputParams['numIgnoredSharedHF']} thresh{round(float(userInputParams['minAngularThreshold']), 1)}-{userInputParams['minThresholdStep']}-{round(float(userInputParams['maxAngularThreshold']), 1)} {userInputParams['optimizerType']} {userInputParams['numSharedEncoderLayers']}-shared specific-{userInputParams['numSpecificEncoderLayers']} " +
+        signalEncoderModelInfo = (f"signalEncoder{' validation' if validationRun else ''} shared-{userInputParams['numIgnoredSharedHF']} thresh{userInputParams['minThresholdStep']}-{round(float(userInputParams['maxAngularThreshold']), 1)} {userInputParams['optimizerType']} {userInputParams['numSharedEncoderLayers']}-shared specific-{userInputParams['numSpecificEncoderLayers']} " +
                                   f"LR{userInputParams['profileLR']}-{userInputParams['physGenLR']}-{round(userInputParams['reversibleLR']*180/math.pi, 3)} profileParams{userInputParams['profileDimension']} numShots{userInputParams['numProfileShots']} encodedDim{userInputParams['encodedDimension']} {userInputParams['neuralOperatorParameters']['wavelet']['waveletType']}-{userInputParams['minWaveletDim']}")
-        emotionModelInfo = (f"emotionPrediction{' validation' if validationRun else ''} shared-{userInputParams['numIgnoredSharedHF']} thresh{round(float(userInputParams['minAngularThreshold']), 1)}-{userInputParams['minThresholdStep']}-{round(float(userInputParams['maxAngularThreshold']), 1)} {userInputParams['optimizerType']} {userInputParams['numSharedEncoderLayers']}-shared specific-{userInputParams['numSpecificEncoderLayers']} " +
+        emotionModelInfo = (f"emotionPrediction{' validation' if validationRun else ''} shared-{userInputParams['numIgnoredSharedHF']} thresh{userInputParams['minThresholdStep']}-{round(float(userInputParams['maxAngularThreshold']), 1)} {userInputParams['optimizerType']} {userInputParams['numSharedEncoderLayers']}-shared specific-{userInputParams['numSpecificEncoderLayers']} " +
                             f"LR{userInputParams['profileLR']}-{userInputParams['physGenLR']}-{round(userInputParams['reversibleLR']*180/math.pi, 3)} profileParams{userInputParams['profileDimension']} numShots{userInputParams['numProfileShots']} encodedDim{userInputParams['encodedDimension']} {userInputParams['neuralOperatorParameters']['wavelet']['waveletType']}-{userInputParams['minWaveletDim']}")
 
         # Return the model information.

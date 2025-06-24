@@ -99,7 +99,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
         return inputData
 
-    # ------------------- Observational Learning ------------------- #
+    # ------------------- Weight Optimization ------------------- #
 
     @staticmethod
     def getWarmupThreshold():
@@ -108,14 +108,17 @@ class reversibleLieLayer(reversibleLieLayerInterface):
     @staticmethod
     def getMinAngularThreshold(epoch, sharedLayer=False):
         if epoch <= modelConstants.numWarmupEpochs: return reversibleLieLayer.getWarmupThreshold()
+        reversibleLR = modelConstants.userInputParams['reversibleLR']  # Radians
         relativeEpoch = epoch - modelConstants.numWarmupEpochs
+        minAngularScaleFactor = 10  # TODO: should be around number of batches
 
         # Get the minimum angular threshold.
         minThresholdStep = modelConstants.userInputParams['minThresholdStep']
-        minAngularThreshold = modelConstants.userInputParams['minAngularThreshold'] if not sharedLayer else reversibleLieLayer.getWarmupThreshold()
-        minAngularThreshold = min(minAngularThreshold, (relativeEpoch**1.5) * minThresholdStep) * torch.pi/180
 
-        return minAngularThreshold
+        minAngularThreshold = reversibleLR * minAngularScaleFactor if not sharedLayer else reversibleLieLayer.getWarmupThreshold()
+        minAngularThreshold = min(minAngularThreshold, (relativeEpoch**1.5) * minThresholdStep)
+
+        return minAngularThreshold  # Radians
 
     def angularThresholding(self, epoch, sharedLayer):
         with torch.no_grad():
@@ -145,7 +148,6 @@ if __name__ == "__main__":
     # for i in [2, 4, 8, 16, 32, 64, 128, 256]:
     # for i in [16, 32, 64, 128, 256]:
     modelConstants.userInputParams['submodel'] = modelConstants.signalEncoderModel
-    modelConstants.userInputParams['minAngularThreshold'] = 0.1
     modelConstants.userInputParams['maxAngularThreshold'] = 45
 
     # for layers, sequenceLength2 in [(2, 256), (2, 128), (2, 64), (2, 32), (2, 16), (2, 8), (2, 4), (2, 2)]:

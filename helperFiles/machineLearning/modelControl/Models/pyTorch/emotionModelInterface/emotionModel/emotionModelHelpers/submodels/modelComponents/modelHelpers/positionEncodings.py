@@ -47,7 +47,7 @@ class PositionalEncoding(nn.Module):
         self.assertUniquePositions()
 
     def forward(self, inputData):
-        """ The shape of inputData = (numBatches, numTimePoints, embeddingDim)"""        
+        """ The shape of inputData = (numMetaBatches, numTimePoints, embeddingDim)"""
         # Assert the integrity of the input data.
         batchSize, sequenceLength, embeddingDim = inputData.size()
         assert sequenceLength <= self.numTokens, "You have too many timepoints in your signal."

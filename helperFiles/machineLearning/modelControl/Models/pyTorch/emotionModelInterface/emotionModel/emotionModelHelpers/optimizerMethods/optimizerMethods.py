@@ -7,7 +7,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 class optimizerMethods:
 
     def addOptimizer(self, submodel, model):
-        angularWD, angularLR = modelConstants.userInputParams['reversibleLR']*100, modelConstants.userInputParams['reversibleLR']
+        angularWD, angularLR = modelConstants.userInputParams['reversibleLR']*10, modelConstants.userInputParams['reversibleLR']
         profileLR = modelConstants.userInputParams['profileLR']
 
         # Emotion model parameters adjustments.
@@ -23,8 +23,8 @@ class optimizerMethods:
 
             # Specify the Lie manifold architecture parameters.
             {'params': (param for name, param in model.named_parameters() if "givensRotationParams" in name), 'weight_decay': angularWD, 'lr': angularLR},
-            {'params': (param for name, param in model.named_parameters() if "activationFunction" in name), 'weight_decay': 1e-3, 'lr': 1e-3},
-            {'params': (param for name, param in model.named_parameters() if "jacobianParameter" in name), 'weight_decay': 1e-3, 'lr': 1e-3},
+            {'params': (param for name, param in model.named_parameters() if "activationFunction" in name), 'weight_decay': 1e-6, 'lr': 1e-3},
+            {'params': (param for name, param in model.named_parameters() if "jacobianParameter" in name), 'weight_decay': 1e-6, 'lr': 1e-3},
         ]
 
         if submodel == modelConstants.emotionModel:
