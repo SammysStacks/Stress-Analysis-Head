@@ -99,7 +99,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
 
         return inputData
 
-    # ------------------- Observational Learning ------------------- #
+    # ------------------- Weight Optimization ------------------- #
 
     @staticmethod
     def getWarmupThreshold():
