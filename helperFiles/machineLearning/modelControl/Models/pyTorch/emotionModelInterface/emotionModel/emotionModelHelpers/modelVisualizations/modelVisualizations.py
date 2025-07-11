@@ -88,7 +88,7 @@ class modelVisualizations(globalPlottingProtocols):
         if showMinimumPlots: return None
 
         # Plot the activation parameters for the signal encoder.
-        paramNames = ["Infinite Bound", "Linearity Factor", "Convergent Point"]
+        paramNames = ["Infinite Bound", "Non-Linear Coefficient", "Convergent Point"]
         activationParamsPaths = np.asarray([specificModel.activationParamsPath for specificModel in specificModels])  # numModels, loadSubmodelEpochs, numActivations, numActivationParams=3
         self.generalViz.plotActivationFlowCompressed(activationParamsPaths=activationParamsPaths, moduleNames=moduleNames, modelLabels=datasetNames, paramNames=paramNames, saveFigureLocation=f"trainingLosses{modelIdentifier}/", plotTitle=f"{modelIdentifier} activation parameter compressed path")
         self.generalViz.plotActivationFlow(activationParamsPaths=activationParamsPaths, moduleNames=moduleNames, paramNames=paramNames, saveFigureLocation=f"trainingLosses{modelIdentifier}/", plotTitle=f"{modelIdentifier} activation parameter path")
@@ -164,7 +164,7 @@ class modelVisualizations(globalPlottingProtocols):
                     # givensAnglesPath: numModuleLayers, numSignals, numParams
 
                     # Plot the health profile training information.
-                    self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, retrainingProfilePath=retrainingHealthProfilePath[:, :, None, :], batchInd=batchInd, signalNames=signalNames, epoch=currentEpoch, saveFigureLocation="SignalEncoderModel/", plotTitle="Health profile generation")
+                    self.signalEncoderViz.plotProfilePath(initialSignalData=None, relativeTimes=resampledBiomarkerTimes, retrainingProfilePath=retrainingHealthProfilePath[:, :, None, :], batchInd=batchInd, signalNames=signalNames, epoch=currentEpoch, saveFigureLocation="SignalEncoderModel/", plotTitle="Health profile generation")
                     self.signalEncoderViz.plotProfileReconstructionError(resampledBiomarkerTimes, healthProfile, reconstructedHealthProfile, epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="SignalEncoderModel/", plotTitle="Health profile reconstruction error")
                     self.signalEncoderViz.plotProfileReconstruction(resampledBiomarkerTimes, healthProfile, reconstructedHealthProfile, epoch=currentEpoch, batchInd=batchInd, saveFigureLocation="SignalEncoderModel/", plotTitle="Health profile reconstruction")
 
@@ -174,10 +174,10 @@ class modelVisualizations(globalPlottingProtocols):
                     # Plot the angular information.
                     if not showMinimumPlots:
                         # Plot information collected across profile training.
-                        self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, retrainingProfilePath=generatingBiometricSignals, batchInd=batchInd, signalNames=signalNames, epoch=currentEpoch, saveFigureLocation="SignalEncoderModel/", plotTitle="Reconstructing biometric feature signal")
+                        self.signalEncoderViz.plotProfilePath(initialSignalData=signalData, relativeTimes=resampledBiomarkerTimes, retrainingProfilePath=generatingBiometricSignals, batchInd=batchInd, signalNames=signalNames, epoch=currentEpoch, saveFigureLocation="SignalEncoderModel/", plotTitle="Reconstructing biometric feature signal")
 
                         # Plotting the data flow within the model.
-                        self.signalEncoderViz.plotProfilePath(relativeTimes=resampledBiomarkerTimes, retrainingProfilePath=backwardModelPassSignals, batchInd=batchInd, signalNames=signalNames, epoch=currentEpoch, saveFigureLocation="SignalEncoderModel/", plotTitle="Backwards transformations (HP to feature)")
+                        self.signalEncoderViz.plotProfilePath(initialSignalData=None, relativeTimes=resampledBiomarkerTimes, retrainingProfilePath=backwardModelPassSignals, batchInd=batchInd, signalNames=signalNames, epoch=currentEpoch, saveFigureLocation="SignalEncoderModel/", plotTitle="Backwards transformations (HP to feature)")
                         self.signalEncoderViz.modelFlow(dataTimes=resampledBiomarkerTimes, dataStatesAll=backwardModelPassSignals, batchInd=batchInd, signalNames=signalNames, epoch=currentEpoch, saveFigureLocation="SignalEncoderModel/", plotTitle="Signal transformations by layer 3D")
                         self.signalEncoderViz.plotSignalEncodingStatePath(relativeTimes=resampledBiomarkerTimes, compiledSignalEncoderLayerStates=backwardModelPassSignals, batchInd=batchInd, signalNames=signalNames, epoch=currentEpoch, saveFigureLocation="SignalEncoderModel/", plotTitle="Signal transformations by layer heatmap")
 

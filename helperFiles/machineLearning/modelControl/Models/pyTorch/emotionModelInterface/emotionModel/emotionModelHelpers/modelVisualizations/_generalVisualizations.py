@@ -69,6 +69,7 @@ class generalVisualizations(globalPlottingProtocols):
         saveFigureName = f"{plotTitle} epoch{numEpochs}.pdf" if "profile" in plotTitle.lower() else None
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=saveFigureName, baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=not self.hpcFlag)
         else: self.clearFigure(fig=fig, legend=None, showPlot=True)
+        return None
 
     def plotActivationFlowCompressed(self, activationParamsPaths, moduleNames, modelLabels, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
         activationParamsPaths = np.asarray(activationParamsPaths)
@@ -107,9 +108,9 @@ class generalVisualizations(globalPlottingProtocols):
                     ax.plot(activationParams, color=lineColor, linewidth=0.8, alpha=alpha, label=modelLabel)
             ax.set_xlabel("Epoch (training)")
             ax.set_title(f"{paramName} at epoch {numEpochs}", fontsize=16)
-            if 'Infinite' in paramName: ax.set_ylim((0, 1.1))
-            elif 'Linearity' in paramName: ax.set_ylim((0, 10.1))
-            elif 'Convergent' in paramName: ax.set_ylim((0, 2.1))
+            if 'infinite' in paramName.lower(): ax.set_ylim((0, 1))
+            elif 'linear' in paramName.lower(): ax.set_ylim((0, 3))
+            elif 'convergent' in paramName.lower(): ax.set_ylim((0, 2))
             ax.set_xlim((0, numEpochs))
             ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5, alpha=0.8)
 
@@ -120,6 +121,7 @@ class generalVisualizations(globalPlottingProtocols):
         # Save the figure if desired.
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epoch{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=False)
         else: self.clearFigure(fig=fig, legend=None, showPlot=True)
+        return None
 
     def plotActivationFlow(self, activationParamsPaths, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
         activationParamsPaths = np.asarray(activationParamsPaths)
@@ -156,9 +158,9 @@ class generalVisualizations(globalPlottingProtocols):
                 if colInd == 0 and 'shared' in moduleName.lower(): ax.set_ylabel("Shared layers", fontsize=16)
                 if colInd == 0 and 'specific' in moduleName.lower(): ax.set_ylabel("Specific layers", fontsize=16)
 
-                if 'infinite' in paramName.lower(): ax.set_ylim((0, 1.1))
-                elif 'linearity' in paramName.lower(): ax.set_ylim((0, 10.1))
-                elif 'convergent' in paramName.lower(): ax.set_ylim((0, 2.1))
+                if 'infinite' in paramName.lower(): ax.set_ylim((0, 1))
+                elif 'linear' in paramName.lower(): ax.set_ylim((0, 3))
+                elif 'convergent' in paramName.lower(): ax.set_ylim((0, 2))
 
                 ax.set_title(moduleName.capitalize(), fontsize=16)
                 ax.set_xlabel("Training epoch")
@@ -194,6 +196,7 @@ class generalVisualizations(globalPlottingProtocols):
             # Save the figure if desired.
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {paramName} epoch{numEpochs}.pdf", baseSaveFigureName=f"{plotTitle} {paramName}.pdf", fig=fig, clearFigure=True, showPlot=False)
             else: self.clearFigure(fig=fig, legend=None, showPlot=True)
+        return None
 
     def plotFreeParamFlow(self, numFreeModelParams, maxFreeParamsPath, moduleNames, paramNames, saveFigureLocation="", plotTitle="Model Convergence Loss"):
         # normalizationFactorsPaths: numModels, numEpochs, numModuleLayers, *numSignals*, numParams=1

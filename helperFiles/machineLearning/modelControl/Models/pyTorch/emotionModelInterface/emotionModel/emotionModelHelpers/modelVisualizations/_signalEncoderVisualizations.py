@@ -37,20 +37,32 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
     # --------------------- Visualize Model Parameters --------------------- #
 
-    def plotProfilePath(self, relativeTimes, retrainingProfilePath, batchInd, signalNames, epoch, saveFigureLocation="SignalEncoderModel/", plotTitle="Health Profile State Path"):
+    def plotProfilePath(self, initialSignalData, relativeTimes, retrainingProfilePath, batchInd, signalNames, epoch, saveFigureLocation="SignalEncoderModel/", plotTitle="Health Profile State Path"):
         # retrainingProfilePath: (numProfileShots or numModuleLayers, numExperiments, numSignals, encodedDimension)
         # Extract the signal dimensions.
         numProfileSteps, numSignals = len(retrainingProfilePath), len(retrainingProfilePath[0][0])
         if numProfileSteps == 0: return None
 
+        # Unpack the data
+        if initialSignalData is not None:
+            datapoints = emotionDataInterface.getChannelData(initialSignalData, channelName=modelConstants.signalChannel)
+            timepoints = emotionDataInterface.getChannelData(initialSignalData, channelName=modelConstants.timeChannel)
+        else: timepoints = datapoints = None
+
         for signalInd in range(numSignals):
             fig, ax = plt.subplots(figsize=(6.4, 4.8))
 
+            # For each step.
             for profileStep in range(numProfileSteps):
                 lineStyle = 'o-' if profileStep == numProfileSteps - 1 else '-'
                 ax.plot(relativeTimes, retrainingProfilePath[profileStep, batchInd, signalInd], lineStyle, c=self.lightColors[1], linewidth=1, markersize=1, alpha=0.3*(numProfileSteps - profileStep)/numProfileSteps)
                 ax.plot(relativeTimes, retrainingProfilePath[profileStep, batchInd, signalInd], lineStyle, c=self.lightColors[0], linewidth=1, markersize=1, alpha=0.6*(1 - (numProfileSteps - profileStep)/numProfileSteps))
             ax.axhline(y=0, color=self.blackColor, linewidth=1, zorder=0)
+
+            # Add the initial signal data if available.
+            if timepoints is not None and datapoints is not None:
+                times, data = timepoints[batchInd, signalInd, :], datapoints[batchInd, signalInd, :]
+                ax.plot(times, data, 'o', color=self.blackColor, markersize=2, alpha=0.75, label="Initial Signal")
 
             # Plotting aesthetics.
             ax.set_xlabel("Time (s)")
@@ -62,6 +74,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             # Save the figure.
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle}{(" " + signalNames[signalInd]) if "health profile" not in plotTitle.lower() else ""} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}{(" " + signalNames[signalInd]) if "health profile" not in plotTitle.lower() else ""}.pdf", fig=fig, clearFigure=True, showPlot=False)
             else: self.clearFigure(fig=fig, legend=None, showPlot=True)
+        return None
 
     def plotProfileReconstructionError(self, relativeTimes, healthProfile, reconstructedHealthProfile, batchInd, epoch, saveFigureLocation="", plotTitle="Signal Encoding"):
         # Extract the signal dimensions.
@@ -150,6 +163,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} {signalNames[signalInd]} Error epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle} {signalNames[signalInd]} Error.pdf", fig=fig, clearFigure=True, showPlot=False)
             else: self.clearFigure(fig=fig, legend=None, showPlot=True)
             plt.close(fig)
+        return None
 
     def plotSignalEncodingStatePath(self, relativeTimes, compiledSignalEncoderLayerStates, batchInd, signalNames, epoch, saveFigureLocation, plotTitle):
         numLayers, numExperiments, numSignals, encodedDimension = compiledSignalEncoderLayerStates.shape

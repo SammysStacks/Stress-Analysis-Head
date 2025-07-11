@@ -23,8 +23,8 @@ class optimizerMethods:
 
             # Specify the Lie manifold architecture parameters.
             {'params': (param for name, param in model.named_parameters() if "givensRotationParams" in name), 'weight_decay': angularLR/10, 'lr': angularLR},
-            {'params': (param for name, param in model.named_parameters() if "activationFunction" in name), 'weight_decay': 1e-4, 'lr': 1e-3},
-            {'params': (param for name, param in model.named_parameters() if "jacobianParameter" in name), 'weight_decay': 1e-4, 'lr': 1e-3},
+            {'params': (param for name, param in model.named_parameters() if "activationFunction" in name), 'weight_decay': 1e-4, 'lr': 5e-4},  # LR: [1e-4, 1e-3]
+            {'params': (param for name, param in model.named_parameters() if "jacobianParameter" in name), 'weight_decay': 1e-4, 'lr': 5e-4},  # LR: [1e-4, 1e-3]
         ]
 
         if submodel == modelConstants.emotionModel:

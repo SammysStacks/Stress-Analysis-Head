@@ -39,19 +39,23 @@ class reversibleLinearSoftSign(reversibleInterface):
         self.infiniteBoundParam = nn.Parameter(torch.zeros(1))  # The infinite bound controller.
         self.convergencePointParam = nn.Parameter(torch.zeros(1))  # The infinite bound controller.
         self.infiniteBound = torch.zeros(1)  # The infinite bound parameter.
-        self.linearity = torch.zeros(1)  # The linearity parameter.
+        self.nonLinearCoefficient = torch.zeros(1)  # The nonLinearCoefficient parameter.
         self.tolerance = 1e-25  # Tolerance for numerical stability
 
     def getActivationParams(self):
-        infiniteBound = 0.5 + 0.45*torch.tanh(self.infiniteBoundParam)  # Convert the infinite bound to a sigmoid value. L_h
-        convergentPoint = 1 + torch.tanh(self.convergencePointParam)  # Convert the infinite bound to a sigmoid value.
-        linearity = 1 / (1 + convergentPoint) / (1 - infiniteBound + 1e-10)  # R_h
+        infiniteBound = 0.5 + 0.4*torch.tanh(self.infiniteBoundParam)  # Convert the infinite bound to a sigmoid value. Maybe 0.5 +/- 0.25
+        convergentPoint = 1 + torch.tanh(self.convergencePointParam)  # Convert the infinite bound to a sigmoid value. Maybe 1 +/-0.5
+        nonLinearCoefficient = (1 + convergentPoint) * (1 - infiniteBound)  # 1/r
 
-        return infiniteBound, linearity, convergentPoint
+        # Assert the validity of the parameters.
+        assert infiniteBound != 1, "The infinite bound must not be equal to 1, as it would lead to a division by zero in the inverse pass."
+
+        # Return the parameters.
+        return infiniteBound, nonLinearCoefficient, convergentPoint
 
     def forward(self, x, linearModel, forwardFirst=True):
         # Set the parameters for the forward and inverse passes.
-        self.infiniteBound, self.linearity, _ = self.getActivationParams()
+        self.infiniteBound, self.nonLinearCoefficient, _ = self.getActivationParams()
 
         # forwardPass: Increase the signal below inversion point; decrease above.
         x = self.forwardPass(x) if forwardFirst else self.inversePass(x)
@@ -64,12 +68,12 @@ class reversibleLinearSoftSign(reversibleInterface):
 
     def forwardPass(self, x):
         # Increase the signal below inversion point; decrease above.
-        return self.infiniteBound*x + x / (1 + x.abs()) / self.linearity  # f(x) = x + x / (1 + |x|) / r
+        return self.infiniteBound*x + self.nonLinearCoefficient * x / (1 + x.abs())  # f(x) = a*x + x / (1 + |x|) / r
 
     def inversePass(self, y):
         # Prepare the terms for the inverse pass.
         signY = torch.nn.functional.hardtanh(y, min_val=-self.tolerance, max_val=self.tolerance) / self.tolerance
-        r, a = self.linearity, self.infiniteBound  # The linearity and infinite bound terms
+        r, a = 1/self.nonLinearCoefficient, self.infiniteBound  # The nonLinearCoefficient and infinite-bound terms
 
         # Base case: infiniteBound=0.
         if a == 0: return y*r / (1 - signY*y*r)  # Poor numerical stability on reconstruction!
@@ -114,11 +118,3 @@ class boundedExp(nn.Module):
         linearTerm = self.infiniteBound * x
 
         return linearTerm * exponentialTerm
-
-
-class reversibleActivationInterface(reversibleInterface):
-    def __init__(self, activationFunctions):
-        super(reversibleActivationInterface, self).__init__()
-        self.activationFunctions = activationFunctions
-
-    def forward(self, x): return self.activationFunctions(x)
