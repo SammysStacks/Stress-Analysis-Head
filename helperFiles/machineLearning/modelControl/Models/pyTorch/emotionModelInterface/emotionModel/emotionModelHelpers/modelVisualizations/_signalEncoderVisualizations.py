@@ -49,8 +49,17 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             timepoints = emotionDataInterface.getChannelData(initialSignalData, channelName=modelConstants.timeChannel)
         else: timepoints = datapoints = None
 
+        # For each signal.
         for signalInd in range(numSignals):
-            fig, ax = plt.subplots(figsize=(6.4, 4.8))
+            # Add the initial signal data if available.
+            if timepoints is not None and datapoints is not None:
+                times, data = timepoints[batchInd, signalInd, :], datapoints[batchInd, signalInd, :]
+                if np.all(data == 0): continue
+
+                # Plot the initial signal data.
+                fig, ax = plt.subplots(figsize=(6.4, 4.8))
+                ax.plot(times, data, 'o', color=self.blackColor, markersize=2, alpha=0.75, label="Initial Signal")
+            else: fig, ax = plt.subplots(figsize=(6.4, 4.8))
 
             # For each step.
             for profileStep in range(numProfileSteps):
@@ -58,11 +67,6 @@ class signalEncoderVisualizations(globalPlottingProtocols):
                 ax.plot(relativeTimes, retrainingProfilePath[profileStep, batchInd, signalInd], lineStyle, c=self.lightColors[1], linewidth=1, markersize=1, alpha=0.3*(numProfileSteps - profileStep)/numProfileSteps)
                 ax.plot(relativeTimes, retrainingProfilePath[profileStep, batchInd, signalInd], lineStyle, c=self.lightColors[0], linewidth=1, markersize=1, alpha=0.6*(1 - (numProfileSteps - profileStep)/numProfileSteps))
             ax.axhline(y=0, color=self.blackColor, linewidth=1, zorder=0)
-
-            # Add the initial signal data if available.
-            if timepoints is not None and datapoints is not None:
-                times, data = timepoints[batchInd, signalInd, :], datapoints[batchInd, signalInd, :]
-                ax.plot(times, data, 'o', color=self.blackColor, markersize=2, alpha=0.75, label="Initial Signal")
 
             # Plotting aesthetics.
             ax.set_xlabel("Time (s)")
@@ -165,13 +169,20 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             plt.close(fig)
         return None
 
-    def plotSignalEncodingStatePath(self, relativeTimes, compiledSignalEncoderLayerStates, batchInd, signalNames, epoch, saveFigureLocation, plotTitle):
+    def plotSignalEncodingStatePath(self, initialSignalData, relativeTimes, compiledSignalEncoderLayerStates, batchInd, signalNames, epoch, saveFigureLocation, plotTitle):
         numLayers, numExperiments, numSignals, encodedDimension = compiledSignalEncoderLayerStates.shape
         numSpecificLayers, numSharedLayers = self.getLayerInformation(saveFigureLocation)
         relativeTimesExtent = (relativeTimes.min(), relativeTimes.max(), 0, numLayers)
         hiddenLayers = 1
 
+        datapoints = emotionDataInterface.getChannelData(initialSignalData, channelName=modelConstants.signalChannel)
+        timepoints = emotionDataInterface.getChannelData(initialSignalData, channelName=modelConstants.timeChannel)
+
         for signalInd in range(len(signalNames)):
+            # Add the initial signal data if available.
+            times, data = timepoints[batchInd, signalInd, :], datapoints[batchInd, signalInd, :]
+            if np.all(data == 0): continue
+
             # These should be chosen based on your data and how you want to "zoom"
             fig, ax = plt.subplots(figsize=(6.4, 4.8))
 
@@ -387,7 +398,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
             # Customize plot title and axes
             ax.set_ylabel(f"{"Specific" if specificFlag else "Shared"} normalization factors")  # Y-axis: bin counts
-            ax.set_ylim((0.95, 1.05))
+            ax.set_ylim((0.975, 1.025))
 
             if numSharedLayers <= axInd: ax.remove(); continue
             # Get the angles for the current layer
@@ -428,11 +439,18 @@ class signalEncoderVisualizations(globalPlottingProtocols):
         if self.saveDataFolder: self.displayFigure(saveFigureLocation=saveFigureLocation, saveFigureName=f"{plotTitle} epochs{epoch}.pdf", baseSaveFigureName=f"{plotTitle}.pdf", fig=fig, clearFigure=True, showPlot=False)
         else: self.clearFigure(fig=fig, legend=None, showPlot=True)
 
-    def modelFlow(self, dataTimes, dataStatesAll, signalNames, batchInd, epoch, saveFigureLocation, plotTitle):
+    def modelFlow(self, initialSignalData, dataTimes, dataStatesAll, signalNames, batchInd, epoch, saveFigureLocation, plotTitle):
+        datapoints = emotionDataInterface.getChannelData(initialSignalData, channelName=modelConstants.signalChannel)
+        timepoints = emotionDataInterface.getChannelData(initialSignalData, channelName=modelConstants.timeChannel)
+
         for signalInd in range(len(signalNames)):
             dataStates = np.asarray(dataStatesAll[:, batchInd, signalInd, :])
             numModelLayers, encodedDimension = dataStates.shape
             # dataStates: numModelLayers, encodedDimension
+
+            # Add the initial signal data if available.
+            times, data = timepoints[batchInd, signalInd, :], datapoints[batchInd, signalInd, :]
+            if np.all(data == 0): continue
 
             # Create a meshgrid for encodedDimension and numModelLayers
             x_data, y_data = np.meshgrid(np.flip(dataTimes), np.flip(np.arange(1, 1 + numModelLayers), axis=-1))
@@ -443,13 +461,11 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             ax = fig.add_subplot(111, projection='3d', facecolor="white")
 
             # Improved scatter points
-            ax.scatter(
-                x, y, z, c=z,
-                cmap='viridis', edgecolors=self.blackColor, linewidth=0.5,
-                alpha=0.95, s=20, vmin=-1.1, vmax=1.1)
+            ax.scatter(x, y, z, c=z, cmap='viridis', edgecolors=self.blackColor, linewidth=0.5, alpha=0.95, s=20, vmin=-1.1, vmax=1.1)
             for modelLayerInd in range(numModelLayers):
                 ax.plot(x[modelLayerInd*encodedDimension:(modelLayerInd + 1)*encodedDimension], y[modelLayerInd*encodedDimension:(modelLayerInd + 1)*encodedDimension], z[modelLayerInd*encodedDimension:(modelLayerInd + 1)*encodedDimension],
                         color=self.blackColor, linestyle='-', linewidth=0.5, alpha=0.5)
+            ax.scatter(times, [numModelLayers] * len(times), data, color=self.blackColor, linewidth=0.5, alpha=1.0, s=25, label='Input Signal')
 
             # View and perspective adjustments
             ax.view_init(elev=25, azim=135)

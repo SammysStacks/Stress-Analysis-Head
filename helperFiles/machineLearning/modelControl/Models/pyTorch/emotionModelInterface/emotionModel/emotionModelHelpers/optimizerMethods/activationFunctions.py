@@ -44,7 +44,7 @@ class reversibleLinearSoftSign(reversibleInterface):
 
     def getActivationParams(self):
         infiniteBound = 0.5 + 0.4*torch.tanh(self.infiniteBoundParam)  # Convert the infinite bound to a sigmoid value. Maybe 0.5 +/- 0.25
-        convergentPoint = 1 + torch.tanh(self.convergencePointParam)  # Convert the infinite bound to a sigmoid value. Maybe 1 +/-0.5
+        convergentPoint = 1 + 0.5*torch.tanh(self.convergencePointParam)  # Convert the infinite bound to a sigmoid value. Maybe 1 +/-0.5
         nonLinearCoefficient = (1 + convergentPoint) * (1 - infiniteBound)  # 1/r
 
         # Assert the validity of the parameters.
