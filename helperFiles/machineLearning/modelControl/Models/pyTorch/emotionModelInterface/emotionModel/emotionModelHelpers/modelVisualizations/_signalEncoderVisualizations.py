@@ -187,7 +187,7 @@ class signalEncoderVisualizations(globalPlottingProtocols):
             fig, ax = plt.subplots(figsize=(6.4, 4.8))
 
             # Plot the rest of the layers with the same normalization.
-            im0 = ax.imshow(compiledSignalEncoderLayerStates[:, batchInd, signalInd, :], cmap='viridis', interpolation=None, extent=relativeTimesExtent, aspect='auto', origin='lower', vmin=-1.1, vmax=1.1)
+            im0 = ax.imshow(np.flip(compiledSignalEncoderLayerStates[:, batchInd, signalInd, :], axis=-1), cmap='viridis', interpolation=None, extent=relativeTimesExtent, aspect='auto', origin='lower', vmin=-1.1, vmax=1.1)
             ax.set_xlim(relativeTimes.min(), relativeTimes.max())
             fig.colorbar(im0, fraction=0.046, pad=0.04)
 
@@ -454,18 +454,18 @@ class signalEncoderVisualizations(globalPlottingProtocols):
 
             # Create a meshgrid for encodedDimension and numModelLayers
             x_data, y_data = np.meshgrid(np.flip(dataTimes), np.flip(np.arange(1, 1 + numModelLayers), axis=-1))
-            x, y, z = x_data.flatten(), np.flip(y_data.flatten()), dataStates.flatten()
+            x, y, z = x_data.flatten(), y_data.flatten(), dataStates.flatten()
 
             # Figure and axis settings
             fig = plt.figure(figsize=(12, 8), facecolor="white")
             ax = fig.add_subplot(111, projection='3d', facecolor="white")
 
             # Improved scatter points
+            ax.scatter(times, [numModelLayers] * len(times), data, color=self.blackColor, linewidth=0.5, alpha=0.5, s=20, label='Input Signal')
             ax.scatter(x, y, z, c=z, cmap='viridis', edgecolors=self.blackColor, linewidth=0.5, alpha=0.95, s=20, vmin=-1.1, vmax=1.1)
-            for modelLayerInd in range(numModelLayers):
-                ax.plot(x[modelLayerInd*encodedDimension:(modelLayerInd + 1)*encodedDimension], y[modelLayerInd*encodedDimension:(modelLayerInd + 1)*encodedDimension], z[modelLayerInd*encodedDimension:(modelLayerInd + 1)*encodedDimension],
-                        color=self.blackColor, linestyle='-', linewidth=0.5, alpha=0.5)
-            ax.scatter(times, [numModelLayers] * len(times), data, color=self.blackColor, linewidth=0.5, alpha=1.0, s=25, label='Input Signal')
+            # for modelLayerInd in range(numModelLayers):
+            #     ax.plot(x[modelLayerInd*encodedDimension:(modelLayerInd + 1)*encodedDimension], y[modelLayerInd*encodedDimension:(modelLayerInd + 1)*encodedDimension], z[modelLayerInd*encodedDimension:(modelLayerInd + 1)*encodedDimension],
+            #             color=self.blackColor, linestyle='-', linewidth=0.5, alpha=0.5)
 
             # View and perspective adjustments
             ax.view_init(elev=25, azim=135)
