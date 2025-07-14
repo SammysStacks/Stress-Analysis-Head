@@ -36,19 +36,17 @@ def getActivationMethod(activationMethod):
 class reversibleLinearSoftSign(reversibleInterface):
     def __init__(self):
         super(reversibleLinearSoftSign, self).__init__()
+        self.convergencePointParam = nn.Parameter(torch.zeros(1))  # The convergence point controller.
         self.infiniteBoundParam = nn.Parameter(torch.zeros(1))  # The infinite bound controller.
-        self.convergencePointParam = nn.Parameter(torch.zeros(1))  # The infinite bound controller.
-        self.infiniteBound = torch.zeros(1)  # The infinite bound parameter.
         self.nonLinearCoefficient = torch.zeros(1)  # The nonLinearCoefficient parameter.
+        self.infiniteBound = torch.zeros(1)  # The infinite bound parameter.
         self.tolerance = 1e-25  # Tolerance for numerical stability
 
     def getActivationParams(self):
-        infiniteBound = 0.5 + 0.25*torch.tanh(self.infiniteBoundParam)  # Convert the infinite bound to a sigmoid value. Maybe 0.5 +/- 0.25
+        infiniteBound = 1 + 0.5*torch.tanh(self.infiniteBoundParam)  # Maybe 0.5 +/- 0.25; Theoretical range [0, 2] at C = 1
         convergentPoint = 1 + 0.5*torch.tanh(self.convergencePointParam)  # Convert the infinite bound to a sigmoid value. Maybe 1 +/-0.5
         nonLinearCoefficient = (1 + convergentPoint) * (1 - infiniteBound)  # 1/r
-
-        # Assert the validity of the parameters.
-        assert infiniteBound != 1, "The infinite bound must not be equal to 1, as it would lead to a division by zero in the inverse pass."
+        # TODO: Maybe a: [0.5, 1.5] or and NLC: [0.5, 1.5]
 
         # Return the parameters.
         return infiniteBound, nonLinearCoefficient, convergentPoint
@@ -68,21 +66,19 @@ class reversibleLinearSoftSign(reversibleInterface):
 
     def forwardPass(self, x):
         # Increase the signal below inversion point; decrease above.
-        return self.infiniteBound*x + self.nonLinearCoefficient * x / (1 + x.abs())  # f(x) = a*x + x / (1 + |x|) / r
+        return self.infiniteBound*x + self.nonLinearCoefficient * x / (1 + x.abs())  # f(x) = a*x + r * x/(1 + |x|)
 
     def inversePass(self, y):
         # Prepare the terms for the inverse pass.
         signY = torch.nn.functional.hardtanh(y, min_val=-self.tolerance, max_val=self.tolerance) / self.tolerance
-        r, a = 1/self.nonLinearCoefficient, self.infiniteBound  # The nonLinearCoefficient and infinite-bound terms
+        r, a = self.nonLinearCoefficient, self.infiniteBound  # The nonLinearCoefficient and infinite-bound terms
 
-        # Base case: infiniteBound=0.
+        # Edge case
         if a == 0: return y*r / (1 - signY*y*r)  # Poor numerical stability on reconstruction!
 
-        # Decrease the signal below inversion point; increase above.
-        sqrtTerm = ((r*a)**2 + 2*a*r*(1 + signY*y*r) + (r*y - signY).pow(2)) / (r*a)**2
-        x = signY*(sqrtTerm.sqrt() - 1)/2 - signY / (2*a*r) + y / (2*a)
-
-        return x
+        # Calculate the inverse activation function.
+        sqrtTerm = (signY*(a + r) - y)**2 + signY*4*a*y
+        return (signY*(sqrtTerm.sqrt() - a - r) + y) / (2*a)  # For 0 <= y: x = (sqrt((a + r - y)^2 + 4ay) - a - r + y) / (2*a)
 
     def getActivationCurve(self, x_min=-2, x_max=2, num_points=200):
         # Turn off gradient tracking for plotting
