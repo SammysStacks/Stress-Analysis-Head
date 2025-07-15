@@ -36,7 +36,7 @@ lrs_reversible=(0.05)  # [0.025, 0.075]
 
 # Angular reference states.
 minAngularThresholds=(1)  # 0.2 - 0.5 - 1
-maxAngularThresholds=(20)  # [10, 45, 90]; Absolute min [6, 10]
+maxAngularThresholds=(45)  # [10, 45, 90]; Absolute min [6, 10]
 
 # Binary reference states.
 numSpecificEncoderLayers_arr=(1)

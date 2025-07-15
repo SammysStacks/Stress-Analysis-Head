@@ -43,8 +43,8 @@ class reversibleLinearSoftSign(reversibleInterface):
         self.tolerance = 1e-25  # Tolerance for numerical stability
 
     def getActivationParams(self):
-        infiniteBound = 1 + 0.5*torch.tanh(self.infiniteBoundParam)  # Maybe 0.5 +/- 0.25 (OLD +/- 0.4); Theoretical range [0, 2] at C = 1
-        convergentPoint = 1 + torch.tanh(self.convergencePointParam)  # Convert the infinite bound to a sigmoid value. Maybe 1 +/-0.5 (OLD +/- 1)
+        infiniteBound = 0.5 + 0.25*torch.tanh(self.infiniteBoundParam)  # Maybe 0.5 +/- 0.25 (OLD +/- 0.4); Theoretical range [0, 2] at C = 1
+        convergentPoint = 1 + 0.5*torch.tanh(self.convergencePointParam)  # Convert the infinite bound to a sigmoid value. Maybe 1 +/-0.5 (OLD +/- 1)
         nonLinearCoefficient = (1 + convergentPoint) * (1 - infiniteBound)  # 1/r
         # TODO: Maybe a: [0.5, 1.5] or and NLC: [0.5, 1.5]
 
@@ -74,7 +74,7 @@ class reversibleLinearSoftSign(reversibleInterface):
         r, a = self.nonLinearCoefficient, self.infiniteBound  # The nonLinearCoefficient and infinite-bound terms
 
         # Edge case
-        if a == 0: return y*r / (1 - signY*y*r)  # Poor numerical stability on reconstruction!
+        if a == 0: return y / (r - signY*y)  # Poor numerical stability on reconstruction!
 
         # Calculate the inverse activation function.
         sqrtTerm = (signY*(a + r) - y)**2 + signY*4*a*y
