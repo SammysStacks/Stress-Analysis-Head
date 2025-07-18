@@ -43,8 +43,8 @@ class reversibleLinearSoftSign(reversibleInterface):
         self.tolerance = 1e-25  # Tolerance for numerical stability
 
     def getActivationParams(self):
-        infiniteBound = 0.5 + 0.25*torch.tanh(self.infiniteBoundParam)  # Maybe 0.5 +/- 0.25 (OLD +/- 0.4); Theoretical range [0, 2] at C = 1
-        convergentPoint = 1 + 0.5*torch.tanh(self.convergencePointParam)  # Convert the infinite bound to a sigmoid value. Maybe 1 +/-0.5 (OLD +/- 1)
+        infiniteBound = 1 + 0.9*torch.tanh(self.infiniteBoundParam)  # Maybe 0.5 +/- 0.25 (OLD +/- 0.4); Theoretical range [0, 2] at C = 1
+        convergentPoint = 1 + 0.1*torch.tanh(self.convergencePointParam)  # Convert the infinite bound to a sigmoid value. Maybe 1 +/-0.5 (OLD +/- 1)
         nonLinearCoefficient = (1 + convergentPoint) * (1 - infiniteBound)  # 1/r
         # TODO: Maybe a: [0.5, 1.5] or and NLC: [0.5, 1.5]
 
