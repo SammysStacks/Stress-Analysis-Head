@@ -22,7 +22,7 @@ class optimizerMethods:
             {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': profileLR/1000, 'lr': profileLR},
 
             # Specify the Lie manifold architecture parameters.
-            {'params': (param for name, param in model.named_parameters() if "givensRotationParams" in name), 'weight_decay': angularLR*1000, 'lr': angularLR},  # weight_decay: angularLR * [0.1, 100]
+            {'params': (param for name, param in model.named_parameters() if "givensRotationParams" in name), 'weight_decay': angularLR*1, 'lr': angularLR},  # weight_decay: angularLR * [0.1, 100]
             {'params': (param for name, param in model.named_parameters() if "activationFunction" in name), 'weight_decay': 1e-6, 'lr': 1e-3},  # LR: [1e-4, 1e-3]
             {'params': (param for name, param in model.named_parameters() if "jacobianParameter" in name), 'weight_decay': 1e-6, 'lr': 1e-3},  # LR: [1e-4, 1e-3]
         ]
