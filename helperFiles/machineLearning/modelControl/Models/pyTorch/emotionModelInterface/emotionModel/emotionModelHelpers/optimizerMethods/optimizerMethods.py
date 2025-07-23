@@ -8,6 +8,7 @@ class optimizerMethods:
 
     def addOptimizer(self, submodel, model):
         angularLR = modelConstants.userInputParams['reversibleLR']
+        physGenLR = modelConstants.userInputParams['physGenLR']
         profileLR = modelConstants.userInputParams['profileLR']
 
         # Emotion model parameters adjustments.
@@ -17,12 +18,12 @@ class optimizerMethods:
         # Get the model parameters.
         modelParams = [
             # Specify the profile parameters for the signal encoding.
-            {'params': model.sharedSignalEncoderModel.healthGenerationModel.parameters(), 'weight_decay': modelConstants.userInputParams['physGenLR']/1000, 'lr': modelConstants.userInputParams['physGenLR']},
-            {'params': model.sharedSignalEncoderModel.fourierModel.parameters(), 'weight_decay': modelConstants.userInputParams['physGenLR']/1000, 'lr': modelConstants.userInputParams['physGenLR']},
+            {'params': model.sharedSignalEncoderModel.healthGenerationModel.parameters(), 'weight_decay': physGenLR/1000, 'lr': physGenLR},
             {'params': model.specificSignalEncoderModel.profileModel.parameters(), 'weight_decay': profileLR/1000, 'lr': profileLR},
+            {'params': model.sharedSignalEncoderModel.fourierModel.parameters(), 'weight_decay': physGenLR/1000, 'lr': physGenLR},
 
             # Specify the Lie manifold architecture parameters.
-            {'params': (param for name, param in model.named_parameters() if "givensRotationParams" in name), 'weight_decay': angularLR/100, 'lr': angularLR},  # weight_decay: angularLR * [0.1, 100]
+            {'params': (param for name, param in model.named_parameters() if "givensRotationParams" in name), 'weight_decay': angularLR/1000, 'lr': angularLR},  # weight_decay: angularLR * [0.1, 100]
             {'params': (param for name, param in model.named_parameters() if "activationFunction" in name), 'weight_decay': 1e-6, 'lr': 1e-3},  # LR: [1e-4, 1e-3]
             {'params': (param for name, param in model.named_parameters() if "jacobianParameter" in name), 'weight_decay': 1e-6, 'lr': 1e-3},  # LR: [1e-4, 1e-3]
         ]
