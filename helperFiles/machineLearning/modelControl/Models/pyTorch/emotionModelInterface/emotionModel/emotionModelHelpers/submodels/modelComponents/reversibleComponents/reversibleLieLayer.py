@@ -92,7 +92,7 @@ class reversibleLieLayer(reversibleLieLayerInterface):
     def applySingleLayer(self, inputData, layerInd):
         # Determine the direction of the forward pass.
         performOptimalForwardFirst = self.optimalForwardFirst if layerInd % 2 == 0 else not self.optimalForwardFirst
-        performOptimalForwardFirst = False  # TODO: Remove this line to enable the optimal forward pass.
+        # performOptimalForwardFirst = False  # TODO: Remove this line to enable the optimal forward pass.
 
         # Apply the layer.
         inputData = self.applyLayer(inputData, layerInd) if self.activationMethod == 'none' \
