@@ -38,7 +38,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-07-22 pt2"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2025-07-24"  # The current date we are training the model. Unique identifier of this training set.
     unifyModelWeights = True  # Whether to unify the model weights across all models.
     plotAllEpochs = False  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
     validationRun = False  # Whether to train new datasets from the old model.
@@ -154,7 +154,7 @@ if __name__ == "__main__":
         trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingModelName, showMinimumPlots=not showAllPlots)
 
         # Save the model sometimes (only on the main device).
-        if saveFullModel and accelerator.is_local_main_process and submodel == modelConstants.signalEncoderModel:  # TODO
+        if saveFullModel and accelerator.is_local_main_process and submodel == modelConstants.signalEncoderModel:
             trainingProtocols.saveModelState(epoch, allMetaModels, allModels, submodel, allDatasetNames, trainingDate)
 
         # Finalize the epoch parameters.
