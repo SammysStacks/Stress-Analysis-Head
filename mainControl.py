@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
     # User options during the run: any number can be true.
     useModelPredictions = False or trainModel  # Apply the learning algorithm to decode the signals.
-    plotStreamedData = False  # Graph the data to show incoming signals.
+    plotStreamedData = True  # Graph the data to show incoming signals.
     useTherapyData = True  # Use the Therapy Data folder for any files.
 
     # General program flags.
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     reverseOrder = False  # Reverse the order of the data for training.
 
     # Specify the user parameters.
-    userName = "Subject-1".replace(" ", "")
+    userName = "Yongeun".replace(" ", "")
     trialName = "BinauralBeatsOpenLoop"  # Experiment Type: Music ....
     date = "2025-11-18"
 
