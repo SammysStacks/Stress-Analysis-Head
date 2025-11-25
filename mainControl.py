@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
     # User options during the run: any number can be true.
     useModelPredictions = False or trainModel  # Apply the learning algorithm to decode the signals.
-    plotStreamedData = True  # Graph the data to show incoming signals.
+    plotStreamedData = False  # Graph the data to show incoming signals.
     useTherapyData = True  # Use the Therapy Data folder for any files.
 
     # General program flags.
@@ -35,9 +35,9 @@ if __name__ == "__main__":
     reverseOrder = False  # Reverse the order of the data for training.
 
     # Specify the user parameters.
-    userName = "Yongeun".replace(" ", "")
-    trialName = "BinauralBeatsOpenLoop"  # Experiment Type: Music ....
-    date = "2025-11-18"
+    userName = "Jin".replace(" ", "")
+    trialName = "BinauralBeatsClosedLoop"  # Experiment Type: Music ....
+    date = "2025-11-25"
 
     # Specify experimental parameters.
     deviceAddress = '12ba4cb61c85ec11bc01fc2b19c2d21c'  # Board's Serial Number (port.serial_number). Only used if streaming data, else it gets reset to None.
