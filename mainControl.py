@@ -35,8 +35,8 @@ if __name__ == "__main__":
     reverseOrder = False  # Reverse the order of the data for training.
 
     # Specify the user parameters.
-    userName = "Huijie".replace(" ", "")
-    trialName = "BinauralBeatsOpenLoop"  # Experiment Type: Music ....
+    userName = "Ruijin".replace(" ", "")
+    trialName = "BinauralBeatsClosedLoop"  # Experiment Type: Music ....
     date = "2025-12-01"
 
     # Specify experimental parameters.
