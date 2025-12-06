@@ -37,7 +37,7 @@ if __name__ == "__main__":
     # Specify the user parameters.
     userName = "Ian".replace(" ", "")
     trialName = "HeatingPadOpenLoop"  # Experiment Type: Music ....
-    date = "2025-12-05"
+    date = "2025-12-06"
 
     # Specify experimental parameters.
     deviceAddress = '12ba4cb61c85ec11bc01fc2b19c2d21c'  # Board's Serial Number (port.serial_number). Only used if streaming data, else it gets reset to None.
