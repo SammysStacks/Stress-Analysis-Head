@@ -58,8 +58,8 @@ class featurePlotting(globalPlottingProtocols):
     def getAxisLimits(dataOnPlots=(), yLim=(None, None)):
         # For each plot on the graph
         for data in dataOnPlots:
-            # if len(data) == 0:
-            #     continue
+            if len(data) == 0:
+                continue
             # Calculate the y-limits for the data
             yMin = 0.9 * min(data) if min(data) > 0 else min(data) * 1.1
             yMax = 1.1 * max(data) if max(data) > 0 else max(data) * 0.9
