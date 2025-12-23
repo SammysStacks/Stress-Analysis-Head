@@ -45,7 +45,7 @@ if __name__ == "__main__":
     testSplitRatio = 0.125  # The test split ratio for the emotion model is higher to allow more examples per class.
 
     # Model loading information.
-    loadSubmodelDate = "2025-04-15---"  # The submodel we are loading: None, "2025-04-18"
+    loadSubmodelDate = "2025-04-15"  # The submodel we are loading: None, "2025-04-18"
 
     # ----------------------- Architecture Parameters ----------------------- #
 
@@ -57,8 +57,8 @@ if __name__ == "__main__":
 
     # Add arguments for the health profile.
     parser.add_argument('--initialProfileAmp', type=float, default=1e-3, help='The limits for profile initialization. Should be near zero')
-    parser.add_argument('--encodedDimension', type=int, default=512, help='The dimension of the health profile and all signals.')
-    parser.add_argument('--numProfileShots', type=int, default=3, help='The epochs for profile training: [16, 32]')
+    parser.add_argument('--encodedDimension', type=int, default=256, help='The dimension of the health profile and all signals.')
+    parser.add_argument('--numProfileShots', type=int, default=32, help='The epochs for profile training: [16, 32]')
     
     # Add arguments for the neural operator.
     parser.add_argument('--waveletType', type=str, default='bior3.1', help='The wavelet type for the wavelet transform: bior3.1, bior3.3, bior2.2, bior3.5')
@@ -70,8 +70,8 @@ if __name__ == "__main__":
     parser.add_argument('--numSharedEncoderLayers', type=int, default=7, help='The number of layers in the model: [2, 10]')
 
     # Add arguments for observational learning.
-    parser.add_argument('--maxAngularThreshold', type=float, default=90, help='The larger rotational threshold in (degrees)')
-    parser.add_argument('--minAngularThreshold', type=float, default=2, help='The smaller rotational threshold in (degrees)')
+    parser.add_argument('--maxAngularThreshold', type=float, default=45, help='The larger rotational threshold in (degrees)')
+    parser.add_argument('--minAngularThreshold', type=float, default=5, help='The smaller rotational threshold in (degrees)')
 
     # dd arguments for the emotion and activity architecture.
     parser.add_argument('--numBasicEmotions', type=int, default=4, help='The number of basic emotions (basis states of emotions)')
