@@ -22,8 +22,8 @@ if __name__ == "__main__":
 
     # Protocol switches: only the first true variably executes.
     readDataFromExcel = False  # For SINGLE FILE analysis. Analyze Data from Excel File called 'currentFilename' on Sheet Number 'testSheetNum'
-    trainModel = False  # Train Model with ALL Data in 'collectedDataFolder'.
-    streamData = True  # Stream in Data from the Board and Analyze.
+    trainModel = True  # Train Model with ALL Data in 'collectedDataFolder'.
+    streamData = False  # Stream in Data from the Board and Analyze.
 
     # User options during the run: any number can be true.
     useModelPredictions = False or trainModel  # Apply the learning algorithm to decode the signals.
