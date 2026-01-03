@@ -8,7 +8,7 @@ from helperFiles.machineLearning.feedbackControl.heatAndMusicTherapy.helperMetho
 
 class simulationProtocols:
     def __init__(self, allParameterBins, allPredictionBins, predictionBinWidths, modelParameterBounds, numPredictions, numParameters, predictionWeights, optimalNormalizedState, initialParameterBounds, unNormalizedParameterBins, simulationParameters,
-                 therapySelection):
+                 therapySelection, realTherapyData=None):
         # ================================================General Parameters================================================
         self.unNormalizedParamBins = unNormalizedParameterBins
         self.optimalNormalizedState = optimalNormalizedState
@@ -23,11 +23,10 @@ class simulationProtocols:
         self.numParameters = numParameters
 
         # ===============================================Hardcoded Parameters===============================================
+        self.simulateTherapy = simulationParameters['simulateTherapy']
         self.therapySelection = therapySelection
-        if self.therapySelection == 'Heat':
-            self.startingPoints = [47, 0.5966159, 0.69935307, 0.91997683]
-        elif self.therapySelection == 'BinauralBeats':
-            self.startingPoints = [[426, 430], [0.5966159, 0.69935307, 0.91997683]]
+        self.realTherapyData = realTherapyData
+        self.startingPoints = self._computeStartingPoints()
         self.initialTimePoint = 0
         self.initialPoints = 1
         self.timeDelay = 10
@@ -63,6 +62,32 @@ class simulationProtocols:
         self.dataInterface = dataInterface(predictionWeights, optimalNormalizedState)
         self.generalMethods = generalMethods()
 
+    """Compute starting points from real experimental data or use defaults for simulation"""
+    def _computeStartingPoints(self):
+        if not self.simulateTherapy and self.realTherapyData is not None:
+            if self.therapySelection == 'Heat':
+                param, pa, na, sa = self.realTherapyData
+                startParam = param[0, 0].item()
+                startPA = pa[0, 0].item()
+                startNA = na[0, 0].item()
+                startSA = sa[0, 0].item()
+                return [startParam, startPA, startNA, startSA]
+            elif self.therapySelection == 'BinauralBeats':
+                totalParam, pa, na, sa = self.realTherapyData
+                param1, param2 = totalParam[0], totalParam[1]
+                startParam1 = param1[0, 0].item()
+                startParam2 = param2[0, 0].item()
+                startPA = pa[0, 0].item()
+                startNA = na[0, 0].item()
+                startSA = sa[0, 0].item()
+                return [[startParam1, startParam2], [startPA, startNA, startSA]]
+        else:
+            # Simulated default starting point
+            if self.therapySelection == 'Heat':
+                return [47, 0.5966159, 0.69935307, 0.91997683]
+            elif self.therapySelection == 'BinauralBeats':
+                return [[426, 430], [0.5966159, 0.69935307, 0.91997683]]
+
     """Simulate individual times"""
     def getSimulatedTimes(self, numPoints, lastTimePoint=None):
         # If lastTimePoint is not provided, start from 0
@@ -74,7 +99,17 @@ class simulationProtocols:
 
     """Define the initialStates"""
     def getInitialState(self):
-        return self.startingTimes, self.startingParams, self.startingPredictions  # (initialPoints), (initialPoints, numParams), (initialPoints, predictions = emotion states)
+        if not self.simulateTherapy and self.realTherapyData is not None:
+            startTime = torch.tensor([self.initialTimePoint])
+            if self.therapySelection == 'Heat':
+                startParam = torch.tensor([[[[self.startingPoints[0]]]]]) # [1, 1, 1, 1]
+                startPredictions = torch.tensor([[[[self.startingPoints[1]]], [[self.startingPoints[2]]], [[self.startingPoints[3]]]]]) # [1, 3, 1, 1]
+            elif self.therapySelection == 'BinauralBeats':
+                startParam = torch.tensor([[[[self.startingPoints[0][0]]], [[self.startingPoints[0][1]]]]]) # [1, 2, 1, 1]
+                startPredictions = torch.tensor([[[[self.startingPoints[1][0]]], [[self.startingPoints[1][1]]], [[self.startingPoints[1][2]]]]]) # [1, 3, 1, 1]
+            return startTime, startParam, startPredictions
+        else:
+            return self.startingTimes, self.startingParams, self.startingPredictions  # (initialPoints), (initialPoints, numParams), (initialPoints, predictions = emotion states)
 
     """Randomly sample states"""
     def randomlySamplePoints(self, numPoints=1, lastTimePoint=None):

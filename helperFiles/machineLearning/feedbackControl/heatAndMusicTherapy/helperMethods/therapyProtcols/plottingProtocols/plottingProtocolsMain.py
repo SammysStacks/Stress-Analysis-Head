@@ -4,7 +4,11 @@ import seaborn as sns
 import numpy as np
 import torch
 import time
-from mpl_toolkits.mplot3d import Axes3D
+
+import os
+from pathlib import Path
+plt.rcParams.update({"pdf.fonttype": 42, "ps.fonttype": 42, "savefig.dpi": 600})
+
 
 
 class plottingProtocolsMain:
@@ -27,6 +31,14 @@ class plottingProtocolsMain:
         self.na_heatmap_predicted = np.zeros(heatmap_size)
         self.sa_heatmap_predicted = np.zeros(heatmap_size)
 
+    # Additional helper methods
+    def _save_figure(self, fig, filename, out_dir):
+        out_dir = Path(out_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        save_path = out_dir / f"{filename}.pdf"
+        fig.savefig(save_path, format="pdf", dpi=600, bbox_inches="tight", pad_inches=0.02)
+        print(f"Saved figure to {save_path}")
+
     @staticmethod
     def plotSimulatedMap(simulatedMap):
         # Initialize the user maps.
@@ -35,11 +47,11 @@ class plottingProtocolsMain:
 
     def plotTherapyResults(self, userStatePath, final_map_pack):
         # Unpack the user states.
-        benefitFunction, heuristic_map, personalized_map, simulated_map = final_map_pack
+        benefitFunction, heuristic_map, personalized_map, combined_map = final_map_pack
         num_steps = len(userStatePath)
         # Titles and maps to be plotted.
-        titles = ['Projected Benefit Map', 'Heuristic Map', 'Personalized Map', 'Simulated Map']
-        maps = [benefitFunction, heuristic_map, personalized_map, simulated_map]
+        titles = ['Projected Benefit Map', 'Heuristic Map', 'Personalized Map', 'Combined Map']
+        maps = [benefitFunction, heuristic_map, personalized_map, combined_map]
 
 
         # Setup subplots
@@ -52,13 +64,13 @@ class plottingProtocolsMain:
         for i, (map_to_plot, title) in enumerate(zip(maps, titles)):
             ax = axs[i % 2, i // 2]  # Correct indexing for subplot
 
-            plottingImage = ax.imshow(map_to_plot.T, cmap='cividis', extent=[self.initialParameterBounds[0].item(), self.initialParameterBounds[1].item(), 0, 1], aspect='auto', origin='lower')
-
-            # Plot past user states with fading red line
+            plottingImage = ax.imshow(map_to_plot.T, cmap='YlOrRd', extent=[self.initialParameterBounds[0].item(), self.initialParameterBounds[1].item(), 0, 1], aspect='auto', origin='lower')
+            ax.set_box_aspect(1)
+            # Plot past user states with fading black line
             for j in range(num_steps - 1):
                 ax.plot([userStatePath[j][0].item(), userStatePath[j + 1][0].item()],
                         [userStatePath[j][1].item(), userStatePath[j + 1][1].item()],
-                        color=(0, 0, 0, alphas[j]), linewidth=2)
+                        color=(1.0, 1.0, 1.0, alphas[j]), linewidth=2)
 
             ax.scatter(userStatePath[-1][0].item(), userStatePath[-1][1].item(), color='tab:red', label='Current State', edgecolor='black', s=75, zorder=10)
             ax.set_title(f'{title} (After Iteration {num_steps})')
@@ -70,6 +82,7 @@ class plottingProtocolsMain:
         fig.tight_layout()
         fig.colorbar(plottingImage, ax=axs.ravel().tolist(), label='Probability')
         plt.show()
+        self._save_figure(fig, filename=f"therapy_results_iter_{num_steps}", out_dir="figures/therapy_maps")
 
         print(f"New current state after iteration {num_steps + 1}: parameter = {userStatePath[-1][0].item()}, Loss = {userStatePath[-1][1].item()}")
 
@@ -77,7 +90,7 @@ class plottingProtocolsMain:
         # Unpack the user states and maps.
         benefitFunction, heuristic_map, personalized_map, simulated_map = final_map_pack
         num_steps = len(userStatePath)
-        titles = ['Projected Benefit Map', 'Heuristic Map', 'Personalized Map', 'Simulated Map']
+        titles = ['Projected Benefit Map', 'Heuristic Map', 'Personalized Map', 'Combined Map']
         maps = [benefitFunction, heuristic_map, personalized_map, simulated_map]
 
         # Create figure for 3D plots.
@@ -92,6 +105,11 @@ class plottingProtocolsMain:
         for i, (map_to_plot, title) in enumerate(zip(maps, titles)):
             ax = fig.add_subplot(2, 2, i + 1, projection='3d')
 
+            # styling
+            ax.set_facecolor('white')
+            for pane in [ax.xaxis.pane, ax.yaxis.pane, ax.zaxis.pane]:
+                pane.set_facecolor((1, 1, 1, 1))
+
             # Extract the middle slice along the loss axis for 3D visualization.
             data_slice = map_to_plot[:, :, loss_slice_idx].numpy()
 
@@ -101,19 +119,19 @@ class plottingProtocolsMain:
             X, Y = np.meshgrid(x, y)
 
             # Plot the surface.
-            surf = ax.plot_surface(X, Y, data_slice.T, cmap='cividis', alpha=0.8, edgecolor='none')
+            surf = ax.plot_surface(X, Y, data_slice.T, cmap='cividis', alpha=0.8, edgecolor='none', antialiased=True)
 
             # Plot the user path on the surface.
             for j in range(num_steps - 1):
-                alpha_value = max(0, 1 - (num_steps - j) * 0.1)  # Gradually decrease alpha for previous lines
+                alpha_value = max(0, 1 - (num_steps - j) * 0.025)  # Gradually decrease alpha for previous lines
                 ax.plot([userStatePath_np[j, 0], userStatePath_np[j + 1, 0]],
                         [userStatePath_np[j, 1], userStatePath_np[j + 1, 1]],
                         [userStatePath_np[j, 2], userStatePath_np[j + 1, 2]],
-                        color='red', linewidth=2, alpha=alpha_value)
+                        color='grey', linewidth=2, alpha=alpha_value)
 
             # Mark the current state.
             ax.scatter(userStatePath_np[-1, 0], userStatePath_np[-1, 1], userStatePath_np[-1, 2],
-                       color='black', label='Current State', edgecolor='white', s=100, zorder=10)
+                       color='red', label='Current State', edgecolor='white', s=100, zorder=10)
 
             # Set titles and labels.
             ax.set_title(f'{title} (Slice at Loss Index {loss_slice_idx})')
@@ -126,7 +144,7 @@ class plottingProtocolsMain:
         fig.tight_layout()
         plt.colorbar(surf, ax=fig.get_axes(), label='Probability', shrink=0.5, aspect=10)
         plt.show()
-
+        self._save_figure(fig, filename=f"therapy_results_iter_{num_steps}", out_dir="figures/therapy_maps")
         print(f"New current state after iteration {num_steps + 1}: parameters = {userStatePath_np[-1, 0:2]}, Loss = {userStatePath_np[-1, 2]}")
 
     # ------------------------ Basic Protocol plotting ------------------------ #

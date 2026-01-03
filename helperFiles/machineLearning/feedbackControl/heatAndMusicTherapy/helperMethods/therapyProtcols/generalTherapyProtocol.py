@@ -99,8 +99,12 @@ class generalTherapyProtocol(abc.ABC):
         self.allNumPredictionBins = [len(self.allPredictionBins[lossInd]) for lossInd in range(self.numPredictions)]  # PA, NA, SA number of bins in the list
 
         # ===========================================Helper Class for Exp. Params==========================================
-        """For Binaural Beats therapy, simulation is done in the same dimension as Heat therapy due to the Binaural Beats constraints"""
-        self.simulationProtocols = simulationProtocols(self.allParameterBins, self.allPredictionBins, self.predictionBinWidths, self.modelParameterBounds, self.numPredictions, self.numParameters, self.predictionWeights, self.optimalNormalizedState, self.initialParameterBounds[0], self.unNormalizedAllParameterBins[0], simulationParameters, therapySelection)
+        # get real therapy data if not simulating
+        realTherapyData = None
+        if not self.simulateTherapy:
+            realTherapyData = self.empatchProtocols.getTherapyData()
+        self.simulationProtocols = simulationProtocols(self.allParameterBins, self.allPredictionBins, self.predictionBinWidths, self.modelParameterBounds, self.numPredictions, self.numParameters, self.predictionWeights,
+                                                       self.optimalNormalizedState, self.initialParameterBounds[0], self.unNormalizedAllParameterBins[0], simulationParameters, therapySelection, realTherapyData=realTherapyData)
         self.plottingProtocolsMain = plottingProtocolsMain(self.initialParameterBounds, self.modelParameterBounds, self.allNumParameterBins, self.parameterBinWidths, self.predictionBounds, self.allNumPredictionBins, self.predictionBinWidths)
 
         # ================================================Reset Parameters=================================================
@@ -185,10 +189,17 @@ class generalTherapyProtocol(abc.ABC):
                 extracted_param_1 = initialSimulatedStates[0, 0, :]
                 extracted_param_2 = initialSimulatedStates[0, 1, :]
                 # Normalize the Params
-                extracted_param_1 = dataInterface.normalizeParameters(currentParamBounds=self.initialParameterBounds[0].unsqueeze(0) - self.initialParameterBounds[0].unsqueeze(0)[:, 0:1], normalizedParamBounds=self.modelParameterBounds,
-                                                                              currentParamValues=extracted_param_1)
-                extracted_param_2 = dataInterface.normalizeParameters(currentParamBounds=self.initialParameterBounds[1].unsqueeze(0) - self.initialParameterBounds[1].unsqueeze(0)[:, 0:1], normalizedParamBounds=self.modelParameterBounds,
-                                                                      currentParamValues=extracted_param_2)
+                extracted_param_1 = dataInterface.normalizeParameters(
+                    currentParamBounds=self.initialParameterBounds[0].unsqueeze(0),
+                    normalizedParamBounds=self.modelParameterBounds,
+                    currentParamValues=extracted_param_1
+                )
+                extracted_param_2 = dataInterface.normalizeParameters(
+                    currentParamBounds=self.initialParameterBounds[1].unsqueeze(0),
+                    normalizedParamBounds=self.modelParameterBounds,
+                    currentParamValues=extracted_param_2
+                )
+
                 extracted_pa = initialSimulatedStates[0, 2, :]
                 extracted_na = initialSimulatedStates[0, 3, :]
                 extracted_sa = initialSimulatedStates[0, 4, :]
@@ -205,8 +216,7 @@ class generalTherapyProtocol(abc.ABC):
                 # Extract for SA: Parameter and third emotion prediction
                 initialRealData_SA = realDataInitialCompiledStates[:, [0, 1, 4], :, :] # # torch.Size([numBinauralBeats, 3, 1, 1])
 
-                resampledParameterBins_single, resampledPredictionBins = self.generalMethods.resampleBins(self.allParameterBins[0], self.allPredictionBins, eventlySpacedBins=False)
-                resampledParameterBins = [resampledParameterBins_single, resampledParameterBins_single]
+                resampledParameterBins, resampledPredictionBins = self.generalMethods.resampleBins(self.allParameterBins, self.allPredictionBins, eventlySpacedBins=False)
 
                 self.simulationProtocols.realSimMapPA = self.generalMethods.get3DProbabilityMatrix(initialRealData_PA, resampledParameterBins, resampledPredictionBins[0], self.gausParameterSTDs, self.gausLossSTDs[0], noise=0.1,
                                                                                  applyGaussianFilter=self.applyGaussianFilter)
@@ -249,7 +259,7 @@ class generalTherapyProtocol(abc.ABC):
         # Therapy Specific Calculations
         if self.therapySelection == 'Heat':
             initialUserParamBinIndex = self.dataInterface.getBinIndex(self.allParameterBins, parameters)
-            initialUserParam = self.unNormalizedAllParameterBins[0][initialUserParamBinIndex]  # bound the initial temperature (1D)
+            initialUserParam = self.unNormalizedAllParameterBins[0][initialUserParamBinIndex]
             initialUserParam = self.boundNewTemperature(initialUserParam, bufferZone=0.01)  # bound the initial temperature (1D)
             self.unNormalizedParameter.append(initialUserParam)  # list of tensor torch.Size([1, 1, 1, 1])
 
@@ -272,6 +282,7 @@ class generalTherapyProtocol(abc.ABC):
             currentTime, currentParam, currentPredictions = self.simulationProtocols.getInitialState() # currentTime: tensor(0); currentParam: torch.Size([1, 1, 1, 1]); currentPredictions: torch.Size([1, 3, 1, 1]) predefined.
             return currentTime, currentParam, currentPredictions
         else:
+            # getInitialState has real data interface implemented
             currentTime, currentParam, currentPredictions = self.simulationProtocols.getInitialState()
             return currentTime, currentParam, currentPredictions
 
@@ -329,7 +340,6 @@ class generalTherapyProtocol(abc.ABC):
                 self.timepoints.append(newTimePoint)
 
         else:
-
                 # Simulate a new time.
                 lastTimePoint = self.timepoints[-1] if len(self.timepoints) != 0 else 0
                 # Convert tensor to int

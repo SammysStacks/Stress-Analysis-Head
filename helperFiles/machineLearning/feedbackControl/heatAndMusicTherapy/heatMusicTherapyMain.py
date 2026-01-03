@@ -18,7 +18,7 @@ class heatMusicTherapyControl(therapyHelpers):
             if self.therapyMethod == "aStarTherapyProtocol":
                 if self.therapySelection == 'Heat':
                     # Get the next states for the therapy.
-                    therapyState, allMaps = self.therapyProtocol.updateTherapyState() # Therapy state newuserParam
+                    therapyState, allMaps = self.therapyProtocol.updateTherapyState() # Therapy state newUserParam
                     self.therapyProtocol.getNextState(therapyState, self.therapyMethod)
                     # Preparation for plotting
                     combinedStates = [[param_state, user_compiled_mental] for param_state, user_compiled_mental in zip(self.therapyProtocol.unNormalizedParameter, self.therapyProtocol.userMentalStateCompiledLoss)]
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     parameterBinWidth = 1
 
     # Therapy method initialziation
-    therapyChoices = "BinauralBeats"  # 'Heat or 'BinauralBeats'
+    therapyChoices = "Heat"  # 'Heat or 'BinauralBeats'
 
     # User parameters.
     userTherapyMethod = "aStarTherapyProtocol"

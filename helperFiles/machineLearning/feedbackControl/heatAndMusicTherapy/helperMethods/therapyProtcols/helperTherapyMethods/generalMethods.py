@@ -23,8 +23,6 @@ class generalMethods:
 
         # Get the max index of the bins with maxlengthPredBins
         maxPredIndex = max([i for i, predBins in enumerate(allPredictionBins) if len(predBins) == maxLengthPredBins])
-        # Assert that all the bins are normalized between 0 and 1
-        # Assert min(predBins[0] for predBins in allPredictionBins) == 0.0 and max(predBins[-1] for predBins in allPredictionBins) == 1.0, "Prediction bins must be normalized between 0 and 1"
 
         if eventlySpacedBins:
             # Resample the bins to be evenly spaced.

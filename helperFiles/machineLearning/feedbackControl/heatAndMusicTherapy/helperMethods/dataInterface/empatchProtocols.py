@@ -34,7 +34,8 @@ class empatchProtocols(extractData):
         self.trainingFolder = os.path.abspath(relative_path)
 
         # Assert the validity of the input parameters.
-        self.compileModelInfo.assertValidTherapyMethod(therapyMethod=self.therapyExpMethod)
+        baseTherapyMethod = self.therapyExpMethod.replace("OpenLoop", "").replace("ClosedLoop", "")
+        self.compileModelInfo.assertValidTherapyMethod(therapyMethod=baseTherapyMethod)
 
     def getFeatureInformation(self):
         # Specify biomarker information.
@@ -45,13 +46,11 @@ class empatchProtocols(extractData):
 
     def getTherapyData(self):
         # Initialize holders.
-        paramStates = []  # The state values for each experiment. Dimensions: numExperiments, (P1, P2, ...); 2D array
-        lossStates = []  # The state values for each experiment. Dimensions: numExperiments, (PA, NA, SA); 2D array
         stateHolder = []
         # For each file in the training folder.
         for excelFile in natsorted(os.listdir(self.trainingFolder)):
             # Remove any files that are not part of the therapy data.
-            if not excelFile.endswith(".xlsx") or excelFile.startswith(("~", ".")): continue  # Only analyze Excel files with the training signals.
+            if not excelFile.endswith(".xlsx") or excelFile.startswith(("~", ".", "._")): continue  # Only analyze Excel files with the training signals.
             if self.therapyExpMethod not in excelFile: continue  # Only analyze the therapy data.
             print(f"Processing file: {excelFile}")
 
@@ -88,62 +87,45 @@ class empatchProtocols(extractData):
             currentPredictionStates = torch.stack(normalizedValuesList, dim=1).tolist()
 
             def temperatureInterface():
-                mean_temperature_list = torch.as_tensor(rawFeatureHolder[3])[:, 0]
-
-                # Get the temperatures in the time window.
-                allTemperatureTimes = torch.as_tensor(rawFeatureTimesHolder[3])
-                allTemperatures = torch.as_tensor(mean_temperature_list)
                 experimentTempHolder = []
-                # For each experiment.
-                for experimentalInd in range(len(experimentNames)):
-                    # Get the start and end times for the experiment.
-                    surveyAnswerTime = currentSurveyAnswerTimes[experimentalInd]
-                    startExperimentTime = experimentTimes[experimentalInd][0]
+                for experimentalInd in range(len(experimentTimes)):
                     experimentName = experimentNames[experimentalInd]
-
-                    # Extract the temperature used in the experiment.
-                    if self.therapyExpMethod in experimentName:
+                    # Match experiments: "Heating-Baseline-temp" or "Baseline-HeatingPad-temp"
+                    if "Heating" in experimentName or "HeatingPad" in experimentName:
                         experimentalTemp = int(experimentName.split("-")[-1])
                         experimentTempHolder.append(experimentalTemp)
-                    else:
-                        # Get the temperature at the start and end of the experiment.
-                        startTemperatureInd = torch.argmin(torch.abs(allTemperatureTimes - startExperimentTime))
-                        surveyAnswerTimeInd = torch.argmin(torch.abs(allTemperatureTimes - surveyAnswerTime))
-
-                        # Find the average temperature between the start and end times.
-                        experimentalTemp = torch.mean(allTemperatures[startTemperatureInd:surveyAnswerTimeInd])
-                        experimentTempHolder.append(experimentalTemp.item())
                 return experimentTempHolder
 
             def binauralBeatsInterface():
                 experimentParamHolder = [[], []]
-                therapyMethodCleaned = self.therapyExpMethod.replace("Beats", "")
                 for experimentalInd in range(len(experimentNames)):
                     experimentName = experimentNames[experimentalInd]
-                    if therapyMethodCleaned in experimentName:
-                        experimentalParameters = experimentName.split("-")[-2:]  # Get the last two elements
-                        param1, param2 = map(int, experimentalParameters)
+                    # match binaural beat experiment: "Binaural-Baseline-param1-param2"
+                    if "Binaural" in experimentName:
+                        parts = experimentName.split("-")
+                        param1 = int(parts[-2])
+                        param2 = int(parts[-1])
                         experimentParamHolder[0].append(param1)
                         experimentParamHolder[1].append(param2)
                 return experimentParamHolder
 
             if self.therapyExpMethod == "HeatingPad":
                 experimentTempHolder = temperatureInterface()
+                heatingExpIndices = [i for i, name in enumerate(experimentNames) if "Heating" in name or "HeatingPad" in name]
                 # For each experiment.
-                for experimentalInd in range(len(experimentNames)):
+                for index, experimentalInd in enumerate(heatingExpIndices):
                     # Get the mental state values and normalize them.
                     emotion_states = [currentPredictionStates[0][experimentalInd], currentPredictionStates[1][experimentalInd], currentPredictionStates[2][experimentalInd]]
-                    experimentalTemp = experimentTempHolder[experimentalInd]
+                    experimentalTemp = experimentTempHolder[index]
                     stateHolder.append([experimentalTemp] + emotion_states)
             elif self.therapyExpMethod == "BinauralBeats":
                 experimentParamHolder = binauralBeatsInterface()
                 correspondEmoIndex = [i for i, name in enumerate(experimentNames) if 'Binaural' in name]
-                for index in range(len(correspondEmoIndex)):
+                for index, experimentalInd in enumerate(correspondEmoIndex):
                     emotion_states = [currentPredictionStates[0][correspondEmoIndex[index]], currentPredictionStates[1][correspondEmoIndex[index]], currentPredictionStates[2][correspondEmoIndex[index]]]
                     experimentalParam_1 = experimentParamHolder[0][index]
                     experimentalParam_2 = experimentParamHolder[1][index]
                     stateHolder.append([experimentalParam_1, experimentalParam_2] + emotion_states)
-
 
         stateHolder = torch.as_tensor(stateHolder)
 
