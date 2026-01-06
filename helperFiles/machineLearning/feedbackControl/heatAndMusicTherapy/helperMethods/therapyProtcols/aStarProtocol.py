@@ -166,7 +166,7 @@ class aStarTherapyProtocol(generalTherapyProtocol):
 
         # Update the confidence flags.
         self.percentHeuristic = min(self.percentHeuristic, 1 - percentConfidence) - 0.001
-        self.percentHeuristic = min(1.0, max(0.0, self.percentHeuristic))
+        self.percentHeuristic = min(1.0, max(0.1, self.percentHeuristic))
 
         # Update the bias terms.
         self.explorationBias = self.percentHeuristic

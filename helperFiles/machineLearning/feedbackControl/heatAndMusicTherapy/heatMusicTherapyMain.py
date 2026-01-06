@@ -43,6 +43,7 @@ class heatMusicTherapyControl(therapyHelpers):
 
                     if self.plotResults:
                         self.therapyProtocol.plottingProtocolsMain.plotTherapyResults3D(combinedStates, allMaps)
+                        self.therapyProtocol.plottingProtocolsMain.plotTherapyResults3D_scatter(combinedStates, allMaps)
                         print(f"Alpha after iteration: {self.therapyProtocol.percentHeuristic}\n")
 
             elif self.therapyMethod == 'basicTherapyProtocol':
@@ -65,18 +66,18 @@ if __name__ == "__main__":
     parameterBinWidth = 1
 
     # Therapy method initialziation
-    therapyChoices = "Heat"  # 'Heat or 'BinauralBeats'
+    therapyChoices = "BinauralBeats"  # 'Heat or 'BinauralBeats'
 
     # User parameters.
     userTherapyMethod = "aStarTherapyProtocol"
     testingUserName = "Subject XYZ"  # The username for the therapy.
     if therapyChoices == "BinauralBeats":
         baseFrequency = 424  # Select different base frequency to stimulate;
-        parameterBounds = ((baseFrequency+8, baseFrequency+15), (baseFrequency+8, baseFrequency+15))  # The parameter bounds for the therapy.
-        parameterBinWidth = 1  # The parameter bounds for the therapy.
+        parameterBounds = ((baseFrequency+6, baseFrequency+22), (baseFrequency+6, baseFrequency+22))  # The parameter bounds for the therapy.
+        parameterBinWidth = 2  # The parameter bounds for the therapy.
     elif therapyChoices == "Heat":
         parameterBounds = (30, 50)  # The temperature bounds for the therapy.
-        parameterBinWidth = 1.5  # The temperature bounds for the therapy.
+        parameterBinWidth = 1  # The temperature bounds for the therapy.
     plotTherapyResults = True  # Whether to plot the results.
 
     # Simulation parameters.
@@ -95,4 +96,4 @@ if __name__ == "__main__":
     # Initialize the therapy protocol
     therapyProtocol = heatMusicTherapyControl(testingUserName, parameterBounds, parameterBinWidth, currentSimulationParameters, therapySelection=therapyChoices, therapyMethod=userTherapyMethod, plotResults=plotTherapyResults)
     # Run the therapy protocol.
-    therapyProtocol.runTherapyProtocol(maxIterations=100)
+    therapyProtocol.runTherapyProtocol(maxIterations=200)

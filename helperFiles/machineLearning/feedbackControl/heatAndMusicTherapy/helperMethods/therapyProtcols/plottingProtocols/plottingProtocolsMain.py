@@ -64,13 +64,14 @@ class plottingProtocolsMain:
         for i, (map_to_plot, title) in enumerate(zip(maps, titles)):
             ax = axs[i % 2, i // 2]  # Correct indexing for subplot
 
-            plottingImage = ax.imshow(map_to_plot.T, cmap='YlOrRd', extent=[self.initialParameterBounds[0].item(), self.initialParameterBounds[1].item(), 0, 1], aspect='auto', origin='lower')
+            plottingImage = ax.imshow(map_to_plot.T, cmap='YlOrRd', alpha=0.8, extent=[self.initialParameterBounds[0].item(), self.initialParameterBounds[1].item(), 0, 1], aspect='auto', origin='lower')
             ax.set_box_aspect(1)
             # Plot past user states with fading black line
             for j in range(num_steps - 1):
+                alpha_value = max(0, 1 - (num_steps - j) * 0.1)
                 ax.plot([userStatePath[j][0].item(), userStatePath[j + 1][0].item()],
                         [userStatePath[j][1].item(), userStatePath[j + 1][1].item()],
-                        color=(1.0, 1.0, 1.0, alphas[j]), linewidth=2)
+                        color=(0.0, 0.0, 0.0, alpha_value), linewidth=2)
 
             ax.scatter(userStatePath[-1][0].item(), userStatePath[-1][1].item(), color='tab:red', label='Current State', edgecolor='black', s=75, zorder=10)
             ax.set_title(f'{title} (After Iteration {num_steps})')
@@ -96,8 +97,8 @@ class plottingProtocolsMain:
         # Create figure for 3D plots.
         fig = plt.figure(figsize=(16, 12))
 
-        # Define a loss slice to visualize. Here, we take the middle slice along the loss axis.
-        loss_slice_idx = maps[0].shape[-1] // 2
+        # Define a loss slice to visualize. Here, we take the first slice along the loss axis represents low loss.
+        loss_slice_idx = 1
 
         # Convert userStatePath to a NumPy array for easier handling.
         userStatePath_np = np.array([[state[0].item(), state[1].item(), state[2].item()] for state in userStatePath])
@@ -110,8 +111,10 @@ class plottingProtocolsMain:
             for pane in [ax.xaxis.pane, ax.yaxis.pane, ax.zaxis.pane]:
                 pane.set_facecolor((1, 1, 1, 1))
 
-            # Extract the middle slice along the loss axis for 3D visualization.
+            # Extract the 1st slice along the loss axis for 3D visualization.
             data_slice = map_to_plot[:, :, loss_slice_idx].numpy()
+            if data_slice.sum() > 0:
+                data_slice = data_slice / data_slice.sum()
 
             # Create the X, Y grid for parameters.
             x = np.linspace(self.initialParameterBounds[0][0].item(), self.initialParameterBounds[0][1].item(), map_to_plot.shape[0])
@@ -119,11 +122,11 @@ class plottingProtocolsMain:
             X, Y = np.meshgrid(x, y)
 
             # Plot the surface.
-            surf = ax.plot_surface(X, Y, data_slice.T, cmap='cividis', alpha=0.8, edgecolor='none', antialiased=True)
+            surf = ax.plot_surface(X, Y, data_slice.T, cmap='YlGnBu_r', alpha=0.8, edgecolor='none', antialiased=True)
 
             # Plot the user path on the surface.
             for j in range(num_steps - 1):
-                alpha_value = max(0, 1 - (num_steps - j) * 0.025)  # Gradually decrease alpha for previous lines
+                alpha_value = max(0, 1 - (num_steps - j) * 0.05)  # Gradually decrease alpha for previous lines
                 ax.plot([userStatePath_np[j, 0], userStatePath_np[j + 1, 0]],
                         [userStatePath_np[j, 1], userStatePath_np[j + 1, 1]],
                         [userStatePath_np[j, 2], userStatePath_np[j + 1, 2]],
@@ -131,7 +134,7 @@ class plottingProtocolsMain:
 
             # Mark the current state.
             ax.scatter(userStatePath_np[-1, 0], userStatePath_np[-1, 1], userStatePath_np[-1, 2],
-                       color='red', label='Current State', edgecolor='white', s=100, zorder=10)
+                       color='red', label='Current State', edgecolor='black', s=75, zorder=10)
 
             # Set titles and labels.
             ax.set_title(f'{title} (Slice at Loss Index {loss_slice_idx})')
@@ -353,3 +356,81 @@ class plottingProtocolsMain:
         plt.legend(frameon=True, loc='best', fontsize=12)
         ax.grid(visible=True, which='both', linestyle='--', linewidth=0.5, alpha=0.8)
         plt.show()
+
+    def plotTherapyResults3D_scatter(self, userStatePath, final_map_pack, probability_threshold=0.0001, minMax=True):
+        benefitFunction, heuristic_map, personalized_map, combined_map = final_map_pack
+        num_steps = len(userStatePath)
+        titles = ['Projected Benefit Map', 'Heuristic Map', 'Personalized Map', 'Combined Map']
+        maps = [benefitFunction, heuristic_map, personalized_map, combined_map]
+
+        # Convert userStatePath to numpy array
+        userStatePath_np = np.array([[state[0].item(), state[1].item(), state[2].item()] for state in userStatePath])
+
+        reference_map = maps[0].numpy() if isinstance(maps[0], torch.Tensor) else np.array(maps[0])
+        num_param1_bins, num_param2_bins, num_loss_bins = reference_map.shape
+
+        # Create parameter and loss bin centers based on actual map dimensions
+        x_bins = np.linspace(self.initialParameterBounds[0][0].item(), self.initialParameterBounds[0][1].item(), num_param1_bins)
+        y_bins = np.linspace(self.initialParameterBounds[1][0].item(), self.initialParameterBounds[1][1].item(), num_param2_bins)
+        z_bins = np.linspace(0, 1, num_loss_bins)  # Normalized loss bins
+
+        fig = plt.figure(figsize=(18, 14))
+
+        for idx, (map_to_plot, title) in enumerate(zip(maps, titles)):
+            ax = fig.add_subplot(2, 2, idx + 1, projection='3d')
+            ax.set_facecolor('white')
+            for pane in [ax.xaxis.pane, ax.yaxis.pane, ax.zaxis.pane]:
+                pane.set_facecolor((1, 1, 1, 1))
+
+            if isinstance(map_to_plot, torch.Tensor):
+                prob_data = map_to_plot.numpy()
+            else:
+                prob_data = np.array(map_to_plot)
+
+            # Create meshgrid for coordinates
+            X, Y, Z = np.meshgrid(x_bins, y_bins, z_bins, indexing='ij')
+            x_flat = X.flatten()
+            y_flat = Y.flatten()
+            z_flat = Z.flatten()
+            prob_flat = prob_data.flatten()
+
+            # Reduce clutter
+            mask = prob_flat > probability_threshold
+            x_filtered = x_flat[mask]
+            y_filtered = y_flat[mask]
+            z_filtered = z_flat[mask]
+            prob_filtered = prob_flat[mask]
+
+            # Normalize probabilities for color mapping (for visualization purposes only)
+            if minMax:
+                if prob_filtered.max() > prob_filtered.min():
+                    prob_normalized = (prob_filtered - prob_filtered.min()) / (prob_filtered.max() - prob_filtered.min())
+                else:
+                    prob_normalized = prob_filtered
+            else:
+                prob_normalized = prob_filtered
+
+            sizes = 10 + 200 * prob_normalized
+            scatter = ax.scatter(x_filtered, y_filtered, z_filtered,c=prob_normalized, cmap='YlGnBu_r', s=sizes, alpha=0.7, edgecolors='none')
+
+            # Plot trajectory
+            for j in range(num_steps - 1):
+                alpha_value = max(0.2, 1 - (num_steps - j) * 0.05)
+                ax.plot([userStatePath_np[j, 0], userStatePath_np[j + 1, 0]],
+                        [userStatePath_np[j, 1], userStatePath_np[j + 1, 1]],
+                        [userStatePath_np[j, 2], userStatePath_np[j + 1, 2]],
+                        color='black', linewidth=2.5, alpha=alpha_value)
+
+            # Current state marker
+            ax.scatter(userStatePath_np[-1, 0], userStatePath_np[-1, 1], userStatePath_np[-1, 2], color='red', s=150, edgecolor='black', linewidth=2, zorder=10, label='Current State')
+            ax.set_xlabel('Parameter 1 (Freq 1)')
+            ax.set_ylabel('Parameter 2 (Freq 2)')
+            ax.set_zlabel('Loss')
+            ax.set_title(f'{title}')
+            ax.legend()
+
+        fig.tight_layout()
+        cbar = fig.colorbar(scatter, ax=fig.get_axes(), shrink=0.5, aspect=15, pad=0.1)
+        cbar.set_label('Probability')
+        plt.show()
+        self._save_figure(fig, filename=f"therapy_3D_scatter_iter_{num_steps}", out_dir="figures/therapy_maps")
