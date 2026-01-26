@@ -63,6 +63,8 @@ class emotionPipelineHelpers:
         if submodel != modelConstants.signalEncoderModel: numProfileShots = modelParameters.getProfileEpochs()
         else: numProfileShots = min(max(3, numEpochs), modelParameters.getProfileEpochs())
 
+        numProfileShots = numProfileShots +  50  # TODO: remove later, this is testing on inference
+
         # Reset and get the parameters that belong to the profile model
         self.model.specificSignalEncoderModel.profileModel.resetProfileHolders(numProfileShots)
         if 4 < modelParameters.getProfileEpochs(): self.model.specificSignalEncoderModel.profileModel.resetProfileWeights()

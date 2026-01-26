@@ -74,11 +74,23 @@ class modelVisualizations(globalPlottingProtocols):
         self.generalViz.plotTrainingLosses(trainingLosses=[specificModel.trainingLosses_signalReconstruction for specificModel in specificModels],
                                            testingLosses=[specificModel.testingLosses_signalReconstruction for specificModel in specificModels], numEpochs=numEpochs,
                                            saveFigureLocation=f"trainingLosses{modelIdentifier}/", plotTitle=f"{modelIdentifier} convergence losses")
+        # for modelInd in range(len(specificModels)):
+        #     print("Train:", datasetNames[modelInd])
+        #     for i in range(len(specificModels[modelInd].trainingLosses_signalReconstruction[-1])):
+        #         print(specificModels[modelInd].trainingLosses_signalReconstruction[-1][i])
+        #     print("Test:", datasetNames[modelInd])
+        #     for i in range(len(specificModels[modelInd].trainingLosses_signalReconstruction[-1])):
+        #         print(specificModels[modelInd].testingLosses_signalReconstruction[-1][i])
 
         if submodel == modelConstants.signalEncoderModel:
             # Plot the losses during few-shot retraining the profile.
             self.generalViz.plotTrainingLosses(trainingLosses=[np.nanmean(specificModel.profileModel.retrainingProfileLosses, axis=1) for specificModel in specificModels], testingLosses=None,
                                                numEpochs=numEpochs, saveFigureLocation=f"trainingLosses{modelIdentifier}/", plotTitle=f"{modelIdentifier} profile convergence losses")
+            # for modelInd in range(len(specificModels)): print('Profile losses:', np.nanmean(specificModels[modelInd].profileModel.retrainingProfileLosses[-1]))
+            # for modelInd in range(len(specificModels)):
+            #     print("Profile:", datasetNames[modelInd])
+            #     for i in np.nanmean(specificModels[modelInd].profileModel.retrainingProfileLosses[-1], axis=0):
+            #         print(i)
 
         freeParamInformation = np.asarray([modelPipeline.model.getFreeParamsFullPassPath(submodelString=submodelString)[1:] for modelPipeline in allModelPipelines])
         moduleNames, maxFreeParamsPath = freeParamInformation[:, 0], freeParamInformation[:, 1].astype(int)  # numFreeParamsPath: numModuleLayers, numSignals, numParams=1

@@ -38,19 +38,20 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2025-07-24"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2025-12-31"  # The current date we are training the model. Unique identifier of this training set.
     unifyModelWeights = True  # Whether to unify the model weights across all models.
     plotAllEpochs = False  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
     validationRun = False  # Whether to train new datasets from the old model.
     testSplitRatio = 0.125  # The test split ratio for the emotion model is higher to allow more examples per class.
+    ablation_study = False
 
     # Model loading information.
-    loadSubmodelDate = "2025-04-15"  # The submodel we are loading: None, "2025-04-18"
+    loadSubmodelDate = "2025-04-03"  # The submodel we are loading: None or "2025-04-03"
 
     # ----------------------- Architecture Parameters ----------------------- #
 
     # Add arguments for the general model
-    parser.add_argument('--submodel', type=str, default=modelConstants.signalEncoderModel, help='The component of the model we are training. Options: signalEncoderModel, emotionModel')
+    parser.add_argument('--submodel', type=str, default=modelConstants.emotionModel, help='The component of the model we are training. Options: signalEncoderModel, emotionModel')
     parser.add_argument('--optimizerType', type=str, default='NAdam', help='The optimizerType used during training convergence: Options: RMSprop, Adam, AdamW, SGD, etc')
     parser.add_argument('--learningProtocol', type=str, default='reversibleLieLayer', help='The learning protocol for the model: reversibleLieLayer')
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are using: cpu, cuda')
@@ -74,9 +75,9 @@ if __name__ == "__main__":
     parser.add_argument('--minAngularThreshold', type=float, default=5, help='The smaller rotational threshold in (degrees)')
 
     # dd arguments for the emotion and activity architecture.
-    parser.add_argument('--numBasicEmotions', type=int, default=4, help='The number of basic emotions (basis states of emotions)')
-    parser.add_argument('--numActivityModelLayers', type=int, default=4, help='The number of layers in the activity model')
-    parser.add_argument('--numEmotionModelLayers', type=int, default=4, help='The number of layers in the emotion model')
+    parser.add_argument('--numBasicEmotions', type=int, default=8, help='The number of basic emotions (basis states of emotions)')
+    parser.add_argument('--numActivityModelLayers', type=int, default=5, help='The number of layers in the activity model')
+    parser.add_argument('--numEmotionModelLayers', type=int, default=5, help='The number of layers in the emotion model')
 
     # ----------------------- Training Parameters ----------------------- #
 
@@ -97,7 +98,7 @@ if __name__ == "__main__":
     userInputParams['minWaveletDim'] = max(32, userInputParams['encodedDimension'] // (2**4))
     userInputParams['minThresholdStep'] = userInputParams['reversibleLR']  # Keep as degrees
     userInputParams['reversibleLR'] = userInputParams['reversibleLR'] * math.pi / 180  # Keep as radians
-    userInputParams['profileDimension'] = userInputParams['encodedDimension'] // 4  # The dimension of the profile.
+    userInputParams['profileDimension'] = userInputParams['encodedDimension'] // 2  # The dimension of the profile.
     userInputParams['unifyModelWeights'] = unifyModelWeights
 
     # Compie additional input parameters.
@@ -125,6 +126,14 @@ if __name__ == "__main__":
     allDatasetNames = metaDatasetNames + datasetNames
 
     # -------------------------- Meta-model Training ------------------------- #
+
+    if ablation_study:
+        for modelPipeline in (allMetaModels + allModels): modelPipeline.scheduler.scheduler.warmupFlag = False; modelPipeline.scheduler.scheduler.step()
+        trainingProtocols.ablation_study_training([], [], allModels, allDataLoaders, remove_signal_names=())
+        trainingProtocols.calculateLossInformation([], [], allModels, allDataLoaders, submodel)
+        trainingProtocols.plotModelState([], [], allModels, allDataLoaders, modelConstants.signalEncoderModel, trainingModelName, showMinimumPlots=False)
+        for modelPipeline in (allMetaModels + allModels): modelPipeline.scheduler.scheduler.warmupFlag = True; modelPipeline.scheduler.scheduler.step()
+        exit()
 
     if submodel == modelConstants.emotionModel:
         # The emotion model needs to start with a health profile.

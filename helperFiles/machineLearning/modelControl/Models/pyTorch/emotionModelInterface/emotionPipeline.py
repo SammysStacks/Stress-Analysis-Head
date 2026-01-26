@@ -17,7 +17,7 @@ class emotionPipeline(emotionPipelineHelpers):
         # Finish setting up the model.
         self.compileOptimizer(submodel)  # Initialize the optimizer (for back propagation)
 
-    def trainModel(self, dataLoader, submodel, profileTraining, specificTraining, trainSharedLayers, stepScheduler, numEpochs):
+    def trainModel(self, dataLoader, submodel, profileTraining, specificTraining, trainSharedLayers, stepScheduler, numEpochs, remove_signal_names=()):
         # Load in all the data and labels for final predictions and calculate the activity and emotion class weights.
         self.setupTraining(submodel, profileTraining=profileTraining, specificTraining=specificTraining, trainSharedLayers=trainSharedLayers)
         onlyProfileTraining = profileTraining and not specificTraining and not trainSharedLayers
@@ -56,6 +56,12 @@ class emotionPipeline(emotionPipelineHelpers):
                             augmentedBatchData = self.dataAugmentation.signalDropout(augmentedBatchData, dropoutPercent=0.1)
                             # augmentedBatchData: batchSize, numSignals, maxSequenceLength, [timeChannel, signalChannel]
                     else: augmentedBatchData = signalBatchData
+
+                    for signal_name in remove_signal_names:
+                        # Remove sensor features from the training data.
+                        signal_mask = [signal_name not in feature_name for feature_name in self.featureNames]
+                        signal_mask = torch.tensor(signal_mask).view(1, -1, 1, 1).to(self.accelerator.device)
+                        augmentedBatchData = augmentedBatchData*signal_mask
 
                     # ------------ Forward pass through the model  ------------- #
 

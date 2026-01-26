@@ -75,6 +75,18 @@ class trainingProtocolHelpers:
             modelPipeline.trainModel(dataLoader, modelConstants.signalEncoderModel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=numProfileShots + 1)  # Profile training.
             if not onlyProfileTraining: modelPipeline.model.cullAngles(epoch=epoch)
 
+    def ablation_study_training(self, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, remove_signal_names):
+        self.unifyAllModelWeights(allMetaModels, allModels)  # Unify all the model weights.
+
+        # For each meta-training model.
+        for modelInd in range(len(allMetaModels) + len(allModels)):
+            dataLoader = allMetadataLoaders[modelInd] if modelInd < len(allMetadataLoaders) else allDataLoaders[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
+            modelPipeline = allMetaModels[modelInd] if modelInd < len(allMetaModels) else allModels[modelInd - len(allMetaModels)]  # Same pipeline instance in training loop.
+
+            # Health profile training.
+            numProfileShots = modelPipeline.resetPhysiologicalProfile(modelConstants.signalEncoderModel)
+            modelPipeline.trainModel(dataLoader, modelConstants.signalEncoderModel, profileTraining=True, specificTraining=False, trainSharedLayers=False, stepScheduler=True, numEpochs=numProfileShots + 1, remove_signal_names=remove_signal_names)  # Profile training.
+
     def validationTraining(self, submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch):
         self.unifyAllModelWeights(allMetaModels, allModels)  # Unify all the model weights.
 
