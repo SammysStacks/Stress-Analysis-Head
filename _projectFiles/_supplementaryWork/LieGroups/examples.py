@@ -27,7 +27,7 @@ for alpha in np.linspace(0, 1, num_steps):
 custom_cmap = LinearSegmentedColormap.from_list("red_transparent_blue", colors)
 
 # --- PARAMETERS ---
-n = 100
+n = 64
 theta = 0.5
 t = np.linspace(0, 4*np.pi, n)
 x = np.sin(t) * np.cos(3*t)  # original 1D signal
