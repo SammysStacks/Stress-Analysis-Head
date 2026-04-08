@@ -16,6 +16,7 @@ pygame
 PyQt5
 pyserial
 PyWavelets
+pytorch_wavelets
 Requests
 scikit-learn
 scipy
