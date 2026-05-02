@@ -47,8 +47,8 @@ class organizeTrainingLosses(lossCalculations):
 
                 # Get the encoder information.
                 givensAnglesPath, normalizationFactorsPath, givensAnglesFeaturesPath, reversibleModuleNames, givensAnglesFeatureNames = model.getLearnableParams(submodelString="SignalEncoderModel")
-                activationParamsPath, moduleNames = model.getActivationParamsFullPassPath(submodelString="SignalEncoderModel")
-                numFreeParamsPath, _, _ = model.getFreeParamsFullPassPath(submodelString="SignalEncoderModel")
+                # activationParamsPath, moduleNames = model.getActivationParamsFullPassPath(submodelString="SignalEncoderModel")
+                # numFreeParamsPath, _, _ = model.getFreeParamsFullPassPath(submodelString="SignalEncoderModel")
                 # givensAnglesFeaturesPath: numModuleLayers, numFeatures=5, numValues*
                 # normalizationFactorsPath: numModuleLayers, numSignals, numParams=1
                 # numFreeParamsPath: numModuleLayers, numSignals, numParams=1
@@ -57,10 +57,10 @@ class organizeTrainingLosses(lossCalculations):
 
                 # Store the signal encoder loss information.
                 self.storeLossInformation(trainingLoss=signalReconstructedTrainingLosses, testingLoss=signalReconstructedTestingLosses, trainingHolder=model.specificSignalEncoderModel.trainingLosses_signalReconstruction, testingHolder=model.specificSignalEncoderModel.testingLosses_signalReconstruction)
-                self.storeLossInformation(trainingLoss=activationParamsPath, testingLoss=None, trainingHolder=model.specificSignalEncoderModel.activationParamsPath, testingHolder=None)
+                # self.storeLossInformation(trainingLoss=activationParamsPath, testingLoss=None, trainingHolder=model.specificSignalEncoderModel.activationParamsPath, testingHolder=None)
                 self.storeLossInformation(trainingLoss=normalizationFactorsPath, testingLoss=None, trainingHolder=model.specificSignalEncoderModel.normalizationFactorsPath, testingHolder=None)
                 self.storeLossInformation(trainingLoss=givensAnglesFeaturesPath, testingLoss=None, trainingHolder=model.specificSignalEncoderModel.givensAnglesFeaturesPath, testingHolder=None)
-                self.storeLossInformation(trainingLoss=numFreeParamsPath, testingLoss=None, trainingHolder=model.specificSignalEncoderModel.numFreeParams, testingHolder=None)
+                # self.storeLossInformation(trainingLoss=numFreeParamsPath, testingLoss=None, trainingHolder=model.specificSignalEncoderModel.numFreeParams, testingHolder=None)
                 self.accelerator.print("Reconstruction loss values:", signalReconstructedTrainingLosses.nanmean().item(), signalReconstructedTestingLosses.nanmean().item())
 
             elif submodel == modelConstants.emotionModel:

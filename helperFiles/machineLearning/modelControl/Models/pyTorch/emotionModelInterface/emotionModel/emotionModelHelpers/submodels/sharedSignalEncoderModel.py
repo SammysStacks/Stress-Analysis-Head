@@ -20,13 +20,13 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
         self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
         self.numLayers = numLayers  # The number of shared encoder layers.
 
-        numIgnoredSharedHF = modelConstants.userInputParams['numIgnoredSharedHF']
+        numIgnoredSharedHF = modelConstants.userInputParams["numIgnoredSharedHF"]
         # Only apply a transformation to the lowest of the high frequency decompositions.
-        self.neuralOperatorParameters['wavelet']['encodeHighFrequencyProtocol'] = f'highFreq-{0}-{numIgnoredSharedHF}'
+        self.neuralOperatorParameters["wavelet"]["encodeHighFrequencyProtocol"] = f"highFreq-{0}-{numIgnoredSharedHF}"
 
         # Initialize the pseudo-encoded times for the fourier data.
         hyperSampledTimes = torch.linspace(start=0, end=self.encodedTimeWindow, steps=self.encodedDimension).flip(dims=[0])
-        self.register_buffer(name='hyperSampledTimes', tensor=hyperSampledTimes)  # Non-learnable parameter.
+        self.register_buffer(name="hyperSampledTimes", tensor=hyperSampledTimes)  # Non-learnable parameter.
         deltaTimes = torch.unique(self.hyperSampledTimes.diff().round(decimals=4))
         assert len(deltaTimes) == 1, f"The time gaps are not similar: {deltaTimes}"
 
@@ -103,21 +103,24 @@ class sharedSignalEncoderModel(neuralOperatorInterface):
 
     def printParams(self):
         # Count the trainable parameters.
-        numInitParams = sum(p.numel() for name, p in self.named_parameters() if p.requires_grad and 'healthGenerationModel' in name)
+        numInitParams = sum(p.numel() for name, p in self.named_parameters() if p.requires_grad and "healthGenerationModel" in name)
         numParams = sum(p.numel() for name, p in self.named_parameters()) - numInitParams
 
         # Print the number of trainable parameters.
         totalParams = sum(p.numel() for name, p in self.named_parameters())
-        print(f'The model has {totalParams} trainable parameters: {numParams} meta-weights, and {numInitParams} initial weights.')
+        print(f"The model has {totalParams} trainable parameters: {numParams} meta-weights, and {numInitParams} initial weights.")
 
 
 if __name__ == "__main__":
+    userInputParameters = {"waveletType": "bior3.1", "minWaveletDim": 32, "numIgnoredSharedHF": 0}
+
     # General parameters.
-    _neuralOperatorParameters = modelParameters.getNeuralParameters({'waveletType': 'bior3.1'})['neuralOperatorParameters']
-    modelConstants.userInputParams['profileDimension'] = 64
+    _neuralOperatorParameters = modelParameters.getNeuralParameters(userInputParameters)["neuralOperatorParameters"]
+    modelConstants.userInputParams["profileDimension"] = 64
     _batchSize, _numSignals, _sequenceLength = 1, 1, 256
     _numSharedEncoderLayers = 4
+    learningProtocol = "FC"
 
     # Set up the parameters.
-    neuralLayerClass = sharedSignalEncoderModel(operatorType='wavelet', encodedDimension=_sequenceLength, numLayers=_numSharedEncoderLayers, learningProtocol='reversibleLieLayer', neuralOperatorParameters=_neuralOperatorParameters)
+    neuralLayerClass = sharedSignalEncoderModel(operatorType="wavelet", encodedDimension=_sequenceLength, numLayers=_numSharedEncoderLayers, learningProtocol=learningProtocol, neuralOperatorParameters=_neuralOperatorParameters)
     neuralLayerClass.printParams()
