@@ -129,11 +129,11 @@ class streamingProtocolHelpers(featureOrganization):
                 analysis.analyzeData(streamingDataFinger)
 
         # All features and data are currently in their respective analysis protocols.
-        # Organize the new features
-            self.organizeRawFeatures()  # Features are now stored in rawFeatureHolder in feature organization.
+        model_data = self.organizeRawFeatures()  # Features are now stored in rawFeatureHolder in feature organization.
+        self.emotion_model_pass(model_data)
 
         # Plot the Data
-            if self.plotStreamedData: self.plottingClass.displayData()
+        if self.plotStreamedData: self.plottingClass.displayData()
 
         # Move the streamingDataFinger pointer to analyze the next batch of data
         return streamingDataFingers

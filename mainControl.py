@@ -21,23 +21,23 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------- #
 
     # Protocol switches: only the first true variably executes.
-    readDataFromExcel = False  # For SINGLE FILE analysis. Analyze Data from Excel File called 'currentFilename' on Sheet Number 'testSheetNum'
-    trainModel = True  # Train Model with ALL Data in 'collectedDataFolder'.
+    readDataFromExcel = True  # For SINGLE FILE analysis. Analyze Data from Excel File called 'currentFilename' on Sheet Number 'testSheetNum'
+    trainModel = False  # Train Model with ALL Data in 'collectedDataFolder'.
     streamData = False  # Stream in Data from the Board and Analyze.
 
     # User options during the run: any number can be true.
-    useModelPredictions = False or trainModel  # Apply the learning algorithm to decode the signals.
+    useModelPredictions = True or trainModel  # Apply the learning algorithm to decode the signals.
     plotStreamedData = False  # Graph the data to show incoming signals.
-    useTherapyData = True  # Use the Therapy Data folder for any files.
+    useTherapyData = False  # Use the Therapy Data folder for any files.
 
     # General program flags.
     reanalyzeData = False  # Reanalyze training files: don't use saved features
     reverseOrder = False  # Reverse the order of the data for training.
 
     # Specify the user parameters.
-    userName = "Subject-66".replace(" ", "")
-    trialName = "ImageryClosedLoop"  # Experiment Type: Music ....
-    date = "2025-12-12"
+    userName = "Subject-1".replace(" ", "")
+    trialName = "Music"  # Experiment Type: Music ....
+    date = "2023-01-04"
 
     # Specify experimental parameters.
     deviceAddress = '12ba4cb61c85ec11bc01fc2b19c2d21c'  # Board's Serial Number (port.serial_number). Only used if streaming data, else it gets reset to None.
@@ -61,8 +61,8 @@ if __name__ == "__main__":
 
     # Compile all the protocol information.
     streamingOrder, biomarkerFeatureOrder, featureAverageWindows, featureNames, biomarkerFeatureNames, extractFeaturesFrom = inputParameterClass.getGeneralParameters()
-    performMachineLearning, modelClasses, actionControl, plotTrainingData, saveModel = inputParameterClass.getMachineLearningParams(featureNames, collectedDataFolder)
     deviceAddress, voltageRange, adcResolution, saveRawSignals, recordQuestionnaire = inputParameterClass.getStreamingParams(deviceAddress)
+    modelClasses, actionControl, plotTrainingData, saveModel = inputParameterClass.getMachineLearningParams()
     soundInfoFile, dataFolder, playGenres = inputParameterClass.getModelParameters()
     saveRawFeatures, testSheetNum = inputParameterClass.getExcelParams()
 

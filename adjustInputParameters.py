@@ -1,6 +1,12 @@
+
+import accelerate
+import torch
+
+import user_parameters
 from helperFiles.machineLearning.featureAnalysis.compiledFeatureNames.compileFeatureNames import compileFeatureNames
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers import modelConstants
 from helperFiles.machineLearning.modelControl.modelSpecifications.compileModelInfo import compileModelInfo
-from helperFiles.machineLearning.machineLearningInterface import machineLearningInterface
+from helperFiles.machineLearning.dataInterface.compileModelData import compileModelData
 
 
 class adjustInputParameters:
@@ -86,7 +92,7 @@ class adjustInputParameters:
 
         return saveRawFeatures, testSheetNum
 
-    def getMachineLearningParams(self, featureNames, collectedDataFolder):
+    def getMachineLearningParams(self):
         # Train or test the machine learning modules
         if not self.useModelPredictions:
             return None, [], None, None, None
@@ -96,18 +102,26 @@ class adjustInputParameters:
         actionControl = None  # NOT IMPLEMENTED YET
         # If training, read the data as quickly as possible
 
-        # Specify the machine learning information
-        modelFile = "predictionModel.pkl"  # Path to Model (Creates New if it Doesn't Exist)
-        modelTypes = ["MF", "MF", "MF"]  # Model Options: linReg, logReg, ridgeReg, elasticNet, SVR_linear, SVR_poly, SVR_rbf, SVR_sigmoid, SVR_precomputed, SVC_linear, SVC_poly, SVC_rbf, SVC_sigmoid, SVC_precomputed, KNN, RF, ADA, XGB, XGB_Reg, lightGBM_Reg
+        # Define the accelerator parameters.
+        accelerator = accelerate.Accelerator(
+            dataloader_config=accelerate.DataLoaderConfiguration(split_batches=True),  # Whether to split batches across devices or not.
+            cpu=torch.backends.mps.is_available(),  # Whether to use the CPU. MPS is NOT fully compatible yet.
+            step_scheduler_with_optimizer=False,  # Whether to wrap the optimizer in a scheduler.
+            gradient_accumulation_steps=1,  # The number of gradient accumulation steps.
+            mixed_precision="no",  # FP32 = "no", BF16 = "bf16", FP16 = "fp16", FP8 = "fp8"
+        )
+
+        # Load in the model.
+        user_parameters.set_params()
+        modelCompiler = compileModelData(useTherapyData=False, accelerator=accelerator, validationRun=True)  # Initialize the model compiler.
+        modelClasses, dataLoaders, _, _, _ = modelCompiler.compileModelsFull(metaDatasetNames=[], submodel=modelConstants.modelConstants.emotionModel,
+                                                                             testSplitRatio=0.2, datasetNames=[modelConstants.modelConstants.empatchDatasetName],
+                                                                             loadSubmodelDate="2025-04-05")
 
         # Choose the Folder to Save ML Results
         saveModel = not self.useModelPredictions  # Save the Machine Learning Model for Later Use
 
-        # Get the Machine Learning Module
-        performMachineLearning = machineLearningInterface(modelTypes, modelFile, featureNames, collectedDataFolder)
-        modelClasses = performMachineLearning.modelControl.modelClasses
-
-        return performMachineLearning, modelClasses, actionControl, plotTrainingData, saveModel
+        return modelClasses, actionControl, plotTrainingData, saveModel
 
     def getModelParameters(self):
         # Train or test the machine learning modules

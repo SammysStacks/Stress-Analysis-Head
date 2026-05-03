@@ -128,3 +128,29 @@ class emotionPipeline(emotionPipelineHelpers):
             self.optimizer.step()  # Adjust the weights.
             self.optimizer.zero_grad()  # Zero your gradients to restart the gradient tracking.
             if self.model.debugging: self.accelerator.print(f"Backprop with LR: {self.scheduler.get_last_lr()}")
+
+    def train_inference_profile(self, numEpochs, model_data, signalIdentifiers, metadata):
+        self.setupTraining(modelConstants.signalEncoderModel, profileTraining=True, specificTraining=False, trainSharedLayers=False)
+        self.scheduler.scheduler.warmupFlag = False; self.scheduler.scheduler.step()
+        signalIdentifiers = signalIdentifiers.to(self.accelerator.device)
+        model_data = model_data.to(self.accelerator.device)
+        metadata = metadata.to(self.accelerator.device)
+        self.optimizer.zero_grad()
+
+        # For each training epoch.
+        for epoch in range(numEpochs):
+            # Perform a forward pass.
+            validDataMask, reconstructedSignalData, resampledSignalData, healthProfile, activityProfile, basicEmotionProfile, emotionProfile = \
+                self.model.forward(submodel=modelConstants.signalEncoderModel, signalData=model_data, signalIdentifiers=signalIdentifiers, metadata=metadata,
+                                   device=self.accelerator.device, compiledLayerStates=False)
+
+            # Calculate the error in signal compression (signal encoding loss).
+            trainingSignalReconstructedLosses = self.organizeLossInfo.calculateSignalEncodingLoss(model_data, reconstructedSignalData, validDataMask, None, averageBatches=True)
+            finalTrainingLoss = trainingSignalReconstructedLosses.nanmean()
+
+            # Update the model parameters.
+            self.accelerator.backward(finalTrainingLoss)  # Calculate the gradients.
+            self.backpropogateModel()  # Backpropagation.
+
+        # Prepare the model/data for evaluation.
+        self.setupTrainingFlags(self.model, trainingFlag=False)  # Turn off training flags.

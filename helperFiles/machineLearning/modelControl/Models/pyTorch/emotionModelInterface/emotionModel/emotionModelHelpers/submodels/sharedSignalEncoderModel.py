@@ -119,7 +119,7 @@ if __name__ == "__main__":
     modelConstants.userInputParams["profileDimension"] = 64
     _batchSize, _numSignals, _sequenceLength = 1, 1, 256
     _numSharedEncoderLayers = 4
-    learningProtocol = "FC"
+    learningProtocol = "reversibleLieLayer"
 
     # Set up the parameters.
     neuralLayerClass = sharedSignalEncoderModel(operatorType="wavelet", encodedDimension=_sequenceLength, numLayers=_numSharedEncoderLayers, learningProtocol=learningProtocol, neuralOperatorParameters=_neuralOperatorParameters)
