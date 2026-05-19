@@ -38,7 +38,7 @@ if __name__ == "__main__":
     )
 
     # General model parameters.
-    trainingDate = "2026-05-02"  # The current date we are training the model. Unique identifier of this training set.
+    trainingDate = "2026-05-18"  # The current date we are training the model. Unique identifier of this training set.
     unifyModelWeights = True  # Whether to unify the model weights across all models.
     plotAllEpochs = False  # Whether to plot all data every epoch (plotting once every numEpoch_toPlot regardless).
     validationRun = False  # Whether to train new datasets from the old model.
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     # ----------------------- Architecture Parameters ----------------------- #
 
     # Add arguments for the general model
-    parser.add_argument('--submodel', type=str, default=modelConstants.signalEncoderModel, help='The component of the model we are training. Options: signalEncoderModel, emotionModel')
+    parser.add_argument('--submodel', type=str, default=modelConstants.emotionModel, help='The component of the model we are training. Options: signalEncoderModel, emotionModel')
     parser.add_argument('--optimizerType', type=str, default='NAdam', help='The optimizerType used during training convergence: Options: RMSprop, Adam, AdamW, SGD, etc')
     parser.add_argument('--learningProtocol', type=str, default='reversibleLieLayer', help='The learning protocol for the model: reversibleLieLayer')
     parser.add_argument('--deviceListed', type=str, default=accelerator.device.type, help='The device we are using: cpu, cuda')
@@ -75,9 +75,9 @@ if __name__ == "__main__":
     parser.add_argument('--minAngularThreshold', type=float, default=5, help='The smaller rotational threshold in (degrees)')
 
     # dd arguments for the emotion and activity architecture.
-    parser.add_argument('--numBasicEmotions', type=int, default=8, help='The number of basic emotions (basis states of emotions)')
-    parser.add_argument('--numActivityModelLayers', type=int, default=5, help='The number of layers in the activity model')
-    parser.add_argument('--numEmotionModelLayers', type=int, default=5, help='The number of layers in the emotion model')
+    parser.add_argument('--numBasicEmotions', type=int, default=3, help='The number of basic emotions (basis states of emotions)')
+    parser.add_argument('--numActivityModelLayers', type=int, default=3, help='The number of layers in the activity model')
+    parser.add_argument('--numEmotionModelLayers', type=int, default=3, help='The number of layers in the emotion model')
 
     # ----------------------- Training Parameters ----------------------- #
 
@@ -145,6 +145,7 @@ if __name__ == "__main__":
     # Plot the initial model state.
     trainingProtocols.calculateLossInformation(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel)  # Calculate the initial loss.
     if plotAllEpochs: trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingModelName, showMinimumPlots=False)
+    trainingProtocols.saveModelState(0, allMetaModels, allModels, submodel, allDatasetNames, trainingDate)
 
     # For each training epoch
     for epoch in range(1, numEpochs + 1):
@@ -153,6 +154,7 @@ if __name__ == "__main__":
 
         # Get the saving information.
         saveFullModel, showAllPlots = modelParameters.getEpochParameters(epoch, numEpoch_toSaveFull, numEpoch_toPlot, plotAllEpochs)
+        showAllPlots = False
 
         # Train the model for a single epoch.
         if not validationRun: trainingProtocols.trainEpoch(submodel, allMetadataLoaders, allMetaModels, allModels, allDataLoaders, epoch)
@@ -163,7 +165,7 @@ if __name__ == "__main__":
         trainingProtocols.plotModelState(allMetadataLoaders, allMetaModels, allModels, allDataLoaders, submodel, trainingModelName, showMinimumPlots=not showAllPlots)
 
         # Save the model sometimes (only on the main device).
-        if saveFullModel and accelerator.is_local_main_process and submodel == modelConstants.signalEncoderModel:
+        if saveFullModel and accelerator.is_local_main_process:
             trainingProtocols.saveModelState(epoch, allMetaModels, allModels, submodel, allDatasetNames, trainingDate)
 
         # Finalize the epoch parameters.

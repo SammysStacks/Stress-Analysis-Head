@@ -105,7 +105,6 @@ class humanMachineInterface:
         for emotionInd in range(len(emotion_class_predictions)):
             emotion_name = self.modelClasses[0].emotionNames[emotionInd]
             print(f"\t{emotion_name}: {emotion_class_predictions[emotionInd][0].argmax().item()}")
-        exit()
 
     def therapyInitialization(self):
         assert self.actionControl in {"heat", "music", "chatGPT", None}, f"Invalid actionControl: {self.actionControl}. Must be one of 'heat', 'music', or 'chatGPT'."

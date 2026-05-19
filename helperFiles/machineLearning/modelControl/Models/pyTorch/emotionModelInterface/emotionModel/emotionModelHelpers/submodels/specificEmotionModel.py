@@ -9,6 +9,8 @@ class specificEmotionModel(neuralOperatorInterface):
 
     def __init__(self, operatorType, numSubjects, numBasicEmotions, encodedDimension, emotionNames, numLayers, neuralOperatorParameters):
         super(specificEmotionModel, self).__init__(operatorType=operatorType, sequenceLength=encodedDimension, numLayers=numLayers, numInputSignals=len(emotionNames)*numBasicEmotions, numOutputSignals=len(emotionNames)*numBasicEmotions, addBiasTerm=False)
+        numSubjects = 1
+
         # General model parameters.
         self.neuralOperatorParameters = copy.deepcopy(neuralOperatorParameters)  # The parameters for the neural operator.
         self.encodedDimension = encodedDimension  # The dimension of the encoded signal.
@@ -49,6 +51,8 @@ class specificEmotionModel(neuralOperatorInterface):
 
     def calculateEmotionProfile(self, basicEmotionProfile, subjectInds):
         # basicEmotionProfile: batchSize, numEmotions, numBasicEmotions, encodedDimension
+        subjectInds = subjectInds * 0  # Sharing all subject weights.
+
         subjectSpecificWeights = self.sigmoid(self.subjectSpecificWeights[subjectInds])  # batchSize, 1, numBasicEmotions, 1
         emotionProfile = (basicEmotionProfile * subjectSpecificWeights).sum(dim=2) / subjectSpecificWeights.sum(dim=2)  # batchSize, numEmotions, encodedDimension
         # emotionProfile: batchSize, numEmotions, encodedDimension

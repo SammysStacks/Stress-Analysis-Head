@@ -84,7 +84,7 @@ class waveletNeuralOperatorLayer(waveletNeuralOperatorWeights):
             if isinstance(weights, reversibleLieLayer): frequencies = weights.applySingleLayer(frequencies, layerInd)
             elif isinstance(weights, nn.Identity): frequencies = weights(frequencies)
             elif isinstance(weights, nn.Module): frequencies = weights(frequencies)
-            elif 'FC' in self.learningProtocol or 'CNN' in self.learningProtocol:  frequencies = weights(frequencies)
+            elif 'FC' in self.learningProtocol or 'CNN' in self.learningProtocol: frequencies = weights(frequencies)
             else: frequencies = torch.einsum(equationString, weights, frequencies)
         # frequencies dimension: batchSize, numOutputSignals, frequencyDimension
 

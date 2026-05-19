@@ -116,7 +116,7 @@ class adjustInputParameters:
         modelCompiler = compileModelData(useTherapyData=False, accelerator=accelerator, validationRun=True)  # Initialize the model compiler.
         modelClasses, dataLoaders, _, _, _ = modelCompiler.compileModelsFull(metaDatasetNames=[], submodel=modelConstants.modelConstants.emotionModel,
                                                                              testSplitRatio=0.2, datasetNames=[modelConstants.modelConstants.empatchDatasetName],
-                                                                             loadSubmodelDate="2025-04-05")
+                                                                             loadSubmodelDate="2026-05-18")
 
         # Choose the Folder to Save ML Results
         saveModel = not self.useModelPredictions  # Save the Machine Learning Model for Later Use

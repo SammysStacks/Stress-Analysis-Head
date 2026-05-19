@@ -39,8 +39,8 @@ class emotionModelWeights(convolutionalHelpers):
     # ------------------- Neural Operator Architectures ------------------- #
 
     @staticmethod
-    def neuralWeightFC(sequenceLength):
-        return emotionModelWeights.linearModel(numInputFeatures=sequenceLength, numOutputFeatures=sequenceLength, activationMethod="boundedExp", addBias=False)
+    def neuralWeightFC(sequenceLength, activationMethod="none"):
+        return emotionModelWeights.linearModel(numInputFeatures=sequenceLength, numOutputFeatures=sequenceLength, activationMethod=activationMethod, addBias=False)
 
     @staticmethod
     def neuralBiasParameters(numChannels=2):

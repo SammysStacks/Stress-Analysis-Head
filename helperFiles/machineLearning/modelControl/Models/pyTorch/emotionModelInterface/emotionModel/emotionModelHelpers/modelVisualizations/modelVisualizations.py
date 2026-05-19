@@ -97,7 +97,6 @@ class modelVisualizations(globalPlottingProtocols):
         numFreeModelParams = [specificModel.numFreeParams for specificModel in specificModels]  # numModels, loadSubmodelEpochs, numModuleLayers, numSignals, numParams=1
         self.generalViz.plotFreeParamFlow(numFreeModelParams, maxFreeParamsPath, paramNames=["Free params"], moduleNames=moduleNames, saveFigureLocation=f"trainingLosses{modelIdentifier}/", plotTitle=f"{modelIdentifier} free parameters path zoomed")
         for modelInd in range(len(numFreeModelParams)): print('numFreeModelParams:', numFreeModelParams[modelInd][-1][0].mean(), numFreeModelParams[modelInd][-1][1].mean())
-        if showMinimumPlots: return None
 
         # Plot the activation parameters for the signal encoder.
         paramNames = ["Infinite Bound", "Non-Linear Coefficient", "Convergent Point"]
@@ -117,6 +116,7 @@ class modelVisualizations(globalPlottingProtocols):
 
     def plotAllTrainingEvents(self, submodel, modelPipeline, lossDataLoader, trainingModelName, currentEpoch, showMinimumPlots):
         self.accelerator.print(f"\nPlotting results for the {modelPipeline.model.datasetName} model")
+        if showMinimumPlots: return None
 
         # Prepare the model/data for evaluation.
         self.setModelSavingFolder(baseSavingFolder=f"trainingFigures/{submodel}/{trainingModelName}/", stringID=f"{modelPipeline.model.datasetName}/", epoch=currentEpoch)
