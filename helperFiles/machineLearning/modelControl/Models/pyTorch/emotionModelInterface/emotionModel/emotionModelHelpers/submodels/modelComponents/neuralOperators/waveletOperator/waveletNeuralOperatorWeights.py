@@ -1,3 +1,5 @@
+import functools
+
 from torch import nn
 
 from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.optimizerMethods import activationFunctions
@@ -57,5 +59,22 @@ class waveletNeuralOperatorWeights(waveletNeuralHelpers):
 
     def getNeuralWeightParameters(self, inChannel, initialFrequencyDim):
         if self.learningProtocol == 'reversibleLieLayer': return self.reversibleNeuralWeightRCNN(numSignals=inChannel, sequenceLength=initialFrequencyDim, numLayers=self.numLayers)
-        elif self.learningProtocol == 'FC': return self.neuralWeightFC(sequenceLength=initialFrequencyDim)
-        else: raise ValueError(f"The learning protocol ({self.learningProtocol}) must be in ['FCC', 'reversibleLieLayer', 'CNN'].")
+        elif self.learningProtocol == 'FC':
+            model = nn.Sequential()
+            for layerInd in range(self.numLayers):
+                act = activationFunctions.getActivationMethod("reversibleLinearSoftSign")
+                layer = self.neuralWeightFC(sequenceLength=initialFrequencyDim, activationMethod="none")
+                model.append(ReversibleLinearSoftSignBlock(act=act,  layer=layer, forward_first=layerInd % 2 != 0))
+            return model
+        else: raise ValueError(f"The learning protocol ({self.learningProtocol}) must be in ['FC', 'reversibleLieLayer', 'CNN'].")
+
+
+class ReversibleLinearSoftSignBlock(nn.Module):
+    def __init__(self, act: nn.Module, layer: nn.Module, forward_first: bool):
+        super().__init__()
+        self.act = act
+        self.layer = layer
+        self.forward_first = forward_first
+
+    def forward(self, X):
+        return self.act(X, self.layer, forwardFirst=self.forward_first)

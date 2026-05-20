@@ -13,7 +13,7 @@ class globalPlottingProtocols:
         # Setup matplotlib
         self.hpcFlag = 'HPC' in modelConstants.userInputParams['deviceListed']
         self.baseFolderName = "_basePlots/"
-        if interactivePlots: plt.ion()
+        # if interactivePlots: plt.ion()
         plt.rcdefaults()
 
         # Specify the color order.

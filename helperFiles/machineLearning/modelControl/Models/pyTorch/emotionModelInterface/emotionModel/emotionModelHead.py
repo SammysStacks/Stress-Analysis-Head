@@ -19,6 +19,8 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 class emotionModelHead(nn.Module):
     def __init__(self, submodel, emotionNames, activityNames, featureNames, allEmotionClasses, numSubjects, datasetName, numExperiments):
         super(emotionModelHead, self).__init__()
+        numSubjects = 1
+
         # General model parameters.
         self.hpcFlag = 'HPC' in modelConstants.userInputParams['deviceListed']  # Flag to determine if the model is running on an HPC.
         self.allEmotionClasses = allEmotionClasses  # The number of classes (intensity levels) within each emotion to predict. Dim: numEmotions

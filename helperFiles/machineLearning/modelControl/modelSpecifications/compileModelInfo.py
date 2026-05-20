@@ -125,7 +125,7 @@ class compileModelInfo:
 
     def getUserInputParameters(self):
         userInputParams = {'submodel': 'signalEncoderModel', 'optimizerType': 'AdamW', 'learningProtocol': 'FC', 'deviceListed': 'cpu', 'numSpecificEncoderLayers': 1, 'numSharedEncoderLayers': 8,
-                           'encodedDimension': 256, 'operatorType': 'wavelet', 'waveletType': 'bior3.1', 'numBasicEmotions': 6, 'numActivityModelLayers': 8, 'numEmotionModelLayers': 8}
+                           'encodedDimension': 256, 'operatorType': 'wavelet', 'waveletType': 'bior3.1', 'numBasicEmotions': 3, 'numActivityModelLayers': 5, 'numEmotionModelLayers': 5}
         userInputParams = modelParameters.getNeuralParameters(userInputParams)
         return userInputParams
 

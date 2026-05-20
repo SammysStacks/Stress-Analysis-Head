@@ -28,8 +28,8 @@ _projectFiles/_supplementaryWork/signalVideos/modelInstances/*
 
 # Machine learning control files and folders
 helperFiles/machineLearning/modelControl/Models/pyTorch/emotionModelInterface/dataAnalysis/trainingFigures/
-helperFiles/machineLearning/modelControl/_finalModels/storedModels/
-helperFiles/machineLearning/modelControl/_finalModels/emotionModel/
+helperFiles/machineLearning/modelControl/_finalModels/emotionModel/2025*
+#helperFiles/machineLearning/_finalModels/
 
 # Feedback control files and folders
 helperFiles/machineLearning/feedbackControl/virtualRealityControl/Virtual Images/horror.osgb
@@ -88,6 +88,3 @@ _experimentalData/_metaDatasets/CASE/data/interpolated/annotations/
 _experimentalData/_metaDatasets/CASE/data/interpolated/dataAnalysis/
 _experimentalData/_metaDatasets/CASE/data/interpolated/physiological/*.csv
 _experimentalData/_metaDatasets/CASE/data/interpolated/physiological/savedFeatures/_*
-
-# Models
-helperFiles/machineLearning/_finalModels/

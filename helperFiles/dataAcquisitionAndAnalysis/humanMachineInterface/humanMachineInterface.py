@@ -1,5 +1,6 @@
 import os
 import accelerate
+import numpy as np
 import torch
 
 # Import Files
@@ -67,10 +68,43 @@ class humanMachineInterface:
         self.therapyInitializedUser = False
         self.timePointEvolution = []
         self.therapyControl = None
-       #self.therapyInitialization()
 
         # Initialize mutable variables.
         self.resetVariables_HMI()
+
+    def emotion_model_pass(self, model_data):
+        feature_mask = np.isin(self.featureNames, self.modelClasses[0].model.featureNames)
+        model_data = torch.as_tensor(model_data)[:, feature_mask]
+        numSignals = model_data.shape[1]
+
+        # Compile all the metadata information: dataset specific.
+        subjectInds = torch.full(size=(1,), fill_value=0)
+        datasetInds = torch.full(size=(1,), fill_value=0)
+        metadata = torch.hstack((datasetInds, subjectInds)).unsqueeze(0)
+        # metadata dim: batch_size=1, numMetadata
+
+        # Compile all the signal information: signal specific.
+        signalInds = torch.arange(numSignals)
+        batchInds = torch.full(size=(numSignals,), fill_value=0)
+        signalIdentifiers = torch.vstack((signalInds, batchInds)).unsqueeze(0)
+        # signalIdentifiers dim: batch_size=1, numSignals, numSignalIdentifiers
+
+        # Train a new profile.
+        numProfileShots = self.modelClasses[0].resetPhysiologicalProfile(modelConstants.signalEncoderModel)
+        self.modelClasses[0].train_inference_profile(numEpochs=numProfileShots+1, model_data=model_data, signalIdentifiers=signalIdentifiers, metadata=metadata)
+
+        # Perform a forward pass.
+        validDataMask, reconstructedSignalData, resampledSignalData, healthProfile, activityProfile, basicEmotionProfile, emotionProfile = \
+            self.modelClasses[0].model.forward(submodel=modelConstants.emotionModel, signalData=model_data, signalIdentifiers=signalIdentifiers, metadata=metadata,
+                                               device=self.modelClasses[0].accelerator.device, compiledLayerStates=False)
+        emotion_class_predictions = emotionDataInterface.getEmotionClassPredictions(
+                emotionProfile, self.modelClasses[0].allEmotionClasses,
+                device=self.modelClasses[0].accelerator.device)
+
+        print("Model outputs:")
+        for emotionInd in range(len(emotion_class_predictions)):
+            emotion_name = self.modelClasses[0].emotionNames[emotionInd]
+            print(f"\t{emotion_name}: {emotion_class_predictions[emotionInd][0].argmax().item()}")
 
     def therapyInitialization(self):
         assert self.actionControl in {"heat", "music", "chatGPT", None}, f"Invalid actionControl: {self.actionControl}. Must be one of 'heat', 'music', or 'chatGPT'."

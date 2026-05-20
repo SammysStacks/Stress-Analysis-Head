@@ -7,6 +7,9 @@ import torch
 
 # Import files.
 from .humanMachineInterface import humanMachineInterface
+from ...machineLearning.dataInterface.compileModelDataHelpers import compileModelDataHelpers
+from ...machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers import modelConstants
+from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterface.emotionModel.emotionModelHelpers.generalMethods.generalMethods import generalMethods
 
 
 # Parameters for the streamingProtocolHelpers class:
@@ -97,14 +100,14 @@ class featureOrganization(humanMachineInterface):
         modelTimes = []
         allRawFeatureTimeInterval = []
         allRawFeatureInterval = []
-        refereneStartTime = []
+        referenceStartTime = []
 
         # for each new point
         for numNewPoint in range(numNewPoints):
             endModelTime = self.startModelTime - self.modelTimeWindow
             allRawFeatureTimeInterval.append([])
             allRawFeatureInterval.append([])
-            refereneStartTime.append([])
+            referenceStartTime.append([])
 
             # For each unique analysis with features.
             for biomarkerInd in range(len(self.featureAnalysisList)):
@@ -124,10 +127,10 @@ class featureOrganization(humanMachineInterface):
 
             # Update the model time.
             self.startModelTime += self.modelTimeGap
-            refereneStartTime[-1].append(self.startModelTime)
-        refereneStartTime = torch.as_tensor(refereneStartTime, dtype=torch.float64)
+            referenceStartTime[-1].append(self.startModelTime)
+        referenceStartTime = torch.as_tensor(referenceStartTime, dtype=torch.float64)
 
-        allSignalData = self.compileModelHelpers._padSignalData(allRawFeatureTimeInterval, allRawFeatureInterval, refereneStartTime)
+        allSignalData = self.compileModelHelpers._padSignalData(allRawFeatureTimeInterval, allRawFeatureInterval, referenceStartTime)
         # allSignalData example size: torch.Size([75, 81, 72, 2])
 
         # allSignalData, allNumSignalPoints = self.compileModelHelpers.preprocessingSignalsTherapy(allSignalData, allNumSignalPoints)
@@ -140,8 +143,11 @@ class featureOrganization(humanMachineInterface):
 
 
     def organizeRawFeatures(self):
+        last_timepoint = 0
+
         # For each unique analysis with features.
         for analysis in self.featureAnalysisList:
+            last_timepoint = max(last_timepoint, analysis.timepoints[-1])
 
             # For each channel in the analysis.
             for featureChannelInd in range(len(analysis.featureChannelIndices)):
@@ -151,7 +157,6 @@ class featureOrganization(humanMachineInterface):
 
                 # Organize the raw features; NOTE: I am assuming that the raw features are in order of the featureChannelIndices.
                 self.rawFeatureTimesHolder[biomarkerInd].extend(analysis.rawFeatureTimes[featureChannelInd][rawFeaturePointer:])
-
                 self.rawFeatureHolder[biomarkerInd].extend(analysis.rawFeatures[featureChannelInd][rawFeaturePointer:])
 
                 # Update the raw pointers.
@@ -162,6 +167,22 @@ class featureOrganization(humanMachineInterface):
                     f"Found {len(self.rawFeatureTimesHolder[biomarkerInd])} raw times and {len(self.rawFeatureHolder[biomarkerInd])} raw features. These must be the same length."
                 assert len(self.rawFeatureHolder[biomarkerInd]) == len(analysis.rawFeatures[featureChannelInd]), \
                     f"Found {len(self.rawFeatureHolder[biomarkerInd])} raw features and {len(analysis.rawFeatures[featureChannelInd])} raw features. These must be the same length."
+
+        newRawFeatureIntervals = []
+        newRawFeatureIntervalTimes = []
+        # Extract the lastest set of features.
+        for biomarkerInd in range(len(self.rawFeatureHolder)):
+            featureIntervals, featureIntervalTimes = self.compileModelFeatures(
+                    startTime=last_timepoint - modelConstants.modelConstants.modelTimeWindow, endTime=last_timepoint,
+                    featureTimes=self.rawFeatureTimesHolder[biomarkerInd], features=self.rawFeatureHolder[biomarkerInd])
+            featureIntervals = generalMethods.minMaxScale_noInverse(inputData=torch.as_tensor(featureIntervals), scale=modelConstants.modelConstants.minMaxScale, dim=0)
+
+            # Save raw interval information
+            newRawFeatureIntervalTimes.append(featureIntervalTimes)
+            newRawFeatureIntervals.append(featureIntervals)
+
+        model_data = compileModelDataHelpers._padSignalData([newRawFeatureIntervalTimes], [newRawFeatureIntervals], [last_timepoint])
+        return model_data
 
     def findCommonTimeRange(self):
         # Set up the parameters.
@@ -251,8 +272,8 @@ class featureOrganization(humanMachineInterface):
         compiledFeatures.extend(newCompiledFeatures)
 
         # Assert the integrity of the feature compilation.
-        assert len(rawFeatures) == len(rawFeatureTimes), f''
-        assert len(compiledFeatures) == len(compiledFeatureTimes), f''
+        assert len(rawFeatures) == len(rawFeatureTimes)
+        assert len(compiledFeatures) == len(compiledFeatureTimes)
 
     def compileStaticFeatures(self, rawFeatureTimesHolder, rawFeatureHolder, featureAverageWindows):
         # rawFeatureHolder dim: numBiomarkers, numTimePoints, numBiomarkerFeatures

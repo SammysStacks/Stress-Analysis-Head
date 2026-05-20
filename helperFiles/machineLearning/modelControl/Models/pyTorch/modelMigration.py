@@ -249,8 +249,14 @@ class modelMigration:
 
     def _loadModel(self, model, datasetName, submodel, trainingDate, loadSubmodelEpochs, loadModelAttributes=True, loadModelWeights=True):
         # Read in the previous signal encoder model when meta-training emotions.
-        if submodel == modelConstants.emotionModel and not self.validationRun:
-            submodel = modelConstants.signalEncoderModel; validationRun = False
+        if submodel == modelConstants.emotionModel:
+            if not self.validationRun:
+                submodel = modelConstants.signalEncoderModel; validationRun = False
+            else:
+                validationRun = self.validationRun
+
+            if trainingDate == "2026-05-18":
+                validationRun = False
         elif submodel == modelConstants.signalEncoderModel and self.validationRun:
             submodel = modelConstants.signalEncoderModel; validationRun = False
         else: validationRun = self.validationRun
@@ -297,6 +303,7 @@ class modelMigration:
         else:
             modelNotLoaded = modelBaseName.split(f"/{submodel}/")[-1].split("/")[1]
             print(f"\tNot loading the {submodel} model for {modelNotLoaded} data")
+            print(loadModelPath)
 
     def _loadModelAttributes(self, model, loadedModelInfo):
         modelAttributes = loadedModelInfo[self.classAttributeKey]

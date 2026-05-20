@@ -30,11 +30,11 @@ class optimizerMethods:
 
         if submodel == modelConstants.emotionModel:
             modelParams.extend([
-                {'params': model.specificEmotionModel.subjectSpecificWeights, 'weight_decay': 1e-4, 'lr': 1e-4},
+                {'params': model.specificEmotionModel.subjectSpecificWeights, 'weight_decay': 1e-6, 'lr': 4e-4},
             ])
 
         # Set the optimizer and scheduler.
-        optimizer = self.setOptimizer(modelParams, lr=1e-4, weight_decay=5e-5, optimizerType=modelConstants.userInputParams["optimizerType"])
+        optimizer = self.setOptimizer(modelParams, lr=4e-4, weight_decay=1e-6, optimizerType=modelConstants.userInputParams["optimizerType"])
         scheduler = self.getLearningRateScheduler(optimizer, submodel)
 
         return optimizer, scheduler

@@ -54,7 +54,7 @@ class modelConstants:
     # Specify the saving parameters.
     specificModelWeights = [specificSignalEncoderModel, specificEmotionModel, specificActivityModel]
     sharedModelWeights = [sharedSignalEncoderModel, sharedEmotionModel, sharedActivityModel]
-    userInputParams = {'deviceListed': 'cpu'}
+    userInputParams = {"deviceListed": "cpu", "numIgnoredSharedHF": 0}
 
     @classmethod
     def updateModelParams(cls, userInputParams):
@@ -63,9 +63,9 @@ class modelConstants:
     # ---------------- Hard-coded therapy parameters --------------------- #
 
     therapyParams = {
-        'heat': [torch.full(size=(1, 1, 1, 1), fill_value=37)],
-        'music': [440, 410],
-        'Vr': None
+        "heat": [torch.full(size=(1, 1, 1, 1), fill_value=37)],
+        "music": [440, 410],
+        "Vr": None
     }
 
     # -------------------------------------------------------------------- #

@@ -29,7 +29,7 @@ class neuralOperatorInterface(emotionModelWeights):
 
         # Hardcoded parameters.
         minWaveletDim = neuralOperatorParameters['wavelet']['minWaveletDim']
-        learningProtocol = 'reversibleLieLayer'
+        learningProtocol = 'reversibleLieLayer'  # reversibleLieLayer
         skipConnectionProtocol = 'none'
         activationMethod = 'none'
         mode = 'periodization'  # Mode: 'zero' (lossy), 'symmetric' (lossy), 'reflect' (lossy), or 'periodization' (lossless).

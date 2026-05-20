@@ -6,18 +6,18 @@ import random
 class generalMethods:
 
     @staticmethod
-    def minMaxScale_noInverse(inputData, scale=1, minDataValues=None, maxDataValues=None, missingDataMask=None):
+    def minMaxScale_noInverse(inputData, scale=1, minDataValues=None, maxDataValues=None, missingDataMask=None, dim=-1):
         # Assert the validity of the input.
         if missingDataMask is not None: assert missingDataMask.size() == inputData.size(), "The missing data mask must have the same size as the input data."
 
         if minDataValues is None:
             # Find the minimum value across the last dimension.
             modifiedInputData = inputData.masked_fill(missingDataMask, float('inf')) if missingDataMask is not None else inputData
-            minDataValues = torch.min(modifiedInputData, dim=-1, keepdim=True).values
+            minDataValues = torch.min(modifiedInputData, dim=dim, keepdim=True).values
         if maxDataValues is None:
             # Find the maximum value across the last dimension.
             modifiedInputData = inputData.masked_fill(missingDataMask, -float('inf')) if missingDataMask is not None else inputData
-            maxDataValues = torch.max(modifiedInputData, dim=-1, keepdim=True).values
+            maxDataValues = torch.max(modifiedInputData, dim=dim, keepdim=True).values
 
         # Handle the case when max_val == min_val (avoid division by zero)
         range_val = maxDataValues - minDataValues
@@ -29,8 +29,8 @@ class generalMethods:
         scaledData = scale * scaledData  # Apply additional scaling if needed
 
         # Reset the missing data values.
-        scaledData[missingDataMask] = 0
-
+        if missingDataMask is not None:
+            scaledData[missingDataMask] = 0
         return scaledData
 
     @staticmethod
