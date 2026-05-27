@@ -14,7 +14,7 @@
 
 **Wearable Affective General Intelligence** is a research platform for modeling affective states using physiological data collected from diverse wearable sensors. Built around a Lie manifold neural architecture, it enables real-time and offline emotion recognition, missing data reconstruction, and cross-dataset generalization.
 
-The system was trained and validated across five public biosensing datasets (e.g., WESAD, AMIGOS, EMOGNITION), integrating signals from 15 platforms across five body locations. By embedding these inputs into a shared low-dimensional affective space, the model supports generalizable emotion decoding, even under signal dropout or novel conditions.
+The system was trained and validated across five public biosensing datasets (e.g., WESAD, AMIGOS, EMOGNITION), integrating signals from 10 platforms across five body locations. By embedding these inputs into a shared low-dimensional affective space, the model supports generalizable emotion decoding, even under signal dropout or novel conditions.
 
 ---
 
