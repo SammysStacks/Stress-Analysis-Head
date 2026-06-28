@@ -28,7 +28,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class featureOrganization(humanMachineInterface):
 
-    def __init__(self, modelClasses, actionControl, analysisProtocols, extractFeaturesFrom, featureAverageWindows, excluded_sensor_features):
+    def __init__(self, modelClasses, actionControl, analysisProtocols, extractFeaturesFrom, featureAverageWindows, excluded_sensors_from_model):
         super().__init__(modelClasses, actionControl, extractFeaturesFrom)
         # General parameters.
         self.featureAnalysisOrder = list(collections.OrderedDict.fromkeys(self.biomarkerFeatureOrder))  # The set of unique feature biomarkers, maintaining the order they will be analyzed. Ex: ['eog', 'eeg', 'eda']
@@ -41,7 +41,7 @@ class featureOrganization(humanMachineInterface):
         self.analysisProtocols = analysisProtocols
         # Assert the integrity of feature organization.
         assert len(featureAverageWindows) == len(self.biomarkerFeatureOrder), f"Found {featureAverageWindows} windows for {self.biomarkerFeatureOrder} biomarkers. These must to be the same length."
-        self.excluded_sensor_features = excluded_sensor_features
+        self.excluded_sensors_from_model = excluded_sensors_from_model
 
         # Loop through each analysis requiring collecting features.
         for biomarkerInd in range(len(self.featureAnalysisOrder)):
@@ -148,7 +148,7 @@ class featureOrganization(humanMachineInterface):
 
         # For each unique analysis with features.
         for analysis_ind, analysis in enumerate(self.featureAnalysisList):
-            cull_feature = self.biomarkerFeatureOrder[analysis_ind] in self.excluded_sensor_features
+            cull_feature = self.biomarkerFeatureOrder[analysis_ind] in self.excluded_sensors_from_model
             last_timepoint = max(last_timepoint, analysis.timepoints[-1])
 
             # For each channel in the analysis.

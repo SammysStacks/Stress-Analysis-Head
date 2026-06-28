@@ -45,7 +45,7 @@ if __name__ == "__main__":
     deviceType = 'serial'  # The type of device being used for streaming.
 
     # For sensor ablations.
-    excluded_sensor_features = ()
+    excluded_sensors_from_model = ("eeg",)
 
     # ---------------------------------------------------------------------- #
 
@@ -70,7 +70,7 @@ if __name__ == "__main__":
     saveRawFeatures, testSheetNum = inputParameterClass.getExcelParams()
 
     # Initialize instance to analyze the data
-    readData = streamingProtocols.streamingProtocols(deviceType, deviceAddress, modelClasses, actionControl, numPointsPerBatch, moveDataFinger, streamingOrder, extractFeaturesFrom, featureAverageWindows, voltageRange, plotStreamedData, excluded_sensor_features)
+    readData = streamingProtocols.streamingProtocols(deviceType, deviceAddress, modelClasses, actionControl, numPointsPerBatch, moveDataFinger, streamingOrder, extractFeaturesFrom, featureAverageWindows, voltageRange, plotStreamedData, excluded_sensors_from_model)
 
     # ----------------------------- Stream the Data from circuit board ----------------------------- #
 
@@ -110,7 +110,7 @@ if __name__ == "__main__":
             newStreamingOrder = streamingOrder[startStreamInd:endStreamInd]
             newExtractFeaturesFrom = [item for item in extractFeaturesFrom if item in newStreamingOrder]
 
-            readData = streamingProtocols.streamingProtocols(deviceType, deviceAddress, modelClasses, actionControl, numPointsPerBatch, moveDataFinger, newStreamingOrder, newExtractFeaturesFrom, featureAverageWindows, voltageRange, plotStreamedData, excluded_sensor_features)
+            readData = streamingProtocols.streamingProtocols(deviceType, deviceAddress, modelClasses, actionControl, numPointsPerBatch, moveDataFinger, newStreamingOrder, newExtractFeaturesFrom, featureAverageWindows, voltageRange, plotStreamedData, excluded_sensors_from_model)
             readData.streamExcelData(compiledRawData_eachFreq[compiledRawDataInd], experimentTimes, experimentNames, surveyAnswerTimes, surveyAnswersList, surveyQuestions, subjectInformationAnswers, subjectInformationQuestions, currentFilename)
 
     # ----------------------------- Extract Feature Data ----------------------------- #
