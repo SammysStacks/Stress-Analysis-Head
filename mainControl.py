@@ -45,7 +45,7 @@ if __name__ == "__main__":
     deviceType = 'serial'  # The type of device being used for streaming.
 
     # For sensor ablations.
-    excluded_sensors_from_model = ("eeg",)
+    excluded_sensors_from_model = ()  # ("eog", "eeg", "eda", "temp")
 
     # ---------------------------------------------------------------------- #
 
