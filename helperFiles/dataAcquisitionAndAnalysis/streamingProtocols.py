@@ -10,10 +10,10 @@ from .streamingProtocolHelpers import streamingProtocolHelpers
 
 class streamingProtocols(streamingProtocolHelpers):
 
-    def __init__(self, deviceType, mainSerialNum, modelClasses, actionControl, numPointsPerBatch, moveDataFinger, streamingOrder, extractFeaturesFrom, featureAverageWindows, voltageRange, plotStreamedData):
+    def __init__(self, deviceType, mainSerialNum, modelClasses, actionControl, numPointsPerBatch, moveDataFinger, streamingOrder, extractFeaturesFrom, featureAverageWindows, voltageRange, plotStreamedData, excluded_sensor_features=()):
         # Create Pointer to Common Functions
         super().__init__(deviceType=deviceType, mainSerialNum=mainSerialNum, therapySerialNum=None, modelClasses=modelClasses, actionControl=actionControl, numPointsPerBatch=numPointsPerBatch, moveDataFinger=moveDataFinger,
-                         streamingOrder=streamingOrder, extractFeaturesFrom=extractFeaturesFrom, featureAverageWindows=featureAverageWindows, voltageRange=voltageRange, plotStreamedData=plotStreamedData)
+                         streamingOrder=streamingOrder, extractFeaturesFrom=extractFeaturesFrom, featureAverageWindows=featureAverageWindows, voltageRange=voltageRange, plotStreamedData=plotStreamedData, excluded_sensor_features=excluded_sensor_features)
         # Holder parameters.
         self.experimentInfoPointerStart = None
         self.experimentInfoPointerEnd = None

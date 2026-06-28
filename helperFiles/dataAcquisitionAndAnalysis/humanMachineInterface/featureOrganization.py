@@ -28,7 +28,7 @@ from helperFiles.machineLearning.modelControl.Models.pyTorch.emotionModelInterfa
 
 class featureOrganization(humanMachineInterface):
 
-    def __init__(self, modelClasses, actionControl, analysisProtocols, extractFeaturesFrom, featureAverageWindows):
+    def __init__(self, modelClasses, actionControl, analysisProtocols, extractFeaturesFrom, featureAverageWindows, excluded_sensor_features):
         super().__init__(modelClasses, actionControl, extractFeaturesFrom)
         # General parameters.
         self.featureAnalysisOrder = list(collections.OrderedDict.fromkeys(self.biomarkerFeatureOrder))  # The set of unique feature biomarkers, maintaining the order they will be analyzed. Ex: ['eog', 'eeg', 'eda']
@@ -41,6 +41,7 @@ class featureOrganization(humanMachineInterface):
         self.analysisProtocols = analysisProtocols
         # Assert the integrity of feature organization.
         assert len(featureAverageWindows) == len(self.biomarkerFeatureOrder), f"Found {featureAverageWindows} windows for {self.biomarkerFeatureOrder} biomarkers. These must to be the same length."
+        self.excluded_sensor_features = excluded_sensor_features
 
         # Loop through each analysis requiring collecting features.
         for biomarkerInd in range(len(self.featureAnalysisOrder)):
@@ -146,7 +147,8 @@ class featureOrganization(humanMachineInterface):
         last_timepoint = 0
 
         # For each unique analysis with features.
-        for analysis in self.featureAnalysisList:
+        for analysis_ind, analysis in enumerate(self.featureAnalysisList):
+            cull_feature = self.biomarkerFeatureOrder[analysis_ind] in self.excluded_sensor_features
             last_timepoint = max(last_timepoint, analysis.timepoints[-1])
 
             # For each channel in the analysis.
@@ -157,7 +159,12 @@ class featureOrganization(humanMachineInterface):
 
                 # Organize the raw features; NOTE: I am assuming that the raw features are in order of the featureChannelIndices.
                 self.rawFeatureTimesHolder[biomarkerInd].extend(analysis.rawFeatureTimes[featureChannelInd][rawFeaturePointer:])
-                self.rawFeatureHolder[biomarkerInd].extend(analysis.rawFeatures[featureChannelInd][rawFeaturePointer:])
+                rawFeatures = analysis.rawFeatures[featureChannelInd][rawFeaturePointer:]
+
+                if cull_feature:
+                    self.rawFeatureHolder[biomarkerInd].extend(np.zeros_like(rawFeatures).tolist())
+                else:
+                    self.rawFeatureHolder[biomarkerInd].extend(rawFeatures)
 
                 # Update the raw pointers.
                 self.rawFeaturePointers[biomarkerInd] = len(analysis.rawFeatureTimes[featureChannelInd])

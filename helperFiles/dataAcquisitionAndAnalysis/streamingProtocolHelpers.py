@@ -36,7 +36,7 @@ from .humanMachineInterface.serverInterface import serverInterface
 
 class streamingProtocolHelpers(featureOrganization):
 
-    def __init__(self, deviceType, mainSerialNum, therapySerialNum, modelClasses, actionControl, numPointsPerBatch, moveDataFinger, streamingOrder, extractFeaturesFrom, featureAverageWindows, voltageRange, plotStreamedData):
+    def __init__(self, deviceType, mainSerialNum, therapySerialNum, modelClasses, actionControl, numPointsPerBatch, moveDataFinger, streamingOrder, extractFeaturesFrom, featureAverageWindows, voltageRange, plotStreamedData, excluded_sensor_features):
         # General streaming parameters.
         self.streamingOrder = np.char.lower(streamingOrder)  # The names of each recorded signal in order. Ex: ['eog', 'eog', 'eeg', 'eda']
         self.numStreamedSignals = len(streamingOrder)  # The total number of signals being recorded.
@@ -104,7 +104,7 @@ class streamingProtocolHelpers(featureOrganization):
 
         # Finish setting up the class.
         assert deviceType in ['empatica', 'serial'], "The device type must be either 'empatica' or 'serial'."
-        super().__init__(modelClasses, actionControl, self.analysisProtocols, extractFeaturesFrom, featureAverageWindows)
+        super().__init__(modelClasses, actionControl, self.analysisProtocols, extractFeaturesFrom, featureAverageWindows, excluded_sensor_features)
         self.resetStreamingInformation()
 
     def resetStreamingInformation(self):
