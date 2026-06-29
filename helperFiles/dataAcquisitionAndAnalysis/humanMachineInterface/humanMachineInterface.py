@@ -1,4 +1,5 @@
 import os
+import csv
 import accelerate
 import numpy as np
 import torch
@@ -69,10 +70,15 @@ class humanMachineInterface:
         self.timePointEvolution = []
         self.therapyControl = None
 
+        # stream out
+        self.scoreFilePath = None
+
         # Initialize mutable variables.
         self.resetVariables_HMI()
 
     def emotion_model_pass(self, model_data):
+        if model_data is None or torch.as_tensor(model_data).numel() == 0:
+            return
         feature_mask = np.isin(self.featureNames, self.modelClasses[0].model.featureNames)
         model_data = torch.as_tensor(model_data)[:, feature_mask]
         numSignals = model_data.shape[1]
@@ -101,10 +107,24 @@ class humanMachineInterface:
                 emotionProfile, self.modelClasses[0].allEmotionClasses,
                 device=self.modelClasses[0].accelerator.device)
 
-        print("Model outputs:")
-        for emotionInd in range(len(emotion_class_predictions)):
-            emotion_name = self.modelClasses[0].emotionNames[emotionInd]
-            print(f"\t{emotion_name}: {emotion_class_predictions[emotionInd][0].argmax().item()}")
+        # Emotion class predictions
+        # print("Model outputs:")
+        # for emotionInd in range(len(emotion_class_predictions)):
+        #     emotion_name = self.modelClasses[0].emotionNames[emotionInd]
+        #     print(f"\t{emotion_name}: {emotion_class_predictions[emotionInd][0].argmax().item()}")
+
+        # scores prediction
+        predictedAnswers = np.array([(probs[0].argmax().item() + 1) for probs in emotion_class_predictions]).reshape(1, -1)
+        PA, NA = self.compileModelInfo.scorePANAS(predictedAnswers)
+        SA = self.compileModelInfo.scoreSTAI(predictedAnswers)
+        t = float(self.analysisList[0].timepoints[-1])
+        pa, na, sa = float(PA[0]), float(NA[0]), float(SA[0])
+        discrete = [int(x) for x in predictedAnswers[0]]  # 30 emotion questions
+        self.streamedStressScores.append((t, pa, na, sa, discrete))
+        if self.scoreFilePath is not None:
+            with open(self.scoreFilePath, "a", newline="") as f:
+                csv.writer(f).writerow([t, pa, na, sa] + discrete)
+        print(f" t = {t}s, PA = {pa}, NA = {na}, SA = {sa}")
 
     def therapyInitialization(self):
         assert self.actionControl in {"heat", "music", "chatGPT", None}, f"Invalid actionControl: {self.actionControl}. Must be one of 'heat', 'music', or 'chatGPT'."
@@ -144,11 +164,20 @@ class humanMachineInterface:
         self.experimentTimes = []  # A list of lists of [start, stop] times of each experiment, where each element represents the times for one experiment. None means no time recorded.
         self.experimentNames = []  # A list of names for each experiment, where len(experimentNames) == len(experimentTimes).
 
+        # score predictions
+        self.streamedStressScores = []
 
     def setUserName(self, filePath):
         # Get user information
         fileName = os.path.basename(filePath).split(".")[0]
         self.userName = fileName.split(" ")[-1].lower()
+
+        # Get score output path
+        base, _ = os.path.splitext(filePath)
+        self.scoreFilePath = f"{base}_scores.csv"
+        header = ['time_s', 'PA', 'NA', 'SA'] + [f"Q{i+1}" for i in range(self.compileModelInfo.numSurveyQuestions)]
+        with open(self.scoreFilePath, "w", newline="") as f:
+            csv.writer(f).writerow(header)
 
     def emotionConversion(self, emotionScores):
         emotionScores[:10] = 0.5 + emotionScores[:10] / (5.5 - 0.5)
@@ -200,4 +229,3 @@ class humanMachineInterface:
         # all the time points
         self.timePointEvolution = self.therapyControl.therapyProtocol.timepoints
         return therapyState, allMaps
-

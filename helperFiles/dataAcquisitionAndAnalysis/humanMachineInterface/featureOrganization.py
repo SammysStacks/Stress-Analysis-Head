@@ -182,6 +182,8 @@ class featureOrganization(humanMachineInterface):
             featureIntervals, featureIntervalTimes = self.compileModelFeatures(
                     startTime=last_timepoint - modelConstants.modelConstants.modelTimeWindow, endTime=last_timepoint,
                     featureTimes=self.rawFeatureTimesHolder[biomarkerInd], features=self.rawFeatureHolder[biomarkerInd])
+            if featureIntervals is None or featureIntervalTimes is None:
+                return None
             featureIntervals = generalMethods.minMaxScale_noInverse(inputData=torch.as_tensor(featureIntervals), scale=modelConstants.modelConstants.minMaxScale, dim=0)
 
             # Save raw interval information

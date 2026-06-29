@@ -74,7 +74,9 @@ class adjustInputParameters:
             moveDataFinger = 5  # The Minimum Number of NEW Data Points to Plot/Analyze in Each Batch;
         else: raise ValueError(f"Unknown device type: {self.deviceType}")
 
-        if not analyzeBatches:
+        realTimeExcel = self.readDataFromExcel and self.useModelPredictions
+
+        if not analyzeBatches and not realTimeExcel:
             # If displaying all data, read in all the Excel data (max per sheet) at once
             numPointsPerBatch = 2048576
             moveDataFinger = 1048100
