@@ -99,10 +99,10 @@ class modelVisualizations(globalPlottingProtocols):
         for modelInd in range(len(numFreeModelParams)): print('numFreeModelParams:', numFreeModelParams[modelInd][-1][0].mean(), numFreeModelParams[modelInd][-1][1].mean())
 
         # Plot the activation parameters for the signal encoder.
-        paramNames = ["Infinite Bound", "Non-Linear Coefficient", "Convergent Point"]
-        activationParamsPaths = np.asarray([specificModel.activationParamsPath for specificModel in specificModels])  # numModels, loadSubmodelEpochs, numActivations, numActivationParams=3
-        self.generalViz.plotActivationFlowCompressed(activationParamsPaths=activationParamsPaths, moduleNames=moduleNames, modelLabels=datasetNames, paramNames=paramNames, saveFigureLocation=f"trainingLosses{modelIdentifier}/", plotTitle=f"{modelIdentifier} activation parameter compressed path")
-        self.generalViz.plotActivationFlow(activationParamsPaths=activationParamsPaths, moduleNames=moduleNames, paramNames=paramNames, saveFigureLocation=f"trainingLosses{modelIdentifier}/", plotTitle=f"{modelIdentifier} activation parameter path")
+        # paramNames = ["Infinite Bound", "Non-Linear Coefficient", "Convergent Point"]
+        # activationParamsPaths = np.asarray([specificModel.activationParamsPath for specificModel in specificModels])  # numModels, loadSubmodelEpochs, numActivations, numActivationParams=3
+        # self.generalViz.plotActivationFlowCompressed(activationParamsPaths=activationParamsPaths, moduleNames=moduleNames, modelLabels=datasetNames, paramNames=paramNames, saveFigureLocation=f"trainingLosses{modelIdentifier}/", plotTitle=f"{modelIdentifier} activation parameter compressed path")
+        # self.generalViz.plotActivationFlow(activationParamsPaths=activationParamsPaths, moduleNames=moduleNames, paramNames=paramNames, saveFigureLocation=f"trainingLosses{modelIdentifier}/", plotTitle=f"{modelIdentifier} activation parameter path")
 
         # Plot the angle features for the signal encoder.
         givensAnglesFeatureNames = reversibleLieLayer.getFeatureNames()

@@ -64,7 +64,7 @@ class saveExcelData(handlingExcelFormat):
                     break
 
             # Finalize document
-            worksheet = self.addExcelAesthetics(worksheet)  # Add Excel Aesthetics
+            self.addExcelAesthetics(worksheet)  # Add Excel Aesthetics
             worksheet = WB.create_sheet(self.emptySheetName)  # Add Sheet
         # Remove empty page
         WB.remove(worksheet)
